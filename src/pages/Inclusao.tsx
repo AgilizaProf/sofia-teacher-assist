@@ -115,8 +115,8 @@ const css = `
 .ac-head-txt b{display:block;font-weight:700;font-size:13px;color:#fff;}
 .ac-head-txt span{font-size:11.5px;color:rgba(255,255,255,.65);}
 .ac-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--accent);color:#fff;padding:4px 8px;border-radius:6px;}
-.ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:#fff;position:relative;z-index:2;}
-.ac-title em{color:var(--accent-warm);font-style:normal;font-weight:800;}
+.inc-root .ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:#fff;position:relative;z-index:2;}
+.inc-root .ac-title em{color:var(--accent-warm);font-style:normal;font-weight:800;}
 .ac-body{font-size:13px;line-height:1.55;color:rgba(255,255,255,.82);margin-bottom:16px;position:relative;z-index:2;}
 .ac-body .bncc{font-family:'JetBrains Mono',monospace;color:var(--accent-warm);background:rgba(255,122,69,.12);padding:1px 5px;border-radius:4px;font-size:11.5px;font-weight:700;}
 .ac-strats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;position:relative;z-index:2;}
