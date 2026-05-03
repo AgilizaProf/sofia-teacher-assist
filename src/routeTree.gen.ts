@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
+import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as IndexRouteImport } from './routes/index'
 
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InclusaoRoute = InclusaoRouteImport.update({
+  id: '/inclusao',
+  path: '/inclusao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssistenteRoute = AssistenteRouteImport.update({
@@ -32,30 +38,34 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/inclusao': typeof InclusaoRoute
   '/relatorios': typeof RelatoriosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/inclusao': typeof InclusaoRoute
   '/relatorios': typeof RelatoriosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/inclusao': typeof InclusaoRoute
   '/relatorios': typeof RelatoriosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/assistente' | '/relatorios'
+  fullPaths: '/' | '/assistente' | '/inclusao' | '/relatorios'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/assistente' | '/relatorios'
-  id: '__root__' | '/' | '/assistente' | '/relatorios'
+  to: '/' | '/assistente' | '/inclusao' | '/relatorios'
+  id: '__root__' | '/' | '/assistente' | '/inclusao' | '/relatorios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssistenteRoute: typeof AssistenteRoute
+  InclusaoRoute: typeof InclusaoRoute
   RelatoriosRoute: typeof RelatoriosRoute
 }
 
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/relatorios'
       preLoaderRoute: typeof RelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inclusao': {
+      id: '/inclusao'
+      path: '/inclusao'
+      fullPath: '/inclusao'
+      preLoaderRoute: typeof InclusaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assistente': {
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistenteRoute: AssistenteRoute,
+  InclusaoRoute: InclusaoRoute,
   RelatoriosRoute: RelatoriosRoute,
 }
 export const routeTree = rootRouteImport
