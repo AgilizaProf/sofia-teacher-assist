@@ -360,7 +360,7 @@ export function Agenda() {
             <div className="ag-actions">
               <button className="ag-btn"><Filter size={14} /> Filtrar</button>
               <button className="ag-btn"><RefreshCw size={14} /> Sincronizar Google</button>
-              <button className="ag-btn primary"><Plus size={14} /> Novo evento</button>
+              <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
             </div>
           </div>
 
@@ -631,6 +631,7 @@ export function Agenda() {
                     Título
                     <input
                       type="text"
+                      autoFocus
                       value={draft.title}
                       onChange={(e) => setDraft({ ...draft, title: e.target.value })}
                       placeholder="Ex.: Reunião de pais 5ºA"
