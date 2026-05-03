@@ -726,11 +726,13 @@ export function Dashboard() {
               <div className="school-field">
                 <label htmlFor="student-pcd">PCD / laudo</label>
                 <select id="student-pcd" name="pcd" defaultValue="nao">
-                  <option value="nao">Não</option>
-                  <option value="tdah">TDAH</option>
-                  <option value="tea">TEA</option>
-                  <option value="dislexia">Dislexia</option>
-                  <option value="outro">Outro</option>
+                  <option value="nao">Não é PCD</option>
+                  <option value="nao_informado">PCD — Não informado</option>
+                  {CID_OPTIONS.filter((o) => o.value !== "nao_informado").map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.cid && o.cid !== "—" ? `${o.label} · CID ${o.cid}` : o.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
