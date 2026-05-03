@@ -804,6 +804,7 @@ export function Inclusao() {
                     <h1>{selected.name} <span className="age">· {selected.age} · {selected.turma}</span></h1>
                     <div className="tag-row">
                       <span className="diagnostic"><span className="pulse" />{selected.diag}</span>
+                      {selected.anoEscolar && <span className="tag"><b>Ano escolar:</b> {selected.anoEscolar}</span>}
                       <span className="tag"><b>Turma:</b> {selected.turma}</span>
                       <span className="tag"><b>{selected.cid}</b></span>
                       <span className="tag"><b>{selected.aee}</b></span>
