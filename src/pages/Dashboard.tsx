@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
+import { updateLoginStreak } from "@/lib/datetime";
 
 const css = `
 .ap-root{
@@ -285,6 +286,8 @@ export function Dashboard() {
   const goalReached = totalMinutes >= goalMinutes;
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
+  const [streak, setStreak] = useState<number>(0);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setCmdk(true); }
@@ -292,6 +295,10 @@ export function Dashboard() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    setStreak(updateLoginStreak());
   }, []);
 
   return (
@@ -308,7 +315,9 @@ export function Dashboard() {
                 <Svg strokeWidth={2.5} c={<polyline points="9 18 15 12 9 6"/>} />
                 <span>Página inicial</span>
               </div>
-              <div className="streak-pill">🔥 <span className="num">12</span> dias seguidos</div>
+              {streak > 1 && (
+                <div className="streak-pill">🔥 <span className="num">{streak}</span> dias seguidos</div>
+              )}
             </div>
             <div className="topbar-actions">
               <button className="icon-action" aria-label="Buscar" onClick={() => setCmdk(true)}>
