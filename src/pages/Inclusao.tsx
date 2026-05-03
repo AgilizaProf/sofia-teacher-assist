@@ -1213,28 +1213,36 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "reg" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Registros pedagógicos · 23</h3>
-                      <button className="btn btn-primary"><Plus size={14} /> Novo registro</button>
+                      <h3>Registros pedagógicos · {studentRegs.length}</h3>
+                      <button className="btn btn-primary" onClick={() => setRegModalOpen(true)}><Plus size={14} /> Novo registro</button>
                     </div>
                     <div className="reg-filters">
-                      <button className="reg-filter active">Todos · 23</button>
-                      <button className="reg-filter">Pedagógicos · 12</button>
-                      <button className="reg-filter">Comportamentais · 4</button>
-                      <button className="reg-filter">Sensoriais · 3</button>
-                      <button className="reg-filter">Família · 4</button>
+                      {([
+                        { k: "todos", l: "Todos" },
+                        { k: "ped", l: "Pedagógicos" },
+                        { k: "com", l: "Comportamentais" },
+                        { k: "sen", l: "Sensoriais" },
+                        { k: "fam", l: "Família" },
+                      ] as const).map(f => {
+                        const count = f.k === "todos" ? studentRegs.length : studentRegs.filter(r => r.cat === f.k).length;
+                        return (
+                          <button key={f.k} type="button" onClick={() => setRegFilter(f.k)} className={"reg-filter" + (regFilter === f.k ? " active" : "")}>{f.l} · {count}</button>
+                        );
+                      })}
                     </div>
                     <div className="reg-list">
-                      {REG_ITEMS.map((r, i) => (
-                        <div className="reg-item" key={i}>
+                      {studentRegs.filter(r => regFilter === "todos" || r.cat === regFilter).length === 0 ? (
+                        <div style={{ background: "#fff", border: "1px dashed var(--border)", borderRadius: 11, padding: 22, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                          Nenhum registro ainda. Clique em <b>Novo registro</b> para começar.
+                        </div>
+                      ) : studentRegs.filter(r => regFilter === "todos" || r.cat === regFilter).map((r) => (
+                        <div className="reg-item" key={r.id}>
                           <div className="reg-item-head">
                             <span className="reg-when">{r.when}</span>
                             <span className="reg-author">· {r.who}</span>
-                            <span className={"reg-cat " + r.cat}>{r.catLabel}</span>
+                            <span className={"reg-cat " + r.cat}>{REG_CAT_LABEL[r.cat]}</span>
                           </div>
                           <div className="reg-body">{r.body}</div>
-                          {r.att.length > 0 && (
-                            <div className="reg-att">{r.att.map((a) => <span key={a}>{a}</span>)}</div>
-                          )}
                         </div>
                       ))}
                     </div>
