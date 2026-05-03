@@ -405,6 +405,23 @@ const DOCS = [
   { ic: "AUT", t: "Autorização · uso de imagem", who: "Família (Juliana Almeida)", date: "08/02/2025", size: "88 KB" },
 ];
 
+const ANAMNESE_EIXOS: Array<{ l: string; p: number; tone: "ok" | "warn" | "muted" }> = [
+  { l: "Ano de Referência", p: 100, tone: "ok" },
+  { l: "Desempenho Acadêmico", p: 92, tone: "ok" },
+  { l: "Aspectos Pedagógicos", p: 88, tone: "ok" },
+  { l: "Psicomotores", p: 95, tone: "ok" },
+  { l: "Interações Sociais", p: 78, tone: "ok" },
+  { l: "Independência", p: 70, tone: "ok" },
+  { l: "Autonomia", p: 65, tone: "warn" },
+  { l: "Emoção", p: 82, tone: "ok" },
+  { l: "Memória", p: 74, tone: "ok" },
+  { l: "Dificuldades & Potencialidades", p: 90, tone: "ok" },
+  { l: "Estratégias", p: 85, tone: "ok" },
+  { l: "Recursos", p: 60, tone: "warn" },
+  { l: "Contexto Familiar", p: 100, tone: "ok" },
+  { l: "Observações", p: 0, tone: "muted" },
+];
+
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
