@@ -196,7 +196,7 @@ export function Assistente() {
   const [text, setText] = useState("");
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
-  type ChatMsg = { role: "user" | "assistant"; content: string };
+  type ChatMsg = { role: "user" | "assistant"; content: string; issues?: Array<{ term: string; suggestion: string; principle: string }> };
   const [messages, setMessages] = useState<ChatMsg[]>(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -224,8 +224,8 @@ export function Assistente() {
     setText("");
     setLoading(true);
     try {
-      const data = await askSofia({ data: { messages: next } });
-      setMessages((m) => [...m, { role: "assistant", content: data.content || "" }]);
+      const data = await askSofia({ data: { messages: next.map(({ role, content }) => ({ role, content })) } });
+      setMessages((m) => [...m, { role: "assistant", content: data.content || "", issues: data.issues }]);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
       setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);
