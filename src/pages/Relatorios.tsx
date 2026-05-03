@@ -311,8 +311,9 @@ export function Relatorios() {
       <main className="rel-main">
         <header className="rel-topbar">
           <div className="rel-crumbs">
-            <span>Sua sala</span><span className="sep">/</span><b>Relatórios</b>
-            <span className="sep">·</span><span className="accent">Pareceres descritivos</span>
+            <b>Sua sala</b>
+            <span className="sep">›</span><span>Relatórios</span>
+            <span className="sep">›</span><span className="accent">Pareceres descritivos</span>
           </div>
           <div className="rel-topbar-right">
             <button className="rel-icon-btn" aria-label="Buscar"><Search size={16} /></button>
