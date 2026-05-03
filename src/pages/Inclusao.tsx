@@ -771,6 +771,21 @@ export function Inclusao() {
     setNewStudentOpen(false);
   };
 
+  const saveTab = (label: string) => {
+    if (!selected) {
+      toast.error("Selecione um aluno antes de salvar.");
+      return;
+    }
+    // All state already auto-syncs to localStorage via useEffect; this
+    // forces a write and confirms to the user.
+    try {
+      window.localStorage.setItem("inc_students", JSON.stringify(students));
+      window.localStorage.setItem("inc_anam", JSON.stringify(anamByStudent));
+      window.localStorage.setItem("inc_reg", JSON.stringify(regByStudent));
+    } catch { /* ignore */ }
+    toast.success(`${label} salvo`, { description: `Sincronizado para ${selected.name}.` });
+  };
+
   return (
     <div className="inc-root">
       <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss + printCss }} />
