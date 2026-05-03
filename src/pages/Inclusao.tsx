@@ -5,6 +5,7 @@ import {
   ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 
 const css = `
 .inc-root{
@@ -569,7 +570,7 @@ export function Inclusao() {
 
   return (
     <div className="inc-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css }} />
+      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss }} />
       <div className="inc-app">
         <AppSidebar active="inclusion" />
 
@@ -621,11 +622,20 @@ export function Inclusao() {
                   </div>
                 </div>
                 <div className="list-grid">
+                  {filtered.length === 0 && (
+                    <EmptyState
+                      icon="🤝"
+                      title="Cadastre o primeiro aluno com necessidade educacional específica."
+                      description="A Sofia organiza PEI, anamnese, registros e relatórios para cada aluno PCD."
+                      ctaLabel="Novo aluno"
+                      onCta={() => setNewStudentOpen(true)}
+                    />
+                  )}
                   {filtered.map((s) => (
                     <button
                       key={s.id}
                       className="student-card"
-                      onClick={() => { if (s.id === "pedrinho") goView("detail"); }}
+                      onClick={() => goView("detail")}
                     >
                       <div className="sc-head">
                         <div className={"sc-avatar" + (s.featured ? " featured" : "")}>{s.initials}</div>
