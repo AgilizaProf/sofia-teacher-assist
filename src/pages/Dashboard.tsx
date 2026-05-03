@@ -653,7 +653,7 @@ export function Dashboard() {
             </div>
             <div>
               <div className="school-modal-title">Cadastrar novo aluno</div>
-              <div className="school-modal-sub">Adicione informações pra a Sofia personalizar relatórios.</div>
+              <div className="school-modal-sub">Adicione um aluno ou cole vários nomes de uma vez.</div>
             </div>
             <button className="school-modal-close" aria-label="Fechar" onClick={() => setStudentOpen(false)}>
               <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
@@ -662,31 +662,65 @@ export function Dashboard() {
           <form className="school-modal-body" onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
-            const name = String(fd.get("name") || "").trim();
-            if (!name) return;
-            setStudents((arr) => [...arr, {
-              name,
-              classRef: String(fd.get("classRef") || ""),
-              birth: String(fd.get("birth") || ""),
-              pcd: String(fd.get("pcd") || "nao"),
-              notes: String(fd.get("notes") || ""),
-            }]);
+            const classRef = String(fd.get("classRef") || "");
+            const pcd = String(fd.get("pcd") || "nao");
+            if (bulkMode) {
+              const raw = String(fd.get("names") || "");
+              const names = raw
+                .split(/[\n,;]+/)
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0 && s.length <= 120);
+              if (names.length === 0) return;
+              setStudents((arr) => [
+                ...arr,
+                ...names.map((name) => ({ name, classRef, birth: "", pcd, notes: "" })),
+              ]);
+            } else {
+              const name = String(fd.get("name") || "").trim();
+              if (!name) return;
+              setStudents((arr) => [...arr, {
+                name,
+                classRef,
+                birth: String(fd.get("birth") || ""),
+                pcd,
+                notes: String(fd.get("notes") || ""),
+              }]);
+            }
             (e.currentTarget as HTMLFormElement).reset();
             setStudentOpen(false);
           }}>
-            <div className="school-field">
-              <label htmlFor="student-name">Nome completo</label>
-              <input id="student-name" name="name" placeholder="Ex.: Nome completo do aluno" required />
+            <div className="school-mode" role="tablist" aria-label="Modo de cadastro">
+              <button type="button" role="tab" aria-selected={!bulkMode} className={!bulkMode ? "active" : ""} onClick={() => setBulkMode(false)}>Individual</button>
+              <button type="button" role="tab" aria-selected={bulkMode} className={bulkMode ? "active" : ""} onClick={() => setBulkMode(true)}>Em massa</button>
             </div>
+            {bulkMode ? (
+              <div className="school-field">
+                <label htmlFor="student-names">Nomes dos alunos</label>
+                <textarea
+                  id="student-names"
+                  name="names"
+                  placeholder={"Cole um nome por linha. Ex.:\nAna Beatriz Souza\nBruno Lima\nCarla Mendes"}
+                  required
+                />
+                <span className="school-hint">Um nome por linha (também aceita vírgula ou ponto e vírgula).</span>
+              </div>
+            ) : (
+              <div className="school-field">
+                <label htmlFor="student-name">Nome completo</label>
+                <input id="student-name" name="name" placeholder="Ex.: Nome completo do aluno" required maxLength={120} />
+              </div>
+            )}
             <div className="school-row">
               <div className="school-field">
                 <label htmlFor="student-class">Turma</label>
                 <input id="student-class" name="classRef" placeholder="Ex.: 2º ano A · sua escola" />
               </div>
-              <div className="school-field">
-                <label htmlFor="student-birth">Data de nascimento</label>
-                <input id="student-birth" name="birth" type="date" />
-              </div>
+              {!bulkMode && (
+                <div className="school-field">
+                  <label htmlFor="student-birth">Data de nascimento</label>
+                  <input id="student-birth" name="birth" type="date" />
+                </div>
+              )}
             </div>
             <div className="school-field">
               <label htmlFor="student-pcd">PCD / laudo</label>
@@ -698,14 +732,16 @@ export function Dashboard() {
                 <option value="outro">Outro</option>
               </select>
             </div>
-            <div className="school-field">
-              <label htmlFor="student-notes">Observações pedagógicas</label>
-              <input id="student-notes" name="notes" placeholder="Pontos fortes, atenção, etc." />
-            </div>
+            {!bulkMode && (
+              <div className="school-field">
+                <label htmlFor="student-notes">Observações pedagógicas</label>
+                <input id="student-notes" name="notes" placeholder="Pontos fortes, atenção, etc." />
+              </div>
+            )}
             <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
               <button type="button" className="school-cancel" onClick={() => setStudentOpen(false)}>Cancelar</button>
               <button type="submit" className="school-save">
-                Salvar aluno
+                {bulkMode ? "Salvar alunos" : "Salvar aluno"}
                 <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
               </button>
             </div>
