@@ -1317,6 +1317,87 @@ export function Inclusao() {
         </div>
       </div>
 
+      {/* Anamnese: Imprimir */}
+      <div className={"inc-modal-overlay" + (anamPrintOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setAnamPrintOpen(false); }}>
+        <div className="inc-modal" style={{ maxWidth: 880 }}>
+          <div className="inc-modal-bar" />
+          <div className="inc-modal-head">
+            <h2>Anamnese · {selected?.name || ""}</h2>
+            <span className="meta">{selected?.anoEscolar || ""}<br />{selected?.turma || ""}</span>
+            <button className="inc-modal-close" onClick={() => setAnamPrintOpen(false)} aria-label="Fechar"><X size={16} /></button>
+          </div>
+          <div className="inc-modal-body">
+            <div style={{ display:"flex", gap:6, marginBottom:12, justifyContent:"center" }}>
+              <button
+                className={"reg-filter" + (anamPrintMode === "completo" ? " active" : "")}
+                onClick={() => setAnamPrintMode("completo")}
+              >Documento completo</button>
+              <button
+                className={"reg-filter" + (anamPrintMode === "preenchido" ? " active" : "")}
+                onClick={() => setAnamPrintMode("preenchido")}
+              >Apenas preenchidos</button>
+            </div>
+            <div id="anam-print-area">
+              <div className="inc-a4">
+                <div className="inc-a4-head">
+                  <div className="inc-a4-logo">A</div>
+                  <div className="center">
+                    <b>Documento de Anamnese Pedagógica</b>
+                    <span>AgilizaProf · Educação Inclusiva<br />Conforme Lei 14.254/2021 · BNCC Inclusão</span>
+                  </div>
+                  <div className="stamp">PROTOCOLO<br />#ANAM-{(selected?.id || "").slice(-6).toUpperCase()}<br />{new Date().toLocaleDateString("pt-BR")}</div>
+                </div>
+                <h1>Anamnese Pedagógica</h1>
+                <div className="ident">
+                  <span><b>Educando:</b> {selected?.name || "—"}</span>
+                  <span><b>Idade:</b> {selected?.age || "—"}</span>
+                  <span><b>Ano escolar:</b> {selected?.anoEscolar || "—"}</span>
+                  <span><b>Turma:</b> {selected?.turma || "—"}</span>
+                  <span><b>Diagnóstico:</b> {selected?.diag || "—"}</span>
+                  <span><b>{selected?.cid || "—"}</b></span>
+                  <span style={{ gridColumn: "1 / -1" }}><b>AEE:</b> {selected?.aee || "—"}</span>
+                </div>
+                {anamData.map((e) => {
+                  const itemsToShow = anamPrintMode === "completo"
+                    ? e.items
+                    : e.items.filter((i) => i.s !== "naoObservado");
+                  const obsToShow = (e.obs || "").trim();
+                  if (anamPrintMode === "preenchido" && itemsToShow.length === 0 && !obsToShow) return null;
+                  return (
+                    <div key={e.l}>
+                      <h2>{e.l}</h2>
+                      {itemsToShow.length > 0 ? (
+                        <ul>
+                          {itemsToShow.map((it, idx) => (
+                            <li key={idx}><b>{ANAM_STATUS_LABEL[it.s]}:</b> {it.d}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        anamPrintMode === "completo" && <p style={{ fontStyle:"italic", color:"#555" }}>Nenhum descritor avaliado.</p>
+                      )}
+                      {obsToShow ? (
+                        <p><b>Observações:</b> {obsToShow}</p>
+                      ) : (
+                        anamPrintMode === "completo" && <p style={{ fontStyle:"italic", color:"#555" }}><b>Observações:</b> ____________________________________________</p>
+                      )}
+                    </div>
+                  );
+                })}
+                <div style={{ marginTop: 32, display:"grid", gridTemplateColumns:"1fr 1fr", gap: 40, fontFamily:"'Inter',sans-serif", fontSize:12 }}>
+                  <div style={{ borderTop:"1px solid #000", paddingTop:6, textAlign:"center" }}>Professor(a) responsável</div>
+                  <div style={{ borderTop:"1px solid #000", paddingTop:6, textAlign:"center" }}>Coordenação pedagógica</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="inc-modal-foot">
+            <span className="legal">{anamPrintMode === "completo" ? "Mostrando todos os eixos (inclusive não preenchidos)." : "Mostrando apenas o que foi preenchido."}</span>
+            <button className="inc-btn-ghost" onClick={() => setAnamPrintOpen(false)}>Fechar</button>
+            <button className="btn btn-primary" onClick={() => window.print()}><Printer size={14} /> Imprimir / PDF</button>
+          </div>
+        </div>
+      </div>
+
       {/* Cadastrar aluno */}
       <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setNewStudentOpen(false); }}>
         <div className="inc-modal" style={{ maxWidth: 560 }}>
