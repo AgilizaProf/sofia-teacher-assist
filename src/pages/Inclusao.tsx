@@ -852,8 +852,8 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "anam" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Anamnese · 14 de 16 eixos preenchidos</h3>
-                      <span className="legal">2º Ano · TEA Nível 1</span>
+                      <h3>Anamnese · 0 de {anamData.length} eixos preenchidos</h3>
+                      <span className="legal">{selected?.turma || ""} · {selected?.diag || ""}</span>
                       <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
                     </div>
                     <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
