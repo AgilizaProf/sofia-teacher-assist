@@ -113,13 +113,13 @@ const css = `
 .tasks-tab.active{background:var(--accent);color:#fff;}
 .tasks-tab:not(.active):hover{background:#F1EFE8;}
 .tasks-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:stretch;}
-.task-card{background:#FFFFFF !important;border:2px solid #E7E9EF;border-radius:12px;padding:12px 10px;text-align:left;
+.task-card{background:#FFFFFF !important;border:2px solid #E7E9EF;border-radius:12px;padding:30px 10px 12px;text-align:left;
   display:flex;flex-direction:column;gap:6px;transition:all .18s;position:relative;
-  box-shadow:0 1px 0 rgba(17,24,39,.04);min-width:0;height:170px;justify-content:flex-start;cursor:pointer;}
+  box-shadow:0 1px 0 rgba(17,24,39,.04);min-width:0;height:180px;justify-content:flex-start;cursor:pointer;}
 .task-card:hover{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,106,44,.18),0 10px 22px -12px rgba(255,106,44,.5);transform:translateY(-2px);}
 .task-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;}
 .task-emoji{width:30px;height:30px;border-radius:8px;background:#FBF7F0;display:grid;place-items:center;font-size:15px;flex-shrink:0;}
-.task-top-pill{font-size:8px;font-weight:800;color:#9A3412;background:#FFEDD5;padding:2px 5px;border-radius:999px;letter-spacing:.04em;align-self:flex-start;}
+.task-top-pill{position:absolute;top:8px;left:10px;font-size:8px;font-weight:800;color:#9A3412;background:#FFEDD5;padding:2px 6px;border-radius:999px;letter-spacing:.04em;}
 .task-shortcut{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);font-weight:700;background:#F6F4EE;border:1px solid var(--line-soft);padding:3px 7px;border-radius:6px;white-space:nowrap;display:inline-flex;align-items:center;line-height:1;margin-top:auto;align-self:flex-start;height:20px;}
 .task-name{font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:var(--text);line-height:1.2;margin-top:4px;}
 .task-desc{font-size:10.5px;color:var(--text-soft);line-height:1.35;}
