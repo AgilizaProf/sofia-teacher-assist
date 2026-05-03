@@ -271,9 +271,15 @@ export function Dashboard() {
   const totalClasses = baseClasses + classes.length;
   const totalStudents = baseStudents + students.length;
   const documentsGenerated = user.documentsGenerated;
-  const h = user.hoursSavedWeek;
-  const m = user.minutesSavedWeek;
-  const totalMinutes = h * 60 + m;
+  // Tempo devolvido cresce conforme o usuário cadastra/usa funcionalidades
+  const earnedMinutes =
+    totalSchools * 10 +
+    totalClasses * 20 +
+    totalStudents * 5 +
+    documentsGenerated * 30;
+  const totalMinutes = user.hoursSavedWeek * 60 + user.minutesSavedWeek + earnedMinutes;
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
   const goalMinutes = Math.max(1, user.weeklyGoalHours * 60);
   const goalPct = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100));
   const goalReached = totalMinutes >= goalMinutes;
