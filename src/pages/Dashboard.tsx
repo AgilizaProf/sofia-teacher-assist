@@ -503,7 +503,7 @@ export function Dashboard() {
           }}>
             <div className="school-field">
               <label htmlFor="school-name">Nome da escola</label>
-              <input id="school-name" name="name" placeholder="Ex.: EMEF CAIC" required />
+              <input id="school-name" name="name" placeholder="Ex.: nome da sua escola" required />
             </div>
             <div className="school-row">
               <div className="school-field">
@@ -585,7 +585,7 @@ export function Dashboard() {
             </div>
             <div className="school-field">
               <label htmlFor="class-school">Escola</label>
-              <input id="class-school" name="school" placeholder="Ex.: EMEF CAIC" />
+              <input id="class-school" name="school" placeholder="Ex.: nome da sua escola" />
             </div>
             <div className="school-row">
               <div className="school-field">
