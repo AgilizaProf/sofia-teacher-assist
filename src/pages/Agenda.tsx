@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
@@ -324,6 +324,16 @@ function SuggestionsButton({ type, onPick }: { type: EventType; onPick: (s: stri
 export function Agenda() {
   const today = brNow();
   const todayKey = dateKey(today);
+  const [nowTick, setNowTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const nowHHMM = useMemo(() => {
+    const n = brNow();
+    void nowTick;
+    return `${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
+  }, [nowTick]);
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [events, setEvents] = useState<Event[]>([]);
@@ -370,6 +380,23 @@ export function Agenda() {
   };
   const deleteEvent = (id: string) => setEvents((arr) => arr.filter((e) => e.id !== id));
 
+  // Drag and drop: arrastar evento para outro dia
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const onDragStartEvent = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", id); } catch { /* noop */ }
+  };
+  const onDragOverDay = (e: React.DragEvent) => {
+    if (draggedId) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }
+  };
+  const onDropDay = (e: React.DragEvent, targetDate: string) => {
+    if (!draggedId) return;
+    e.preventDefault();
+    setEvents((arr) => arr.map((ev) => ev.id === draggedId ? { ...ev, date: targetDate } : ev));
+    setDraggedId(null);
+  };
+
   const tomorrowKey = useMemo(() => {
     const t = new Date(today);
     t.setDate(t.getDate() + 1);
@@ -393,6 +420,21 @@ export function Agenda() {
       .sort((a, b) => a.date.localeCompare(b.date))[0];
     return { todayCount, tomorrowCount, weekCount, deadlinesCount, nextDeadline };
   }, [events, todayKey, tomorrowKey, weekRange]);
+
+  // Próximos compromissos: ordenados por data+hora, removendo os que já passaram.
+  const upcoming = useMemo(() => {
+    return events
+      .filter((e) => {
+        if (e.date > todayKey) return true;
+        if (e.date < todayKey) return false;
+        if (!e.time) return true; // sem horário, conta o dia inteiro
+        return e.time >= nowHHMM;
+      })
+      .sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return (a.time || "99:99").localeCompare(b.time || "99:99");
+      });
+  }, [events, todayKey, nowHHMM]);
 
   const formatShortBR = (key: string) => {
     const [, m, d] = key.split("-");
