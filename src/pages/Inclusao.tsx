@@ -138,7 +138,7 @@ const css = `
 .pei-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 @media(max-width:720px){.pei-grid{grid-template-columns:1fr;}}
 .pei{padding:13px 14px;border:1.5px solid var(--accent);border-radius:11px;background:linear-gradient(180deg,#fff,#FAFBFE);cursor:pointer;transition:.15s;text-align:left;width:100%;}
-.pei:hover{border-color:var(--accent-warm);transform:translateY(-2px);box-shadow:0 8px 20px rgba(255,122,69,.18);}
+.pei:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px rgba(255,122,69,.18);}
 .pei-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;font-weight:800;margin-bottom:8px;font-family:'Fraunces',serif;}
 .pei-cog{background:#FFF1E8;color:#B8410E;}
 .pei-soc{background:#E0F2FE;color:#0C4A6E;}
