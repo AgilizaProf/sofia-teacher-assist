@@ -420,18 +420,18 @@ export function Dashboard() {
             </button>
             <div className="stat">
               <div className="stat-icon s4"><Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} /></div>
-              <div className="stat-body"><div className="stat-value">23</div><div className="stat-label">Documentos gerados</div></div>
+              <div className="stat-body"><div className="stat-value">{documentsGenerated}</div><div className="stat-label">Documentos gerados</div></div>
             </div>
           </div>
 
           <div className="grid-2">
             <div className="card">
               <div className="card-head">
-                <h3 className="card-title">Seus alunos<span className="card-title-count">6</span></h3>
+                <h3 className="card-title">Seus alunos<span className="card-title-count">{totalStudents}</span></h3>
                 <div className="filter-pills">
-                  <button className={`filter-pill ${filter==="all"?"active":""}`} onClick={() => setFilter("all")}>Todos <span className="count">6</span></button>
-                  <button className={`filter-pill ${filter==="pcd"?"active":""}`} onClick={() => setFilter("pcd")}>PCD <span className="count">1</span></button>
-                  <button className={`filter-pill ${filter==="reg"?"active":""}`} onClick={() => setFilter("reg")}>Regular <span className="count">5</span></button>
+                  <button className={`filter-pill ${filter==="all"?"active":""}`} onClick={() => setFilter("all")}>Todos <span className="count">{totalStudents}</span></button>
+                  <button className={`filter-pill ${filter==="pcd"?"active":""}`} onClick={() => setFilter("pcd")}>PCD <span className="count">{students.filter(s => s.pcd && s.pcd !== "nao").length}</span></button>
+                  <button className={`filter-pill ${filter==="reg"?"active":""}`} onClick={() => setFilter("reg")}>Regular <span className="count">{students.filter(s => !s.pcd || s.pcd === "nao").length}</span></button>
                 </div>
               </div>
 
