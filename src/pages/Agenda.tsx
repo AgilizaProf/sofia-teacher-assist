@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock, X, Pencil, Trash2 } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 
@@ -140,6 +140,34 @@ const css = `
 .ag-up-meta .mdot{width:3px;height:3px;border-radius:50%;background:#cdd4e0;}
 .ag-up-prep{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--success);margin-top:5px;background:rgba(16,185,129,.08);padding:2px 6px;border-radius:4px;border:1px solid rgba(16,185,129,.18);}
 .ag-up-prep.pending{color:var(--warn);background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);}
+
+.ag-cal-day{cursor:pointer;}
+.ag-overlay{position:fixed;inset:0;background:rgba(15,27,54,.45);backdrop-filter:blur(2px);z-index:80;display:flex;justify-content:flex-end;}
+.ag-panel{width:420px;max-width:100%;background:#fff;height:100%;box-shadow:-8px 0 24px rgba(15,27,54,.18);display:flex;flex-direction:column;animation:agpanel .2s ease-out;}
+@keyframes agpanel{from{transform:translateX(20px);opacity:.6}to{transform:none;opacity:1}}
+.ag-panel-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.ag-panel-title{font-family:'Fraunces',serif;font-size:20px;font-weight:800;letter-spacing:-.4px;color:var(--text);}
+.ag-panel-sub{font-size:12px;color:var(--text-mute);margin-top:2px;}
+.ag-panel-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-mute);}
+.ag-panel-close:hover{background:var(--bg);color:var(--text);}
+.ag-panel-body{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
+.ag-panel-section-title{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-mute);}
+.ag-panel-event{border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:flex-start;gap:10px;}
+.ag-panel-event .ev-dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+.ag-panel-event .ev-body{flex:1;min-width:0;}
+.ag-panel-event .ev-title{font-weight:600;font-size:13px;color:var(--text);}
+.ag-panel-event .ev-meta{font-size:11.5px;color:var(--text-mute);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;}
+.ag-panel-event .ev-actions{display:flex;gap:4px;}
+.ag-icon-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-mute);}
+.ag-icon-btn:hover{background:var(--bg);color:var(--text);}
+.ag-icon-btn.danger:hover{color:var(--danger);border-color:rgba(239,68,68,.3);}
+.ag-empty{font-size:12.5px;color:var(--text-mute);padding:14px;border:1px dashed var(--border);border-radius:10px;text-align:center;}
+.ag-form{display:flex;flex-direction:column;gap:10px;background:#FAFBFD;border:1px solid var(--border);border-radius:12px;padding:14px;}
+.ag-form label{font-size:11.5px;font-weight:600;color:var(--text-mute);display:flex;flex-direction:column;gap:5px;}
+.ag-form input,.ag-form select,.ag-form textarea{font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none;}
+.ag-form input:focus,.ag-form select:focus,.ag-form textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,69,.15);}
+.ag-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ag-panel-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);background:#fff;}
 `;
 
 type Ev = { type: "holiday" | "meeting" | "eval" | "report" | "plan" | "pcd"; t: string; urgent?: boolean };
@@ -191,11 +219,87 @@ const dateKey = (d: Date) =>
 
 type ViewMode = "dia" | "semana" | "mes" | "ano";
 
+type EventType = "meeting" | "eval" | "report" | "plan" | "pcd";
+type Event = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  time?: string;
+  type: EventType;
+  notes?: string;
+};
+
+const TYPE_LABEL: Record<EventType, string> = {
+  meeting: "Reunião",
+  eval: "Avaliação",
+  report: "Entrega",
+  plan: "Planejamento",
+  pcd: "Inclusão",
+};
+const TYPE_COLOR: Record<EventType, string> = {
+  meeting: "var(--meeting)",
+  eval: "var(--eval)",
+  report: "var(--report)",
+  plan: "var(--plan)",
+  pcd: "var(--pcd)",
+};
+
 export function Agenda() {
   const today = brNow();
   const todayKey = dateKey(today);
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
+  const [events, setEvents] = useState<Event[]>([]);
+  const [openDate, setOpenDate] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Event | null>(null);
+  const [draft, setDraft] = useState<{ title: string; time: string; type: EventType; notes: string }>({
+    title: "", time: "", type: "meeting", notes: "",
+  });
+
+  const eventsByDate = useMemo(() => {
+    const m = new Map<string, Event[]>();
+    for (const e of events) {
+      const arr = m.get(e.date) || [];
+      arr.push(e);
+      m.set(e.date, arr);
+    }
+    for (const arr of m.values()) arr.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+    return m;
+  }, [events]);
+
+  const openDayPanel = (key: string) => {
+    setOpenDate(key);
+    setEditing(null);
+    setDraft({ title: "", time: "", type: "meeting", notes: "" });
+  };
+  const closePanel = () => { setOpenDate(null); setEditing(null); };
+  const startEdit = (ev: Event) => {
+    setEditing(ev);
+    setDraft({ title: ev.title, time: ev.time || "", type: ev.type, notes: ev.notes || "" });
+  };
+  const cancelEdit = () => {
+    setEditing(null);
+    setDraft({ title: "", time: "", type: "meeting", notes: "" });
+  };
+  const saveDraft = () => {
+    if (!openDate || !draft.title.trim()) return;
+    if (editing) {
+      setEvents((arr) => arr.map((e) => e.id === editing.id ? { ...e, ...draft, title: draft.title.trim() } : e));
+    } else {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      setEvents((arr) => [...arr, { id, date: openDate, ...draft, title: draft.title.trim() }]);
+    }
+    cancelEdit();
+  };
+  const deleteEvent = (id: string) => setEvents((arr) => arr.filter((e) => e.id !== id));
+
+  const dayEvents = openDate ? (eventsByDate.get(openDate) || []) : [];
+  const openDateLabel = openDate ? (() => {
+    const [y, m, d] = openDate.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    return `${["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"][dt.getDay()]}, ${d} de ${MONTHS_PT[m - 1]} ${y}`;
+  })() : "";
+  const openDateHoliday = openDate ? holidays.get(openDate) : undefined;
 
   const holidays = useMemo(() => holidayMap(cursor.getFullYear()), [cursor]);
 
@@ -315,12 +419,21 @@ export function Agenda() {
                   <div className="ag-cal-grid">
                     {monthDays.map((d, i) => {
                       const holiday = holidays.get(d.date);
+                      const evs = eventsByDate.get(d.date) || [];
                       return (
-                        <div key={i} className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}>
+                        <div key={i} className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")} onClick={() => openDayPanel(d.date)}>
                           <span className="ag-cal-num">{d.n}</span>
                           {d.today && <span className="ag-cal-day-flag">Hoje</span>}
                           {holiday && !d.other && (
                             <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
+                          )}
+                          {!d.other && evs.slice(0, 3).map((e) => (
+                            <div key={e.id} className={"ag-cal-event " + e.type} title={e.title}>
+                              {e.time ? `${e.time} · ` : ""}{e.title}
+                            </div>
+                          ))}
+                          {!d.other && evs.length > 3 && (
+                            <div style={{ fontSize: 10.5, color: "var(--text-mute)", fontWeight: 600 }}>+{evs.length - 3} mais</div>
                           )}
                         </div>
                       );
@@ -332,13 +445,19 @@ export function Agenda() {
                   <div className="ag-cal-grid" style={{ gridAutoRows: "minmax(180px,auto)" }}>
                     {weekDays.map((d, i) => {
                       const holiday = holidays.get(d.date);
+                      const evs = eventsByDate.get(d.date) || [];
                       return (
-                        <div key={i} className={"ag-cal-day" + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}>
+                        <div key={i} className={"ag-cal-day" + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")} onClick={() => openDayPanel(d.date)}>
                           <span className="ag-cal-num">{d.n}</span>
                           {d.today && <span className="ag-cal-day-flag">Hoje</span>}
                           {holiday && (
                             <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
                           )}
+                          {evs.map((e) => (
+                            <div key={e.id} className={"ag-cal-event " + e.type} title={e.title}>
+                              {e.time ? `${e.time} · ` : ""}{e.title}
+                            </div>
+                          ))}
                         </div>
                       );
                     })}
@@ -358,9 +477,22 @@ export function Agenda() {
                         Feriado nacional · {dayHoliday}
                       </div>
                     )}
-                    <div style={{ fontSize: 13, color: "var(--text-mute)" }}>
-                      Nenhum evento cadastrado para este dia.
-                    </div>
+                    {(eventsByDate.get(dayKey) || []).length === 0 ? (
+                      <div style={{ fontSize: 13, color: "var(--text-mute)", marginBottom: 12 }}>
+                        Nenhum evento cadastrado para este dia.
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+                        {(eventsByDate.get(dayKey) || []).map((e) => (
+                          <div key={e.id} className={"ag-cal-event " + e.type} style={{ fontSize: 13, padding: "8px 12px" }}>
+                            {e.time ? `${e.time} · ` : ""}{e.title}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button className="ag-btn primary" onClick={() => openDayPanel(dayKey)}>
+                      <Plus size={14} /> Gerenciar eventos do dia
+                    </button>
                   </div>
                 )}
 
