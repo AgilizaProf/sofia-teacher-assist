@@ -46,12 +46,11 @@ const css = `
 .pl-hero .hbc.outline:hover{background:rgba(255,255,255,.12);color:#fff;}
 @media(max-width:880px){.pl-hero h1{font-size:22px;}}
 
-.pl-tabbar{margin:18px 24px 0;background:var(--navy-deep);border-radius:12px;padding:6px;display:flex;align-items:center;gap:4px;overflow-x:auto;border:1px solid var(--navy-darker);}
-.pl-tb-label{color:var(--orange);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;padding:0 14px 0 8px;border-right:1px solid rgba(255,255,255,.08);margin-right:4px;white-space:nowrap;display:flex;align-items:center;gap:6px;height:32px;font-family:'JetBrains Mono',monospace;}
-.pl-tab{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:8px;color:#94A3B8;font-size:12.5px;font-weight:500;white-space:nowrap;border:1px solid transparent;transition:.15s;}
-.pl-tab .num{display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,.07);color:#CBD5E1;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
-.pl-tab:hover{color:#fff;background:rgba(255,255,255,.04);}
-.pl-tab.active{background:var(--orange);color:#fff;box-shadow:0 4px 14px rgba(255,122,69,.35);}
+.pl-tabbar{margin:18px 24px 0;background:#fff;border:1px solid var(--line);border-radius:11px;padding:5px;display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
+.pl-tab{flex:1;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border-radius:8px;color:var(--muted);font-size:12.5px;font-weight:600;white-space:nowrap;border:1px solid transparent;transition:.15s;}
+.pl-tab .num{display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.pl-tab:hover{color:var(--ink);background:var(--bg);}
+.pl-tab.active{background:linear-gradient(135deg,var(--orange),#FF9466);color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.3);}
 .pl-tab.active .num{background:rgba(255,255,255,.22);color:#fff;}
 
 .pl-workspace{padding:18px 24px 100px;display:grid;grid-template-columns:1fr;gap:18px;}
