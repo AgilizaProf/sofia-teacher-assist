@@ -615,7 +615,7 @@ export function Inclusao() {
                       onChange={(e) => setQuery(e.target.value)}
                     />
                   </div>
-                  <button className="list-filter">Turma: 2º Ano A</button>
+                  <button className="list-filter">Turma: Todas</button>
                   <button className="list-filter">Diagnóstico: Todos</button>
                   <div className="list-actions">
                     <button className="btn btn-primary" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
