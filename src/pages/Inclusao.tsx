@@ -1505,54 +1505,6 @@ export function Inclusao() {
 
       {/* Cadastrar aluno */}
       <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setNewStudentOpen(false); }}>
-      <div className={"inc-modal-overlay" + (regModalOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setRegModalOpen(false); }}>
-        <div className="inc-modal" style={{ maxWidth: 600 }}>
-          <div className="inc-modal-bar" />
-          <div className="inc-modal-head">
-            <h2>Novo registro {selected ? "· " + selected.name : ""}</h2>
-            <button className="inc-modal-close" onClick={() => setRegModalOpen(false)} aria-label="Fechar"><X size={16} /></button>
-          </div>
-          <form className="inc-modal-body plain" onSubmit={handleSaveReg} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Tipo de registro</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {(["ped","com","sen","fam"] as RegCat[]).map(k => (
-                  <button type="button" key={k} onClick={() => setNrCat(k)} className={"reg-filter" + (nrCat === k ? " active" : "")}>{REG_CAT_LABEL[k]}</button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Opções rápidas</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {REG_QUICK[nrCat].map(s => (
-                  <button
-                    type="button"
-                    key={s}
-                    onClick={() => setNrBody(prev => prev.trim() ? prev.trim() + (prev.trim().endsWith(".") ? " " : ". ") + s : s)}
-                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "#fff", fontSize: 12, cursor: "pointer", textAlign: "left" }}
-                  >+ {s}</button>
-                ))}
-              </div>
-            </div>
-            <label style={{ fontSize: 12, fontWeight: 700 }}>Descrição
-              <textarea
-                required
-                value={nrBody}
-                onChange={(e) => setNrBody(e.target.value)}
-                rows={5}
-                placeholder="Descreva o registro…"
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, fontFamily: "inherit", fontSize: 13, resize: "vertical" }}
-              />
-            </label>
-            <div className="inc-modal-foot" style={{ marginLeft: -22, marginRight: -22, marginBottom: -22 }}>
-              <span className="legal">Salvo individualmente para o aluno selecionado.</span>
-              <button type="button" className="inc-btn-ghost" onClick={() => setRegModalOpen(false)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary"><Plus size={14} /> Salvar registro</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
         <div className="inc-modal" style={{ maxWidth: 560 }}>
           <div className="inc-modal-bar" />
           <div className="inc-modal-head">
