@@ -73,7 +73,7 @@ const css = `
 .hero-greet{font-size:11.5px;color:rgba(255,255,255,.65);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;letter-spacing:.04em;text-transform:uppercase;}
 .hero-greet .live-dot{width:6px;height:6px;background:var(--success);border-radius:50%;box-shadow:0 0 0 0 rgba(16,185,129,.5);animation:ap-pulse 2s infinite;}
 @keyframes ap-pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5);}70%{box-shadow:0 0 0 8px rgba(16,185,129,0);}100%{box-shadow:0 0 0 0 rgba(16,185,129,0);}}
-.hero-title{font-family:'Fraunces',serif;font-weight:800;font-size:36px;color:#fff;line-height:1.08;margin-bottom:12px;letter-spacing:-0.025em;}
+.ap-root .hero-title{font-family:'Fraunces',serif;font-weight:800;font-size:36px;color:#fff;line-height:1.08;margin-bottom:12px;letter-spacing:-0.025em;}
 .hero-title .accent{color:var(--accent);position:relative;display:inline-block;}
 .hero-title .accent::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:9px;background:rgba(255,122,69,.22);z-index:-1;border-radius:3px;}
 .hero-sub{font-size:14px;color:rgba(255,255,255,.78);line-height:1.55;max-width:480px;margin-bottom:22px;}
