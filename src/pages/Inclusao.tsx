@@ -502,6 +502,8 @@ export function Inclusao() {
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
   const [nsCid, setNsCid] = useState("nao_informado");
+  const [nsAeeDays, setNsAeeDays] = useState<string>("");
+  const [nsMediadora, setNsMediadora] = useState<string>("");
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
@@ -553,6 +555,10 @@ export function Inclusao() {
     const cidOpt = CID_OPTIONS.find((o) => o.value === nsCid);
     const diagLabel = cidOpt && cidOpt.value !== "nao_informado" ? cidOpt.label.split(" — ")[0] : "Não informado";
     const cidCode = cidOpt && cidOpt.cid && cidOpt.cid !== "—" ? `CID ${cidOpt.cid}` : "CID não informado";
+    const aeeLabel = nsAeeDays
+      ? `AEE ${nsAeeDays}x/sem`
+      : "AEE a definir";
+    const mediadora = nsMediadora.trim();
     const newStudent: Student = {
       id: `s_${Date.now()}`,
       name,
@@ -561,7 +567,7 @@ export function Inclusao() {
       turma: nsTurma.trim() || "Sem turma",
       diag: diagLabel,
       cid: cidCode,
-      aee: "AEE a definir",
+      aee: mediadora ? `${aeeLabel} · Mediadora: ${mediadora}` : aeeLabel,
       anamnese: "0/14",
       registros: "0",
       trend: "—",
@@ -569,6 +575,7 @@ export function Inclusao() {
     };
     setStudents((prev) => [newStudent, ...prev]);
     setNsName(""); setNsTurma(""); setNsCid("nao_informado");
+    setNsAeeDays(""); setNsMediadora("");
     setNewStudentOpen(false);
   };
 
