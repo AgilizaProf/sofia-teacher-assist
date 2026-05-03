@@ -268,6 +268,8 @@ function useCountUp(target: number, duration = 1500) {
 export function Dashboard() {
   const [cmdk, setCmdk] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
+  const [schools, setSchools] = useState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>([]);
+  const baseSchools = 4;
   const [authorize, setAuthorize] = useState(true);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
