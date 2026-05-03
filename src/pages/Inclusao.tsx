@@ -688,6 +688,7 @@ export function Inclusao() {
       initials: initials || "AL",
       age: "—",
       turma: nsTurma.trim() || "Sem turma",
+      anoEscolar: nsAnoEscolar.trim() || "",
       diag: diagLabel,
       cid: cidCode,
       aee: mediadora ? `${aeeLabel} · Mediadora: ${mediadora}` : aeeLabel,
@@ -697,7 +698,7 @@ export function Inclusao() {
       trendTone: "muted",
     };
     setStudents((prev) => [newStudent, ...prev]);
-    setNsName(""); setNsTurma(""); setNsCid("nao_informado");
+    setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCid("nao_informado");
     setNsAeeDays(""); setNsMediadora("");
     setNewStudentOpen(false);
   };
