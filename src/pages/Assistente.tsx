@@ -8,6 +8,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
 import { askSofia } from "@/server/sofia.functions";
+import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 
 const css = `
 .ap-root{
@@ -388,6 +389,13 @@ export function Assistente() {
                 <div className="composer-hint">
                   <span>💡 Dica: use <span className="kbd">⌘</span> + <span className="kbd">1-6</span> para abrir uma tarefa direto</span>
                   <span>A Sofia pode cometer erros · sempre revise antes de usar</span>
+                </div>
+                <div
+                  className="text-xs"
+                  style={{ marginTop: 4, color: "#6B7280", textAlign: "right" }}
+                  title="Esta assistente opera sob princípios éticos e pedagógicos. Clique em Configurações > Princípios da Sofia para ler na íntegra."
+                >
+                  🛡️ Sofia v{SOFIA_CONSTITUTION_VERSION} · BNCC · LBI · Lei 14.254/2021 · linguagem não-capacitista
                 </div>
               </div>
             </div>
