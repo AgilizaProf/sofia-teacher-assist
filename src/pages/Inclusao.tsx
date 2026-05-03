@@ -928,6 +928,7 @@ export function Inclusao() {
                       <div className="context-card">
                         <h4>Contexto rápido</h4>
                         {([
+                          { l: "Ano escolar", v: selected.anoEscolar || "Não informado", t: "" },
                           { l: "Turma", v: selected.turma, t: "" },
                           { l: "Diagnóstico", v: selected.diag, t: "" },
                           { l: "CID", v: selected.cid, t: "" },
