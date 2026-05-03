@@ -235,8 +235,8 @@ const css = `
 .school-modal-foot{padding:14px 20px;border-top:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;background:var(--bg-soft);}
 .school-cancel{margin-left:auto;padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:var(--text-soft);cursor:pointer;}
 .school-cancel:hover{border-color:var(--primary);color:var(--primary);}
-.school-save{padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(255,122,69,.35);display:inline-flex;align-items:center;gap:6px;}
-.school-save:hover{filter:brightness(1.05);}
+.ap-root .school-save{padding:9px 16px;border-radius:9px;border:none !important;background:linear-gradient(135deg,#FF7A45,#FF9466) !important;color:#fff !important;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(255,122,69,.45);display:inline-flex;align-items:center;gap:6px;}
+.ap-root .school-save:hover{filter:brightness(1.05);}
 .school-clickable{cursor:pointer;transition:transform .15s, box-shadow .15s;}
 .school-clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
 @media(max-width:1200px){.hero{grid-template-columns:1fr;gap:22px;padding:24px;}.stats{grid-template-columns:1fr 1fr;}.grid-2{grid-template-columns:1fr;}}
@@ -268,6 +268,8 @@ function useCountUp(target: number, duration = 1500) {
 export function Dashboard() {
   const [cmdk, setCmdk] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
+  const [schools, setSchools] = useState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>([]);
+  const baseSchools = 4;
   const [authorize, setAuthorize] = useState(true);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -449,7 +451,7 @@ export function Dashboard() {
               style={{ textAlign: "left" }}
             >
               <div className="stat-icon s1"><Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
-              <div className="stat-body"><div className="stat-value">4 <span className="stat-value-trend">+1</span></div><div className="stat-label">Escolas</div></div>
+              <div className="stat-body"><div className="stat-value">{baseSchools + schools.length} {schools.length > 0 && <span className="stat-value-trend">+{schools.length}</span>}</div><div className="stat-label">Escolas</div></div>
             </button>
             <div className="stat">
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
@@ -622,7 +624,22 @@ export function Dashboard() {
               <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
             </button>
           </div>
-          <form className="school-modal-body" onSubmit={(e) => { e.preventDefault(); setSchoolOpen(false); }}>
+          <form className="school-modal-body" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const name = String(fd.get("name") || "").trim();
+            if (!name) return;
+            setSchools((arr) => [...arr, {
+              name,
+              network: String(fd.get("network") || ""),
+              stage: String(fd.get("stage") || ""),
+              city: String(fd.get("city") || ""),
+              uf: String(fd.get("uf") || "").toUpperCase(),
+              classes: String(fd.get("classes") || ""),
+            }]);
+            (e.currentTarget as HTMLFormElement).reset();
+            setSchoolOpen(false);
+          }}>
             <div className="school-field">
               <label htmlFor="school-name">Nome da escola</label>
               <input id="school-name" name="name" placeholder="Ex.: EMEF CAIC" required />
