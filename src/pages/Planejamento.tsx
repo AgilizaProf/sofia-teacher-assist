@@ -550,7 +550,7 @@ export function Planejamento() {
             {m === "m1" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Sofia preenche a semana <small>· 2º Ano A · tema: Listas e contagem</small></h2></div>
+                  <div><h2>Sofia preenche a semana <small>· defina turma e tema</small></h2></div>
                   <div className="right">
                     <button className="pl-btn ghost"><RefreshCw size={14} /> Regenerar</button>
                     <button className="pl-btn primary"><Check size={14} /> Aceitar semana toda</button>
@@ -562,50 +562,37 @@ export function Planejamento() {
                     <div className="pl-cal-head">
                       <div className="nav">
                         <button aria-label="Anterior"><ChevronLeft size={14} /></button>
-                        <div className="month">Semana 11–15 abr · Abril 2026</div>
+                        <div className="month">Semana atual</div>
                         <button aria-label="Próxima"><ChevronRight size={14} /></button>
                       </div>
-                      <div className="stat">✨ <b>11 sugestões</b> · alinhadas à BNCC</div>
+                      <div className="stat">✨ <b>0 sugestões</b></div>
                     </div>
-                    <div className="pl-cal-grid">
-                      {[
-                        { k: "seg" as DayKey, n: "SEG", d: "11", count: "3 aulas", items: [
-                          { v: "", sub: "Língua Port.", tt: "Mercadinho · escrita de listas", mn: "50min · EF02LP07" },
-                          { v: "mat", sub: "Matemática", tt: "Soma de valores em reais", mn: "50min · EF02MA05" },
-                          { v: "ci", sub: "Ciências", tt: "O que cabe na lista?", mn: "30min · roda" },
-                        ]},
-                        { k: "ter" as DayKey, n: "TER", d: "12", count: "2 aulas", items: [
-                          { v: "mat", sub: "Matemática", tt: "Inventário de brinquedos", mn: "45min · EF02MA03" },
-                          { v: "aval", sub: "Avaliação", tt: "Diagnóstico de leitura", mn: "50min · 🔒 fixo" },
-                        ]},
-                        { k: "qua" as DayKey, n: "QUA", d: "13", count: "2 aulas", items: [
-                          { v: "", sub: "Língua Port.", tt: "Receita maluca · listas", mn: "40min · EF02LP07" },
-                          { v: "ci", sub: "Ciências", tt: "Plantio de feijão · dia 1", mn: "40min · roda" },
-                        ]},
-                        { k: "qui" as DayKey, n: "QUI", d: "14", count: "2 aulas", items: [
-                          { v: "", sub: "Língua Port.", tt: "Corrida das palavras e nº", mn: "50min · EF02LP04" },
-                          { v: "aval", sub: "Escola", tt: "Conselho de classe", mn: "14h-17h · 🔒 fixo" },
-                        ]},
-                        { k: "sex" as DayKey, n: "SEX", d: "15", count: "2 aulas", items: [
-                          { v: "mat", sub: "Matemática", tt: "Mercadinho · prática", mn: "50min · EF02MA05" },
-                          { v: "", sub: "Síntese", tt: "Roda final · o que aprendemos?", mn: "30min" },
-                        ]},
-                      ].map((day) => (
-                        <button key={day.k} className={"pl-cal-day has-ai" + (calSel === day.k ? " selected" : "")} onClick={() => setCalSel(day.k)}>
-                          <div className="pl-cd-head">
-                            <div><div className="dn">{day.n}</div><div className="dd">{day.d}</div></div>
-                            <span className="pl-cd-pill">{day.count}</span>
-                          </div>
-                          {day.items.map((it, i) => (
-                            <div key={i} className={"pl-ai " + it.v}>
-                              <div className="sub">{it.sub}</div>
-                              <div className="tt">{it.tt}</div>
-                              <div className="mn">{it.mn}</div>
+                    {M1_DAYS.length === 0 ? (
+                      <EmptyState
+                        icon="✨"
+                        title="Sem sugestões geradas ainda."
+                        description="Configure tema e turma ao lado para a Sofia esboçar a semana inteira em segundos."
+                        ctaLabel="Gerar com a Sofia"
+                      />
+                    ) : (
+                      <div className="pl-cal-grid">
+                        {M1_DAYS.map((day) => (
+                          <button key={day.k} className={"pl-cal-day has-ai" + (calSel === day.k ? " selected" : "")} onClick={() => setCalSel(day.k)}>
+                            <div className="pl-cd-head">
+                              <div><div className="dn">{day.n}</div><div className="dd">{day.d}</div></div>
+                              <span className="pl-cd-pill">{day.count}</span>
                             </div>
-                          ))}
-                        </button>
-                      ))}
-                    </div>
+                            {day.items.map((it, i) => (
+                              <div key={i} className={"pl-ai " + it.v}>
+                                <div className="sub">{it.sub}</div>
+                                <div className="tt">{it.tt}</div>
+                                <div className="mn">{it.mn}</div>
+                              </div>
+                            ))}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <aside className="pl-side">
@@ -614,7 +601,7 @@ export function Planejamento() {
                       <p className="lead">Ajuste e regenere se quiser outra direção.</p>
                       <div className="pl-field">
                         <label>Tema do mês</label>
-                        <input className="pl-input" defaultValue="Listas e contagem" />
+                        <input className="pl-input" placeholder="Ex.: Listas e contagem" />
                       </div>
                       <div className="pl-field">
                         <label>Foco da semana</label>
@@ -638,16 +625,10 @@ export function Planejamento() {
                     <div className="pl-panel">
                       <h3>O que Sofia considerou</h3>
                       <div className="pl-stats">
-                        <div className="pl-stat-box"><div className="v">11</div><div className="l">Atividades</div></div>
-                        <div className="pl-stat-box"><div className="v green">4</div><div className="l">Habilidades BNCC</div></div>
-                        <div className="pl-stat-box"><div className="v orange">2</div><div className="l">Adapt. PCD</div></div>
-                        <div className="pl-stat-box"><div className="v">~6min</div><div className="l">Pra revisar</div></div>
-                      </div>
-                      <div className="pl-bncc">
-                        <div className="pl-bncc-item"><span className="code">EF02LP07</span><span className="desc">Escrever listas tematicamente organizadas</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02LP04</span><span className="desc">Ler palavras com fluência</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02MA03</span><span className="desc">Comparar quantidades</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02MA05</span><span className="desc">Resolver problemas de adição até 1.000</span></div>
+                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Atividades</div></div>
+                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Habilidades BNCC</div></div>
+                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Adapt. PCD</div></div>
+                        <div className="pl-stat-box"><div className="v">—</div><div className="l">Pra revisar</div></div>
                       </div>
                     </div>
                   </aside>
@@ -658,7 +639,7 @@ export function Planejamento() {
             {m === "m2" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Cadeia da semana <small>· Língua Portuguesa · 2º Ano A</small></h2></div>
+                  <div><h2>Cadeia da semana <small>· selecione disciplina e turma</small></h2></div>
                   <div className="right">
                     <button className="pl-btn"><BookOpen size={14} /> Habilidades</button>
                     <button className="pl-btn primary"><Link2 size={14} /> Conectar próxima aula</button>
@@ -666,41 +647,38 @@ export function Planejamento() {
                 </div>
                 <div className="pl-chain">
                   <div className="pl-chain-card">
-                    <h3 style={{ fontSize: 16 }}>Sequência didática · Listas e contagem</h3>
-                    <div className="pl-chain-list">
-                      {[
-                        { d: "SEG", tag: "INTRODUÇÃO", t: "Mercadinho · escrita de listas", p: "EF02LP07 · 50min" },
-                        { d: "TER", tag: "DESENVOLVIMENTO", t: "Inventário de brinquedos · contagem", p: "EF02MA03 · 45min" },
-                        { d: "QUA", tag: "APROFUNDAMENTO", t: "Receita maluca · listas com unidades", p: "EF02LP07 · 40min" },
-                        { d: "QUI", tag: "APLICAÇÃO", t: "Soma de valores em reais (lista de mercado)", p: "EF02MA05 · 50min" },
-                        { d: "SEX", tag: "★ SUGESTÃO SOFIA", t: "Síntese: nossa lista da turma · cartaz", p: "EF02LP07 + EF02MA03 · 40min", suggest: true },
-                      ].map((s, i) => (
-                        <div key={i} className={"pl-step" + (s.suggest ? " suggest" : "")}>
-                          <div className="day">{s.d}</div>
-                          <div className="body">
-                            <div className="tag">{s.tag}</div>
-                            <div className="ttl">{s.t}</div>
-                            <div className="meta">
-                              <span className="pill">{s.p}</span>
-                              {s.suggest && <button className="pl-btn primary" style={{ padding: "5px 10px", fontSize: 11.5 }}><Check size={12} /> Aceitar</button>}
+                    <h3 style={{ fontSize: 16 }}>Sequência didática</h3>
+                    {M2_STEPS.length === 0 ? (
+                      <div style={{ marginTop: 12 }}>
+                        <EmptyState
+                          icon="🔗"
+                          title="Sem sequência montada ainda."
+                          description="Adicione aulas e a Sofia conecta cada atividade na cadeia ideal — preservando objetivo e BNCC."
+                          ctaLabel="Adicionar aula"
+                        />
+                      </div>
+                    ) : (
+                      <div className="pl-chain-list">
+                        {M2_STEPS.map((s, i) => (
+                          <div key={i} className={"pl-step" + (s.suggest ? " suggest" : "")}>
+                            <div className="day">{s.d}</div>
+                            <div className="body">
+                              <div className="tag">{s.tag}</div>
+                              <div className="ttl">{s.t}</div>
+                              <div className="meta">
+                                <span className="pill">{s.p}</span>
+                                {s.suggest && <button className="pl-btn primary" style={{ padding: "5px 10px", fontSize: 11.5 }}><Check size={12} /> Aceitar</button>}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <aside className="pl-side">
                     <div className="pl-panel">
                       <h3><Link2 size={14} /> Por que essa sequência?</h3>
-                      <p className="lead">Sofia notou que <b>3 das 4 aulas</b> da semana giram em torno de <b>listas</b>. A síntese de sexta consolida o tema e fecha o ciclo.</p>
-                    </div>
-                    <div className="pl-panel">
-                      <h3><BookOpen size={14} /> Habilidades cobertas</h3>
-                      <div className="pl-bncc" style={{ marginTop: 4 }}>
-                        <div className="pl-bncc-item"><span className="code">EF02LP07</span><span className="desc">Escrever listas tematicamente organizadas</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02MA03</span><span className="desc">Comparar quantidades</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02MA05</span><span className="desc">Resolver problemas de adição até 1.000</span></div>
-                      </div>
+                      <p className="lead">Quando você cadastrar aulas, a Sofia explica aqui por que conecta cada atividade na ordem proposta.</p>
                     </div>
                   </aside>
                 </div>
