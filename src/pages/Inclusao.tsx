@@ -602,9 +602,9 @@ export function Inclusao() {
                 <>
                   <a onClick={() => goView("list")}>Inclusão</a>
                   <span className="sep">›</span>
-                  <a onClick={() => goView("list")}>2º Ano A</a>
+                  <a onClick={() => goView("list")}>{selected?.turma || "Aluno"}</a>
                   <span className="sep">›</span>
-                  <span>Pedrinho Almeida</span>
+                  <span>{selected?.name || "—"}</span>
                 </>
               )}
             </div>
