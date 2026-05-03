@@ -45,7 +45,7 @@ export const useUser = (): UserContext => {
     hoursSavedTotal: 0,
     reportsDoneBimester: 0,
     reportsTotalBimester: 0,
-    weeklyGoalHours: 10,
+    weeklyGoalHours: 5,
     creditsUsed: 0,
     creditsTotal: 3000,
   };
