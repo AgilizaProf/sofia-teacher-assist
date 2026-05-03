@@ -543,15 +543,17 @@ export function Inclusao() {
         <main className="inc-main">
           <div className="inc-topbar">
             <div className="inc-crumbs">
+              <b className="now">Sua sala</b>
+              <span className="sep">›</span>
               {view === "list" ? (
-                <span className="now">Inclusão</span>
+                <span>Inclusão</span>
               ) : (
                 <>
                   <a onClick={() => goView("list")}>Inclusão</a>
-                  <span className="sep">/</span>
+                  <span className="sep">›</span>
                   <a onClick={() => goView("list")}>2º Ano A</a>
-                  <span className="sep">/</span>
-                  <span className="now">Pedrinho Almeida</span>
+                  <span className="sep">›</span>
+                  <span>Pedrinho Almeida</span>
                 </>
               )}
             </div>
