@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
-  ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2,
+  ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb, Check,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
