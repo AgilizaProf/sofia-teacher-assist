@@ -609,8 +609,8 @@ export function Inclusao() {
               )}
             </div>
             <div className="inc-spacer" />
-            {view === "detail" && (
-              <div className="inc-status-pill"><span className="dot" /> PEI atualizado há 3 dias · Próxima revisão em 27 dias</div>
+            {view === "detail" && selected && (
+              <div className="inc-status-pill"><span className="dot" /> PEI ainda não criado · comece pela Anamnese</div>
             )}
             <button className="inc-btn-ghost" onClick={() => setTutorialOpen(true)}><HelpCircle size={14} /> Tutorial Inclusão</button>
             {view === "detail" && (
