@@ -15,7 +15,6 @@ import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiSofiaRouteImport } from './routes/api/sofia'
 
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
@@ -47,11 +46,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiSofiaRoute = ApiSofiaRouteImport.update({
-  id: '/api/sofia',
-  path: '/api/sofia',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,7 +54,6 @@ export interface FileRoutesByFullPath {
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
-  '/api/sofia': typeof ApiSofiaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,7 +62,6 @@ export interface FileRoutesByTo {
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
-  '/api/sofia': typeof ApiSofiaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,7 +71,6 @@ export interface FileRoutesById {
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
-  '/api/sofia': typeof ApiSofiaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,7 +81,6 @@ export interface FileRouteTypes {
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
-    | '/api/sofia'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -99,7 +89,6 @@ export interface FileRouteTypes {
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
-    | '/api/sofia'
   id:
     | '__root__'
     | '/'
@@ -108,7 +97,6 @@ export interface FileRouteTypes {
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
-    | '/api/sofia'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,7 +106,6 @@ export interface RootRouteChildren {
   InclusaoRoute: typeof InclusaoRoute
   PlanejamentoRoute: typeof PlanejamentoRoute
   RelatoriosRoute: typeof RelatoriosRoute
-  ApiSofiaRoute: typeof ApiSofiaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,13 +152,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/sofia': {
-      id: '/api/sofia'
-      path: '/api/sofia'
-      fullPath: '/api/sofia'
-      preLoaderRoute: typeof ApiSofiaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -182,7 +162,6 @@ const rootRouteChildren: RootRouteChildren = {
   InclusaoRoute: InclusaoRoute,
   PlanejamentoRoute: PlanejamentoRoute,
   RelatoriosRoute: RelatoriosRoute,
-  ApiSofiaRoute: ApiSofiaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
