@@ -50,8 +50,8 @@ const css = `
 .list-filter{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-weight:600;font-size:12.5px;color:var(--text);}
 .list-actions{margin-left:auto;}
 .list-grid{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-.student-card{background:#fff7ed;border:2px solid var(--accent);border-radius:13px;padding:16px;cursor:pointer;transition:.15s;position:relative;overflow:hidden;text-align:left;width:100%;}
-.student-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(255,140,0,.28);}
+.student-card{background:#fafbfd;border:1.5px dashed #E4E8F0;border-radius:14px;padding:16px;cursor:pointer;transition:.15s;position:relative;overflow:hidden;text-align:left;width:100%;color:#5B6B82;}
+.student-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 26px rgba(255,140,0,.18);}
 .student-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));opacity:0;transition:.15s;}
 .student-card:hover::before{opacity:1;}
 .sc-head{display:flex;gap:12px;align-items:center;margin-bottom:12px;}
