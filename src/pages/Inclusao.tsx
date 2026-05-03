@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
+import { CID_OPTIONS } from "@/lib/cidsBR";
 
 const css = `
 .inc-root{
@@ -1124,7 +1125,17 @@ export function Inclusao() {
               <input style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} placeholder="Ex.: 2º Ano A" />
             </label>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Diagnóstico / CID
-              <input style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} placeholder="Ex.: TEA Nível 1 · F84.0" />
+              <select
+                defaultValue="nao_informado"
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, background: "#fff", fontFamily: "inherit", fontSize: 13 }}
+              >
+                <option value="nao_informado">Não informado</option>
+                {CID_OPTIONS.filter((o) => o.value !== "nao_informado").map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.cid && o.cid !== "—" ? `${o.label} · CID ${o.cid}` : o.label}
+                  </option>
+                ))}
+              </select>
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
