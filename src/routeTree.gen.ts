@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
@@ -29,6 +30,11 @@ const PlanejamentoRoute = PlanejamentoRouteImport.update({
 const InclusaoRoute = InclusaoRouteImport.update({
   id: '/inclusao',
   path: '/inclusao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssistenteRoute = AssistenteRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/assistente'
+    | '/configuracoes'
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/assistente'
+    | '/configuracoes'
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/assistente'
+    | '/configuracoes'
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRoute
   AssistenteRoute: typeof AssistenteRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
   InclusaoRoute: typeof InclusaoRoute
   PlanejamentoRoute: typeof PlanejamentoRoute
   RelatoriosRoute: typeof RelatoriosRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/inclusao'
       fullPath: '/inclusao'
       preLoaderRoute: typeof InclusaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assistente': {
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
   AssistenteRoute: AssistenteRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
   InclusaoRoute: InclusaoRoute,
   PlanejamentoRoute: PlanejamentoRoute,
   RelatoriosRoute: RelatoriosRoute,
@@ -166,3 +187,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
