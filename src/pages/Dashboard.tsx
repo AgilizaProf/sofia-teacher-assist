@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 const css = `
 .ap-root{
