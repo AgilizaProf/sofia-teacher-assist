@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { AppSidebar } from "@/components/AppSidebar";
 
 const css = `
 .ap-root{
@@ -298,68 +299,7 @@ export function Dashboard() {
     <div className="ap-root">
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <div className="ap-app">
-        <aside className="ap-sidebar">
-          <div className="sb-head">
-            <div className="sb-logo-icon">A</div>
-            <div className="sb-logo-text">Agiliza<span>Prof</span></div>
-          </div>
-          <button className="sb-cmdk" onClick={() => setCmdk(true)}>
-            <Svg c={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />
-            Buscar ou ir para...
-            <span className="sb-cmdk-shortcut">⌘K</span>
-          </button>
-          <div className="sb-section-label">Sua sala</div>
-          <nav className="sb-nav">
-            <button className="sb-item active">
-              <Svg className="sb-icon" c={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />
-              Página inicial<span className="sb-shortcut">H</span>
-            </button>
-            <Link to="/assistente" className="sb-item">
-              <Svg className="sb-icon" c={<><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></>} />
-              Assistente IA<span className="sb-badge">NOVO</span>
-            </Link>
-            <button className="sb-item">
-              <Svg className="sb-icon" c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
-              Planejamento<span className="sb-shortcut">P</span>
-            </button>
-            <Link to="/relatorios" className="sb-item">
-              <Svg className="sb-icon" c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
-              Relatórios<span className="sb-shortcut">R</span>
-            </Link>
-            <button className="sb-item">
-              <Svg className="sb-icon" c={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />
-              Inclusão<span className="sb-shortcut">I</span>
-            </button>
-            <button className="sb-item">
-              <Svg className="sb-icon" c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
-              Agenda escolar
-            </button>
-            <div className="sb-section-label" style={{ marginTop: 12 }}>Conta</div>
-            <button className="sb-item">
-              <Svg className="sb-icon" c={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>} />
-              Configurações
-            </button>
-            <button className="sb-item">
-              <Svg className="sb-icon" c={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />
-              Sair
-            </button>
-          </nav>
-          <div className="sb-foot">
-            <div className="sb-plan" role="complementary" aria-label="Oferta plano anual">
-              <span className="sb-plan-tag">
-                <Svg c={<path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/>} width={10} height={10} fill="currentColor" stroke="none" />
-                PLANO ANUAL
-              </span>
-              <h4>Créditos ilimitados por R$ 247/ano</h4>
-              <p>~9.000 créditos/ano · economize 41%.</p>
-              <button className="sb-plan-btn" aria-label="Ver oferta do plano anual">
-                Ver oferta
-                <Svg width={11} height={11} c={<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>} />
-              </button>
-            </div>
-            <div className="sb-version">v3.2 · Atualizado hoje</div>
-          </div>
-        </aside>
+        <AppSidebar active="home" onCmdK={() => setCmdk(true)} />
 
         <main className="ap-main">
           <div className="topbar">
