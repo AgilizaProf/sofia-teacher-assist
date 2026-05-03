@@ -702,26 +702,136 @@ export function Inclusao() {
                 </div>
 
                 <div className={"panel" + (tab === "plan" ? " active" : "")}>
-                  <div className="simple">
-                    <h4>Planejamento adaptado</h4>
-                    <p>Configure período, disciplinas e gere atividades já com adaptação aplicada conforme o PEI vigente.</p>
-                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Sparkles size={14} /> Gerar sugestões com IA</button></div>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Planejamento adaptado · Pedrinho</h3>
+                      <span className="legal">PEI v3.2 · BNCC Inclusão</span>
+                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
+                    </div>
+                    <div className="plan-hero">
+                      <div className="tag-line">Aula de hoje · 16h</div>
+                      <h3>Frações e Partilha Justa · Matemática</h3>
+                      <p>3 adaptações já preparadas pela Sofia, alinhadas à BNCC EF02MA08 e ao objetivo PEI #4.</p>
+                      <div className="plan-strats">
+                        <div className="plan-strat"><b>Visual</b><span>Substituir "metade" por imagem da pizza dividida — material concreto disponível.</span></div>
+                        <div className="plan-strat"><b>Pacing</b><span>3 micro-blocos de 5 min com pausas sensoriais entre eles.</span></div>
+                        <div className="plan-strat"><b>Mediação</b><span>Profa. Carla (AEE) alinhada · script enviado às 13h.</span></div>
+                      </div>
+                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}>Aplicar adaptações <ChevronRight size={14} /></button>
+                    </div>
+                    <div className="plan-list">
+                      {PLAN_WEEK.map((p) => (
+                        <div className="plan-item" key={p.title}>
+                          <div className="when">{p.when}<b>{p.date}</b></div>
+                          <div>
+                            <h5>{p.title}</h5>
+                            <div className="meta-row">
+                              <span>{p.disc}</span>
+                              <span className="bncc">{p.bncc}</span>
+                              {p.adapted && <span className="adapted">Adaptado pela Sofia</span>}
+                            </div>
+                          </div>
+                          <button className="inc-btn-ghost"><FileText size={12} /> Abrir</button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 <div className={"panel" + (tab === "reg" ? " active" : "")}>
-                  <div className="simple">
-                    <h4>Registros pedagógicos · 23</h4>
-                    <p>Filtros: Pedagógico · Social · Comportamental · Psicomotor.</p>
-                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Plus size={14} /> Novo registro</button></div>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Registros pedagógicos · 23</h3>
+                      <button className="btn btn-primary"><Plus size={14} /> Novo registro</button>
+                    </div>
+                    <div className="reg-filters">
+                      <button className="reg-filter active">Todos · 23</button>
+                      <button className="reg-filter">Pedagógicos · 12</button>
+                      <button className="reg-filter">Comportamentais · 4</button>
+                      <button className="reg-filter">Sensoriais · 3</button>
+                      <button className="reg-filter">Família · 4</button>
+                    </div>
+                    <div className="reg-list">
+                      {REG_ITEMS.map((r, i) => (
+                        <div className="reg-item" key={i}>
+                          <div className="reg-item-head">
+                            <span className="reg-when">{r.when}</span>
+                            <span className="reg-author">· {r.who}</span>
+                            <span className={"reg-cat " + r.cat}>{r.catLabel}</span>
+                          </div>
+                          <div className="reg-body">{r.body}</div>
+                          {r.att.length > 0 && (
+                            <div className="reg-att">{r.att.map((a) => <span key={a}>{a}</span>)}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 <div className={"panel" + (tab === "rel" ? " active" : "")}>
-                  <div className="simple">
-                    <h4>Relatório IA · Parecer Descritivo</h4>
-                    <p>Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar (Word/PDF), conforme Lei 14.254/2021.</p>
-                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Sparkles size={14} /> Gerar com a Sofia</button></div>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Relatórios · Pareceres descritivos</h3>
+                      <span className="legal">Lei 14.254/2021</span>
+                    </div>
+                    <div className="rel-feature">
+                      <h4>Parecer descritivo bimestral · 1º bim 2026</h4>
+                      <p>A Sofia consolida 23 registros + PEI v3.2 + anamnese em um parecer pronto para exportar (Word/PDF) e assinar.</p>
+                      <button className="btn btn-primary"><Sparkles size={14} /> Gerar com a Sofia (~3 min)</button>
+                    </div>
+                    <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, margin: "16px 0 10px" }}>Pareceres anteriores · 2025</h4>
+                    <div className="rel-list">
+                      {REL_PAST.map((r) => (
+                        <div className="rel-row" key={r.bim}>
+                          <div className="ico"><FileText size={16} /></div>
+                          <div className="info">
+                            <b>{r.bim}</b>
+                            <span>Emitido em {r.date}</span>
+                          </div>
+                          <span className={"rel-status " + r.status}>{r.statusLabel}</span>
+                          <div className="rel-actions">
+                            <button className="inc-btn-ghost"><Download size={12} /> PDF</button>
+                            <button className="inc-btn-ghost">Reabrir</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rel-suggest">
+                      <h5>Próximos pareceres sugeridos pela Sofia</h5>
+                      <ul>
+                        <li>Relatório intermediário de progresso · objetivo PEI #1 (Leitura silábica) — sugerido para 20/05.</li>
+                        <li>Comunicado à família · avanços em Matemática concreta — pronto para enviar.</li>
+                        <li>Anexo BNCC Inclusão para conselho de classe de junho — base já consolidada.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={"panel" + (tab === "doc" ? " active" : "")}>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Documentos · Pedrinho Almeida</h3>
+                      <button className="btn btn-primary"><Plus size={14} /> Adicionar documento</button>
+                    </div>
+                    <div className="doc-grid">
+                      {DOCS.map((d) => (
+                        <div className="doc-card" key={d.t}>
+                          <div className="doc-head">
+                            <div className="doc-ic">{d.ic}</div>
+                            <div>
+                              <b>{d.t}</b>
+                              <div className="doc-meta">{d.who}</div>
+                            </div>
+                          </div>
+                          <div className="doc-meta">{d.date} · {d.size}</div>
+                          <div className="doc-acts">
+                            <button>Visualizar</button>
+                            <button className="primary"><Download size={12} /> Baixar</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </>
