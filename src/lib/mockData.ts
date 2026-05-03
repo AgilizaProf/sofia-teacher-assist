@@ -51,8 +51,10 @@ export const useUser = (): UserContext => {
   };
 };
 
+import { brHour } from "./datetime";
+
 export const greeting = (name: string) => {
-  const h = new Date().getHours();
+  const h = brHour();
   const slot = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
   return name ? `${slot}, ${name}` : `${slot} 👋`;
 };
