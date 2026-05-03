@@ -270,6 +270,12 @@ export function Dashboard() {
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [schools, setSchools] = useState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>([]);
   const baseSchools = 4;
+  const [classOpen, setClassOpen] = useState(false);
+  const [classes, setClasses] = useState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>([]);
+  const baseClasses = 6;
+  const [studentOpen, setStudentOpen] = useState(false);
+  const [students, setStudents] = useState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>([]);
+  const baseStudents = 6;
   const [authorize, setAuthorize] = useState(true);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -453,14 +459,14 @@ export function Dashboard() {
               <div className="stat-icon s1"><Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
               <div className="stat-body"><div className="stat-value">{baseSchools + schools.length} {schools.length > 0 && <span className="stat-value-trend">+{schools.length}</span>}</div><div className="stat-label">Escolas</div></div>
             </button>
-            <div className="stat">
+            <button className="stat school-clickable" type="button" onClick={() => setClassOpen(true)} aria-label="Adicionar turma" style={{ textAlign: "left" }}>
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
-              <div className="stat-body"><div className="stat-value">6 <span className="stat-value-trend">+2</span></div><div className="stat-label">Turmas ativas</div></div>
-            </div>
-            <div className="stat">
+              <div className="stat-body"><div className="stat-value">{baseClasses + classes.length} {classes.length > 0 && <span className="stat-value-trend">+{classes.length}</span>}</div><div className="stat-label">Turmas ativas</div></div>
+            </button>
+            <button className="stat school-clickable" type="button" onClick={() => setStudentOpen(true)} aria-label="Adicionar aluno" style={{ textAlign: "left" }}>
               <div className="stat-icon s3"><Svg c={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} /></div>
-              <div className="stat-body"><div className="stat-value">6 <span className="stat-value-trend">+1</span></div><div className="stat-label">Alunos</div></div>
-            </div>
+              <div className="stat-body"><div className="stat-value">{baseStudents + students.length} {students.length > 0 && <span className="stat-value-trend">+{students.length}</span>}</div><div className="stat-label">Alunos</div></div>
+            </button>
             <div className="stat">
               <div className="stat-icon s4"><Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} /></div>
               <div className="stat-body"><div className="stat-value">23</div><div className="stat-label">Documentos gerados</div></div>
@@ -682,6 +688,143 @@ export function Dashboard() {
               <button type="button" className="school-cancel" onClick={() => setSchoolOpen(false)}>Cancelar</button>
               <button type="submit" className="school-save">
                 Salvar escola
+                <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className={`cmdk-overlay ${classOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setClassOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Cadastrar turma">
+          <div className="school-modal-head">
+            <div className="school-modal-icon">
+              <Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Cadastrar nova turma</div>
+              <div className="school-modal-sub">Vincule a turma a uma escola e defina turno e série.</div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setClassOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <form className="school-modal-body" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const name = String(fd.get("name") || "").trim();
+            if (!name) return;
+            setClasses((arr) => [...arr, {
+              name,
+              school: String(fd.get("school") || ""),
+              grade: String(fd.get("grade") || ""),
+              shift: String(fd.get("shift") || ""),
+              students: String(fd.get("students") || ""),
+            }]);
+            (e.currentTarget as HTMLFormElement).reset();
+            setClassOpen(false);
+          }}>
+            <div className="school-field">
+              <label htmlFor="class-name">Nome da turma</label>
+              <input id="class-name" name="name" placeholder="Ex.: 2º ano A" required />
+            </div>
+            <div className="school-field">
+              <label htmlFor="class-school">Escola</label>
+              <input id="class-school" name="school" placeholder="Ex.: EMEF CAIC" />
+            </div>
+            <div className="school-row">
+              <div className="school-field">
+                <label htmlFor="class-grade">Série / Ano</label>
+                <select id="class-grade" name="grade" defaultValue="2">
+                  {["1","2","3","4","5","6","7","8","9"].map((g) => <option key={g} value={g}>{g}º ano</option>)}
+                </select>
+              </div>
+              <div className="school-field">
+                <label htmlFor="class-shift">Turno</label>
+                <select id="class-shift" name="shift" defaultValue="manha">
+                  <option value="manha">Manhã</option>
+                  <option value="tarde">Tarde</option>
+                  <option value="integral">Integral</option>
+                  <option value="noite">Noite</option>
+                </select>
+              </div>
+            </div>
+            <div className="school-field">
+              <label htmlFor="class-students">Nº de alunos</label>
+              <input id="class-students" name="students" type="number" min={1} placeholder="Ex.: 24" />
+            </div>
+            <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
+              <button type="button" className="school-cancel" onClick={() => setClassOpen(false)}>Cancelar</button>
+              <button type="submit" className="school-save">
+                Salvar turma
+                <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className={`cmdk-overlay ${studentOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setStudentOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Cadastrar aluno">
+          <div className="school-modal-head">
+            <div className="school-modal-icon">
+              <Svg c={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Cadastrar novo aluno</div>
+              <div className="school-modal-sub">Adicione informações pra a Sofia personalizar relatórios.</div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setStudentOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <form className="school-modal-body" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const name = String(fd.get("name") || "").trim();
+            if (!name) return;
+            setStudents((arr) => [...arr, {
+              name,
+              classRef: String(fd.get("classRef") || ""),
+              birth: String(fd.get("birth") || ""),
+              pcd: String(fd.get("pcd") || "nao"),
+              notes: String(fd.get("notes") || ""),
+            }]);
+            (e.currentTarget as HTMLFormElement).reset();
+            setStudentOpen(false);
+          }}>
+            <div className="school-field">
+              <label htmlFor="student-name">Nome completo</label>
+              <input id="student-name" name="name" placeholder="Ex.: Maria Ribeiro" required />
+            </div>
+            <div className="school-row">
+              <div className="school-field">
+                <label htmlFor="student-class">Turma</label>
+                <input id="student-class" name="classRef" placeholder="Ex.: 2º ano A · CAIC" />
+              </div>
+              <div className="school-field">
+                <label htmlFor="student-birth">Data de nascimento</label>
+                <input id="student-birth" name="birth" type="date" />
+              </div>
+            </div>
+            <div className="school-field">
+              <label htmlFor="student-pcd">PCD / laudo</label>
+              <select id="student-pcd" name="pcd" defaultValue="nao">
+                <option value="nao">Não</option>
+                <option value="tdah">TDAH</option>
+                <option value="tea">TEA</option>
+                <option value="dislexia">Dislexia</option>
+                <option value="outro">Outro</option>
+              </select>
+            </div>
+            <div className="school-field">
+              <label htmlFor="student-notes">Observações pedagógicas</label>
+              <input id="student-notes" name="notes" placeholder="Pontos fortes, atenção, etc." />
+            </div>
+            <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
+              <button type="button" className="school-cancel" onClick={() => setStudentOpen(false)}>Cancelar</button>
+              <button type="submit" className="school-save">
+                Salvar aluno
                 <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
               </button>
             </div>
