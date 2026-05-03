@@ -465,6 +465,8 @@ export function Inclusao() {
 
                 {/* PANEL: HOJE */}
                 <div className={"panel" + (tab === "hoje" ? " active" : "")}>
+                  <div className="hoje-grid">
+                    <div className="col-l">
                   <div className="action-card">
                     <div className="ac-head">
                       <div className="sofia">S</div>
@@ -506,6 +508,80 @@ export function Inclusao() {
                         </button>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Linha do tempo pedagógica</h3>
+                      <button className="more" onClick={() => setActiveTab("reg")}>Todos os 23 registros →</button>
+                    </div>
+                    <div className="tl">
+                      <div className="tl-item"><div className="tl-dot pulse" /><div className="tl-content"><b>Sofia adaptou aula de Matemática (Frações)</b><span>3 estratégias geradas · aguardando aplicação</span></div><div className="tl-date">HOJE · 14h05</div></div>
+                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>Atingiu objetivo #6 — Trabalho em dupla por 20 min</b><span>Profa. Camila · evidência fotográfica</span></div><div className="tl-date">29 ABR</div></div>
+                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>Reunião com família · alinhamento PEI bimestral</b><span>Mãe relatou avanço em casa · ata anexada</span></div><div className="tl-date">25 ABR</div></div>
+                      <div className="tl-item"><div className="tl-dot warn" /><div className="tl-content"><b>Crise sensorial breve em aula de Música</b><span>Resolvido com fone abafador</span></div><div className="tl-date">18 ABR</div></div>
+                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>PEI revisado · 9 objetivos vigentes (v3.2)</b><span>Co-construído com AEE e família</span></div><div className="tl-date">04 ABR</div></div>
+                    </div>
+                  </div>
+                    </div>
+
+                    <aside className="col-r">
+                      <div className="sofia-card">
+                        <div className="sofia-head">
+                          <div className="av">S</div>
+                          <div>
+                            <b>Sofia · IA pedagógica</b>
+                            <span>especialista em PEI e BNCC inclusão</span>
+                          </div>
+                        </div>
+                        <p className="sofia-q">"Posso te ajudar com o Pedrinho agora. O que faz mais sentido?"</p>
+                        <div className="sofia-actions">
+                          <button className="sofia-action" onClick={() => setAdaptOpen(true)}><Sparkles size={14} className="ico" /> Adaptar aula de hoje (Frações) <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => setActiveTab("plan")}><FileText size={14} className="ico" /> Gerar plano de aula adaptado <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => setActiveTab("rel")}><BookOpen size={14} className="ico" /> Gerar parecer descritivo bimestral <span className="arrow">›</span></button>
+                          <button className="sofia-action"><Send size={14} className="ico" /> Preparar reunião com família <span className="arrow">›</span></button>
+                        </div>
+                      </div>
+
+                      <div className="context-card">
+                        <h4>Contexto rápido</h4>
+                        {([
+                          { l: "Ano de referência", v: "2º Ano", t: "" },
+                          { l: "Leitura", v: "Em processo", t: "warn" },
+                          { l: "Escrita", v: "Em processo", t: "warn" },
+                          { l: "Matemática", v: "Avançado", t: "ok" },
+                          { l: "Socialização", v: "Com mediação", t: "" },
+                          { l: "Mediador em sala", v: "Sim", t: "ok" },
+                          { l: "AEE (contraturno)", v: "2x / sem", t: "" },
+                        ] as Array<{ l: string; v: string; t: "" | "warn" | "ok" }>).map((r) => (
+                          <div className="ctx-row" key={r.l}>
+                            <span className="lbl">{r.l}</span>
+                            <span className={"ctx-pill" + (r.t ? " " + r.t : "")}>{r.v}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="skills-card">
+                        <h4>Habilidades · evolução <span className="badge">+3 no bimestre</span></h4>
+                        {([
+                          { l: "Atenção sustentada", p: 72, c: "" },
+                          { l: "Leitura silábica", p: 48, c: "warn" },
+                          { l: "Cálculo concreto", p: 89, c: "green" },
+                          { l: "Interação em dupla", p: 65, c: "" },
+                          { l: "Autorregulação", p: 58, c: "" },
+                        ] as Array<{ l: string; p: number; c: "" | "warn" | "green" }>).map((s) => (
+                          <div className="skill" key={s.l}>
+                            <div className="skill-head"><b>{s.l}</b><span>{s.p}%</span></div>
+                            <div className="skill-bar"><div className={"skill-fill" + (s.c ? " " + s.c : "")} style={{ width: s.p + "%" }} /></div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="trust-card">
+                        <span className="dot" />
+                        <span><b>PEI conforme Lei 14.254/2021.</b> Documentos exportados pelo AgilizaProf têm validade institucional na secretaria.</span>
+                      </div>
+                    </aside>
                   </div>
                 </div>
 
