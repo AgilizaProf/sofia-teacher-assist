@@ -20,6 +20,7 @@ export const sidebarCss = `
 .sb-item.active::before{content:"";position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:#FF7A45;border-radius:0 3px 3px 0;}
 .sb-icon{width:15px;height:15px;flex-shrink:0;stroke-width:2;}
 .sb-badge{margin-left:auto;background:#FF7A45;color:#fff;font-size:9px;font-weight:800;padding:1.5px 6px;border-radius:100px;line-height:1.4;}
+.sb-badge.exclusive{background:linear-gradient(135deg,#FF7A45,#FFB07A);box-shadow:0 2px 6px rgba(255,122,69,.45);}
 .sb-shortcut{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.40);font-weight:600;}
 .sb-foot{padding:10px 12px 12px;position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.06);margin-top:auto;}
 .sb-plan{margin:0 10px 10px;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);border:1px solid #F7C9A8;border-radius:10px;padding:8px 10px;color:#3a1f0b;position:relative;z-index:1;}
@@ -72,7 +73,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
         </Link>
         <Link to="/inclusao" className={cls("inclusion")} aria-label="Inclusão">
           <Svg className="sb-icon" c={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />
-          <span>Inclusão</span><span className="sb-shortcut">I</span>
+          <span>Inclusão</span><span className="sb-badge exclusive">EXCLUSIVO</span>
         </Link>
         <Link to="/agenda" className={cls("agenda")} aria-label="Agenda escolar">
           <Svg className="sb-icon" c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
