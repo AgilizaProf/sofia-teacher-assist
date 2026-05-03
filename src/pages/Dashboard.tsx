@@ -124,8 +124,8 @@ const css = `
 .today-focus-dismiss:hover{border-color:var(--text-soft);color:var(--text);}
 .today-focus-dismiss svg{width:11px;height:11px;}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
-.stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:all .2s;cursor:pointer;}
-.stat:hover{border-color:var(--primary-soft);box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.ap-root .stat,.ap-root button.stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:all .2s;cursor:pointer;}
+.ap-root .stat:hover,.ap-root button.stat:hover{border-color:var(--primary-soft);box-shadow:var(--shadow-md);transform:translateY(-1px);background:#fff;}
 .stat-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .stat-icon svg{width:16px;height:16px;stroke-width:2;}
 .stat-icon.s1{background:#FFF1E8;color:var(--accent);}
