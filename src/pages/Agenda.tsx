@@ -183,29 +183,25 @@ export function Agenda() {
           <div className="ag-content">
             <div className="ag-col-main">
               <div className="ag-radar">
-                <div className="ag-radar-card urgent">
-                  <span className="ag-radar-label">🔴 Hoje</span>
-                  <div className="ag-radar-count">3</div>
-                  <div className="ag-radar-desc"><b>Reunião de pais</b> 5ºA · 14h<br />+ 2 atividades para corrigir</div>
-                  <span className="ag-radar-tag">Ver hoje →</span>
+                <div className="ag-radar-card">
+                  <span className="ag-radar-label">Hoje</span>
+                  <div className="ag-radar-count">0</div>
+                  <div className="ag-radar-desc">Nenhum evento cadastrado para hoje.</div>
                 </div>
-                <div className="ag-radar-card warn">
-                  <span className="ag-radar-label">🟠 Amanhã</span>
-                  <div className="ag-radar-count">2</div>
-                  <div className="ag-radar-desc"><b>Prova de Matemática</b> 4ºB<br />Sofia sugere revisar 3 alunos</div>
-                  <span className="ag-radar-tag">Preparar →</span>
+                <div className="ag-radar-card">
+                  <span className="ag-radar-label">Amanhã</span>
+                  <div className="ag-radar-count">0</div>
+                  <div className="ag-radar-desc">Sem compromissos previstos.</div>
                 </div>
                 <div className="ag-radar-card">
                   <span className="ag-radar-label">Esta semana</span>
-                  <div className="ag-radar-count">7 <small>eventos</small></div>
-                  <div className="ag-radar-desc">2 reuniões · 1 prova · 1 conselho · 3 prazos</div>
-                  <span className="ag-radar-tag" style={{ color: "var(--text-mute)" }}>Ver semana</span>
+                  <div className="ag-radar-count">0 <small>eventos</small></div>
+                  <div className="ag-radar-desc">Cadastre eventos para visualizar aqui.</div>
                 </div>
                 <div className="ag-radar-card">
                   <span className="ag-radar-label">Próximos prazos</span>
-                  <div className="ag-radar-count">15 <small>/abr</small></div>
-                  <div className="ag-radar-desc"><b>Boletins 1º bimestre</b><br />27 pareceres pendentes</div>
-                  <span className="ag-radar-tag">Sofia ajuda →</span>
+                  <div className="ag-radar-count">0</div>
+                  <div className="ag-radar-desc">Nenhum prazo próximo.</div>
                 </div>
               </div>
 
@@ -260,29 +256,13 @@ export function Agenda() {
                 <div className="ag-sofia-msg">
                   Olá! Conforme você cadastra eventos, reuniões e prazos, eu vou preparar pautas e materiais automaticamente.
                 </div>
-                <div className="ag-sofia-actions">
-                  <button className="ag-sofia-action">
-                    <div className="ag-sofia-action-ic"><FileText size={14} /></div>
-                    <div><b>Ver pauta da reunião</b><small>Pronta · 12 tópicos</small></div>
-                    <span className="ag-sofia-arrow">›</span>
-                  </button>
-                  <button className="ag-sofia-action">
-                    <div className="ag-sofia-action-ic"><CalIcon size={14} /></div>
-                    <div><b>Preparar prova de amanhã</b><small>4ºB · Mat · BNCC EF04MA10</small></div>
-                    <span className="ag-sofia-arrow">›</span>
-                  </button>
-                  <button className="ag-sofia-action">
-                    <div className="ag-sofia-action-ic"><Sparkles size={14} /></div>
-                    <div><b>Adiantar 27 pareceres</b><small>Prazo dia 15 · economiza 3h</small></div>
-                    <span className="ag-sofia-arrow">›</span>
-                  </button>
-                </div>
+                <div className="ag-sofia-actions" />
               </div>
 
               <div className="ag-stat-card">
                 <div className="ag-stat-head"><Clock size={11} style={{ display: "inline", marginRight: 4 }} />Você esta semana</div>
-                <div className="ag-stat-big">3h 47min <small>economizadas</small></div>
-                <div className="ag-stat-desc">Sofia preparou <b>4 reuniões</b>, sugeriu <b>9 ajustes</b> e adiantou <b>12 pareceres</b>. Equivale a um <b>domingo livre</b>.</div>
+                <div className="ag-stat-big">0min <small>economizadas</small></div>
+                <div className="ag-stat-desc">Conforme você usa a Sofia, o tempo economizado aparece aqui.</div>
               </div>
 
               <div className="ag-up-card">
