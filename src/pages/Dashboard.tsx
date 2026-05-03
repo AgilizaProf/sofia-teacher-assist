@@ -695,6 +695,143 @@ export function Dashboard() {
         </div>
       </div>
 
+      <div className={`cmdk-overlay ${classOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setClassOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Cadastrar turma">
+          <div className="school-modal-head">
+            <div className="school-modal-icon">
+              <Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Cadastrar nova turma</div>
+              <div className="school-modal-sub">Vincule a turma a uma escola e defina turno e série.</div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setClassOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <form className="school-modal-body" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const name = String(fd.get("name") || "").trim();
+            if (!name) return;
+            setClasses((arr) => [...arr, {
+              name,
+              school: String(fd.get("school") || ""),
+              grade: String(fd.get("grade") || ""),
+              shift: String(fd.get("shift") || ""),
+              students: String(fd.get("students") || ""),
+            }]);
+            (e.currentTarget as HTMLFormElement).reset();
+            setClassOpen(false);
+          }}>
+            <div className="school-field">
+              <label htmlFor="class-name">Nome da turma</label>
+              <input id="class-name" name="name" placeholder="Ex.: 2º ano A" required />
+            </div>
+            <div className="school-field">
+              <label htmlFor="class-school">Escola</label>
+              <input id="class-school" name="school" placeholder="Ex.: EMEF CAIC" />
+            </div>
+            <div className="school-row">
+              <div className="school-field">
+                <label htmlFor="class-grade">Série / Ano</label>
+                <select id="class-grade" name="grade" defaultValue="2">
+                  {["1","2","3","4","5","6","7","8","9"].map((g) => <option key={g} value={g}>{g}º ano</option>)}
+                </select>
+              </div>
+              <div className="school-field">
+                <label htmlFor="class-shift">Turno</label>
+                <select id="class-shift" name="shift" defaultValue="manha">
+                  <option value="manha">Manhã</option>
+                  <option value="tarde">Tarde</option>
+                  <option value="integral">Integral</option>
+                  <option value="noite">Noite</option>
+                </select>
+              </div>
+            </div>
+            <div className="school-field">
+              <label htmlFor="class-students">Nº de alunos</label>
+              <input id="class-students" name="students" type="number" min={1} placeholder="Ex.: 24" />
+            </div>
+            <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
+              <button type="button" className="school-cancel" onClick={() => setClassOpen(false)}>Cancelar</button>
+              <button type="submit" className="school-save">
+                Salvar turma
+                <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className={`cmdk-overlay ${studentOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setStudentOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Cadastrar aluno">
+          <div className="school-modal-head">
+            <div className="school-modal-icon">
+              <Svg c={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Cadastrar novo aluno</div>
+              <div className="school-modal-sub">Adicione informações pra a Sofia personalizar relatórios.</div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setStudentOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <form className="school-modal-body" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const name = String(fd.get("name") || "").trim();
+            if (!name) return;
+            setStudents((arr) => [...arr, {
+              name,
+              classRef: String(fd.get("classRef") || ""),
+              birth: String(fd.get("birth") || ""),
+              pcd: String(fd.get("pcd") || "nao"),
+              notes: String(fd.get("notes") || ""),
+            }]);
+            (e.currentTarget as HTMLFormElement).reset();
+            setStudentOpen(false);
+          }}>
+            <div className="school-field">
+              <label htmlFor="student-name">Nome completo</label>
+              <input id="student-name" name="name" placeholder="Ex.: Maria Ribeiro" required />
+            </div>
+            <div className="school-row">
+              <div className="school-field">
+                <label htmlFor="student-class">Turma</label>
+                <input id="student-class" name="classRef" placeholder="Ex.: 2º ano A · CAIC" />
+              </div>
+              <div className="school-field">
+                <label htmlFor="student-birth">Data de nascimento</label>
+                <input id="student-birth" name="birth" type="date" />
+              </div>
+            </div>
+            <div className="school-field">
+              <label htmlFor="student-pcd">PCD / laudo</label>
+              <select id="student-pcd" name="pcd" defaultValue="nao">
+                <option value="nao">Não</option>
+                <option value="tdah">TDAH</option>
+                <option value="tea">TEA</option>
+                <option value="dislexia">Dislexia</option>
+                <option value="outro">Outro</option>
+              </select>
+            </div>
+            <div className="school-field">
+              <label htmlFor="student-notes">Observações pedagógicas</label>
+              <input id="student-notes" name="notes" placeholder="Pontos fortes, atenção, etc." />
+            </div>
+            <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
+              <button type="button" className="school-cancel" onClick={() => setStudentOpen(false)}>Cancelar</button>
+              <button type="submit" className="school-save">
+                Salvar aluno
+                <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div className={`cmdk-overlay ${cmdk ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setCmdk(false); }}>
         <div className="cmdk">
           <input className="cmdk-input" placeholder="O que você quer fazer? (ex: gerar parecer, adicionar aluno...)" autoComplete="off" autoFocus={cmdk} />
