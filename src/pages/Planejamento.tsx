@@ -334,7 +334,7 @@ export function Planejamento() {
   const [week, setWeek] = useState<Week>(INITIAL_WEEK);
   const [dropDay, setDropDay] = useState<DayKey | null>(null);
   const dragCard = useRef<{ from: DayKey; id: string } | null>(null);
-  const [picks, setPicks] = useState<Record<string, boolean>>({ "2b": true, "2c": true });
+  const [picks, setPicks] = useState<Record<string, boolean>>({});
   const [tipOpen, setTipOpen] = useState(true);
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
