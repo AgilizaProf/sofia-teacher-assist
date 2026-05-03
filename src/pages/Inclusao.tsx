@@ -498,6 +498,7 @@ export function Inclusao() {
   const navigate = useNavigate({ from: "/inclusao" });
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
   const [view, setView] = useState<ViewKey>(students.length === 0 ? "list" : (search.view || "list"));
+  const [selectedId, setSelectedId] = useState<string | null>(search.aluno || null);
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
   const [nsCid, setNsCid] = useState("nao_informado");
@@ -535,6 +536,12 @@ export function Inclusao() {
     setView(safe);
     navigate({ search: (prev) => ({ ...prev, view: v }) as never, replace: true });
   };
+  const openStudent = (id: string) => {
+    setSelectedId(id);
+    setView("detail");
+    navigate({ search: (prev) => ({ ...prev, view: "detail", aluno: id }) as never, replace: true });
+  };
+  const selected = students.find((s) => s.id === selectedId) || null;
   const setActiveTab = (t: TabKey) => {
     setTab(t);
     navigate({ search: (prev) => ({ ...prev, tab: t }) as never, replace: true });
@@ -647,7 +654,7 @@ export function Inclusao() {
                     <button
                       key={s.id}
                       className="student-card"
-                      onClick={() => goView("detail")}
+                      onClick={() => openStudent(s.id)}
                     >
                       <div className="sc-head">
                         <div className={"sc-avatar" + (s.featured ? " featured" : "")}>{s.initials}</div>
@@ -671,18 +678,17 @@ export function Inclusao() {
               </>
             )}
 
-            {view === "detail" && (
+            {view === "detail" && selected && (
               <>
                 <div className="hero">
                   <div className="hero-l">
                     <button className="back" onClick={() => goView("list")}><ArrowLeft size={13} /> Voltar à lista</button>
-                    <h1>Pedrinho Almeida <span className="age">· 7 anos · 2º Ano A</span></h1>
+                    <h1>{selected.name} <span className="age">· {selected.age} · {selected.turma}</span></h1>
                     <div className="tag-row">
-                      <span className="diagnostic"><span className="pulse" />TEA · Transtorno do Espectro Autista (Nível 1)</span>
-                      <span className="tag"><b>Ref:</b> 2º Ano</span>
-                      <span className="tag"><b>CID</b> F84.0</span>
-                      <span className="tag"><b>AEE</b> Sim · 2x/sem</span>
-                      <span className="tag"><b>Mediador</b> Sim</span>
+                      <span className="diagnostic"><span className="pulse" />{selected.diag}</span>
+                      <span className="tag"><b>Turma:</b> {selected.turma}</span>
+                      <span className="tag"><b>{selected.cid}</b></span>
+                      <span className="tag"><b>{selected.aee}</b></span>
                     </div>
                   </div>
                   <div className="hero-r">
