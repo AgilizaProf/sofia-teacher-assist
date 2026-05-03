@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
+import { askSofia } from "@/server/sofia.functions";
 
 const css = `
 .ap-root{
@@ -223,13 +224,7 @@ export function Assistente() {
     setText("");
     setLoading(true);
     try {
-      const res = await fetch("/api/sofia", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: next }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Falha na resposta da Sofia");
+      const data = await askSofia({ data: { messages: next } });
       setMessages((m) => [...m, { role: "assistant", content: data.content || "" }]);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
