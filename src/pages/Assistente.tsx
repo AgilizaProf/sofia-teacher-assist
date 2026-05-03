@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil, Clock,
-  FileText, Send, Paperclip, User, Mic, Sparkles, ArrowRight,
+  FileText, Send, User, Sparkles, ArrowRight,
   Calendar, CheckSquare, Star,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
@@ -236,9 +236,6 @@ export function Assistente() {
                     aria-label="Mensagem para a Sofia"
                   />
                   <div className="composer-row">
-                    <button className="tool" aria-label="Anexar arquivo"><Paperclip size={14} /> Anexar</button>
-                    <button className="tool" aria-label="Selecionar aluno"><User size={14} /> Aluno</button>
-                    <button className="tool" aria-label="Falar com a Sofia"><Mic size={14} /> Voz</button>
                     <button className="send" aria-label="Enviar mensagem">Enviar <Send size={14} /></button>
                   </div>
                 </div>
