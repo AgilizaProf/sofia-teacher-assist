@@ -586,6 +586,101 @@ export function Agenda() {
             </div>
           </div>
         </main>
+        {openDate && (
+          <div className="ag-overlay" onClick={closePanel}>
+            <div className="ag-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="ag-panel-head">
+                <div style={{ minWidth: 0 }}>
+                  <div className="ag-panel-title">{openDateLabel}</div>
+                  <div className="ag-panel-sub">
+                    {openDate === todayKey ? "Hoje" : ""}
+                    {openDateHoliday ? (openDate === todayKey ? " · " : "") + "Feriado · " + openDateHoliday : ""}
+                  </div>
+                </div>
+                <button className="ag-panel-close" onClick={closePanel} aria-label="Fechar"><X size={16} /></button>
+              </div>
+              <div className="ag-panel-body">
+                <div className="ag-panel-section-title">Eventos do dia</div>
+                {dayEvents.length === 0 ? (
+                  <div className="ag-empty">Nenhum evento cadastrado.</div>
+                ) : (
+                  dayEvents.map((e) => (
+                    <div key={e.id} className="ag-panel-event">
+                      <span className="ev-dot" style={{ background: TYPE_COLOR[e.type] }} />
+                      <div className="ev-body">
+                        <div className="ev-title">{e.title}</div>
+                        <div className="ev-meta">
+                          <span>{TYPE_LABEL[e.type]}</span>
+                          {e.time && <span>· {e.time}</span>}
+                        </div>
+                        {e.notes && <div style={{ fontSize: 12, color: "var(--text-mute)", marginTop: 4 }}>{e.notes}</div>}
+                      </div>
+                      <div className="ev-actions">
+                        <button className="ag-icon-btn" onClick={() => startEdit(e)} aria-label="Editar"><Pencil size={13} /></button>
+                        <button className="ag-icon-btn danger" onClick={() => deleteEvent(e.id)} aria-label="Excluir"><Trash2 size={13} /></button>
+                      </div>
+                    </div>
+                  ))
+                )}
+
+                <div className="ag-panel-section-title" style={{ marginTop: 6 }}>
+                  {editing ? "Editar evento" : "Adicionar evento"}
+                </div>
+                <div className="ag-form">
+                  <label>
+                    Título
+                    <input
+                      type="text"
+                      value={draft.title}
+                      onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                      placeholder="Ex.: Reunião de pais 5ºA"
+                    />
+                  </label>
+                  <div className="ag-form-row">
+                    <label>
+                      Tipo
+                      <select
+                        value={draft.type}
+                        onChange={(e) => setDraft({ ...draft, type: e.target.value as EventType })}
+                      >
+                        <option value="meeting">Reunião</option>
+                        <option value="eval">Avaliação</option>
+                        <option value="report">Entrega</option>
+                        <option value="plan">Planejamento</option>
+                        <option value="pcd">Inclusão</option>
+                      </select>
+                    </label>
+                    <label>
+                      Horário
+                      <input
+                        type="time"
+                        value={draft.time}
+                        onChange={(e) => setDraft({ ...draft, time: e.target.value })}
+                      />
+                    </label>
+                  </div>
+                  <label>
+                    Observações
+                    <textarea
+                      rows={3}
+                      value={draft.notes}
+                      onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+                      placeholder="Detalhes, pauta, materiais…"
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="ag-panel-foot">
+                {editing && (
+                  <button className="ag-btn" onClick={cancelEdit}>Cancelar</button>
+                )}
+                <button className="ag-btn primary" onClick={saveDraft} disabled={!draft.title.trim()}>
+                  <Plus size={14} /> {editing ? "Salvar alterações" : "Adicionar evento"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
