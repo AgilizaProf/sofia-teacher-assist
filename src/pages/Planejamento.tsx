@@ -359,7 +359,6 @@ export function Planejamento() {
 
           {/* TABS */}
           <div className="pl-tabbar" role="tablist">
-            <span className="pl-tb-label">★ MUDANÇAS DO DREAM TIME</span>
             {TABS.map((t) => (
               <button key={t.k} className={"pl-tab" + (m === t.k ? " active" : "")} onClick={() => setMudanca(t.k)} role="tab" aria-selected={m === t.k}>
                 <span className="num">{t.num}</span> {t.label}
@@ -376,7 +375,7 @@ export function Planejamento() {
                     <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
                     <button className="pl-btn"><Plus size={14} /> Adicionar atividade</button>
-                    <button className="pl-btn dark" onClick={() => showToast("Sofia está montando sugestões... ✨")}><Sparkles size={14} /> Gerar com Sofia</button>
+                    <button className="pl-btn primary" onClick={() => showToast("Sofia está montando sugestões... ✨")}><Sparkles size={14} /> Gerar com Sofia</button>
                   </div>
                 </div>
 
