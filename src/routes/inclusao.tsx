@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import { Inclusao } from "@/pages/Inclusao";
 
-const schema = z.object({
-  tab: fallback(z.enum(["anam", "pei", "plan", "reg", "rel", "doc"]), "anam").default("anam"),
-});
+type Search = { tab?: "anam" | "pei" | "plan" | "reg" | "rel" | "doc" };
 
 export const Route = createFileRoute("/inclusao")({
-  validateSearch: zodValidator(schema),
+  validateSearch: (s: Record<string, unknown>): Search => {
+    const t = s.tab;
+    const allowed = ["anam", "pei", "plan", "reg", "rel", "doc"] as const;
+    return { tab: allowed.includes(t as never) ? (t as Search["tab"]) : "anam" };
+  },
   head: () => ({
     meta: [
       { title: "Inclusão · PEI e pareceres — AgilizaProf" },
