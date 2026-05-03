@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { EmptyState, emptyStateCss } from "@/components/EmptyState";
+import { useUser } from "@/lib/mockData";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -226,95 +228,15 @@ type Parecer = {
   actions: { label: string; variant?: "default" | "dark" | "accent"; icon?: "preview" | "sofia" | "arrow" | "pdf" | null; action?: "preview" | "sofia" | "edit" }[];
 };
 
-const PARECERES: Parecer[] = [
-  {
-    id: "caio", name: "Caio Fernandes", initials: "CF", meta: "2º ano · CAIC · sala 211",
-    avatar: "violet", status: "todo", statusLabel: "A FAZER · URGENTE", pcd: "PCD · TDAH",
-    metaInfo: [
-      { icon: "calendar", text: "Prazo 15/05 · em 12 dias" },
-      { icon: "file", text: "Laudo cadastrado" },
-    ],
-    actions: [
-      { label: "Editar manual", action: "edit" },
-      { label: "Gerar com Sofia", variant: "accent", icon: "sofia", action: "sofia" },
-    ],
-  },
-  {
-    id: "maria", name: "Maria Ribeiro", initials: "MR", meta: "2º ano · CAIC · sala 211",
-    avatar: "green", status: "todo", statusLabel: "A FAZER",
-    metaInfo: [
-      { icon: "calendar", text: "Prazo 15/05" },
-      { icon: "home", text: "5 registros no diário" },
-    ],
-    actions: [
-      { label: "Editar manual", action: "edit" },
-      { label: "Gerar com Sofia", variant: "accent", icon: "sofia", action: "sofia" },
-    ],
-  },
-  {
-    id: "tereza", name: "Tereza Almeida", initials: "T", meta: "1º ano · Teste · sala 111",
-    avatar: "", status: "draft", statusLabel: "RASCUNHO · GERADO PELA SOFIA",
-    progress: 80,
-    metaInfo: [
-      { icon: "clock", text: "Gerado há 2h 4min" },
-      { icon: "check", text: "Alinhado à BNCC" },
-    ],
-    actions: [
-      { label: "Pré-visualizar", icon: "preview", action: "preview" },
-      { label: "Revisar e finalizar", variant: "dark", icon: "arrow", action: "edit" },
-    ],
-  },
-  {
-    id: "joao", name: "João Silva", initials: "JS", meta: "2º ano · CAIC · sala 211",
-    avatar: "blue", status: "review", statusLabel: "PARA REVISAR · COORDENAÇÃO",
-    metaInfo: [
-      { icon: "user", text: "Enviado pra coord. há 1 dia" },
-      { icon: "msg", text: "2 comentários" },
-    ],
-    actions: [
-      { label: "Ver comentários", action: "preview" },
-      { label: "Abrir parecer", variant: "dark", action: "edit" },
-    ],
-  },
-  {
-    id: "ana", name: "Ana Carolina", initials: "AC", meta: "2º ano · CAIC · sala 211",
-    avatar: "pink", status: "done", statusLabel: "FINALIZADO · ASSINADO",
-    metaInfo: [
-      { icon: "check", text: "Finalizado em 28/04" },
-      { icon: "file", text: "Selo institucional" },
-    ],
-    actions: [
-      { label: "PDF", icon: "pdf", action: "preview" },
-      { label: "Duplicar", action: "preview" },
-      { label: "Abrir", action: "edit" },
-    ],
-  },
-  {
-    id: "pedro", name: "Pedro Lima", initials: "PL", meta: "2º ano · CAIC · sala 211",
-    avatar: "amber", status: "draft", statusLabel: "RASCUNHO",
-    progress: 45,
-    metaInfo: [
-      { icon: "edit", text: "Você editou ontem · 45% completo" },
-    ],
-    actions: [
-      { label: "Descartar", action: "preview" },
-      { label: "Continuar", variant: "dark", action: "edit" },
-    ],
-  },
-];
-
-const HISTORY = [
-  { initials: "AC", name: "Ana Carolina", bg: "linear-gradient(135deg,#EC4899,#F472B6)", meta: "2º ano CAIC · finalizado em 28/04", date: "28/04 · 14:22" },
-  { initials: "LF", name: "Lucas Ferreira", bg: "linear-gradient(135deg,#16A36B,#48C893)", meta: "2º ano CAIC · finalizado em 27/04", date: "27/04 · 09:10" },
-  { initials: "SR", name: "Sofia Rodrigues", bg: "linear-gradient(135deg,#3B82F6,#60A5FA)", meta: "1º ano Teste · finalizado em 25/04", date: "25/04 · 17:48" },
-];
+const PARECERES: Parecer[] = [];
+const HISTORY: { initials: string; name: string; bg: string; meta: string; date: string }[] = [];
 
 const TABS = [
-  { key: "all", label: "Todos", count: 47 },
-  { key: "todo", label: "A fazer", count: 9 },
-  { key: "draft", label: "Rascunho", count: 4 },
-  { key: "review", label: "Para revisar", count: 2 },
-  { key: "done", label: "Finalizados", count: 12 },
+  { key: "all", label: "Todos", count: 0 },
+  { key: "todo", label: "A fazer", count: 0 },
+  { key: "draft", label: "Rascunho", count: 0 },
+  { key: "review", label: "Para revisar", count: 0 },
+  { key: "done", label: "Finalizados", count: 0 },
 ] as const;
 
 const MetaIcon = ({ name }: { name: Parecer["metaInfo"][number]["icon"] }) => {
