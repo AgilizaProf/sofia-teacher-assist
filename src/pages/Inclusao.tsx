@@ -418,21 +418,85 @@ const DOCS = [
   { ic: "AUT", t: "Autorização · uso de imagem", who: "Família (Juliana Almeida)", date: "08/02/2025", size: "88 KB" },
 ];
 
-const ANAMNESE_EIXOS: Array<{ l: string; p: number; tone: "ok" | "warn" | "muted" }> = [
-  { l: "Ano de Referência", p: 100, tone: "ok" },
-  { l: "Desempenho Acadêmico", p: 92, tone: "ok" },
-  { l: "Aspectos Pedagógicos", p: 88, tone: "ok" },
-  { l: "Psicomotores", p: 95, tone: "ok" },
-  { l: "Interações Sociais", p: 78, tone: "ok" },
-  { l: "Independência", p: 70, tone: "ok" },
-  { l: "Autonomia", p: 65, tone: "warn" },
-  { l: "Emoção", p: 82, tone: "ok" },
-  { l: "Memória", p: 74, tone: "ok" },
-  { l: "Dificuldades & Potencialidades", p: 90, tone: "ok" },
-  { l: "Estratégias", p: 85, tone: "ok" },
-  { l: "Recursos", p: 60, tone: "warn" },
-  { l: "Contexto Familiar", p: 100, tone: "ok" },
-  { l: "Observações", p: 0, tone: "muted" },
+type AnamStatus = "consolidado" | "desenvolvimento" | "naoAlcancado" | "naoObservado";
+const ANAM_STATUS_VALUE: Record<AnamStatus, number> = {
+  consolidado: 100, desenvolvimento: 60, naoAlcancado: 20, naoObservado: 0,
+};
+const ANAM_STATUS_LABEL: Record<AnamStatus, string> = {
+  consolidado: "Consolidado", desenvolvimento: "Em desenvolvimento", naoAlcancado: "Não alcançado", naoObservado: "Não observado",
+};
+
+const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus }> }> = [
+  { l: "Ano de Referência", items: [
+    { d: "Reconhece o ano/etapa em que está matriculado", s: "consolidado" },
+    { d: "Identifica a turma e a professora regente", s: "consolidado" },
+  ]},
+  { l: "Desempenho Acadêmico", items: [
+    { d: "Leitura de palavras com sílabas simples (CV)", s: "desenvolvimento" },
+    { d: "Resolução de adição até 20 com material concreto", s: "consolidado" },
+    { d: "Escrita do próprio nome", s: "consolidado" },
+    { d: "Cópia de frases curtas do quadro", s: "desenvolvimento" },
+  ]},
+  { l: "Aspectos Pedagógicos", items: [
+    { d: "Permanece na atividade por 15 min com mediação", s: "consolidado" },
+    { d: "Aceita apoio visual (pictogramas, fichas)", s: "consolidado" },
+    { d: "Tolera mudanças na rotina avisadas previamente", s: "desenvolvimento" },
+  ]},
+  { l: "Psicomotores", items: [
+    { d: "Coordenação motora ampla (correr, pular, equilíbrio)", s: "consolidado" },
+    { d: "Coordenação motora fina (preensão do lápis, recorte)", s: "desenvolvimento" },
+    { d: "Lateralidade definida", s: "consolidado" },
+  ]},
+  { l: "Interações Sociais", items: [
+    { d: "Inicia contato com colegas em duplas", s: "desenvolvimento" },
+    { d: "Participa de brincadeiras coletivas com mediação", s: "desenvolvimento" },
+    { d: "Respeita turnos em jogos simples", s: "consolidado" },
+  ]},
+  { l: "Independência", items: [
+    { d: "Vai ao banheiro sem auxílio", s: "consolidado" },
+    { d: "Organiza o próprio material escolar", s: "desenvolvimento" },
+    { d: "Lancha sozinho", s: "consolidado" },
+  ]},
+  { l: "Autonomia", items: [
+    { d: "Pede ajuda quando precisa", s: "desenvolvimento" },
+    { d: "Toma decisões simples (escolher atividade)", s: "desenvolvimento" },
+    { d: "Identifica e nomeia próprias dificuldades", s: "naoAlcancado" },
+  ]},
+  { l: "Emoção", items: [
+    { d: "Reconhece emoções básicas em si", s: "desenvolvimento" },
+    { d: "Solicita pausa ao perceber sobrecarga", s: "consolidado" },
+    { d: "Aceita estratégias de autorregulação (respiração, fone)", s: "consolidado" },
+  ]},
+  { l: "Memória", items: [
+    { d: "Recupera informações de aulas anteriores com pistas", s: "desenvolvimento" },
+    { d: "Memoriza rotinas visuais", s: "consolidado" },
+    { d: "Lembra combinados da turma", s: "desenvolvimento" },
+  ]},
+  { l: "Dificuldades & Potencialidades", items: [
+    { d: "Dificuldade: leitura coletiva em voz alta", s: "naoAlcancado" },
+    { d: "Potencialidade: raciocínio lógico-matemático concreto", s: "consolidado" },
+    { d: "Potencialidade: memória visual", s: "consolidado" },
+  ]},
+  { l: "Estratégias", items: [
+    { d: "Material concreto em Matemática", s: "consolidado" },
+    { d: "Apoio visual (pictogramas) em Português", s: "consolidado" },
+    { d: "Mediação de pares em atividades em dupla", s: "desenvolvimento" },
+  ]},
+  { l: "Recursos", items: [
+    { d: "Fones abafadores disponíveis em sala", s: "consolidado" },
+    { d: "Canto da calma estruturado", s: "desenvolvimento" },
+    { d: "Sala AEE 2x/semana", s: "consolidado" },
+    { d: "Software de comunicação alternativa", s: "naoObservado" },
+  ]},
+  { l: "Contexto Familiar", items: [
+    { d: "Família participa de reuniões bimestrais", s: "consolidado" },
+    { d: "Mãe acompanha tarefas em casa", s: "consolidado" },
+    { d: "Comunicação família-escola via agenda diária", s: "consolidado" },
+  ]},
+  { l: "Observações", items: [
+    { d: "Observações abertas da equipe pedagógica", s: "naoObservado" },
+    { d: "Observações abertas da família", s: "naoObservado" },
+  ]},
 ];
 
 export function Inclusao() {
