@@ -3,6 +3,7 @@ import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
+  Link2, MessageSquare, Send, Layers, BookOpen, Smile, Frown, ArrowRight,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 
@@ -209,6 +210,68 @@ const css = `
 .pl-generic p{color:var(--muted);max-width:520px;margin:0;font-size:14px;line-height:1.55;}
 .pl-generic .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
 
+/* M2 — sequência */
+.pl-chain{display:grid;grid-template-columns:1fr 320px;gap:18px;}
+@media(max-width:1200px){.pl-chain{grid-template-columns:1fr;}}
+.pl-chain-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow-sm);}
+.pl-chain-list{display:flex;flex-direction:column;gap:0;margin-top:10px;}
+.pl-step{position:relative;display:grid;grid-template-columns:54px 1fr;gap:12px;padding:14px 0;border-left:2px dashed transparent;}
+.pl-step .day{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.12em;padding-top:14px;text-align:right;padding-right:8px;}
+.pl-step .body{position:relative;padding:14px 16px;background:#FAFBFD;border:1px solid var(--line);border-radius:11px;}
+.pl-step .body::before{content:"";position:absolute;left:-22px;top:18px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--orange);box-shadow:0 0 0 3px var(--orange-soft);}
+.pl-step + .pl-step .body::after{content:"";position:absolute;left:-16px;top:-30px;height:30px;border-left:2px dashed #CBD5E1;}
+.pl-step .tag{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;color:var(--orange);}
+.pl-step .ttl{font-size:14px;font-weight:600;color:var(--ink);margin:4px 0 4px;}
+.pl-step .meta{color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.pl-step .meta .pill{background:#fff;border:1px solid var(--line);padding:2px 7px;border-radius:5px;font-size:10.5px;color:var(--ink-2);font-family:'JetBrains Mono',monospace;}
+.pl-step.suggest .body{background:#FFF8F2;border-color:#FED7C4;border-style:dashed;}
+.pl-step.suggest .ttl{color:var(--orange-2);}
+.pl-step.suggest .body::before{border-color:var(--orange);background:var(--orange);}
+
+/* M3 — chat */
+.pl-chat{display:grid;grid-template-columns:1fr 320px;gap:18px;}
+@media(max-width:1200px){.pl-chat{grid-template-columns:1fr;}}
+.pl-chat-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-sm);}
+.pl-act-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#FAFBFD;}
+.pl-act-card h4{font-size:13px;font-family:'Fraunces',serif;color:var(--ink);margin-bottom:6px;}
+.pl-act-card .meta{color:var(--muted);font-size:11.5px;display:flex;gap:8px;}
+.pl-act-card .body{margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--ink-2);font-size:12.5px;line-height:1.55;}
+.pl-msg{display:flex;gap:10px;align-items:flex-start;}
+.pl-msg .av{width:28px;height:28px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.pl-msg.user .av{background:var(--navy);}
+.pl-msg .bub{background:#FAFBFD;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--ink);max-width:85%;}
+.pl-msg.user .bub{background:var(--orange-soft);border-color:#FED7C4;}
+.pl-chat-input{display:flex;gap:8px;border:1px solid var(--line);border-radius:11px;padding:6px 6px 6px 12px;background:#fff;}
+.pl-chat-input input{flex:1;border:none;outline:none;font-family:inherit;font-size:13px;color:var(--ink);background:transparent;}
+.pl-chat-input button{background:var(--orange);color:#fff;border-radius:8px;padding:7px 12px;font-weight:600;font-size:12px;display:inline-flex;gap:5px;align-items:center;}
+.pl-quickies{display:flex;flex-wrap:wrap;gap:6px;}
+.pl-quickies button{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:11.5px;color:var(--ink-2);}
+.pl-quickies button:hover{border-color:var(--orange);color:var(--orange);}
+
+/* M4 — camadas */
+.pl-layers-bar{display:flex;gap:6px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:11px;padding:5px;margin-bottom:14px;}
+.pl-lay{padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:6px;}
+.pl-lay:hover{background:var(--bg);color:var(--ink);}
+.pl-lay.on{background:var(--navy);color:#fff;}
+.pl-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:11.5px;color:var(--muted);}
+.pl-legend .it{display:inline-flex;align-items:center;gap:5px;}
+.pl-legend .sw{width:10px;height:10px;border-radius:3px;}
+
+/* M6 — diário */
+.pl-diary{display:grid;grid-template-columns:1fr 320px;gap:18px;}
+@media(max-width:1200px){.pl-diary{grid-template-columns:1fr;}}
+.pl-diary-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow-sm);}
+.pl-diary-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:11px;margin-bottom:10px;background:#FAFBFD;}
+.pl-diary-row .ttl{font-size:13px;font-weight:600;color:var(--ink);}
+.pl-diary-row .sub{color:var(--muted);font-size:11.5px;margin-top:2px;}
+.pl-mood{display:flex;gap:6px;}
+.pl-mood button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;color:var(--muted);}
+.pl-mood button:hover{border-color:#CBD5E1;}
+.pl-mood button.ok.on{background:#DCFCE7;border-color:#86EFAC;color:#15803D;}
+.pl-mood button.warn.on{background:#FEF3C7;border-color:#FCD34D;color:#92400E;}
+.pl-mood button.next.on{background:var(--orange-soft);border-color:#FED7C4;color:var(--orange-2);}
+.pl-learnt{padding:12px 14px;background:linear-gradient(135deg,#FFF4ED,#FFFAF7);border:1px solid #FED7C4;border-radius:12px;font-size:12.5px;color:#7A2E0A;line-height:1.5;display:flex;gap:10px;align-items:flex-start;}
+
 .pl-toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,80px);background:var(--navy);color:#fff;padding:11px 16px;border-radius:10px;box-shadow:var(--shadow-lg);font-size:12.5px;display:flex;align-items:center;gap:10px;z-index:60;opacity:0;transition:.25s;pointer-events:none;}
 .pl-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
 .pl-toast .ic{color:var(--orange);}
@@ -298,6 +361,21 @@ export function Planejamento() {
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
+  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([
+    { from: "sofia", t: "Aqui está a atividade. Quer que eu adapte? Pode pedir em linguagem natural." },
+  ]);
+  const [chatTxt, setChatTxt] = useState("");
+  const [layer, setLayer] = useState<"disc" | "bncc" | "tipo" | "intens">("disc");
+  const [diary, setDiary] = useState<Record<string, "ok" | "warn" | "next" | undefined>>({});
+
+  const sendChat = (msg?: string) => {
+    const t = (msg ?? chatTxt).trim(); if (!t) return;
+    setChatLog((l) => [...l, { from: "user", t }]);
+    setChatTxt("");
+    setTimeout(() => {
+      setChatLog((l) => [...l, { from: "sofia", t: `Ajustei a atividade considerando "${t}". Mantive o objetivo e a habilidade BNCC.` }]);
+    }, 400);
+  };
 
   const setMudanca = (k: MKey) => {
     setM(k);
@@ -582,20 +660,227 @@ export function Planejamento() {
               </>
             )}
 
-            {m !== "m5" && m !== "m1" && (
-              <div className="pl-generic">
-                <span className="badge-big">{m.toUpperCase()}</span>
-                <h3>{cfg.title.replace(".", "")}</h3>
-                <p>{m === "m2" && "Sofia conecta atividades em sequência mantendo continuidade pedagógica entre os dias. Quando você adiciona uma aula, ela sugere a próxima do mesmo eixo."}
-                  {m === "m3" && "Edite atividades conversando com Sofia em linguagem natural — \"torna mais fácil\", \"adapta pra TDAH\", \"encurta pra 30 min\". Zero formulário."}
-                  {m === "m4" && "Visão por disciplina, por habilidade BNCC, por tipo de aula — alterne camadas com 1 clique e veja a semana sob cada perspectiva."}
-                  {m === "m6" && "Após cada aula, registre 3 cliques: o que funcionou, o que travou, próximo passo. Sofia usa isso pra preencher melhor as próximas semanas."}
-                </p>
-                <div className="actions">
-                  <button className="pl-btn primary">Ver demo desta mudança</button>
-                  <button className="pl-btn">Ler proposta completa</button>
+            {m === "m2" && (
+              <>
+                <div className="pl-tools">
+                  <div><h2>Cadeia da semana <small>· Língua Portuguesa · 2º Ano A</small></h2></div>
+                  <div className="right">
+                    <button className="pl-btn"><BookOpen size={14} /> Habilidades</button>
+                    <button className="pl-btn primary"><Link2 size={14} /> Conectar próxima aula</button>
+                  </div>
                 </div>
-              </div>
+                <div className="pl-chain">
+                  <div className="pl-chain-card">
+                    <h3 style={{ fontSize: 16 }}>Sequência didática · Listas e contagem</h3>
+                    <div className="pl-chain-list">
+                      {[
+                        { d: "SEG", tag: "INTRODUÇÃO", t: "Mercadinho · escrita de listas", p: "EF02LP07 · 50min" },
+                        { d: "TER", tag: "DESENVOLVIMENTO", t: "Inventário de brinquedos · contagem", p: "EF02MA03 · 45min" },
+                        { d: "QUA", tag: "APROFUNDAMENTO", t: "Receita maluca · listas com unidades", p: "EF02LP07 · 40min" },
+                        { d: "QUI", tag: "APLICAÇÃO", t: "Soma de valores em reais (lista de mercado)", p: "EF02MA05 · 50min" },
+                        { d: "SEX", tag: "★ SUGESTÃO SOFIA", t: "Síntese: nossa lista da turma · cartaz", p: "EF02LP07 + EF02MA03 · 40min", suggest: true },
+                      ].map((s, i) => (
+                        <div key={i} className={"pl-step" + (s.suggest ? " suggest" : "")}>
+                          <div className="day">{s.d}</div>
+                          <div className="body">
+                            <div className="tag">{s.tag}</div>
+                            <div className="ttl">{s.t}</div>
+                            <div className="meta">
+                              <span className="pill">{s.p}</span>
+                              {s.suggest && <button className="pl-btn primary" style={{ padding: "5px 10px", fontSize: 11.5 }}><Check size={12} /> Aceitar</button>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <aside className="pl-side">
+                    <div className="pl-panel">
+                      <h3><Link2 size={14} /> Por que essa sequência?</h3>
+                      <p className="lead">Sofia notou que <b>3 das 4 aulas</b> da semana giram em torno de <b>listas</b>. A síntese de sexta consolida o tema e fecha o ciclo.</p>
+                    </div>
+                    <div className="pl-panel">
+                      <h3><BookOpen size={14} /> Habilidades cobertas</h3>
+                      <div className="pl-bncc" style={{ marginTop: 4 }}>
+                        <div className="pl-bncc-item"><span className="code">EF02LP07</span><span className="desc">Escrever listas tematicamente organizadas</span></div>
+                        <div className="pl-bncc-item"><span className="code">EF02MA03</span><span className="desc">Comparar quantidades</span></div>
+                        <div className="pl-bncc-item"><span className="code">EF02MA05</span><span className="desc">Resolver problemas de adição até 1.000</span></div>
+                      </div>
+                    </div>
+                  </aside>
+                </div>
+              </>
+            )}
+
+            {m === "m3" && (
+              <>
+                <div className="pl-tools">
+                  <div><h2>Editar com Sofia <small>· Mercadinho · escrita de listas</small></h2></div>
+                  <div className="right">
+                    <button className="pl-btn"><RefreshCw size={14} /> Restaurar original</button>
+                    <button className="pl-btn primary"><Check size={14} /> Salvar alterações</button>
+                  </div>
+                </div>
+                <div className="pl-chat">
+                  <div className="pl-chat-card">
+                    <div className="pl-act-card">
+                      <h4>Mercadinho · escrita de listas</h4>
+                      <div className="meta"><span>50min</span> · <span>EF02LP07</span> · <span>22 alunos</span></div>
+                      <div className="body">
+                        Em duplas, os alunos visitam o "mercadinho da sala" (cartões com produtos e preços) e escrevem uma lista de compras com até 6 itens, respeitando ortografia das palavras trabalhadas. Em seguida, leem a lista para o colega conferir.
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 280, overflowY: "auto" }}>
+                      {chatLog.map((m, i) => (
+                        <div key={i} className={"pl-msg " + m.from}>
+                          <div className="av">{m.from === "user" ? "C" : "S"}</div>
+                          <div className="bub">{m.t}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pl-quickies">
+                      {["Torna mais fácil", "Encurta pra 30min", "Adapta pra TDAH", "Versão para PCD (TEA)", "Mais lúdica"].map((q) => (
+                        <button key={q} onClick={() => sendChat(q)}>{q}</button>
+                      ))}
+                    </div>
+
+                    <form className="pl-chat-input" onSubmit={(e) => { e.preventDefault(); sendChat(); }}>
+                      <input value={chatTxt} onChange={(e) => setChatTxt(e.target.value)} placeholder="Diga o que mudar... (ex: 'transforma em jogo')" />
+                      <button type="submit"><Send size={12} /> Enviar</button>
+                    </form>
+                  </div>
+
+                  <aside className="pl-side">
+                    <div className="pl-panel accent">
+                      <h3><MessageSquare size={14} /> O que fica preservado</h3>
+                      <p className="lead">Sofia <b>nunca muda</b> objetivo pedagógico nem código BNCC. Só ajusta tempo, complexidade, materiais e modo de execução.</p>
+                    </div>
+                    <div className="pl-panel">
+                      <h3><Clock size={14} /> Histórico desta atividade</h3>
+                      <div className="pl-hist"><span className="icn o" /><div className="body"><b>Encurtada</b> para 40min<div className="me">há 5 min</div></div></div>
+                      <div className="pl-hist"><span className="icn b" /><div className="body"><b>Adaptada</b> para TDAH<div className="me">há 12 min</div></div></div>
+                      <div className="pl-hist"><span className="icn g" /><div className="body"><b>Criada</b> por Sofia<div className="me">hoje · 14:02</div></div></div>
+                    </div>
+                  </aside>
+                </div>
+              </>
+            )}
+
+            {m === "m4" && (
+              <>
+                <div className="pl-tools">
+                  <div><h2>Semana 11–15 abr <small>· camada: {layer === "disc" ? "Disciplina" : layer === "bncc" ? "BNCC" : layer === "tipo" ? "Tipo" : "Intensidade"}</small></h2></div>
+                  <div className="right">
+                    <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
+                    <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
+                  </div>
+                </div>
+                <div className="pl-layers-bar">
+                  {([
+                    { k: "disc", l: "📚 Por disciplina" },
+                    { k: "bncc", l: "🎯 Por BNCC" },
+                    { k: "tipo", l: "🌈 Por tipo" },
+                    { k: "intens", l: "🔥 Por intensidade" },
+                  ] as const).map((x) => (
+                    <button key={x.k} className={"pl-lay" + (layer === x.k ? " on" : "")} onClick={() => setLayer(x.k)}>
+                      <Layers size={12} /> {x.l}
+                    </button>
+                  ))}
+                </div>
+                <div className="pl-week">
+                  {DAYS.map((d) => (
+                    <div key={d.k} className="pl-day">
+                      <div className="pl-day-head">
+                        <div><div className="dn">{d.n}</div><div className="dd">{d.d}</div></div>
+                      </div>
+                      {(week[d.k] || []).map((c) => {
+                        const variantByLayer = (() => {
+                          if (layer === "disc") return c.v;
+                          if (layer === "bncc") return c.v === "port" ? "ci" : c.v === "mat" ? "mat" : c.v;
+                          if (layer === "tipo") return c.v === "aval" ? "aval" : "esc";
+                          return c.v === "aval" ? "aval" : c.v === "mat" ? "mat" : "port";
+                        })();
+                        const tagByLayer = (() => {
+                          if (layer === "disc") return c.tag;
+                          if (layer === "bncc") return c.v === "port" ? "EF02LP07" : c.v === "mat" ? "EF02MA05" : c.tag;
+                          if (layer === "tipo") return c.v === "aval" ? "AVALIATIVA" : c.v === "esc" ? "INSTITUCIONAL" : "PRÁTICA";
+                          return c.v === "aval" ? "ALTA" : c.v === "mat" ? "MÉDIA" : "LEVE";
+                        })();
+                        return (
+                          <div key={c.id} className={"pl-card " + variantByLayer}>
+                            <div className="top"><span className="tag">{tagByLayer}</span></div>
+                            <div className="ttl">{c.title}</div>
+                            <div className="meta"><span>{c.meta}</span></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+                <div className="pl-legend">
+                  {layer === "disc" && <>
+                    <span className="it"><span className="sw" style={{ background: "#3B82F6" }} /> Português</span>
+                    <span className="it"><span className="sw" style={{ background: "#8B5CF6" }} /> Matemática</span>
+                    <span className="it"><span className="sw" style={{ background: "#F59E0B" }} /> Avaliação</span>
+                    <span className="it"><span className="sw" style={{ background: "#10B981" }} /> Escola</span>
+                  </>}
+                  {layer === "bncc" && <span>Códigos BNCC mapeados automaticamente por Sofia.</span>}
+                  {layer === "tipo" && <span>Tipologia: prática · avaliativa · institucional.</span>}
+                  {layer === "intens" && <span>Intensidade cognitiva estimada da turma.</span>}
+                </div>
+              </>
+            )}
+
+            {m === "m6" && (
+              <>
+                <div className="pl-tools">
+                  <div><h2>Diário de bordo <small>· hoje · 2º Ano A</small></h2></div>
+                  <div className="right">
+                    <button className="pl-btn primary"><Sparkles size={14} /> Resumo da semana</button>
+                  </div>
+                </div>
+                <div className="pl-diary">
+                  <div className="pl-diary-card">
+                    <h3 style={{ fontSize: 16, marginBottom: 10 }}>Aulas de hoje</h3>
+                    {[
+                      { id: "a1", t: "Mercadinho · escrita de listas", s: "Português · 50min · 22 alunos" },
+                      { id: "a2", t: "Adição com material dourado", s: "Matemática · 50min · duplas" },
+                      { id: "a3", t: "Roda de leitura", s: "Português · 30min" },
+                    ].map((a) => (
+                      <div key={a.id} className="pl-diary-row">
+                        <div>
+                          <div className="ttl">{a.t}</div>
+                          <div className="sub">{a.s}</div>
+                        </div>
+                        <div className="pl-mood">
+                          <button className={"ok" + (diary[a.id] === "ok" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "ok" }))} aria-label="Funcionou"><Smile size={16} /></button>
+                          <button className={"warn" + (diary[a.id] === "warn" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "warn" }))} aria-label="Travou"><Frown size={16} /></button>
+                          <button className={"next" + (diary[a.id] === "next" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "next" }))} aria-label="Próximo passo"><ArrowRight size={16} /></button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="pl-learnt">
+                      <Sparkles size={16} color="#B45309" />
+                      <div><b>Sofia aprendeu:</b> a turma respondeu melhor a <b>atividades em duplas</b> (3 "funcionou" esta semana). Vou priorizar esse formato no plano da próxima.</div>
+                    </div>
+                  </div>
+                  <aside className="pl-side">
+                    <div className="pl-panel">
+                      <h3><Clock size={14} /> Esta semana</h3>
+                      <div className="pl-hist"><span className="icn g" /><div className="body"><b>4 aulas</b> · funcionou<div className="me">turma engajada</div></div></div>
+                      <div className="pl-hist"><span className="icn o" /><div className="body"><b>1 aula</b> · travou<div className="me">cansaço pós-recreio</div></div></div>
+                      <div className="pl-hist"><span className="icn b" /><div className="body"><b>2 próximos passos</b><div className="me">aplicar na semana 18–22</div></div></div>
+                    </div>
+                    <div className="pl-panel accent">
+                      <h3><Sparkles size={14} /> Sugestão da Sofia</h3>
+                      <p className="lead">Quer que eu monte a próxima semana <b>privilegiando duplas</b> e <b>evitando aulas pesadas pós-recreio</b>?</p>
+                      <button className="pl-btn primary" style={{ width: "100%", justifyContent: "center", marginTop: 6 }}><Check size={14} /> Sim, gerar com esses ajustes</button>
+                    </div>
+                  </aside>
+                </div>
+              </>
             )}
           </div>
         </div>
