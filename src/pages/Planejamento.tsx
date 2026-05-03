@@ -8,6 +8,7 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 
 const css = `
 .pl-root{
+  --primary:#1B2A4E;--primary-dark:#0F1B36;
   --navy:#1B2A4E;--navy-2:#243762;--navy-deep:#0F1A36;--navy-darker:#0A1228;
   --orange:#FF7A45;--orange-2:#F26B36;--orange-soft:rgba(255,122,69,.12);--orange-soft-2:rgba(255,122,69,.20);
   --ink:#0F172A;--ink-2:#334155;--muted:#64748B;--line:#E2E8F0;--bg:#F6F7FB;
