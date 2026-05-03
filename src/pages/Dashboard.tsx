@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
+import { updateLoginStreak } from "@/lib/datetime";
 
 const css = `
 .ap-root{
