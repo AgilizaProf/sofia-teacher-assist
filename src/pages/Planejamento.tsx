@@ -293,24 +293,7 @@ const DAYS: Array<{ k: DayKey; n: string; d: string }> = [
   { k: "sex", n: "SEX", d: "15" },
 ];
 
-const INITIAL_WEEK: Week = {
-  seg: [
-    { id: "c1", v: "port", tag: "PORT", title: "Atividade temática · Dia das Mães", meta: "50min" },
-    { id: "c2", v: "mat", tag: "MAT", title: "Adição com material dourado", meta: "50min · duplas" },
-  ],
-  ter: [
-    { id: "c3", v: "mat", tag: "MAT", title: "Adição com material dourado", meta: "50min · duplas" },
-    { id: "c4", v: "aval", tag: "AVAL", title: "Diagnóstico de leitura", meta: "50min", locked: true },
-  ],
-  qua: [
-    { id: "c5", v: "port", tag: "PORT", title: "Caça aos substantivos", meta: "30min" },
-  ],
-  qui: [
-    { id: "c6", v: "port", tag: "PORT", title: "Roda de leitura", meta: "30min" },
-    { id: "c7", v: "esc", tag: "ESCOLA", title: "Conselho de classe", meta: "14h–17h", locked: true },
-  ],
-  sex: [],
-};
+const INITIAL_WEEK: Week = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
 const M_CONFIG: Record<MKey, { badge: string; title: string; sub: string; lead: React.ReactNode; chips: Array<{ label: string; solid?: boolean }>; crumb: string }> = {
   m1: { badge: "★ MUDANÇA #1 · IA QUE OBSERVA", title: "Sofia preenche a semana por você.", sub: "Você revisa em 6 minutos. Não em 60.",
@@ -342,11 +325,7 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
   { k: "m6", num: "M6", label: "Diário de bordo" },
 ];
 
-const TURMAS = [
-  { id: "2b", name: "2º Ano B", sub: "22 alunos", pcd: "1 PCD · TDAH", gain: "+5 aulas" },
-  { id: "2c", name: "2º Ano C", sub: "26 alunos · sem PCD", gain: "+5 aulas" },
-  { id: "3a", name: "3º Ano A", sub: "23 alunos · ano diferente", warn: "⚠ adapt." },
-];
+const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [];
 
 export function Planejamento() {
   const search = useSearch({ from: "/planejamento" }) as { m?: MKey };
