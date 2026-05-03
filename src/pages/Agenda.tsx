@@ -550,6 +550,10 @@ export function Agenda() {
                 </div>
               </div>
 
+              <div className="ag-drag-hint" role="note">
+                <span className="ag-drag-hint-ic">↔</span>
+                Evento mudou? Arraste!
+              </div>
               <div className="ag-cal-card">
                 <div className="ag-cal-head">
                   <div className="ag-cal-nav">
