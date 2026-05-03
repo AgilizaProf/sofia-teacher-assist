@@ -6,6 +6,7 @@ import {
   Link2, MessageSquare, Send, Layers, BookOpen, Smile, Frown, ArrowRight,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 
 const css = `
 .pl-root{
