@@ -78,7 +78,7 @@ const css = `
 .hero-title .accent::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:9px;background:rgba(255,122,69,.22);z-index:-1;border-radius:3px;}
 .hero-sub{font-size:14px;color:rgba(255,255,255,.78);line-height:1.55;max-width:480px;margin-bottom:22px;}
 .hero-cta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.hero-cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;border-radius:11px;padding:13px 20px;font-size:14px;font-weight:800;box-shadow:var(--shadow-accent);transition:all .25s;}
+.ap-root .hero-cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#FF7A45,#FF9466) !important;color:#fff !important;border:none;border-radius:11px;padding:13px 20px;font-size:14px;font-weight:800;box-shadow:0 12px 28px rgba(255,122,69,.35);transition:all .25s;}
 .hero-cta:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(255,122,69,.55);}
 .hero-cta svg{width:15px;height:15px;transition:transform .2s;}
 .hero-cta:hover svg{transform:translateX(3px);}
@@ -216,7 +216,7 @@ const css = `
 @media(max-width:560px){.hero{padding:20px 18px;}.hero-title{font-size:26px;}.hero-metric-value{font-size:42px;}.stats{grid-template-columns:1fr;}.today-focus{flex-direction:column;align-items:flex-start;}.today-focus-action{width:100%;justify-content:center;}}
 `;
 
-const Svg = ({ c, ...rest }: { d: React.ReactNode } & React.SVGProps<SVGSVGElement>) => (
+const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...rest}>
     {c}
   </svg>
