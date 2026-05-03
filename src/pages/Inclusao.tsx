@@ -7,6 +7,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
+import { toast } from "sonner";
 
 const css = `
 .inc-root{
@@ -770,6 +771,21 @@ export function Inclusao() {
     setNewStudentOpen(false);
   };
 
+  const saveTab = (label: string) => {
+    if (!selected) {
+      toast.error("Selecione um aluno antes de salvar.");
+      return;
+    }
+    // All state already auto-syncs to localStorage via useEffect; this
+    // forces a write and confirms to the user.
+    try {
+      window.localStorage.setItem("inc_students", JSON.stringify(students));
+      window.localStorage.setItem("inc_anam", JSON.stringify(anamByStudent));
+      window.localStorage.setItem("inc_reg", JSON.stringify(regByStudent));
+    } catch { /* ignore */ }
+    toast.success(`${label} salvo`, { description: `Sincronizado para ${selected.name}.` });
+  };
+
   return (
     <div className="inc-root">
       <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss + printCss }} />
@@ -923,6 +939,11 @@ export function Inclusao() {
 
                 {/* PANEL: HOJE */}
                 <div className={"panel" + (tab === "hoje" ? " active" : "")}>
+                  <div className="section-head" style={{ marginBottom: 10 }}>
+                    <h3>Visão de hoje · {selected.name}</h3>
+                    <span className="legal">{selected.anoEscolar || "Ano escolar não informado"}</span>
+                    <button className="btn btn-primary" onClick={() => saveTab("Visão de hoje")}><CheckCircle2 size={14} /> Salvar</button>
+                  </div>
                   <div className="hoje-grid">
                     <div className="col-l">
                   <div className="action-card">
@@ -1043,6 +1064,7 @@ export function Inclusao() {
                       <span className="legal">{selected?.anoEscolar ? selected.anoEscolar + " · " : ""}{selected?.turma || ""} · {selected?.diag || ""}</span>
                       <button className="btn btn-secondary" onClick={() => { setAnamPrintMode("completo"); setAnamPrintOpen(true); }}><Printer size={14} /> Imprimir Anamnese</button>
                       <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
+                      <button className="btn btn-primary" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
                     <div className="anam-list">
@@ -1138,6 +1160,7 @@ export function Inclusao() {
                       <h3>Planejamento adaptado · {selected?.name || ""}</h3>
                       <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
                       <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
+                      <button className="btn btn-primary" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>Ano de referência</label>
@@ -1215,6 +1238,7 @@ export function Inclusao() {
                     <div className="section-head">
                       <h3>Registros pedagógicos · {studentRegs.length}</h3>
                       <button className="btn btn-primary" onClick={() => setRegModalOpen(true)}><Plus size={14} /> Novo registro</button>
+                      <button className="btn btn-primary" onClick={() => saveTab("Registros")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="reg-filters">
                       {([
@@ -1254,6 +1278,7 @@ export function Inclusao() {
                     <div className="section-head">
                       <h3>Relatórios · Pareceres descritivos</h3>
                       <span className="legal">Lei 14.254/2021</span>
+                      <button className="btn btn-primary" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="rel-feature">
                       <h4>Parecer descritivo bimestral · 1º bim 2026</h4>
@@ -1291,8 +1316,9 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "doc" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Documentos · Pedrinho Almeida</h3>
+                      <h3>Documentos · {selected?.name || ""}</h3>
                       <button className="btn btn-primary"><Plus size={14} /> Adicionar documento</button>
+                      <button className="btn btn-primary" onClick={() => saveTab("Documentos")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="doc-grid">
                       {DOCS.map((d) => (
