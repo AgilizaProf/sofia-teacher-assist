@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
@@ -324,6 +324,16 @@ function SuggestionsButton({ type, onPick }: { type: EventType; onPick: (s: stri
 export function Agenda() {
   const today = brNow();
   const todayKey = dateKey(today);
+  const [nowTick, setNowTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const nowHHMM = useMemo(() => {
+    const n = brNow();
+    void nowTick;
+    return `${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
+  }, [nowTick]);
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [events, setEvents] = useState<Event[]>([]);
@@ -370,6 +380,23 @@ export function Agenda() {
   };
   const deleteEvent = (id: string) => setEvents((arr) => arr.filter((e) => e.id !== id));
 
+  // Drag and drop: arrastar evento para outro dia
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const onDragStartEvent = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", id); } catch { /* noop */ }
+  };
+  const onDragOverDay = (e: React.DragEvent) => {
+    if (draggedId) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }
+  };
+  const onDropDay = (e: React.DragEvent, targetDate: string) => {
+    if (!draggedId) return;
+    e.preventDefault();
+    setEvents((arr) => arr.map((ev) => ev.id === draggedId ? { ...ev, date: targetDate } : ev));
+    setDraggedId(null);
+  };
+
   const tomorrowKey = useMemo(() => {
     const t = new Date(today);
     t.setDate(t.getDate() + 1);
@@ -393,6 +420,21 @@ export function Agenda() {
       .sort((a, b) => a.date.localeCompare(b.date))[0];
     return { todayCount, tomorrowCount, weekCount, deadlinesCount, nextDeadline };
   }, [events, todayKey, tomorrowKey, weekRange]);
+
+  // Próximos compromissos: ordenados por data+hora, removendo os que já passaram.
+  const upcoming = useMemo(() => {
+    return events
+      .filter((e) => {
+        if (e.date > todayKey) return true;
+        if (e.date < todayKey) return false;
+        if (!e.time) return true; // sem horário, conta o dia inteiro
+        return e.time >= nowHHMM;
+      })
+      .sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return (a.time || "99:99").localeCompare(b.time || "99:99");
+      });
+  }, [events, todayKey, nowHHMM]);
 
   const formatShortBR = (key: string) => {
     const [, m, d] = key.split("-");
@@ -545,14 +587,27 @@ export function Agenda() {
                       const holiday = holidays.get(d.date);
                       const evs = eventsByDate.get(d.date) || [];
                       return (
-                        <div key={i} className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")} onClick={() => openDayPanel(d.date)}>
+                        <div
+                          key={i}
+                          className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}
+                          onClick={() => openDayPanel(d.date)}
+                          onDragOver={onDragOverDay}
+                          onDrop={(e) => onDropDay(e, d.date)}
+                        >
                           <span className="ag-cal-num">{d.n}</span>
                           {d.today && <span className="ag-cal-day-flag">Hoje</span>}
                           {holiday && !d.other && (
                             <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
                           )}
                           {!d.other && evs.slice(0, 3).map((e) => (
-                            <div key={e.id} className={"ag-cal-event " + e.type} title={e.title}>
+                            <div
+                              key={e.id}
+                              className={"ag-cal-event " + e.type}
+                              title={e.title}
+                              draggable
+                              onDragStart={(ev) => { ev.stopPropagation(); onDragStartEvent(ev, e.id); }}
+                              onClick={(ev) => { ev.stopPropagation(); openDayPanel(d.date); }}
+                            >
                               {e.time ? `${e.time} · ` : ""}{e.title}
                             </div>
                           ))}
@@ -571,14 +626,27 @@ export function Agenda() {
                       const holiday = holidays.get(d.date);
                       const evs = eventsByDate.get(d.date) || [];
                       return (
-                        <div key={i} className={"ag-cal-day" + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")} onClick={() => openDayPanel(d.date)}>
+                        <div
+                          key={i}
+                          className={"ag-cal-day" + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}
+                          onClick={() => openDayPanel(d.date)}
+                          onDragOver={onDragOverDay}
+                          onDrop={(e) => onDropDay(e, d.date)}
+                        >
                           <span className="ag-cal-num">{d.n}</span>
                           {d.today && <span className="ag-cal-day-flag">Hoje</span>}
                           {holiday && (
                             <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
                           )}
                           {evs.map((e) => (
-                            <div key={e.id} className={"ag-cal-event " + e.type} title={e.title}>
+                            <div
+                              key={e.id}
+                              className={"ag-cal-event " + e.type}
+                              title={e.title}
+                              draggable
+                              onDragStart={(ev) => { ev.stopPropagation(); onDragStartEvent(ev, e.id); }}
+                              onClick={(ev) => { ev.stopPropagation(); openDayPanel(d.date); }}
+                            >
                               {e.time ? `${e.time} · ` : ""}{e.title}
                             </div>
                           ))}
@@ -681,26 +749,39 @@ export function Agenda() {
                   <span className="ag-up-link">Ver todos</span>
                 </div>
                 <div className="ag-up-list">
-                  {([] as Array<{ d: string; m: string; tag: string; tagL: string; n: string; meta: string[]; prep: string; pending: boolean }>).map((it, i) => (
-                    <div key={i} className="ag-up-item">
-                      <div className="ag-up-day">
-                        <div className="ag-up-day-num">{it.d}</div>
-                        <div className="ag-up-day-mo">{it.m}</div>
-                      </div>
-                      <div className="ag-up-body">
-                        <span className={"ag-up-tag " + it.tag}>{it.tagL}</span>
-                        <div className="ag-up-name">{it.n}</div>
-                        <div className="ag-up-meta">
-                          {it.meta.map((m, j) => (
-                            <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                              {j > 0 && <span className="mdot" />}<span>{m}</span>
-                            </span>
-                          ))}
-                        </div>
-                        <span className={"ag-up-prep" + (it.pending ? " pending" : "")}>{it.prep}</span>
-                      </div>
+                  {upcoming.length === 0 ? (
+                    <div style={{ padding: "14px 16px", fontSize: 12.5, color: "var(--text-mute)" }}>
+                      Nenhum compromisso futuro.
                     </div>
-                  ))}
+                  ) : (
+                    upcoming.map((ev) => {
+                      const [, mm, dd] = ev.date.split("-");
+                      return (
+                        <div key={ev.id} className="ag-up-item" onClick={() => openDayPanel(ev.date)}>
+                          <div className="ag-up-day">
+                            <div className="ag-up-day-num">{dd}</div>
+                            <div className="ag-up-day-mo">{MONTHS_PT[Number(mm) - 1].slice(0, 3)}</div>
+                          </div>
+                          <div className="ag-up-body">
+                            <span
+                              className="ag-up-tag"
+                              style={{ background: "color-mix(in oklab, " + TYPE_COLOR[ev.type] + " 18%, white)", color: TYPE_COLOR[ev.type] }}
+                            >
+                              {TYPE_LABEL[ev.type]}
+                            </span>
+                            <div className="ag-up-name">{ev.title}</div>
+                            {ev.time && (
+                              <div className="ag-up-meta">
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                  <Clock size={11} /> {ev.time}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
