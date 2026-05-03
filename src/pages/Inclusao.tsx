@@ -1092,8 +1092,13 @@ export function Inclusao() {
                         style={{ padding: "8px 12px", border: "1px solid var(--border)", borderRadius: 8, background: "#fff", fontFamily: "inherit", fontSize: 13, minWidth: 220 }}
                       >
                         <option value="">Apenas este aluno</option>
-                        {Array.from(new Set(students.map(s => s.anoEscolar).filter(Boolean))).sort().map(y => (
-                          <option key={y} value={y as string}>{y}</option>
+                        {[
+                          "Educação Infantil",
+                          "1º Ano EF","2º Ano EF","3º Ano EF","4º Ano EF","5º Ano EF",
+                          "6º Ano EF","7º Ano EF","8º Ano EF","9º Ano EF",
+                          "1ª Série EM","2ª Série EM","3ª Série EM",
+                        ].map(y => (
+                          <option key={y} value={y}>{y}</option>
                         ))}
                       </select>
                     </div>
