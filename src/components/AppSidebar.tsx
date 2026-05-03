@@ -22,11 +22,11 @@ export const sidebarCss = `
 .sb-badge{margin-left:auto;background:#FF7A45;color:#fff;font-size:9px;font-weight:800;padding:1.5px 6px;border-radius:100px;line-height:1.4;}
 .sb-shortcut{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.40);font-weight:600;}
 .sb-foot{padding:12px;position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.06);margin-top:8px;}
-.sb-plan{margin:10px 12px 0;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);border:1px solid #F7C9A8;border-radius:12px;padding:10px 12px;color:#3a1f0b;position:relative;z-index:1;}
-.sb-plan-tag{font-size:9.5px;font-weight:800;color:#9A3412;letter-spacing:.08em;display:inline-flex;align-items:center;gap:5px;}
-.sb-plan h4{margin:5px 0 2px;font-family:'Fraunces',serif;font-weight:700;font-size:13px;color:#3a1f0b;line-height:1.25;}
-.sb-plan p{margin:0;font-size:11px;color:#5a3a20;line-height:1.35;}
-.sb-plan-btn{margin-top:8px;display:inline-flex;align-items:center;gap:5px;background:#FF6A2C;color:#fff;padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:700;border:none;cursor:pointer;}
+.sb-plan{margin:8px 10px 0;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);border:1px solid #F7C9A8;border-radius:10px;padding:8px 10px;color:#3a1f0b;position:relative;z-index:1;}
+.sb-plan-tag{font-size:8.5px;font-weight:800;color:#9A3412;letter-spacing:.08em;display:inline-flex;align-items:center;gap:4px;}
+.sb-plan h4{margin:3px 0 1px;font-family:'Fraunces',serif;font-weight:700;font-size:11.5px;color:#3a1f0b;line-height:1.2;}
+.sb-plan p{margin:0;font-size:10px;color:#5a3a20;line-height:1.3;}
+.sb-plan-btn{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#FF6A2C;color:#fff;padding:5px 9px;border-radius:7px;font-size:10.5px;font-weight:700;border:none;cursor:pointer;}
 .sb-plan-btn:hover{filter:brightness(1.05);}
 .sb-bruna{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);margin-bottom:10px;transition:background .2s;cursor:pointer;}
 .sb-bruna:hover{background:rgba(255,255,255,.08);}
