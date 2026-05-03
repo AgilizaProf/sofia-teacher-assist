@@ -39,8 +39,8 @@ function Item({
 
 export function RightPanel() {
   return (
-    <aside className="hidden xl:flex xl:flex-col xl:w-72 xl:shrink-0 xl:fixed xl:inset-y-0 xl:right-0 xl:z-20 xl:border-l xl:border-border xl:bg-card xl:px-3 xl:py-6">
-      <div className="space-y-6">
+    <aside className="hidden xl:flex xl:flex-col xl:w-[280px] xl:shrink-0 xl:fixed xl:inset-y-0 xl:right-0 xl:z-20 xl:border-l xl:border-border xl:bg-card xl:p-6 xl:overflow-y-auto">
+      <div className="space-y-6 w-full">
         <div className="space-y-2">
           <SectionTitle>Sugestões da IA</SectionTitle>
           <div className="space-y-1">

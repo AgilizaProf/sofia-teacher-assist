@@ -13,8 +13,8 @@ export function Dashboard() {
     <div className="min-h-screen bg-background">
       <Sidebar />
       <RightPanel />
-      <main className="lg:pl-60 xl:pr-72">
-        <div className="mx-auto w-full max-w-3xl px-5 py-8 md:px-8 md:py-12">
+      <main className="lg:pl-60 xl:pr-[280px]">
+        <div className="mx-auto w-full max-w-[720px] px-5 py-8 md:px-8 md:py-12">
           <div className="space-y-10">
             <Hero />
             <TimeAndFocus />

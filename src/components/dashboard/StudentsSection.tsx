@@ -35,14 +35,14 @@ const turmas: { name: string; subtitle: string; students: Student[] }[] = [
 export function StudentsSection() {
   return (
     <section aria-labelledby="students-title">
-      <div className="flex items-center gap-2">
-        <h2 id="students-title" className="text-xl font-semibold tracking-tight">
-          Seus alunos
-        </h2>
-        <Badge className="rounded-full bg-muted text-foreground/70 hover:bg-muted">6</Badge>
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h2 id="students-title" className="text-xl font-semibold tracking-tight">
+            Seus alunos
+          </h2>
+          <Badge className="rounded-full bg-muted text-foreground/70 hover:bg-muted">6</Badge>
+        </div>
+        <div className="flex flex-wrap gap-2">
         {filters.map((f) => (
           <button
             key={f.label}
@@ -59,6 +59,7 @@ export function StudentsSection() {
             </span>
           </button>
         ))}
+        </div>
       </div>
 
       <div className="mt-4 space-y-4">
