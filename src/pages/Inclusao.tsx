@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
-  Search, Bell, HelpCircle, FileText, Download, Printer, X, Sparkles,
-  Plus, Upload, BookOpen, Users, Activity, Clock, ChevronRight, ChevronDown,
-  CheckCircle2, AlertCircle, Calendar, Send, ArrowLeft,
+  HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
+  ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 
@@ -22,122 +21,141 @@ const css = `
 .inc-root input,.inc-root textarea,.inc-root select{font-family:inherit;font-size:13px;}
 
 .inc-app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-.inc-main{padding:18px 26px 48px;overflow-x:hidden;}
+.inc-main{display:flex;flex-direction:column;min-width:0;}
 
-.inc-topbar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
-.inc-crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600;}
-.inc-crumbs strong{color:var(--text);}
-.inc-tag-orange{background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;}
-.inc-top-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
-.inc-icon-btn{width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid var(--border);display:grid;place-items:center;color:var(--muted);}
-.inc-icon-btn:hover{border-color:var(--primary);color:var(--primary);}
-.inc-user{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--border);border-radius:99px;padding:4px 13px 4px 4px;}
-.inc-user-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-weight:700;font-size:10.5px;}
-.inc-user-name{font-size:11.5px;font-weight:700;}
-.inc-user-plan{font-size:9px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.06em;}
+.inc-topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 26px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50;flex-wrap:wrap;}
+.inc-crumbs{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);}
+.inc-crumbs a{color:var(--muted);cursor:pointer;}
+.inc-crumbs a:hover{color:var(--accent);}
+.inc-crumbs .sep{opacity:.4;}
+.inc-crumbs .now{color:var(--text);font-weight:600;}
+.inc-spacer{flex:1;}
+.inc-status-pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);}
+.inc-status-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success);}
+.inc-btn-ghost{padding:8px 13px;border:1px solid var(--border);background:#fff;border-radius:9px;font-weight:600;font-size:12.5px;color:var(--text);display:inline-flex;align-items:center;gap:6px;transition:.15s;}
+.inc-btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
 
-.inc-header{display:flex;align-items:flex-end;gap:18px;margin-bottom:18px;flex-wrap:wrap;}
-.inc-header-l h1{font-family:'Fraunces',serif;font-weight:800;font-size:34px;line-height:1.05;}
-.inc-header-l p{color:var(--muted);font-size:13.5px;margin-top:4px;}
-.inc-header-r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
-.inc-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;border:1px solid var(--border);background:#fff;color:var(--text);transition:.15s;}
-.inc-btn:hover{border-color:var(--primary);}
-.inc-btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;border:none;box-shadow:0 8px 18px rgba(255,122,69,.35);}
-.inc-btn-primary:hover{filter:brightness(1.05);}
+.inc-content{padding:22px 26px 48px;}
 
-.inc-hero{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:18px;}
-@media(max-width:1024px){.inc-hero{grid-template-columns:1fr;}}
-.inc-hero-l{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;}
-.inc-hero-id{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
-.inc-avatar-lg{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:24px;box-shadow:0 0 0 3px rgba(255,122,69,.2);}
-.inc-hero-id h2{font-family:'Fraunces',serif;font-weight:800;font-size:22px;}
-.inc-hero-id .sub{color:var(--muted);font-size:12.5px;margin-top:2px;}
-.inc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
-.inc-chip-info{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--accent-soft);color:#B8410E;}
-.inc-chip-info.muted{background:var(--bg);color:var(--muted);}
-.inc-mini-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-@media(max-width:720px){.inc-mini-kpis{grid-template-columns:repeat(2,1fr);}}
-.inc-mini-kpi{padding:10px 12px;background:linear-gradient(180deg,#fff,#FAFBFE);border:1px solid var(--border);border-radius:10px;}
-.inc-mini-kpi .lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
-.inc-mini-kpi .val{font-family:'Fraunces',serif;font-weight:800;font-size:20px;margin-top:3px;color:var(--text);}
+/* LIST VIEW */
+.list-hero h1{font-family:'Fraunces',serif;font-weight:800;font-size:30px;letter-spacing:-.4px;margin-bottom:5px;}
+.list-hero p{color:var(--muted);font-size:13.5px;}
+.list-toolbar{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.list-search{flex:1;max-width:380px;position:relative;}
+.list-search input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--border);border-radius:10px;outline:none;background:#fff;font-size:13px;}
+.list-search input:focus{border-color:var(--accent);}
+.list-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);}
+.list-filter{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-weight:600;font-size:12.5px;color:var(--text);}
+.list-actions{margin-left:auto;}
+.list-grid{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.student-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:16px;cursor:pointer;transition:.15s;position:relative;overflow:hidden;text-align:left;width:100%;}
+.student-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 26px rgba(27,42,78,.08);}
+.student-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));opacity:0;transition:.15s;}
+.student-card:hover::before{opacity:1;}
+.sc-head{display:flex;gap:12px;align-items:center;margin-bottom:12px;}
+.sc-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:18px;flex-shrink:0;}
+.sc-avatar.featured{background:linear-gradient(135deg,var(--accent),var(--accent-warm));box-shadow:0 0 0 3px rgba(255,122,69,.2);}
+.sc-info b{display:block;font-family:'Fraunces',serif;font-weight:700;font-size:15px;}
+.sc-info span{font-size:11.5px;color:var(--muted);}
+.sc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
+.sc-tag{font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:5px;background:var(--accent-soft);color:#B8410E;}
+.sc-tag.muted{background:var(--bg);color:var(--muted);}
+.sc-stats{display:flex;justify-content:space-between;padding-top:10px;border-top:1px dashed var(--border);font-size:11.5px;color:var(--muted);}
+.sc-stats > div{flex:1;}
+.sc-stats b{color:var(--text);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;display:block;}
 
-.inc-action-card{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:14px;padding:20px;color:#fff;position:relative;overflow:hidden;}
-.inc-action-card::before{content:"";position:absolute;top:-50%;right:-30%;width:100%;height:160%;background:radial-gradient(circle,rgba(255,122,69,.28) 0%,transparent 60%);pointer-events:none;}
-.inc-ac-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--accent-warm);text-transform:uppercase;letter-spacing:.06em;position:relative;z-index:2;}
-.inc-ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:19px;line-height:1.25;margin-top:8px;color:#fff;position:relative;z-index:2;}
-.inc-ac-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:rgba(255,255,255,.7);margin-top:6px;position:relative;z-index:2;}
-.inc-ac-body{font-size:13px;color:rgba(255,255,255,.85);line-height:1.55;margin:12px 0 14px;position:relative;z-index:2;}
-.inc-ac-cta{position:relative;z-index:2;display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;padding:11px 16px;border-radius:10px;font-weight:800;font-size:13px;box-shadow:0 8px 18px rgba(255,122,69,.45);}
-.inc-ac-cta:hover{filter:brightness(1.05);}
+/* DETAIL VIEW */
+.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;}
+@media(max-width:1024px){.hero{grid-template-columns:1fr;}}
+.back{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;margin-bottom:10px;}
+.back:hover{color:var(--accent);}
+.hero-l h1{font-family:'Fraunces',serif;font-weight:800;font-size:34px;letter-spacing:-.6px;line-height:1.05;margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.hero-l h1 .age{font-family:'Inter',sans-serif;font-weight:500;font-size:15px;color:var(--muted);letter-spacing:0;}
+.diagnostic{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#FFF1E8,#FFE4D2);border:1px solid #FFD4B8;color:#B8410E;padding:7px 13px;border-radius:10px;font-weight:700;font-size:13px;margin-right:8px;}
+.diagnostic .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(255,122,69,.6);animation:incPulse 2s infinite;}
+@keyframes incPulse{0%{box-shadow:0 0 0 0 rgba(255,122,69,.6);}70%{box-shadow:0 0 0 8px rgba(255,122,69,0);}100%{box-shadow:0 0 0 0 rgba(255,122,69,0);}}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:#fff;border:1px solid var(--border);font-size:12px;color:var(--muted);font-weight:500;}
+.tag b{color:var(--text);font-weight:600;}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.hero-r{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end;}
+.btn{padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap;border:none;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;box-shadow:0 6px 16px rgba(255,122,69,.35);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,122,69,.45);}
+.btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
 
-.inc-adapt-list{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px;}
-.inc-adapt-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.inc-adapt-head h3{font-family:'Fraunces',serif;font-weight:700;font-size:17px;flex:1;}
-.inc-adapt-head .legal{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);background:var(--bg);padding:4px 8px;border-radius:6px;}
-.inc-adapt-item{display:grid;grid-template-columns:32px 1fr auto;gap:14px;align-items:start;padding:14px;border:1px solid var(--border);border-radius:11px;margin-bottom:8px;}
-.inc-adapt-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:14px;}
-.inc-adapt-item h4{font-weight:700;font-size:14px;}
-.inc-adapt-item p{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:3px;}
-.inc-adapt-item .meta{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--accent);font-weight:700;}
-.inc-adapt-foot{margin-top:8px;padding:12px 14px;background:var(--accent-soft);border-radius:10px;font-size:12.5px;color:#7A2E0A;}
-.inc-adapt-foot b{font-weight:700;}
+.kpis{margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+@media(max-width:1024px){.kpis{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;}
+.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:6px;}
+.kpi-value{font-family:'Fraunces',serif;font-weight:700;font-size:24px;letter-spacing:-.4px;line-height:1;}
+.kpi-value .small{font-size:14px;color:var(--muted);font-weight:500;}
+.kpi-sub{font-size:11.5px;color:var(--muted);margin-top:4px;}
+.kpi-sub .up{color:var(--success);font-weight:700;}
+.kpi-accent{background:linear-gradient(135deg,var(--accent-soft),#FFE4D2);border-color:#FFD4B8;}
+.kpi-accent .kpi-label{color:#B8410E;}
+.kpi-accent .kpi-value{color:#7A2E0A;}
+.kpi-accent .kpi-sub{color:#7A2E0A;}
 
-.inc-tabs{display:flex;gap:4px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:14px;position:sticky;top:8px;z-index:10;overflow-x:auto;}
-.inc-tab{padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}
-.inc-tab:hover{background:var(--bg);color:var(--text);}
-.inc-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;box-shadow:0 3px 8px rgba(255,122,69,.3);}
-.inc-tab-count{background:rgba(255,255,255,.25);font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;padding:1.5px 6px;border-radius:5px;}
-.inc-tab:not(.active) .inc-tab-count{background:var(--bg);color:var(--muted);}
+.tabs{margin-top:18px;display:flex;background:#fff;border:1px solid var(--border);border-radius:11px;padding:5px;gap:2px;overflow-x:auto;}
+.tab{flex:1;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--muted);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s;white-space:nowrap;}
+.tab:hover{color:var(--text);background:var(--bg);}
+.tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.3);}
+.tab-count{font-size:10px;padding:1px 5px;border-radius:6px;background:rgba(255,255,255,.22);font-weight:700;}
+.tab:not(.active) .tab-count{background:var(--bg);color:var(--muted);}
 
-.inc-panel{display:none;}
-.inc-panel.active{display:block;}
+.panel{display:none;flex-direction:column;gap:14px;margin-top:14px;}
+.panel.active{display:flex;}
 
-.inc-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-@media(max-width:720px){.inc-grid-2{grid-template-columns:1fr;}}
+.action-card{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:14px;padding:20px 22px;color:#fff;position:relative;overflow:hidden;}
+.action-card::before{content:"";position:absolute;top:-40%;right:-15%;width:70%;height:140%;background:radial-gradient(circle,rgba(255,122,69,.32) 0%,transparent 60%);pointer-events:none;}
+.ac-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:2;}
+.ac-head .sofia{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:13px;box-shadow:0 0 0 3px rgba(255,122,69,.2);}
+.ac-head-txt{flex:1;}
+.ac-head-txt b{display:block;font-weight:700;font-size:13px;color:#fff;}
+.ac-head-txt span{font-size:11.5px;color:rgba(255,255,255,.65);}
+.ac-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--accent);color:#fff;padding:4px 8px;border-radius:6px;}
+.ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:#fff;position:relative;z-index:2;}
+.ac-title em{color:var(--accent-warm);font-style:normal;font-weight:800;}
+.ac-body{font-size:13px;line-height:1.55;color:rgba(255,255,255,.82);margin-bottom:16px;position:relative;z-index:2;}
+.ac-body .bncc{font-family:'JetBrains Mono',monospace;color:var(--accent-warm);background:rgba(255,122,69,.12);padding:1px 5px;border-radius:4px;font-size:11.5px;font-weight:700;}
+.ac-strats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;position:relative;z-index:2;}
+@media(max-width:1024px){.ac-strats{grid-template-columns:1fr;}}
+.ac-strat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px;font-size:11.5px;line-height:1.4;}
+.ac-strat b{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--accent-warm);font-size:11px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.ac-strat span{color:rgba(255,255,255,.78);}
+.ac-cta{display:flex;gap:8px;position:relative;z-index:2;flex-wrap:wrap;}
+.btn-ghost-dark{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:600;}
+.btn-ghost-dark:hover{background:rgba(255,255,255,.1);}
 
-.inc-eixo{background:#fff;border:1px solid var(--border);border-radius:11px;padding:14px 16px;}
-.inc-eixo-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.inc-eixo-head h4{font-family:'Fraunces',serif;font-weight:700;font-size:14.5px;flex:1;}
-.inc-status{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.04em;}
-.inc-status.warn{background:#FEF3C7;color:#78350F;}
-.inc-status.ok{background:#DCFCE7;color:#14532D;}
-.inc-status.info{background:#E0F2FE;color:#0C4A6E;}
-.inc-status.accent{background:var(--accent-soft);color:#B8410E;}
-.inc-eixo p{font-size:12.5px;color:var(--muted);line-height:1.45;}
-.inc-suggest-btn{margin-top:8px;font-size:12px;color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:4px;}
+.section{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px 20px;}
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.section-head h3{font-family:'Fraunces',serif;font-weight:700;font-size:18px;letter-spacing:-.2px;flex:1;}
+.section-head .legal{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);background:var(--bg);padding:4px 8px;border-radius:6px;font-weight:500;}
+.section-head .more{color:var(--muted);font-size:12px;font-weight:600;}
+.section-head .more:hover{color:var(--accent);}
+.pei-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:720px){.pei-grid{grid-template-columns:1fr;}}
+.pei{padding:13px 14px;border:1px solid var(--border);border-radius:11px;background:linear-gradient(180deg,#fff,#FAFBFE);cursor:pointer;transition:.15s;text-align:left;width:100%;}
+.pei:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px rgba(27,42,78,.06);}
+.pei-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;font-weight:800;margin-bottom:8px;font-family:'Fraunces',serif;}
+.pei-cog{background:#FFF1E8;color:#B8410E;}
+.pei-soc{background:#E0F2FE;color:#0C4A6E;}
+.pei-mot{background:#DCFCE7;color:#14532D;}
+.pei-com{background:#FEF3C7;color:#78350F;}
+.pei h4{font-weight:700;font-size:13px;margin-bottom:4px;}
+.pei .pei-status{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.pei-status .ok{color:var(--success);font-weight:700;}
+.pei-status .warn{color:var(--warn);font-weight:700;}
+.pei .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);background:var(--bg);padding:3px 6px;border-radius:5px;display:inline-block;}
+.pei p{font-size:12px;line-height:1.5;color:var(--muted);margin:6px 0 0;}
+.pei p b{color:var(--text);font-weight:600;}
 
-.inc-a4{background:#fff;width:100%;max-width:760px;margin:0 auto;padding:40px 50px;font-family:'Fraunces',serif;color:#000;border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.06);}
-.inc-a4-head{display:grid;grid-template-columns:60px 1fr auto;gap:14px;align-items:center;border-bottom:3px double #000;padding-bottom:14px;margin-bottom:18px;}
-.inc-a4-logo{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:22px;}
-.inc-a4-head .center{text-align:center;font-family:'Inter',sans-serif;}
-.inc-a4-head .center b{display:block;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;}
-.inc-a4-head .center span{font-size:11px;color:#444;}
-.inc-a4-head .stamp{font-family:'JetBrains Mono',monospace;font-size:10px;color:#666;text-align:right;line-height:1.5;}
-.inc-a4 h1{font-family:'Fraunces',serif;font-weight:800;font-size:18px;text-align:center;margin-bottom:18px;text-transform:uppercase;letter-spacing:.05em;}
-.inc-a4 .ident{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:12.5px;margin-bottom:18px;border:1px solid #000;padding:10px 14px;font-family:'Inter',sans-serif;}
-.inc-a4 .ident b{font-weight:700;}
-.inc-a4 h2{font-family:'Fraunces',serif;font-weight:700;font-size:13px;background:#000;color:#fff;padding:5px 12px;margin:14px 0 8px;text-transform:uppercase;letter-spacing:.06em;}
-.inc-a4 p{font-size:13px;line-height:1.6;text-align:justify;margin-bottom:8px;}
-.inc-a4 ul{font-size:12.5px;line-height:1.7;padding-left:22px;margin-bottom:8px;font-family:'Inter',sans-serif;}
-.inc-a4 .signs{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:30px;font-size:12px;text-align:center;font-family:'Inter',sans-serif;}
-.inc-a4 .sign-line{border-top:1px solid #000;padding-top:5px;}
-.inc-a4 .sign-line b{display:block;font-weight:700;}
-.inc-a4 .sign-line span{font-size:10.5px;color:#444;}
-.inc-a4-page{font-family:'JetBrains Mono',monospace;font-size:10px;color:#666;text-align:center;margin-top:20px;padding-top:8px;border-top:1px solid #ccc;}
-.inc-a4-actions{display:flex;justify-content:flex-end;gap:8px;max-width:760px;margin:0 auto 12px;}
+.simple{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px 20px;}
+.simple h4{font-family:'Fraunces',serif;font-weight:700;font-size:17px;margin-bottom:6px;}
+.simple p{color:var(--muted);font-size:13px;}
 
-.inc-report{background:#fff;border:1px solid var(--border);border-radius:14px;padding:24px 28px;}
-.inc-report-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:18px;}
-.inc-report-head b{display:block;font-family:'Fraunces',serif;font-weight:700;font-size:14px;}
-.inc-report-head span{font-size:11px;color:var(--muted);}
-.inc-report h2{font-family:'Fraunces',serif;font-weight:800;font-size:24px;margin:6px 0;}
-.inc-report .sub{font-size:12px;color:var(--muted);margin-bottom:18px;}
-.inc-report h4{font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin:14px 0 6px;color:var(--accent);}
-.inc-report p{font-size:13.5px;line-height:1.65;color:var(--text);}
-.inc-report p em{background:rgba(255,122,69,.12);padding:1px 4px;border-radius:3px;font-style:normal;}
-.inc-report-foot{display:flex;align-items:center;gap:10px;margin-top:20px;padding-top:14px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);flex-wrap:wrap;}
-.inc-report-foot .actions{margin-left:auto;display:flex;gap:6px;}
-
+/* MODAL */
 .inc-modal-overlay{position:fixed;inset:0;background:rgba(15,27,54,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px;}
 .inc-modal-overlay.open{display:flex;}
 .inc-modal{background:#fff;border-radius:16px;width:100%;max-width:880px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(15,27,54,.4);}
@@ -151,70 +169,98 @@ const css = `
 .inc-modal-body.plain{background:#fff;}
 .inc-modal-foot{padding:14px 24px;border-top:1px solid var(--border);background:var(--bg);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .inc-modal-foot .legal{font-size:11.5px;color:var(--muted);flex:1;min-width:180px;}
-.inc-modal-foot .actions{display:flex;gap:8px;}
 
 .inc-tut-step{display:grid;grid-template-columns:36px 1fr;gap:14px;padding:14px;border:1px solid var(--border);border-radius:11px;background:linear-gradient(180deg,#fff,#FAFBFE);margin-bottom:8px;}
-.inc-tut-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:15px;box-shadow:0 4px 10px rgba(255,122,69,.35);}
+.inc-tut-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:15px;}
 .inc-tut-step b{display:block;font-weight:700;font-size:14px;margin-bottom:2px;}
 .inc-tut-step p{font-size:12.5px;color:var(--muted);line-height:1.5;}
 
-@media(max-width:720px){.inc-app{grid-template-columns:1fr;}.inc-main{padding:14px;}}
+.inc-adapt-item{display:grid;grid-template-columns:32px 1fr auto;gap:14px;align-items:start;padding:14px;border:1px solid var(--border);border-radius:11px;margin-bottom:8px;background:#fff;}
+.inc-adapt-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:14px;}
+.inc-adapt-item h4{font-weight:700;font-size:14px;}
+.inc-adapt-item p{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:3px;}
+.inc-adapt-item .meta{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--accent);font-weight:700;}
+
+.inc-a4{background:#fff;width:100%;max-width:760px;margin:0 auto;padding:40px 50px;font-family:'Fraunces',serif;color:#000;border:1px solid var(--border);border-radius:6px;}
+.inc-a4-head{display:grid;grid-template-columns:60px 1fr auto;gap:14px;align-items:center;border-bottom:3px double #000;padding-bottom:14px;margin-bottom:18px;}
+.inc-a4-logo{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:22px;}
+.inc-a4-head .center{text-align:center;font-family:'Inter',sans-serif;}
+.inc-a4-head .center b{display:block;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;}
+.inc-a4-head .center span{font-size:11px;color:#444;}
+.inc-a4-head .stamp{font-family:'JetBrains Mono',monospace;font-size:10px;color:#666;text-align:right;line-height:1.5;}
+.inc-a4 h1{font-family:'Fraunces',serif;font-weight:800;font-size:18px;text-align:center;margin-bottom:18px;text-transform:uppercase;letter-spacing:.05em;}
+.inc-a4 .ident{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:12.5px;margin-bottom:18px;border:1px solid #000;padding:10px 14px;font-family:'Inter',sans-serif;}
+.inc-a4 h2{font-family:'Fraunces',serif;font-weight:700;font-size:13px;background:#000;color:#fff;padding:5px 12px;margin:14px 0 8px;text-transform:uppercase;letter-spacing:.06em;}
+.inc-a4 p{font-size:13px;line-height:1.6;text-align:justify;margin-bottom:8px;}
+.inc-a4 ul{font-size:12.5px;line-height:1.7;padding-left:22px;margin-bottom:8px;font-family:'Inter',sans-serif;}
+
+@media(max-width:720px){.inc-app{grid-template-columns:1fr;}}
 `;
 
-type TabKey = "anam" | "pei" | "plan" | "reg" | "rel" | "doc";
+type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel";
+type ViewKey = "list" | "detail";
 
-type Eixo = { label: string; status: string; tone: "ok" | "warn" | "info" | "accent"; desc: string };
+type Student = {
+  id: string; name: string; initials: string; age: string; turma: string;
+  diag: string; cid: string; aee: string; featured?: boolean;
+  anamnese: string; registros: string; trend: string; trendTone: "ok" | "warn" | "muted";
+};
 
-const EIXOS: Eixo[] = [
-  { label: "Leitura", status: "Em processo", tone: "warn", desc: "Lê palavras CV com mediação. Dificuldade em encontros consonantais (BR, TR)." },
-  { label: "Escrita", status: "Em processo", tone: "warn", desc: "Escreve nome sem modelo. Hipótese silábica na escrita espontânea." },
-  { label: "Matemática", status: "Avançado", tone: "ok", desc: "Conta até 100. Resolve adição/subtração até 20 com material dourado." },
-  { label: "Socialização", status: "Com mediação", tone: "info", desc: "Trabalha bem em duplas estruturadas. Evita grandes grupos." },
-  { label: "Mediador em sala", status: "Sim", tone: "ok", desc: "Mediação humana garantida em sala regular." },
-  { label: "AEE (contraturno)", status: "2x/sem", tone: "info", desc: "Acompanhamento com Profa. Carla Mendonça às terças e quintas." },
-  { label: "Atenção e concentração", status: "Com mediação", tone: "warn", desc: "Sustentada por até 15 min em atividades de interesse." },
-  { label: "Coordenação motora", status: "Adequada", tone: "ok", desc: "Coordenação ampla preservada; fina em desenvolvimento." },
-  { label: "Sensibilidades sensoriais", status: "Auditiva alta", tone: "warn", desc: "Fones abafadores em uso. Aversão a cola líquida." },
-  { label: "Independência cotidiana", status: "Parcial", tone: "info", desc: "Higiene e alimentação independentes. Vestir-se exige apoio." },
-  { label: "Autonomia / decisão", status: "Necessita apoio", tone: "warn", desc: "Tomada de decisão com apoio do mediador." },
-  { label: "Regulação emocional", status: "Em processo", tone: "warn", desc: "Reconhece emoções básicas com apoio visual." },
-  { label: "Memória", status: "Preservada", tone: "ok", desc: "Boa memória de longo prazo, principalmente para temas de interesse." },
-  { label: "Contexto familiar", status: "Engajada", tone: "ok", desc: "Família participativa. Mãe relata avanços em rotinas matinais." },
+const STUDENTS: Student[] = [
+  { id: "pedrinho", name: "Pedrinho Almeida", initials: "PA", age: "7 anos", turma: "2º Ano A", diag: "TEA Nível 1", cid: "CID F84.0", aee: "AEE 2x/sem", featured: true, anamnese: "14/16", registros: "23", trend: "↑ 2", trendTone: "ok" },
+  { id: "ana", name: "Ana Clara Silva", initials: "AC", age: "7 anos", turma: "2º Ano A", diag: "TDAH", cid: "CID F90.0", aee: "Sem AEE", anamnese: "10/16", registros: "18", trend: "Pendente", trendTone: "warn" },
+  { id: "lucas", name: "Lucas Mendes", initials: "LM", age: "8 anos", turma: "2º Ano A", diag: "Dislexia", cid: "CID F81.0", aee: "AEE 1x/sem", anamnese: "16/16", registros: "31", trend: "↑ 4", trendTone: "ok" },
+  { id: "sofia", name: "Sofia Reis Carvalho", initials: "SR", age: "7 anos", turma: "2º Ano A", diag: "Síndrome de Down", cid: "CID Q90", aee: "Mediador", anamnese: "15/16", registros: "27", trend: "↑ 1", trendTone: "ok" },
+  { id: "miguel", name: "Miguel Souza", initials: "MS", age: "7 anos", turma: "2º Ano A", diag: "Deficiência Auditiva", cid: "CID H90.3", aee: "Libras", anamnese: "12/16", registros: "14", trend: "—", trendTone: "muted" },
+];
+
+const PEI_EIXOS = [
+  { ic: "C", cls: "pei-cog", h: "Cognição & Linguagem", status: "3 de 4 objetivos atingidos", tone: "ok" as const, meta: "Obj. PEI #1, #3, #4", body: <>Apoio com <b>material concreto</b>, comandos curtos (1 etapa) e tempo extra de 30%.</> },
+  { ic: "I", cls: "pei-soc", h: "Interação social", status: "2 de 3 objetivos · 1 em processo", tone: "warn" as const, meta: "Obj. PEI #5, #6", body: <>Trabalha bem em <b>duplas estruturadas</b>. Evita grandes grupos.</> },
+  { ic: "P", cls: "pei-mot", h: "Psicomotor & sensorial", status: "Todos os objetivos atingidos", tone: "ok" as const, meta: "Obj. PEI #7", body: <>Sensibilidade auditiva — <b>fones abafadores</b> disponíveis.</> },
+  { ic: "A", cls: "pei-com", h: "Comunicação & autonomia", status: "1 de 2 objetivos · revisão sugerida", tone: "warn" as const, meta: "Obj. PEI #8, #9", body: <>Avançar para <b>narrativas com 3 elementos</b>.</> },
 ];
 
 const ADAPTACOES = [
-  { n: 1, title: "Substituir abstração por material concreto", desc: "Trocar 'dividir entre amigos' por imagem da pizza dividida em fatias iguais.", meta: "PEI obj. #4 · BNCC EF02MA08" },
-  { n: 2, title: "Dividir em micro-blocos com pausas sensoriais", desc: "Estruturar em 3 blocos de 5 min com pausas de 1 min para movimento.", meta: "PEI obj. #1 · Atenção sustentada" },
-  { n: 3, title: "Mediação prévia com Profa. Carla (AEE)", desc: "Profa. Carla alinhada às 13h. Script com 5 perguntas-âncora.", meta: "AEE alinhada · Script #SF-2046" },
+  { n: 1, title: "Substituir abstração por material concreto", desc: "Trocar 'metade' por imagem da pizza dividida em fatias iguais.", meta: "PEI obj. #4 · BNCC EF02MA08" },
+  { n: 2, title: "Dividir em 3 micro-blocos de 5 min com pausas sensoriais", desc: "Estruturar com pausas de 1 min para movimento.", meta: "PEI obj. #1 · Atenção sustentada" },
+  { n: 3, title: "Mediação prévia com Profa. Carla (AEE)", desc: "Profa. Carla alinhada às 13h. Script com 5 perguntas-âncora enviado.", meta: "AEE alinhada · Script #SF-2046" },
 ];
 
 const TUTORIAL_STEPS = [
-  { t: "Selecione o aluno", d: "Na lista, clique no card do aluno. Você verá KPIs do mês, eixos do PEI e linha do tempo pedagógica." },
-  { t: "Preencha a Anamnese", d: "Use os 14 eixos guiados. Em cada campo há sugestões rápidas contextuais ao ano e diagnóstico." },
-  { t: "Gere o Planejamento", d: "Configure o período, escolha as disciplinas e clique 'Gerar sugestões com IA'. As atividades já vêm com adaptação." },
-  { t: "Faça Registros frequentes", d: "Cada registro alimenta o relatório anual. Use observações rápidas pra ganhar velocidade." },
-  { t: "Gere o Relatório com a Sofia", d: "Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto pra editar e exportar." },
-  { t: "Exporte com validade institucional", d: "Word ou PDF. Documentos seguem a Lei 14.254/2021 e a BNCC Inclusão — aceitos pela secretaria." },
+  { t: "Selecione o aluno", d: "Na lista de Inclusão, clique no card do aluno para abrir KPIs, eixos do PEI e timeline pedagógica." },
+  { t: "Confira a Visão de hoje", d: "A Sofia destaca a aula do dia que precisa de adaptação e propõe estratégias visual, pacing e mediação." },
+  { t: "Preencha a Anamnese", d: "Use os 14 eixos guiados. Em cada campo há sugestões rápidas contextuais ao ano e ao diagnóstico." },
+  { t: "Gere o Planejamento", d: "Configure período, escolha disciplinas e gere atividades já adaptadas conforme o PEI vigente." },
+  { t: "Faça Registros frequentes", d: "Cada registro alimenta o relatório anual. Use observações rápidas para ganhar velocidade." },
+  { t: "Gere o Relatório IA", d: "Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar." },
 ];
 
 export function Inclusao() {
-  const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey };
+  const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const [tab, setTab] = useState<TabKey>(search.tab || "anam");
+  const [view, setView] = useState<ViewKey>(search.view || "list");
+  const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
+  const [peiOpen, setPeiOpen] = useState(false);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
+  const goView = (v: ViewKey) => {
+    setView(v);
+    navigate({ search: (prev) => ({ ...prev, view: v }) as never, replace: true });
+  };
   const setActiveTab = (t: TabKey) => {
     setTab(t);
-    navigate({ search: { tab: t } as never, replace: true });
+    navigate({ search: (prev) => ({ ...prev, tab: t }) as never, replace: true });
   };
 
-  const exportPEI = (fmt: "docx" | "pdf") => {
-    alert(`Exportando PEI em ${fmt.toUpperCase()}...`);
-  };
+  const filtered = STUDENTS.filter((s) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return true;
+    return s.name.toLowerCase().includes(q) || s.turma.toLowerCase().includes(q) || s.diag.toLowerCase().includes(q);
+  });
 
   return (
     <div className="inc-root">
@@ -225,263 +271,220 @@ export function Inclusao() {
         <main className="inc-main">
           <div className="inc-topbar">
             <div className="inc-crumbs">
-              <strong>Sua sala</strong>
-              <ChevronRight size={11} />
-              <span>Inclusão</span>
+              {view === "list" ? (
+                <span className="now">Inclusão</span>
+              ) : (
+                <>
+                  <a onClick={() => goView("list")}>Inclusão</a>
+                  <span className="sep">/</span>
+                  <a onClick={() => goView("list")}>2º Ano A</a>
+                  <span className="sep">/</span>
+                  <span className="now">Pedrinho Almeida</span>
+                </>
+              )}
             </div>
-            <span className="inc-tag-orange">Acompanhamento PCD &amp; PEI</span>
-            <div className="inc-top-actions">
-              <button className="inc-icon-btn" aria-label="Buscar"><Search size={14} /></button>
-              <button className="inc-icon-btn" aria-label="Notificações"><Bell size={14} /></button>
-              <button className="inc-icon-btn" aria-label="Ajuda"><HelpCircle size={14} /></button>
-              <div className="inc-user">
-                <div className="inc-user-av">CM</div>
-                <div>
-                  <div className="inc-user-name">Camila M.</div>
-                  <div className="inc-user-plan">Plano Pro</div>
-                </div>
-              </div>
-            </div>
+            <div className="inc-spacer" />
+            {view === "detail" && (
+              <div className="inc-status-pill"><span className="dot" /> PEI atualizado há 3 dias · Próxima revisão em 27 dias</div>
+            )}
+            <button className="inc-btn-ghost" onClick={() => setTutorialOpen(true)}><HelpCircle size={14} /> Tutorial Inclusão</button>
+            {view === "detail" && (
+              <button className="inc-btn-ghost" onClick={() => setPeiOpen(true)}><Download size={14} /> Exportar PEI</button>
+            )}
           </div>
 
-          <div className="inc-header">
-            <div className="inc-header-l">
-              <h1>Inclusão</h1>
-              <p>PEI, anamnese, registros e pareceres descritivos com a Sofia</p>
-            </div>
-            <div className="inc-header-r">
-              <button className="inc-btn" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Novo aluno</button>
-              <button className="inc-btn" onClick={() => setImportOpen(true)}><Upload size={14} /> Importar laudo (PDF)</button>
-              <button className="inc-btn" onClick={() => setTutorialOpen(true)}><BookOpen size={14} /> Tutorial · 3 min</button>
-            </div>
-          </div>
-
-          <section className="inc-hero">
-            <div className="inc-hero-l">
-              <div className="inc-hero-id">
-                <div className="inc-avatar-lg">PA</div>
-                <div>
-                  <h2>Pedrinho Almeida</h2>
-                  <div className="sub">7 anos · 2º Ano A</div>
+          <div className="inc-content">
+            {view === "list" && (
+              <>
+                <div className="list-hero">
+                  <h1>Alunos · Educação Inclusiva</h1>
+                  <p>Selecione um aluno para acessar PEI, Anamnese, Planejamento, Registros e Relatórios.</p>
                 </div>
-              </div>
-              <div className="inc-chips">
-                <span className="inc-chip-info">TEA Nível 1</span>
-                <span className="inc-chip-info muted">CID F84.0</span>
-                <span className="inc-chip-info muted">Mediador em sala</span>
-                <span className="inc-chip-info muted">AEE 2x/semana</span>
-              </div>
-              <div className="inc-mini-kpis">
-                <div className="inc-mini-kpi"><div className="lbl">Objetivos PEI</div><div className="val">6/9</div></div>
-                <div className="inc-mini-kpi"><div className="lbl">Registros do mês</div><div className="val">14</div></div>
-                <div className="inc-mini-kpi"><div className="lbl">Próx. revisão PEI</div><div className="val">04/06</div></div>
-                <div className="inc-mini-kpi"><div className="lbl">Tempo economizado</div><div className="val">4h12</div></div>
-              </div>
-            </div>
-            <div className="inc-action-card">
-              <div className="inc-ac-tag"><Sparkles size={12} /> ADAPTAR AULA DE HOJE</div>
-              <h3 className="inc-ac-title">Frações e Partilha Justa</h3>
-              <div className="inc-ac-meta">Matemática · 16h00 · BNCC EF02MA08</div>
-              <p className="inc-ac-body">A aula original usa metáforas abstratas e leitura coletiva — duas áreas onde o Pedrinho tem dificuldade documentada no PEI. Preparei <b style={{ color: "var(--accent-warm)" }}>3 adaptações pontuais</b> que mantêm o objetivo BNCC.</p>
-              <button className="inc-ac-cta" onClick={() => setAdaptOpen(true)}>Adaptar agora · ~5 min <ChevronRight size={14} /></button>
-            </div>
-          </section>
-
-          <section className="inc-adapt-list">
-            <div className="inc-adapt-head">
-              <h3>Adaptações sugeridas pela Sofia</h3>
-              <span className="legal">Lei 14.254/2021 · BNCC Inclusão</span>
-            </div>
-            {ADAPTACOES.map((a) => (
-              <div className="inc-adapt-item" key={a.n}>
-                <div className="inc-adapt-num">{a.n}</div>
-                <div>
-                  <h4>{a.title}</h4>
-                  <p>{a.desc}</p>
-                  <div className="meta">{a.meta}</div>
-                </div>
-                <CheckCircle2 size={20} color="var(--accent)" />
-              </div>
-            ))}
-            <div className="inc-adapt-foot"><b>Tempo estimado economizado:</b> 45 min (manual ~50min · com Sofia ~5min)</div>
-          </section>
-
-          <div className="inc-tabs" role="tablist">
-            {([
-              { k: "anam", label: "Anamnese", count: "14/16" },
-              { k: "pei", label: "PEI" },
-              { k: "plan", label: "Planejamento" },
-              { k: "reg", label: "Registros", count: "23" },
-              { k: "rel", label: "Relatórios" },
-              { k: "doc", label: "Documentos" },
-            ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
-              <button
-                key={t.k}
-                className={"inc-tab" + (tab === t.k ? " active" : "")}
-                onClick={() => setActiveTab(t.k)}
-                role="tab"
-                aria-selected={tab === t.k}
-              >
-                {t.label}
-                {t.count && <span className="inc-tab-count">{t.count}</span>}
-              </button>
-            ))}
-          </div>
-
-          <div className={"inc-panel" + (tab === "anam" ? " active" : "")}>
-            <div className="inc-grid-2">
-              {EIXOS.map((e) => (
-                <div className="inc-eixo" key={e.label}>
-                  <div className="inc-eixo-head">
-                    <h4>{e.label}</h4>
-                    <span className={"inc-status " + e.tone}>{e.status}</span>
+                <div className="list-toolbar">
+                  <div className="list-search">
+                    <Search size={14} />
+                    <input
+                      placeholder="Buscar por nome, turma ou diagnóstico…"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                    />
                   </div>
-                  <p>{e.desc}</p>
-                  <button className="inc-suggest-btn"><Sparkles size={12} /> Sugestões rápidas</button>
+                  <button className="list-filter">Turma: 2º Ano A</button>
+                  <button className="list-filter">Diagnóstico: Todos</button>
+                  <div className="list-actions">
+                    <button className="btn btn-primary" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className={"inc-panel" + (tab === "pei" ? " active" : "")}>
-            <div className="inc-a4-actions">
-              <button className="inc-btn" onClick={() => exportPEI("docx")}><FileText size={14} /> Word</button>
-              <button className="inc-btn" onClick={() => exportPEI("pdf")}><Printer size={14} /> Imprimir / PDF</button>
-              <button className="inc-btn" onClick={() => setActiveTab("anam")}><X size={14} /> Fechar</button>
-            </div>
-            <div className="inc-a4">
-              <div className="inc-a4-head">
-                <div className="inc-a4-logo">M</div>
-                <div className="center">
-                  <b>Prefeitura Municipal de São Paulo</b>
-                  <span>Secretaria Municipal da Educação · Diretoria Regional Sul<br />EMEF Profa. Maria Aparecida Silva</span>
+                <div className="list-grid">
+                  {filtered.map((s) => (
+                    <button
+                      key={s.id}
+                      className="student-card"
+                      onClick={() => { if (s.id === "pedrinho") goView("detail"); }}
+                    >
+                      <div className="sc-head">
+                        <div className={"sc-avatar" + (s.featured ? " featured" : "")}>{s.initials}</div>
+                        <div className="sc-info"><b>{s.name}</b><span>{s.age} · {s.turma}</span></div>
+                      </div>
+                      <div className="sc-tags">
+                        <span className="sc-tag">{s.diag}</span>
+                        <span className="sc-tag muted">{s.cid}</span>
+                        <span className="sc-tag muted">{s.aee}</span>
+                      </div>
+                      <div className="sc-stats">
+                        <div><b>{s.anamnese}</b>Anamnese</div>
+                        <div><b>{s.registros}</b>Registros</div>
+                        <div style={{ color: s.trendTone === "ok" ? "var(--success)" : s.trendTone === "warn" ? "var(--warn)" : "var(--muted)" }}>
+                          <b>{s.trend}</b>Objetivos
+                        </div>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                <div className="stamp">PROTOCOLO<br />#PEI-2026-PA-v3.2<br />04/04/2026</div>
-              </div>
-              <h1>Plano Educacional Individualizado</h1>
-              <div className="ident">
-                <span><b>Educando:</b> Pedro Henrique Almeida</span>
-                <span><b>Idade:</b> 7 anos</span>
-                <span><b>Turma:</b> 2º Ano A · Manhã</span>
-                <span><b>Ref. curricular:</b> 2º Ano EF</span>
-                <span><b>CID:</b> F84.0 · TEA Nível 1</span>
-                <span><b>Laudo:</b> Dr. Ricardo Mendes (CRM 145632) · 12/03/2025</span>
-                <span><b>Mediador em sala:</b> Sim</span>
-                <span><b>AEE:</b> 2x/semana · Profa. Carla Mendonça</span>
-              </div>
-              <h2>1. Caracterização e Anamnese</h2>
-              <p>O educando apresenta diagnóstico de Transtorno do Espectro Autista (Nível 1), conforme laudo médico. Reconhece o alfabeto e lê palavras com sílabas simples (CV) com mediação. Em Matemática, demonstra fluência com material concreto e resolve operações até 20. Sensibilidade auditiva alta — fones abafadores em uso. Família participativa.</p>
-              <h2>2. Cognição e Linguagem · Objetivos</h2>
-              <ul>
-                <li><b>Obj. 01.</b> Ler 20 palavras com encontros consonantais com mediação visual <i style={{ color: "#B8410E" }}>(em processo · 14/20)</i></li>
-                <li><b>Obj. 02.</b> Compor narrativas curtas com 3 elementos (personagem-ação-lugar)</li>
-                <li><b>Obj. 03.</b> Resolver operações de adição até 20 com material concreto <i style={{ color: "var(--success)" }}>· atingido em 12/04/2026</i></li>
-                <li><b>Obj. 04.</b> Compreender o conceito de "metade" e "inteiro" com mediação visual</li>
-              </ul>
-              <h2>3. Interação Social · Objetivos</h2>
-              <ul>
-                <li><b>Obj. 05.</b> Cooperar com colega em atividade de 15 min sem mediação direta <i style={{ color: "#B8410E" }}>(em processo)</i></li>
-                <li><b>Obj. 06.</b> Sustentar trabalho em dupla por 20 min <i style={{ color: "var(--success)" }}>· atingido em 29/04/2026</i></li>
-              </ul>
-              <h2>4. Psicomotor e Sensorial · Objetivos</h2>
-              <ul>
-                <li><b>Obj. 07.</b> Reconhecer sinais de sobrecarga sensorial e solicitar pausa <i style={{ color: "var(--success)" }}>· atingido em 18/04/2026</i></li>
-              </ul>
-              <h2>5. Comunicação e Autonomia · Objetivos</h2>
-              <ul>
-                <li><b>Obj. 08.</b> Compor narrativas orais com 3 elementos <i style={{ color: "#B8410E" }}>(em processo)</i></li>
-                <li><b>Obj. 09.</b> Comunicar necessidades por meio de frases completas <i style={{ color: "var(--accent)" }}>(revisão sugerida)</i></li>
-              </ul>
-              <h2>6. Estratégias e Recursos</h2>
-              <ul>
-                <li>Material concreto em Matemática (material dourado, ábaco)</li>
-                <li>Pictogramas e roteiro visual da rotina diária</li>
-                <li>Fones abafadores em situações de alta carga auditiva</li>
-                <li>Tempo extra de 30% em provas e atividades</li>
-                <li>Mediação humana em sala</li>
-                <li>AEE 2x/semana no contraturno</li>
-              </ul>
-              <h2>7. Co-construção e Validação</h2>
-              <p>Este documento foi elaborado de forma colaborativa entre Profa. Camila Ribeiro (regente), Profa. Carla Mendonça (AEE), Sra. Júlia Almeida (responsável) e Coordenação Pedagógica em reunião realizada em 04/04/2026. Próxima revisão obrigatória: 04/06/2026.</p>
-              <div className="signs">
-                <div className="sign-line"><b>Profa. Camila Ribeiro</b><span>Regente · 2º Ano A</span></div>
-                <div className="sign-line"><b>Profa. Carla Mendonça</b><span>AEE</span></div>
-                <div className="sign-line" style={{ marginTop: 30 }}><b>Sra. Júlia Almeida</b><span>Responsável legal</span></div>
-                <div className="sign-line" style={{ marginTop: 30 }}><b>Coordenação Pedagógica</b><span>EMEF M. A. Silva</span></div>
-              </div>
-              <div className="inc-a4-page">Documento gerado pelo AgilizaProf · Conforme Lei 14.254/2021 · BNCC Inclusão · Página 1 de 1</div>
-            </div>
-          </div>
+              </>
+            )}
 
-          <div className={"inc-panel" + (tab === "plan" ? " active" : "")}>
-            <div className="inc-eixo">
-              <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 17, marginBottom: 6 }}>Planejamento adaptado</h4>
-              <p>Configure período, disciplinas e clique em "Gerar sugestões com IA". As atividades virão com adaptação aplicada conforme o PEI vigente.</p>
-              <div style={{ marginTop: 14 }}>
-                <button className="inc-btn inc-btn-primary"><Sparkles size={14} /> Gerar sugestões com IA</button>
-              </div>
-            </div>
-          </div>
-
-          <div className={"inc-panel" + (tab === "reg" ? " active" : "")}>
-            <div className="inc-eixo">
-              <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 17, marginBottom: 6 }}>Registros pedagógicos</h4>
-              <p>23 registros · todos os bimestres. Filtros: Pedagógico · Social · Comportamental · Psicomotor.</p>
-              <div style={{ marginTop: 14 }}>
-                <button className="inc-btn inc-btn-primary"><Plus size={14} /> Novo registro</button>
-              </div>
-            </div>
-          </div>
-
-          <div className={"inc-panel" + (tab === "rel" ? " active" : "")}>
-            <div className="inc-report">
-              <div className="inc-report-head">
-                <div>
-                  <b>EMEF Profa. Maria Aparecida Silva</b>
-                  <span>Rede Municipal · Diretoria Regional Sul</span>
+            {view === "detail" && (
+              <>
+                <div className="hero">
+                  <div className="hero-l">
+                    <button className="back" onClick={() => goView("list")}><ArrowLeft size={13} /> Voltar à lista</button>
+                    <h1>Pedrinho Almeida <span className="age">· 7 anos · 2º Ano A</span></h1>
+                    <div className="tag-row">
+                      <span className="diagnostic"><span className="pulse" />TEA · Transtorno do Espectro Autista (Nível 1)</span>
+                      <span className="tag"><b>Ref:</b> 2º Ano</span>
+                      <span className="tag"><b>CID</b> F84.0</span>
+                      <span className="tag"><b>AEE</b> Sim · 2x/sem</span>
+                      <span className="tag"><b>Mediador</b> Sim</span>
+                    </div>
+                  </div>
+                  <div className="hero-r">
+                    <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> Ver PEI completo</button>
+                    <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Adaptar aula de hoje</button>
+                  </div>
                 </div>
-                <div style={{ textAlign: "right", fontFamily: "'JetBrains Mono',monospace", fontSize: 11, color: "var(--muted)" }}>
-                  DOC #2026-PA-004<br />Versão 1 · Sofia AI
-                </div>
-              </div>
-              <h2>Parecer Descritivo · 2º Bimestre 2026</h2>
-              <div className="sub">Pedrinho Almeida · 2º Ano A · TEA Nível 1 (CID F84.0) · Profa. Camila Ribeiro</div>
-              <h4>1. Aspectos Pedagógicos</h4>
-              <p>Pedrinho demonstrou avanços significativos no domínio da <em>leitura silábica</em>, reconhecendo sílabas CV em 80% das palavras com mediação. Em Matemática, mostra-se à vontade com operações concretas até 10 (BNCC EF02MA08). A escrita do nome completo sem modelo, em 10/04, marca conquista de autonomia.</p>
-              <h4>2. Interação Social</h4>
-              <p>Atingiu o <em>objetivo PEI #6</em> em 29/04 ao sustentar atividade colaborativa em dupla por 20 min com o colega João. Demonstra preferência por duplas estruturadas e tem evoluído na cooperação espontânea.</p>
-              <h4>3. Aspectos Sensoriais e Psicomotores</h4>
-              <p>Sensibilidade auditiva permanece como ponto de atenção. Houve crise sensorial breve em Música (18/04), resolvida com fone abafador. Recomenda-se ajuste no PEI para incluir sinalização prévia.</p>
-              <h4>4. Considerações Finais</h4>
-              <p>Pedrinho apresenta <em>evolução consistente</em>. Dos 9 objetivos vigentes, 6 foram atingidos. A parceria família-escola-AEE tem se mostrado decisiva. Sugere-se avançar para <em>narrativas com 3 elementos</em> no próximo bimestre.</p>
-              <div className="inc-report-foot">
-                <span>Conforme Lei 14.254/2021 · BNCC Inclusão · Gerado em 02/05/2026 14:18</span>
-                <div className="actions">
-                  <button className="inc-btn">Editar</button>
-                  <button className="inc-btn">Word</button>
-                  <button className="inc-btn inc-btn-primary">PDF</button>
-                </div>
-              </div>
-            </div>
-            <button
-              className="inc-btn inc-btn-primary"
-              style={{ position: "fixed", bottom: 24, right: 24, padding: "14px 18px", borderRadius: 99, boxShadow: "0 14px 30px rgba(255,122,69,.5)" }}
-              onClick={() => setDrawerOpen(true)}
-            >
-              <Sparkles size={16} /> Gerar com a Sofia
-            </button>
-          </div>
 
-          <div className={"inc-panel" + (tab === "doc" ? " active" : "")}>
-            <div className="inc-eixo">
-              <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 17, marginBottom: 6 }}>Documentos do aluno</h4>
-              <p>Laudos, atas, autorizações e relatórios anteriores ficam aqui. Importe novos PDFs para a Sofia ler o contexto.</p>
-            </div>
+                <div className="kpis">
+                  <div className="kpi kpi-accent">
+                    <div className="kpi-label">Tempo economizado neste aluno</div>
+                    <div className="kpi-value">7h 20min</div>
+                    <div className="kpi-sub">vs. preparar adaptações manualmente · este mês</div>
+                  </div>
+                  <div className="kpi">
+                    <div className="kpi-label">Aulas adaptadas</div>
+                    <div className="kpi-value">14<span className="small"> /18</span></div>
+                    <div className="kpi-sub"><span className="up">↑ 78%</span> taxa de adaptação</div>
+                  </div>
+                  <div className="kpi">
+                    <div className="kpi-label">Objetivos PEI atingidos</div>
+                    <div className="kpi-value">6<span className="small"> /9</span></div>
+                    <div className="kpi-sub"><span className="up">↑ 2</span> desde a última revisão</div>
+                  </div>
+                  <div className="kpi">
+                    <div className="kpi-label">Evolução pedagógica</div>
+                    <div className="kpi-value" style={{ color: "var(--success)" }}>Progredindo</div>
+                    <div className="kpi-sub">Leitura: em processo · Mat: avançado</div>
+                  </div>
+                </div>
+
+                <div className="tabs" role="tablist">
+                  {([
+                    { k: "hoje", label: "Visão de hoje" },
+                    { k: "anam", label: "Anamnese", count: "14/16" },
+                    { k: "plan", label: "Planejamento" },
+                    { k: "reg", label: "Registros", count: "23" },
+                    { k: "rel", label: "Relatório IA" },
+                  ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
+                    <button key={t.k} className={"tab" + (tab === t.k ? " active" : "")} onClick={() => setActiveTab(t.k)} role="tab" aria-selected={tab === t.k}>
+                      {t.label}{t.count && <span className="tab-count">{t.count}</span>}
+                    </button>
+                  ))}
+                </div>
+
+                {/* PANEL: HOJE */}
+                <div className={"panel" + (tab === "hoje" ? " active" : "")}>
+                  <div className="action-card">
+                    <div className="ac-head">
+                      <div className="sofia">S</div>
+                      <div className="ac-head-txt">
+                        <b>Sofia identificou uma aula que precisa de adaptação</b>
+                        <span>Hoje, 14h05 · análise contextual baseada no PEI</span>
+                      </div>
+                      <span className="ac-tag">Hoje · 16h</span>
+                    </div>
+                    <h2 className="ac-title">Aula de hoje tem <em>fração e leitura silábica</em> — Pedrinho precisa de 3 adaptações</h2>
+                    <p className="ac-body">A aula "Frações e Partilha Justa" (Matemática · 16h) usa metáforas abstratas e leitura coletiva — duas áreas onde Pedrinho tem dificuldade documentada no PEI. Preparei adaptações alinhadas à BNCC <span className="bncc">EF02MA08</span> e ao objetivo PEI #4.</p>
+                    <div className="ac-strats">
+                      <div className="ac-strat"><b>Visual</b><span>Substituir "metade" por imagem da pizza dividida — material concreto disponível</span></div>
+                      <div className="ac-strat"><b>Pacing</b><span>Aula em 3 micro-blocos de 5 min com pausas sensoriais</span></div>
+                      <div className="ac-strat"><b>Mediação</b><span>Profa. Carla (AEE) já alinhada · script enviado às 13h</span></div>
+                    </div>
+                    <div className="ac-cta">
+                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}>Aplicar adaptações ao plano de aula <ChevronRight size={14} /></button>
+                      <button className="btn-ghost-dark">Ver aula original</button>
+                    </div>
+                  </div>
+
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Plano Educacional Individualizado · Eixos ativos</h3>
+                      <span className="legal">Lei 14.254/2021 · BNCC Inclusão</span>
+                      <button className="more" onClick={() => setPeiOpen(true)}>Ver completo →</button>
+                    </div>
+                    <div className="pei-grid">
+                      {PEI_EIXOS.map((e) => (
+                        <button key={e.h} className="pei" onClick={() => setActiveTab("anam")}>
+                          <div className={"pei-icon " + e.cls}>{e.ic}</div>
+                          <h4>{e.h}</h4>
+                          <div className="pei-status">
+                            <span className={e.tone === "ok" ? "ok" : "warn"}>●</span> {e.status}
+                          </div>
+                          <span className="meta">{e.meta}</span>
+                          <p>{e.body}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* PANEL: ANAMNESE (placeholder retains existing content) */}
+                <div className={"panel" + (tab === "anam" ? " active" : "")}>
+                  <div className="simple">
+                    <h4>Anamnese · 14 de 16 eixos preenchidos</h4>
+                    <p>Os 14 eixos guiados (Ano de Referência, Desempenho Acadêmico, Aspectos Pedagógicos, Psicomotores, Interações Sociais, Independência, Autonomia, Emoção, Memória, Dificuldades & Potencialidades, Estratégias, Recursos, Contexto Familiar e Observações) são preenchidos com chips, textareas e sugestões rápidas contextualizadas ao 2º Ano e ao TEA Nível 1.</p>
+                  </div>
+                </div>
+
+                <div className={"panel" + (tab === "plan" ? " active" : "")}>
+                  <div className="simple">
+                    <h4>Planejamento adaptado</h4>
+                    <p>Configure período, disciplinas e gere atividades já com adaptação aplicada conforme o PEI vigente.</p>
+                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Sparkles size={14} /> Gerar sugestões com IA</button></div>
+                  </div>
+                </div>
+
+                <div className={"panel" + (tab === "reg" ? " active" : "")}>
+                  <div className="simple">
+                    <h4>Registros pedagógicos · 23</h4>
+                    <p>Filtros: Pedagógico · Social · Comportamental · Psicomotor.</p>
+                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Plus size={14} /> Novo registro</button></div>
+                  </div>
+                </div>
+
+                <div className={"panel" + (tab === "rel" ? " active" : "")}>
+                  <div className="simple">
+                    <h4>Relatório IA · Parecer Descritivo</h4>
+                    <p>Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar (Word/PDF), conforme Lei 14.254/2021.</p>
+                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Sparkles size={14} /> Gerar com a Sofia</button></div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>
 
-      {/* Tutorial modal */}
+      {/* Tutorial */}
       <div className={"inc-modal-overlay" + (tutorialOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setTutorialOpen(false); }}>
         <div className="inc-modal" style={{ maxWidth: 680 }}>
           <div className="inc-modal-bar" />
@@ -500,9 +503,7 @@ export function Inclusao() {
           </div>
           <div className="inc-modal-foot">
             <span className="legal">Pode chamar a Sofia a qualquer momento clicando em "Assistente IA"</span>
-            <div className="actions">
-              <button className="inc-btn inc-btn-primary" onClick={() => setTutorialOpen(false)}>Entendi, começar</button>
-            </div>
+            <button className="btn btn-primary" onClick={() => setTutorialOpen(false)}>Entendi, começar</button>
           </div>
         </div>
       </div>
@@ -528,19 +529,64 @@ export function Inclusao() {
                 <input type="checkbox" defaultChecked style={{ width: 18, height: 18, accentColor: "var(--accent)" }} />
               </div>
             ))}
-            <div className="inc-adapt-foot" style={{ marginTop: 14 }}><b>Tempo estimado economizado:</b> 45 min (manual ~50min · com Sofia ~5min)</div>
           </div>
           <div className="inc-modal-foot">
-            <span className="legal">As adaptações serão registradas no histórico do Pedrinho automaticamente</span>
-            <div className="actions">
-              <button className="inc-btn" onClick={() => setAdaptOpen(false)}>Cancelar</button>
-              <button className="inc-btn inc-btn-primary" onClick={() => setAdaptOpen(false)}>Aplicar 3 adaptações</button>
-            </div>
+            <span className="legal">As adaptações serão registradas no histórico do Pedrinho automaticamente.</span>
+            <button className="inc-btn-ghost" onClick={() => setAdaptOpen(false)}>Cancelar</button>
+            <button className="btn btn-primary" onClick={() => setAdaptOpen(false)}><CheckCircle2 size={14} /> Aplicar 3 adaptações</button>
           </div>
         </div>
       </div>
 
-      {/* Novo aluno */}
+      {/* PEI completo */}
+      <div className={"inc-modal-overlay" + (peiOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setPeiOpen(false); }}>
+        <div className="inc-modal" style={{ maxWidth: 880 }}>
+          <div className="inc-modal-bar" />
+          <div className="inc-modal-head">
+            <h2>Plano Educacional Individualizado · Pedrinho Almeida</h2>
+            <span className="meta">PEI-2026-PA-v3.2<br />Lei 14.254/2021</span>
+            <button className="inc-modal-close" onClick={() => setPeiOpen(false)} aria-label="Fechar"><X size={16} /></button>
+          </div>
+          <div className="inc-modal-body">
+            <div className="inc-a4">
+              <div className="inc-a4-head">
+                <div className="inc-a4-logo">M</div>
+                <div className="center">
+                  <b>Prefeitura Municipal de São Paulo</b>
+                  <span>Secretaria Municipal da Educação · Diretoria Regional Sul<br />EMEF Profa. Maria Aparecida Silva</span>
+                </div>
+                <div className="stamp">PROTOCOLO<br />#PEI-2026-PA-v3.2<br />04/04/2026</div>
+              </div>
+              <h1>Plano Educacional Individualizado</h1>
+              <div className="ident">
+                <span><b>Educando:</b> Pedro Henrique Almeida</span>
+                <span><b>Idade:</b> 7 anos</span>
+                <span><b>Turma:</b> 2º Ano A · Manhã</span>
+                <span><b>Ref. curricular:</b> 2º Ano EF</span>
+                <span><b>CID:</b> F84.0 · TEA Nível 1</span>
+                <span><b>AEE:</b> 2x/semana · Profa. Carla Mendonça</span>
+              </div>
+              <h2>1. Caracterização e Anamnese</h2>
+              <p>O educando apresenta diagnóstico de TEA (Nível 1). Reconhece o alfabeto e lê palavras CV com mediação. Em Matemática demonstra fluência com material concreto. Sensibilidade auditiva alta — fones abafadores em uso. Família participativa.</p>
+              <h2>2. Objetivos vigentes</h2>
+              <ul>
+                <li><b>#1</b> Ler 20 palavras com encontros consonantais com mediação visual</li>
+                <li><b>#3</b> Resolver operações de adição até 20 com material concreto · atingido</li>
+                <li><b>#4</b> Compreender "metade" e "inteiro" com mediação visual</li>
+                <li><b>#6</b> Sustentar trabalho em dupla por 20 min · atingido</li>
+                <li><b>#7</b> Reconhecer sobrecarga sensorial e solicitar pausa · atingido</li>
+              </ul>
+            </div>
+          </div>
+          <div className="inc-modal-foot">
+            <span className="legal">Conforme Lei 14.254/2021 · BNCC Inclusão</span>
+            <button className="inc-btn-ghost"><FileText size={14} /> Word</button>
+            <button className="btn btn-primary"><Printer size={14} /> Imprimir / PDF</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Cadastrar aluno */}
       <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setNewStudentOpen(false); }}>
         <div className="inc-modal" style={{ maxWidth: 560 }}>
           <div className="inc-modal-bar" />
@@ -558,52 +604,13 @@ export function Inclusao() {
             <label style={{ fontSize: 12, fontWeight: 700 }}>Diagnóstico / CID
               <input style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} placeholder="Ex.: TEA Nível 1 · F84.0" />
             </label>
-            <div className="inc-modal-foot" style={{ margin: "8px -24px -22px", borderRadius: 0 }}>
-              <button type="button" className="inc-btn" onClick={() => setNewStudentOpen(false)} style={{ marginLeft: "auto" }}>Cancelar</button>
-              <button type="submit" className="inc-btn inc-btn-primary">Salvar aluno</button>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+              <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
+              <button type="submit" className="btn btn-primary">Salvar aluno</button>
             </div>
           </form>
         </div>
       </div>
-
-      {/* Importar laudo */}
-      <div className={"inc-modal-overlay" + (importOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setImportOpen(false); }}>
-        <div className="inc-modal" style={{ maxWidth: 520 }}>
-          <div className="inc-modal-bar" />
-          <div className="inc-modal-head">
-            <h2>Importar laudo (PDF)</h2>
-            <button className="inc-modal-close" onClick={() => setImportOpen(false)} aria-label="Fechar"><X size={16} /></button>
-          </div>
-          <div className="inc-modal-body plain" style={{ textAlign: "center", padding: 32 }}>
-            <Upload size={36} color="var(--accent)" />
-            <p style={{ marginTop: 12, color: "var(--muted)" }}>Arraste o PDF aqui ou clique para selecionar.</p>
-            <button className="inc-btn inc-btn-primary" style={{ marginTop: 14 }}>Selecionar arquivo</button>
-          </div>
-        </div>
-      </div>
-
-      {/* Sofia drawer */}
-      {drawerOpen && (
-        <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 380, background: "#fff", borderLeft: "1px solid var(--border)", boxShadow: "-20px 0 60px rgba(15,27,54,.15)", zIndex: 150, display: "flex", flexDirection: "column" }}>
-          <div style={{ padding: "18px 22px", background: "linear-gradient(135deg,var(--primary),var(--primary-dark))", color: "#fff", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,var(--accent),var(--accent-warm))", display: "grid", placeItems: "center", fontFamily: "'Fraunces',serif", fontWeight: 800 }}>S</div>
-            <div style={{ flex: 1 }}>
-              <b style={{ fontFamily: "'Fraunces',serif" }}>Sofia</b>
-              <div style={{ fontSize: 11.5, color: "rgba(255,255,255,.65)" }}>IA pedagógica · sobre Pedrinho</div>
-            </div>
-            <button onClick={() => setDrawerOpen(false)} style={{ color: "#fff", background: "rgba(255,255,255,.1)", width: 30, height: 30, borderRadius: 8 }}><X size={14} /></button>
-          </div>
-          <div style={{ flex: 1, padding: 18, background: "var(--bg)", overflowY: "auto" }}>
-            <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 12, padding: 12, fontSize: 13 }}>
-              Olá, Camila! Posso te ajudar com 4 coisas — adaptar aula, gerar parecer, sugerir próximo objetivo PEI ou preparar reunião com a família.
-            </div>
-          </div>
-          <div style={{ padding: 14, borderTop: "1px solid var(--border)", display: "flex", gap: 8 }}>
-            <input placeholder="Pergunte algo sobre o Pedrinho..." style={{ flex: 1, padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 9 }} />
-            <button className="inc-btn inc-btn-primary" style={{ padding: "10px 12px" }}><Send size={14} /></button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
