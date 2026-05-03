@@ -156,6 +156,67 @@ const css = `
 .simple h4{font-family:'Fraunces',serif;font-weight:700;font-size:17px;margin-bottom:6px;}
 .simple p{color:var(--muted);font-size:13px;}
 
+/* Visão de hoje · 2 colunas */
+.hoje-grid{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;}
+@media(max-width:1024px){.hoje-grid{grid-template-columns:1fr;}}
+.col-l{display:flex;flex-direction:column;gap:14px;min-width:0;}
+.col-r{display:flex;flex-direction:column;gap:14px;position:sticky;top:80px;}
+@media(max-width:1024px){.col-r{position:static;}}
+
+/* Sofia card */
+.sofia-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;}
+.sofia-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sofia-head .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;}
+.sofia-head b{display:block;font-weight:700;font-size:13.5px;color:var(--text);}
+.sofia-head span{font-size:11.5px;color:var(--muted);}
+.sofia-q{font-style:italic;font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.sofia-actions{display:flex;flex-direction:column;gap:6px;}
+.sofia-action{background:var(--bg);border:1px solid transparent;border-radius:9px;padding:10px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;text-align:left;width:100%;color:var(--text);font-weight:500;transition:.15s;}
+.sofia-action:hover{background:var(--accent-soft);border-color:#FFD4B8;color:#7A2E0A;}
+.sofia-action .ico{color:var(--accent);flex-shrink:0;}
+.sofia-action .arrow{margin-left:auto;color:var(--muted);font-size:14px;}
+
+/* Contexto rápido */
+.context-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+.context-card h4{font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin-bottom:12px;}
+.ctx-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:12px;}
+.ctx-row:last-child{border-bottom:none;}
+.ctx-row .lbl{color:var(--muted);font-weight:500;}
+.ctx-pill{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;background:var(--bg);color:var(--text);}
+.ctx-pill.warn{background:#FEF3C7;color:#78350F;}
+.ctx-pill.ok{background:#DCFCE7;color:#14532D;}
+
+/* Skills card */
+.skills-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+.skills-card h4{font-family:'Fraunces',serif;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.skills-card h4 .badge{margin-left:auto;font-family:'Inter',sans-serif;font-size:10.5px;font-weight:700;background:#DCFCE7;color:#14532D;padding:3px 7px;border-radius:6px;}
+.skill{margin-bottom:11px;}
+.skill:last-child{margin-bottom:0;}
+.skill-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;font-size:12px;}
+.skill-head b{font-weight:600;color:var(--text);}
+.skill-head span{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);font-weight:700;}
+.skill-bar{height:6px;background:var(--bg);border-radius:99px;overflow:hidden;}
+.skill-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));}
+.skill-fill.green{background:linear-gradient(90deg,#10B981,#34D399);}
+.skill-fill.warn{background:linear-gradient(90deg,#F59E0B,#FBBF24);}
+
+/* Trust */
+.trust-card{background:var(--accent-soft);border:1px dashed #FFD4B8;border-radius:12px;padding:14px;font-size:12px;color:#7A2E0A;line-height:1.5;display:flex;gap:9px;align-items:flex-start;}
+.trust-card .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;}
+.trust-card b{font-weight:700;}
+
+/* Timeline */
+.tl{display:flex;flex-direction:column;position:relative;padding-left:6px;}
+.tl::before{content:"";position:absolute;left:15px;top:14px;bottom:14px;width:0;border-left:2px dashed var(--border);}
+.tl-item{display:grid;grid-template-columns:24px 1fr auto;gap:12px;padding:10px 0;align-items:start;position:relative;}
+.tl-dot{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--accent);margin-top:3px;position:relative;z-index:2;}
+.tl-dot.pulse{box-shadow:0 0 0 0 rgba(255,122,69,.6);animation:incPulse 2s infinite;}
+.tl-dot.done{background:var(--success);border-color:var(--success);}
+.tl-dot.warn{background:#fff;border-color:var(--warn);}
+.tl-content b{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.tl-content span{font-size:11.5px;color:var(--muted);line-height:1.4;}
+.tl-date{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);font-weight:600;white-space:nowrap;}
+
 /* MODAL */
 .inc-modal-overlay{position:fixed;inset:0;background:rgba(15,27,54,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px;}
 .inc-modal-overlay.open{display:flex;}
@@ -404,6 +465,8 @@ export function Inclusao() {
 
                 {/* PANEL: HOJE */}
                 <div className={"panel" + (tab === "hoje" ? " active" : "")}>
+                  <div className="hoje-grid">
+                    <div className="col-l">
                   <div className="action-card">
                     <div className="ac-head">
                       <div className="sofia">S</div>
@@ -445,6 +508,80 @@ export function Inclusao() {
                         </button>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Linha do tempo pedagógica</h3>
+                      <button className="more" onClick={() => setActiveTab("reg")}>Todos os 23 registros →</button>
+                    </div>
+                    <div className="tl">
+                      <div className="tl-item"><div className="tl-dot pulse" /><div className="tl-content"><b>Sofia adaptou aula de Matemática (Frações)</b><span>3 estratégias geradas · aguardando aplicação</span></div><div className="tl-date">HOJE · 14h05</div></div>
+                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>Atingiu objetivo #6 — Trabalho em dupla por 20 min</b><span>Profa. Camila · evidência fotográfica</span></div><div className="tl-date">29 ABR</div></div>
+                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>Reunião com família · alinhamento PEI bimestral</b><span>Mãe relatou avanço em casa · ata anexada</span></div><div className="tl-date">25 ABR</div></div>
+                      <div className="tl-item"><div className="tl-dot warn" /><div className="tl-content"><b>Crise sensorial breve em aula de Música</b><span>Resolvido com fone abafador</span></div><div className="tl-date">18 ABR</div></div>
+                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>PEI revisado · 9 objetivos vigentes (v3.2)</b><span>Co-construído com AEE e família</span></div><div className="tl-date">04 ABR</div></div>
+                    </div>
+                  </div>
+                    </div>
+
+                    <aside className="col-r">
+                      <div className="sofia-card">
+                        <div className="sofia-head">
+                          <div className="av">S</div>
+                          <div>
+                            <b>Sofia · IA pedagógica</b>
+                            <span>especialista em PEI e BNCC inclusão</span>
+                          </div>
+                        </div>
+                        <p className="sofia-q">"Posso te ajudar com o Pedrinho agora. O que faz mais sentido?"</p>
+                        <div className="sofia-actions">
+                          <button className="sofia-action" onClick={() => setAdaptOpen(true)}><Sparkles size={14} className="ico" /> Adaptar aula de hoje (Frações) <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => setActiveTab("plan")}><FileText size={14} className="ico" /> Gerar plano de aula adaptado <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => setActiveTab("rel")}><BookOpen size={14} className="ico" /> Gerar parecer descritivo bimestral <span className="arrow">›</span></button>
+                          <button className="sofia-action"><Send size={14} className="ico" /> Preparar reunião com família <span className="arrow">›</span></button>
+                        </div>
+                      </div>
+
+                      <div className="context-card">
+                        <h4>Contexto rápido</h4>
+                        {([
+                          { l: "Ano de referência", v: "2º Ano", t: "" },
+                          { l: "Leitura", v: "Em processo", t: "warn" },
+                          { l: "Escrita", v: "Em processo", t: "warn" },
+                          { l: "Matemática", v: "Avançado", t: "ok" },
+                          { l: "Socialização", v: "Com mediação", t: "" },
+                          { l: "Mediador em sala", v: "Sim", t: "ok" },
+                          { l: "AEE (contraturno)", v: "2x / sem", t: "" },
+                        ] as Array<{ l: string; v: string; t: "" | "warn" | "ok" }>).map((r) => (
+                          <div className="ctx-row" key={r.l}>
+                            <span className="lbl">{r.l}</span>
+                            <span className={"ctx-pill" + (r.t ? " " + r.t : "")}>{r.v}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="skills-card">
+                        <h4>Habilidades · evolução <span className="badge">+3 no bimestre</span></h4>
+                        {([
+                          { l: "Atenção sustentada", p: 72, c: "" },
+                          { l: "Leitura silábica", p: 48, c: "warn" },
+                          { l: "Cálculo concreto", p: 89, c: "green" },
+                          { l: "Interação em dupla", p: 65, c: "" },
+                          { l: "Autorregulação", p: 58, c: "" },
+                        ] as Array<{ l: string; p: number; c: "" | "warn" | "green" }>).map((s) => (
+                          <div className="skill" key={s.l}>
+                            <div className="skill-head"><b>{s.l}</b><span>{s.p}%</span></div>
+                            <div className="skill-bar"><div className={"skill-fill" + (s.c ? " " + s.c : "")} style={{ width: s.p + "%" }} /></div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="trust-card">
+                        <span className="dot" />
+                        <span><b>PEI conforme Lei 14.254/2021.</b> Documentos exportados pelo AgilizaProf têm validade institucional na secretaria.</span>
+                      </div>
+                    </aside>
                   </div>
                 </div>
 
