@@ -294,9 +294,18 @@ export function Assistente() {
                       }}
                     >
                       {m.role === "assistant" ? (
-                        <div className="prose prose-sm max-w-none">
-                          <ReactMarkdown>{m.content}</ReactMarkdown>
-                        </div>
+                        <>
+                          <div className="prose prose-sm max-w-none">
+                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                          </div>
+                          {m.issues && m.issues.length > 0 && (
+                            <div style={{ marginTop: 10, padding: "8px 10px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, fontSize: 12, color: "#7C2D12" }}>
+                              <b>Linguagem ajustada automaticamente</b> ({m.issues.length} termo{m.issues.length > 1 ? "s" : ""}): {m.issues.map((i, k) => (
+                                <span key={k}>{k > 0 ? ", " : " "}<i>"{i.term}"</i> → <b>{i.suggestion}</b></span>
+                              ))}
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
                       )}
