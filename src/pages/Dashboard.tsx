@@ -624,7 +624,22 @@ export function Dashboard() {
               <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
             </button>
           </div>
-          <form className="school-modal-body" onSubmit={(e) => { e.preventDefault(); setSchoolOpen(false); }}>
+          <form className="school-modal-body" onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const name = String(fd.get("name") || "").trim();
+            if (!name) return;
+            setSchools((arr) => [...arr, {
+              name,
+              network: String(fd.get("network") || ""),
+              stage: String(fd.get("stage") || ""),
+              city: String(fd.get("city") || ""),
+              uf: String(fd.get("uf") || "").toUpperCase(),
+              classes: String(fd.get("classes") || ""),
+            }]);
+            (e.currentTarget as HTMLFormElement).reset();
+            setSchoolOpen(false);
+          }}>
             <div className="school-field">
               <label htmlFor="school-name">Nome da escola</label>
               <input id="school-name" name="name" placeholder="Ex.: EMEF CAIC" required />
