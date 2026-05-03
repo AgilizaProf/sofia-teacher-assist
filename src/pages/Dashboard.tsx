@@ -269,22 +269,27 @@ function useCountUp(target: number, duration = 1500) {
 }
 
 export function Dashboard() {
+  const user = useUser();
+  const heroGreeting = greeting(user.name);
   const [cmdk, setCmdk] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [schools, setSchools] = useState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>([]);
-  const baseSchools = 4;
+  const baseSchools = 0;
   const [classOpen, setClassOpen] = useState(false);
   const [classes, setClasses] = useState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>([]);
-  const baseClasses = 6;
+  const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [students, setStudents] = useState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>([]);
-  const baseStudents = 6;
-  const [authorize, setAuthorize] = useState(true);
+  const baseStudents = 0;
+  const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [showFocus, setShowFocus] = useState(true);
-  const h = useCountUp(8, 800);
-  const m = useCountUp(12, 1200);
+  const totalSchools = baseSchools + schools.length;
+  const totalClasses = baseClasses + classes.length;
+  const totalStudents = baseStudents + students.length;
+  const documentsGenerated = user.documentsGenerated;
+  const h = user.hoursSavedWeek;
+  const m = user.minutesSavedWeek;
+  const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -295,11 +300,9 @@ export function Dashboard() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const toggleClass = (k: string) => setCollapsed(s => ({ ...s, [k]: !s[k] }));
-
   return (
     <div className="ap-root">
-      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <style dangerouslySetInnerHTML={{ __html: css + emptyStateCss }} />
       <div className="ap-app">
         <AppSidebar active="home" onCmdK={() => setCmdk(true)} />
 
