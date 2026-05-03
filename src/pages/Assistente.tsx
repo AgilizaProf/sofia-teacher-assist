@@ -104,6 +104,28 @@ const css = `
 .composer-hint{display:flex;justify-content:space-between;color:var(--muted);font-size:11.5px;margin-top:8px;padding:0 4px;flex-wrap:wrap;gap:8px;}
 .kbd{font-size:10px;border:1px solid var(--line-soft);padding:2px 6px;border-radius:6px;background:#fff;color:#5b6478;}
 
+/* Tasks block */
+.tasks-wrap{margin-top:28px;}
+.tasks-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.tasks-title{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--text);letter-spacing:-.01em;}
+.tasks-tabs{display:inline-flex;gap:4px;background:#fff;border:1px solid var(--line-soft);border-radius:10px;padding:4px;}
+.tasks-tab{font-size:12px;color:var(--text-soft);font-weight:600;padding:6px 12px;border-radius:7px;transition:all .15s;}
+.tasks-tab.active{background:var(--accent);color:#fff;}
+.tasks-tab:not(.active):hover{background:#F1EFE8;}
+.tasks-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.task-card{background:#fff;border:1px solid var(--line-soft);border-radius:14px;padding:14px;text-align:left;
+  display:flex;flex-direction:column;gap:8px;transition:all .18s;position:relative;
+  box-shadow:0 1px 0 rgba(17,24,39,.04);}
+.task-card:hover{border-color:#cfd4e1;transform:translateY(-1px);box-shadow:0 8px 20px -10px rgba(17,24,39,.18);}
+.task-top{display:flex;align-items:center;justify-content:space-between;}
+.task-emoji{width:36px;height:36px;border-radius:10px;background:#FBF7F0;display:grid;place-items:center;font-size:18px;}
+.task-top-meta{display:flex;align-items:center;gap:6px;}
+.task-top-pill{font-size:9.5px;font-weight:800;color:#9A3412;background:#FFEDD5;padding:2px 7px;border-radius:999px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:3px;}
+.task-shortcut{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);font-weight:600;background:#F6F4EE;border:1px solid var(--line-soft);padding:2px 6px;border-radius:6px;}
+.task-name{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--text);line-height:1.25;}
+.task-desc{font-size:12.5px;color:var(--text-soft);line-height:1.4;}
+@media(max-width:640px){.tasks-grid{grid-template-columns:1fr;}}
+
 /* History */
 .history{background:var(--paper-2);border-left:1px solid rgba(17,24,39,.06);
   display:flex;flex-direction:column;height:100vh;position:sticky;top:0;transition:all .25s ease;overflow:hidden;}
@@ -160,10 +182,21 @@ const HISTORY_WEEK = [
   { icon: <FileText size={13} />, text: "Parecer Maria Ribeiro · 1º bim", meta: "6 dias atrás" },
 ];
 
+type TaskTab = "Mais usadas" | "Inclusão" | "Avaliação" | "Tudo";
+const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string; top?: boolean }> = [
+  { emoji: "📚", name: "Plano de aula", desc: "BNCC alinhado, com objetivos e avaliação", shortcut: "⌘ + 1", top: true },
+  { emoji: "📝", name: "Parecer descritivo", desc: "Bimestral, individual, em 4 minutos", shortcut: "⌘ + 2", top: true },
+  { emoji: "✨", name: "Adaptar conteúdo", desc: "Para alunos PCD ou com dificuldades", shortcut: "⌘ + 3" },
+  { emoji: "📊", name: "Atividade avaliativa", desc: "Com gabarito e níveis de dificuldade", shortcut: "⌘ + 4" },
+  { emoji: "💬", name: "Feedback ao aluno", desc: "Construtivo, alinhado à neurociência", shortcut: "⌘ + 5" },
+  { emoji: "🎲", name: "Dinâmica de grupo", desc: "Para socialização e aprendizado ativo", shortcut: "⌘ + 6" },
+];
+
 export function Assistente() {
   const navigate = useNavigate();
   const [text, setText] = useState("");
   const [collapsed, setCollapsed] = useState(false);
+  const [tab, setTab] = useState<TaskTab>("Mais usadas");
 
   const handleNew = () => setText("");
 
@@ -225,6 +258,38 @@ export function Assistente() {
                 <button className="btn-cta" onClick={() => navigate({ to: "/" })} aria-label="Começar agora">
                   Começar agora <ArrowRight size={14} />
                 </button>
+              </div>
+
+              <div className="tasks-wrap">
+                <div className="tasks-head">
+                  <div className="tasks-title">Ou escolha uma tarefa</div>
+                  <div className="tasks-tabs" role="tablist">
+                    {(["Mais usadas","Inclusão","Avaliação","Tudo"] as const).map((t) => (
+                      <button
+                        key={t}
+                        role="tab"
+                        aria-selected={tab === t}
+                        className={"tasks-tab" + (tab === t ? " active" : "")}
+                        onClick={() => setTab(t)}
+                      >{t}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="tasks-grid">
+                  {TASKS.map((t) => (
+                    <button key={t.shortcut} className="task-card" aria-label={t.name}>
+                      <div className="task-top">
+                        <div className="task-emoji">{t.emoji}</div>
+                        <div className="task-top-meta">
+                          {t.top && <span className="task-top-pill">🔥 Top</span>}
+                          <span className="task-shortcut">{t.shortcut}</span>
+                        </div>
+                      </div>
+                      <div className="task-name">{t.name}</div>
+                      <div className="task-desc">{t.desc}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="composer-wrap">
