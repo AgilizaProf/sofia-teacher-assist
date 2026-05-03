@@ -1505,9 +1505,6 @@ export function Inclusao() {
 
       {/* Cadastrar aluno */}
       <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setNewStudentOpen(false); }}>
-      </div>
-
-      {/* Novo registro */}
       <div className={"inc-modal-overlay" + (regModalOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setRegModalOpen(false); }}>
         <div className="inc-modal" style={{ maxWidth: 600 }}>
           <div className="inc-modal-bar" />
@@ -1556,7 +1553,6 @@ export function Inclusao() {
         </div>
       </div>
 
-      <div style={{ display: "none" }} onClick={(e) => e.stopPropagation()}>
         <div className="inc-modal" style={{ maxWidth: 560 }}>
           <div className="inc-modal-bar" />
           <div className="inc-modal-head">
