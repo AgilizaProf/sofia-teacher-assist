@@ -300,7 +300,7 @@ export function Agenda() {
                   <div className="ag-sofia-name">Sofia <small>Sua assistente · online</small></div>
                 </div>
                 <div className="ag-sofia-msg">
-                  Camila, vi que <b>hoje 14h você tem reunião de pais do 5ºA</b>. Já preparei a pauta com base nas notas do bimestre e em 2 alertas que merecem atenção (Pedrinho/TEA e Júlia/leitura).
+                  Olá! Conforme você cadastra eventos, reuniões e prazos, eu vou preparar pautas e materiais automaticamente.
                 </div>
                 <div className="ag-sofia-actions">
                   <button className="ag-sofia-action">
