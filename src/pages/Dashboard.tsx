@@ -425,73 +425,13 @@ export function Dashboard() {
                 </div>
               </div>
 
-              <div className="class-group">
-                <div className="class-head" onClick={() => toggleClass("g1")}>
-                  <span className={`class-toggle ${collapsed.g1 ? "collapsed" : ""}`}>
-                    <Svg width={12} height={12} strokeWidth={2.5} c={<polyline points="6 9 12 15 18 9"/>} />
-                  </span>
-                  <div className="class-info">
-                    <div className="class-name">1º ano · Teste</div>
-                    <div className="class-meta">Ed. Infantil · sala 111</div>
-                  </div>
-                  <span className="class-count">1 aluno</span>
-                </div>
-                {!collapsed.g1 && (
-                  <div className="student">
-                    <div className="student-avatar av-1">T</div>
-                    <div className="student-info">
-                      <div className="student-name">Tereza</div>
-                      <div className="student-meta">1º ano · sem laudo</div>
-                    </div>
-                    <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="class-group">
-                <div className="class-head" onClick={() => toggleClass("g2")}>
-                  <span className={`class-toggle ${collapsed.g2 ? "collapsed" : ""}`}>
-                    <Svg width={12} height={12} strokeWidth={2.5} c={<polyline points="6 9 12 15 18 9"/>} />
-                  </span>
-                  <div className="class-info">
-                    <div className="class-name">2º ano · CAIC</div>
-                    <div className="class-meta">Fundamental I · sala 211</div>
-                  </div>
-                  <span className="class-count">2 alunos</span>
-                </div>
-                {!collapsed.g2 && <>
-                  <div className="student">
-                    <div className="student-avatar av-2">CF</div>
-                    <div className="student-info">
-                      <div className="student-name">Caio Fernandes<span className="student-tag">PCD · TDAH</span></div>
-                      <div className="student-meta">2º ano · acompanhamento ativo</div>
-                    </div>
-                    <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
-                    </div>
-                  </div>
-                  <div className="student">
-                    <div className="student-avatar av-3">MR</div>
-                    <div className="student-info">
-                      <div className="student-name">Maria Ribeiro</div>
-                      <div className="student-meta">2º ano · sem laudo</div>
-                    </div>
-                    <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
-                    </div>
-                  </div>
-                </>}
-              </div>
-
-              <a href="#" className="card-link" style={{ marginTop: 14, display: "inline-flex" }}>
-                Ver todos os 6 alunos
-                <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
-              </a>
+              <EmptyState
+                icon="👥"
+                title="Você ainda não cadastrou alunos."
+                description="Crie sua primeira turma e cadastre os alunos para começar a usar a Sofia."
+                ctaLabel="Cadastrar primeiro aluno"
+                onCta={() => setStudentOpen(true)}
+              />
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
