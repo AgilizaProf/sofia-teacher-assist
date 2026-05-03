@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock, X, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 
@@ -246,6 +246,80 @@ const TYPE_COLOR: Record<EventType, string> = {
   pcd: "var(--pcd)",
   personal: "var(--personal)",
 };
+
+const TYPE_SUGGESTIONS: Record<EventType, string[]> = {
+  meeting: [
+    "Pauta: rendimento da turma, ocorrências, próximos passos.",
+    "Levar boletim parcial e exemplos de produções dos alunos.",
+    "Reservar 10min finais para dúvidas das famílias.",
+  ],
+  eval: [
+    "Conteúdo: revisar objetivos da BNCC trabalhados no bimestre.",
+    "Material: prova impressa, gabarito e folha de respostas.",
+    "Adaptações para alunos PCD (tempo extra, leitura assistida).",
+  ],
+  report: [
+    "Conferir pareceres pendentes antes da entrega.",
+    "Anexar evidências (atividades, registros) ao relatório.",
+    "Validar prazos com a coordenação.",
+  ],
+  plan: [
+    "Tema da semana e habilidades BNCC envolvidas.",
+    "Sequência didática: abertura, desenvolvimento, fechamento.",
+    "Recursos necessários e avaliação prevista.",
+  ],
+  pcd: [
+    "Revisar PEI do aluno e metas do bimestre.",
+    "Combinar adaptações com a equipe (AEE, família).",
+    "Registrar avanços e pontos de atenção.",
+  ],
+  personal: [
+    "Compromisso pessoal — lembrar de avisar a escola se conflitar.",
+    "Reservar tempo de deslocamento.",
+    "Adicionar lembrete 1h antes.",
+  ],
+};
+
+function SuggestionsButton({ type, onPick }: { type: EventType; onPick: (s: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const items = TYPE_SUGGESTIONS[type] || [];
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        type="button"
+        className="ag-btn"
+        style={{ padding: "6px 10px", fontSize: 12 }}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Sparkles size={13} /> Sugestões para {TYPE_LABEL[type].toLowerCase()}
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 10,
+          background: "#fff", border: "1px solid var(--border)", borderRadius: 10,
+          boxShadow: "0 12px 28px rgba(15,27,54,.12)", padding: 6, display: "flex", flexDirection: "column", gap: 2,
+        }}>
+          {items.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => { onPick(s); setOpen(false); }}
+              style={{
+                textAlign: "left", padding: "8px 10px", fontSize: 12.5, lineHeight: 1.4,
+                background: "transparent", border: "none", borderRadius: 7, cursor: "pointer",
+                color: "var(--text)", fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Agenda() {
   const today = brNow();
@@ -674,6 +748,15 @@ export function Agenda() {
                       placeholder="Detalhes, pauta, materiais…"
                     />
                   </label>
+                  <SuggestionsButton
+                    type={draft.type}
+                    onPick={(s) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        notes: prev.notes ? prev.notes.replace(/\s+$/, "") + "\n" + s : s,
+                      }))
+                    }
+                  />
                 </div>
               </div>
               <div className="ag-panel-foot">
