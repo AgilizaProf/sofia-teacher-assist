@@ -9,6 +9,7 @@ import {
 
 const css = `
 .rel-root{
+  --primary:#1B2A4E;--primary-dark:#0F1B36;
   --panel:#0E1422;--muted:#7A8194;--line-soft:#E7E9EF;
   --paper:#F6F4EE;--paper-2:#FBFAF6;
   --accent:#FF6A2C;--accent-2:#FFB47A;
