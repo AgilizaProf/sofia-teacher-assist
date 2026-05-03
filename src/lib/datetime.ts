@@ -33,3 +33,46 @@ export const formatBRDateTime = (date: Date | string | number = new Date()) =>
     day: "2-digit", month: "2-digit", year: "numeric",
     hour: "2-digit", minute: "2-digit", hour12: false,
   });
+
+/** Data atual em Brasília no formato YYYY-MM-DD (calendário nacional BR). */
+export function brDateKey(date: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: BR_TIMEZONE,
+    year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(date);
+  const y = parts.find(p => p.type === "year")?.value;
+  const m = parts.find(p => p.type === "month")?.value;
+  const d = parts.find(p => p.type === "day")?.value;
+  return `${y}-${m}-${d}`;
+}
+
+/** Diferença em dias entre duas datas YYYY-MM-DD (b - a). */
+export function diffDaysBR(a: string, b: string): number {
+  const da = new Date(`${a}T00:00:00Z`).getTime();
+  const db = new Date(`${b}T00:00:00Z`).getTime();
+  return Math.round((db - da) / 86_400_000);
+}
+
+const STREAK_KEY = "sofia.streak.v1";
+
+/** Atualiza e retorna o streak de dias consecutivos de acesso (fuso BR). */
+export function updateLoginStreak(): number {
+  if (typeof window === "undefined") return 0;
+  const today = brDateKey();
+  try {
+    const raw = localStorage.getItem(STREAK_KEY);
+    const prev = raw ? (JSON.parse(raw) as { date: string; count: number }) : null;
+    let count = 1;
+    if (prev) {
+      if (prev.date === today) count = prev.count;
+      else {
+        const diff = diffDaysBR(prev.date, today);
+        count = diff === 1 ? prev.count + 1 : 1;
+      }
+    }
+    localStorage.setItem(STREAK_KEY, JSON.stringify({ date: today, count }));
+    return count;
+  } catch {
+    return 1;
+  }
+}
