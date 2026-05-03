@@ -1276,6 +1276,28 @@ export function Inclusao() {
             <label style={{ fontSize: 12, fontWeight: 700 }}>Nome completo
               <input required value={nsName} onChange={(e) => setNsName(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} />
             </label>
+            <label style={{ fontSize: 12, fontWeight: 700 }}>Ano escolar
+              <select
+                value={nsAnoEscolar}
+                onChange={(e) => setNsAnoEscolar(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, background: "#fff", fontFamily: "inherit", fontSize: 13 }}
+              >
+                <option value="">Não informado</option>
+                <option value="Educação Infantil">Educação Infantil</option>
+                <option value="1º Ano EF">1º Ano · Ensino Fundamental</option>
+                <option value="2º Ano EF">2º Ano · Ensino Fundamental</option>
+                <option value="3º Ano EF">3º Ano · Ensino Fundamental</option>
+                <option value="4º Ano EF">4º Ano · Ensino Fundamental</option>
+                <option value="5º Ano EF">5º Ano · Ensino Fundamental</option>
+                <option value="6º Ano EF">6º Ano · Ensino Fundamental</option>
+                <option value="7º Ano EF">7º Ano · Ensino Fundamental</option>
+                <option value="8º Ano EF">8º Ano · Ensino Fundamental</option>
+                <option value="9º Ano EF">9º Ano · Ensino Fundamental</option>
+                <option value="1ª Série EM">1ª Série · Ensino Médio</option>
+                <option value="2ª Série EM">2ª Série · Ensino Médio</option>
+                <option value="3ª Série EM">3ª Série · Ensino Médio</option>
+              </select>
+            </label>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Turma
               <input value={nsTurma} onChange={(e) => setNsTurma(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} placeholder="Ex.: 2º Ano A" />
             </label>
