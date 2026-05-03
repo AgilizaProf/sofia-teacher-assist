@@ -278,15 +278,11 @@ export function Assistente() {
                 <div className="tasks-grid">
                   {TASKS.map((t) => (
                     <button key={t.shortcut} className="task-card" aria-label={t.name}>
-                      <div className="task-top">
-                        <div className="task-emoji">{t.emoji}</div>
-                        <div className="task-top-meta">
-                          {t.top && <span className="task-top-pill">🔥 Top</span>}
-                          <span className="task-shortcut">{t.shortcut}</span>
-                        </div>
-                      </div>
+                      {t.top && <span className="task-top-pill">🔥 Top</span>}
+                      <div className="task-emoji">{t.emoji}</div>
                       <div className="task-name">{t.name}</div>
                       <div className="task-desc">{t.desc}</div>
+                      <span className="task-shortcut">{t.shortcut}</span>
                     </button>
                   ))}
                 </div>
