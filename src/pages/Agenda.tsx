@@ -472,25 +472,39 @@ export function Agenda() {
           <div className="ag-content">
             <div className="ag-col-main">
               <div className="ag-radar">
-                <div className="ag-radar-card">
+                <div className="ag-radar-card" onClick={() => openDayPanel(todayKey)}>
                   <span className="ag-radar-label">Hoje</span>
-                  <div className="ag-radar-count">0</div>
-                  <div className="ag-radar-desc">Nenhum evento cadastrado para hoje.</div>
+                  <div className="ag-radar-count">{counts.todayCount}</div>
+                  <div className="ag-radar-desc">
+                    {counts.todayCount === 0
+                      ? "Nenhum evento cadastrado para hoje."
+                      : `${counts.todayCount} ${counts.todayCount === 1 ? "evento" : "eventos"} hoje.`}
+                  </div>
                 </div>
-                <div className="ag-radar-card">
+                <div className="ag-radar-card" onClick={() => openDayPanel(tomorrowKey)}>
                   <span className="ag-radar-label">Amanhã</span>
-                  <div className="ag-radar-count">0</div>
-                  <div className="ag-radar-desc">Sem compromissos previstos.</div>
+                  <div className="ag-radar-count">{counts.tomorrowCount}</div>
+                  <div className="ag-radar-desc">
+                    {counts.tomorrowCount === 0
+                      ? "Sem compromissos previstos."
+                      : `${counts.tomorrowCount} ${counts.tomorrowCount === 1 ? "evento" : "eventos"} amanhã.`}
+                  </div>
                 </div>
-                <div className="ag-radar-card">
+                <div className="ag-radar-card" onClick={() => setView("semana")}>
                   <span className="ag-radar-label">Esta semana</span>
-                  <div className="ag-radar-count">0 <small>eventos</small></div>
-                  <div className="ag-radar-desc">Cadastre eventos para visualizar aqui.</div>
+                  <div className="ag-radar-count">{counts.weekCount} <small>eventos</small></div>
+                  <div className="ag-radar-desc">
+                    {counts.weekCount === 0 ? "Cadastre eventos para visualizar aqui." : "Domingo a sábado."}
+                  </div>
                 </div>
-                <div className="ag-radar-card">
+                <div className="ag-radar-card" onClick={() => counts.nextDeadline && openDayPanel(counts.nextDeadline.date)}>
                   <span className="ag-radar-label">Próximos prazos</span>
-                  <div className="ag-radar-count">0</div>
-                  <div className="ag-radar-desc">Nenhum prazo próximo.</div>
+                  <div className="ag-radar-count">{counts.deadlinesCount}</div>
+                  <div className="ag-radar-desc">
+                    {counts.nextDeadline
+                      ? <><b>{counts.nextDeadline.title}</b><br />{formatShortBR(counts.nextDeadline.date)}</>
+                      : "Nenhum prazo próximo."}
+                  </div>
                 </div>
               </div>
 
