@@ -172,25 +172,63 @@ function buildMonthGrid(year: number, month: number, todayKey: string): Day[] {
   return days;
 }
 
+function buildWeekGrid(ref: Date, todayKey: string): Day[] {
+  const start = new Date(ref);
+  start.setDate(ref.getDate() - ref.getDay()); // domingo
+  const days: Day[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const dow = d.getDay();
+    days.push({ n: d.getDate(), date: key, weekend: dow === 0 || dow === 6, today: key === todayKey });
+  }
+  return days;
+}
+
+const dateKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+type ViewMode = "dia" | "semana" | "mes" | "ano";
+
 export function Agenda() {
   const today = brNow();
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  const [cursor, setCursor] = useState<{ y: number; m: number }>({ y: today.getFullYear(), m: today.getMonth() });
+  const todayKey = dateKey(today);
+  const [view, setView] = useState<ViewMode>("mes");
+  const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
 
-  const holidays = useMemo(() => holidayMap(cursor.y), [cursor.y]);
-  const days = useMemo(() => buildMonthGrid(cursor.y, cursor.m, todayKey), [cursor.y, cursor.m, todayKey]);
+  const holidays = useMemo(() => holidayMap(cursor.getFullYear()), [cursor]);
 
-  const goPrev = () => setCursor((c) => {
-    const m = c.m - 1;
-    return m < 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m };
-  });
-  const goNext = () => setCursor((c) => {
-    const m = c.m + 1;
-    return m > 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m };
-  });
-  const goToday = () => setCursor({ y: today.getFullYear(), m: today.getMonth() });
+  const shift = (dir: 1 | -1) => {
+    const d = new Date(cursor);
+    if (view === "dia") d.setDate(d.getDate() + dir);
+    else if (view === "semana") d.setDate(d.getDate() + 7 * dir);
+    else if (view === "mes") d.setMonth(d.getMonth() + dir);
+    else d.setFullYear(d.getFullYear() + dir);
+    setCursor(d);
+  };
+  const goToday = () => setCursor(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
 
-  const monthLabel = `${MONTHS_PT[cursor.m]} ${cursor.y}`;
+  const headerLabel = useMemo(() => {
+    if (view === "dia") {
+      return `${String(cursor.getDate()).padStart(2, "0")} de ${MONTHS_PT[cursor.getMonth()]} ${cursor.getFullYear()}`;
+    }
+    if (view === "semana") {
+      const start = new Date(cursor); start.setDate(cursor.getDate() - cursor.getDay());
+      const end = new Date(start); end.setDate(start.getDate() + 6);
+      return `${String(start.getDate()).padStart(2, "0")} ${MONTHS_PT[start.getMonth()].slice(0,3)} – ${String(end.getDate()).padStart(2, "0")} ${MONTHS_PT[end.getMonth()].slice(0,3)} ${end.getFullYear()}`;
+    }
+    if (view === "mes") return `${MONTHS_PT[cursor.getMonth()]} ${cursor.getFullYear()}`;
+    return `${cursor.getFullYear()}`;
+  }, [view, cursor]);
+
+  const monthDays = useMemo(
+    () => buildMonthGrid(cursor.getFullYear(), cursor.getMonth(), todayKey),
+    [cursor, todayKey]
+  );
+  const weekDays = useMemo(() => buildWeekGrid(cursor, todayKey), [cursor, todayKey]);
+  const dayKey = dateKey(cursor);
+  const dayHoliday = holidays.get(dayKey);
 
   return (
     <div className="ag-root">
@@ -204,7 +242,7 @@ export function Agenda() {
               <div className="ag-breadcrumb">
                 <b>Sua sala</b><span className="sep">›</span>
                 <span>Agenda</span><span className="sep">›</span>
-                <span>{monthLabel}</span>
+                <span>{headerLabel}</span>
               </div>
               <h1 className="ag-title">Agenda · Radar pedagógico</h1>
               <div className="ag-meta">
@@ -246,16 +284,16 @@ export function Agenda() {
               <div className="ag-cal-card">
                 <div className="ag-cal-head">
                   <div className="ag-cal-nav">
-                    <button className="ag-cal-nav-btn" aria-label="Mês anterior" onClick={goPrev}><ChevronLeft size={14} /></button>
-                    <div className="ag-cal-month">{monthLabel}</div>
-                    <button className="ag-cal-nav-btn" aria-label="Próximo mês" onClick={goNext}><ChevronRight size={14} /></button>
+                    <button className="ag-cal-nav-btn" aria-label="Anterior" onClick={() => shift(-1)}><ChevronLeft size={14} /></button>
+                    <div className="ag-cal-month">{headerLabel}</div>
+                    <button className="ag-cal-nav-btn" aria-label="Próximo" onClick={() => shift(1)}><ChevronRight size={14} /></button>
                     <button className="ag-btn" style={{ padding: "5px 10px", fontSize: 11.5, marginLeft: 4 }} onClick={goToday}>Hoje</button>
                   </div>
                   <div className="ag-cal-views">
-                    <button className="ag-cal-view">Dia</button>
-                    <button className="ag-cal-view">Semana</button>
-                    <button className="ag-cal-view active">Mês</button>
-                    <button className="ag-cal-view">Ano</button>
+                    <button className={"ag-cal-view" + (view === "dia" ? " active" : "")} onClick={() => setView("dia")}>Dia</button>
+                    <button className={"ag-cal-view" + (view === "semana" ? " active" : "")} onClick={() => setView("semana")}>Semana</button>
+                    <button className={"ag-cal-view" + (view === "mes" ? " active" : "")} onClick={() => setView("mes")}>Mês</button>
+                    <button className={"ag-cal-view" + (view === "ano" ? " active" : "")} onClick={() => setView("ano")}>Ano</button>
                   </div>
                   <div className="ag-cal-legend">
                     <span className="ag-legend-item"><span className="ag-legend-dot" style={{ background: "var(--meeting)" }} />Reunião</span>
@@ -267,24 +305,99 @@ export function Agenda() {
                   </div>
                 </div>
 
-                <div className="ag-cal-weekdays">
-                  {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map((d) => <div key={d} className="ag-cal-weekday">{d}</div>)}
-                </div>
+                {(view === "mes" || view === "semana") && (
+                  <div className="ag-cal-weekdays">
+                    {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map((d) => <div key={d} className="ag-cal-weekday">{d}</div>)}
+                  </div>
+                )}
 
-                <div className="ag-cal-grid">
-                  {days.map((d, i) => {
-                    const holiday = holidays.get(d.date);
-                    return (
-                      <div key={i} className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}>
-                        <span className="ag-cal-num">{d.n}</span>
-                        {d.today && <span className="ag-cal-day-flag">Hoje</span>}
-                        {holiday && !d.other && (
-                          <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
-                        )}
+                {view === "mes" && (
+                  <div className="ag-cal-grid">
+                    {monthDays.map((d, i) => {
+                      const holiday = holidays.get(d.date);
+                      return (
+                        <div key={i} className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}>
+                          <span className="ag-cal-num">{d.n}</span>
+                          {d.today && <span className="ag-cal-day-flag">Hoje</span>}
+                          {holiday && !d.other && (
+                            <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {view === "semana" && (
+                  <div className="ag-cal-grid" style={{ gridAutoRows: "minmax(180px,auto)" }}>
+                    {weekDays.map((d, i) => {
+                      const holiday = holidays.get(d.date);
+                      return (
+                        <div key={i} className={"ag-cal-day" + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}>
+                          <span className="ag-cal-num">{d.n}</span>
+                          {d.today && <span className="ag-cal-day-flag">Hoje</span>}
+                          {holiday && (
+                            <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {view === "dia" && (
+                  <div style={{ padding: 24 }}>
+                    <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>
+                      {["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"][cursor.getDay()]}, {cursor.getDate()} de {MONTHS_PT[cursor.getMonth()]}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-mute)", marginBottom: 16 }}>
+                      {dayKey === todayKey ? "Hoje" : ""}
+                    </div>
+                    {dayHoliday && (
+                      <div className="ag-cal-event holiday" style={{ display: "inline-block", marginBottom: 12 }}>
+                        Feriado nacional · {dayHoliday}
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+                    <div style={{ fontSize: 13, color: "var(--text-mute)" }}>
+                      Nenhum evento cadastrado para este dia.
+                    </div>
+                  </div>
+                )}
+
+                {view === "ano" && (
+                  <div style={{ padding: 18, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+                    {MONTHS_PT.map((mn, mi) => {
+                      const mDays = buildMonthGrid(cursor.getFullYear(), mi, todayKey);
+                      return (
+                        <button
+                          key={mi}
+                          onClick={() => { setCursor(new Date(cursor.getFullYear(), mi, 1)); setView("mes"); }}
+                          style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 12, padding: 10, cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}
+                        >
+                          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{mn}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, fontSize: 10, color: "var(--text-mute)" }}>
+                            {["D","S","T","Q","Q","S","S"].map((w, wi) => (
+                              <div key={"w"+wi} style={{ textAlign: "center", fontWeight: 700 }}>{w}</div>
+                            ))}
+                            {mDays.map((d, di) => {
+                              const isHol = holidays.has(d.date) && !d.other;
+                              return (
+                                <div key={di} style={{
+                                  textAlign: "center", padding: "2px 0", borderRadius: 4,
+                                  color: d.other ? "#cdd4e0" : isHol ? "#C2410C" : "var(--text)",
+                                  background: d.today ? "var(--accent)" : isHol ? "#FFF1E8" : "transparent",
+                                  fontWeight: d.today ? 700 : 500,
+                                }}>
+                                  {d.n}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
