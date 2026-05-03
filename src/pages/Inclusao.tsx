@@ -259,9 +259,81 @@ const css = `
 .inc-a4 ul{font-size:12.5px;line-height:1.7;padding-left:22px;margin-bottom:8px;font-family:'Inter',sans-serif;}
 
 @media(max-width:720px){.inc-app{grid-template-columns:1fr;}}
+
+/* PLAN tab */
+.plan-hero{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;margin-bottom:14px;}
+.plan-hero::before{content:"";position:absolute;top:-40%;right:-15%;width:70%;height:140%;background:radial-gradient(circle,rgba(255,122,69,.32) 0%,transparent 60%);pointer-events:none;}
+.plan-hero > *{position:relative;z-index:1;}
+.plan-hero .tag-line{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.7);margin-bottom:8px;}
+.plan-hero h3{font-family:'Fraunces',serif;font-size:22px;font-weight:700;margin-bottom:10px;color:#fff;}
+.plan-hero p{color:rgba(255,255,255,.85);font-size:13px;margin-bottom:14px;}
+.plan-strats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+@media(max-width:1024px){.plan-strats{grid-template-columns:1fr;}}
+.plan-strat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:12px 14px;}
+.plan-strat b{display:block;color:var(--accent-warm);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.plan-strat span{color:rgba(255,255,255,.85);font-size:12.5px;line-height:1.45;}
+.plan-list{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.plan-item{background:#fff;border:1px solid var(--border);border-radius:11px;padding:14px 16px;display:grid;grid-template-columns:80px 1fr auto;gap:14px;align-items:center;}
+@media(max-width:720px){.plan-item{grid-template-columns:1fr;}}
+.plan-item .when{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;}
+.plan-item .when b{display:block;font-size:14px;color:var(--text);}
+.plan-item h5{font-weight:700;font-size:13.5px;margin-bottom:4px;}
+.plan-item .meta-row{display:flex;flex-wrap:wrap;gap:6px;font-size:11.5px;color:var(--muted);}
+.plan-item .bncc{font-family:'JetBrains Mono',monospace;background:var(--bg);padding:2px 7px;border-radius:5px;color:var(--text);font-weight:600;}
+.plan-item .adapted{background:var(--accent-soft);color:#B8410E;padding:2px 7px;border-radius:5px;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;}
+
+/* REG tab */
+.reg-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.reg-filter{padding:7px 12px;border-radius:8px;background:#fff;border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text);cursor:pointer;transition:.15s;}
+.reg-filter.active,.reg-filter:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+.reg-list{display:flex;flex-direction:column;gap:10px;}
+.reg-item{background:#fff;border:1px solid var(--border);border-radius:11px;padding:14px 16px;}
+.reg-item-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+.reg-when{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);font-weight:700;}
+.reg-author{font-size:12px;font-weight:600;color:var(--text);}
+.reg-cat{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.04em;margin-left:auto;}
+.reg-cat.ped{background:#E0F2FE;color:#0C4A6E;}
+.reg-cat.com{background:#FEF3C7;color:#78350F;}
+.reg-cat.sen{background:#FCE7F3;color:#831843;}
+.reg-cat.fam{background:#DCFCE7;color:#14532D;}
+.reg-body{font-size:13px;color:var(--text);line-height:1.5;}
+.reg-att{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}
+.reg-att span{font-size:11px;background:var(--bg);padding:4px 8px;border-radius:6px;color:var(--muted);font-weight:600;display:inline-flex;align-items:center;gap:4px;}
+
+/* REL tab */
+.rel-feature{background:linear-gradient(135deg,var(--accent-soft),#FFE4D2);border:1px solid #FFD4B8;border-radius:14px;padding:18px 20px;margin-bottom:14px;}
+.rel-feature h4{font-family:'Fraunces',serif;font-size:18px;color:#7A2E0A;margin-bottom:6px;}
+.rel-feature p{color:#7A2E0A;font-size:12.5px;margin-bottom:12px;}
+.rel-list{display:flex;flex-direction:column;gap:10px;}
+.rel-row{background:#fff;border:1px solid var(--border);border-radius:11px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.rel-row .ico{width:36px;height:36px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex-shrink:0;}
+.rel-row .info{flex:1;min-width:200px;}
+.rel-row .info b{display:block;font-size:13.5px;font-weight:700;}
+.rel-row .info span{font-size:11.5px;color:var(--muted);}
+.rel-status{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em;}
+.rel-status.ok{background:#DCFCE7;color:#14532D;}
+.rel-status.draft{background:#FEF3C7;color:#78350F;}
+.rel-actions{display:flex;gap:6px;}
+.rel-suggest{margin-top:14px;background:#fff;border:1px dashed var(--accent);border-radius:12px;padding:14px 16px;}
+.rel-suggest h5{font-family:'Fraunces',serif;font-size:14.5px;margin-bottom:10px;color:var(--text);}
+.rel-suggest ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.rel-suggest li{font-size:12.5px;color:var(--text);display:flex;gap:8px;align-items:flex-start;}
+.rel-suggest li::before{content:"•";color:var(--accent);font-weight:900;}
+
+/* DOC tab */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.doc-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;}
+.doc-card .doc-head{display:flex;align-items:center;gap:10px;}
+.doc-card .doc-ic{width:36px;height:36px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:12px;flex-shrink:0;}
+.doc-card b{font-size:13.5px;font-weight:700;line-height:1.3;}
+.doc-card .doc-meta{font-size:11.5px;color:var(--muted);}
+.doc-card .doc-acts{display:flex;gap:6px;margin-top:6px;}
+.doc-card .doc-acts button{flex:1;padding:7px 10px;border-radius:7px;font-size:11.5px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:5px;}
+.doc-card .doc-acts button:hover{border-color:var(--accent);color:var(--accent);}
+.doc-card .doc-acts .primary{background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;border:none;}
 `;
 
-type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel";
+type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel" | "doc";
 type ViewKey = "list" | "detail";
 
 type Student = {
@@ -298,6 +370,39 @@ const TUTORIAL_STEPS = [
   { t: "Gere o Planejamento", d: "Configure período, escolha disciplinas e gere atividades já adaptadas conforme o PEI vigente." },
   { t: "Faça Registros frequentes", d: "Cada registro alimenta o relatório anual. Use observações rápidas para ganhar velocidade." },
   { t: "Gere o Relatório IA", d: "Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar." },
+];
+
+const PLAN_WEEK = [
+  { when: "TER", date: "06 MAI", disc: "Língua Portuguesa", title: "Leitura compartilhada · O patinho feio", bncc: "EF02LP04", adapted: true },
+  { when: "QUA", date: "07 MAI", disc: "Matemática", title: "Adição com material dourado até 50", bncc: "EF02MA05", adapted: true },
+  { when: "QUI", date: "08 MAI", disc: "Ciências", title: "Os sentidos · experimentos sensoriais", bncc: "EF02CI03", adapted: false },
+  { when: "SEX", date: "09 MAI", disc: "Arte", title: "Colagem coletiva · estações do ano", bncc: "EF15AR05", adapted: true },
+];
+
+const REG_ITEMS = [
+  { when: "HOJE · 14h05", who: "Sofia · IA", cat: "ped" as const, catLabel: "Pedagógico", body: "Aula de Frações adaptada com 3 estratégias (visual, pacing, mediação). Aguardando aplicação pela Profa. Camila às 16h.", att: ["📎 plano-aula-adaptado.pdf"] },
+  { when: "29 ABR · 10h12", who: "Profa. Camila Ribeiro", cat: "ped" as const, catLabel: "Pedagógico", body: "Pedrinho atingiu o objetivo PEI #6: sustentou trabalho em dupla com a Ana Clara por 22 minutos resolvendo um quebra-cabeça de números. Excelente regulação emocional.", att: ["📷 evidencia-dupla.jpg", "🎙️ audio-1m23s.m4a"] },
+  { when: "25 ABR · 19h30", who: "Família · Mãe (Juliana)", cat: "fam" as const, catLabel: "Família", body: "Reunião bimestral. Mãe relatou que em casa Pedrinho está nomeando frações ao dividir bolo (\"metade\", \"pedaço inteiro\"). Combinamos manter os fones abafadores também na hora do recreio.", att: ["📄 ata-reuniao-25-04.pdf"] },
+  { when: "18 ABR · 09h45", who: "Profa. Carla Mendonça (AEE)", cat: "sen" as const, catLabel: "Sensorial", body: "Crise sensorial breve durante aula de Música (volume da flauta). Resolvida em 3 min com fone abafador + canto da calma. Pedrinho retomou a atividade sozinho.", att: [] },
+  { when: "12 ABR · 14h00", who: "Profa. Camila Ribeiro", cat: "com" as const, catLabel: "Comportamental", body: "Solicitou pausa sozinho ao perceber sobrecarga (objetivo PEI #7 atingido novamente). Verbalizou: 'preciso respirar'.", att: [] },
+  { when: "04 ABR · 16h20", who: "Equipe pedagógica", cat: "ped" as const, catLabel: "Pedagógico", body: "PEI revisado em conjunto com AEE e família. Versão v3.2 publicada com 9 objetivos vigentes.", att: ["📄 PEI-v3.2.pdf"] },
+];
+
+const REL_PAST = [
+  { bim: "4º bimestre · 2025", date: "12/12/2025", status: "ok" as const, statusLabel: "Assinado" },
+  { bim: "3º bimestre · 2025", date: "26/09/2025", status: "ok" as const, statusLabel: "Assinado" },
+  { bim: "2º bimestre · 2025", date: "04/07/2025", status: "ok" as const, statusLabel: "Assinado" },
+  { bim: "1º bimestre · 2025", date: "11/04/2025", status: "ok" as const, statusLabel: "Assinado" },
+];
+
+const DOCS = [
+  { ic: "PDF", t: "Laudo médico · TEA Nível 1", who: "Dr. Ricardo Mendes · CRM 123456", date: "12/03/2025", size: "1.2 MB" },
+  { ic: "PEI", t: "PEI v3.2 · vigente", who: "Equipe pedagógica + AEE + família", date: "04/04/2026", size: "684 KB" },
+  { ic: "ATA", t: "Ata · reunião bimestral", who: "Família + Profa. Camila", date: "25/04/2026", size: "212 KB" },
+  { ic: "ATA", t: "Ata · revisão de PEI", who: "Equipe + AEE", date: "04/04/2026", size: "198 KB" },
+  { ic: "ATA", t: "Ata · acolhimento inicial", who: "Coordenação + família", date: "08/02/2025", size: "176 KB" },
+  { ic: "AVA", t: "Avaliação pedagógica diagnóstica", who: "Profa. Camila Ribeiro", date: "20/02/2026", size: "456 KB" },
+  { ic: "AUT", t: "Autorização · uso de imagem", who: "Família (Juliana Almeida)", date: "08/02/2025", size: "88 KB" },
 ];
 
 export function Inclusao() {
@@ -458,6 +563,7 @@ export function Inclusao() {
                     { k: "plan", label: "Planejamento" },
                     { k: "reg", label: "Registros", count: "23" },
                     { k: "rel", label: "Relatório IA" },
+                    { k: "doc", label: "Documentos", count: "7" },
                   ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
                     <button key={t.k} className={"tab" + (tab === t.k ? " active" : "")} onClick={() => setActiveTab(t.k)} role="tab" aria-selected={tab === t.k}>
                       {t.label}{t.count && <span className="tab-count">{t.count}</span>}
@@ -596,26 +702,136 @@ export function Inclusao() {
                 </div>
 
                 <div className={"panel" + (tab === "plan" ? " active" : "")}>
-                  <div className="simple">
-                    <h4>Planejamento adaptado</h4>
-                    <p>Configure período, disciplinas e gere atividades já com adaptação aplicada conforme o PEI vigente.</p>
-                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Sparkles size={14} /> Gerar sugestões com IA</button></div>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Planejamento adaptado · Pedrinho</h3>
+                      <span className="legal">PEI v3.2 · BNCC Inclusão</span>
+                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
+                    </div>
+                    <div className="plan-hero">
+                      <div className="tag-line">Aula de hoje · 16h</div>
+                      <h3>Frações e Partilha Justa · Matemática</h3>
+                      <p>3 adaptações já preparadas pela Sofia, alinhadas à BNCC EF02MA08 e ao objetivo PEI #4.</p>
+                      <div className="plan-strats">
+                        <div className="plan-strat"><b>Visual</b><span>Substituir "metade" por imagem da pizza dividida — material concreto disponível.</span></div>
+                        <div className="plan-strat"><b>Pacing</b><span>3 micro-blocos de 5 min com pausas sensoriais entre eles.</span></div>
+                        <div className="plan-strat"><b>Mediação</b><span>Profa. Carla (AEE) alinhada · script enviado às 13h.</span></div>
+                      </div>
+                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}>Aplicar adaptações <ChevronRight size={14} /></button>
+                    </div>
+                    <div className="plan-list">
+                      {PLAN_WEEK.map((p) => (
+                        <div className="plan-item" key={p.title}>
+                          <div className="when">{p.when}<b>{p.date}</b></div>
+                          <div>
+                            <h5>{p.title}</h5>
+                            <div className="meta-row">
+                              <span>{p.disc}</span>
+                              <span className="bncc">{p.bncc}</span>
+                              {p.adapted && <span className="adapted">Adaptado pela Sofia</span>}
+                            </div>
+                          </div>
+                          <button className="inc-btn-ghost"><FileText size={12} /> Abrir</button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 <div className={"panel" + (tab === "reg" ? " active" : "")}>
-                  <div className="simple">
-                    <h4>Registros pedagógicos · 23</h4>
-                    <p>Filtros: Pedagógico · Social · Comportamental · Psicomotor.</p>
-                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Plus size={14} /> Novo registro</button></div>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Registros pedagógicos · 23</h3>
+                      <button className="btn btn-primary"><Plus size={14} /> Novo registro</button>
+                    </div>
+                    <div className="reg-filters">
+                      <button className="reg-filter active">Todos · 23</button>
+                      <button className="reg-filter">Pedagógicos · 12</button>
+                      <button className="reg-filter">Comportamentais · 4</button>
+                      <button className="reg-filter">Sensoriais · 3</button>
+                      <button className="reg-filter">Família · 4</button>
+                    </div>
+                    <div className="reg-list">
+                      {REG_ITEMS.map((r, i) => (
+                        <div className="reg-item" key={i}>
+                          <div className="reg-item-head">
+                            <span className="reg-when">{r.when}</span>
+                            <span className="reg-author">· {r.who}</span>
+                            <span className={"reg-cat " + r.cat}>{r.catLabel}</span>
+                          </div>
+                          <div className="reg-body">{r.body}</div>
+                          {r.att.length > 0 && (
+                            <div className="reg-att">{r.att.map((a) => <span key={a}>{a}</span>)}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 <div className={"panel" + (tab === "rel" ? " active" : "")}>
-                  <div className="simple">
-                    <h4>Relatório IA · Parecer Descritivo</h4>
-                    <p>Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar (Word/PDF), conforme Lei 14.254/2021.</p>
-                    <div style={{ marginTop: 12 }}><button className="btn btn-primary"><Sparkles size={14} /> Gerar com a Sofia</button></div>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Relatórios · Pareceres descritivos</h3>
+                      <span className="legal">Lei 14.254/2021</span>
+                    </div>
+                    <div className="rel-feature">
+                      <h4>Parecer descritivo bimestral · 1º bim 2026</h4>
+                      <p>A Sofia consolida 23 registros + PEI v3.2 + anamnese em um parecer pronto para exportar (Word/PDF) e assinar.</p>
+                      <button className="btn btn-primary"><Sparkles size={14} /> Gerar com a Sofia (~3 min)</button>
+                    </div>
+                    <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, margin: "16px 0 10px" }}>Pareceres anteriores · 2025</h4>
+                    <div className="rel-list">
+                      {REL_PAST.map((r) => (
+                        <div className="rel-row" key={r.bim}>
+                          <div className="ico"><FileText size={16} /></div>
+                          <div className="info">
+                            <b>{r.bim}</b>
+                            <span>Emitido em {r.date}</span>
+                          </div>
+                          <span className={"rel-status " + r.status}>{r.statusLabel}</span>
+                          <div className="rel-actions">
+                            <button className="inc-btn-ghost"><Download size={12} /> PDF</button>
+                            <button className="inc-btn-ghost">Reabrir</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rel-suggest">
+                      <h5>Próximos pareceres sugeridos pela Sofia</h5>
+                      <ul>
+                        <li>Relatório intermediário de progresso · objetivo PEI #1 (Leitura silábica) — sugerido para 20/05.</li>
+                        <li>Comunicado à família · avanços em Matemática concreta — pronto para enviar.</li>
+                        <li>Anexo BNCC Inclusão para conselho de classe de junho — base já consolidada.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={"panel" + (tab === "doc" ? " active" : "")}>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Documentos · Pedrinho Almeida</h3>
+                      <button className="btn btn-primary"><Plus size={14} /> Adicionar documento</button>
+                    </div>
+                    <div className="doc-grid">
+                      {DOCS.map((d) => (
+                        <div className="doc-card" key={d.t}>
+                          <div className="doc-head">
+                            <div className="doc-ic">{d.ic}</div>
+                            <div>
+                              <b>{d.t}</b>
+                              <div className="doc-meta">{d.who}</div>
+                            </div>
+                          </div>
+                          <div className="doc-meta">{d.date} · {d.size}</div>
+                          <div className="doc-acts">
+                            <button>Visualizar</button>
+                            <button className="primary"><Download size={12} /> Baixar</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </>
