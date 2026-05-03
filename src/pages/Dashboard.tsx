@@ -327,14 +327,6 @@ export function Dashboard() {
                 <Svg width={11} height={11} c={<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>} />
               </button>
             </div>
-            <div className="sb-bruna">
-              <div className="sb-bruna-avatar">BC</div>
-              <div className="sb-bruna-text">
-                <div className="sb-bruna-name">Bruna Cassaro</div>
-                <div className="sb-bruna-role">Mentoria pedagógica</div>
-                <span className="sb-bruna-badge">Live · Quinta 19h</span>
-              </div>
-            </div>
             <div className="sb-version">v3.2 · Atualizado hoje</div>
           </div>
         </aside>
