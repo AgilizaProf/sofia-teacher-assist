@@ -610,8 +610,63 @@ export function Inclusao() {
   const [newStudentOpen, setNewStudentOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [planYearFilter, setPlanYearFilter] = useState<string>("");
+  type RegCat = "ped" | "com" | "sen" | "fam";
+  type RegItem = { id: string; when: string; who: string; cat: RegCat; body: string };
+  const [regByStudent, setRegByStudent] = useState<Record<string, RegItem[]>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem("inc_reg");
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return {};
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("inc_reg", JSON.stringify(regByStudent)); } catch { /* ignore */ }
+  }, [regByStudent]);
+  const [regFilter, setRegFilter] = useState<"todos" | RegCat>("todos");
+  const [regModalOpen, setRegModalOpen] = useState(false);
+  const [nrCat, setNrCat] = useState<RegCat>("ped");
+  const [nrBody, setNrBody] = useState("");
+  const REG_CAT_LABEL: Record<RegCat, string> = { ped: "Pedagógico", com: "Comportamental", sen: "Sensorial", fam: "Família" };
+  const REG_QUICK: Record<RegCat, string[]> = {
+    ped: [
+      "Demonstrou progresso na atividade proposta.",
+      "Necessitou de apoio individualizado.",
+      "Concluiu a tarefa com adaptação visual.",
+      "Apresentou dificuldade na compreensão da consigna.",
+    ],
+    com: [
+      "Manteve postura colaborativa com os colegas.",
+      "Apresentou episódio de desregulação emocional.",
+      "Recusou-se a iniciar a atividade.",
+      "Respondeu bem ao redirecionamento positivo.",
+    ],
+    sen: [
+      "Reagiu a estímulos sonoros do ambiente.",
+      "Buscou recurso sensorial (fone/abafador).",
+      "Apresentou desconforto com texturas.",
+      "Necessitou de pausa sensorial durante a aula.",
+    ],
+    fam: [
+      "Família relatou boa rotina de sono na semana.",
+      "Comunicado enviado sobre evolução pedagógica.",
+      "Reunião agendada com responsáveis.",
+      "Família solicitou orientações sobre rotina em casa.",
+    ],
+  };
+  const handleSaveReg = (e: React.FormEvent) => {
+    e.preventDefault();
+    const body = nrBody.trim();
+    if (!body || !studentKey || studentKey === "_none") return;
+    const now = new Date();
+    const when = now.toLocaleDateString("pt-BR") + " · " + now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const item: RegItem = { id: `r_${Date.now()}`, when, who: "Você", cat: nrCat, body };
+    setRegByStudent((all) => ({ ...all, [studentKey]: [item, ...(all[studentKey] || [])] }));
+    setNrBody(""); setNrCat("ped"); setRegModalOpen(false);
+  };
   const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
   const studentKey = selectedId || "_none";
+  const studentRegs = regByStudent[studentKey] || [];
   const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
   const [anamByStudent, setAnamByStudent] = useState<Record<string, ReturnType<typeof buildBlankAnam>>>(() => {
     if (typeof window === "undefined") return {};
@@ -1158,28 +1213,36 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "reg" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Registros pedagógicos · 23</h3>
-                      <button className="btn btn-primary"><Plus size={14} /> Novo registro</button>
+                      <h3>Registros pedagógicos · {studentRegs.length}</h3>
+                      <button className="btn btn-primary" onClick={() => setRegModalOpen(true)}><Plus size={14} /> Novo registro</button>
                     </div>
                     <div className="reg-filters">
-                      <button className="reg-filter active">Todos · 23</button>
-                      <button className="reg-filter">Pedagógicos · 12</button>
-                      <button className="reg-filter">Comportamentais · 4</button>
-                      <button className="reg-filter">Sensoriais · 3</button>
-                      <button className="reg-filter">Família · 4</button>
+                      {([
+                        { k: "todos", l: "Todos" },
+                        { k: "ped", l: "Pedagógicos" },
+                        { k: "com", l: "Comportamentais" },
+                        { k: "sen", l: "Sensoriais" },
+                        { k: "fam", l: "Família" },
+                      ] as const).map(f => {
+                        const count = f.k === "todos" ? studentRegs.length : studentRegs.filter(r => r.cat === f.k).length;
+                        return (
+                          <button key={f.k} type="button" onClick={() => setRegFilter(f.k)} className={"reg-filter" + (regFilter === f.k ? " active" : "")}>{f.l} · {count}</button>
+                        );
+                      })}
                     </div>
                     <div className="reg-list">
-                      {REG_ITEMS.map((r, i) => (
-                        <div className="reg-item" key={i}>
+                      {studentRegs.filter(r => regFilter === "todos" || r.cat === regFilter).length === 0 ? (
+                        <div style={{ background: "#fff", border: "1px dashed var(--border)", borderRadius: 11, padding: 22, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                          Nenhum registro ainda. Clique em <b>Novo registro</b> para começar.
+                        </div>
+                      ) : studentRegs.filter(r => regFilter === "todos" || r.cat === regFilter).map((r) => (
+                        <div className="reg-item" key={r.id}>
                           <div className="reg-item-head">
                             <span className="reg-when">{r.when}</span>
                             <span className="reg-author">· {r.who}</span>
-                            <span className={"reg-cat " + r.cat}>{r.catLabel}</span>
+                            <span className={"reg-cat " + r.cat}>{REG_CAT_LABEL[r.cat]}</span>
                           </div>
                           <div className="reg-body">{r.body}</div>
-                          {r.att.length > 0 && (
-                            <div className="reg-att">{r.att.map((a) => <span key={a}>{a}</span>)}</div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -1516,6 +1579,54 @@ export function Inclusao() {
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
               <button type="submit" className="btn btn-primary">Salvar aluno</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Novo registro */}
+      <div className={"inc-modal-overlay" + (regModalOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setRegModalOpen(false); }}>
+        <div className="inc-modal" style={{ maxWidth: 600 }}>
+          <div className="inc-modal-bar" />
+          <div className="inc-modal-head">
+            <h2>Novo registro {selected ? "· " + selected.name : ""}</h2>
+            <button className="inc-modal-close" onClick={() => setRegModalOpen(false)} aria-label="Fechar"><X size={16} /></button>
+          </div>
+          <form className="inc-modal-body plain" onSubmit={handleSaveReg} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Tipo de registro</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {(["ped","com","sen","fam"] as RegCat[]).map(k => (
+                  <button type="button" key={k} onClick={() => setNrCat(k)} className={"reg-filter" + (nrCat === k ? " active" : "")}>{REG_CAT_LABEL[k]}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Opções rápidas</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {REG_QUICK[nrCat].map(s => (
+                  <button
+                    type="button"
+                    key={s}
+                    onClick={() => setNrBody(prev => prev.trim() ? prev.trim() + (prev.trim().endsWith(".") ? " " : ". ") + s : s)}
+                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "#fff", fontSize: 12, cursor: "pointer", textAlign: "left" }}
+                  >+ {s}</button>
+                ))}
+              </div>
+            </div>
+            <label style={{ fontSize: 12, fontWeight: 700 }}>Descrição
+              <textarea
+                required
+                value={nrBody}
+                onChange={(e) => setNrBody(e.target.value)}
+                rows={5}
+                placeholder="Descreva o registro…"
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, fontFamily: "inherit", fontSize: 13, resize: "vertical" }}
+              />
+            </label>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+              <button type="button" className="inc-btn-ghost" onClick={() => setRegModalOpen(false)}>Cancelar</button>
+              <button type="submit" className="btn btn-primary"><Plus size={14} /> Salvar registro</button>
             </div>
           </form>
         </div>
