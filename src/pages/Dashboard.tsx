@@ -273,6 +273,10 @@ export function Dashboard() {
   const documentsGenerated = user.documentsGenerated;
   const h = user.hoursSavedWeek;
   const m = user.minutesSavedWeek;
+  const totalMinutes = h * 60 + m;
+  const goalMinutes = Math.max(1, user.weeklyGoalHours * 60);
+  const goalPct = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100));
+  const goalReached = totalMinutes >= goalMinutes;
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
   useEffect(() => {
