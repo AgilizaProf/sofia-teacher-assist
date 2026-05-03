@@ -623,7 +623,6 @@ export function Inclusao() {
   useEffect(() => {
     try { window.localStorage.setItem("inc_reg", JSON.stringify(regByStudent)); } catch { /* ignore */ }
   }, [regByStudent]);
-  const studentRegs = regByStudent[studentKey] || [];
   const [regFilter, setRegFilter] = useState<"todos" | RegCat>("todos");
   const [regModalOpen, setRegModalOpen] = useState(false);
   const [nrCat, setNrCat] = useState<RegCat>("ped");
@@ -667,6 +666,7 @@ export function Inclusao() {
   };
   const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
   const studentKey = selectedId || "_none";
+  const studentRegs = regByStudent[studentKey] || [];
   const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
   const [anamByStudent, setAnamByStudent] = useState<Record<string, ReturnType<typeof buildBlankAnam>>>(() => {
     if (typeof window === "undefined") return {};
