@@ -291,13 +291,7 @@ export function Agenda() {
                   <span className="ag-up-link">Ver todos</span>
                 </div>
                 <div className="ag-up-list">
-                  {[
-                    { d: "07", m: "Hoje", tag: "meeting", tagL: "Reunião · 14h", n: "Reunião de pais — 5ºA", meta: ["👥 22 famílias", "Sala 12"], prep: "✓ Sofia preparou pauta + boletins", pending: false },
-                    { d: "08", m: "Qua", tag: "eval", tagL: "Avaliação · 8h", n: "Prova de Matemática — 4ºB", meta: ["📐 Frações · BNCC EF04MA10"], prep: "⚠ Sofia precisa: ajustar prova p/ Pedrinho (TEA)", pending: true },
-                    { d: "14", m: "Ter", tag: "meeting", tagL: "Conselho · 19h", n: "Conselho de classe — 1º bimestre", meta: ["🏫 Toda a escola"], prep: "✓ Sofia preparou síntese de 27 alunos", pending: false },
-                    { d: "15", m: "Qua", tag: "report", tagL: "Prazo · 23h59", n: "Boletins 1º bimestre", meta: ["📄 27 pareceres", "Sec. escolar"], prep: "⚠ 4h estimadas · Sofia faz em 30min", pending: true },
-                    { d: "16", m: "Qui", tag: "pcd", tagL: "Inclusão · 16h", n: "Reunião AEE — Lucas (TDAH)", meta: ["💜 PEI revisão"], prep: "✓ Sofia atualizou plano individualizado", pending: false },
-                  ].map((it, i) => (
+                  {([] as Array<{ d: string; m: string; tag: string; tagL: string; n: string; meta: string[]; prep: string; pending: boolean }>).map((it, i) => (
                     <div key={i} className="ag-up-item">
                       <div className="ag-up-day">
                         <div className="ag-up-day-num">{it.d}</div>
