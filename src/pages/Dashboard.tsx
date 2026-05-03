@@ -87,7 +87,7 @@ const css = `
 .hero-title .accent::after{content:"";position:absolute;left:0;right:0;bottom:3px;height:9px;background:rgba(255,122,69,.22);z-index:-1;border-radius:3px;}
 .hero-sub{font-size:14px;color:rgba(255,255,255,.78);line-height:1.55;max-width:480px;margin-bottom:22px;}
 .hero-cta-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.ap-root .hero-cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#FF7A45,#FF9466) !important;color:#fff !important;border:none;border-radius:11px;padding:13px 20px;font-size:14px;font-weight:800;box-shadow:0 12px 28px rgba(255,122,69,.35);transition:all .25s;}
+.ap-root .hero-cta{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#FF7A45,#FF9466) !important;color:#fff !important;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;box-shadow:0 10px 22px rgba(255,122,69,.32);transition:all .25s;width:auto;}
 .hero-cta:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(255,122,69,.55);}
 .hero-cta svg{width:15px;height:15px;transition:transform .2s;}
 .hero-cta:hover svg{transform:translateX(3px);}
