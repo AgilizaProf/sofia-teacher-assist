@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 
@@ -436,7 +436,6 @@ export function Agenda() {
             </div>
             <div className="ag-actions">
               <button className="ag-btn"><Filter size={14} /> Filtrar</button>
-              <button className="ag-btn"><RefreshCw size={14} /> Sincronizar Google</button>
               <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
             </div>
           </div>
