@@ -1,13 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Inclusao } from "@/pages/Inclusao";
 
-type Search = { tab?: "anam" | "pei" | "plan" | "reg" | "rel" | "doc" };
+type Search = { tab?: "hoje" | "anam" | "plan" | "reg" | "rel"; view?: "list" | "detail"; aluno?: string };
 
 export const Route = createFileRoute("/inclusao")({
   validateSearch: (s: Record<string, unknown>): Search => {
-    const t = s.tab;
-    const allowed = ["anam", "pei", "plan", "reg", "rel", "doc"] as const;
-    return { tab: allowed.includes(t as never) ? (t as Search["tab"]) : "anam" };
+    const tabs = ["hoje", "anam", "plan", "reg", "rel"] as const;
+    const views = ["list", "detail"] as const;
+    return {
+      tab: tabs.includes(s.tab as never) ? (s.tab as Search["tab"]) : "hoje",
+      view: views.includes(s.view as never) ? (s.view as Search["view"]) : "list",
+      aluno: typeof s.aluno === "string" ? s.aluno : undefined,
+    };
   },
   head: () => ({
     meta: [
