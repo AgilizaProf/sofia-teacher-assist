@@ -367,7 +367,7 @@ export function Dashboard() {
             </div>
           </section>
 
-          {showFocus && (
+          {!onboardingDone && (
             <div className="today-focus">
               <div className="today-focus-icon">
                 <div className="today-focus-icon-inner">
@@ -375,21 +375,17 @@ export function Dashboard() {
                 </div>
               </div>
               <div className="today-focus-content">
-                <span className="today-focus-tag">✨ Foco de hoje · sugerido pela IA</span>
-                <div className="today-focus-title"><strong>Caio (TDAH)</strong> precisa de uma atividade adaptada para a aula de matemática de amanhã.</div>
+                <span className="today-focus-tag">✨ Bem-vinda · primeiros passos</span>
+                <div className="today-focus-title">
+                  ✅ Conta criada &nbsp;·&nbsp;
+                  {totalClasses > 0 ? "✅" : "⬜"} Cadastrar primeira turma &nbsp;·&nbsp;
+                  {totalStudents > 0 ? "✅" : "⬜"} Adicionar alunos &nbsp;·&nbsp;
+                  {documentsGenerated > 0 ? "✅" : "⬜"} Conversar com a Sofia
+                </div>
                 <div className="today-focus-meta">
-                  <span>~2 minutos para gerar</span>
-                  <span className="sep" />
-                  <span>baseado no laudo já cadastrado</span>
+                  <span>Conclua os passos pra liberar todo o potencial da Sofia.</span>
                 </div>
               </div>
-              <button className="today-focus-action">
-                Adaptar agora
-                <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
-              </button>
-              <button className="today-focus-dismiss" aria-label="Dispensar" onClick={() => setShowFocus(false)}>
-                <Svg strokeWidth={2.5} c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
-              </button>
             </div>
           )}
 
