@@ -385,7 +385,7 @@ type Student = {
 
 const STUDENTS: Student[] = [];
 
-const PEI_EIXOS: Array<{ ic: string; cls: string; h: string; status: string; tone: "ok" | "warn"; meta: string; body: React.ReactNode }> = [];
+const PEI_EIXOS: Array<{ ic: string; cls: string; h: string; status: string; tone: "ok" | "warn"; meta: string; body: ReactNode }> = [];
 
 const ADAPTACOES: Array<{ n: number; title: string; desc: string; meta: string }> = [];
 
