@@ -587,14 +587,27 @@ export function Agenda() {
                       const holiday = holidays.get(d.date);
                       const evs = eventsByDate.get(d.date) || [];
                       return (
-                        <div key={i} className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")} onClick={() => openDayPanel(d.date)}>
+                        <div
+                          key={i}
+                          className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}
+                          onClick={() => openDayPanel(d.date)}
+                          onDragOver={onDragOverDay}
+                          onDrop={(e) => onDropDay(e, d.date)}
+                        >
                           <span className="ag-cal-num">{d.n}</span>
                           {d.today && <span className="ag-cal-day-flag">Hoje</span>}
                           {holiday && !d.other && (
                             <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
                           )}
                           {!d.other && evs.slice(0, 3).map((e) => (
-                            <div key={e.id} className={"ag-cal-event " + e.type} title={e.title}>
+                            <div
+                              key={e.id}
+                              className={"ag-cal-event " + e.type}
+                              title={e.title}
+                              draggable
+                              onDragStart={(ev) => { ev.stopPropagation(); onDragStartEvent(ev, e.id); }}
+                              onClick={(ev) => { ev.stopPropagation(); openDayPanel(d.date); }}
+                            >
                               {e.time ? `${e.time} · ` : ""}{e.title}
                             </div>
                           ))}
@@ -613,14 +626,27 @@ export function Agenda() {
                       const holiday = holidays.get(d.date);
                       const evs = eventsByDate.get(d.date) || [];
                       return (
-                        <div key={i} className={"ag-cal-day" + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")} onClick={() => openDayPanel(d.date)}>
+                        <div
+                          key={i}
+                          className={"ag-cal-day" + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}
+                          onClick={() => openDayPanel(d.date)}
+                          onDragOver={onDragOverDay}
+                          onDrop={(e) => onDropDay(e, d.date)}
+                        >
                           <span className="ag-cal-num">{d.n}</span>
                           {d.today && <span className="ag-cal-day-flag">Hoje</span>}
                           {holiday && (
                             <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
                           )}
                           {evs.map((e) => (
-                            <div key={e.id} className={"ag-cal-event " + e.type} title={e.title}>
+                            <div
+                              key={e.id}
+                              className={"ag-cal-event " + e.type}
+                              title={e.title}
+                              draggable
+                              onDragStart={(ev) => { ev.stopPropagation(); onDragStartEvent(ev, e.id); }}
+                              onClick={(ev) => { ev.stopPropagation(); openDayPanel(d.date); }}
+                            >
                               {e.time ? `${e.time} · ` : ""}{e.title}
                             </div>
                           ))}
