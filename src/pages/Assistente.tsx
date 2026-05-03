@@ -182,10 +182,21 @@ const HISTORY_WEEK = [
   { icon: <FileText size={13} />, text: "Parecer Maria Ribeiro · 1º bim", meta: "6 dias atrás" },
 ];
 
+type TaskTab = "Mais usadas" | "Inclusão" | "Avaliação" | "Tudo";
+const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string; top?: boolean }> = [
+  { emoji: "📚", name: "Plano de aula", desc: "BNCC alinhado, com objetivos e avaliação", shortcut: "⌘ + 1", top: true },
+  { emoji: "📝", name: "Parecer descritivo", desc: "Bimestral, individual, em 4 minutos", shortcut: "⌘ + 2", top: true },
+  { emoji: "✨", name: "Adaptar conteúdo", desc: "Para alunos PCD ou com dificuldades", shortcut: "⌘ + 3" },
+  { emoji: "📊", name: "Atividade avaliativa", desc: "Com gabarito e níveis de dificuldade", shortcut: "⌘ + 4" },
+  { emoji: "💬", name: "Feedback ao aluno", desc: "Construtivo, alinhado à neurociência", shortcut: "⌘ + 5" },
+  { emoji: "🎲", name: "Dinâmica de grupo", desc: "Para socialização e aprendizado ativo", shortcut: "⌘ + 6" },
+];
+
 export function Assistente() {
   const navigate = useNavigate();
   const [text, setText] = useState("");
   const [collapsed, setCollapsed] = useState(false);
+  const [tab, setTab] = useState<TaskTab>("Mais usadas");
 
   const handleNew = () => setText("");
 
