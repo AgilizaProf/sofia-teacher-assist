@@ -716,7 +716,7 @@ export function Inclusao() {
 
   return (
     <div className="inc-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss }} />
+      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss + printCss }} />
       <div className="inc-app">
         <AppSidebar active="inclusion" />
 
