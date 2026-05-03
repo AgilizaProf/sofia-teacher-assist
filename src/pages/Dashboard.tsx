@@ -218,6 +218,27 @@ const css = `
 .cmdk-item:hover,.cmdk-item.active{background:var(--bg-soft);}
 .cmdk-item svg{width:14px;height:14px;color:var(--text-soft);}
 .cmdk-item-shortcut{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);font-weight:600;}
+.school-modal{width:100%;max-width:480px;background:#fff;border-radius:16px;box-shadow:0 25px 60px rgba(15,27,54,.40);overflow:hidden;border:1px solid var(--border);}
+.school-modal-head{padding:18px 20px 12px;border-bottom:1px solid var(--border-soft);display:flex;align-items:flex-start;gap:12px;}
+.school-modal-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;color:#fff;flex-shrink:0;}
+.school-modal-icon svg{width:18px;height:18px;}
+.school-modal-title{font-family:'Fraunces',serif;font-weight:700;font-size:18px;color:var(--text);line-height:1.2;}
+.school-modal-sub{font-size:12px;color:var(--text-soft);margin-top:3px;}
+.school-modal-close{margin-left:auto;width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:#fff;display:grid;place-items:center;color:var(--text-soft);cursor:pointer;}
+.school-modal-close:hover{border-color:var(--primary);color:var(--primary);}
+.school-modal-body{padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.school-field{display:flex;flex-direction:column;gap:5px;}
+.school-field label{font-size:11.5px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.04em;}
+.school-field input,.school-field select{padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;transition:border .15s;}
+.school-field input:focus,.school-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,69,.15);}
+.school-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.school-modal-foot{padding:14px 20px;border-top:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;background:var(--bg-soft);}
+.school-cancel{margin-left:auto;padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:var(--text-soft);cursor:pointer;}
+.school-cancel:hover{border-color:var(--primary);color:var(--primary);}
+.school-save{padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(255,122,69,.35);display:inline-flex;align-items:center;gap:6px;}
+.school-save:hover{filter:brightness(1.05);}
+.school-clickable{cursor:pointer;transition:transform .15s, box-shadow .15s;}
+.school-clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
 @media(max-width:1200px){.hero{grid-template-columns:1fr;gap:22px;padding:24px;}.stats{grid-template-columns:1fr 1fr;}.grid-2{grid-template-columns:1fr;}}
 @media(max-width:900px){.ap-app{grid-template-columns:1fr;}.ap-sidebar{display:none;}.ap-main{padding:18px;}}
 @media(max-width:560px){.hero{padding:20px 18px;}.hero-title{font-size:26px;}.hero-metric-value{font-size:42px;}.stats{grid-template-columns:1fr;}.today-focus{flex-direction:column;align-items:flex-start;}.today-focus-action{width:100%;justify-content:center;}}
@@ -246,6 +267,7 @@ function useCountUp(target: number, duration = 1500) {
 
 export function Dashboard() {
   const [cmdk, setCmdk] = useState(false);
+  const [schoolOpen, setSchoolOpen] = useState(false);
   const [authorize, setAuthorize] = useState(true);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -419,10 +441,16 @@ export function Dashboard() {
           )}
 
           <div className="stats">
-            <div className="stat">
+            <button
+              className="stat school-clickable"
+              type="button"
+              onClick={() => setSchoolOpen(true)}
+              aria-label="Adicionar escola"
+              style={{ textAlign: "left" }}
+            >
               <div className="stat-icon s1"><Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
               <div className="stat-body"><div className="stat-value">4 <span className="stat-value-trend">+1</span></div><div className="stat-label">Escolas</div></div>
-            </div>
+            </button>
             <div className="stat">
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
               <div className="stat-body"><div className="stat-value">6 <span className="stat-value-trend">+2</span></div><div className="stat-label">Turmas ativas</div></div>
@@ -578,6 +606,70 @@ export function Dashboard() {
             <button className={`toggle-switch ${authorize ? "on" : ""}`} aria-label="Autorizar" onClick={() => setAuthorize(v => !v)} />
           </div>
         </main>
+      </div>
+
+      <div className={`cmdk-overlay ${schoolOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setSchoolOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Cadastrar escola">
+          <div className="school-modal-head">
+            <div className="school-modal-icon">
+              <Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Cadastrar nova escola</div>
+              <div className="school-modal-sub">Preencha os dados para vincular turmas e alunos.</div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setSchoolOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <form className="school-modal-body" onSubmit={(e) => { e.preventDefault(); setSchoolOpen(false); }}>
+            <div className="school-field">
+              <label htmlFor="school-name">Nome da escola</label>
+              <input id="school-name" name="name" placeholder="Ex.: EMEF CAIC" required />
+            </div>
+            <div className="school-row">
+              <div className="school-field">
+                <label htmlFor="school-network">Rede</label>
+                <select id="school-network" name="network" defaultValue="municipal">
+                  <option value="municipal">Municipal</option>
+                  <option value="estadual">Estadual</option>
+                  <option value="federal">Federal</option>
+                  <option value="privada">Privada</option>
+                </select>
+              </div>
+              <div className="school-field">
+                <label htmlFor="school-stage">Etapa</label>
+                <select id="school-stage" name="stage" defaultValue="fundamental1">
+                  <option value="infantil">Educação Infantil</option>
+                  <option value="fundamental1">Fund. I</option>
+                  <option value="fundamental2">Fund. II</option>
+                  <option value="medio">Ensino Médio</option>
+                </select>
+              </div>
+            </div>
+            <div className="school-row">
+              <div className="school-field">
+                <label htmlFor="school-city">Cidade</label>
+                <input id="school-city" name="city" placeholder="Cidade" />
+              </div>
+              <div className="school-field">
+                <label htmlFor="school-uf">UF</label>
+                <input id="school-uf" name="uf" placeholder="UF" maxLength={2} />
+              </div>
+            </div>
+            <div className="school-field">
+              <label htmlFor="school-classes">Turmas que você leciona</label>
+              <input id="school-classes" name="classes" placeholder="Ex.: 2º ano A, 3º ano B" />
+            </div>
+            <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
+              <button type="button" className="school-cancel" onClick={() => setSchoolOpen(false)}>Cancelar</button>
+              <button type="submit" className="school-save">
+                Salvar escola
+                <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <div className={`cmdk-overlay ${cmdk ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setCmdk(false); }}>
