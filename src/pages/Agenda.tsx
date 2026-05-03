@@ -460,7 +460,7 @@ export function Agenda() {
               </div>
               <h1 className="ag-title">Agenda · Radar pedagógico</h1>
               <div className="ag-meta">
-                <span><b>0 eventos</b> esta semana</span>
+                <span><b>{counts.weekCount} {counts.weekCount === 1 ? "evento" : "eventos"}</b> esta semana</span>
               </div>
             </div>
             <div className="ag-actions">
