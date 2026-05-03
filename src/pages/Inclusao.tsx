@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
-  ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2,
+  ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
@@ -380,12 +380,23 @@ const css = `
 .anam-status-btn.active.naoObservado{background:var(--bg);border-color:var(--border);color:var(--text);}
 `;
 
+const printCss = `
+@media print {
+  body * { visibility: hidden !important; }
+  #anam-print-area, #anam-print-area * { visibility: visible !important; }
+  #anam-print-area { position: absolute !important; inset: 0 !important; padding: 0 !important; background:#fff !important; }
+  .inc-modal-bar, .inc-modal-head, .inc-modal-foot { display: none !important; }
+  .inc-modal { box-shadow: none !important; max-width: 100% !important; }
+  .inc-modal-body { background:#fff !important; padding: 0 !important; overflow: visible !important; }
+}
+`;
+
 type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel" | "doc";
 type ViewKey = "list" | "detail";
 
 type Student = {
   id: string; name: string; initials: string; age: string; turma: string;
-  diag: string; cid: string; aee: string; featured?: boolean;
+  diag: string; cid: string; aee: string; anoEscolar?: string; featured?: boolean;
   anamnese: string; registros: string; trend: string; trendTone: "ok" | "warn" | "muted";
 };
 
@@ -493,14 +504,99 @@ const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus
   ]},
 ];
 
+const ANAM_SUGESTOES: Record<string, string[]> = {
+  "Ano de Referência": [
+    "Está matriculado no ano correspondente à faixa etária.",
+    "Reconhece a turma e a professora regente.",
+    "Foi reclassificado em relação à idade/série.",
+  ],
+  "Desempenho Acadêmico": [
+    "Lê palavras com sílabas simples (CV) com mediação.",
+    "Realiza adições simples até 20 com material concreto.",
+    "Escreve o próprio nome de forma legível.",
+    "Apresenta dificuldades de leitura coletiva em voz alta.",
+  ],
+  "Aspectos Pedagógicos": [
+    "Permanece na atividade por curtos períodos com mediação.",
+    "Aceita apoio visual (pictogramas, fichas).",
+    "Tolera mudanças avisadas previamente na rotina.",
+  ],
+  "Psicomotores": [
+    "Coordenação motora ampla preservada.",
+    "Coordenação motora fina em desenvolvimento (preensão do lápis, recorte).",
+    "Lateralidade ainda não definida.",
+  ],
+  "Interações Sociais": [
+    "Interage melhor em duplas do que em grupos grandes.",
+    "Participa de brincadeiras coletivas com mediação.",
+    "Respeita turnos em jogos com lembretes.",
+  ],
+  "Independência": [
+    "Vai ao banheiro sem auxílio.",
+    "Organiza o próprio material com lembretes.",
+    "Lancha sozinho.",
+  ],
+  "Autonomia": [
+    "Pede ajuda quando precisa.",
+    "Toma decisões simples (escolher atividade).",
+    "Identifica próprias dificuldades.",
+  ],
+  "Emoção": [
+    "Reconhece emoções básicas em si.",
+    "Solicita pausa ao perceber sobrecarga.",
+    "Aceita estratégias de autorregulação (respiração, fone).",
+  ],
+  "Memória": [
+    "Recupera informações com pistas visuais.",
+    "Memoriza rotinas estruturadas.",
+    "Lembra dos combinados da turma.",
+  ],
+  "Dificuldades & Potencialidades": [
+    "Dificuldade em leitura coletiva em voz alta.",
+    "Potencialidade em raciocínio lógico-matemático concreto.",
+    "Boa memória visual.",
+  ],
+  "Estratégias": [
+    "Uso de material concreto em Matemática.",
+    "Apoio visual (pictogramas) em Português.",
+    "Mediação de pares em atividades em dupla.",
+  ],
+  "Recursos": [
+    "Fones abafadores disponíveis em sala.",
+    "Canto da calma estruturado.",
+    "Atendimento na sala de AEE 2x/semana.",
+  ],
+  "Contexto Familiar": [
+    "Família participa de reuniões bimestrais.",
+    "Responsável acompanha tarefas em casa.",
+    "Comunicação família-escola via agenda diária.",
+  ],
+  "Observações": [
+    "Aluno demonstra evolução constante na rotina escolar.",
+    "Necessita de acompanhamento contínuo da equipe pedagógica.",
+    "Família solicita reuniões periódicas para alinhamento.",
+  ],
+};
+
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
+  const [students, setStudents] = useState<Student[]>(() => {
+    if (typeof window === "undefined") return INITIAL_STUDENTS;
+    try {
+      const raw = window.localStorage.getItem("inc_students");
+      if (raw) return JSON.parse(raw) as Student[];
+    } catch { /* ignore */ }
+    return INITIAL_STUDENTS;
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("inc_students", JSON.stringify(students)); } catch { /* ignore */ }
+  }, [students]);
   const [view, setView] = useState<ViewKey>(students.length === 0 ? "list" : (search.view || "list"));
   const [selectedId, setSelectedId] = useState<string | null>(search.aluno || null);
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
+  const [nsAnoEscolar, setNsAnoEscolar] = useState("");
   const [nsCid, setNsCid] = useState("nao_informado");
   const [nsAeeDays, setNsAeeDays] = useState<string>("");
   const [nsMediadora, setNsMediadora] = useState<string>("");
@@ -508,12 +604,29 @@ export function Inclusao() {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
   const [peiOpen, setPeiOpen] = useState(false);
+  const [anamPrintOpen, setAnamPrintOpen] = useState(false);
+  const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
+  const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
-  const [anamData, setAnamData] = useState(() =>
-    ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })) }))
-  );
+  const studentKey = selectedId || "_none";
+  const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
+  const [anamByStudent, setAnamByStudent] = useState<Record<string, ReturnType<typeof buildBlankAnam>>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem("inc_anam");
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return {};
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("inc_anam", JSON.stringify(anamByStudent)); } catch { /* ignore */ }
+  }, [anamByStudent]);
+  const anamData = anamByStudent[studentKey] || buildBlankAnam();
+  const setAnamData = (updater: (prev: ReturnType<typeof buildBlankAnam>) => ReturnType<typeof buildBlankAnam>) => {
+    setAnamByStudent((all) => ({ ...all, [studentKey]: updater(all[studentKey] || buildBlankAnam()) }));
+  };
   const eixoPct = (items: Array<{ s: AnamStatus }>) => {
     if (!items.length) return 0;
     const sum = items.reduce((a, i) => a + ANAM_STATUS_VALUE[i.s], 0);
@@ -530,6 +643,21 @@ export function Inclusao() {
       ...e, items: e.items.map((it, j) => j === itemIdx ? { ...it, s } : it)
     })));
   };
+  const setEixoObs = (eixoIdx: number, obs: string) => {
+    setAnamData((prev) => prev.map((e, i) => i !== eixoIdx ? e : ({ ...e, obs })));
+  };
+  const appendEixoSugestao = (eixoIdx: number, txt: string) => {
+    setAnamData((prev) => prev.map((e, i) => {
+      if (i !== eixoIdx) return e;
+      const cur = (e.obs || "").trim();
+      const next = cur ? cur + (cur.endsWith(".") ? " " : ". ") + txt : txt;
+      return { ...e, obs: next };
+    }));
+  };
+  const eixosPreenchidos = useMemo(
+    () => anamData.filter((e) => e.items.some((i) => i.s !== "naoObservado") || (e.obs && e.obs.trim())).length,
+    [anamData]
+  );
 
   const goView = (v: ViewKey) => {
     const safe: ViewKey = v === "detail" && students.length === 0 ? "list" : v;
@@ -571,6 +699,7 @@ export function Inclusao() {
       initials: initials || "AL",
       age: "—",
       turma: nsTurma.trim() || "Sem turma",
+      anoEscolar: nsAnoEscolar.trim() || "",
       diag: diagLabel,
       cid: cidCode,
       aee: mediadora ? `${aeeLabel} · Mediadora: ${mediadora}` : aeeLabel,
@@ -580,14 +709,14 @@ export function Inclusao() {
       trendTone: "muted",
     };
     setStudents((prev) => [newStudent, ...prev]);
-    setNsName(""); setNsTurma(""); setNsCid("nao_informado");
+    setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCid("nao_informado");
     setNsAeeDays(""); setNsMediadora("");
     setNewStudentOpen(false);
   };
 
   return (
     <div className="inc-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss }} />
+      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss + printCss }} />
       <div className="inc-app">
         <AppSidebar active="inclusion" />
 
@@ -686,6 +815,7 @@ export function Inclusao() {
                     <h1>{selected.name} <span className="age">· {selected.age} · {selected.turma}</span></h1>
                     <div className="tag-row">
                       <span className="diagnostic"><span className="pulse" />{selected.diag}</span>
+                      {selected.anoEscolar && <span className="tag"><b>Ano escolar:</b> {selected.anoEscolar}</span>}
                       <span className="tag"><b>Turma:</b> {selected.turma}</span>
                       <span className="tag"><b>{selected.cid}</b></span>
                       <span className="tag"><b>{selected.aee}</b></span>
@@ -780,7 +910,7 @@ export function Inclusao() {
                   <div className="section">
                     <div className="section-head">
                       <h3>Linha do tempo pedagógica</h3>
-                      <button className="more" onClick={() => setActiveTab("reg")}>Todos os 23 registros →</button>
+                      <button className="more" onClick={() => setActiveTab("reg")}>Todos os 0 registros →</button>
                     </div>
                     <div className="tl">
                       <p style={{ color: "var(--muted)", fontSize: 12.5 }}>Nenhum registro ainda. Os eventos pedagógicos de {selected.name.split(" ")[0]} aparecerão aqui.</p>
@@ -809,6 +939,7 @@ export function Inclusao() {
                       <div className="context-card">
                         <h4>Contexto rápido</h4>
                         {([
+                          { l: "Ano escolar", v: selected.anoEscolar || "Não informado", t: "" },
                           { l: "Turma", v: selected.turma, t: "" },
                           { l: "Diagnóstico", v: selected.diag, t: "" },
                           { l: "CID", v: selected.cid, t: "" },
@@ -852,8 +983,9 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "anam" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Anamnese · 0 de {anamData.length} eixos preenchidos</h3>
-                      <span className="legal">{selected?.turma || ""} · {selected?.diag || ""}</span>
+                      <h3>Anamnese · {eixosPreenchidos} de {anamData.length} eixos preenchidos</h3>
+                      <span className="legal">{selected?.anoEscolar ? selected.anoEscolar + " · " : ""}{selected?.turma || ""} · {selected?.diag || ""}</span>
+                      <button className="btn btn-secondary" onClick={() => { setAnamPrintMode("completo"); setAnamPrintOpen(true); }}><Printer size={14} /> Imprimir Anamnese</button>
                       <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
                     </div>
                     <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
@@ -862,6 +994,8 @@ export function Inclusao() {
                         const p = eixoPct(e.items);
                         const tone = eixoTone(p, e.items);
                         const open = !!anamOpen[e.l];
+                        const sugs = ANAM_SUGESTOES[e.l] || [];
+                        const sugVisible = sugOpenFor === e.l;
                         return (
                           <div className="anam-item" key={e.l}>
                             <button
@@ -896,6 +1030,43 @@ export function Inclusao() {
                                     </div>
                                   </div>
                                 ))}
+                                <div style={{ background:"#fff", border:"1px solid var(--border)", borderRadius:9, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
+                                  <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                                    <b style={{ fontSize:12.5 }}>Observações do eixo</b>
+                                    <span style={{ fontSize:11, color:"var(--muted)" }}>(salva automaticamente)</span>
+                                    {sugs.length > 0 && (
+                                      <button
+                                        type="button"
+                                        className="inc-btn-ghost"
+                                        style={{ marginLeft:"auto" }}
+                                        onClick={() => setSugOpenFor(sugVisible ? null : e.l)}
+                                      >
+                                        <Lightbulb size={13} /> Sugestões rápidas
+                                      </button>
+                                    )}
+                                  </div>
+                                  {sugVisible && (
+                                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                                      {sugs.map((s) => (
+                                        <button
+                                          key={s}
+                                          type="button"
+                                          className="anam-status-btn"
+                                          onClick={() => appendEixoSugestao(ei, s)}
+                                          title="Adicionar à observação"
+                                        >
+                                          + {s}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <textarea
+                                    value={e.obs || ""}
+                                    onChange={(ev) => setEixoObs(ei, ev.target.value)}
+                                    placeholder="Anote observações sobre este eixo…"
+                                    style={{ width:"100%", minHeight:70, padding:"8px 10px", border:"1px solid var(--border)", borderRadius:8, resize:"vertical", fontFamily:"inherit", fontSize:12.5, color:"var(--text)", background:"#fff" }}
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1146,6 +1317,87 @@ export function Inclusao() {
         </div>
       </div>
 
+      {/* Anamnese: Imprimir */}
+      <div className={"inc-modal-overlay" + (anamPrintOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setAnamPrintOpen(false); }}>
+        <div className="inc-modal" style={{ maxWidth: 880 }}>
+          <div className="inc-modal-bar" />
+          <div className="inc-modal-head">
+            <h2>Anamnese · {selected?.name || ""}</h2>
+            <span className="meta">{selected?.anoEscolar || ""}<br />{selected?.turma || ""}</span>
+            <button className="inc-modal-close" onClick={() => setAnamPrintOpen(false)} aria-label="Fechar"><X size={16} /></button>
+          </div>
+          <div className="inc-modal-body">
+            <div style={{ display:"flex", gap:6, marginBottom:12, justifyContent:"center" }}>
+              <button
+                className={"reg-filter" + (anamPrintMode === "completo" ? " active" : "")}
+                onClick={() => setAnamPrintMode("completo")}
+              >Documento completo</button>
+              <button
+                className={"reg-filter" + (anamPrintMode === "preenchido" ? " active" : "")}
+                onClick={() => setAnamPrintMode("preenchido")}
+              >Apenas preenchidos</button>
+            </div>
+            <div id="anam-print-area">
+              <div className="inc-a4">
+                <div className="inc-a4-head">
+                  <div className="inc-a4-logo">A</div>
+                  <div className="center">
+                    <b>Documento de Anamnese Pedagógica</b>
+                    <span>AgilizaProf · Educação Inclusiva<br />Conforme Lei 14.254/2021 · BNCC Inclusão</span>
+                  </div>
+                  <div className="stamp">PROTOCOLO<br />#ANAM-{(selected?.id || "").slice(-6).toUpperCase()}<br />{new Date().toLocaleDateString("pt-BR")}</div>
+                </div>
+                <h1>Anamnese Pedagógica</h1>
+                <div className="ident">
+                  <span><b>Educando:</b> {selected?.name || "—"}</span>
+                  <span><b>Idade:</b> {selected?.age || "—"}</span>
+                  <span><b>Ano escolar:</b> {selected?.anoEscolar || "—"}</span>
+                  <span><b>Turma:</b> {selected?.turma || "—"}</span>
+                  <span><b>Diagnóstico:</b> {selected?.diag || "—"}</span>
+                  <span><b>{selected?.cid || "—"}</b></span>
+                  <span style={{ gridColumn: "1 / -1" }}><b>AEE:</b> {selected?.aee || "—"}</span>
+                </div>
+                {anamData.map((e) => {
+                  const itemsToShow = anamPrintMode === "completo"
+                    ? e.items
+                    : e.items.filter((i) => i.s !== "naoObservado");
+                  const obsToShow = (e.obs || "").trim();
+                  if (anamPrintMode === "preenchido" && itemsToShow.length === 0 && !obsToShow) return null;
+                  return (
+                    <div key={e.l}>
+                      <h2>{e.l}</h2>
+                      {itemsToShow.length > 0 ? (
+                        <ul>
+                          {itemsToShow.map((it, idx) => (
+                            <li key={idx}><b>{ANAM_STATUS_LABEL[it.s]}:</b> {it.d}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        anamPrintMode === "completo" && <p style={{ fontStyle:"italic", color:"#555" }}>Nenhum descritor avaliado.</p>
+                      )}
+                      {obsToShow ? (
+                        <p><b>Observações:</b> {obsToShow}</p>
+                      ) : (
+                        anamPrintMode === "completo" && <p style={{ fontStyle:"italic", color:"#555" }}><b>Observações:</b> ____________________________________________</p>
+                      )}
+                    </div>
+                  );
+                })}
+                <div style={{ marginTop: 32, display:"grid", gridTemplateColumns:"1fr 1fr", gap: 40, fontFamily:"'Inter',sans-serif", fontSize:12 }}>
+                  <div style={{ borderTop:"1px solid #000", paddingTop:6, textAlign:"center" }}>Professor(a) responsável</div>
+                  <div style={{ borderTop:"1px solid #000", paddingTop:6, textAlign:"center" }}>Coordenação pedagógica</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="inc-modal-foot">
+            <span className="legal">{anamPrintMode === "completo" ? "Mostrando todos os eixos (inclusive não preenchidos)." : "Mostrando apenas o que foi preenchido."}</span>
+            <button className="inc-btn-ghost" onClick={() => setAnamPrintOpen(false)}>Fechar</button>
+            <button className="btn btn-primary" onClick={() => window.print()}><Printer size={14} /> Imprimir / PDF</button>
+          </div>
+        </div>
+      </div>
+
       {/* Cadastrar aluno */}
       <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setNewStudentOpen(false); }}>
         <div className="inc-modal" style={{ maxWidth: 560 }}>
@@ -1157,6 +1409,28 @@ export function Inclusao() {
           <form className="inc-modal-body plain" onSubmit={handleSaveStudent} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Nome completo
               <input required value={nsName} onChange={(e) => setNsName(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} />
+            </label>
+            <label style={{ fontSize: 12, fontWeight: 700 }}>Ano escolar
+              <select
+                value={nsAnoEscolar}
+                onChange={(e) => setNsAnoEscolar(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, background: "#fff", fontFamily: "inherit", fontSize: 13 }}
+              >
+                <option value="">Não informado</option>
+                <option value="Educação Infantil">Educação Infantil</option>
+                <option value="1º Ano EF">1º Ano · Ensino Fundamental</option>
+                <option value="2º Ano EF">2º Ano · Ensino Fundamental</option>
+                <option value="3º Ano EF">3º Ano · Ensino Fundamental</option>
+                <option value="4º Ano EF">4º Ano · Ensino Fundamental</option>
+                <option value="5º Ano EF">5º Ano · Ensino Fundamental</option>
+                <option value="6º Ano EF">6º Ano · Ensino Fundamental</option>
+                <option value="7º Ano EF">7º Ano · Ensino Fundamental</option>
+                <option value="8º Ano EF">8º Ano · Ensino Fundamental</option>
+                <option value="9º Ano EF">9º Ano · Ensino Fundamental</option>
+                <option value="1ª Série EM">1ª Série · Ensino Médio</option>
+                <option value="2ª Série EM">2ª Série · Ensino Médio</option>
+                <option value="3ª Série EM">3ª Série · Ensino Médio</option>
+              </select>
             </label>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Turma
               <input value={nsTurma} onChange={(e) => setNsTurma(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} placeholder="Ex.: 2º Ano A" />
