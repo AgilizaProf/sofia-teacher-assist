@@ -11,7 +11,7 @@ const css = `
   --success:#10B981;--warn:#F59E0B;--danger:#EF4444;--info:#3B82F6;
   --bg:#F4F6FB;--card:#FFFFFF;--text:#1B2A4E;--text-mute:#64708A;
   --border:#E4E8F0;--border-soft:#EEF1F7;
-  --pcd:#8B5CF6;--plan:#3B82F6;--report:#10B981;--meeting:#FF7A45;--eval:#F59E0B;--holiday:#94A3B8;
+ --pcd:#8B5CF6;--plan:#3B82F6;--report:#10B981;--meeting:#FF7A45;--eval:#F59E0B;--holiday:#94A3B8;--personal:#EC4899;
   font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;
 }
 .ag-root *{box-sizing:border-box;}
@@ -90,6 +90,7 @@ const css = `
 .ag-cal-event.report{background:#D1FAE5;color:#065F46;border-color:var(--report);}
 .ag-cal-event.plan{background:#DBEAFE;color:#1E40AF;border-color:var(--plan);}
 .ag-cal-event.pcd{background:#EDE9FE;color:#5B21B6;border-color:var(--pcd);}
+.ag-cal-event.personal{background:#FCE7F3;color:#9D174D;border-color:var(--personal);}
 .ag-cal-event.urgent{box-shadow:0 0 0 2px rgba(239,68,68,.15);position:relative;}
 .ag-cal-event.urgent::after{content:"";position:absolute;top:3px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--danger);box-shadow:0 0 6px var(--danger);animation:agpulse 1.6s infinite;}
 @keyframes agpulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -219,7 +220,7 @@ const dateKey = (d: Date) =>
 
 type ViewMode = "dia" | "semana" | "mes" | "ano";
 
-type EventType = "meeting" | "eval" | "report" | "plan" | "pcd";
+type EventType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
 type Event = {
   id: string;
   date: string; // YYYY-MM-DD
@@ -235,6 +236,7 @@ const TYPE_LABEL: Record<EventType, string> = {
   report: "Entrega",
   plan: "Planejamento",
   pcd: "Inclusão",
+  personal: "Pessoal",
 };
 const TYPE_COLOR: Record<EventType, string> = {
   meeting: "var(--meeting)",
@@ -242,6 +244,7 @@ const TYPE_COLOR: Record<EventType, string> = {
   report: "var(--report)",
   plan: "var(--plan)",
   pcd: "var(--pcd)",
+  personal: "var(--personal)",
 };
 
 export function Agenda() {
@@ -409,6 +412,7 @@ export function Agenda() {
                     <span className="ag-legend-item"><span className="ag-legend-dot" style={{ background: "var(--report)" }} />Entrega</span>
                     <span className="ag-legend-item"><span className="ag-legend-dot" style={{ background: "var(--plan)" }} />Planejamento</span>
                     <span className="ag-legend-item"><span className="ag-legend-dot" style={{ background: "var(--pcd)" }} />Inclusão</span>
+                    <span className="ag-legend-item"><span className="ag-legend-dot" style={{ background: "var(--personal)" }} />Pessoal</span>
                     <span className="ag-legend-item"><span className="ag-legend-dot" style={{ background: "var(--holiday)" }} />Feriado</span>
                   </div>
                 </div>
@@ -649,6 +653,7 @@ export function Agenda() {
                         <option value="report">Entrega</option>
                         <option value="plan">Planejamento</option>
                         <option value="pcd">Inclusão</option>
+                        <option value="personal">Pessoal</option>
                       </select>
                     </label>
                     <label>
