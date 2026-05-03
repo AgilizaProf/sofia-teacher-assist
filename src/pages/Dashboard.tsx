@@ -666,12 +666,12 @@ export function Dashboard() {
           }}>
             <div className="school-field">
               <label htmlFor="student-name">Nome completo</label>
-              <input id="student-name" name="name" placeholder="Ex.: Maria Ribeiro" required />
+              <input id="student-name" name="name" placeholder="Ex.: Nome completo do aluno" required />
             </div>
             <div className="school-row">
               <div className="school-field">
                 <label htmlFor="student-class">Turma</label>
-                <input id="student-class" name="classRef" placeholder="Ex.: 2º ano A · CAIC" />
+                <input id="student-class" name="classRef" placeholder="Ex.: 2º ano A · sua escola" />
               </div>
               <div className="school-field">
                 <label htmlFor="student-birth">Data de nascimento</label>
