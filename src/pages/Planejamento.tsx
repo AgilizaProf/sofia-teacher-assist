@@ -361,6 +361,21 @@ export function Planejamento() {
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
+  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([
+    { from: "sofia", t: "Aqui está a atividade. Quer que eu adapte? Pode pedir em linguagem natural." },
+  ]);
+  const [chatTxt, setChatTxt] = useState("");
+  const [layer, setLayer] = useState<"disc" | "bncc" | "tipo" | "intens">("disc");
+  const [diary, setDiary] = useState<Record<string, "ok" | "warn" | "next" | undefined>>({});
+
+  const sendChat = (msg?: string) => {
+    const t = (msg ?? chatTxt).trim(); if (!t) return;
+    setChatLog((l) => [...l, { from: "user", t }]);
+    setChatTxt("");
+    setTimeout(() => {
+      setChatLog((l) => [...l, { from: "sofia", t: `Ajustei a atividade considerando "${t}". Mantive o objetivo e a habilidade BNCC.` }]);
+    }, 400);
+  };
 
   const setMudanca = (k: MKey) => {
     setM(k);
