@@ -253,21 +253,6 @@ const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGEleme
   </svg>
 );
 
-function useCountUp(target: number, duration = 1500) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    const step = Math.max(10, Math.floor(duration / target));
-    let cur = 0;
-    const t = setInterval(() => {
-      cur++;
-      setV(cur);
-      if (cur >= target) clearInterval(t);
-    }, step);
-    return () => clearInterval(t);
-  }, [target, duration]);
-  return v;
-}
-
 export function Dashboard() {
   const user = useUser();
   const heroGreeting = greeting(user.name);
