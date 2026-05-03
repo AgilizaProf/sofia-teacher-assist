@@ -490,7 +490,7 @@ const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const [view, setView] = useState<ViewKey>(search.view || "list");
+  const [view, setView] = useState<ViewKey>(STUDENTS.length === 0 ? "list" : (search.view || "list"));
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
@@ -519,7 +519,8 @@ export function Inclusao() {
   };
 
   const goView = (v: ViewKey) => {
-    setView(v);
+    const safe: ViewKey = v === "detail" && STUDENTS.length === 0 ? "list" : v;
+    setView(safe);
     navigate({ search: (prev) => ({ ...prev, view: v }) as never, replace: true });
   };
   const setActiveTab = (t: TabKey) => {
