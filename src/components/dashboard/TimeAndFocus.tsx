@@ -5,9 +5,10 @@ import { Progress } from "@/components/ui/progress";
 
 export function TimeAndFocus() {
   return (
-    <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <Card className="rounded-2xl border-border/70 shadow-sm">
-        <CardContent className="p-6">
+    <section className="grid grid-cols-1 gap-4 md:grid-cols-2 items-stretch">
+      <Card className="rounded-2xl border-border/70 shadow-sm h-full flex flex-col">
+        <CardContent className="p-6 flex flex-1 flex-col justify-between">
+          <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Tempo devolvido a você
           </p>
@@ -15,6 +16,8 @@ export function TimeAndFocus() {
           <p className="mt-1 text-sm text-muted-foreground">
             economizados nos últimos 7 dias
           </p>
+          </div>
+          <div>
           <div className="mt-5">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Meta: 10h</span>
@@ -26,14 +29,15 @@ export function TimeAndFocus() {
             <TrendingUp className="h-3.5 w-3.5" />
             +38% vs. semana passada
           </div>
+          </div>
         </CardContent>
       </Card>
 
       <Card
-        className="rounded-2xl border-border/70 shadow-sm"
+        className="rounded-2xl border-border/70 shadow-sm h-full flex flex-col"
         style={{ background: "var(--gradient-hero)" }}
       >
-        <CardContent className="p-6">
+        <CardContent className="p-6 flex flex-1 flex-col">
           <p className="inline-flex items-center gap-1.5 text-xs font-medium text-primary">
             <Sparkles className="h-3.5 w-3.5" />
             Foco de hoje · sugerido pela IA
@@ -45,7 +49,7 @@ export function TimeAndFocus() {
             <li>~2 minutos para gerar</li>
             <li>baseado no laudo já cadastrado</li>
           </ul>
-          <Button className="mt-5 w-full rounded-xl h-11 shadow-sm sm:w-auto sm:px-6">
+          <Button className="mt-auto pt-5 w-full rounded-xl h-11 shadow-sm sm:w-auto sm:px-6 self-start">
             <Sparkles className="mr-1 h-4 w-4" />
             Adaptar agora
           </Button>
