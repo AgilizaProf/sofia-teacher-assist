@@ -1079,37 +1079,73 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "plan" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Planejamento adaptado · Pedrinho</h3>
-                      <span className="legal">PEI v3.2 · BNCC Inclusão</span>
+                      <h3>Planejamento adaptado · {selected?.name || ""}</h3>
+                      <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
                       <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
                     </div>
-                    <div className="plan-hero">
-                      <div className="tag-line">Aula de hoje · 16h</div>
-                      <h3>Frações e Partilha Justa · Matemática</h3>
-                      <p>3 adaptações já preparadas pela Sofia, alinhadas à BNCC EF02MA08 e ao objetivo PEI #4.</p>
-                      <div className="plan-strats">
-                        <div className="plan-strat"><b>Visual</b><span>Substituir "metade" por imagem da pizza dividida — material concreto disponível.</span></div>
-                        <div className="plan-strat"><b>Pacing</b><span>3 micro-blocos de 5 min com pausas sensoriais entre eles.</span></div>
-                        <div className="plan-strat"><b>Mediação</b><span>Profa. Carla (AEE) alinhada · script enviado às 13h.</span></div>
-                      </div>
-                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}>Aplicar adaptações <ChevronRight size={14} /></button>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
+                      <label style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>Ano de referência</label>
+                      <select
+                        value={planYearFilter}
+                        onChange={(e) => setPlanYearFilter(e.target.value)}
+                        style={{ padding: "8px 12px", border: "1px solid var(--border)", borderRadius: 8, background: "#fff", fontFamily: "inherit", fontSize: 13, minWidth: 220 }}
+                      >
+                        <option value="">Apenas este aluno</option>
+                        {Array.from(new Set(students.map(s => s.anoEscolar).filter(Boolean))).sort().map(y => (
+                          <option key={y} value={y as string}>{y}</option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="plan-list">
-                      {PLAN_WEEK.map((p) => (
-                        <div className="plan-item" key={p.title}>
-                          <div className="when">{p.when}<b>{p.date}</b></div>
-                          <div>
-                            <h5>{p.title}</h5>
-                            <div className="meta-row">
-                              <span>{p.disc}</span>
-                              <span className="bncc">{p.bncc}</span>
-                              {p.adapted && <span className="adapted">Adaptado pela Sofia</span>}
-                            </div>
+                    {planYearFilter ? (
+                      <div className="plan-list">
+                        {students.filter(s => s.anoEscolar === planYearFilter).length === 0 ? (
+                          <div style={{ background: "#fff", border: "1px dashed var(--border)", borderRadius: 11, padding: 18, color: "var(--muted)", fontSize: 13 }}>
+                            Nenhum aluno encontrado em <b>{planYearFilter}</b>.
                           </div>
-                          <button className="inc-btn-ghost"><FileText size={12} /> Abrir</button>
-                        </div>
-                      ))}
-                    </div>
+                        ) : students.filter(s => s.anoEscolar === planYearFilter).map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => openStudent(s.id)}
+                            className="plan-item"
+                            style={{ textAlign: "left", cursor: "pointer", background: s.id === selectedId ? "var(--accent-soft)" : "#fff" }}
+                          >
+                            <div className="when">Aluno<b>{s.initials}</b></div>
+                            <div>
+                              <h5>{s.name}</h5>
+                              <div className="meta-row">
+                                <span>{s.turma}</span>
+                                <span className="bncc">{s.anoEscolar}</span>
+                                <span>{s.diag}</span>
+                              </div>
+                            </div>
+                            <span className="inc-btn-ghost"><ChevronRight size={12} /> Abrir</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="plan-list">
+                        {PLAN_WEEK.length === 0 ? (
+                          <div style={{ background: "#fff", border: "1px dashed var(--border)", borderRadius: 11, padding: 22, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                            Nenhum plano de aula registrado para <b>{selected?.name || "este aluno"}</b> ainda.<br />
+                            Use <b>Gerar novo plano adaptado</b> para começar.
+                          </div>
+                        ) : PLAN_WEEK.map((p) => (
+                          <div className="plan-item" key={p.title}>
+                            <div className="when">{p.when}<b>{p.date}</b></div>
+                            <div>
+                              <h5>{p.title}</h5>
+                              <div className="meta-row">
+                                <span>{p.disc}</span>
+                                <span className="bncc">{p.bncc}</span>
+                                {p.adapted && <span className="adapted">Adaptado pela Sofia</span>}
+                              </div>
+                            </div>
+                            <button className="inc-btn-ghost"><FileText size={12} /> Abrir</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
