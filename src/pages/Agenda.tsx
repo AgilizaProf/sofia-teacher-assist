@@ -143,6 +143,8 @@ const css = `
 .ag-up-prep.pending{color:var(--warn);background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);}
 
 .ag-cal-day{cursor:pointer;}
+.ag-drag-hint{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:11px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#fff;font-size:12.5px;font-weight:600;letter-spacing:.1px;box-shadow:0 6px 16px rgba(15,27,54,.18);border:1px solid rgba(255,255,255,.06);}
+.ag-drag-hint-ic{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:rgba(255,122,69,.22);color:var(--accent-warm);font-weight:800;font-size:13px;}
 .ag-overlay{position:fixed;inset:0;background:rgba(15,27,54,.45);backdrop-filter:blur(2px);z-index:80;display:flex;justify-content:flex-end;}
 .ag-panel{width:420px;max-width:100%;background:#fff;height:100%;box-shadow:-8px 0 24px rgba(15,27,54,.18);display:flex;flex-direction:column;animation:agpanel .2s ease-out;}
 @keyframes agpanel{from{transform:translateX(20px);opacity:.6}to{transform:none;opacity:1}}
@@ -550,6 +552,10 @@ export function Agenda() {
                 </div>
               </div>
 
+              <div className="ag-drag-hint" role="note">
+                <span className="ag-drag-hint-ic">↔</span>
+                Evento mudou? Arraste!
+              </div>
               <div className="ag-cal-card">
                 <div className="ag-cal-head">
                   <div className="ag-cal-nav">
