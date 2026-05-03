@@ -51,8 +51,8 @@ const css = `
 .pl-tab{flex:1;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border-radius:8px;color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;border:1px solid transparent;transition:.15s;}
 .pl-tab .num{display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .pl-tab:hover{background:rgba(255,255,255,.08);}
-.pl-tab.active{background:linear-gradient(135deg,var(--orange),#FF9466);color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.3);}
-.pl-tab.active .num{background:rgba(255,255,255,.22);color:#fff;}
+.pl-tab.active{background:rgba(255,255,255,.10);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,122,69,.45);}
+.pl-tab.active .num{background:var(--orange);color:#fff;}
 
 .pl-workspace{padding:18px 24px 100px;display:grid;grid-template-columns:1fr;gap:18px;}
 .pl-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
