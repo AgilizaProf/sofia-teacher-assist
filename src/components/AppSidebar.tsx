@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type React from "react";
 
 export const sidebarCss = `
-.ap-sidebar{background:linear-gradient(180deg,var(--primary,#1B2A4E) 0%,var(--primary-dark,#0F1B36) 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
+.ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
 .ap-sidebar::before{content:"";position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(255,122,69,.14) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
 .sb-head{padding:18px 18px 12px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
 .sb-logo-icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#FF7A45,#FF9466);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:17px;color:#fff;box-shadow:0 6px 18px rgba(255,122,69,.40);flex-shrink:0;}

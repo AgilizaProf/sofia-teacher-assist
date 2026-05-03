@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Download, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Shield, ChevronDown, Download } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 
@@ -30,9 +30,8 @@ function getPrincipleBody(idx: number): string {
 }
 
 export function Configuracoes() {
-  const [selected, setSelected] = useState<number>(1);
-  const [navOpen, setNavOpen] = useState<boolean>(false);
-  const current = PRINCIPLES.find((p) => p.n === selected) ?? PRINCIPLES[0];
+  const [open, setOpen] = useState<Record<number, boolean>>({});
+  const toggle = (n: number) => setOpen((o) => ({ ...o, [n]: !o[n] }));
 
   return (
     <div style={{ minHeight: "100vh", background: "#F4F6FB", color: "#1B2A4E", fontFamily: "'Inter',-apple-system,sans-serif" }}>
@@ -68,92 +67,44 @@ export function Configuracoes() {
               🛡️ Versão {SOFIA_CONSTITUTION_VERSION} · atualizada para a versão atual da BNCC e legislação brasileira
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: navOpen ? "240px 1fr" : "52px 1fr",
-                gap: 16,
-                alignItems: "start",
-                transition: "grid-template-columns .2s",
-              }}
-            >
-              {/* Sub-sidebar: lista recolhível dos 7 princípios */}
-              <aside
-                aria-label="Lista de princípios"
-                style={{
-                  borderRadius: 12,
-                  background: "linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%)",
-                  color: "#fff",
-                  boxShadow: "0 6px 24px rgba(15,27,54,.18)",
-                  padding: 8,
-                  position: "sticky",
-                  top: 16,
-                  alignSelf: "start",
-                  overflow: "hidden",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setNavOpen((v) => !v)}
-                  aria-expanded={navOpen}
-                  aria-label={navOpen ? "Recolher lista" : "Expandir lista"}
-                  title={navOpen ? "Recolher" : "Expandir"}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", justifyContent: navOpen ? "space-between" : "center",
-                    gap: 8, background: "transparent", border: "none",
-                    padding: "6px 8px", marginBottom: 6, cursor: "pointer",
-                    color: "rgba(255,255,255,.55)", fontSize: 11, fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase",
-                  }}
-                >
-                  {navOpen && <span>Princípios</span>}
-                  {navOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
-                </button>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-                  {PRINCIPLES.map((p) => {
-                    const isActive = p.n === selected;
-                    return (
-                      <li key={p.n}>
-                        <button
-                          type="button"
-                          onClick={() => { setSelected(p.n); setNavOpen(true); }}
-                          aria-current={isActive ? "true" : undefined}
-                          title={`${p.n}. ${p.name}`}
-                          style={{
-                            width: "100%", textAlign: "left", display: "flex", alignItems: "center",
-                            gap: 10, padding: navOpen ? "8px 10px" : "8px 6px",
-                            justifyContent: navOpen ? "flex-start" : "center",
-                            border: "1px solid " + (isActive ? "rgba(255,122,69,.4)" : "transparent"),
-                            background: isActive ? "rgba(255,122,69,.18)" : "transparent",
-                            color: isActive ? "#fff" : "rgba(255,255,255,.78)",
-                            borderRadius: 8, cursor: "pointer",
-                            fontWeight: isActive ? 700 : 500, fontSize: 13,
-                            transition: "background .15s, color .15s",
-                          }}
-                        >
-                          <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>{p.emoji}</span>
-                          {navOpen && <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.n}. {p.name}</span>}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </aside>
-
-              {/* Conteúdo do princípio selecionado */}
-              <article style={{ border: "1px solid #E4E8F0", borderRadius: 12, background: "#fff", padding: 18, minWidth: 0 }}>
-                <header style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
-                  <div style={{ fontSize: 26, lineHeight: 1 }} aria-hidden>{current.emoji}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <h3 style={{ margin: 0, fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700 }}>
-                      {current.n}. {current.name}
-                    </h3>
-                    <p style={{ margin: "2px 0 0", color: "#6B7691", fontSize: 13 }}>{current.summary}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {PRINCIPLES.map((p) => {
+                const isOpen = !!open[p.n];
+                return (
+                  <div key={p.n} style={{ border: "1px solid #E4E8F0", borderRadius: 12, background: "#FBFAF6" }}>
+                    <div style={{ padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      <div style={{ fontSize: 22, lineHeight: 1 }} aria-hidden>{p.emoji}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14 }}>
+                          {p.n}. {p.name}
+                        </div>
+                        <div style={{ color: "#6B7691", fontSize: 13, marginTop: 2 }}>{p.summary}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggle(p.n)}
+                        aria-expanded={isOpen}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          background: isOpen ? "#FF7A45" : "transparent",
+                          color: isOpen ? "#fff" : "#FF7A45",
+                          border: "1px solid #FF7A45",
+                          padding: "6px 10px", borderRadius: 8, fontWeight: 600, fontSize: 12,
+                          cursor: "pointer", whiteSpace: "nowrap",
+                        }}
+                      >
+                        {isOpen ? "Recolher" : "Ler na íntegra"}
+                        <ChevronDown size={14} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: ".2s" }} />
+                      </button>
+                    </div>
+                    {isOpen && (
+                      <div style={{ padding: "0 14px 14px 48px", color: "#1B2A4E", fontSize: 13.5, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                        {getPrincipleBody(p.n)}
+                      </div>
+                    )}
                   </div>
-                </header>
-                <div style={{ color: "#1B2A4E", fontSize: 13.5, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
-                  {getPrincipleBody(current.n)}
-                </div>
-              </article>
+                );
+              })}
             </div>
 
             <div style={{ marginTop: 18, display: "flex", justifyContent: "flex-end" }}>
