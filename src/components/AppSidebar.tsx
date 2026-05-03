@@ -62,10 +62,10 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <Svg className="sb-icon" c={<><path d="M12 2v3"/><path d="M12 19v3"/><circle cx="12" cy="12" r="6"/><path d="M5 12H2"/><path d="M22 12h-3"/></>} />
           <span>Assistente IA</span><span className="sb-badge">NOVO</span>
         </Link>
-        <button className={cls("planning")} aria-label="Planejamento">
+        <Link to="/planejamento" className={cls("planning")} aria-label="Planejamento">
           <Svg className="sb-icon" c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
           <span>Planejamento</span><span className="sb-shortcut">P</span>
-        </button>
+        </Link>
         <Link to="/relatorios" className={cls("reports")} aria-label="Relatórios">
           <Svg className="sb-icon" c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
           <span>Relatórios</span><span className="sb-shortcut">R</span>
