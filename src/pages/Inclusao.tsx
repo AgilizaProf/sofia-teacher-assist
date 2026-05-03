@@ -7,6 +7,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
+import { toast } from "sonner";
 
 const css = `
 .inc-root{
