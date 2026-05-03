@@ -331,6 +331,19 @@ const css = `
 .doc-card .doc-acts button{flex:1;padding:7px 10px;border-radius:7px;font-size:11.5px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--text);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:5px;}
 .doc-card .doc-acts button:hover{border-color:var(--accent);color:var(--accent);}
 .doc-card .doc-acts .primary{background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;border:none;}
+
+/* Anamnese eixos */
+.anam-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:14px;}
+@media(max-width:720px){.anam-grid{grid-template-columns:1fr;}}
+.anam-row{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px dashed var(--border);}
+.anam-row-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;}
+.anam-row-head b{font-weight:600;color:var(--text);}
+.anam-row-head span{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);font-weight:700;}
+.anam-bar{height:6px;background:var(--bg);border-radius:99px;overflow:hidden;}
+.anam-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));transition:width .3s;}
+.anam-fill.ok{background:linear-gradient(90deg,#10B981,#34D399);}
+.anam-fill.warn{background:linear-gradient(90deg,#F59E0B,#FBBF24);}
+.anam-fill.muted{background:var(--border);}
 `;
 
 type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel" | "doc";
@@ -403,6 +416,23 @@ const DOCS = [
   { ic: "ATA", t: "Ata · acolhimento inicial", who: "Coordenação + família", date: "08/02/2025", size: "176 KB" },
   { ic: "AVA", t: "Avaliação pedagógica diagnóstica", who: "Profa. Camila Ribeiro", date: "20/02/2026", size: "456 KB" },
   { ic: "AUT", t: "Autorização · uso de imagem", who: "Família (Juliana Almeida)", date: "08/02/2025", size: "88 KB" },
+];
+
+const ANAMNESE_EIXOS: Array<{ l: string; p: number; tone: "ok" | "warn" | "muted" }> = [
+  { l: "Ano de Referência", p: 100, tone: "ok" },
+  { l: "Desempenho Acadêmico", p: 92, tone: "ok" },
+  { l: "Aspectos Pedagógicos", p: 88, tone: "ok" },
+  { l: "Psicomotores", p: 95, tone: "ok" },
+  { l: "Interações Sociais", p: 78, tone: "ok" },
+  { l: "Independência", p: 70, tone: "ok" },
+  { l: "Autonomia", p: 65, tone: "warn" },
+  { l: "Emoção", p: 82, tone: "ok" },
+  { l: "Memória", p: 74, tone: "ok" },
+  { l: "Dificuldades & Potencialidades", p: 90, tone: "ok" },
+  { l: "Estratégias", p: 85, tone: "ok" },
+  { l: "Recursos", p: 60, tone: "warn" },
+  { l: "Contexto Familiar", p: 100, tone: "ok" },
+  { l: "Observações", p: 0, tone: "muted" },
 ];
 
 export function Inclusao() {
@@ -695,9 +725,21 @@ export function Inclusao() {
 
                 {/* PANEL: ANAMNESE (placeholder retains existing content) */}
                 <div className={"panel" + (tab === "anam" ? " active" : "")}>
-                  <div className="simple">
-                    <h4>Anamnese · 14 de 16 eixos preenchidos</h4>
-                    <p>Os 14 eixos guiados (Ano de Referência, Desempenho Acadêmico, Aspectos Pedagógicos, Psicomotores, Interações Sociais, Independência, Autonomia, Emoção, Memória, Dificuldades & Potencialidades, Estratégias, Recursos, Contexto Familiar e Observações) são preenchidos com chips, textareas e sugestões rápidas contextualizadas ao 2º Ano e ao TEA Nível 1.</p>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Anamnese · 14 de 16 eixos preenchidos</h3>
+                      <span className="legal">2º Ano · TEA Nível 1</span>
+                      <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
+                    </div>
+                    <p style={{ color: "var(--muted)", fontSize: 13 }}>Cada eixo é preenchido com chips, textareas e sugestões rápidas contextualizadas ao ano e ao diagnóstico. Use as barras abaixo para ver o progresso.</p>
+                    <div className="anam-grid">
+                      {ANAMNESE_EIXOS.map((e) => (
+                        <div className="anam-row" key={e.l}>
+                          <div className="anam-row-head"><b>{e.l}</b><span>{e.p}%</span></div>
+                          <div className="anam-bar"><div className={"anam-fill " + e.tone} style={{ width: e.p + "%" }} /></div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
