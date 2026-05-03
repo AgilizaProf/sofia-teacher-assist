@@ -3,6 +3,7 @@ import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
+  Link2, MessageSquare, Send, Layers, BookOpen, Smile, Frown, ArrowRight,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 
