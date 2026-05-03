@@ -710,11 +710,11 @@ export function Dashboard() {
             <div className="cmdk-section">Sugestões da IA</div>
             <div className="cmdk-item active">
               <Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
-              Gerar parecer descritivo da Tereza<span className="cmdk-item-shortcut">↵</span>
+              Gerar parecer descritivo<span className="cmdk-item-shortcut">↵</span>
             </div>
             <div className="cmdk-item">
               <Svg c={<path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/>} />
-              Adaptar atividade para Caio (TDAH)
+              Adaptar atividade para aluno PCD
             </div>
             <div className="cmdk-section">Ir para</div>
             <div className="cmdk-item">
