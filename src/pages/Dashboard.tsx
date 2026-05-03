@@ -235,6 +235,12 @@ const css = `
 .school-field input,.school-field select{padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;transition:border .15s;}
 .school-field input:focus,.school-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,69,.15);}
 .school-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.school-mode{display:inline-flex;background:var(--bg-soft);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px;align-self:flex-start;margin-top:2px;}
+.school-mode button{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;color:var(--text-soft);background:transparent;border:none;cursor:pointer;}
+.school-mode button.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(15,27,54,.08);}
+.school-field textarea{padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13.5px;font-family:inherit;color:var(--text);background:#fff;outline:none;transition:border .15s;resize:vertical;min-height:110px;line-height:1.5;}
+.school-field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,69,.15);}
+.school-hint{font-size:11.5px;color:var(--text-soft);margin-top:-2px;}
 .school-modal-foot{padding:14px 20px;border-top:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;background:var(--bg-soft);}
 .school-cancel{margin-left:auto;padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:var(--text-soft);cursor:pointer;}
 .school-cancel:hover{border-color:var(--primary);color:var(--primary);}
@@ -264,6 +270,7 @@ export function Dashboard() {
   const [classes, setClasses] = useState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>([]);
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
   const [students, setStudents] = useState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>([]);
   const baseStudents = 0;
   const [authorize, setAuthorize] = useState(false);
