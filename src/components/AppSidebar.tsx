@@ -95,17 +95,19 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <span>Sair</span>
         </button>
       </nav>
-      <div className="sb-plan" role="complementary" aria-label="Oferta plano anual">
-        <span className="sb-plan-tag">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
-          PLANO ANUAL
-        </span>
-        <h4>Créditos ilimitados por R$ 247/ano</h4>
-        <p>Você usaria ~9.000 créditos/ano. Economize 41%.</p>
-        <button className="sb-plan-btn" aria-label="Ver oferta do plano anual">
-          Ver oferta
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
+      <div className="sb-foot">
+        <div className="sb-plan" role="complementary" aria-label="Oferta plano anual">
+          <span className="sb-plan-tag">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
+            PLANO ANUAL
+          </span>
+          <h4>Créditos ilimitados por R$ 247/ano</h4>
+          <p>~9.000 créditos/ano · economize 41%.</p>
+          <button className="sb-plan-btn" aria-label="Ver oferta do plano anual">
+            Ver oferta
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
       </div>
     </aside>
   );
