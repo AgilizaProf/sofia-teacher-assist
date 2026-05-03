@@ -719,17 +719,17 @@ export function Inclusao() {
   const goView = (v: ViewKey) => {
     const safe: ViewKey = v === "detail" && students.length === 0 ? "list" : v;
     setView(safe);
-    navigate({ search: (prev) => ({ ...prev, view: v }) as never, replace: true });
+    navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, view: v }) as never, replace: true });
   };
   const openStudent = (id: string) => {
     setSelectedId(id);
     setView("detail");
-    navigate({ search: (prev) => ({ ...prev, view: "detail", aluno: id }) as never, replace: true });
+    navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, view: "detail", aluno: id }) as never, replace: true });
   };
   const selected = students.find((s) => s.id === selectedId) || null;
   const setActiveTab = (t: TabKey) => {
     setTab(t);
-    navigate({ search: (prev) => ({ ...prev, tab: t }) as never, replace: true });
+    navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, tab: t }) as never, replace: true });
   };
 
   const filtered = students.filter((s) => {

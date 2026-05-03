@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil, Clock,
@@ -6,6 +6,8 @@ import {
   Calendar, CheckSquare, Star,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import ReactMarkdown from "react-markdown";
+import { askSofia } from "@/server/sofia.functions";
 
 const css = `
 .ap-root{
@@ -194,8 +196,43 @@ export function Assistente() {
   const [text, setText] = useState("");
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
+  type ChatMsg = { role: "user" | "assistant"; content: string };
+  const [messages, setMessages] = useState<ChatMsg[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem("sofia_chat");
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return [];
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("sofia_chat", JSON.stringify(messages)); } catch { /* ignore */ }
+  }, [messages]);
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, loading]);
 
-  const handleNew = () => setText("");
+  const handleNew = () => { setText(""); setMessages([]); };
+
+  const sendMessage = async (raw?: string) => {
+    const content = (raw ?? text).trim();
+    if (!content || loading) return;
+    const next: ChatMsg[] = [...messages, { role: "user", content }];
+    setMessages(next);
+    setText("");
+    setLoading(true);
+    try {
+      const data = await askSofia({ data: { messages: next } });
+      setMessages((m) => [...m, { role: "assistant", content: data.content || "" }]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
+      setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="ap-root">
@@ -237,7 +274,42 @@ export function Assistente() {
           </div>
 
           <div className="convo">
-            <div className="convo-inner">
+            <div className="convo-inner" ref={scrollRef}>
+              {messages.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
+                  {messages.map((m, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                        maxWidth: "85%",
+                        background: m.role === "user" ? "var(--accent)" : "#fff",
+                        color: m.role === "user" ? "#fff" : "var(--text)",
+                        border: m.role === "user" ? "none" : "1px solid var(--line-soft)",
+                        borderRadius: 14,
+                        padding: "12px 14px",
+                        fontSize: 14,
+                        lineHeight: 1.55,
+                        boxShadow: "0 1px 0 rgba(17,24,39,.04),0 8px 24px -16px rgba(17,24,39,.18)",
+                      }}
+                    >
+                      {m.role === "assistant" ? (
+                        <div className="prose prose-sm max-w-none">
+                          <ReactMarkdown>{m.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
+                      )}
+                    </div>
+                  ))}
+                  {loading && (
+                    <div style={{ alignSelf: "flex-start", color: "var(--muted)", fontSize: 13, padding: "8px 12px" }}>
+                      Sofia está pensando…
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
               <div className="stamp"><Clock size={12} /> QUINTA-FEIRA · 08:14</div>
               <h1 className="greet">
                 Olá 👋<br />
@@ -276,7 +348,7 @@ export function Assistente() {
                 </div>
                 <div className="tasks-grid">
                   {TASKS.map((t) => (
-                    <button key={t.shortcut} className="task-card" aria-label={t.name}>
+                    <button key={t.shortcut} className="task-card" aria-label={t.name} onClick={() => sendMessage(`${t.name}: ${t.desc}`)}>
                       {t.top && <span className="task-top-pill">🔥 Top</span>}
                       <div className="task-emoji">{t.emoji}</div>
                       <div className="task-name">{t.name}</div>
@@ -286,17 +358,22 @@ export function Assistente() {
                   ))}
                 </div>
               </div>
+                </>
+              )}
 
               <div className="composer-wrap">
                 <div className="composer">
                   <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                     placeholder="Pergunte qualquer coisa pedagógica... ex: 'crie um plano de aula sobre frações para o 4º ano'"
                     aria-label="Mensagem para a Sofia"
                   />
                   <div className="composer-row">
-                    <button className="send" aria-label="Enviar mensagem">Enviar <Send size={14} /></button>
+                    <button className="send" aria-label="Enviar mensagem" onClick={() => sendMessage()} disabled={loading}>
+                      {loading ? "Enviando…" : "Enviar"} <Send size={14} />
+                    </button>
                   </div>
                 </div>
                 <div className="composer-hint">
