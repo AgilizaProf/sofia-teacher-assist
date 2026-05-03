@@ -395,6 +395,7 @@ export function Planejamento() {
     <div className="pl-root">
       <style>{sidebarCss}</style>
       <style>{css}</style>
+      <style>{emptyStateCss}</style>
       <div className="pl-app">
         <AppSidebar active="planning" />
         <div className="pl-main">
