@@ -493,6 +493,80 @@ const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus
   ]},
 ];
 
+const ANAM_SUGESTOES: Record<string, string[]> = {
+  "Ano de Referência": [
+    "Está matriculado no ano correspondente à faixa etária.",
+    "Reconhece a turma e a professora regente.",
+    "Foi reclassificado em relação à idade/série.",
+  ],
+  "Desempenho Acadêmico": [
+    "Lê palavras com sílabas simples (CV) com mediação.",
+    "Realiza adições simples até 20 com material concreto.",
+    "Escreve o próprio nome de forma legível.",
+    "Apresenta dificuldades de leitura coletiva em voz alta.",
+  ],
+  "Aspectos Pedagógicos": [
+    "Permanece na atividade por curtos períodos com mediação.",
+    "Aceita apoio visual (pictogramas, fichas).",
+    "Tolera mudanças avisadas previamente na rotina.",
+  ],
+  "Psicomotores": [
+    "Coordenação motora ampla preservada.",
+    "Coordenação motora fina em desenvolvimento (preensão do lápis, recorte).",
+    "Lateralidade ainda não definida.",
+  ],
+  "Interações Sociais": [
+    "Interage melhor em duplas do que em grupos grandes.",
+    "Participa de brincadeiras coletivas com mediação.",
+    "Respeita turnos em jogos com lembretes.",
+  ],
+  "Independência": [
+    "Vai ao banheiro sem auxílio.",
+    "Organiza o próprio material com lembretes.",
+    "Lancha sozinho.",
+  ],
+  "Autonomia": [
+    "Pede ajuda quando precisa.",
+    "Toma decisões simples (escolher atividade).",
+    "Identifica próprias dificuldades.",
+  ],
+  "Emoção": [
+    "Reconhece emoções básicas em si.",
+    "Solicita pausa ao perceber sobrecarga.",
+    "Aceita estratégias de autorregulação (respiração, fone).",
+  ],
+  "Memória": [
+    "Recupera informações com pistas visuais.",
+    "Memoriza rotinas estruturadas.",
+    "Lembra dos combinados da turma.",
+  ],
+  "Dificuldades & Potencialidades": [
+    "Dificuldade em leitura coletiva em voz alta.",
+    "Potencialidade em raciocínio lógico-matemático concreto.",
+    "Boa memória visual.",
+  ],
+  "Estratégias": [
+    "Uso de material concreto em Matemática.",
+    "Apoio visual (pictogramas) em Português.",
+    "Mediação de pares em atividades em dupla.",
+  ],
+  "Recursos": [
+    "Fones abafadores disponíveis em sala.",
+    "Canto da calma estruturado.",
+    "Atendimento na sala de AEE 2x/semana.",
+  ],
+  "Contexto Familiar": [
+    "Família participa de reuniões bimestrais.",
+    "Responsável acompanha tarefas em casa.",
+    "Comunicação família-escola via agenda diária.",
+  ],
+  "Observações": [
+    "Aluno demonstra evolução constante na rotina escolar.",
+    "Necessita de acompanhamento contínuo da equipe pedagógica.",
+    "Família solicita reuniões periódicas para alinhamento.",
+  ],
+};
+
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
