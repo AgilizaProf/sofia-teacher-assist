@@ -174,13 +174,7 @@ const css = `
 `;
 
 const HISTORY_TODAY: Array<{ icon: React.ReactNode; text: string; meta: string }> = [];
-const HISTORY_WEEK = [
-  { icon: <Calendar size={13} />, text: "Plano de aula · Sistema solar 2º a...", meta: "ontem · 7min" },
-  { icon: <User size={13} />, text: "Atividade adaptada para Caio (T...", meta: "2 dias atrás" },
-  { icon: <CheckSquare size={13} />, text: "Avaliação de matemática · frações", meta: "3 dias atrás" },
-  { icon: <Calendar size={13} />, text: "Planejamento semanal turma 211", meta: "5 dias atrás" },
-  { icon: <FileText size={13} />, text: "Parecer Maria Ribeiro · 1º bim", meta: "6 dias atrás" },
-];
+const HISTORY_WEEK: Array<{ icon: React.ReactNode; text: string; meta: string }> = [];
 
 type TaskTab = "Mais usadas" | "Inclusão" | "Avaliação" | "Tudo";
 const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string; top?: boolean }> = [
