@@ -440,20 +440,10 @@ export function Dashboard() {
                   <h3 className="card-title">📈 Esta semana</h3>
                   <a href="#" className="card-link">Ver tudo<Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} /></a>
                 </div>
-                <div className="activity-list">
-                  <div className="activity">
-                    <div className="activity-dot ad-rel">📝</div>
-                    <div className="activity-body"><div className="activity-title">Você gerou o <strong>parecer</strong> da Tereza</div><div className="activity-meta">há 2h <span className="sep" /> 4min de criação</div></div>
-                  </div>
-                  <div className="activity">
-                    <div className="activity-dot ad-plan">📅</div>
-                    <div className="activity-body"><div className="activity-title"><strong>Planejamento</strong> da turma 211 finalizado</div><div className="activity-meta">ontem <span className="sep" /> alinhado à BNCC</div></div>
-                  </div>
-                  <div className="activity">
-                    <div className="activity-dot ad-inc">✨</div>
-                    <div className="activity-body"><div className="activity-title"><strong>Atividade adaptada</strong> para Caio (TDAH)</div><div className="activity-meta">2 dias atrás <span className="sep" /> matemática</div></div>
-                  </div>
-                </div>
+                <EmptyState
+                  icon="📈"
+                  title="Suas atividades aparecerão aqui conforme você usar a Sofia."
+                />
               </div>
 
               <div className="card">
