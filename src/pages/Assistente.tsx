@@ -27,6 +27,9 @@ const css = `
 .ai-main{display:flex;flex-direction:column;min-width:0;}
 .ai-topbar{display:flex;align-items:center;gap:14px;padding:14px 22px;background:var(--paper);
   border-bottom:1px solid rgba(17,24,39,.06);position:sticky;top:0;z-index:5;}
+.ai-crumbs{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);}
+.ai-crumbs b{color:var(--text);font-weight:700;}
+.ai-crumbs .sep{opacity:.5;}
 .sofia-id{display:flex;align-items:center;gap:10px;}
 .sofia-avatar{width:36px;height:36px;border-radius:10px;
   background:radial-gradient(120% 120% at 30% 20%,#FFD2B7 0%,#FF6A2C 60%,#C84A14 100%);
@@ -202,6 +205,11 @@ export function Assistente() {
 
         <section className="ai-main">
           <header className="ai-topbar">
+            <div className="ai-crumbs">
+              <b>Sua sala</b>
+              <span className="sep">›</span>
+              <span>Assistente IA</span>
+            </div>
             <div className="sofia-id">
               <div className="sofia-avatar"><Sparkles size={18} /></div>
               <div>
