@@ -365,7 +365,10 @@ export function Planejamento() {
     { from: "sofia", t: "Aqui está a atividade. Quer que eu adapte? Pode pedir em linguagem natural." },
   ]);
   const [chatTxt, setChatTxt] = useState("");
-  const [layer, setLayer] = useState<"disc" | "bncc" | "tipo" | "intens">("disc");
+  const [layers, setLayers] = useState<Record<string, boolean>>({
+    aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
+  });
+  const toggleLayer = (k: string) => setLayers((s) => ({ ...s, [k]: !s[k] }));
   const [diary, setDiary] = useState<Record<string, "ok" | "warn" | "next" | undefined>>({});
 
   const sendChat = (msg?: string) => {
@@ -771,7 +774,7 @@ export function Planejamento() {
             {m === "m4" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Semana 11–15 abr <small>· camada: {layer === "disc" ? "Disciplina" : layer === "bncc" ? "BNCC" : layer === "tipo" ? "Tipo" : "Intensidade"}</small></h2></div>
+                  <div><h2>Semana 11–15 abr <small>· {Object.values(layers).filter(Boolean).length} camada(s) ativa(s)</small></h2></div>
                   <div className="right">
                     <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
@@ -779,56 +782,64 @@ export function Planejamento() {
                 </div>
                 <div className="pl-layers-bar">
                   {([
-                    { k: "disc", l: "📚 Por disciplina" },
-                    { k: "bncc", l: "🎯 Por BNCC" },
-                    { k: "tipo", l: "🌈 Por tipo" },
-                    { k: "intens", l: "🔥 Por intensidade" },
+                    { k: "aulas", l: "📚 Aulas" },
+                    { k: "aval", l: "📝 Avaliações" },
+                    { k: "eventos", l: "🏫 Eventos da escola" },
+                    { k: "feriados", l: "🎉 Feriados" },
+                    { k: "bncc", l: "🎯 Habilidades BNCC" },
+                    { k: "sofia", l: "✨ Sugestões Sofia" },
                   ] as const).map((x) => (
-                    <button key={x.k} className={"pl-lay" + (layer === x.k ? " on" : "")} onClick={() => setLayer(x.k)}>
-                      <Layers size={12} /> {x.l}
+                    <button key={x.k} className={"pl-lay" + (layers[x.k] ? " on" : "")} onClick={() => toggleLayer(x.k)} aria-pressed={layers[x.k]}>
+                      {layers[x.k] ? <Check size={12} /> : <Layers size={12} />} {x.l}
                     </button>
                   ))}
                 </div>
                 <div className="pl-week">
-                  {DAYS.map((d) => (
-                    <div key={d.k} className="pl-day">
-                      <div className="pl-day-head">
-                        <div><div className="dn">{d.n}</div><div className="dd">{d.d}</div></div>
-                      </div>
-                      {(week[d.k] || []).map((c) => {
-                        const variantByLayer = (() => {
-                          if (layer === "disc") return c.v;
-                          if (layer === "bncc") return c.v === "port" ? "ci" : c.v === "mat" ? "mat" : c.v;
-                          if (layer === "tipo") return c.v === "aval" ? "aval" : "esc";
-                          return c.v === "aval" ? "aval" : c.v === "mat" ? "mat" : "port";
-                        })();
-                        const tagByLayer = (() => {
-                          if (layer === "disc") return c.tag;
-                          if (layer === "bncc") return c.v === "port" ? "EF02LP07" : c.v === "mat" ? "EF02MA05" : c.tag;
-                          if (layer === "tipo") return c.v === "aval" ? "AVALIATIVA" : c.v === "esc" ? "INSTITUCIONAL" : "PRÁTICA";
-                          return c.v === "aval" ? "ALTA" : c.v === "mat" ? "MÉDIA" : "LEVE";
-                        })();
-                        return (
-                          <div key={c.id} className={"pl-card " + variantByLayer}>
-                            <div className="top"><span className="tag">{tagByLayer}</span></div>
-                            <div className="ttl">{c.title}</div>
-                            <div className="meta"><span>{c.meta}</span></div>
+                  {DAYS.map((d) => {
+                    type Item = { id: string; cat: "aulas" | "aval" | "eventos" | "feriados" | "bncc" | "sofia"; v: Variant; tag: string; title: string; meta: string };
+                    const items: Item[] = [];
+                    (week[d.k] || []).forEach((c) => {
+                      if (c.v === "aval") items.push({ id: c.id, cat: "aval", v: "aval", tag: "AVALIAÇÃO", title: c.title, meta: c.meta });
+                      else if (c.v === "esc") items.push({ id: c.id, cat: "eventos", v: "esc", tag: "EVENTO ESCOLA", title: c.title, meta: c.meta });
+                      else items.push({ id: c.id, cat: "aulas", v: c.v, tag: c.tag, title: c.title, meta: c.meta });
+                    });
+                    const extras: Item[] = {
+                      seg: [{ id: "b-seg", cat: "bncc", v: "ci", tag: "EF02LP07", title: "Escrever listas tematicamente organizadas", meta: "habilidade" }],
+                      ter: [{ id: "s-ter", cat: "sofia", v: "port", tag: "✨ SOFIA", title: "Sugestão: roda de leitura curta antes do diagnóstico", meta: "10min" }],
+                      qua: [],
+                      qui: [{ id: "b-qui", cat: "bncc", v: "mat", tag: "EF02MA05", title: "Resolver problemas de adição até 1.000", meta: "habilidade" },
+                            { id: "f-qui", cat: "feriados", v: "esc", tag: "FERIADO", title: "Tiradentes (sex 21 abr) · semana curta na próxima", meta: "atenção" }],
+                      sex: [{ id: "s-sex", cat: "sofia", v: "port", tag: "✨ SOFIA", title: "Síntese da semana · cartaz coletivo", meta: "30min" }],
+                    }[d.k] as Item[];
+                    const visible = [...items, ...extras].filter((it) => layers[it.cat]);
+                    return (
+                      <div key={d.k} className="pl-day">
+                        <div className="pl-day-head">
+                          <div><div className="dn">{d.n}</div><div className="dd">{d.d}</div></div>
+                        </div>
+                        {visible.map((it) => (
+                          <div key={it.id} className={"pl-card " + it.v + (it.cat === "sofia" ? " suggest-card" : "")}>
+                            <div className="top"><span className="tag">{it.tag}</span></div>
+                            <div className="ttl">{it.title}</div>
+                            <div className="meta"><span>{it.meta}</span></div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  ))}
+                        ))}
+                        {visible.length === 0 && (
+                          <div className="pl-empty-slot" style={{ minHeight: 80 }}>
+                            <div>Nenhuma camada<br />ativa neste dia</div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 <div className="pl-legend">
-                  {layer === "disc" && <>
-                    <span className="it"><span className="sw" style={{ background: "#3B82F6" }} /> Português</span>
-                    <span className="it"><span className="sw" style={{ background: "#8B5CF6" }} /> Matemática</span>
-                    <span className="it"><span className="sw" style={{ background: "#F59E0B" }} /> Avaliação</span>
-                    <span className="it"><span className="sw" style={{ background: "#10B981" }} /> Escola</span>
-                  </>}
-                  {layer === "bncc" && <span>Códigos BNCC mapeados automaticamente por Sofia.</span>}
-                  {layer === "tipo" && <span>Tipologia: prática · avaliativa · institucional.</span>}
-                  {layer === "intens" && <span>Intensidade cognitiva estimada da turma.</span>}
+                  <span className="it"><span className="sw" style={{ background: "#3B82F6" }} /> Aulas</span>
+                  <span className="it"><span className="sw" style={{ background: "#F59E0B" }} /> Avaliações</span>
+                  <span className="it"><span className="sw" style={{ background: "#10B981" }} /> Eventos da escola</span>
+                  <span className="it"><span className="sw" style={{ background: "#EF4444" }} /> Feriados</span>
+                  <span className="it"><span className="sw" style={{ background: "#06B6D4" }} /> BNCC</span>
+                  <span className="it"><span className="sw" style={{ background: "#FF7A45" }} /> Sugestões Sofia</span>
                 </div>
               </>
             )}
