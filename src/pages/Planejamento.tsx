@@ -688,7 +688,7 @@ export function Planejamento() {
             {m === "m3" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Editar com Sofia <small>· Mercadinho · escrita de listas</small></h2></div>
+                  <div><h2>Editar com Sofia <small>· selecione uma atividade</small></h2></div>
                   <div className="right">
                     <button className="pl-btn"><RefreshCw size={14} /> Restaurar original</button>
                     <button className="pl-btn primary"><Check size={14} /> Salvar alterações</button>
@@ -696,18 +696,16 @@ export function Planejamento() {
                 </div>
                 <div className="pl-chat">
                   <div className="pl-chat-card">
-                    <div className="pl-act-card">
-                      <h4>Mercadinho · escrita de listas</h4>
-                      <div className="meta"><span>50min</span> · <span>EF02LP07</span> · <span>22 alunos</span></div>
-                      <div className="body">
-                        Em duplas, os alunos visitam o "mercadinho da sala" (cartões com produtos e preços) e escrevem uma lista de compras com até 6 itens, respeitando ortografia das palavras trabalhadas. Em seguida, leem a lista para o colega conferir.
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon="💬"
+                      title="Nenhuma atividade selecionada."
+                      description="Escolha uma atividade do seu plano para editar com a Sofia em linguagem natural."
+                    />
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 280, overflowY: "auto" }}>
                       {chatLog.map((m, i) => (
                         <div key={i} className={"pl-msg " + m.from}>
-                          <div className="av">{m.from === "user" ? "C" : "S"}</div>
+                          <div className="av">{m.from === "user" ? "P" : "S"}</div>
                           <div className="bub">{m.t}</div>
                         </div>
                       ))}
@@ -732,9 +730,7 @@ export function Planejamento() {
                     </div>
                     <div className="pl-panel">
                       <h3><Clock size={14} /> Histórico desta atividade</h3>
-                      <div className="pl-hist"><span className="icn o" /><div className="body"><b>Encurtada</b> para 40min<div className="me">há 5 min</div></div></div>
-                      <div className="pl-hist"><span className="icn b" /><div className="body"><b>Adaptada</b> para TDAH<div className="me">há 12 min</div></div></div>
-                      <div className="pl-hist"><span className="icn g" /><div className="body"><b>Criada</b> por Sofia<div className="me">hoje · 14:02</div></div></div>
+                      <EmptyState icon="🕘" title="Sem histórico ainda." description="Edições da atividade aparecem aqui." />
                     </div>
                   </aside>
                 </div>
