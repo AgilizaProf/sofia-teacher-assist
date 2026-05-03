@@ -370,6 +370,35 @@ export function Agenda() {
   };
   const deleteEvent = (id: string) => setEvents((arr) => arr.filter((e) => e.id !== id));
 
+  const tomorrowKey = useMemo(() => {
+    const t = new Date(today);
+    t.setDate(t.getDate() + 1);
+    return dateKey(t);
+  }, [today]);
+  const weekRange = useMemo(() => {
+    const start = new Date(today); start.setDate(today.getDate() - today.getDay());
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    return { start: dateKey(start), end: dateKey(end) };
+  }, [today]);
+
+  const counts = useMemo(() => {
+    const todayCount = events.filter((e) => e.date === todayKey).length;
+    const tomorrowCount = events.filter((e) => e.date === tomorrowKey).length;
+    const weekCount = events.filter((e) => e.date >= weekRange.start && e.date <= weekRange.end).length;
+    const deadlinesCount = events.filter(
+      (e) => e.date >= todayKey && (e.type === "report" || e.type === "eval")
+    ).length;
+    const nextDeadline = events
+      .filter((e) => e.date >= todayKey && (e.type === "report" || e.type === "eval"))
+      .sort((a, b) => a.date.localeCompare(b.date))[0];
+    return { todayCount, tomorrowCount, weekCount, deadlinesCount, nextDeadline };
+  }, [events, todayKey, tomorrowKey, weekRange]);
+
+  const formatShortBR = (key: string) => {
+    const [, m, d] = key.split("-");
+    return `${d}/${m}`;
+  };
+
   const holidays = useMemo(() => holidayMap(cursor.getFullYear()), [cursor]);
   const panelHolidays = useMemo(
     () => openDate ? holidayMap(Number(openDate.slice(0, 4))) : null,
