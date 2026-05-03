@@ -267,6 +267,7 @@ function useCountUp(target: number, duration = 1500) {
 
 export function Dashboard() {
   const [cmdk, setCmdk] = useState(false);
+  const [schoolOpen, setSchoolOpen] = useState(false);
   const [authorize, setAuthorize] = useState(true);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -440,10 +441,16 @@ export function Dashboard() {
           )}
 
           <div className="stats">
-            <div className="stat">
+            <button
+              className="stat school-clickable"
+              type="button"
+              onClick={() => setSchoolOpen(true)}
+              aria-label="Adicionar escola"
+              style={{ textAlign: "left" }}
+            >
               <div className="stat-icon s1"><Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
               <div className="stat-body"><div className="stat-value">4 <span className="stat-value-trend">+1</span></div><div className="stat-label">Escolas</div></div>
-            </div>
+            </button>
             <div className="stat">
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
               <div className="stat-body"><div className="stat-value">6 <span className="stat-value-trend">+2</span></div><div className="stat-label">Turmas ativas</div></div>
