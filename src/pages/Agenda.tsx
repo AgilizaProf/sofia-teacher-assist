@@ -142,54 +142,16 @@ const css = `
 type Ev = { type: "holiday" | "meeting" | "eval" | "report" | "plan" | "pcd"; t: string; urgent?: boolean };
 type Day = { n: number; other?: boolean; weekend?: boolean; today?: boolean; events?: Ev[] };
 
-const WEEKS: Day[][] = [
-  [
-    { n: 29, other: true, weekend: true }, { n: 30, other: true }, { n: 31, other: true },
-    { n: 1, events: [{ type: "plan", t: "📘 Plano Mat. 5ºA" }] },
-    { n: 2, events: [{ type: "eval", t: "📝 Atividade Port." }] },
-    { n: 3, events: [{ type: "holiday", t: "🎉 Sexta-feira Santa" }] },
-    { n: 4, weekend: true },
-  ],
-  [
-    { n: 5, weekend: true, events: [{ type: "holiday", t: "🥚 Páscoa" }] },
-    { n: 6, events: [{ type: "plan", t: "📘 Sequência didática" }] },
-    { n: 7, today: true, events: [
-      { type: "meeting", t: "👥 Reunião pais 5ºA · 14h", urgent: true },
-      { type: "report", t: "📄 Corrigir Port. 4ºB" },
-      { type: "pcd", t: "💜 Acomp. Pedrinho TEA" },
-    ]},
-    { n: 8, events: [{ type: "eval", t: "📝 Prova Mat. 4ºB · 8h", urgent: true }] },
-    { n: 9, events: [{ type: "plan", t: "📘 Planejar Ciências" }] },
-    { n: 10, events: [{ type: "meeting", t: "👥 HTPC · 18h" }] },
-    { n: 11, weekend: true },
-  ],
-  [
-    { n: 12, weekend: true },
-    { n: 13, events: [{ type: "report", t: "📄 Entrega notas" }] },
-    { n: 14, events: [{ type: "meeting", t: "👥 Conselho de classe" }, { type: "plan", t: "📘 Sofia prepara" }] },
-    { n: 15, events: [{ type: "report", t: "📄 Boletins 1º bim · 27", urgent: true }] },
-    { n: 16, events: [{ type: "pcd", t: "💜 Reunião AEE · TDAH" }] },
-    { n: 17, events: [{ type: "eval", t: "📝 Atividade interdisc." }] },
-    { n: 18, weekend: true },
-  ],
-  [
-    { n: 19, weekend: true },
-    { n: 20, events: [{ type: "plan", t: "📘 Projeto Folclore" }] },
-    { n: 21, events: [{ type: "holiday", t: "🇧🇷 Tiradentes" }] },
-    { n: 22, events: [{ type: "meeting", t: "👥 Reunião pedag." }] },
-    { n: 23, events: [{ type: "eval", t: "📝 Avaliação Hist." }] },
-    { n: 24, events: [{ type: "plan", t: "📘 Plano 2º bim" }] },
-    { n: 25, weekend: true },
-  ],
-  [
-    { n: 26, weekend: true },
-    { n: 27, events: [{ type: "report", t: "📄 Pareceres descritivos" }] },
-    { n: 28, events: [{ type: "pcd", t: "💜 PEI · 3 alunos" }] },
-    { n: 29, events: [{ type: "meeting", t: "👥 Reunião de pais 4ºB" }] },
-    { n: 30, events: [{ type: "plan", t: "📘 Festa Junina" }] },
-    { n: 1, other: true, weekend: true }, { n: 2, other: true, weekend: true },
-  ],
-];
+const WEEKS: Day[][] = (() => {
+  const days: Day[] = [];
+  for (let i = 1; i <= 35; i++) {
+    const dow = (i - 1) % 7;
+    days.push({ n: i, weekend: dow === 0 || dow === 6 });
+  }
+  const w: Day[][] = [];
+  for (let i = 0; i < 5; i++) w.push(days.slice(i * 7, i * 7 + 7));
+  return w;
+})();
 
 export function Agenda() {
   return (
@@ -208,11 +170,7 @@ export function Agenda() {
               </div>
               <h1 className="ag-title">Agenda · Radar pedagógico</h1>
               <div className="ag-meta">
-                <span><b>7 eventos</b> esta semana</span>
-                <span className="mdot" />
-                <span><b>2</b> precisam de preparação</span>
-                <span className="mdot" />
-                <span className="pill">⚡ Sofia preparou 4 reuniões automaticamente</span>
+                <span><b>0 eventos</b> esta semana</span>
               </div>
             </div>
             <div className="ag-actions">
@@ -300,7 +258,7 @@ export function Agenda() {
                   <div className="ag-sofia-name">Sofia <small>Sua assistente · online</small></div>
                 </div>
                 <div className="ag-sofia-msg">
-                  Camila, vi que <b>hoje 14h você tem reunião de pais do 5ºA</b>. Já preparei a pauta com base nas notas do bimestre e em 2 alertas que merecem atenção (Pedrinho/TEA e Júlia/leitura).
+                  Olá! Conforme você cadastra eventos, reuniões e prazos, eu vou preparar pautas e materiais automaticamente.
                 </div>
                 <div className="ag-sofia-actions">
                   <button className="ag-sofia-action">
@@ -333,13 +291,7 @@ export function Agenda() {
                   <span className="ag-up-link">Ver todos</span>
                 </div>
                 <div className="ag-up-list">
-                  {[
-                    { d: "07", m: "Hoje", tag: "meeting", tagL: "Reunião · 14h", n: "Reunião de pais — 5ºA", meta: ["👥 22 famílias", "Sala 12"], prep: "✓ Sofia preparou pauta + boletins", pending: false },
-                    { d: "08", m: "Qua", tag: "eval", tagL: "Avaliação · 8h", n: "Prova de Matemática — 4ºB", meta: ["📐 Frações · BNCC EF04MA10"], prep: "⚠ Sofia precisa: ajustar prova p/ Pedrinho (TEA)", pending: true },
-                    { d: "14", m: "Ter", tag: "meeting", tagL: "Conselho · 19h", n: "Conselho de classe — 1º bimestre", meta: ["🏫 Toda a escola"], prep: "✓ Sofia preparou síntese de 27 alunos", pending: false },
-                    { d: "15", m: "Qua", tag: "report", tagL: "Prazo · 23h59", n: "Boletins 1º bimestre", meta: ["📄 27 pareceres", "Sec. escolar"], prep: "⚠ 4h estimadas · Sofia faz em 30min", pending: true },
-                    { d: "16", m: "Qui", tag: "pcd", tagL: "Inclusão · 16h", n: "Reunião AEE — Lucas (TDAH)", meta: ["💜 PEI revisão"], prep: "✓ Sofia atualizou plano individualizado", pending: false },
-                  ].map((it, i) => (
+                  {([] as Array<{ d: string; m: string; tag: string; tagL: string; n: string; meta: string[]; prep: string; pending: boolean }>).map((it, i) => (
                     <div key={i} className="ag-up-item">
                       <div className="ag-up-day">
                         <div className="ag-up-day-num">{it.d}</div>

@@ -5,6 +5,7 @@ import {
   ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 
 const css = `
 .inc-root{
@@ -412,12 +413,7 @@ const TUTORIAL_STEPS = [
   { t: "Gere o Relatório IA", d: "Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar." },
 ];
 
-const PLAN_WEEK = [
-  { when: "TER", date: "06 MAI", disc: "Língua Portuguesa", title: "Leitura compartilhada · O patinho feio", bncc: "EF02LP04", adapted: true },
-  { when: "QUA", date: "07 MAI", disc: "Matemática", title: "Adição com material dourado até 50", bncc: "EF02MA05", adapted: true },
-  { when: "QUI", date: "08 MAI", disc: "Ciências", title: "Os sentidos · experimentos sensoriais", bncc: "EF02CI03", adapted: false },
-  { when: "SEX", date: "09 MAI", disc: "Arte", title: "Colagem coletiva · estações do ano", bncc: "EF15AR05", adapted: true },
-];
+const PLAN_WEEK: { when: string; date: string; disc: string; title: string; bncc: string; adapted: boolean }[] = [];
 
 const REG_ITEMS = [
   { when: "HOJE · 14h05", who: "Sofia · IA", cat: "ped" as const, catLabel: "Pedagógico", body: "Aula de Frações adaptada com 3 estratégias (visual, pacing, mediação). Aguardando aplicação pela Profa. Camila às 16h.", att: ["📎 plano-aula-adaptado.pdf"] },
@@ -574,7 +570,7 @@ export function Inclusao() {
 
   return (
     <div className="inc-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css }} />
+      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss }} />
       <div className="inc-app">
         <AppSidebar active="inclusion" />
 
@@ -619,18 +615,27 @@ export function Inclusao() {
                       onChange={(e) => setQuery(e.target.value)}
                     />
                   </div>
-                  <button className="list-filter">Turma: 2º Ano A</button>
+                  <button className="list-filter">Turma: Todas</button>
                   <button className="list-filter">Diagnóstico: Todos</button>
                   <div className="list-actions">
                     <button className="btn btn-primary" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
                   </div>
                 </div>
                 <div className="list-grid">
+                  {filtered.length === 0 && (
+                    <EmptyState
+                      icon="🤝"
+                      title="Cadastre o primeiro aluno com necessidade educacional específica."
+                      description="A Sofia organiza PEI, anamnese, registros e relatórios para cada aluno PCD."
+                      ctaLabel="Novo aluno"
+                      onCta={() => setNewStudentOpen(true)}
+                    />
+                  )}
                   {filtered.map((s) => (
                     <button
                       key={s.id}
                       className="student-card"
-                      onClick={() => { if (s.id === "pedrinho") goView("detail"); }}
+                      onClick={() => goView("detail")}
                     >
                       <div className="sc-head">
                         <div className={"sc-avatar" + (s.featured ? " featured" : "")}>{s.initials}</div>

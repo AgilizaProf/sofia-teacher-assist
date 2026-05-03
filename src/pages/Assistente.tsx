@@ -174,13 +174,7 @@ const css = `
 `;
 
 const HISTORY_TODAY: Array<{ icon: React.ReactNode; text: string; meta: string }> = [];
-const HISTORY_WEEK = [
-  { icon: <Calendar size={13} />, text: "Plano de aula · Sistema solar 2º a...", meta: "ontem · 7min" },
-  { icon: <User size={13} />, text: "Atividade adaptada para Caio (T...", meta: "2 dias atrás" },
-  { icon: <CheckSquare size={13} />, text: "Avaliação de matemática · frações", meta: "3 dias atrás" },
-  { icon: <Calendar size={13} />, text: "Planejamento semanal turma 211", meta: "5 dias atrás" },
-  { icon: <FileText size={13} />, text: "Parecer Maria Ribeiro · 1º bim", meta: "6 dias atrás" },
-];
+const HISTORY_WEEK: Array<{ icon: React.ReactNode; text: string; meta: string }> = [];
 
 type TaskTab = "Mais usadas" | "Inclusão" | "Avaliação" | "Tudo";
 const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string; top?: boolean }> = [
@@ -230,10 +224,7 @@ export function Assistente() {
 
           <div className="ai-context">
             <span className="ctx-label">Contexto ativo:</span>
-            <span className="chip orange"><span className="d" />Camila Mendes · 2º ano</span>
-            <span className="chip violet"><span className="d" />Turma 211 · CAIC</span>
-            <span className="chip green"><span className="d" />6 alunos · 1 PCD</span>
-            <span className="chip blue"><span className="d" />BNCC alinhado</span>
+            <span className="chip blue"><span className="d" />Adicione contexto pra Sofia te ajudar melhor</span>
             <button className="edit-context" aria-label="Editar contexto"><Pencil size={13} /> Editar contexto</button>
           </div>
 
@@ -241,19 +232,19 @@ export function Assistente() {
             <div className="convo-inner">
               <div className="stamp"><Clock size={12} /> QUINTA-FEIRA · 08:14</div>
               <h1 className="greet">
-                Bom dia, Camila.<br />
+                Olá 👋<br />
                 Por onde <em><u>a gente começa hoje?</u></em>
               </h1>
               <p className="greet-sub">
-                Já tenho o contexto da sua turma <b>211 do CAIC</b> e do <b>laudo do Caio</b>. Posso gerar tudo em minutos.
+                Cadastre suas turmas e alunos para que eu tenha contexto e possa gerar pareceres, planos e adaptações em minutos.
               </p>
 
               <div className="suggest">
                 <div className="ico-tile"><FileText size={22} /></div>
                 <div>
                   <div className="label"><Star size={11} fill="currentColor" /> SUGESTÃO PRA VOCÊ AGORA</div>
-                  <h3>Gerar os 3 pareceres descritivos do bimestre</h3>
-                  <p>Tereza, Caio e Maria · ~12 minutos · economiza 4h do seu domingo</p>
+                  <h3>Comece cadastrando sua primeira turma</h3>
+                  <p>Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui.</p>
                 </div>
                 <button className="btn-cta" onClick={() => navigate({ to: "/" })} aria-label="Começar agora">
                   Começar agora <ArrowRight size={14} />

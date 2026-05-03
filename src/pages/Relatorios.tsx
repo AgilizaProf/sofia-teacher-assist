@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { EmptyState, emptyStateCss } from "@/components/EmptyState";
+import { useUser } from "@/lib/mockData";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -226,95 +228,15 @@ type Parecer = {
   actions: { label: string; variant?: "default" | "dark" | "accent"; icon?: "preview" | "sofia" | "arrow" | "pdf" | null; action?: "preview" | "sofia" | "edit" }[];
 };
 
-const PARECERES: Parecer[] = [
-  {
-    id: "caio", name: "Caio Fernandes", initials: "CF", meta: "2º ano · CAIC · sala 211",
-    avatar: "violet", status: "todo", statusLabel: "A FAZER · URGENTE", pcd: "PCD · TDAH",
-    metaInfo: [
-      { icon: "calendar", text: "Prazo 15/05 · em 12 dias" },
-      { icon: "file", text: "Laudo cadastrado" },
-    ],
-    actions: [
-      { label: "Editar manual", action: "edit" },
-      { label: "Gerar com Sofia", variant: "accent", icon: "sofia", action: "sofia" },
-    ],
-  },
-  {
-    id: "maria", name: "Maria Ribeiro", initials: "MR", meta: "2º ano · CAIC · sala 211",
-    avatar: "green", status: "todo", statusLabel: "A FAZER",
-    metaInfo: [
-      { icon: "calendar", text: "Prazo 15/05" },
-      { icon: "home", text: "5 registros no diário" },
-    ],
-    actions: [
-      { label: "Editar manual", action: "edit" },
-      { label: "Gerar com Sofia", variant: "accent", icon: "sofia", action: "sofia" },
-    ],
-  },
-  {
-    id: "tereza", name: "Tereza Almeida", initials: "T", meta: "1º ano · Teste · sala 111",
-    avatar: "", status: "draft", statusLabel: "RASCUNHO · GERADO PELA SOFIA",
-    progress: 80,
-    metaInfo: [
-      { icon: "clock", text: "Gerado há 2h 4min" },
-      { icon: "check", text: "Alinhado à BNCC" },
-    ],
-    actions: [
-      { label: "Pré-visualizar", icon: "preview", action: "preview" },
-      { label: "Revisar e finalizar", variant: "dark", icon: "arrow", action: "edit" },
-    ],
-  },
-  {
-    id: "joao", name: "João Silva", initials: "JS", meta: "2º ano · CAIC · sala 211",
-    avatar: "blue", status: "review", statusLabel: "PARA REVISAR · COORDENAÇÃO",
-    metaInfo: [
-      { icon: "user", text: "Enviado pra coord. há 1 dia" },
-      { icon: "msg", text: "2 comentários" },
-    ],
-    actions: [
-      { label: "Ver comentários", action: "preview" },
-      { label: "Abrir parecer", variant: "dark", action: "edit" },
-    ],
-  },
-  {
-    id: "ana", name: "Ana Carolina", initials: "AC", meta: "2º ano · CAIC · sala 211",
-    avatar: "pink", status: "done", statusLabel: "FINALIZADO · ASSINADO",
-    metaInfo: [
-      { icon: "check", text: "Finalizado em 28/04" },
-      { icon: "file", text: "Selo institucional" },
-    ],
-    actions: [
-      { label: "PDF", icon: "pdf", action: "preview" },
-      { label: "Duplicar", action: "preview" },
-      { label: "Abrir", action: "edit" },
-    ],
-  },
-  {
-    id: "pedro", name: "Pedro Lima", initials: "PL", meta: "2º ano · CAIC · sala 211",
-    avatar: "amber", status: "draft", statusLabel: "RASCUNHO",
-    progress: 45,
-    metaInfo: [
-      { icon: "edit", text: "Você editou ontem · 45% completo" },
-    ],
-    actions: [
-      { label: "Descartar", action: "preview" },
-      { label: "Continuar", variant: "dark", action: "edit" },
-    ],
-  },
-];
-
-const HISTORY = [
-  { initials: "AC", name: "Ana Carolina", bg: "linear-gradient(135deg,#EC4899,#F472B6)", meta: "2º ano CAIC · finalizado em 28/04", date: "28/04 · 14:22" },
-  { initials: "LF", name: "Lucas Ferreira", bg: "linear-gradient(135deg,#16A36B,#48C893)", meta: "2º ano CAIC · finalizado em 27/04", date: "27/04 · 09:10" },
-  { initials: "SR", name: "Sofia Rodrigues", bg: "linear-gradient(135deg,#3B82F6,#60A5FA)", meta: "1º ano Teste · finalizado em 25/04", date: "25/04 · 17:48" },
-];
+const PARECERES: Parecer[] = [];
+const HISTORY: { initials: string; name: string; bg: string; meta: string; date: string }[] = [];
 
 const TABS = [
-  { key: "all", label: "Todos", count: 47 },
-  { key: "todo", label: "A fazer", count: 9 },
-  { key: "draft", label: "Rascunho", count: 4 },
-  { key: "review", label: "Para revisar", count: 2 },
-  { key: "done", label: "Finalizados", count: 12 },
+  { key: "all", label: "Todos", count: 0 },
+  { key: "todo", label: "A fazer", count: 0 },
+  { key: "draft", label: "Rascunho", count: 0 },
+  { key: "review", label: "Para revisar", count: 0 },
+  { key: "done", label: "Finalizados", count: 0 },
 ] as const;
 
 const MetaIcon = ({ name }: { name: Parecer["metaInfo"][number]["icon"] }) => {
@@ -342,6 +264,7 @@ const ActionIcon = ({ name }: { name: NonNullable<Parecer["actions"][number]["ic
 };
 
 export function Relatorios() {
+  const user = useUser();
   const navigate = useNavigate();
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
   const [search, setSearch] = useState("");
@@ -382,7 +305,7 @@ export function Relatorios() {
 
   return (
     <div className="rel-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css }} />
+      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss }} />
       <AppSidebar active="reports" />
 
       <main className="rel-main">
@@ -394,9 +317,9 @@ export function Relatorios() {
           <div className="rel-topbar-right">
             <button className="rel-icon-btn" aria-label="Buscar"><Search size={16} /></button>
             <button className="rel-icon-btn" aria-label="Notificações"><Bell size={16} /></button>
-            <div className="rel-user-pill" aria-label="Usuária Camila M., Plano PRO">
-              <div className="av">CM</div>
-              <div><b>Camila M.</b><small>PLANO PRO</small></div>
+            <div className="rel-user-pill" aria-label={`Usuária ${user.name}, Plano ${user.plan}`}>
+              <div className="av">{user.initials}</div>
+              <div><b>{user.name}</b><small>PLANO {user.plan}</small></div>
             </div>
           </div>
         </header>
@@ -406,12 +329,12 @@ export function Relatorios() {
           <section className="rel-hero">
             <div className="rel-hero-grid">
               <div>
-                <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> FIM DO 1º BIMESTRE · 12 DIAS RESTANTES</span>
-                <h1>Você tem <em>9 pareceres</em><br />pendentes do bimestre.</h1>
-                <p>Em vez de gastar 4 horas no domingo, gere todos em ~30 minutos. A Sofia já tem o contexto da sua turma.</p>
+                <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> COMECE PELOS PARECERES</span>
+                <h1>Nenhum parecer<br />gerado ainda.</h1>
+                <p>Cadastre seus alunos e gere o primeiro parecer descritivo com a Sofia em poucos minutos.</p>
                 <div className="rel-hero-cta">
                   <button className="rel-btn-primary" onClick={goLote} aria-label="Gerar todos com a Sofia">
-                    <Sparkles size={14} strokeWidth={2.4} /> Gerar todos com a Sofia <ArrowRight size={14} strokeWidth={2.4} />
+                    <Sparkles size={14} strokeWidth={2.4} /> Gerar primeiro parecer <ArrowRight size={14} strokeWidth={2.4} />
                   </button>
                   <button className="rel-btn-ghost" aria-label="Ver vídeo de como funciona">
                     <PlayCircle size={14} /> Como funciona · 60s
@@ -420,10 +343,9 @@ export function Relatorios() {
               </div>
               <div className="rel-pc">
                 <div className="rel-pc-title">PROGRESSO DO BIMESTRE</div>
-                <div className="rel-pc-num">12<span>/47 alunos</span></div>
-                <div className="rel-pc-bar"><i style={{ width: "25.5%" }} /></div>
-                <div className="rel-pc-meta"><span>25,5% concluído</span><span>35 a fazer</span></div>
-                <span className="rel-pc-tag"><ArrowRight size={11} strokeWidth={2.4} /> +5 finalizados esta semana</span>
+                <div className="rel-pc-num">{user.reportsDoneBimester}<span>/{user.reportsTotalBimester} alunos</span></div>
+                <div className="rel-pc-bar"><i style={{ width: "0%" }} /></div>
+                <div className="rel-pc-meta"><span>0% concluído</span><span>—</span></div>
               </div>
             </div>
           </section>
@@ -432,23 +354,23 @@ export function Relatorios() {
           <div className="rel-kpis">
             <div className="rel-kpi">
               <div className="rel-kpi-top"><span className="rel-kpi-label">A FAZER</span><div className="rel-kpi-icon amber"><Clock size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">9<small> alunos</small></div>
-              <div className="rel-kpi-foot">3 são <b className="urg">urgentes</b> · prazo 15/05</div>
+              <div className="rel-kpi-num">0<small> alunos</small></div>
+              <div className="rel-kpi-foot">—</div>
             </div>
             <div className="rel-kpi">
               <div className="rel-kpi-top"><span className="rel-kpi-label">EM RASCUNHO</span><div className="rel-kpi-icon violet"><Edit3 size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">4<small> pareceres</small></div>
-              <div className="rel-kpi-foot">Geração da Sofia aguardando sua revisão</div>
+              <div className="rel-kpi-num">0<small> pareceres</small></div>
+              <div className="rel-kpi-foot">—</div>
             </div>
             <div className="rel-kpi">
               <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">12<small>/47</small></div>
-              <div className="rel-kpi-foot"><b className="up">+5</b> esta semana</div>
+              <div className="rel-kpi-num">0<small>/0</small></div>
+              <div className="rel-kpi-foot">—</div>
             </div>
             <div className="rel-kpi">
               <div className="rel-kpi-top"><span className="rel-kpi-label">TEMPO ECONOMIZADO</span><div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">8h12<small>min</small></div>
-              <div className="rel-kpi-foot">Este bimestre · vs. método manual</div>
+              <div className="rel-kpi-num">0h<small>00min</small></div>
+              <div className="rel-kpi-foot">—</div>
             </div>
           </div>
 
@@ -475,7 +397,7 @@ export function Relatorios() {
             <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")} aria-haspopup="menu">
               <Calendar size={13} /> Turma · {filterTurma} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="turma" value={filterTurma} onChange={setFilterTurma}
-                options={["Todas", "2º ano CAIC", "1º ano Teste"]} />
+                options={["Todas"]} />
             </button>
             <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "bim" ? null : "bim")} aria-haspopup="menu">
               <Calendar size={13} /> Bimestre · {filterBimestre} <ChevronDown size={11} strokeWidth={2.4} />
@@ -495,17 +417,14 @@ export function Relatorios() {
 
           {/* Cards grid */}
           <div className="rel-grid">
-            {tab === "all" && (
-              <div className="rel-bulk">
-                <div className="rel-bulk-icon"><Sparkles size={22} /></div>
-                <div>
-                  <h3>3 pareceres em 12 minutos com a Sofia</h3>
-                  <p>Tereza, Caio e Maria estão prontos pra serem gerados em lote. Você só revisa.</p>
-                </div>
-                <button className="rel-btn-primary" onClick={goLote} aria-label="Abrir gerador em lote">
-                  Gerar em lote <ArrowRight size={13} strokeWidth={2.4} />
-                </button>
-              </div>
+            {filtered.length === 0 && (
+              <EmptyState
+                icon="📝"
+                title="Nenhum parecer gerado ainda."
+                description="Cadastre seus alunos e gere o primeiro parecer descritivo com a Sofia."
+                ctaLabel="Gerar primeiro parecer"
+                onCta={goLote}
+              />
             )}
 
             {filtered.map((p) => (
@@ -560,6 +479,13 @@ export function Relatorios() {
           </div>
 
           <div className="rel-history">
+            {HISTORY.length === 0 && (
+              <EmptyState
+                icon="📂"
+                title="Nenhum parecer finalizado ainda."
+                description="Finalize seus primeiros pareceres pra acompanhar o histórico aqui."
+              />
+            )}
             {HISTORY.map((h) => (
               <div key={h.initials} className="rel-h-row">
                 <div className="rel-h-av" style={{ background: h.bg }}>{h.initials}</div>

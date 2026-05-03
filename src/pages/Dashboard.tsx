@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
+import { EmptyState, emptyStateCss } from "@/components/EmptyState";
+import { useUser, greeting } from "@/lib/mockData";
 
 const css = `
 .ap-root{
@@ -251,38 +252,28 @@ const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGEleme
   </svg>
 );
 
-function useCountUp(target: number, duration = 1500) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    const step = Math.max(10, Math.floor(duration / target));
-    let cur = 0;
-    const t = setInterval(() => {
-      cur++;
-      setV(cur);
-      if (cur >= target) clearInterval(t);
-    }, step);
-    return () => clearInterval(t);
-  }, [target, duration]);
-  return v;
-}
-
 export function Dashboard() {
+  const user = useUser();
+  const heroGreeting = greeting(user.name);
   const [cmdk, setCmdk] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [schools, setSchools] = useState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>([]);
-  const baseSchools = 4;
+  const baseSchools = 0;
   const [classOpen, setClassOpen] = useState(false);
   const [classes, setClasses] = useState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>([]);
-  const baseClasses = 6;
+  const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [students, setStudents] = useState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>([]);
-  const baseStudents = 6;
-  const [authorize, setAuthorize] = useState(true);
+  const baseStudents = 0;
+  const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [showFocus, setShowFocus] = useState(true);
-  const h = useCountUp(8, 800);
-  const m = useCountUp(12, 1200);
+  const totalSchools = baseSchools + schools.length;
+  const totalClasses = baseClasses + classes.length;
+  const totalStudents = baseStudents + students.length;
+  const documentsGenerated = user.documentsGenerated;
+  const h = user.hoursSavedWeek;
+  const m = user.minutesSavedWeek;
+  const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -293,11 +284,9 @@ export function Dashboard() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const toggleClass = (k: string) => setCollapsed(s => ({ ...s, [k]: !s[k] }));
-
   return (
     <div className="ap-root">
-      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <style dangerouslySetInnerHTML={{ __html: css + emptyStateCss }} />
       <div className="ap-app">
         <AppSidebar active="home" onCmdK={() => setCmdk(true)} />
 
@@ -323,10 +312,10 @@ export function Dashboard() {
                 <Svg c={<><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>} />
               </button>
               <div className="user-pill">
-                <div className="user-avatar">CM</div>
+                <div className="user-avatar">{user.initials}</div>
                 <div>
-                  <div className="user-name">Camila M.</div>
-                  <div className="user-plan">Plano Pro</div>
+                  <div className="user-name">{user.name}</div>
+                  <div className="user-plan">Plano {user.plan}</div>
                 </div>
               </div>
             </div>
@@ -334,12 +323,12 @@ export function Dashboard() {
 
           <section className="hero">
             <div className="hero-left">
-              <div className="hero-greet"><span className="live-dot" />Quinta-feira · 1º de maio · 08:12</div>
-              <h1 className="hero-title">Bom dia, Camila.<br />Hoje você gera <span className="accent">3 pareceres em 12 minutos.</span></h1>
-              <p className="hero-sub">Você tem <strong style={{ color: "#fff" }}>6 alunos</strong> em <strong style={{ color: "#fff" }}>2 turmas</strong> aguardando o relatório descritivo do bimestre. Vamos juntas?</p>
+              <div className="hero-greet"><span className="live-dot" />Bem-vinda à Sofia</div>
+              <h1 className="hero-title">{heroGreeting}.<br />Comece configurando <span className="accent">sua primeira turma.</span></h1>
+              <p className="hero-sub">Cadastre suas turmas e alunos para que a Sofia possa te ajudar a gerar pareceres, planos de aula e adaptações em minutos.</p>
               <div className="hero-cta-row">
-                <button className="hero-cta">
-                  Começar pelos pareceres
+                <button className="hero-cta" onClick={() => setClassOpen(true)}>
+                  Criar primeira turma
                   <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
                 </button>
                 <button className="hero-cta-ghost">
@@ -356,13 +345,13 @@ export function Dashboard() {
               <div className="hero-metric-value">
                 <span>{h}</span>h<span className="hero-metric-unit"><span>{m}</span>min</span>
               </div>
-              <div className="hero-metric-label">economizados nos últimos 7 dias</div>
+              <div className="hero-metric-label">comece a usar a Sofia pra economizar tempo</div>
               <div className="hero-metric-bar"><div className="hero-metric-fill" /></div>
-              <div className="hero-metric-foot"><span>Meta: 10h</span><span><strong>+38%</strong> vs. semana passada</span></div>
+              <div className="hero-metric-foot"><span>Meta: {user.weeklyGoalHours}h</span><span>0%</span></div>
             </div>
           </section>
 
-          {showFocus && (
+          {!onboardingDone && (
             <div className="today-focus">
               <div className="today-focus-icon">
                 <div className="today-focus-icon-inner">
@@ -370,21 +359,17 @@ export function Dashboard() {
                 </div>
               </div>
               <div className="today-focus-content">
-                <span className="today-focus-tag">✨ Foco de hoje · sugerido pela IA</span>
-                <div className="today-focus-title"><strong>Caio (TDAH)</strong> precisa de uma atividade adaptada para a aula de matemática de amanhã.</div>
+                <span className="today-focus-tag">✨ Bem-vinda · primeiros passos</span>
+                <div className="today-focus-title">
+                  ✅ Conta criada &nbsp;·&nbsp;
+                  {totalClasses > 0 ? "✅" : "⬜"} Cadastrar primeira turma &nbsp;·&nbsp;
+                  {totalStudents > 0 ? "✅" : "⬜"} Adicionar alunos &nbsp;·&nbsp;
+                  {documentsGenerated > 0 ? "✅" : "⬜"} Conversar com a Sofia
+                </div>
                 <div className="today-focus-meta">
-                  <span>~2 minutos para gerar</span>
-                  <span className="sep" />
-                  <span>baseado no laudo já cadastrado</span>
+                  <span>Conclua os passos pra liberar todo o potencial da Sofia.</span>
                 </div>
               </div>
-              <button className="today-focus-action">
-                Adaptar agora
-                <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
-              </button>
-              <button className="today-focus-dismiss" aria-label="Dispensar" onClick={() => setShowFocus(false)}>
-                <Svg strokeWidth={2.5} c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
-              </button>
             </div>
           )}
 
@@ -424,73 +409,13 @@ export function Dashboard() {
                 </div>
               </div>
 
-              <div className="class-group">
-                <div className="class-head" onClick={() => toggleClass("g1")}>
-                  <span className={`class-toggle ${collapsed.g1 ? "collapsed" : ""}`}>
-                    <Svg width={12} height={12} strokeWidth={2.5} c={<polyline points="6 9 12 15 18 9"/>} />
-                  </span>
-                  <div className="class-info">
-                    <div className="class-name">1º ano · Teste</div>
-                    <div className="class-meta">Ed. Infantil · sala 111</div>
-                  </div>
-                  <span className="class-count">1 aluno</span>
-                </div>
-                {!collapsed.g1 && (
-                  <div className="student">
-                    <div className="student-avatar av-1">T</div>
-                    <div className="student-info">
-                      <div className="student-name">Tereza</div>
-                      <div className="student-meta">1º ano · sem laudo</div>
-                    </div>
-                    <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="class-group">
-                <div className="class-head" onClick={() => toggleClass("g2")}>
-                  <span className={`class-toggle ${collapsed.g2 ? "collapsed" : ""}`}>
-                    <Svg width={12} height={12} strokeWidth={2.5} c={<polyline points="6 9 12 15 18 9"/>} />
-                  </span>
-                  <div className="class-info">
-                    <div className="class-name">2º ano · CAIC</div>
-                    <div className="class-meta">Fundamental I · sala 211</div>
-                  </div>
-                  <span className="class-count">2 alunos</span>
-                </div>
-                {!collapsed.g2 && <>
-                  <div className="student">
-                    <div className="student-avatar av-2">CF</div>
-                    <div className="student-info">
-                      <div className="student-name">Caio Fernandes<span className="student-tag">PCD · TDAH</span></div>
-                      <div className="student-meta">2º ano · acompanhamento ativo</div>
-                    </div>
-                    <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
-                    </div>
-                  </div>
-                  <div className="student">
-                    <div className="student-avatar av-3">MR</div>
-                    <div className="student-info">
-                      <div className="student-name">Maria Ribeiro</div>
-                      <div className="student-meta">2º ano · sem laudo</div>
-                    </div>
-                    <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
-                    </div>
-                  </div>
-                </>}
-              </div>
-
-              <a href="#" className="card-link" style={{ marginTop: 14, display: "inline-flex" }}>
-                Ver todos os 6 alunos
-                <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
-              </a>
+              <EmptyState
+                icon="👥"
+                title="Você ainda não cadastrou alunos."
+                description="Crie sua primeira turma e cadastre os alunos para começar a usar a Sofia."
+                ctaLabel="Cadastrar primeiro aluno"
+                onCta={() => setStudentOpen(true)}
+              />
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -499,20 +424,10 @@ export function Dashboard() {
                   <h3 className="card-title">📈 Esta semana</h3>
                   <a href="#" className="card-link">Ver tudo<Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} /></a>
                 </div>
-                <div className="activity-list">
-                  <div className="activity">
-                    <div className="activity-dot ad-rel">📝</div>
-                    <div className="activity-body"><div className="activity-title">Você gerou o <strong>parecer</strong> da Tereza</div><div className="activity-meta">há 2h <span className="sep" /> 4min de criação</div></div>
-                  </div>
-                  <div className="activity">
-                    <div className="activity-dot ad-plan">📅</div>
-                    <div className="activity-body"><div className="activity-title"><strong>Planejamento</strong> da turma 211 finalizado</div><div className="activity-meta">ontem <span className="sep" /> alinhado à BNCC</div></div>
-                  </div>
-                  <div className="activity">
-                    <div className="activity-dot ad-inc">✨</div>
-                    <div className="activity-body"><div className="activity-title"><strong>Atividade adaptada</strong> para Caio (TDAH)</div><div className="activity-meta">2 dias atrás <span className="sep" /> matemática</div></div>
-                  </div>
-                </div>
+                <EmptyState
+                  icon="📈"
+                  title="Suas atividades aparecerão aqui conforme você usar a Sofia."
+                />
               </div>
 
               <div className="card">
@@ -588,7 +503,7 @@ export function Dashboard() {
           }}>
             <div className="school-field">
               <label htmlFor="school-name">Nome da escola</label>
-              <input id="school-name" name="name" placeholder="Ex.: EMEF CAIC" required />
+              <input id="school-name" name="name" placeholder="Ex.: nome da sua escola" required />
             </div>
             <div className="school-row">
               <div className="school-field">
@@ -670,7 +585,7 @@ export function Dashboard() {
             </div>
             <div className="school-field">
               <label htmlFor="class-school">Escola</label>
-              <input id="class-school" name="school" placeholder="Ex.: EMEF CAIC" />
+              <input id="class-school" name="school" placeholder="Ex.: nome da sua escola" />
             </div>
             <div className="school-row">
               <div className="school-field">
@@ -735,12 +650,12 @@ export function Dashboard() {
           }}>
             <div className="school-field">
               <label htmlFor="student-name">Nome completo</label>
-              <input id="student-name" name="name" placeholder="Ex.: Maria Ribeiro" required />
+              <input id="student-name" name="name" placeholder="Ex.: Nome completo do aluno" required />
             </div>
             <div className="school-row">
               <div className="school-field">
                 <label htmlFor="student-class">Turma</label>
-                <input id="student-class" name="classRef" placeholder="Ex.: 2º ano A · CAIC" />
+                <input id="student-class" name="classRef" placeholder="Ex.: 2º ano A · sua escola" />
               </div>
               <div className="school-field">
                 <label htmlFor="student-birth">Data de nascimento</label>
@@ -779,11 +694,11 @@ export function Dashboard() {
             <div className="cmdk-section">Sugestões da IA</div>
             <div className="cmdk-item active">
               <Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
-              Gerar parecer descritivo da Tereza<span className="cmdk-item-shortcut">↵</span>
+              Gerar parecer descritivo<span className="cmdk-item-shortcut">↵</span>
             </div>
             <div className="cmdk-item">
               <Svg c={<path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/>} />
-              Adaptar atividade para Caio (TDAH)
+              Adaptar atividade para aluno PCD
             </div>
             <div className="cmdk-section">Ir para</div>
             <div className="cmdk-item">
