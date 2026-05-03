@@ -570,11 +570,22 @@ const ANAM_SUGESTOES: Record<string, string[]> = {
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
+  const [students, setStudents] = useState<Student[]>(() => {
+    if (typeof window === "undefined") return INITIAL_STUDENTS;
+    try {
+      const raw = window.localStorage.getItem("inc_students");
+      if (raw) return JSON.parse(raw) as Student[];
+    } catch { /* ignore */ }
+    return INITIAL_STUDENTS;
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("inc_students", JSON.stringify(students)); } catch { /* ignore */ }
+  }, [students]);
   const [view, setView] = useState<ViewKey>(students.length === 0 ? "list" : (search.view || "list"));
   const [selectedId, setSelectedId] = useState<string | null>(search.aluno || null);
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
+  const [nsAnoEscolar, setNsAnoEscolar] = useState("");
   const [nsCid, setNsCid] = useState("nao_informado");
   const [nsAeeDays, setNsAeeDays] = useState<string>("");
   const [nsMediadora, setNsMediadora] = useState<string>("");
@@ -582,12 +593,29 @@ export function Inclusao() {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
   const [peiOpen, setPeiOpen] = useState(false);
+  const [anamPrintOpen, setAnamPrintOpen] = useState(false);
+  const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
+  const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
-  const [anamData, setAnamData] = useState(() =>
-    ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })) }))
-  );
+  const studentKey = selectedId || "_none";
+  const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
+  const [anamByStudent, setAnamByStudent] = useState<Record<string, ReturnType<typeof buildBlankAnam>>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem("inc_anam");
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return {};
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("inc_anam", JSON.stringify(anamByStudent)); } catch { /* ignore */ }
+  }, [anamByStudent]);
+  const anamData = anamByStudent[studentKey] || buildBlankAnam();
+  const setAnamData = (updater: (prev: ReturnType<typeof buildBlankAnam>) => ReturnType<typeof buildBlankAnam>) => {
+    setAnamByStudent((all) => ({ ...all, [studentKey]: updater(all[studentKey] || buildBlankAnam()) }));
+  };
   const eixoPct = (items: Array<{ s: AnamStatus }>) => {
     if (!items.length) return 0;
     const sum = items.reduce((a, i) => a + ANAM_STATUS_VALUE[i.s], 0);
@@ -604,6 +632,21 @@ export function Inclusao() {
       ...e, items: e.items.map((it, j) => j === itemIdx ? { ...it, s } : it)
     })));
   };
+  const setEixoObs = (eixoIdx: number, obs: string) => {
+    setAnamData((prev) => prev.map((e, i) => i !== eixoIdx ? e : ({ ...e, obs })));
+  };
+  const appendEixoSugestao = (eixoIdx: number, txt: string) => {
+    setAnamData((prev) => prev.map((e, i) => {
+      if (i !== eixoIdx) return e;
+      const cur = (e.obs || "").trim();
+      const next = cur ? cur + (cur.endsWith(".") ? " " : ". ") + txt : txt;
+      return { ...e, obs: next };
+    }));
+  };
+  const eixosPreenchidos = useMemo(
+    () => anamData.filter((e) => e.items.some((i) => i.s !== "naoObservado") || (e.obs && e.obs.trim())).length,
+    [anamData]
+  );
 
   const goView = (v: ViewKey) => {
     const safe: ViewKey = v === "detail" && students.length === 0 ? "list" : v;
