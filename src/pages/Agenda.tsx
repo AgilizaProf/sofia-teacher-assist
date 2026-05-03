@@ -293,15 +293,19 @@ export function Agenda() {
   };
   const deleteEvent = (id: string) => setEvents((arr) => arr.filter((e) => e.id !== id));
 
+  const holidays = useMemo(() => holidayMap(cursor.getFullYear()), [cursor]);
+  const panelHolidays = useMemo(
+    () => openDate ? holidayMap(Number(openDate.slice(0, 4))) : null,
+    [openDate]
+  );
+
   const dayEvents = openDate ? (eventsByDate.get(openDate) || []) : [];
   const openDateLabel = openDate ? (() => {
     const [y, m, d] = openDate.split("-").map(Number);
     const dt = new Date(y, m - 1, d);
     return `${["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"][dt.getDay()]}, ${d} de ${MONTHS_PT[m - 1]} ${y}`;
   })() : "";
-  const openDateHoliday = openDate ? holidays.get(openDate) : undefined;
-
-  const holidays = useMemo(() => holidayMap(cursor.getFullYear()), [cursor]);
+  const openDateHoliday = openDate && panelHolidays ? panelHolidays.get(openDate) : undefined;
 
   const shift = (dir: 1 | -1) => {
     const d = new Date(cursor);
