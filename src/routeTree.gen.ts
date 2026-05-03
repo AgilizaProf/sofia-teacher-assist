@@ -13,6 +13,7 @@ import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as AssistenteRouteImport } from './routes/assistente'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 
 const RelatoriosRoute = RelatoriosRouteImport.update({
@@ -35,6 +36,11 @@ const AssistenteRoute = AssistenteRouteImport.update({
   path: '/assistente',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
@@ -65,12 +74,25 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/assistente' | '/inclusao' | '/planejamento' | '/relatorios'
+  fullPaths:
+    | '/'
+    | '/agenda'
+    | '/assistente'
+    | '/inclusao'
+    | '/planejamento'
+    | '/relatorios'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/assistente' | '/inclusao' | '/planejamento' | '/relatorios'
+  to:
+    | '/'
+    | '/agenda'
+    | '/assistente'
+    | '/inclusao'
+    | '/planejamento'
+    | '/relatorios'
   id:
     | '__root__'
     | '/'
+    | '/agenda'
     | '/assistente'
     | '/inclusao'
     | '/planejamento'
@@ -79,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRoute
   AssistenteRoute: typeof AssistenteRoute
   InclusaoRoute: typeof InclusaoRoute
   PlanejamentoRoute: typeof PlanejamentoRoute
@@ -115,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssistenteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -127,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRoute,
   AssistenteRoute: AssistenteRoute,
   InclusaoRoute: InclusaoRoute,
   PlanejamentoRoute: PlanejamentoRoute,
