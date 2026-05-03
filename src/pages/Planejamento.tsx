@@ -365,7 +365,10 @@ export function Planejamento() {
     { from: "sofia", t: "Aqui está a atividade. Quer que eu adapte? Pode pedir em linguagem natural." },
   ]);
   const [chatTxt, setChatTxt] = useState("");
-  const [layer, setLayer] = useState<"disc" | "bncc" | "tipo" | "intens">("disc");
+  const [layers, setLayers] = useState<Record<string, boolean>>({
+    aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
+  });
+  const toggleLayer = (k: string) => setLayers((s) => ({ ...s, [k]: !s[k] }));
   const [diary, setDiary] = useState<Record<string, "ok" | "warn" | "next" | undefined>>({});
 
   const sendChat = (msg?: string) => {
