@@ -1,5 +1,5 @@
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, FileText, Calendar as CalIcon, Sparkles, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock } from "lucide-react";
 
 const css = `
 .ag-root{
