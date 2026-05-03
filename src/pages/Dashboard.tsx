@@ -235,8 +235,8 @@ const css = `
 .school-modal-foot{padding:14px 20px;border-top:1px solid var(--border-soft);display:flex;align-items:center;gap:10px;background:var(--bg-soft);}
 .school-cancel{margin-left:auto;padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:700;color:var(--text-soft);cursor:pointer;}
 .school-cancel:hover{border-color:var(--primary);color:var(--primary);}
-.school-save{padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(255,122,69,.35);display:inline-flex;align-items:center;gap:6px;}
-.school-save:hover{filter:brightness(1.05);}
+.ap-root .school-save{padding:9px 16px;border-radius:9px;border:none !important;background:linear-gradient(135deg,#FF7A45,#FF9466) !important;color:#fff !important;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(255,122,69,.45);display:inline-flex;align-items:center;gap:6px;}
+.ap-root .school-save:hover{filter:brightness(1.05);}
 .school-clickable{cursor:pointer;transition:transform .15s, box-shadow .15s;}
 .school-clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
 @media(max-width:1200px){.hero{grid-template-columns:1fr;gap:22px;padding:24px;}.stats{grid-template-columns:1fr 1fr;}.grid-2{grid-template-columns:1fr;}}
