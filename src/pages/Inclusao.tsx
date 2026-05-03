@@ -344,6 +344,33 @@ const css = `
 .anam-fill.ok{background:linear-gradient(90deg,#10B981,#34D399);}
 .anam-fill.warn{background:linear-gradient(90deg,#F59E0B,#FBBF24);}
 .anam-fill.muted{background:var(--border);}
+
+/* Anamnese accordion */
+.anam-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.anam-item{background:#fff;border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.anam-summary{width:100%;display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;padding:12px 14px;background:#fff;cursor:pointer;text-align:left;border:none;}
+.anam-summary:hover{background:#FAFBFE;}
+.anam-summary .label{display:flex;flex-direction:column;gap:6px;min-width:0;}
+.anam-summary .label b{font-weight:600;font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px;}
+.anam-summary .label .bar{height:5px;background:var(--bg);border-radius:99px;overflow:hidden;width:100%;max-width:280px;}
+.anam-summary .label .bar > div{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));transition:width .25s;}
+.anam-summary .label .bar > div.ok{background:linear-gradient(90deg,#10B981,#34D399);}
+.anam-summary .label .bar > div.warn{background:linear-gradient(90deg,#F59E0B,#FBBF24);}
+.anam-summary .label .bar > div.muted{background:var(--border);}
+.anam-summary .pct{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--muted);}
+.anam-summary .chev{color:var(--muted);transition:transform .2s;}
+.anam-summary.open .chev{transform:rotate(90deg);color:var(--accent);}
+.anam-body{padding:6px 14px 14px;border-top:1px dashed var(--border);background:#FAFBFE;display:flex;flex-direction:column;gap:8px;}
+.anam-desc{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:9px;}
+@media(max-width:720px){.anam-desc{grid-template-columns:1fr;}}
+.anam-desc p{font-size:12.5px;color:var(--text);line-height:1.4;margin:0;}
+.anam-status-group{display:flex;gap:4px;flex-wrap:wrap;}
+.anam-status-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:.15s;white-space:nowrap;}
+.anam-status-btn:hover{border-color:var(--accent);color:var(--accent);}
+.anam-status-btn.active.consolidado{background:#DCFCE7;border-color:#10B981;color:#14532D;}
+.anam-status-btn.active.desenvolvimento{background:var(--accent-soft);border-color:var(--accent);color:#7A2E0A;}
+.anam-status-btn.active.naoAlcancado{background:#FEE2E2;border-color:#EF4444;color:#7F1D1D;}
+.anam-status-btn.active.naoObservado{background:var(--bg);border-color:var(--border);color:var(--text);}
 `;
 
 type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel" | "doc";
