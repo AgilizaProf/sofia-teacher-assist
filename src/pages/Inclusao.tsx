@@ -700,34 +700,34 @@ export function Inclusao() {
                 <div className="kpis">
                   <div className="kpi kpi-accent">
                     <div className="kpi-label">Tempo economizado neste aluno</div>
-                    <div className="kpi-value">7h 20min</div>
-                    <div className="kpi-sub">vs. preparar adaptações manualmente · este mês</div>
+                    <div className="kpi-value">0h</div>
+                    <div className="kpi-sub">comece a usar a Sofia para acumular ganhos</div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Aulas adaptadas</div>
-                    <div className="kpi-value">14<span className="small"> /18</span></div>
-                    <div className="kpi-sub"><span className="up">↑ 78%</span> taxa de adaptação</div>
+                    <div className="kpi-value">0<span className="small"> /0</span></div>
+                    <div className="kpi-sub">nenhuma adaptação registrada</div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Objetivos PEI atingidos</div>
-                    <div className="kpi-value">6<span className="small"> /9</span></div>
-                    <div className="kpi-sub"><span className="up">↑ 2</span> desde a última revisão</div>
+                    <div className="kpi-value">0<span className="small"> /0</span></div>
+                    <div className="kpi-sub">defina objetivos no PEI</div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Evolução pedagógica</div>
-                    <div className="kpi-value" style={{ color: "var(--success)" }}>Progredindo</div>
-                    <div className="kpi-sub">Leitura: em processo · Mat: avançado</div>
+                    <div className="kpi-value" style={{ color: "var(--muted)" }}>Sem dados</div>
+                    <div className="kpi-sub">aguardando primeiros registros</div>
                   </div>
                 </div>
 
                 <div className="tabs" role="tablist">
                   {([
                     { k: "hoje", label: "Visão de hoje" },
-                    { k: "anam", label: "Anamnese", count: "14/16" },
+                    { k: "anam", label: "Anamnese" },
                     { k: "plan", label: "Planejamento" },
-                    { k: "reg", label: "Registros", count: "23" },
+                    { k: "reg", label: "Registros" },
                     { k: "rel", label: "Relatório IA" },
-                    { k: "doc", label: "Documentos", count: "7" },
+                    { k: "doc", label: "Documentos" },
                   ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
                     <button key={t.k} className={"tab" + (tab === t.k ? " active" : "")} onClick={() => setActiveTab(t.k)} role="tab" aria-selected={tab === t.k}>
                       {t.label}{t.count && <span className="tab-count">{t.count}</span>}
@@ -743,21 +743,16 @@ export function Inclusao() {
                     <div className="ac-head">
                       <div className="sofia">S</div>
                       <div className="ac-head-txt">
-                        <b>Sofia identificou uma aula que precisa de adaptação</b>
-                        <span>Hoje, 14h05 · análise contextual baseada no PEI</span>
+                        <b>Sofia ainda está conhecendo {selected.name.split(" ")[0]}</b>
+                        <span>Preencha a Anamnese e o PEI para receber sugestões personalizadas</span>
                       </div>
-                      <span className="ac-tag">Hoje · 16h</span>
+                      <span className="ac-tag">Novo</span>
                     </div>
-                    <h2 className="ac-title">Aula de hoje tem <em>fração e leitura silábica</em> — Pedrinho precisa de 3 adaptações</h2>
-                    <p className="ac-body">A aula "Frações e Partilha Justa" (Matemática · 16h) usa metáforas abstratas e leitura coletiva — duas áreas onde Pedrinho tem dificuldade documentada no PEI. Preparei adaptações alinhadas à BNCC <span className="bncc">EF02MA08</span> e ao objetivo PEI #4.</p>
-                    <div className="ac-strats">
-                      <div className="ac-strat"><b>Visual</b><span>Substituir "metade" por imagem da pizza dividida — material concreto disponível</span></div>
-                      <div className="ac-strat"><b>Pacing</b><span>Aula em 3 micro-blocos de 5 min com pausas sensoriais</span></div>
-                      <div className="ac-strat"><b>Mediação</b><span>Profa. Carla (AEE) já alinhada · script enviado às 13h</span></div>
-                    </div>
+                    <h2 className="ac-title">Vamos começar pela <em>Anamnese</em> de {selected.name.split(" ")[0]}</h2>
+                    <p className="ac-body">Sem registros ainda. Preencha os eixos da Anamnese e cadastre o PEI para que a Sofia possa sugerir adaptações de aula alinhadas ao perfil e à BNCC.</p>
                     <div className="ac-cta">
-                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}>Aplicar adaptações ao plano de aula <ChevronRight size={14} /></button>
-                      <button className="btn-ghost-dark">Ver aula original</button>
+                      <button className="btn btn-primary" onClick={() => setActiveTab("anam")}>Preencher Anamnese <ChevronRight size={14} /></button>
+                      <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Abrir PEI</button>
                     </div>
                   </div>
 
@@ -788,11 +783,7 @@ export function Inclusao() {
                       <button className="more" onClick={() => setActiveTab("reg")}>Todos os 23 registros →</button>
                     </div>
                     <div className="tl">
-                      <div className="tl-item"><div className="tl-dot pulse" /><div className="tl-content"><b>Sofia adaptou aula de Matemática (Frações)</b><span>3 estratégias geradas · aguardando aplicação</span></div><div className="tl-date">HOJE · 14h05</div></div>
-                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>Atingiu objetivo #6 — Trabalho em dupla por 20 min</b><span>Profa. Camila · evidência fotográfica</span></div><div className="tl-date">29 ABR</div></div>
-                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>Reunião com família · alinhamento PEI bimestral</b><span>Mãe relatou avanço em casa · ata anexada</span></div><div className="tl-date">25 ABR</div></div>
-                      <div className="tl-item"><div className="tl-dot warn" /><div className="tl-content"><b>Crise sensorial breve em aula de Música</b><span>Resolvido com fone abafador</span></div><div className="tl-date">18 ABR</div></div>
-                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>PEI revisado · 9 objetivos vigentes (v3.2)</b><span>Co-construído com AEE e família</span></div><div className="tl-date">04 ABR</div></div>
+                      <p style={{ color: "var(--muted)", fontSize: 12.5 }}>Nenhum registro ainda. Os eventos pedagógicos de {selected.name.split(" ")[0]} aparecerão aqui.</p>
                     </div>
                   </div>
                     </div>
@@ -806,9 +797,9 @@ export function Inclusao() {
                             <span>especialista em PEI e BNCC inclusão</span>
                           </div>
                         </div>
-                        <p className="sofia-q">"Posso te ajudar com o Pedrinho agora. O que faz mais sentido?"</p>
+                        <p className="sofia-q">"Posso te ajudar com {selected.name.split(" ")[0]} agora. O que faz mais sentido?"</p>
                         <div className="sofia-actions">
-                          <button className="sofia-action" onClick={() => setAdaptOpen(true)}><Sparkles size={14} className="ico" /> Adaptar aula de hoje (Frações) <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => setAdaptOpen(true)}><Sparkles size={14} className="ico" /> Adaptar aula de hoje <span className="arrow">›</span></button>
                           <button className="sofia-action" onClick={() => setActiveTab("plan")}><FileText size={14} className="ico" /> Gerar plano de aula adaptado <span className="arrow">›</span></button>
                           <button className="sofia-action" onClick={() => setActiveTab("rel")}><BookOpen size={14} className="ico" /> Gerar parecer descritivo bimestral <span className="arrow">›</span></button>
                           <button className="sofia-action"><Send size={14} className="ico" /> Preparar reunião com família <span className="arrow">›</span></button>
@@ -818,13 +809,13 @@ export function Inclusao() {
                       <div className="context-card">
                         <h4>Contexto rápido</h4>
                         {([
-                          { l: "Ano de referência", v: "2º Ano", t: "" },
-                          { l: "Leitura", v: "Em processo", t: "warn" },
-                          { l: "Escrita", v: "Em processo", t: "warn" },
-                          { l: "Matemática", v: "Avançado", t: "ok" },
-                          { l: "Socialização", v: "Com mediação", t: "" },
-                          { l: "Mediador em sala", v: "Sim", t: "ok" },
-                          { l: "AEE (contraturno)", v: "2x / sem", t: "" },
+                          { l: "Turma", v: selected.turma, t: "" },
+                          { l: "Diagnóstico", v: selected.diag, t: "" },
+                          { l: "CID", v: selected.cid, t: "" },
+                          { l: "AEE / Mediação", v: selected.aee, t: "" },
+                          { l: "Leitura", v: "Sem dados", t: "" },
+                          { l: "Escrita", v: "Sem dados", t: "" },
+                          { l: "Matemática", v: "Sem dados", t: "" },
                         ] as Array<{ l: string; v: string; t: "" | "warn" | "ok" }>).map((r) => (
                           <div className="ctx-row" key={r.l}>
                             <span className="lbl">{r.l}</span>
@@ -834,13 +825,13 @@ export function Inclusao() {
                       </div>
 
                       <div className="skills-card">
-                        <h4>Habilidades · evolução <span className="badge">+3 no bimestre</span></h4>
+                        <h4>Habilidades · evolução</h4>
                         {([
-                          { l: "Atenção sustentada", p: 72, c: "" },
-                          { l: "Leitura silábica", p: 48, c: "warn" },
-                          { l: "Cálculo concreto", p: 89, c: "green" },
-                          { l: "Interação em dupla", p: 65, c: "" },
-                          { l: "Autorregulação", p: 58, c: "" },
+                          { l: "Atenção sustentada", p: 0, c: "" },
+                          { l: "Leitura silábica", p: 0, c: "" },
+                          { l: "Cálculo concreto", p: 0, c: "" },
+                          { l: "Interação em dupla", p: 0, c: "" },
+                          { l: "Autorregulação", p: 0, c: "" },
                         ] as Array<{ l: string; p: number; c: "" | "warn" | "green" }>).map((s) => (
                           <div className="skill" key={s.l}>
                             <div className="skill-head"><b>{s.l}</b><span>{s.p}%</span></div>
