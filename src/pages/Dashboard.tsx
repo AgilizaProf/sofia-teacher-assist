@@ -328,10 +328,10 @@ export function Dashboard() {
                 <Svg c={<><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>} />
               </button>
               <div className="user-pill">
-                <div className="user-avatar">CM</div>
+                <div className="user-avatar">{user.initials}</div>
                 <div>
-                  <div className="user-name">Camila M.</div>
-                  <div className="user-plan">Plano Pro</div>
+                  <div className="user-name">{user.name}</div>
+                  <div className="user-plan">Plano {user.plan}</div>
                 </div>
               </div>
             </div>
@@ -339,12 +339,12 @@ export function Dashboard() {
 
           <section className="hero">
             <div className="hero-left">
-              <div className="hero-greet"><span className="live-dot" />Quinta-feira · 1º de maio · 08:12</div>
-              <h1 className="hero-title">Bom dia, Camila.<br />Hoje você gera <span className="accent">3 pareceres em 12 minutos.</span></h1>
-              <p className="hero-sub">Você tem <strong style={{ color: "#fff" }}>6 alunos</strong> em <strong style={{ color: "#fff" }}>2 turmas</strong> aguardando o relatório descritivo do bimestre. Vamos juntas?</p>
+              <div className="hero-greet"><span className="live-dot" />Bem-vinda à Sofia</div>
+              <h1 className="hero-title">{heroGreeting}.<br />Comece configurando <span className="accent">sua primeira turma.</span></h1>
+              <p className="hero-sub">Cadastre suas turmas e alunos para que a Sofia possa te ajudar a gerar pareceres, planos de aula e adaptações em minutos.</p>
               <div className="hero-cta-row">
-                <button className="hero-cta">
-                  Começar pelos pareceres
+                <button className="hero-cta" onClick={() => setClassOpen(true)}>
+                  Criar primeira turma
                   <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
                 </button>
                 <button className="hero-cta-ghost">
@@ -361,9 +361,9 @@ export function Dashboard() {
               <div className="hero-metric-value">
                 <span>{h}</span>h<span className="hero-metric-unit"><span>{m}</span>min</span>
               </div>
-              <div className="hero-metric-label">economizados nos últimos 7 dias</div>
+              <div className="hero-metric-label">comece a usar a Sofia pra economizar tempo</div>
               <div className="hero-metric-bar"><div className="hero-metric-fill" /></div>
-              <div className="hero-metric-foot"><span>Meta: 10h</span><span><strong>+38%</strong> vs. semana passada</span></div>
+              <div className="hero-metric-foot"><span>Meta: {user.weeklyGoalHours}h</span><span>0%</span></div>
             </div>
           </section>
 
