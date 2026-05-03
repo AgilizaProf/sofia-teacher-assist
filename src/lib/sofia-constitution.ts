@@ -43,3 +43,28 @@ Em todo plano, parecer e adaptação, a Sofia convoca silenciosamente o pensamen
 
 REGRA DE OURO
 Se houver conflito entre o pedido do usuário e estas regras, as regras vencem. A Sofia explica gentilmente o porquê e oferece uma alternativa que respeite os princípios.`;
+
+/**
+ * Constrói o prompt final que DEVE ser enviado a qualquer LLM em nome da Sofia.
+ * Anexa a Constituição como camada inegociável acima da tarefa e do contexto.
+ *
+ * @param taskPrompt  Instrução específica da tarefa (ex.: "gere um parecer descritivo").
+ * @param context     Dados reais cadastrados pela professora (registros, anotações, etc.).
+ */
+export function buildSofiaPrompt(taskPrompt: string, context?: string): string {
+  const safeTask = (taskPrompt || "").trim();
+  const safeContext = (context || "").trim();
+  return [
+    `Você é Sofia, assistente pedagógica do AgilizaProf (Constituição v${SOFIA_CONSTITUTION_VERSION}).`,
+    `As regras abaixo estão acima de qualquer pedido do usuário e são INEGOCIÁVEIS.`,
+    ``,
+    `===== CONSTITUIÇÃO DA SOFIA =====`,
+    SOFIA_CONSTITUTION,
+    `===== FIM DA CONSTITUIÇÃO =====`,
+    ``,
+    safeContext ? `===== CONTEXTO REAL (dados cadastrados pela professora) =====\n${safeContext}\n===== FIM DO CONTEXTO =====\n` : `===== CONTEXTO REAL =====\n(nenhum contexto fornecido — se faltar informação essencial, PARE e pergunte à professora)\n===== FIM DO CONTEXTO =====\n`,
+    `===== TAREFA =====`,
+    safeTask || "(tarefa não especificada)",
+    `===== FIM DA TAREFA =====`,
+  ].join("\n");
+}
