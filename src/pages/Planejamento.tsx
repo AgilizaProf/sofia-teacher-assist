@@ -770,12 +770,7 @@ export function Planejamento() {
                       else items.push({ id: c.id, cat: "aulas", v: c.v, tag: c.tag, title: c.title, meta: c.meta });
                     });
                     const extras: Item[] = {
-                      seg: [{ id: "b-seg", cat: "bncc", v: "ci", tag: "EF02LP07", title: "Escrever listas tematicamente organizadas", meta: "habilidade" }],
-                      ter: [{ id: "s-ter", cat: "sofia", v: "port", tag: "✨ SOFIA", title: "Sugestão: roda de leitura curta antes do diagnóstico", meta: "10min" }],
-                      qua: [],
-                      qui: [{ id: "b-qui", cat: "bncc", v: "mat", tag: "EF02MA05", title: "Resolver problemas de adição até 1.000", meta: "habilidade" },
-                            { id: "f-qui", cat: "feriados", v: "esc", tag: "FERIADO", title: "Tiradentes (sex 21 abr) · semana curta na próxima", meta: "atenção" }],
-                      sex: [{ id: "s-sex", cat: "sofia", v: "port", tag: "✨ SOFIA", title: "Síntese da semana · cartaz coletivo", meta: "30min" }],
+                      seg: [], ter: [], qua: [], qui: [], sex: [],
                     }[d.k] as Item[];
                     const visible = [...items, ...extras].filter((it) => layers[it.cat]);
                     return (
@@ -813,7 +808,7 @@ export function Planejamento() {
             {m === "m6" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Diário de bordo <small>· hoje · 2º Ano A</small></h2></div>
+                  <div><h2>Diário de bordo <small>· hoje</small></h2></div>
                   <div className="right">
                     <button className="pl-btn primary"><Sparkles size={14} /> Resumo da semana</button>
                   </div>
@@ -821,39 +816,36 @@ export function Planejamento() {
                 <div className="pl-diary">
                   <div className="pl-diary-card">
                     <h3 style={{ fontSize: 16, marginBottom: 10 }}>Aulas de hoje</h3>
-                    {[
-                      { id: "a1", t: "Mercadinho · escrita de listas", s: "Português · 50min · 22 alunos" },
-                      { id: "a2", t: "Adição com material dourado", s: "Matemática · 50min · duplas" },
-                      { id: "a3", t: "Roda de leitura", s: "Português · 30min" },
-                    ].map((a) => (
-                      <div key={a.id} className="pl-diary-row">
-                        <div>
-                          <div className="ttl">{a.t}</div>
-                          <div className="sub">{a.s}</div>
+                    {M6_AULAS.length === 0 ? (
+                      <EmptyState
+                        icon="📓"
+                        title="Nenhuma aula registrada hoje."
+                        description="Após cada aula, marque funcionou / travou / próximo passo. A Sofia aprende com cada registro."
+                      />
+                    ) : (
+                      M6_AULAS.map((a) => (
+                        <div key={a.id} className="pl-diary-row">
+                          <div>
+                            <div className="ttl">{a.t}</div>
+                            <div className="sub">{a.s}</div>
+                          </div>
+                          <div className="pl-mood">
+                            <button className={"ok" + (diary[a.id] === "ok" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "ok" }))} aria-label="Funcionou"><Smile size={16} /></button>
+                            <button className={"warn" + (diary[a.id] === "warn" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "warn" }))} aria-label="Travou"><Frown size={16} /></button>
+                            <button className={"next" + (diary[a.id] === "next" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "next" }))} aria-label="Próximo passo"><ArrowRight size={16} /></button>
+                          </div>
                         </div>
-                        <div className="pl-mood">
-                          <button className={"ok" + (diary[a.id] === "ok" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "ok" }))} aria-label="Funcionou"><Smile size={16} /></button>
-                          <button className={"warn" + (diary[a.id] === "warn" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "warn" }))} aria-label="Travou"><Frown size={16} /></button>
-                          <button className={"next" + (diary[a.id] === "next" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "next" }))} aria-label="Próximo passo"><ArrowRight size={16} /></button>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="pl-learnt">
-                      <Sparkles size={16} color="#B45309" />
-                      <div><b>Sofia aprendeu:</b> a turma respondeu melhor a <b>atividades em duplas</b> (3 "funcionou" esta semana). Vou priorizar esse formato no plano da próxima.</div>
-                    </div>
+                      ))
+                    )}
                   </div>
                   <aside className="pl-side">
                     <div className="pl-panel">
                       <h3><Clock size={14} /> Esta semana</h3>
-                      <div className="pl-hist"><span className="icn g" /><div className="body"><b>4 aulas</b> · funcionou<div className="me">turma engajada</div></div></div>
-                      <div className="pl-hist"><span className="icn o" /><div className="body"><b>1 aula</b> · travou<div className="me">cansaço pós-recreio</div></div></div>
-                      <div className="pl-hist"><span className="icn b" /><div className="body"><b>2 próximos passos</b><div className="me">aplicar na semana 18–22</div></div></div>
+                      <EmptyState icon="📊" title="Sem dados ainda." description="O resumo da semana aparece após os primeiros registros." />
                     </div>
                     <div className="pl-panel accent">
                       <h3><Sparkles size={14} /> Sugestão da Sofia</h3>
-                      <p className="lead">Quer que eu monte a próxima semana <b>privilegiando duplas</b> e <b>evitando aulas pesadas pós-recreio</b>?</p>
-                      <button className="pl-btn primary" style={{ width: "100%", justifyContent: "center", marginTop: 6 }}><Check size={14} /> Sim, gerar com esses ajustes</button>
+                      <p className="lead">Conforme você registra o que funcionou ou travou, a Sofia sugere ajustes para a próxima semana.</p>
                     </div>
                   </aside>
                 </div>
