@@ -502,6 +502,8 @@ export function Inclusao() {
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
   const [nsCid, setNsCid] = useState("nao_informado");
+  const [nsAeeDays, setNsAeeDays] = useState<string>("");
+  const [nsMediadora, setNsMediadora] = useState<string>("");
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
@@ -553,6 +555,10 @@ export function Inclusao() {
     const cidOpt = CID_OPTIONS.find((o) => o.value === nsCid);
     const diagLabel = cidOpt && cidOpt.value !== "nao_informado" ? cidOpt.label.split(" — ")[0] : "Não informado";
     const cidCode = cidOpt && cidOpt.cid && cidOpt.cid !== "—" ? `CID ${cidOpt.cid}` : "CID não informado";
+    const aeeLabel = nsAeeDays
+      ? `AEE ${nsAeeDays}x/sem`
+      : "AEE a definir";
+    const mediadora = nsMediadora.trim();
     const newStudent: Student = {
       id: `s_${Date.now()}`,
       name,
@@ -561,7 +567,7 @@ export function Inclusao() {
       turma: nsTurma.trim() || "Sem turma",
       diag: diagLabel,
       cid: cidCode,
-      aee: "AEE a definir",
+      aee: mediadora ? `${aeeLabel} · Mediadora: ${mediadora}` : aeeLabel,
       anamnese: "0/14",
       registros: "0",
       trend: "—",
@@ -569,6 +575,7 @@ export function Inclusao() {
     };
     setStudents((prev) => [newStudent, ...prev]);
     setNsName(""); setNsTurma(""); setNsCid("nao_informado");
+    setNsAeeDays(""); setNsMediadora("");
     setNewStudentOpen(false);
   };
 
@@ -1171,6 +1178,28 @@ export function Inclusao() {
                   </option>
                 ))}
               </select>
+            </label>
+            <label style={{ fontSize: 12, fontWeight: 700 }}>AEE — frequência semanal <span style={{ fontWeight: 400, color: "var(--muted)" }}>(opcional)</span>
+              <select
+                value={nsAeeDays}
+                onChange={(e) => setNsAeeDays(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, background: "#fff", fontFamily: "inherit", fontSize: 13 }}
+              >
+                <option value="">Não informado</option>
+                <option value="1">1 dia por semana</option>
+                <option value="2">2 dias por semana</option>
+                <option value="3">3 dias por semana</option>
+                <option value="4">4 dias por semana</option>
+                <option value="5">5 dias por semana</option>
+              </select>
+            </label>
+            <label style={{ fontSize: 12, fontWeight: 700 }}>Mediadora <span style={{ fontWeight: 400, color: "var(--muted)" }}>(opcional)</span>
+              <input
+                value={nsMediadora}
+                onChange={(e) => setNsMediadora(e.target.value)}
+                placeholder="Nome da mediadora"
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }}
+              />
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
