@@ -8,8 +8,6 @@ export const sidebarCss = `
 .sb-logo-icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#FF7A45,#FF9466);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:17px;color:#fff;box-shadow:0 6px 18px rgba(255,122,69,.40);flex-shrink:0;}
 .sb-logo-text{font-family:'Fraunces',serif;font-weight:900;font-size:16px;color:#fff;letter-spacing:-0.03em;line-height:1;}
 .sb-logo-text span{color:#FF7A45;}
-.sb-exclusive{margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;background:linear-gradient(135deg,#FF7A45,#FFB07A);color:#fff;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;box-shadow:0 4px 12px rgba(255,122,69,.40),inset 0 1px 0 rgba(255,255,255,.25);position:relative;z-index:2;}
-.sb-exclusive svg{width:9px;height:9px;}
 .sb-cmdk{margin:6px 14px 14px;padding:8px 11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:8px;display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .2s;position:relative;z-index:1;}
 .sb-cmdk:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.16);}
 .sb-cmdk svg{width:13px;height:13px;flex-shrink:0;}
@@ -31,7 +29,7 @@ export const sidebarCss = `
 .sb-plan-btn{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#FF6A2C;color:#fff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:700;border:none;cursor:pointer;}
 .sb-plan-btn:hover{filter:brightness(1.05);}
 .sb-version{font-size:10px;color:rgba(255,255,255,.30);text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;}
-@media(max-width:1100px){.ap-sidebar{width:72px;}.sb-logo-text,.sb-cmdk,.sb-section-label,.sb-shortcut,.sb-badge,.sb-version,.sb-plan,.sb-foot,.sb-exclusive,.sb-item span:not(.sb-shortcut):not(.sb-badge){display:none;}.sb-head{justify-content:center;padding:16px 8px;}.sb-item{justify-content:center;}}
+@media(max-width:1100px){.ap-sidebar{width:72px;}.sb-logo-text,.sb-cmdk,.sb-section-label,.sb-shortcut,.sb-badge,.sb-version,.sb-plan,.sb-foot,.sb-item span:not(.sb-shortcut):not(.sb-badge){display:none;}.sb-head{justify-content:center;padding:16px 8px;}.sb-item{justify-content:center;}}
 @media(max-width:820px){.ap-sidebar{display:none;}}
 `;
 
@@ -48,10 +46,6 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
       <div className="sb-head">
         <div className="sb-logo-icon">A</div>
         <div className="sb-logo-text">Agiliza<span>Prof</span></div>
-        <span className="sb-exclusive" aria-label="Acesso exclusivo">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
-          Exclusivo
-        </span>
       </div>
       <button className="sb-cmdk" onClick={onCmdK} aria-label="Buscar ou navegar">
         <Svg c={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />
