@@ -280,6 +280,47 @@ const TYPE_SUGGESTIONS: Record<EventType, string[]> = {
   ],
 };
 
+function SuggestionsButton({ type, onPick }: { type: EventType; onPick: (s: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const items = TYPE_SUGGESTIONS[type] || [];
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        type="button"
+        className="ag-btn"
+        style={{ padding: "6px 10px", fontSize: 12 }}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Sparkles size={13} /> Sugestões para {TYPE_LABEL[type].toLowerCase()}
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 10,
+          background: "#fff", border: "1px solid var(--border)", borderRadius: 10,
+          boxShadow: "0 12px 28px rgba(15,27,54,.12)", padding: 6, display: "flex", flexDirection: "column", gap: 2,
+        }}>
+          {items.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => { onPick(s); setOpen(false); }}
+              style={{
+                textAlign: "left", padding: "8px 10px", fontSize: 12.5, lineHeight: 1.4,
+                background: "transparent", border: "none", borderRadius: 7, cursor: "pointer",
+                color: "var(--text)", fontFamily: "inherit",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Agenda() {
   const today = brNow();
   const todayKey = dateKey(today);
