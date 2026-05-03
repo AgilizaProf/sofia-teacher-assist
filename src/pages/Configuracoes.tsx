@@ -31,7 +31,7 @@ function getPrincipleBody(idx: number): string {
 
 export function Configuracoes() {
   const [selected, setSelected] = useState<number>(1);
-  const [navOpen, setNavOpen] = useState<boolean>(true);
+  const [navOpen, setNavOpen] = useState<boolean>(false);
   const current = PRINCIPLES.find((p) => p.n === selected) ?? PRINCIPLES[0];
 
   return (
@@ -81,13 +81,15 @@ export function Configuracoes() {
               <aside
                 aria-label="Lista de princípios"
                 style={{
-                  border: "1px solid #E4E8F0",
                   borderRadius: 12,
-                  background: "#FBFAF6",
+                  background: "linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%)",
+                  color: "#fff",
+                  boxShadow: "0 6px 24px rgba(15,27,54,.18)",
                   padding: 8,
                   position: "sticky",
                   top: 16,
                   alignSelf: "start",
+                  overflow: "hidden",
                 }}
               >
                 <button
@@ -100,7 +102,7 @@ export function Configuracoes() {
                     width: "100%", display: "flex", alignItems: "center", justifyContent: navOpen ? "space-between" : "center",
                     gap: 8, background: "transparent", border: "none",
                     padding: "6px 8px", marginBottom: 6, cursor: "pointer",
-                    color: "#6B7691", fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase",
+                    color: "rgba(255,255,255,.55)", fontSize: 11, fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase",
                   }}
                 >
                   {navOpen && <span>Princípios</span>}
@@ -113,17 +115,19 @@ export function Configuracoes() {
                       <li key={p.n}>
                         <button
                           type="button"
-                          onClick={() => setSelected(p.n)}
+                          onClick={() => { setSelected(p.n); setNavOpen(true); }}
                           aria-current={isActive ? "true" : undefined}
                           title={`${p.n}. ${p.name}`}
                           style={{
                             width: "100%", textAlign: "left", display: "flex", alignItems: "center",
                             gap: 10, padding: navOpen ? "8px 10px" : "8px 6px",
                             justifyContent: navOpen ? "flex-start" : "center",
-                            border: "1px solid " + (isActive ? "#FF7A45" : "transparent"),
-                            background: isActive ? "rgba(255,122,69,.12)" : "transparent",
-                            color: "#1B2A4E", borderRadius: 8, cursor: "pointer",
+                            border: "1px solid " + (isActive ? "rgba(255,122,69,.4)" : "transparent"),
+                            background: isActive ? "rgba(255,122,69,.18)" : "transparent",
+                            color: isActive ? "#fff" : "rgba(255,255,255,.78)",
+                            borderRadius: 8, cursor: "pointer",
                             fontWeight: isActive ? 700 : 500, fontSize: 13,
+                            transition: "background .15s, color .15s",
                           }}
                         >
                           <span aria-hidden style={{ fontSize: 16, lineHeight: 1 }}>{p.emoji}</span>
