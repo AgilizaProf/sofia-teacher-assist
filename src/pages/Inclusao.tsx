@@ -387,7 +387,7 @@ type Student = {
   anamnese: string; registros: string; trend: string; trendTone: "ok" | "warn" | "muted";
 };
 
-const STUDENTS: Student[] = [];
+const INITIAL_STUDENTS: Student[] = [];
 
 const PEI_EIXOS: Array<{ ic: string; cls: string; h: string; status: string; tone: "ok" | "warn"; meta: string; body: ReactNode }> = [];
 
@@ -494,7 +494,11 @@ const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const [view, setView] = useState<ViewKey>(STUDENTS.length === 0 ? "list" : (search.view || "list"));
+  const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
+  const [view, setView] = useState<ViewKey>(students.length === 0 ? "list" : (search.view || "list"));
+  const [nsName, setNsName] = useState("");
+  const [nsTurma, setNsTurma] = useState("");
+  const [nsCid, setNsCid] = useState("nao_informado");
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
@@ -523,7 +527,7 @@ export function Inclusao() {
   };
 
   const goView = (v: ViewKey) => {
-    const safe: ViewKey = v === "detail" && STUDENTS.length === 0 ? "list" : v;
+    const safe: ViewKey = v === "detail" && students.length === 0 ? "list" : v;
     setView(safe);
     navigate({ search: (prev) => ({ ...prev, view: v }) as never, replace: true });
   };
@@ -532,11 +536,38 @@ export function Inclusao() {
     navigate({ search: (prev) => ({ ...prev, tab: t }) as never, replace: true });
   };
 
-  const filtered = STUDENTS.filter((s) => {
+  const filtered = students.filter((s) => {
     const q = query.toLowerCase().trim();
     if (!q) return true;
     return s.name.toLowerCase().includes(q) || s.turma.toLowerCase().includes(q) || s.diag.toLowerCase().includes(q);
   });
+
+  const handleSaveStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = nsName.trim();
+    if (!name) return;
+    const initials = name.split(/\s+/).map((p) => p[0] || "").join("").slice(0, 2).toUpperCase();
+    const cidOpt = CID_OPTIONS.find((o) => o.value === nsCid);
+    const diagLabel = cidOpt && cidOpt.value !== "nao_informado" ? cidOpt.label.split(" — ")[0] : "Não informado";
+    const cidCode = cidOpt && cidOpt.cid && cidOpt.cid !== "—" ? `CID ${cidOpt.cid}` : "CID não informado";
+    const newStudent: Student = {
+      id: `s_${Date.now()}`,
+      name,
+      initials: initials || "AL",
+      age: "—",
+      turma: nsTurma.trim() || "Sem turma",
+      diag: diagLabel,
+      cid: cidCode,
+      aee: "AEE a definir",
+      anamnese: "0/14",
+      registros: "0",
+      trend: "—",
+      trendTone: "muted",
+    };
+    setStudents((prev) => [newStudent, ...prev]);
+    setNsName(""); setNsTurma(""); setNsCid("nao_informado");
+    setNewStudentOpen(false);
+  };
 
   return (
     <div className="inc-root">
@@ -1117,16 +1148,17 @@ export function Inclusao() {
             <h2>Cadastrar novo aluno</h2>
             <button className="inc-modal-close" onClick={() => setNewStudentOpen(false)} aria-label="Fechar"><X size={16} /></button>
           </div>
-          <form className="inc-modal-body plain" onSubmit={(e) => { e.preventDefault(); setNewStudentOpen(false); }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <form className="inc-modal-body plain" onSubmit={handleSaveStudent} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Nome completo
-              <input required style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} />
+              <input required value={nsName} onChange={(e) => setNsName(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} />
             </label>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Turma
-              <input style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} placeholder="Ex.: 2º Ano A" />
+              <input value={nsTurma} onChange={(e) => setNsTurma(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} placeholder="Ex.: 2º Ano A" />
             </label>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Diagnóstico / CID
               <select
-                defaultValue="nao_informado"
+                value={nsCid}
+                onChange={(e) => setNsCid(e.target.value)}
                 style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, background: "#fff", fontFamily: "inherit", fontSize: 13 }}
               >
                 <option value="nao_informado">Não informado</option>
