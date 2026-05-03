@@ -749,26 +749,39 @@ export function Agenda() {
                   <span className="ag-up-link">Ver todos</span>
                 </div>
                 <div className="ag-up-list">
-                  {([] as Array<{ d: string; m: string; tag: string; tagL: string; n: string; meta: string[]; prep: string; pending: boolean }>).map((it, i) => (
-                    <div key={i} className="ag-up-item">
-                      <div className="ag-up-day">
-                        <div className="ag-up-day-num">{it.d}</div>
-                        <div className="ag-up-day-mo">{it.m}</div>
-                      </div>
-                      <div className="ag-up-body">
-                        <span className={"ag-up-tag " + it.tag}>{it.tagL}</span>
-                        <div className="ag-up-name">{it.n}</div>
-                        <div className="ag-up-meta">
-                          {it.meta.map((m, j) => (
-                            <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                              {j > 0 && <span className="mdot" />}<span>{m}</span>
-                            </span>
-                          ))}
-                        </div>
-                        <span className={"ag-up-prep" + (it.pending ? " pending" : "")}>{it.prep}</span>
-                      </div>
+                  {upcoming.length === 0 ? (
+                    <div style={{ padding: "14px 16px", fontSize: 12.5, color: "var(--text-mute)" }}>
+                      Nenhum compromisso futuro.
                     </div>
-                  ))}
+                  ) : (
+                    upcoming.map((ev) => {
+                      const [, mm, dd] = ev.date.split("-");
+                      return (
+                        <div key={ev.id} className="ag-up-item" onClick={() => openDayPanel(ev.date)}>
+                          <div className="ag-up-day">
+                            <div className="ag-up-day-num">{dd}</div>
+                            <div className="ag-up-day-mo">{MONTHS_PT[Number(mm) - 1].slice(0, 3)}</div>
+                          </div>
+                          <div className="ag-up-body">
+                            <span
+                              className="ag-up-tag"
+                              style={{ background: "color-mix(in oklab, " + TYPE_COLOR[ev.type] + " 18%, white)", color: TYPE_COLOR[ev.type] }}
+                            >
+                              {TYPE_LABEL[ev.type]}
+                            </span>
+                            <div className="ag-up-name">{ev.title}</div>
+                            {ev.time && (
+                              <div className="ag-up-meta">
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                  <Clock size={11} /> {ev.time}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
