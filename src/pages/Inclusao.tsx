@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
@@ -383,26 +383,11 @@ type Student = {
   anamnese: string; registros: string; trend: string; trendTone: "ok" | "warn" | "muted";
 };
 
-const STUDENTS: Student[] = [
-  { id: "pedrinho", name: "Pedrinho Almeida", initials: "PA", age: "7 anos", turma: "2º Ano A", diag: "TEA Nível 1", cid: "CID F84.0", aee: "AEE 2x/sem", featured: true, anamnese: "14/16", registros: "23", trend: "↑ 2", trendTone: "ok" },
-  { id: "ana", name: "Ana Clara Silva", initials: "AC", age: "7 anos", turma: "2º Ano A", diag: "TDAH", cid: "CID F90.0", aee: "Sem AEE", anamnese: "10/16", registros: "18", trend: "Pendente", trendTone: "warn" },
-  { id: "lucas", name: "Lucas Mendes", initials: "LM", age: "8 anos", turma: "2º Ano A", diag: "Dislexia", cid: "CID F81.0", aee: "AEE 1x/sem", anamnese: "16/16", registros: "31", trend: "↑ 4", trendTone: "ok" },
-  { id: "sofia", name: "Sofia Reis Carvalho", initials: "SR", age: "7 anos", turma: "2º Ano A", diag: "Síndrome de Down", cid: "CID Q90", aee: "Mediador", anamnese: "15/16", registros: "27", trend: "↑ 1", trendTone: "ok" },
-  { id: "miguel", name: "Miguel Souza", initials: "MS", age: "7 anos", turma: "2º Ano A", diag: "Deficiência Auditiva", cid: "CID H90.3", aee: "Libras", anamnese: "12/16", registros: "14", trend: "—", trendTone: "muted" },
-];
+const STUDENTS: Student[] = [];
 
-const PEI_EIXOS = [
-  { ic: "C", cls: "pei-cog", h: "Cognição & Linguagem", status: "3 de 4 objetivos atingidos", tone: "ok" as const, meta: "Obj. PEI #1, #3, #4", body: <>Apoio com <b>material concreto</b>, comandos curtos (1 etapa) e tempo extra de 30%.</> },
-  { ic: "I", cls: "pei-soc", h: "Interação social", status: "2 de 3 objetivos · 1 em processo", tone: "warn" as const, meta: "Obj. PEI #5, #6", body: <>Trabalha bem em <b>duplas estruturadas</b>. Evita grandes grupos.</> },
-  { ic: "P", cls: "pei-mot", h: "Psicomotor & sensorial", status: "Todos os objetivos atingidos", tone: "ok" as const, meta: "Obj. PEI #7", body: <>Sensibilidade auditiva — <b>fones abafadores</b> disponíveis.</> },
-  { ic: "A", cls: "pei-com", h: "Comunicação & autonomia", status: "1 de 2 objetivos · revisão sugerida", tone: "warn" as const, meta: "Obj. PEI #8, #9", body: <>Avançar para <b>narrativas com 3 elementos</b>.</> },
-];
+const PEI_EIXOS: Array<{ ic: string; cls: string; h: string; status: string; tone: "ok" | "warn"; meta: string; body: ReactNode }> = [];
 
-const ADAPTACOES = [
-  { n: 1, title: "Substituir abstração por material concreto", desc: "Trocar 'metade' por imagem da pizza dividida em fatias iguais.", meta: "PEI obj. #4 · BNCC EF02MA08" },
-  { n: 2, title: "Dividir em 3 micro-blocos de 5 min com pausas sensoriais", desc: "Estruturar com pausas de 1 min para movimento.", meta: "PEI obj. #1 · Atenção sustentada" },
-  { n: 3, title: "Mediação prévia com Profa. Carla (AEE)", desc: "Profa. Carla alinhada às 13h. Script com 5 perguntas-âncora enviado.", meta: "AEE alinhada · Script #SF-2046" },
-];
+const ADAPTACOES: Array<{ n: number; title: string; desc: string; meta: string }> = [];
 
 const TUTORIAL_STEPS = [
   { t: "Selecione o aluno", d: "Na lista de Inclusão, clique no card do aluno para abrir KPIs, eixos do PEI e timeline pedagógica." },
@@ -415,31 +400,11 @@ const TUTORIAL_STEPS = [
 
 const PLAN_WEEK: { when: string; date: string; disc: string; title: string; bncc: string; adapted: boolean }[] = [];
 
-const REG_ITEMS = [
-  { when: "HOJE · 14h05", who: "Sofia · IA", cat: "ped" as const, catLabel: "Pedagógico", body: "Aula de Frações adaptada com 3 estratégias (visual, pacing, mediação). Aguardando aplicação pela Profa. Camila às 16h.", att: ["📎 plano-aula-adaptado.pdf"] },
-  { when: "29 ABR · 10h12", who: "Profa. Camila Ribeiro", cat: "ped" as const, catLabel: "Pedagógico", body: "Pedrinho atingiu o objetivo PEI #6: sustentou trabalho em dupla com a Ana Clara por 22 minutos resolvendo um quebra-cabeça de números. Excelente regulação emocional.", att: ["📷 evidencia-dupla.jpg", "🎙️ audio-1m23s.m4a"] },
-  { when: "25 ABR · 19h30", who: "Família · Mãe (Juliana)", cat: "fam" as const, catLabel: "Família", body: "Reunião bimestral. Mãe relatou que em casa Pedrinho está nomeando frações ao dividir bolo (\"metade\", \"pedaço inteiro\"). Combinamos manter os fones abafadores também na hora do recreio.", att: ["📄 ata-reuniao-25-04.pdf"] },
-  { when: "18 ABR · 09h45", who: "Profa. Carla Mendonça (AEE)", cat: "sen" as const, catLabel: "Sensorial", body: "Crise sensorial breve durante aula de Música (volume da flauta). Resolvida em 3 min com fone abafador + canto da calma. Pedrinho retomou a atividade sozinho.", att: [] },
-  { when: "12 ABR · 14h00", who: "Profa. Camila Ribeiro", cat: "com" as const, catLabel: "Comportamental", body: "Solicitou pausa sozinho ao perceber sobrecarga (objetivo PEI #7 atingido novamente). Verbalizou: 'preciso respirar'.", att: [] },
-  { when: "04 ABR · 16h20", who: "Equipe pedagógica", cat: "ped" as const, catLabel: "Pedagógico", body: "PEI revisado em conjunto com AEE e família. Versão v3.2 publicada com 9 objetivos vigentes.", att: ["📄 PEI-v3.2.pdf"] },
-];
+const REG_ITEMS: Array<{ when: string; who: string; cat: "ped" | "fam" | "sen" | "com"; catLabel: string; body: string; att: string[] }> = [];
 
-const REL_PAST = [
-  { bim: "4º bimestre · 2025", date: "12/12/2025", status: "ok" as const, statusLabel: "Assinado" },
-  { bim: "3º bimestre · 2025", date: "26/09/2025", status: "ok" as const, statusLabel: "Assinado" },
-  { bim: "2º bimestre · 2025", date: "04/07/2025", status: "ok" as const, statusLabel: "Assinado" },
-  { bim: "1º bimestre · 2025", date: "11/04/2025", status: "ok" as const, statusLabel: "Assinado" },
-];
+const REL_PAST: Array<{ bim: string; date: string; status: "ok"; statusLabel: string }> = [];
 
-const DOCS = [
-  { ic: "PDF", t: "Laudo médico · TEA Nível 1", who: "Dr. Ricardo Mendes · CRM 123456", date: "12/03/2025", size: "1.2 MB" },
-  { ic: "PEI", t: "PEI v3.2 · vigente", who: "Equipe pedagógica + AEE + família", date: "04/04/2026", size: "684 KB" },
-  { ic: "ATA", t: "Ata · reunião bimestral", who: "Família + Profa. Camila", date: "25/04/2026", size: "212 KB" },
-  { ic: "ATA", t: "Ata · revisão de PEI", who: "Equipe + AEE", date: "04/04/2026", size: "198 KB" },
-  { ic: "ATA", t: "Ata · acolhimento inicial", who: "Coordenação + família", date: "08/02/2025", size: "176 KB" },
-  { ic: "AVA", t: "Avaliação pedagógica diagnóstica", who: "Profa. Camila Ribeiro", date: "20/02/2026", size: "456 KB" },
-  { ic: "AUT", t: "Autorização · uso de imagem", who: "Família (Juliana Almeida)", date: "08/02/2025", size: "88 KB" },
-];
+const DOCS: Array<{ ic: string; t: string; who: string; date: string; size: string }> = [];
 
 type AnamStatus = "consolidado" | "desenvolvimento" | "naoAlcancado" | "naoObservado";
 const ANAM_STATUS_VALUE: Record<AnamStatus, number> = {
@@ -451,70 +416,70 @@ const ANAM_STATUS_LABEL: Record<AnamStatus, string> = {
 
 const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus }> }> = [
   { l: "Ano de Referência", items: [
-    { d: "Reconhece o ano/etapa em que está matriculado", s: "consolidado" },
-    { d: "Identifica a turma e a professora regente", s: "consolidado" },
+    { d: "Reconhece o ano/etapa em que está matriculado", s: "naoObservado" },
+    { d: "Identifica a turma e a professora regente", s: "naoObservado" },
   ]},
   { l: "Desempenho Acadêmico", items: [
-    { d: "Leitura de palavras com sílabas simples (CV)", s: "desenvolvimento" },
-    { d: "Resolução de adição até 20 com material concreto", s: "consolidado" },
-    { d: "Escrita do próprio nome", s: "consolidado" },
-    { d: "Cópia de frases curtas do quadro", s: "desenvolvimento" },
+    { d: "Leitura de palavras com sílabas simples (CV)", s: "naoObservado" },
+    { d: "Resolução de adição até 20 com material concreto", s: "naoObservado" },
+    { d: "Escrita do próprio nome", s: "naoObservado" },
+    { d: "Cópia de frases curtas do quadro", s: "naoObservado" },
   ]},
   { l: "Aspectos Pedagógicos", items: [
-    { d: "Permanece na atividade por 15 min com mediação", s: "consolidado" },
-    { d: "Aceita apoio visual (pictogramas, fichas)", s: "consolidado" },
-    { d: "Tolera mudanças na rotina avisadas previamente", s: "desenvolvimento" },
+    { d: "Permanece na atividade por 15 min com mediação", s: "naoObservado" },
+    { d: "Aceita apoio visual (pictogramas, fichas)", s: "naoObservado" },
+    { d: "Tolera mudanças na rotina avisadas previamente", s: "naoObservado" },
   ]},
   { l: "Psicomotores", items: [
-    { d: "Coordenação motora ampla (correr, pular, equilíbrio)", s: "consolidado" },
-    { d: "Coordenação motora fina (preensão do lápis, recorte)", s: "desenvolvimento" },
-    { d: "Lateralidade definida", s: "consolidado" },
+    { d: "Coordenação motora ampla (correr, pular, equilíbrio)", s: "naoObservado" },
+    { d: "Coordenação motora fina (preensão do lápis, recorte)", s: "naoObservado" },
+    { d: "Lateralidade definida", s: "naoObservado" },
   ]},
   { l: "Interações Sociais", items: [
-    { d: "Inicia contato com colegas em duplas", s: "desenvolvimento" },
-    { d: "Participa de brincadeiras coletivas com mediação", s: "desenvolvimento" },
-    { d: "Respeita turnos em jogos simples", s: "consolidado" },
+    { d: "Inicia contato com colegas em duplas", s: "naoObservado" },
+    { d: "Participa de brincadeiras coletivas com mediação", s: "naoObservado" },
+    { d: "Respeita turnos em jogos simples", s: "naoObservado" },
   ]},
   { l: "Independência", items: [
-    { d: "Vai ao banheiro sem auxílio", s: "consolidado" },
-    { d: "Organiza o próprio material escolar", s: "desenvolvimento" },
-    { d: "Lancha sozinho", s: "consolidado" },
+    { d: "Vai ao banheiro sem auxílio", s: "naoObservado" },
+    { d: "Organiza o próprio material escolar", s: "naoObservado" },
+    { d: "Lancha sozinho", s: "naoObservado" },
   ]},
   { l: "Autonomia", items: [
-    { d: "Pede ajuda quando precisa", s: "desenvolvimento" },
-    { d: "Toma decisões simples (escolher atividade)", s: "desenvolvimento" },
-    { d: "Identifica e nomeia próprias dificuldades", s: "naoAlcancado" },
+    { d: "Pede ajuda quando precisa", s: "naoObservado" },
+    { d: "Toma decisões simples (escolher atividade)", s: "naoObservado" },
+    { d: "Identifica e nomeia próprias dificuldades", s: "naoObservado" },
   ]},
   { l: "Emoção", items: [
-    { d: "Reconhece emoções básicas em si", s: "desenvolvimento" },
-    { d: "Solicita pausa ao perceber sobrecarga", s: "consolidado" },
-    { d: "Aceita estratégias de autorregulação (respiração, fone)", s: "consolidado" },
+    { d: "Reconhece emoções básicas em si", s: "naoObservado" },
+    { d: "Solicita pausa ao perceber sobrecarga", s: "naoObservado" },
+    { d: "Aceita estratégias de autorregulação (respiração, fone)", s: "naoObservado" },
   ]},
   { l: "Memória", items: [
-    { d: "Recupera informações de aulas anteriores com pistas", s: "desenvolvimento" },
-    { d: "Memoriza rotinas visuais", s: "consolidado" },
-    { d: "Lembra combinados da turma", s: "desenvolvimento" },
+    { d: "Recupera informações de aulas anteriores com pistas", s: "naoObservado" },
+    { d: "Memoriza rotinas visuais", s: "naoObservado" },
+    { d: "Lembra combinados da turma", s: "naoObservado" },
   ]},
   { l: "Dificuldades & Potencialidades", items: [
-    { d: "Dificuldade: leitura coletiva em voz alta", s: "naoAlcancado" },
-    { d: "Potencialidade: raciocínio lógico-matemático concreto", s: "consolidado" },
-    { d: "Potencialidade: memória visual", s: "consolidado" },
+    { d: "Dificuldade: leitura coletiva em voz alta", s: "naoObservado" },
+    { d: "Potencialidade: raciocínio lógico-matemático concreto", s: "naoObservado" },
+    { d: "Potencialidade: memória visual", s: "naoObservado" },
   ]},
   { l: "Estratégias", items: [
-    { d: "Material concreto em Matemática", s: "consolidado" },
-    { d: "Apoio visual (pictogramas) em Português", s: "consolidado" },
-    { d: "Mediação de pares em atividades em dupla", s: "desenvolvimento" },
+    { d: "Material concreto em Matemática", s: "naoObservado" },
+    { d: "Apoio visual (pictogramas) em Português", s: "naoObservado" },
+    { d: "Mediação de pares em atividades em dupla", s: "naoObservado" },
   ]},
   { l: "Recursos", items: [
-    { d: "Fones abafadores disponíveis em sala", s: "consolidado" },
-    { d: "Canto da calma estruturado", s: "desenvolvimento" },
-    { d: "Sala AEE 2x/semana", s: "consolidado" },
+    { d: "Fones abafadores disponíveis em sala", s: "naoObservado" },
+    { d: "Canto da calma estruturado", s: "naoObservado" },
+    { d: "Sala AEE 2x/semana", s: "naoObservado" },
     { d: "Software de comunicação alternativa", s: "naoObservado" },
   ]},
   { l: "Contexto Familiar", items: [
-    { d: "Família participa de reuniões bimestrais", s: "consolidado" },
-    { d: "Mãe acompanha tarefas em casa", s: "consolidado" },
-    { d: "Comunicação família-escola via agenda diária", s: "consolidado" },
+    { d: "Família participa de reuniões bimestrais", s: "naoObservado" },
+    { d: "Mãe acompanha tarefas em casa", s: "naoObservado" },
+    { d: "Comunicação família-escola via agenda diária", s: "naoObservado" },
   ]},
   { l: "Observações", items: [
     { d: "Observações abertas da equipe pedagógica", s: "naoObservado" },
@@ -525,7 +490,7 @@ const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const [view, setView] = useState<ViewKey>(search.view || "list");
+  const [view, setView] = useState<ViewKey>(STUDENTS.length === 0 ? "list" : (search.view || "list"));
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
@@ -554,7 +519,8 @@ export function Inclusao() {
   };
 
   const goView = (v: ViewKey) => {
-    setView(v);
+    const safe: ViewKey = v === "detail" && STUDENTS.length === 0 ? "list" : v;
+    setView(safe);
     navigate({ search: (prev) => ({ ...prev, view: v }) as never, replace: true });
   };
   const setActiveTab = (t: TabKey) => {

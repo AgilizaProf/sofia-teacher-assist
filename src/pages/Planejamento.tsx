@@ -6,6 +6,7 @@ import {
   Link2, MessageSquare, Send, Layers, BookOpen, Smile, Frown, ArrowRight,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 
 const css = `
 .pl-root{
@@ -327,6 +328,10 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
 
 const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [];
 
+const M1_DAYS: Array<{ k: DayKey; n: string; d: string; count: string; items: Array<{ v: Variant | ""; sub: string; tt: string; mn: string }> }> = [];
+const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
+const M6_AULAS: Array<{ id: string; t: string; s: string }> = [];
+
 export function Planejamento() {
   const search = useSearch({ from: "/planejamento" }) as { m?: MKey };
   const navigate = useNavigate({ from: "/planejamento" });
@@ -340,9 +345,7 @@ export function Planejamento() {
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
-  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([
-    { from: "sofia", t: "Aqui está a atividade. Quer que eu adapte? Pode pedir em linguagem natural." },
-  ]);
+  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([]);
   const [chatTxt, setChatTxt] = useState("");
   const [layers, setLayers] = useState<Record<string, boolean>>({
     aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
@@ -390,6 +393,7 @@ export function Planejamento() {
     <div className="pl-root">
       <style>{sidebarCss}</style>
       <style>{css}</style>
+      <style>{emptyStateCss}</style>
       <div className="pl-app">
         <AppSidebar active="planning" />
         <div className="pl-main">
@@ -401,8 +405,7 @@ export function Planejamento() {
             </div>
             <div className="pl-top-meta">
               <span><span className="sdot" />Sofia online</span>
-              <span>qua · 29 abr · 18:31</span>
-              <div className="av" title="Profª Carla R.">CR</div>
+              <div className="av" title="Você">P</div>
             </div>
           </div>
 
@@ -431,7 +434,7 @@ export function Planejamento() {
             {m === "m5" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Semana 11–15 abr <small>· 2º Ano A · 22 alunos</small></h2></div>
+                  <div><h2>Semana atual <small>· selecione uma turma</small></h2></div>
                   <div className="right">
                     <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
@@ -442,6 +445,14 @@ export function Planejamento() {
 
                 <div className="pl-layout">
                   <div>
+                    {TURMAS.length === 0 ? (
+                      <EmptyState
+                        icon="🗓️"
+                        title="Cadastre uma turma para começar a planejar a semana."
+                        description="Quando houver turmas e atividades, você poderá arrastar entre os dias e replicar para outras turmas."
+                        ctaLabel="Nova turma"
+                      />
+                    ) : (
                     <div className="pl-week">
                       {DAYS.map((d) => {
                         const cards = week[d.k];
@@ -487,6 +498,7 @@ export function Planejamento() {
                         );
                       })}
                     </div>
+                    )}
 
                     {tipOpen && (
                       <div className="pl-tip">
@@ -501,6 +513,9 @@ export function Planejamento() {
                     <div className="pl-panel">
                       <h3><Copy size={14} /> Replicar em turmas</h3>
                       <p className="lead">A semana ficou boa? Aplique em <b>1 clique</b> nas outras turmas. Sofia adapta automaticamente datas e PCDs.</p>
+                      {TURMAS.length === 0 && (
+                        <EmptyState icon="👩‍🏫" title="Sem turmas cadastradas." description="Cadastre turmas para replicar planos rapidamente." />
+                      )}
                       {TURMAS.map((t) => {
                         const on = !!picks[t.id];
                         return (
@@ -519,15 +534,11 @@ export function Planejamento() {
                       <button className="pl-btn primary pl-replica-cta" onClick={() => showToast(`Semana replicada em ${pickCount} turma(s). Sofia adaptou 2 atividades para PCD. ✓`)}>
                         <Check size={14} /> Replicar em {pickCount} turmas
                       </button>
-                      <div className="pl-replica-eco">Economia: <b>~25min por turma</b></div>
                     </div>
 
                     <div className="pl-panel">
                       <h3><Clock size={14} /> Histórico</h3>
-                      <div className="pl-hist"><span className="icn b" /><div className="body"><b>Mover</b> · 13 abr (chuva)<div className="me">há 12 min · Sofia ok</div></div></div>
-                      <div className="pl-hist"><span className="icn o" /><div className="body"><b>Replicar</b> · 5ºA → 5ºB<div className="me">há 2h · 5 atividades</div></div></div>
-                      <div className="pl-hist"><span className="icn g" /><div className="body"><b>Duplicar semana</b> · 28 mar<div className="me">7 atividades</div></div></div>
-                      <button className="pl-hist-link">Ver histórico completo →</button>
+                      <EmptyState icon="🕘" title="Sem ações registradas ainda." description="Suas movimentações e replicações aparecerão aqui." />
                     </div>
                   </aside>
                 </div>
@@ -537,7 +548,7 @@ export function Planejamento() {
             {m === "m1" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Sofia preenche a semana <small>· 2º Ano A · tema: Listas e contagem</small></h2></div>
+                  <div><h2>Sofia preenche a semana <small>· defina turma e tema</small></h2></div>
                   <div className="right">
                     <button className="pl-btn ghost"><RefreshCw size={14} /> Regenerar</button>
                     <button className="pl-btn primary"><Check size={14} /> Aceitar semana toda</button>
@@ -549,50 +560,37 @@ export function Planejamento() {
                     <div className="pl-cal-head">
                       <div className="nav">
                         <button aria-label="Anterior"><ChevronLeft size={14} /></button>
-                        <div className="month">Semana 11–15 abr · Abril 2026</div>
+                        <div className="month">Semana atual</div>
                         <button aria-label="Próxima"><ChevronRight size={14} /></button>
                       </div>
-                      <div className="stat">✨ <b>11 sugestões</b> · alinhadas à BNCC</div>
+                      <div className="stat">✨ <b>0 sugestões</b></div>
                     </div>
-                    <div className="pl-cal-grid">
-                      {[
-                        { k: "seg" as DayKey, n: "SEG", d: "11", count: "3 aulas", items: [
-                          { v: "", sub: "Língua Port.", tt: "Mercadinho · escrita de listas", mn: "50min · EF02LP07" },
-                          { v: "mat", sub: "Matemática", tt: "Soma de valores em reais", mn: "50min · EF02MA05" },
-                          { v: "ci", sub: "Ciências", tt: "O que cabe na lista?", mn: "30min · roda" },
-                        ]},
-                        { k: "ter" as DayKey, n: "TER", d: "12", count: "2 aulas", items: [
-                          { v: "mat", sub: "Matemática", tt: "Inventário de brinquedos", mn: "45min · EF02MA03" },
-                          { v: "aval", sub: "Avaliação", tt: "Diagnóstico de leitura", mn: "50min · 🔒 fixo" },
-                        ]},
-                        { k: "qua" as DayKey, n: "QUA", d: "13", count: "2 aulas", items: [
-                          { v: "", sub: "Língua Port.", tt: "Receita maluca · listas", mn: "40min · EF02LP07" },
-                          { v: "ci", sub: "Ciências", tt: "Plantio de feijão · dia 1", mn: "40min · roda" },
-                        ]},
-                        { k: "qui" as DayKey, n: "QUI", d: "14", count: "2 aulas", items: [
-                          { v: "", sub: "Língua Port.", tt: "Corrida das palavras e nº", mn: "50min · EF02LP04" },
-                          { v: "aval", sub: "Escola", tt: "Conselho de classe", mn: "14h-17h · 🔒 fixo" },
-                        ]},
-                        { k: "sex" as DayKey, n: "SEX", d: "15", count: "2 aulas", items: [
-                          { v: "mat", sub: "Matemática", tt: "Mercadinho · prática", mn: "50min · EF02MA05" },
-                          { v: "", sub: "Síntese", tt: "Roda final · o que aprendemos?", mn: "30min" },
-                        ]},
-                      ].map((day) => (
-                        <button key={day.k} className={"pl-cal-day has-ai" + (calSel === day.k ? " selected" : "")} onClick={() => setCalSel(day.k)}>
-                          <div className="pl-cd-head">
-                            <div><div className="dn">{day.n}</div><div className="dd">{day.d}</div></div>
-                            <span className="pl-cd-pill">{day.count}</span>
-                          </div>
-                          {day.items.map((it, i) => (
-                            <div key={i} className={"pl-ai " + it.v}>
-                              <div className="sub">{it.sub}</div>
-                              <div className="tt">{it.tt}</div>
-                              <div className="mn">{it.mn}</div>
+                    {M1_DAYS.length === 0 ? (
+                      <EmptyState
+                        icon="✨"
+                        title="Sem sugestões geradas ainda."
+                        description="Configure tema e turma ao lado para a Sofia esboçar a semana inteira em segundos."
+                        ctaLabel="Gerar com a Sofia"
+                      />
+                    ) : (
+                      <div className="pl-cal-grid">
+                        {M1_DAYS.map((day) => (
+                          <button key={day.k} className={"pl-cal-day has-ai" + (calSel === day.k ? " selected" : "")} onClick={() => setCalSel(day.k)}>
+                            <div className="pl-cd-head">
+                              <div><div className="dn">{day.n}</div><div className="dd">{day.d}</div></div>
+                              <span className="pl-cd-pill">{day.count}</span>
                             </div>
-                          ))}
-                        </button>
-                      ))}
-                    </div>
+                            {day.items.map((it, i) => (
+                              <div key={i} className={"pl-ai " + it.v}>
+                                <div className="sub">{it.sub}</div>
+                                <div className="tt">{it.tt}</div>
+                                <div className="mn">{it.mn}</div>
+                              </div>
+                            ))}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <aside className="pl-side">
@@ -601,7 +599,7 @@ export function Planejamento() {
                       <p className="lead">Ajuste e regenere se quiser outra direção.</p>
                       <div className="pl-field">
                         <label>Tema do mês</label>
-                        <input className="pl-input" defaultValue="Listas e contagem" />
+                        <input className="pl-input" placeholder="Ex.: Listas e contagem" />
                       </div>
                       <div className="pl-field">
                         <label>Foco da semana</label>
@@ -625,16 +623,10 @@ export function Planejamento() {
                     <div className="pl-panel">
                       <h3>O que Sofia considerou</h3>
                       <div className="pl-stats">
-                        <div className="pl-stat-box"><div className="v">11</div><div className="l">Atividades</div></div>
-                        <div className="pl-stat-box"><div className="v green">4</div><div className="l">Habilidades BNCC</div></div>
-                        <div className="pl-stat-box"><div className="v orange">2</div><div className="l">Adapt. PCD</div></div>
-                        <div className="pl-stat-box"><div className="v">~6min</div><div className="l">Pra revisar</div></div>
-                      </div>
-                      <div className="pl-bncc">
-                        <div className="pl-bncc-item"><span className="code">EF02LP07</span><span className="desc">Escrever listas tematicamente organizadas</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02LP04</span><span className="desc">Ler palavras com fluência</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02MA03</span><span className="desc">Comparar quantidades</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02MA05</span><span className="desc">Resolver problemas de adição até 1.000</span></div>
+                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Atividades</div></div>
+                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Habilidades BNCC</div></div>
+                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Adapt. PCD</div></div>
+                        <div className="pl-stat-box"><div className="v">—</div><div className="l">Pra revisar</div></div>
                       </div>
                     </div>
                   </aside>
@@ -645,7 +637,7 @@ export function Planejamento() {
             {m === "m2" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Cadeia da semana <small>· Língua Portuguesa · 2º Ano A</small></h2></div>
+                  <div><h2>Cadeia da semana <small>· selecione disciplina e turma</small></h2></div>
                   <div className="right">
                     <button className="pl-btn"><BookOpen size={14} /> Habilidades</button>
                     <button className="pl-btn primary"><Link2 size={14} /> Conectar próxima aula</button>
@@ -653,41 +645,38 @@ export function Planejamento() {
                 </div>
                 <div className="pl-chain">
                   <div className="pl-chain-card">
-                    <h3 style={{ fontSize: 16 }}>Sequência didática · Listas e contagem</h3>
-                    <div className="pl-chain-list">
-                      {[
-                        { d: "SEG", tag: "INTRODUÇÃO", t: "Mercadinho · escrita de listas", p: "EF02LP07 · 50min" },
-                        { d: "TER", tag: "DESENVOLVIMENTO", t: "Inventário de brinquedos · contagem", p: "EF02MA03 · 45min" },
-                        { d: "QUA", tag: "APROFUNDAMENTO", t: "Receita maluca · listas com unidades", p: "EF02LP07 · 40min" },
-                        { d: "QUI", tag: "APLICAÇÃO", t: "Soma de valores em reais (lista de mercado)", p: "EF02MA05 · 50min" },
-                        { d: "SEX", tag: "★ SUGESTÃO SOFIA", t: "Síntese: nossa lista da turma · cartaz", p: "EF02LP07 + EF02MA03 · 40min", suggest: true },
-                      ].map((s, i) => (
-                        <div key={i} className={"pl-step" + (s.suggest ? " suggest" : "")}>
-                          <div className="day">{s.d}</div>
-                          <div className="body">
-                            <div className="tag">{s.tag}</div>
-                            <div className="ttl">{s.t}</div>
-                            <div className="meta">
-                              <span className="pill">{s.p}</span>
-                              {s.suggest && <button className="pl-btn primary" style={{ padding: "5px 10px", fontSize: 11.5 }}><Check size={12} /> Aceitar</button>}
+                    <h3 style={{ fontSize: 16 }}>Sequência didática</h3>
+                    {M2_STEPS.length === 0 ? (
+                      <div style={{ marginTop: 12 }}>
+                        <EmptyState
+                          icon="🔗"
+                          title="Sem sequência montada ainda."
+                          description="Adicione aulas e a Sofia conecta cada atividade na cadeia ideal — preservando objetivo e BNCC."
+                          ctaLabel="Adicionar aula"
+                        />
+                      </div>
+                    ) : (
+                      <div className="pl-chain-list">
+                        {M2_STEPS.map((s, i) => (
+                          <div key={i} className={"pl-step" + (s.suggest ? " suggest" : "")}>
+                            <div className="day">{s.d}</div>
+                            <div className="body">
+                              <div className="tag">{s.tag}</div>
+                              <div className="ttl">{s.t}</div>
+                              <div className="meta">
+                                <span className="pill">{s.p}</span>
+                                {s.suggest && <button className="pl-btn primary" style={{ padding: "5px 10px", fontSize: 11.5 }}><Check size={12} /> Aceitar</button>}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <aside className="pl-side">
                     <div className="pl-panel">
                       <h3><Link2 size={14} /> Por que essa sequência?</h3>
-                      <p className="lead">Sofia notou que <b>3 das 4 aulas</b> da semana giram em torno de <b>listas</b>. A síntese de sexta consolida o tema e fecha o ciclo.</p>
-                    </div>
-                    <div className="pl-panel">
-                      <h3><BookOpen size={14} /> Habilidades cobertas</h3>
-                      <div className="pl-bncc" style={{ marginTop: 4 }}>
-                        <div className="pl-bncc-item"><span className="code">EF02LP07</span><span className="desc">Escrever listas tematicamente organizadas</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02MA03</span><span className="desc">Comparar quantidades</span></div>
-                        <div className="pl-bncc-item"><span className="code">EF02MA05</span><span className="desc">Resolver problemas de adição até 1.000</span></div>
-                      </div>
+                      <p className="lead">Quando você cadastrar aulas, a Sofia explica aqui por que conecta cada atividade na ordem proposta.</p>
                     </div>
                   </aside>
                 </div>
@@ -697,7 +686,7 @@ export function Planejamento() {
             {m === "m3" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Editar com Sofia <small>· Mercadinho · escrita de listas</small></h2></div>
+                  <div><h2>Editar com Sofia <small>· selecione uma atividade</small></h2></div>
                   <div className="right">
                     <button className="pl-btn"><RefreshCw size={14} /> Restaurar original</button>
                     <button className="pl-btn primary"><Check size={14} /> Salvar alterações</button>
@@ -705,18 +694,16 @@ export function Planejamento() {
                 </div>
                 <div className="pl-chat">
                   <div className="pl-chat-card">
-                    <div className="pl-act-card">
-                      <h4>Mercadinho · escrita de listas</h4>
-                      <div className="meta"><span>50min</span> · <span>EF02LP07</span> · <span>22 alunos</span></div>
-                      <div className="body">
-                        Em duplas, os alunos visitam o "mercadinho da sala" (cartões com produtos e preços) e escrevem uma lista de compras com até 6 itens, respeitando ortografia das palavras trabalhadas. Em seguida, leem a lista para o colega conferir.
-                      </div>
-                    </div>
+                    <EmptyState
+                      icon="💬"
+                      title="Nenhuma atividade selecionada."
+                      description="Escolha uma atividade do seu plano para editar com a Sofia em linguagem natural."
+                    />
 
                     <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 280, overflowY: "auto" }}>
                       {chatLog.map((m, i) => (
                         <div key={i} className={"pl-msg " + m.from}>
-                          <div className="av">{m.from === "user" ? "C" : "S"}</div>
+                          <div className="av">{m.from === "user" ? "P" : "S"}</div>
                           <div className="bub">{m.t}</div>
                         </div>
                       ))}
@@ -741,9 +728,7 @@ export function Planejamento() {
                     </div>
                     <div className="pl-panel">
                       <h3><Clock size={14} /> Histórico desta atividade</h3>
-                      <div className="pl-hist"><span className="icn o" /><div className="body"><b>Encurtada</b> para 40min<div className="me">há 5 min</div></div></div>
-                      <div className="pl-hist"><span className="icn b" /><div className="body"><b>Adaptada</b> para TDAH<div className="me">há 12 min</div></div></div>
-                      <div className="pl-hist"><span className="icn g" /><div className="body"><b>Criada</b> por Sofia<div className="me">hoje · 14:02</div></div></div>
+                      <EmptyState icon="🕘" title="Sem histórico ainda." description="Edições da atividade aparecem aqui." />
                     </div>
                   </aside>
                 </div>
@@ -783,12 +768,7 @@ export function Planejamento() {
                       else items.push({ id: c.id, cat: "aulas", v: c.v, tag: c.tag, title: c.title, meta: c.meta });
                     });
                     const extras: Item[] = {
-                      seg: [{ id: "b-seg", cat: "bncc", v: "ci", tag: "EF02LP07", title: "Escrever listas tematicamente organizadas", meta: "habilidade" }],
-                      ter: [{ id: "s-ter", cat: "sofia", v: "port", tag: "✨ SOFIA", title: "Sugestão: roda de leitura curta antes do diagnóstico", meta: "10min" }],
-                      qua: [],
-                      qui: [{ id: "b-qui", cat: "bncc", v: "mat", tag: "EF02MA05", title: "Resolver problemas de adição até 1.000", meta: "habilidade" },
-                            { id: "f-qui", cat: "feriados", v: "esc", tag: "FERIADO", title: "Tiradentes (sex 21 abr) · semana curta na próxima", meta: "atenção" }],
-                      sex: [{ id: "s-sex", cat: "sofia", v: "port", tag: "✨ SOFIA", title: "Síntese da semana · cartaz coletivo", meta: "30min" }],
+                      seg: [], ter: [], qua: [], qui: [], sex: [],
                     }[d.k] as Item[];
                     const visible = [...items, ...extras].filter((it) => layers[it.cat]);
                     return (
@@ -826,7 +806,7 @@ export function Planejamento() {
             {m === "m6" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Diário de bordo <small>· hoje · 2º Ano A</small></h2></div>
+                  <div><h2>Diário de bordo <small>· hoje</small></h2></div>
                   <div className="right">
                     <button className="pl-btn primary"><Sparkles size={14} /> Resumo da semana</button>
                   </div>
@@ -834,39 +814,36 @@ export function Planejamento() {
                 <div className="pl-diary">
                   <div className="pl-diary-card">
                     <h3 style={{ fontSize: 16, marginBottom: 10 }}>Aulas de hoje</h3>
-                    {[
-                      { id: "a1", t: "Mercadinho · escrita de listas", s: "Português · 50min · 22 alunos" },
-                      { id: "a2", t: "Adição com material dourado", s: "Matemática · 50min · duplas" },
-                      { id: "a3", t: "Roda de leitura", s: "Português · 30min" },
-                    ].map((a) => (
-                      <div key={a.id} className="pl-diary-row">
-                        <div>
-                          <div className="ttl">{a.t}</div>
-                          <div className="sub">{a.s}</div>
+                    {M6_AULAS.length === 0 ? (
+                      <EmptyState
+                        icon="📓"
+                        title="Nenhuma aula registrada hoje."
+                        description="Após cada aula, marque funcionou / travou / próximo passo. A Sofia aprende com cada registro."
+                      />
+                    ) : (
+                      M6_AULAS.map((a) => (
+                        <div key={a.id} className="pl-diary-row">
+                          <div>
+                            <div className="ttl">{a.t}</div>
+                            <div className="sub">{a.s}</div>
+                          </div>
+                          <div className="pl-mood">
+                            <button className={"ok" + (diary[a.id] === "ok" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "ok" }))} aria-label="Funcionou"><Smile size={16} /></button>
+                            <button className={"warn" + (diary[a.id] === "warn" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "warn" }))} aria-label="Travou"><Frown size={16} /></button>
+                            <button className={"next" + (diary[a.id] === "next" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "next" }))} aria-label="Próximo passo"><ArrowRight size={16} /></button>
+                          </div>
                         </div>
-                        <div className="pl-mood">
-                          <button className={"ok" + (diary[a.id] === "ok" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "ok" }))} aria-label="Funcionou"><Smile size={16} /></button>
-                          <button className={"warn" + (diary[a.id] === "warn" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "warn" }))} aria-label="Travou"><Frown size={16} /></button>
-                          <button className={"next" + (diary[a.id] === "next" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "next" }))} aria-label="Próximo passo"><ArrowRight size={16} /></button>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="pl-learnt">
-                      <Sparkles size={16} color="#B45309" />
-                      <div><b>Sofia aprendeu:</b> a turma respondeu melhor a <b>atividades em duplas</b> (3 "funcionou" esta semana). Vou priorizar esse formato no plano da próxima.</div>
-                    </div>
+                      ))
+                    )}
                   </div>
                   <aside className="pl-side">
                     <div className="pl-panel">
                       <h3><Clock size={14} /> Esta semana</h3>
-                      <div className="pl-hist"><span className="icn g" /><div className="body"><b>4 aulas</b> · funcionou<div className="me">turma engajada</div></div></div>
-                      <div className="pl-hist"><span className="icn o" /><div className="body"><b>1 aula</b> · travou<div className="me">cansaço pós-recreio</div></div></div>
-                      <div className="pl-hist"><span className="icn b" /><div className="body"><b>2 próximos passos</b><div className="me">aplicar na semana 18–22</div></div></div>
+                      <EmptyState icon="📊" title="Sem dados ainda." description="O resumo da semana aparece após os primeiros registros." />
                     </div>
                     <div className="pl-panel accent">
                       <h3><Sparkles size={14} /> Sugestão da Sofia</h3>
-                      <p className="lead">Quer que eu monte a próxima semana <b>privilegiando duplas</b> e <b>evitando aulas pesadas pós-recreio</b>?</p>
-                      <button className="pl-btn primary" style={{ width: "100%", justifyContent: "center", marginTop: 6 }}><Check size={14} /> Sim, gerar com esses ajustes</button>
+                      <p className="lead">Conforme você registra o que funcionou ou travou, a Sofia sugere ajustes para a próxima semana.</p>
                     </div>
                   </aside>
                 </div>
