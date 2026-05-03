@@ -115,23 +115,23 @@ const css = `
 .panel{display:none;flex-direction:column;gap:14px;margin-top:14px;}
 .panel.active{display:flex;}
 
-.action-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 22px;color:var(--text);position:relative;overflow:hidden;}
+.action-card{background:linear-gradient(135deg,#1B2A4E 0%,#0F1A36 100%);border:1px solid #0F1A36;border-radius:14px;padding:20px 22px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 28px rgba(15,26,54,.22);}
 .action-card::before{display:none;}
 .ac-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:2;}
 .ac-head .sofia{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:13px;box-shadow:0 0 0 3px rgba(255,122,69,.2);}
 .ac-head-txt{flex:1;}
-.ac-head-txt b{display:block;font-weight:700;font-size:13px;color:var(--text);}
-.ac-head-txt span{font-size:11.5px;color:var(--muted);}
+.ac-head-txt b{display:block;font-weight:700;font-size:13px;color:#fff;}
+.ac-head-txt span{font-size:11.5px;color:rgba(255,255,255,.7);}
 .ac-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--accent);color:#fff;padding:4px 8px;border-radius:6px;}
-.inc-root .ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:var(--text);position:relative;z-index:2;}
-.inc-root .ac-title em{color:var(--accent);font-style:normal;font-weight:800;}
-.ac-body{font-size:13px;line-height:1.55;color:var(--muted);margin-bottom:16px;position:relative;z-index:2;}
-.ac-body .bncc{font-family:'JetBrains Mono',monospace;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:4px;font-size:11.5px;font-weight:700;}
+.inc-root .ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:#fff;position:relative;z-index:2;}
+.inc-root .ac-title em{color:var(--accent-warm);font-style:normal;font-weight:800;}
+.ac-body{font-size:13px;line-height:1.55;color:rgba(255,255,255,.78);margin-bottom:16px;position:relative;z-index:2;}
+.ac-body .bncc{font-family:'JetBrains Mono',monospace;color:#fff;background:rgba(255,122,69,.3);padding:1px 5px;border-radius:4px;font-size:11.5px;font-weight:700;}
 .ac-strats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;position:relative;z-index:2;}
 @media(max-width:1024px){.ac-strats{grid-template-columns:1fr;}}
-.ac-strat{background:#fff;border:1px solid var(--border);border-radius:9px;padding:10px;font-size:11.5px;line-height:1.4;}
-.ac-strat b{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--accent);font-size:11px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
-.ac-strat span{color:var(--muted);}
+.ac-strat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px;font-size:11.5px;line-height:1.4;}
+.ac-strat b{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--accent-warm);font-size:11px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.ac-strat span{color:rgba(255,255,255,.78);}
 .ac-cta{display:flex;gap:8px;position:relative;z-index:2;flex-wrap:wrap;}
 .btn-ghost-dark{background:#fff;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:600;}
 .btn-ghost-dark:hover{border-color:var(--accent);color:var(--accent);}
@@ -171,19 +171,19 @@ const css = `
 @media(max-width:1024px){.col-r{position:static;}}
 
 /* Sofia card */
-.sofia-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;color:var(--text);position:relative;overflow:hidden;}
+.sofia-card{background:linear-gradient(135deg,#1B2A4E 0%,#0F1A36 100%);border:1px solid #0F1A36;border-radius:14px;padding:18px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 28px rgba(15,26,54,.22);}
 .sofia-card::before{display:none;}
 .sofia-card > *{position:relative;z-index:1;}
 .sofia-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .sofia-head .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;}
-.sofia-head b{display:block;font-weight:700;font-size:13.5px;color:var(--text);}
-.sofia-head span{font-size:11.5px;color:var(--muted);}
-.sofia-q{font-style:italic;font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.sofia-head b{display:block;font-weight:700;font-size:13.5px;color:#fff;}
+.sofia-head span{font-size:11.5px;color:rgba(255,255,255,.7);}
+.sofia-q{font-style:italic;font-size:12.5px;color:rgba(255,255,255,.82);line-height:1.5;margin-bottom:12px;}
 .sofia-actions{display:flex;flex-direction:column;gap:6px;}
-.sofia-action{background:#fff;border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;text-align:left;width:100%;color:var(--text);font-weight:500;transition:.15s;}
-.sofia-action:hover{border-color:var(--accent);color:var(--accent);}
-.sofia-action .ico{color:var(--accent);flex-shrink:0;}
-.sofia-action .arrow{margin-left:auto;color:var(--muted);font-size:14px;}
+.sofia-action{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:10px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;text-align:left;width:100%;color:#fff;font-weight:500;transition:.15s;}
+.sofia-action:hover{border-color:var(--accent-warm);background:rgba(255,122,69,.14);color:#fff;}
+.sofia-action .ico{color:var(--accent-warm);flex-shrink:0;}
+.sofia-action .arrow{margin-left:auto;color:rgba(255,255,255,.6);font-size:14px;}
 
 /* Contexto rápido */
 .context-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
@@ -609,8 +609,8 @@ export function Inclusao() {
               )}
             </div>
             <div className="inc-spacer" />
-            {view === "detail" && (
-              <div className="inc-status-pill"><span className="dot" /> PEI atualizado há 3 dias · Próxima revisão em 27 dias</div>
+            {view === "detail" && selected && (
+              <div className="inc-status-pill"><span className="dot" /> PEI ainda não criado · comece pela Anamnese</div>
             )}
             <button className="inc-btn-ghost" onClick={() => setTutorialOpen(true)}><HelpCircle size={14} /> Tutorial Inclusão</button>
             {view === "detail" && (
@@ -700,34 +700,34 @@ export function Inclusao() {
                 <div className="kpis">
                   <div className="kpi kpi-accent">
                     <div className="kpi-label">Tempo economizado neste aluno</div>
-                    <div className="kpi-value">7h 20min</div>
-                    <div className="kpi-sub">vs. preparar adaptações manualmente · este mês</div>
+                    <div className="kpi-value">0h</div>
+                    <div className="kpi-sub">comece a usar a Sofia para acumular ganhos</div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Aulas adaptadas</div>
-                    <div className="kpi-value">14<span className="small"> /18</span></div>
-                    <div className="kpi-sub"><span className="up">↑ 78%</span> taxa de adaptação</div>
+                    <div className="kpi-value">0<span className="small"> /0</span></div>
+                    <div className="kpi-sub">nenhuma adaptação registrada</div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Objetivos PEI atingidos</div>
-                    <div className="kpi-value">6<span className="small"> /9</span></div>
-                    <div className="kpi-sub"><span className="up">↑ 2</span> desde a última revisão</div>
+                    <div className="kpi-value">0<span className="small"> /0</span></div>
+                    <div className="kpi-sub">defina objetivos no PEI</div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Evolução pedagógica</div>
-                    <div className="kpi-value" style={{ color: "var(--success)" }}>Progredindo</div>
-                    <div className="kpi-sub">Leitura: em processo · Mat: avançado</div>
+                    <div className="kpi-value" style={{ color: "var(--muted)" }}>Sem dados</div>
+                    <div className="kpi-sub">aguardando primeiros registros</div>
                   </div>
                 </div>
 
                 <div className="tabs" role="tablist">
                   {([
                     { k: "hoje", label: "Visão de hoje" },
-                    { k: "anam", label: "Anamnese", count: "14/16" },
+                    { k: "anam", label: "Anamnese" },
                     { k: "plan", label: "Planejamento" },
-                    { k: "reg", label: "Registros", count: "23" },
+                    { k: "reg", label: "Registros" },
                     { k: "rel", label: "Relatório IA" },
-                    { k: "doc", label: "Documentos", count: "7" },
+                    { k: "doc", label: "Documentos" },
                   ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
                     <button key={t.k} className={"tab" + (tab === t.k ? " active" : "")} onClick={() => setActiveTab(t.k)} role="tab" aria-selected={tab === t.k}>
                       {t.label}{t.count && <span className="tab-count">{t.count}</span>}
@@ -743,21 +743,16 @@ export function Inclusao() {
                     <div className="ac-head">
                       <div className="sofia">S</div>
                       <div className="ac-head-txt">
-                        <b>Sofia identificou uma aula que precisa de adaptação</b>
-                        <span>Hoje, 14h05 · análise contextual baseada no PEI</span>
+                        <b>Sofia ainda está conhecendo {selected.name.split(" ")[0]}</b>
+                        <span>Preencha a Anamnese e o PEI para receber sugestões personalizadas</span>
                       </div>
-                      <span className="ac-tag">Hoje · 16h</span>
+                      <span className="ac-tag">Novo</span>
                     </div>
-                    <h2 className="ac-title">Aula de hoje tem <em>fração e leitura silábica</em> — Pedrinho precisa de 3 adaptações</h2>
-                    <p className="ac-body">A aula "Frações e Partilha Justa" (Matemática · 16h) usa metáforas abstratas e leitura coletiva — duas áreas onde Pedrinho tem dificuldade documentada no PEI. Preparei adaptações alinhadas à BNCC <span className="bncc">EF02MA08</span> e ao objetivo PEI #4.</p>
-                    <div className="ac-strats">
-                      <div className="ac-strat"><b>Visual</b><span>Substituir "metade" por imagem da pizza dividida — material concreto disponível</span></div>
-                      <div className="ac-strat"><b>Pacing</b><span>Aula em 3 micro-blocos de 5 min com pausas sensoriais</span></div>
-                      <div className="ac-strat"><b>Mediação</b><span>Profa. Carla (AEE) já alinhada · script enviado às 13h</span></div>
-                    </div>
+                    <h2 className="ac-title">Vamos começar pela <em>Anamnese</em> de {selected.name.split(" ")[0]}</h2>
+                    <p className="ac-body">Sem registros ainda. Preencha os eixos da Anamnese e cadastre o PEI para que a Sofia possa sugerir adaptações de aula alinhadas ao perfil e à BNCC.</p>
                     <div className="ac-cta">
-                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}>Aplicar adaptações ao plano de aula <ChevronRight size={14} /></button>
-                      <button className="btn-ghost-dark">Ver aula original</button>
+                      <button className="btn btn-primary" onClick={() => setActiveTab("anam")}>Preencher Anamnese <ChevronRight size={14} /></button>
+                      <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Abrir PEI</button>
                     </div>
                   </div>
 
@@ -788,11 +783,7 @@ export function Inclusao() {
                       <button className="more" onClick={() => setActiveTab("reg")}>Todos os 23 registros →</button>
                     </div>
                     <div className="tl">
-                      <div className="tl-item"><div className="tl-dot pulse" /><div className="tl-content"><b>Sofia adaptou aula de Matemática (Frações)</b><span>3 estratégias geradas · aguardando aplicação</span></div><div className="tl-date">HOJE · 14h05</div></div>
-                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>Atingiu objetivo #6 — Trabalho em dupla por 20 min</b><span>Profa. Camila · evidência fotográfica</span></div><div className="tl-date">29 ABR</div></div>
-                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>Reunião com família · alinhamento PEI bimestral</b><span>Mãe relatou avanço em casa · ata anexada</span></div><div className="tl-date">25 ABR</div></div>
-                      <div className="tl-item"><div className="tl-dot warn" /><div className="tl-content"><b>Crise sensorial breve em aula de Música</b><span>Resolvido com fone abafador</span></div><div className="tl-date">18 ABR</div></div>
-                      <div className="tl-item"><div className="tl-dot done" /><div className="tl-content"><b>PEI revisado · 9 objetivos vigentes (v3.2)</b><span>Co-construído com AEE e família</span></div><div className="tl-date">04 ABR</div></div>
+                      <p style={{ color: "var(--muted)", fontSize: 12.5 }}>Nenhum registro ainda. Os eventos pedagógicos de {selected.name.split(" ")[0]} aparecerão aqui.</p>
                     </div>
                   </div>
                     </div>
@@ -806,9 +797,9 @@ export function Inclusao() {
                             <span>especialista em PEI e BNCC inclusão</span>
                           </div>
                         </div>
-                        <p className="sofia-q">"Posso te ajudar com o Pedrinho agora. O que faz mais sentido?"</p>
+                        <p className="sofia-q">"Posso te ajudar com {selected.name.split(" ")[0]} agora. O que faz mais sentido?"</p>
                         <div className="sofia-actions">
-                          <button className="sofia-action" onClick={() => setAdaptOpen(true)}><Sparkles size={14} className="ico" /> Adaptar aula de hoje (Frações) <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => setAdaptOpen(true)}><Sparkles size={14} className="ico" /> Adaptar aula de hoje <span className="arrow">›</span></button>
                           <button className="sofia-action" onClick={() => setActiveTab("plan")}><FileText size={14} className="ico" /> Gerar plano de aula adaptado <span className="arrow">›</span></button>
                           <button className="sofia-action" onClick={() => setActiveTab("rel")}><BookOpen size={14} className="ico" /> Gerar parecer descritivo bimestral <span className="arrow">›</span></button>
                           <button className="sofia-action"><Send size={14} className="ico" /> Preparar reunião com família <span className="arrow">›</span></button>
@@ -818,13 +809,13 @@ export function Inclusao() {
                       <div className="context-card">
                         <h4>Contexto rápido</h4>
                         {([
-                          { l: "Ano de referência", v: "2º Ano", t: "" },
-                          { l: "Leitura", v: "Em processo", t: "warn" },
-                          { l: "Escrita", v: "Em processo", t: "warn" },
-                          { l: "Matemática", v: "Avançado", t: "ok" },
-                          { l: "Socialização", v: "Com mediação", t: "" },
-                          { l: "Mediador em sala", v: "Sim", t: "ok" },
-                          { l: "AEE (contraturno)", v: "2x / sem", t: "" },
+                          { l: "Turma", v: selected.turma, t: "" },
+                          { l: "Diagnóstico", v: selected.diag, t: "" },
+                          { l: "CID", v: selected.cid, t: "" },
+                          { l: "AEE / Mediação", v: selected.aee, t: "" },
+                          { l: "Leitura", v: "Sem dados", t: "" },
+                          { l: "Escrita", v: "Sem dados", t: "" },
+                          { l: "Matemática", v: "Sem dados", t: "" },
                         ] as Array<{ l: string; v: string; t: "" | "warn" | "ok" }>).map((r) => (
                           <div className="ctx-row" key={r.l}>
                             <span className="lbl">{r.l}</span>
@@ -834,13 +825,13 @@ export function Inclusao() {
                       </div>
 
                       <div className="skills-card">
-                        <h4>Habilidades · evolução <span className="badge">+3 no bimestre</span></h4>
+                        <h4>Habilidades · evolução</h4>
                         {([
-                          { l: "Atenção sustentada", p: 72, c: "" },
-                          { l: "Leitura silábica", p: 48, c: "warn" },
-                          { l: "Cálculo concreto", p: 89, c: "green" },
-                          { l: "Interação em dupla", p: 65, c: "" },
-                          { l: "Autorregulação", p: 58, c: "" },
+                          { l: "Atenção sustentada", p: 0, c: "" },
+                          { l: "Leitura silábica", p: 0, c: "" },
+                          { l: "Cálculo concreto", p: 0, c: "" },
+                          { l: "Interação em dupla", p: 0, c: "" },
+                          { l: "Autorregulação", p: 0, c: "" },
                         ] as Array<{ l: string; p: number; c: "" | "warn" | "green" }>).map((s) => (
                           <div className="skill" key={s.l}>
                             <div className="skill-head"><b>{s.l}</b><span>{s.p}%</span></div>
@@ -861,8 +852,8 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "anam" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Anamnese · 14 de 16 eixos preenchidos</h3>
-                      <span className="legal">2º Ano · TEA Nível 1</span>
+                      <h3>Anamnese · 0 de {anamData.length} eixos preenchidos</h3>
+                      <span className="legal">{selected?.turma || ""} · {selected?.diag || ""}</span>
                       <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
                     </div>
                     <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
