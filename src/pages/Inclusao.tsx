@@ -563,6 +563,7 @@ export function Inclusao() {
                     { k: "plan", label: "Planejamento" },
                     { k: "reg", label: "Registros", count: "23" },
                     { k: "rel", label: "Relatório IA" },
+                    { k: "doc", label: "Documentos", count: "7" },
                   ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
                     <button key={t.k} className={"tab" + (tab === t.k ? " active" : "")} onClick={() => setActiveTab(t.k)} role="tab" aria-selected={tab === t.k}>
                       {t.label}{t.count && <span className="tab-count">{t.count}</span>}
