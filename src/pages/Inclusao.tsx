@@ -380,6 +380,17 @@ const css = `
 .anam-status-btn.active.naoObservado{background:var(--bg);border-color:var(--border);color:var(--text);}
 `;
 
+const printCss = `
+@media print {
+  body * { visibility: hidden !important; }
+  #anam-print-area, #anam-print-area * { visibility: visible !important; }
+  #anam-print-area { position: absolute !important; inset: 0 !important; padding: 0 !important; background:#fff !important; }
+  .inc-modal-bar, .inc-modal-head, .inc-modal-foot { display: none !important; }
+  .inc-modal { box-shadow: none !important; max-width: 100% !important; }
+  .inc-modal-body { background:#fff !important; padding: 0 !important; overflow: visible !important; }
+}
+`;
+
 type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel" | "doc";
 type ViewKey = "list" | "detail";
 
