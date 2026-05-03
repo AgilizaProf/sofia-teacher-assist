@@ -385,7 +385,7 @@ type ViewKey = "list" | "detail";
 
 type Student = {
   id: string; name: string; initials: string; age: string; turma: string;
-  diag: string; cid: string; aee: string; featured?: boolean;
+  diag: string; cid: string; aee: string; anoEscolar?: string; featured?: boolean;
   anamnese: string; registros: string; trend: string; trendTone: "ok" | "warn" | "muted";
 };
 
