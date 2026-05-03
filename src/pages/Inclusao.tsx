@@ -609,6 +609,7 @@ export function Inclusao() {
   const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [planYearFilter, setPlanYearFilter] = useState<string>("");
   const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
   const studentKey = selectedId || "_none";
   const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
