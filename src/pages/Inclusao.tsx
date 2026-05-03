@@ -344,6 +344,33 @@ const css = `
 .anam-fill.ok{background:linear-gradient(90deg,#10B981,#34D399);}
 .anam-fill.warn{background:linear-gradient(90deg,#F59E0B,#FBBF24);}
 .anam-fill.muted{background:var(--border);}
+
+/* Anamnese accordion */
+.anam-list{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.anam-item{background:#fff;border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.anam-summary{width:100%;display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;padding:12px 14px;background:#fff;cursor:pointer;text-align:left;border:none;}
+.anam-summary:hover{background:#FAFBFE;}
+.anam-summary .label{display:flex;flex-direction:column;gap:6px;min-width:0;}
+.anam-summary .label b{font-weight:600;font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px;}
+.anam-summary .label .bar{height:5px;background:var(--bg);border-radius:99px;overflow:hidden;width:100%;max-width:280px;}
+.anam-summary .label .bar > div{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));transition:width .25s;}
+.anam-summary .label .bar > div.ok{background:linear-gradient(90deg,#10B981,#34D399);}
+.anam-summary .label .bar > div.warn{background:linear-gradient(90deg,#F59E0B,#FBBF24);}
+.anam-summary .label .bar > div.muted{background:var(--border);}
+.anam-summary .pct{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--muted);}
+.anam-summary .chev{color:var(--muted);transition:transform .2s;}
+.anam-summary.open .chev{transform:rotate(90deg);color:var(--accent);}
+.anam-body{padding:6px 14px 14px;border-top:1px dashed var(--border);background:#FAFBFE;display:flex;flex-direction:column;gap:8px;}
+.anam-desc{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;background:#fff;border:1px solid var(--border);border-radius:9px;}
+@media(max-width:720px){.anam-desc{grid-template-columns:1fr;}}
+.anam-desc p{font-size:12.5px;color:var(--text);line-height:1.4;margin:0;}
+.anam-status-group{display:flex;gap:4px;flex-wrap:wrap;}
+.anam-status-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:.15s;white-space:nowrap;}
+.anam-status-btn:hover{border-color:var(--accent);color:var(--accent);}
+.anam-status-btn.active.consolidado{background:#DCFCE7;border-color:#10B981;color:#14532D;}
+.anam-status-btn.active.desenvolvimento{background:var(--accent-soft);border-color:var(--accent);color:#7A2E0A;}
+.anam-status-btn.active.naoAlcancado{background:#FEE2E2;border-color:#EF4444;color:#7F1D1D;}
+.anam-status-btn.active.naoObservado{background:var(--bg);border-color:var(--border);color:var(--text);}
 `;
 
 type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel" | "doc";
@@ -418,21 +445,85 @@ const DOCS = [
   { ic: "AUT", t: "Autorização · uso de imagem", who: "Família (Juliana Almeida)", date: "08/02/2025", size: "88 KB" },
 ];
 
-const ANAMNESE_EIXOS: Array<{ l: string; p: number; tone: "ok" | "warn" | "muted" }> = [
-  { l: "Ano de Referência", p: 100, tone: "ok" },
-  { l: "Desempenho Acadêmico", p: 92, tone: "ok" },
-  { l: "Aspectos Pedagógicos", p: 88, tone: "ok" },
-  { l: "Psicomotores", p: 95, tone: "ok" },
-  { l: "Interações Sociais", p: 78, tone: "ok" },
-  { l: "Independência", p: 70, tone: "ok" },
-  { l: "Autonomia", p: 65, tone: "warn" },
-  { l: "Emoção", p: 82, tone: "ok" },
-  { l: "Memória", p: 74, tone: "ok" },
-  { l: "Dificuldades & Potencialidades", p: 90, tone: "ok" },
-  { l: "Estratégias", p: 85, tone: "ok" },
-  { l: "Recursos", p: 60, tone: "warn" },
-  { l: "Contexto Familiar", p: 100, tone: "ok" },
-  { l: "Observações", p: 0, tone: "muted" },
+type AnamStatus = "consolidado" | "desenvolvimento" | "naoAlcancado" | "naoObservado";
+const ANAM_STATUS_VALUE: Record<AnamStatus, number> = {
+  consolidado: 100, desenvolvimento: 60, naoAlcancado: 20, naoObservado: 0,
+};
+const ANAM_STATUS_LABEL: Record<AnamStatus, string> = {
+  consolidado: "Consolidado", desenvolvimento: "Em desenvolvimento", naoAlcancado: "Não alcançado", naoObservado: "Não observado",
+};
+
+const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus }> }> = [
+  { l: "Ano de Referência", items: [
+    { d: "Reconhece o ano/etapa em que está matriculado", s: "consolidado" },
+    { d: "Identifica a turma e a professora regente", s: "consolidado" },
+  ]},
+  { l: "Desempenho Acadêmico", items: [
+    { d: "Leitura de palavras com sílabas simples (CV)", s: "desenvolvimento" },
+    { d: "Resolução de adição até 20 com material concreto", s: "consolidado" },
+    { d: "Escrita do próprio nome", s: "consolidado" },
+    { d: "Cópia de frases curtas do quadro", s: "desenvolvimento" },
+  ]},
+  { l: "Aspectos Pedagógicos", items: [
+    { d: "Permanece na atividade por 15 min com mediação", s: "consolidado" },
+    { d: "Aceita apoio visual (pictogramas, fichas)", s: "consolidado" },
+    { d: "Tolera mudanças na rotina avisadas previamente", s: "desenvolvimento" },
+  ]},
+  { l: "Psicomotores", items: [
+    { d: "Coordenação motora ampla (correr, pular, equilíbrio)", s: "consolidado" },
+    { d: "Coordenação motora fina (preensão do lápis, recorte)", s: "desenvolvimento" },
+    { d: "Lateralidade definida", s: "consolidado" },
+  ]},
+  { l: "Interações Sociais", items: [
+    { d: "Inicia contato com colegas em duplas", s: "desenvolvimento" },
+    { d: "Participa de brincadeiras coletivas com mediação", s: "desenvolvimento" },
+    { d: "Respeita turnos em jogos simples", s: "consolidado" },
+  ]},
+  { l: "Independência", items: [
+    { d: "Vai ao banheiro sem auxílio", s: "consolidado" },
+    { d: "Organiza o próprio material escolar", s: "desenvolvimento" },
+    { d: "Lancha sozinho", s: "consolidado" },
+  ]},
+  { l: "Autonomia", items: [
+    { d: "Pede ajuda quando precisa", s: "desenvolvimento" },
+    { d: "Toma decisões simples (escolher atividade)", s: "desenvolvimento" },
+    { d: "Identifica e nomeia próprias dificuldades", s: "naoAlcancado" },
+  ]},
+  { l: "Emoção", items: [
+    { d: "Reconhece emoções básicas em si", s: "desenvolvimento" },
+    { d: "Solicita pausa ao perceber sobrecarga", s: "consolidado" },
+    { d: "Aceita estratégias de autorregulação (respiração, fone)", s: "consolidado" },
+  ]},
+  { l: "Memória", items: [
+    { d: "Recupera informações de aulas anteriores com pistas", s: "desenvolvimento" },
+    { d: "Memoriza rotinas visuais", s: "consolidado" },
+    { d: "Lembra combinados da turma", s: "desenvolvimento" },
+  ]},
+  { l: "Dificuldades & Potencialidades", items: [
+    { d: "Dificuldade: leitura coletiva em voz alta", s: "naoAlcancado" },
+    { d: "Potencialidade: raciocínio lógico-matemático concreto", s: "consolidado" },
+    { d: "Potencialidade: memória visual", s: "consolidado" },
+  ]},
+  { l: "Estratégias", items: [
+    { d: "Material concreto em Matemática", s: "consolidado" },
+    { d: "Apoio visual (pictogramas) em Português", s: "consolidado" },
+    { d: "Mediação de pares em atividades em dupla", s: "desenvolvimento" },
+  ]},
+  { l: "Recursos", items: [
+    { d: "Fones abafadores disponíveis em sala", s: "consolidado" },
+    { d: "Canto da calma estruturado", s: "desenvolvimento" },
+    { d: "Sala AEE 2x/semana", s: "consolidado" },
+    { d: "Software de comunicação alternativa", s: "naoObservado" },
+  ]},
+  { l: "Contexto Familiar", items: [
+    { d: "Família participa de reuniões bimestrais", s: "consolidado" },
+    { d: "Mãe acompanha tarefas em casa", s: "consolidado" },
+    { d: "Comunicação família-escola via agenda diária", s: "consolidado" },
+  ]},
+  { l: "Observações", items: [
+    { d: "Observações abertas da equipe pedagógica", s: "naoObservado" },
+    { d: "Observações abertas da família", s: "naoObservado" },
+  ]},
 ];
 
 export function Inclusao() {
@@ -445,6 +536,26 @@ export function Inclusao() {
   const [peiOpen, setPeiOpen] = useState(false);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
+  const [anamData, setAnamData] = useState(() =>
+    ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })) }))
+  );
+  const eixoPct = (items: Array<{ s: AnamStatus }>) => {
+    if (!items.length) return 0;
+    const sum = items.reduce((a, i) => a + ANAM_STATUS_VALUE[i.s], 0);
+    return Math.round(sum / items.length);
+  };
+  const eixoTone = (p: number, items: Array<{ s: AnamStatus }>): "ok" | "warn" | "muted" => {
+    if (items.every((i) => i.s === "naoObservado")) return "muted";
+    if (p >= 80) return "ok";
+    if (p >= 40) return "warn";
+    return "muted";
+  };
+  const setItemStatus = (eixoIdx: number, itemIdx: number, s: AnamStatus) => {
+    setAnamData((prev) => prev.map((e, i) => i !== eixoIdx ? e : ({
+      ...e, items: e.items.map((it, j) => j === itemIdx ? { ...it, s } : it)
+    })));
+  };
 
   const goView = (v: ViewKey) => {
     setView(v);
@@ -731,14 +842,51 @@ export function Inclusao() {
                       <span className="legal">2º Ano · TEA Nível 1</span>
                       <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
                     </div>
-                    <p style={{ color: "var(--muted)", fontSize: 13 }}>Cada eixo é preenchido com chips, textareas e sugestões rápidas contextualizadas ao ano e ao diagnóstico. Use as barras abaixo para ver o progresso.</p>
-                    <div className="anam-grid">
-                      {ANAMNESE_EIXOS.map((e) => (
-                        <div className="anam-row" key={e.l}>
-                          <div className="anam-row-head"><b>{e.l}</b><span>{e.p}%</span></div>
-                          <div className="anam-bar"><div className={"anam-fill " + e.tone} style={{ width: e.p + "%" }} /></div>
-                        </div>
-                      ))}
+                    <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
+                    <div className="anam-list">
+                      {anamData.map((e, ei) => {
+                        const p = eixoPct(e.items);
+                        const tone = eixoTone(p, e.items);
+                        const open = !!anamOpen[e.l];
+                        return (
+                          <div className="anam-item" key={e.l}>
+                            <button
+                              className={"anam-summary" + (open ? " open" : "")}
+                              onClick={() => setAnamOpen((o) => ({ ...o, [e.l]: !o[e.l] }))}
+                              aria-expanded={open}
+                            >
+                              <div className="label">
+                                <b>{e.l} <span style={{ fontWeight: 500, color: "var(--muted)", fontSize: 11 }}>· {e.items.length} descritores</span></b>
+                                <div className="bar"><div className={tone} style={{ width: p + "%" }} /></div>
+                              </div>
+                              <span className="pct">{p}%</span>
+                              <ChevronRight size={16} className="chev" />
+                            </button>
+                            {open && (
+                              <div className="anam-body">
+                                {e.items.map((it, ii) => (
+                                  <div className="anam-desc" key={ii}>
+                                    <p>{it.d}</p>
+                                    <div className="anam-status-group" role="radiogroup" aria-label={it.d}>
+                                      {(["naoObservado", "naoAlcancado", "desenvolvimento", "consolidado"] as AnamStatus[]).map((s) => (
+                                        <button
+                                          key={s}
+                                          className={"anam-status-btn " + s + (it.s === s ? " active" : "")}
+                                          onClick={() => setItemStatus(ei, ii, s)}
+                                          role="radio"
+                                          aria-checked={it.s === s}
+                                        >
+                                          {ANAM_STATUS_LABEL[s]}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
