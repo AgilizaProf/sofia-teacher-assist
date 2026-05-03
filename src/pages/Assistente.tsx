@@ -112,19 +112,20 @@ const css = `
 .tasks-tab{font-size:12px;color:var(--text-soft);font-weight:600;padding:6px 12px;border-radius:7px;transition:all .15s;}
 .tasks-tab.active{background:var(--accent);color:#fff;}
 .tasks-tab:not(.active):hover{background:#F1EFE8;}
-.tasks-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-.task-card{background:#fff;border:1px solid var(--line-soft);border-radius:14px;padding:14px;text-align:left;
-  display:flex;flex-direction:column;gap:8px;transition:all .18s;position:relative;
-  box-shadow:0 1px 0 rgba(17,24,39,.04);}
+.tasks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.task-card{background:#fff;border:1px solid var(--line-soft);border-radius:11px;padding:10px;text-align:left;
+  display:flex;flex-direction:column;gap:5px;transition:all .18s;position:relative;
+  box-shadow:0 1px 0 rgba(17,24,39,.04);min-width:0;}
 .task-card:hover{border-color:#cfd4e1;transform:translateY(-1px);box-shadow:0 8px 20px -10px rgba(17,24,39,.18);}
-.task-top{display:flex;align-items:center;justify-content:space-between;}
-.task-emoji{width:36px;height:36px;border-radius:10px;background:#FBF7F0;display:grid;place-items:center;font-size:18px;}
-.task-top-meta{display:flex;align-items:center;gap:6px;}
-.task-top-pill{font-size:9.5px;font-weight:800;color:#9A3412;background:#FFEDD5;padding:2px 7px;border-radius:999px;letter-spacing:.06em;display:inline-flex;align-items:center;gap:3px;}
-.task-shortcut{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);font-weight:600;background:#F6F4EE;border:1px solid var(--line-soft);padding:2px 6px;border-radius:6px;}
-.task-name{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--text);line-height:1.25;}
-.task-desc{font-size:12.5px;color:var(--text-soft);line-height:1.4;}
-@media(max-width:640px){.tasks-grid{grid-template-columns:1fr;}}
+.task-top{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.task-emoji{width:28px;height:28px;border-radius:8px;background:#FBF7F0;display:grid;place-items:center;font-size:14px;}
+.task-top-meta{display:flex;align-items:center;gap:4px;}
+.task-top-pill{font-size:8.5px;font-weight:800;color:#9A3412;background:#FFEDD5;padding:1px 5px;border-radius:999px;letter-spacing:.04em;}
+.task-shortcut{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--muted);font-weight:600;background:#F6F4EE;border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px;white-space:nowrap;}
+.task-name{font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:var(--text);line-height:1.2;margin-top:2px;}
+.task-desc{font-size:11px;color:var(--text-soft);line-height:1.35;}
+@media(max-width:820px){.tasks-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:520px){.tasks-grid{grid-template-columns:1fr;}}
 
 /* History */
 .history{background:var(--paper-2);border-left:1px solid rgba(17,24,39,.06);
