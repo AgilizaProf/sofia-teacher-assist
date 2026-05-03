@@ -58,8 +58,8 @@ const css = `
 .chip.violet .d{background:var(--violet);}
 .chip.green .d{background:var(--green);}
 .chip.blue .d{background:#3B82F6;}
-.edit-context{margin-left:auto;font-size:12px;color:var(--accent);font-weight:600;display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
-.edit-context:hover{text-decoration:underline;}
+.ap-root .edit-context{margin-left:auto;font-size:12px;color:#fff !important;background:var(--accent) !important;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border-radius:999px;border:none;box-shadow:0 6px 14px -6px rgba(255,106,44,.55);}
+.ap-root .edit-context:hover{filter:brightness(1.05);}
 
 /* Convo */
 .convo{flex:1;display:flex;flex-direction:column;align-items:center;padding:48px 24px 24px;}
