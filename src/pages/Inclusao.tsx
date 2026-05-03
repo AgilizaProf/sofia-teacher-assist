@@ -1064,6 +1064,7 @@ export function Inclusao() {
                       <span className="legal">{selected?.anoEscolar ? selected.anoEscolar + " · " : ""}{selected?.turma || ""} · {selected?.diag || ""}</span>
                       <button className="btn btn-secondary" onClick={() => { setAnamPrintMode("completo"); setAnamPrintOpen(true); }}><Printer size={14} /> Imprimir Anamnese</button>
                       <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
+                      <button className="btn btn-primary" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
                     <div className="anam-list">
