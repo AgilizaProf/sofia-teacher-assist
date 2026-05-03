@@ -1,5 +1,8 @@
+import { useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock } from "lucide-react";
+import { holidayMap } from "@/lib/holidaysBR";
+import { brNow } from "@/lib/datetime";
 
 const css = `
 .ag-root{
@@ -140,20 +143,55 @@ const css = `
 `;
 
 type Ev = { type: "holiday" | "meeting" | "eval" | "report" | "plan" | "pcd"; t: string; urgent?: boolean };
-type Day = { n: number; other?: boolean; weekend?: boolean; today?: boolean; events?: Ev[] };
+type Day = { n: number; date: string; other?: boolean; weekend?: boolean; today?: boolean; events?: Ev[] };
 
-const WEEKS: Day[][] = (() => {
+const MONTHS_PT = [
+  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
+];
+
+function buildMonthGrid(year: number, month: number, todayKey: string): Day[] {
+  // month: 0-11. Semana começa no domingo.
+  const first = new Date(year, month, 1);
+  const startDow = first.getDay(); // 0 = domingo
+  const start = new Date(year, month, 1 - startDow);
   const days: Day[] = [];
-  for (let i = 1; i <= 35; i++) {
-    const dow = (i - 1) % 7;
-    days.push({ n: i, weekend: dow === 0 || dow === 6 });
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const dow = d.getDay();
+    days.push({
+      n: d.getDate(),
+      date: key,
+      other: d.getMonth() !== month,
+      weekend: dow === 0 || dow === 6,
+      today: key === todayKey,
+    });
   }
-  const w: Day[][] = [];
-  for (let i = 0; i < 5; i++) w.push(days.slice(i * 7, i * 7 + 7));
-  return w;
-})();
+  return days;
+}
 
 export function Agenda() {
+  const today = brNow();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const [cursor, setCursor] = useState<{ y: number; m: number }>({ y: today.getFullYear(), m: today.getMonth() });
+
+  const holidays = useMemo(() => holidayMap(cursor.y), [cursor.y]);
+  const days = useMemo(() => buildMonthGrid(cursor.y, cursor.m, todayKey), [cursor.y, cursor.m, todayKey]);
+
+  const goPrev = () => setCursor((c) => {
+    const m = c.m - 1;
+    return m < 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m };
+  });
+  const goNext = () => setCursor((c) => {
+    const m = c.m + 1;
+    return m > 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m };
+  });
+  const goToday = () => setCursor({ y: today.getFullYear(), m: today.getMonth() });
+
+  const monthLabel = `${MONTHS_PT[cursor.m]} ${cursor.y}`;
+
   return (
     <div className="ag-root">
       <style>{sidebarCss}</style>
@@ -166,7 +204,7 @@ export function Agenda() {
               <div className="ag-breadcrumb">
                 <b>Sua sala</b><span className="sep">›</span>
                 <span>Agenda</span><span className="sep">›</span>
-                <span>Abril 2026</span>
+                <span>{monthLabel}</span>
               </div>
               <h1 className="ag-title">Agenda · Radar pedagógico</h1>
               <div className="ag-meta">
@@ -208,10 +246,10 @@ export function Agenda() {
               <div className="ag-cal-card">
                 <div className="ag-cal-head">
                   <div className="ag-cal-nav">
-                    <button className="ag-cal-nav-btn" aria-label="Mês anterior"><ChevronLeft size={14} /></button>
-                    <div className="ag-cal-month">Abril 2026 <small>· 1º bimestre · semana 14</small></div>
-                    <button className="ag-cal-nav-btn" aria-label="Próximo mês"><ChevronRight size={14} /></button>
-                    <button className="ag-btn" style={{ padding: "5px 10px", fontSize: 11.5, marginLeft: 4 }}>Hoje</button>
+                    <button className="ag-cal-nav-btn" aria-label="Mês anterior" onClick={goPrev}><ChevronLeft size={14} /></button>
+                    <div className="ag-cal-month">{monthLabel}</div>
+                    <button className="ag-cal-nav-btn" aria-label="Próximo mês" onClick={goNext}><ChevronRight size={14} /></button>
+                    <button className="ag-btn" style={{ padding: "5px 10px", fontSize: 11.5, marginLeft: 4 }} onClick={goToday}>Hoje</button>
                   </div>
                   <div className="ag-cal-views">
                     <button className="ag-cal-view">Dia</button>
@@ -234,15 +272,18 @@ export function Agenda() {
                 </div>
 
                 <div className="ag-cal-grid">
-                  {WEEKS.flat().map((d, i) => (
-                    <div key={i} className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}>
-                      <span className="ag-cal-num">{d.n}</span>
-                      {d.today && <span className="ag-cal-day-flag">Hoje</span>}
-                      {(d.events || []).map((e, j) => (
-                        <div key={j} className={"ag-cal-event " + e.type + (e.urgent ? " urgent" : "")}>{e.t}</div>
-                      ))}
-                    </div>
-                  ))}
+                  {days.map((d, i) => {
+                    const holiday = holidays.get(d.date);
+                    return (
+                      <div key={i} className={"ag-cal-day" + (d.other ? " other" : "") + (d.weekend ? " weekend" : "") + (d.today ? " today" : "")}>
+                        <span className="ag-cal-num">{d.n}</span>
+                        {d.today && <span className="ag-cal-day-flag">Hoje</span>}
+                        {holiday && !d.other && (
+                          <div className="ag-cal-event holiday" title={holiday}>{holiday}</div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
