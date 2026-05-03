@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type React from "react";
 
 export const sidebarCss = `
-.ap-sidebar{background:linear-gradient(180deg,var(--primary,#1B2A4E) 0%,var(--primary-dark,#0F1B36) 100%);color:#fff;display:flex;flex-direction:column;position:relative;overflow:hidden;width:240px;flex-shrink:0;}
+.ap-sidebar{background:linear-gradient(180deg,var(--primary,#1B2A4E) 0%,var(--primary-dark,#0F1B36) 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
 .ap-sidebar::before{content:"";position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(255,122,69,.14) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
 .sb-head{padding:18px 18px 12px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
 .sb-logo-icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#FF7A45,#FF9466);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:17px;color:#fff;box-shadow:0 6px 18px rgba(255,122,69,.40);flex-shrink:0;}
@@ -22,6 +22,12 @@ export const sidebarCss = `
 .sb-badge{margin-left:auto;background:#FF7A45;color:#fff;font-size:9px;font-weight:800;padding:1.5px 6px;border-radius:100px;line-height:1.4;}
 .sb-shortcut{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.40);font-weight:600;}
 .sb-foot{padding:12px;position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.06);margin-top:8px;}
+.sb-plan{margin:10px 12px 0;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);border:1px solid #F7C9A8;border-radius:12px;padding:10px 12px;color:#3a1f0b;position:relative;z-index:1;}
+.sb-plan-tag{font-size:9.5px;font-weight:800;color:#9A3412;letter-spacing:.08em;display:inline-flex;align-items:center;gap:5px;}
+.sb-plan h4{margin:5px 0 2px;font-family:'Fraunces',serif;font-weight:700;font-size:13px;color:#3a1f0b;line-height:1.25;}
+.sb-plan p{margin:0;font-size:11px;color:#5a3a20;line-height:1.35;}
+.sb-plan-btn{margin-top:8px;display:inline-flex;align-items:center;gap:5px;background:#FF6A2C;color:#fff;padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:700;border:none;cursor:pointer;}
+.sb-plan-btn:hover{filter:brightness(1.05);}
 .sb-bruna{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);margin-bottom:10px;transition:background .2s;cursor:pointer;}
 .sb-bruna:hover{background:rgba(255,255,255,.08);}
 .sb-bruna-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#FF7A45,#FF9466);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:13px;border:2px solid rgba(255,255,255,.14);}
@@ -30,7 +36,7 @@ export const sidebarCss = `
 .sb-bruna-role{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px;}
 .sb-bruna-badge{font-size:8.5px;font-weight:800;color:#FF7A45;background:rgba(255,122,69,.14);padding:2px 5px;border-radius:4px;text-transform:uppercase;letter-spacing:.06em;display:inline-block;margin-top:3px;}
 .sb-version{font-size:10px;color:rgba(255,255,255,.30);text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;}
-@media(max-width:1100px){.ap-sidebar{width:72px;}.sb-logo-text,.sb-cmdk,.sb-section-label,.sb-shortcut,.sb-badge,.sb-bruna-text,.sb-version,.sb-item span:not(.sb-shortcut):not(.sb-badge){display:none;}.sb-head{justify-content:center;padding:16px 8px;}.sb-item{justify-content:center;}.sb-bruna{justify-content:center;}}
+@media(max-width:1100px){.ap-sidebar{width:72px;}.sb-logo-text,.sb-cmdk,.sb-section-label,.sb-shortcut,.sb-badge,.sb-bruna-text,.sb-version,.sb-plan,.sb-item span:not(.sb-shortcut):not(.sb-badge){display:none;}.sb-head{justify-content:center;padding:16px 8px;}.sb-item{justify-content:center;}.sb-bruna{justify-content:center;}}
 @media(max-width:820px){.ap-sidebar{display:none;}}
 `;
 
@@ -89,6 +95,18 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <span>Sair</span>
         </button>
       </nav>
+      <div className="sb-plan" role="complementary" aria-label="Oferta plano anual">
+        <span className="sb-plan-tag">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
+          PLANO ANUAL
+        </span>
+        <h4>Créditos ilimitados por R$ 247/ano</h4>
+        <p>Você usaria ~9.000 créditos/ano. Economize 41%.</p>
+        <button className="sb-plan-btn" aria-label="Ver oferta do plano anual">
+          Ver oferta
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
     </aside>
   );
 }

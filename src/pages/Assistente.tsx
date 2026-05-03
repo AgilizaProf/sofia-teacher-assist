@@ -349,12 +349,6 @@ export function Assistente() {
             ))}
           </div>
 
-          <div className="plan">
-            <span className="plan-tag"><Star size={10} fill="currentColor" /> PLANO ANUAL</span>
-            <h4>Créditos ilimitados por R$ 247/ano</h4>
-            <p>Você usaria ~9.000 créditos/ano. Economize 41%.</p>
-            <button className="btn-plan">Ver oferta <ArrowRight size={12} /></button>
-          </div>
         </aside>
       </div>
     </div>
