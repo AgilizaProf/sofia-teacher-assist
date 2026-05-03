@@ -112,10 +112,10 @@ const css = `
 .tasks-tab{font-size:12px;color:var(--text-soft);font-weight:600;padding:6px 12px;border-radius:7px;transition:all .15s;}
 .tasks-tab.active{background:var(--accent);color:#fff;}
 .tasks-tab:not(.active):hover{background:#F1EFE8;}
-.tasks-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+.tasks-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:stretch;}
 .task-card{background:#FFFFFF !important;border:2px solid #E7E9EF;border-radius:12px;padding:12px 10px;text-align:left;
   display:flex;flex-direction:column;gap:6px;transition:all .18s;position:relative;
-  box-shadow:0 1px 0 rgba(17,24,39,.04);min-width:0;aspect-ratio:3/4;justify-content:flex-start;cursor:pointer;}
+  box-shadow:0 1px 0 rgba(17,24,39,.04);min-width:0;height:170px;justify-content:flex-start;cursor:pointer;}
 .task-card:hover{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,106,44,.18),0 10px 22px -12px rgba(255,106,44,.5);transform:translateY(-2px);}
 .task-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;}
 .task-emoji{width:30px;height:30px;border-radius:8px;background:#FBF7F0;display:grid;place-items:center;font-size:15px;flex-shrink:0;}
