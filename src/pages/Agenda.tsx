@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock, X, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, RefreshCw, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 
@@ -245,6 +245,39 @@ const TYPE_COLOR: Record<EventType, string> = {
   plan: "var(--plan)",
   pcd: "var(--pcd)",
   personal: "var(--personal)",
+};
+
+const TYPE_SUGGESTIONS: Record<EventType, string[]> = {
+  meeting: [
+    "Pauta: rendimento da turma, ocorrências, próximos passos.",
+    "Levar boletim parcial e exemplos de produções dos alunos.",
+    "Reservar 10min finais para dúvidas das famílias.",
+  ],
+  eval: [
+    "Conteúdo: revisar objetivos da BNCC trabalhados no bimestre.",
+    "Material: prova impressa, gabarito e folha de respostas.",
+    "Adaptações para alunos PCD (tempo extra, leitura assistida).",
+  ],
+  report: [
+    "Conferir pareceres pendentes antes da entrega.",
+    "Anexar evidências (atividades, registros) ao relatório.",
+    "Validar prazos com a coordenação.",
+  ],
+  plan: [
+    "Tema da semana e habilidades BNCC envolvidas.",
+    "Sequência didática: abertura, desenvolvimento, fechamento.",
+    "Recursos necessários e avaliação prevista.",
+  ],
+  pcd: [
+    "Revisar PEI do aluno e metas do bimestre.",
+    "Combinar adaptações com a equipe (AEE, família).",
+    "Registrar avanços e pontos de atenção.",
+  ],
+  personal: [
+    "Compromisso pessoal — lembrar de avisar a escola se conflitar.",
+    "Reservar tempo de deslocamento.",
+    "Adicionar lembrete 1h antes.",
+  ],
 };
 
 export function Agenda() {
@@ -674,6 +707,15 @@ export function Agenda() {
                       placeholder="Detalhes, pauta, materiais…"
                     />
                   </label>
+                  <SuggestionsButton
+                    type={draft.type}
+                    onPick={(s) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        notes: prev.notes ? prev.notes.replace(/\s+$/, "") + "\n" + s : s,
+                      }))
+                    }
+                  />
                 </div>
               </div>
               <div className="ag-panel-foot">
