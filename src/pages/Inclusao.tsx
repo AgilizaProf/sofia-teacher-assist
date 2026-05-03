@@ -725,9 +725,21 @@ export function Inclusao() {
 
                 {/* PANEL: ANAMNESE (placeholder retains existing content) */}
                 <div className={"panel" + (tab === "anam" ? " active" : "")}>
-                  <div className="simple">
-                    <h4>Anamnese · 14 de 16 eixos preenchidos</h4>
-                    <p>Os 14 eixos guiados (Ano de Referência, Desempenho Acadêmico, Aspectos Pedagógicos, Psicomotores, Interações Sociais, Independência, Autonomia, Emoção, Memória, Dificuldades & Potencialidades, Estratégias, Recursos, Contexto Familiar e Observações) são preenchidos com chips, textareas e sugestões rápidas contextualizadas ao 2º Ano e ao TEA Nível 1.</p>
+                  <div className="section">
+                    <div className="section-head">
+                      <h3>Anamnese · 14 de 16 eixos preenchidos</h3>
+                      <span className="legal">2º Ano · TEA Nível 1</span>
+                      <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
+                    </div>
+                    <p style={{ color: "var(--muted)", fontSize: 13 }}>Cada eixo é preenchido com chips, textareas e sugestões rápidas contextualizadas ao ano e ao diagnóstico. Use as barras abaixo para ver o progresso.</p>
+                    <div className="anam-grid">
+                      {ANAMNESE_EIXOS.map((e) => (
+                        <div className="anam-row" key={e.l}>
+                          <div className="anam-row-head"><b>{e.l}</b><span>{e.p}%</span></div>
+                          <div className="anam-bar"><div className={"anam-fill " + e.tone} style={{ width: e.p + "%" }} /></div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
