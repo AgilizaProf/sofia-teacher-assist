@@ -270,6 +270,12 @@ export function Dashboard() {
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [schools, setSchools] = useState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>([]);
   const baseSchools = 4;
+  const [classOpen, setClassOpen] = useState(false);
+  const [classes, setClasses] = useState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>([]);
+  const baseClasses = 6;
+  const [studentOpen, setStudentOpen] = useState(false);
+  const [students, setStudents] = useState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>([]);
+  const baseStudents = 6;
   const [authorize, setAuthorize] = useState(true);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
