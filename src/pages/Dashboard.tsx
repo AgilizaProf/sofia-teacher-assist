@@ -608,6 +608,70 @@ export function Dashboard() {
         </main>
       </div>
 
+      <div className={`cmdk-overlay ${schoolOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setSchoolOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Cadastrar escola">
+          <div className="school-modal-head">
+            <div className="school-modal-icon">
+              <Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Cadastrar nova escola</div>
+              <div className="school-modal-sub">Preencha os dados para vincular turmas e alunos.</div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setSchoolOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <form className="school-modal-body" onSubmit={(e) => { e.preventDefault(); setSchoolOpen(false); }}>
+            <div className="school-field">
+              <label htmlFor="school-name">Nome da escola</label>
+              <input id="school-name" name="name" placeholder="Ex.: EMEF CAIC" required />
+            </div>
+            <div className="school-row">
+              <div className="school-field">
+                <label htmlFor="school-network">Rede</label>
+                <select id="school-network" name="network" defaultValue="municipal">
+                  <option value="municipal">Municipal</option>
+                  <option value="estadual">Estadual</option>
+                  <option value="federal">Federal</option>
+                  <option value="privada">Privada</option>
+                </select>
+              </div>
+              <div className="school-field">
+                <label htmlFor="school-stage">Etapa</label>
+                <select id="school-stage" name="stage" defaultValue="fundamental1">
+                  <option value="infantil">Educação Infantil</option>
+                  <option value="fundamental1">Fund. I</option>
+                  <option value="fundamental2">Fund. II</option>
+                  <option value="medio">Ensino Médio</option>
+                </select>
+              </div>
+            </div>
+            <div className="school-row">
+              <div className="school-field">
+                <label htmlFor="school-city">Cidade</label>
+                <input id="school-city" name="city" placeholder="Cidade" />
+              </div>
+              <div className="school-field">
+                <label htmlFor="school-uf">UF</label>
+                <input id="school-uf" name="uf" placeholder="UF" maxLength={2} />
+              </div>
+            </div>
+            <div className="school-field">
+              <label htmlFor="school-classes">Turmas que você leciona</label>
+              <input id="school-classes" name="classes" placeholder="Ex.: 2º ano A, 3º ano B" />
+            </div>
+            <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
+              <button type="button" className="school-cancel" onClick={() => setSchoolOpen(false)}>Cancelar</button>
+              <button type="submit" className="school-save">
+                Salvar escola
+                <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <div className={`cmdk-overlay ${cmdk ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setCmdk(false); }}>
         <div className="cmdk">
           <input className="cmdk-input" placeholder="O que você quer fazer? (ex: gerar parecer, adicionar aluno...)" autoComplete="off" autoFocus={cmdk} />
