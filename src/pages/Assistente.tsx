@@ -134,12 +134,15 @@ const css = `
 .btn-plan{margin-top:8px;display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;
   padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:700;}
 
-.history.collapsed .history-head{flex-direction:column;gap:10px;padding:12px 8px;}
+.history.collapsed{overflow:visible;}
+.history.collapsed .history-head{flex-direction:column;gap:8px;padding:12px 8px;align-items:center;}
+.history.collapsed .history-actions{flex-direction:column;gap:8px;margin-left:0;}
 .history.collapsed .history-title,
 .history.collapsed .history-search,
 .history.collapsed .history-section,
 .history.collapsed .history-list,
 .history.collapsed .plan,
+.history.collapsed .empty-today,
 .history.collapsed .btn-new span{display:none;}
 .history.collapsed .btn-new{padding:6px;width:32px;height:32px;justify-content:center;}
 .history.collapsed .btn-collapse svg{transform:rotate(180deg);}
@@ -272,7 +275,7 @@ export function Assistente() {
 
           <div className="history-section">Hoje</div>
           {HISTORY_TODAY.length === 0 && (
-            <div style={{ padding: "0 16px 8px", fontSize: 12, color: "var(--muted)" }}>Nenhuma conversa hoje.</div>
+            <div className="empty-today" style={{ padding: "0 16px 8px", fontSize: 12, color: "var(--muted)" }}>Nenhuma conversa hoje.</div>
           )}
 
           <div className="history-section">Esta semana</div>

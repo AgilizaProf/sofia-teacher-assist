@@ -89,17 +89,6 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <span>Sair</span>
         </button>
       </nav>
-      <div className="sb-foot">
-        <div className="sb-bruna">
-          <div className="sb-bruna-avatar">BC</div>
-          <div className="sb-bruna-text">
-            <div className="sb-bruna-name">Bruna Cassaro</div>
-            <div className="sb-bruna-role">Mentoria pedagógica</div>
-            <span className="sb-bruna-badge">Live · Quinta 19h</span>
-          </div>
-        </div>
-        <div className="sb-version">v3.2 · Atualizado hoje</div>
-      </div>
     </aside>
   );
 }
