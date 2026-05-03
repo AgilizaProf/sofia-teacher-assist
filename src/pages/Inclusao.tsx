@@ -1160,6 +1160,7 @@ export function Inclusao() {
                       <h3>Planejamento adaptado · {selected?.name || ""}</h3>
                       <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
                       <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
+                      <button className="btn btn-primary" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>Ano de referência</label>
