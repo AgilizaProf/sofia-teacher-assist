@@ -1,0 +1,1 @@
+export const SOFIA_CONSTITUTION_VERSION = "1.0";
