@@ -1179,6 +1179,28 @@ export function Inclusao() {
                 ))}
               </select>
             </label>
+            <label style={{ fontSize: 12, fontWeight: 700 }}>AEE — frequência semanal <span style={{ fontWeight: 400, color: "var(--muted)" }}>(opcional)</span>
+              <select
+                value={nsAeeDays}
+                onChange={(e) => setNsAeeDays(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, background: "#fff", fontFamily: "inherit", fontSize: 13 }}
+              >
+                <option value="">Não informado</option>
+                <option value="1">1 dia por semana</option>
+                <option value="2">2 dias por semana</option>
+                <option value="3">3 dias por semana</option>
+                <option value="4">4 dias por semana</option>
+                <option value="5">5 dias por semana</option>
+              </select>
+            </label>
+            <label style={{ fontSize: 12, fontWeight: 700 }}>Mediadora <span style={{ fontWeight: 400, color: "var(--muted)" }}>(opcional)</span>
+              <input
+                value={nsMediadora}
+                onChange={(e) => setNsMediadora(e.target.value)}
+                placeholder="Nome da mediadora"
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }}
+              />
+            </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
               <button type="submit" className="btn btn-primary">Salvar aluno</button>
