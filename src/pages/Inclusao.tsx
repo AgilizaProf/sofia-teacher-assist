@@ -1238,6 +1238,7 @@ export function Inclusao() {
                     <div className="section-head">
                       <h3>Registros pedagógicos · {studentRegs.length}</h3>
                       <button className="btn btn-primary" onClick={() => setRegModalOpen(true)}><Plus size={14} /> Novo registro</button>
+                      <button className="btn btn-primary" onClick={() => saveTab("Registros")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="reg-filters">
                       {([
@@ -1277,6 +1278,7 @@ export function Inclusao() {
                     <div className="section-head">
                       <h3>Relatórios · Pareceres descritivos</h3>
                       <span className="legal">Lei 14.254/2021</span>
+                      <button className="btn btn-primary" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="rel-feature">
                       <h4>Parecer descritivo bimestral · 1º bim 2026</h4>
@@ -1314,8 +1316,9 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "doc" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Documentos · Pedrinho Almeida</h3>
+                      <h3>Documentos · {selected?.name || ""}</h3>
                       <button className="btn btn-primary"><Plus size={14} /> Adicionar documento</button>
+                      <button className="btn btn-primary" onClick={() => saveTab("Documentos")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="doc-grid">
                       {DOCS.map((d) => (
