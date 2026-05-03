@@ -412,12 +412,7 @@ const TUTORIAL_STEPS = [
   { t: "Gere o Relatório IA", d: "Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar." },
 ];
 
-const PLAN_WEEK = [
-  { when: "TER", date: "06 MAI", disc: "Língua Portuguesa", title: "Leitura compartilhada · O patinho feio", bncc: "EF02LP04", adapted: true },
-  { when: "QUA", date: "07 MAI", disc: "Matemática", title: "Adição com material dourado até 50", bncc: "EF02MA05", adapted: true },
-  { when: "QUI", date: "08 MAI", disc: "Ciências", title: "Os sentidos · experimentos sensoriais", bncc: "EF02CI03", adapted: false },
-  { when: "SEX", date: "09 MAI", disc: "Arte", title: "Colagem coletiva · estações do ano", bncc: "EF15AR05", adapted: true },
-];
+const PLAN_WEEK: { when: string; date: string; disc: string; title: string; bncc: string; adapted: boolean }[] = [];
 
 const REG_ITEMS = [
   { when: "HOJE · 14h05", who: "Sofia · IA", cat: "ped" as const, catLabel: "Pedagógico", body: "Aula de Frações adaptada com 3 estratégias (visual, pacing, mediação). Aguardando aplicação pela Profa. Camila às 16h.", att: ["📎 plano-aula-adaptado.pdf"] },
