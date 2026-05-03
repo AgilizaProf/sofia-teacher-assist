@@ -92,10 +92,11 @@ const css = `
 .kpi-value .small{font-size:14px;color:var(--muted);font-weight:500;}
 .kpi-sub{font-size:11.5px;color:var(--muted);margin-top:4px;}
 .kpi-sub .up{color:var(--success);font-weight:700;}
-.kpi-accent{background:linear-gradient(135deg,var(--accent-soft),#FFE4D2);border-color:#FFD4B8;}
-.kpi-accent .kpi-label{color:#B8410E;}
-.kpi-accent .kpi-value{color:#7A2E0A;}
-.kpi-accent .kpi-sub{color:#7A2E0A;}
+.kpi-accent{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-color:transparent;color:#fff;position:relative;overflow:hidden;}
+.kpi-accent::before{content:"";position:absolute;top:-30%;right:-20%;width:80%;height:120%;background:radial-gradient(circle,rgba(255,122,69,.28) 0%,transparent 60%);pointer-events:none;}
+.kpi-accent .kpi-label{color:rgba(255,255,255,.65);position:relative;z-index:2;}
+.kpi-accent .kpi-value{color:#fff;position:relative;z-index:2;}
+.kpi-accent .kpi-sub{color:rgba(255,255,255,.7);position:relative;z-index:2;}
 
 .tabs{margin-top:18px;display:flex;background:#fff;border:1px solid var(--border);border-radius:11px;padding:5px;gap:2px;overflow-x:auto;}
 .tab{flex:1;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--muted);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s;white-space:nowrap;}
