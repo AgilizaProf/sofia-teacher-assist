@@ -120,7 +120,7 @@ const css = `
 .task-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;}
 .task-emoji{width:30px;height:30px;border-radius:8px;background:#FBF7F0;display:grid;place-items:center;font-size:15px;flex-shrink:0;}
 .task-top-pill{font-size:8px;font-weight:800;color:#9A3412;background:#FFEDD5;padding:2px 5px;border-radius:999px;letter-spacing:.04em;align-self:flex-start;}
-.task-shortcut{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);font-weight:600;background:#F6F4EE;border:1px solid var(--line-soft);padding:1px 4px;border-radius:5px;white-space:nowrap;display:inline-block;margin-top:auto;align-self:flex-start;}
+.task-shortcut{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);font-weight:700;background:#F6F4EE;border:1px solid var(--line-soft);padding:3px 7px;border-radius:6px;white-space:nowrap;display:inline-flex;align-items:center;line-height:1;margin-top:auto;align-self:flex-start;height:20px;}
 .task-name{font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:var(--text);line-height:1.2;margin-top:4px;}
 .task-desc{font-size:10.5px;color:var(--text-soft);line-height:1.35;}
 @media(max-width:1100px){.tasks-grid{grid-template-columns:repeat(3,1fr);}}
