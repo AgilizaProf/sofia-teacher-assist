@@ -345,9 +345,7 @@ export function Planejamento() {
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
-  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([
-    { from: "sofia", t: "Aqui está a atividade. Quer que eu adapte? Pode pedir em linguagem natural." },
-  ]);
+  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([]);
   const [chatTxt, setChatTxt] = useState("");
   const [layers, setLayers] = useState<Record<string, boolean>>({
     aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
