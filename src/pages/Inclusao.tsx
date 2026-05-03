@@ -899,7 +899,7 @@ export function Inclusao() {
                   <div className="section">
                     <div className="section-head">
                       <h3>Linha do tempo pedagógica</h3>
-                      <button className="more" onClick={() => setActiveTab("reg")}>Todos os 23 registros →</button>
+                      <button className="more" onClick={() => setActiveTab("reg")}>Todos os 0 registros →</button>
                     </div>
                     <div className="tl">
                       <p style={{ color: "var(--muted)", fontSize: 12.5 }}>Nenhum registro ainda. Os eventos pedagógicos de {selected.name.split(" ")[0]} aparecerão aqui.</p>
@@ -972,8 +972,9 @@ export function Inclusao() {
                 <div className={"panel" + (tab === "anam" ? " active" : "")}>
                   <div className="section">
                     <div className="section-head">
-                      <h3>Anamnese · 0 de {anamData.length} eixos preenchidos</h3>
-                      <span className="legal">{selected?.turma || ""} · {selected?.diag || ""}</span>
+                      <h3>Anamnese · {eixosPreenchidos} de {anamData.length} eixos preenchidos</h3>
+                      <span className="legal">{selected?.anoEscolar ? selected.anoEscolar + " · " : ""}{selected?.turma || ""} · {selected?.diag || ""}</span>
+                      <button className="btn btn-secondary" onClick={() => { setAnamPrintMode("completo"); setAnamPrintOpen(true); }}><Printer size={14} /> Imprimir Anamnese</button>
                       <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
                     </div>
                     <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
@@ -982,6 +983,8 @@ export function Inclusao() {
                         const p = eixoPct(e.items);
                         const tone = eixoTone(p, e.items);
                         const open = !!anamOpen[e.l];
+                        const sugs = ANAM_SUGESTOES[e.l] || [];
+                        const sugVisible = sugOpenFor === e.l;
                         return (
                           <div className="anam-item" key={e.l}>
                             <button
@@ -1016,6 +1019,43 @@ export function Inclusao() {
                                     </div>
                                   </div>
                                 ))}
+                                <div style={{ background:"#fff", border:"1px solid var(--border)", borderRadius:9, padding:"10px 12px", display:"flex", flexDirection:"column", gap:8 }}>
+                                  <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                                    <b style={{ fontSize:12.5 }}>Observações do eixo</b>
+                                    <span style={{ fontSize:11, color:"var(--muted)" }}>(salva automaticamente)</span>
+                                    {sugs.length > 0 && (
+                                      <button
+                                        type="button"
+                                        className="inc-btn-ghost"
+                                        style={{ marginLeft:"auto" }}
+                                        onClick={() => setSugOpenFor(sugVisible ? null : e.l)}
+                                      >
+                                        <Lightbulb size={13} /> Sugestões rápidas
+                                      </button>
+                                    )}
+                                  </div>
+                                  {sugVisible && (
+                                    <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                                      {sugs.map((s) => (
+                                        <button
+                                          key={s}
+                                          type="button"
+                                          className="anam-status-btn"
+                                          onClick={() => appendEixoSugestao(ei, s)}
+                                          title="Adicionar à observação"
+                                        >
+                                          + {s}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <textarea
+                                    value={e.obs || ""}
+                                    onChange={(ev) => setEixoObs(ei, ev.target.value)}
+                                    placeholder="Anote observações sobre este eixo…"
+                                    style={{ width:"100%", minHeight:70, padding:"8px 10px", border:"1px solid var(--border)", borderRadius:8, resize:"vertical", fontFamily:"inherit", fontSize:12.5, color:"var(--text)", background:"#fff" }}
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
