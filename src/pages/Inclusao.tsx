@@ -261,7 +261,7 @@ const css = `
 @media(max-width:720px){.inc-app{grid-template-columns:1fr;}}
 `;
 
-type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel";
+type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel" | "doc";
 type ViewKey = "list" | "detail";
 
 type Student = {
