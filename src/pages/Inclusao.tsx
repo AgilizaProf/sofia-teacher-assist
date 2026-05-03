@@ -536,6 +536,26 @@ export function Inclusao() {
   const [peiOpen, setPeiOpen] = useState(false);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
+  const [anamData, setAnamData] = useState(() =>
+    ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })) }))
+  );
+  const eixoPct = (items: Array<{ s: AnamStatus }>) => {
+    if (!items.length) return 0;
+    const sum = items.reduce((a, i) => a + ANAM_STATUS_VALUE[i.s], 0);
+    return Math.round(sum / items.length);
+  };
+  const eixoTone = (p: number, items: Array<{ s: AnamStatus }>): "ok" | "warn" | "muted" => {
+    if (items.every((i) => i.s === "naoObservado")) return "muted";
+    if (p >= 80) return "ok";
+    if (p >= 40) return "warn";
+    return "muted";
+  };
+  const setItemStatus = (eixoIdx: number, itemIdx: number, s: AnamStatus) => {
+    setAnamData((prev) => prev.map((e, i) => i !== eixoIdx ? e : ({
+      ...e, items: e.items.map((it, j) => j === itemIdx ? { ...it, s } : it)
+    })));
+  };
 
   const goView = (v: ViewKey) => {
     setView(v);
