@@ -84,8 +84,8 @@ const css = `
   text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;}
 .suggest h3{margin:6px 0 4px;font-family:'Fraunces',serif;font-weight:600;font-size:22px;line-height:1.25;color:#fff;}
 .suggest p{margin:0;color:#aab2c8;font-size:13px;}
-.btn-cta{background:linear-gradient(180deg,#FF7A3D,#FF5A14);color:#fff;padding:12px 18px;border-radius:12px;
-  font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;
+.ap-root .btn-cta{background:linear-gradient(180deg,#FF7A3D,#FF5A14) !important;color:#fff !important;padding:12px 18px;border-radius:12px;
+  font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px;border:none;
   box-shadow:0 12px 24px -8px rgba(255,90,20,.55),inset 0 1px 0 rgba(255,255,255,.25);}
 .btn-cta:hover{filter:brightness(1.05);}
 
