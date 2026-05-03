@@ -80,10 +80,13 @@ const css = `
 .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
 .hero-r{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end;}
 .inc-root .btn{padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap;border:none;cursor:pointer;}
-.inc-root .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-warm))!important;color:#fff!important;box-shadow:0 6px 16px rgba(255,122,69,.35);border:none;}
-.inc-root .btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,122,69,.45);filter:brightness(1.03);}
+.inc-root .btn-primary{background:#fff!important;color:var(--text)!important;border:1px solid var(--border);box-shadow:none;}
+.inc-root .btn-primary:hover{border-color:var(--accent);color:var(--accent)!important;}
 .inc-root .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text);}
 .inc-root .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+/* Exceção: botão Cadastrar aluno mantém o destaque laranja. */
+.inc-root .btn-cadastrar{background:linear-gradient(135deg,var(--accent),var(--accent-warm))!important;color:#fff!important;border:none!important;box-shadow:0 6px 16px rgba(255,122,69,.35);}
+.inc-root .btn-cadastrar:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,122,69,.45);filter:brightness(1.03);color:#fff!important;}
 
 .kpis{margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 @media(max-width:1024px){.kpis{grid-template-columns:repeat(2,1fr);}}
@@ -93,11 +96,11 @@ const css = `
 .kpi-value .small{font-size:14px;color:var(--muted);font-weight:500;}
 .kpi-sub{font-size:11.5px;color:var(--muted);margin-top:4px;}
 .kpi-sub .up{color:var(--success);font-weight:700;}
-.kpi-accent{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-color:transparent;color:#fff;position:relative;overflow:hidden;}
-.kpi-accent::before{content:"";position:absolute;top:-30%;right:-20%;width:80%;height:120%;background:radial-gradient(circle,rgba(255,122,69,.28) 0%,transparent 60%);pointer-events:none;}
-.kpi-accent .kpi-label{color:rgba(255,255,255,.65);position:relative;z-index:2;}
-.kpi-accent .kpi-value{color:#fff;position:relative;z-index:2;}
-.kpi-accent .kpi-sub{color:rgba(255,255,255,.7);position:relative;z-index:2;}
+.kpi-accent{background:#fff;border:1px solid var(--border);color:var(--text);position:relative;overflow:hidden;}
+.kpi-accent::before{display:none;}
+.kpi-accent .kpi-label{color:var(--muted);}
+.kpi-accent .kpi-value{color:var(--text);}
+.kpi-accent .kpi-sub{color:var(--muted);}
 
 .tabs{margin-top:18px;display:flex;background:#fff;border:1px solid var(--border);border-radius:11px;padding:5px;gap:2px;overflow-x:auto;}
 .tab{flex:1;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--muted);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s;white-space:nowrap;}
@@ -109,26 +112,26 @@ const css = `
 .panel{display:none;flex-direction:column;gap:14px;margin-top:14px;}
 .panel.active{display:flex;}
 
-.action-card{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:14px;padding:20px 22px;color:#fff;position:relative;overflow:hidden;}
-.action-card::before{content:"";position:absolute;top:-40%;right:-15%;width:70%;height:140%;background:radial-gradient(circle,rgba(255,122,69,.32) 0%,transparent 60%);pointer-events:none;}
+.action-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 22px;color:var(--text);position:relative;overflow:hidden;}
+.action-card::before{display:none;}
 .ac-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:2;}
 .ac-head .sofia{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:13px;box-shadow:0 0 0 3px rgba(255,122,69,.2);}
 .ac-head-txt{flex:1;}
-.ac-head-txt b{display:block;font-weight:700;font-size:13px;color:#fff;}
-.ac-head-txt span{font-size:11.5px;color:rgba(255,255,255,.65);}
+.ac-head-txt b{display:block;font-weight:700;font-size:13px;color:var(--text);}
+.ac-head-txt span{font-size:11.5px;color:var(--muted);}
 .ac-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--accent);color:#fff;padding:4px 8px;border-radius:6px;}
-.inc-root .ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:#fff;position:relative;z-index:2;}
-.inc-root .ac-title em{color:var(--accent-warm);font-style:normal;font-weight:800;}
-.ac-body{font-size:13px;line-height:1.55;color:rgba(255,255,255,.82);margin-bottom:16px;position:relative;z-index:2;}
-.ac-body .bncc{font-family:'JetBrains Mono',monospace;color:var(--accent-warm);background:rgba(255,122,69,.12);padding:1px 5px;border-radius:4px;font-size:11.5px;font-weight:700;}
+.inc-root .ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:var(--text);position:relative;z-index:2;}
+.inc-root .ac-title em{color:var(--accent);font-style:normal;font-weight:800;}
+.ac-body{font-size:13px;line-height:1.55;color:var(--muted);margin-bottom:16px;position:relative;z-index:2;}
+.ac-body .bncc{font-family:'JetBrains Mono',monospace;color:var(--accent);background:var(--accent-soft);padding:1px 5px;border-radius:4px;font-size:11.5px;font-weight:700;}
 .ac-strats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;position:relative;z-index:2;}
 @media(max-width:1024px){.ac-strats{grid-template-columns:1fr;}}
-.ac-strat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px;font-size:11.5px;line-height:1.4;}
-.ac-strat b{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--accent-warm);font-size:11px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
-.ac-strat span{color:rgba(255,255,255,.78);}
+.ac-strat{background:#fff;border:1px solid var(--border);border-radius:9px;padding:10px;font-size:11.5px;line-height:1.4;}
+.ac-strat b{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--accent);font-size:11px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.ac-strat span{color:var(--muted);}
 .ac-cta{display:flex;gap:8px;position:relative;z-index:2;flex-wrap:wrap;}
-.btn-ghost-dark{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:600;}
-.btn-ghost-dark:hover{background:rgba(255,255,255,.1);}
+.btn-ghost-dark{background:#fff;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:600;}
+.btn-ghost-dark:hover{border-color:var(--accent);color:var(--accent);}
 
 .section{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px 20px;}
 .section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
@@ -165,19 +168,19 @@ const css = `
 @media(max-width:1024px){.col-r{position:static;}}
 
 /* Sofia card */
-.sofia-card{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border:1px solid transparent;border-radius:14px;padding:18px;color:#fff;position:relative;overflow:hidden;}
-.sofia-card::before{content:"";position:absolute;top:-40%;right:-15%;width:70%;height:140%;background:radial-gradient(circle,rgba(255,122,69,.32) 0%,transparent 60%);pointer-events:none;}
+.sofia-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;color:var(--text);position:relative;overflow:hidden;}
+.sofia-card::before{display:none;}
 .sofia-card > *{position:relative;z-index:1;}
 .sofia-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .sofia-head .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;}
-.sofia-head b{display:block;font-weight:700;font-size:13.5px;color:#fff;}
-.sofia-head span{font-size:11.5px;color:rgba(255,255,255,.7);}
-.sofia-q{font-style:italic;font-size:12.5px;color:rgba(255,255,255,.8);line-height:1.5;margin-bottom:12px;}
+.sofia-head b{display:block;font-weight:700;font-size:13.5px;color:var(--text);}
+.sofia-head span{font-size:11.5px;color:var(--muted);}
+.sofia-q{font-style:italic;font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
 .sofia-actions{display:flex;flex-direction:column;gap:6px;}
-.sofia-action{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;text-align:left;width:100%;color:#fff;font-weight:500;transition:.15s;}
-.sofia-action:hover{background:rgba(255,122,69,.18);border-color:rgba(255,122,69,.45);color:#fff;}
+.sofia-action{background:#fff;border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;text-align:left;width:100%;color:var(--text);font-weight:500;transition:.15s;}
+.sofia-action:hover{border-color:var(--accent);color:var(--accent);}
 .sofia-action .ico{color:var(--accent);flex-shrink:0;}
-.sofia-action .arrow{margin-left:auto;color:rgba(255,255,255,.6);font-size:14px;}
+.sofia-action .arrow{margin-left:auto;color:var(--muted);font-size:14px;}
 
 /* Contexto rápido */
 .context-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
@@ -586,7 +589,7 @@ export function Inclusao() {
                   <button className="list-filter">Turma: Todas</button>
                   <button className="list-filter">Diagnóstico: Todos</button>
                   <div className="list-actions">
-                    <button className="btn btn-primary" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
+                    <button className="btn btn-primary btn-cadastrar" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
                   </div>
                 </div>
                 <div className="list-grid">
