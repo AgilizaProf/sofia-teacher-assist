@@ -405,8 +405,7 @@ export function Planejamento() {
             </div>
             <div className="pl-top-meta">
               <span><span className="sdot" />Sofia online</span>
-              <span>qua · 29 abr · 18:31</span>
-              <div className="av" title="Profª Carla R.">CR</div>
+              <div className="av" title="Você">P</div>
             </div>
           </div>
 
@@ -435,7 +434,7 @@ export function Planejamento() {
             {m === "m5" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Semana 11–15 abr <small>· 2º Ano A · 22 alunos</small></h2></div>
+                  <div><h2>Semana atual <small>· selecione uma turma</small></h2></div>
                   <div className="right">
                     <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
@@ -446,6 +445,14 @@ export function Planejamento() {
 
                 <div className="pl-layout">
                   <div>
+                    {TURMAS.length === 0 ? (
+                      <EmptyState
+                        icon="🗓️"
+                        title="Cadastre uma turma para começar a planejar a semana."
+                        description="Quando houver turmas e atividades, você poderá arrastar entre os dias e replicar para outras turmas."
+                        ctaLabel="Nova turma"
+                      />
+                    ) : (
                     <div className="pl-week">
                       {DAYS.map((d) => {
                         const cards = week[d.k];
@@ -491,6 +498,7 @@ export function Planejamento() {
                         );
                       })}
                     </div>
+                    )}
 
                     {tipOpen && (
                       <div className="pl-tip">
@@ -505,6 +513,9 @@ export function Planejamento() {
                     <div className="pl-panel">
                       <h3><Copy size={14} /> Replicar em turmas</h3>
                       <p className="lead">A semana ficou boa? Aplique em <b>1 clique</b> nas outras turmas. Sofia adapta automaticamente datas e PCDs.</p>
+                      {TURMAS.length === 0 && (
+                        <EmptyState icon="👩‍🏫" title="Sem turmas cadastradas." description="Cadastre turmas para replicar planos rapidamente." />
+                      )}
                       {TURMAS.map((t) => {
                         const on = !!picks[t.id];
                         return (
@@ -523,15 +534,11 @@ export function Planejamento() {
                       <button className="pl-btn primary pl-replica-cta" onClick={() => showToast(`Semana replicada em ${pickCount} turma(s). Sofia adaptou 2 atividades para PCD. ✓`)}>
                         <Check size={14} /> Replicar em {pickCount} turmas
                       </button>
-                      <div className="pl-replica-eco">Economia: <b>~25min por turma</b></div>
                     </div>
 
                     <div className="pl-panel">
                       <h3><Clock size={14} /> Histórico</h3>
-                      <div className="pl-hist"><span className="icn b" /><div className="body"><b>Mover</b> · 13 abr (chuva)<div className="me">há 12 min · Sofia ok</div></div></div>
-                      <div className="pl-hist"><span className="icn o" /><div className="body"><b>Replicar</b> · 5ºA → 5ºB<div className="me">há 2h · 5 atividades</div></div></div>
-                      <div className="pl-hist"><span className="icn g" /><div className="body"><b>Duplicar semana</b> · 28 mar<div className="me">7 atividades</div></div></div>
-                      <button className="pl-hist-link">Ver histórico completo →</button>
+                      <EmptyState icon="🕘" title="Sem ações registradas ainda." description="Suas movimentações e replicações aparecerão aqui." />
                     </div>
                   </aside>
                 </div>
