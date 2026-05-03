@@ -939,6 +939,11 @@ export function Inclusao() {
 
                 {/* PANEL: HOJE */}
                 <div className={"panel" + (tab === "hoje" ? " active" : "")}>
+                  <div className="section-head" style={{ marginBottom: 10 }}>
+                    <h3>Visão de hoje · {selected.name}</h3>
+                    <span className="legal">{selected.anoEscolar || "Ano escolar não informado"}</span>
+                    <button className="btn btn-primary" onClick={() => saveTab("Visão de hoje")}><CheckCircle2 size={14} /> Salvar</button>
+                  </div>
                   <div className="hoje-grid">
                     <div className="col-l">
                   <div className="action-card">
