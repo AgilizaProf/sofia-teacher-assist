@@ -372,6 +372,39 @@ const TUTORIAL_STEPS = [
   { t: "Gere o Relatório IA", d: "Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar." },
 ];
 
+const PLAN_WEEK = [
+  { when: "TER", date: "06 MAI", disc: "Língua Portuguesa", title: "Leitura compartilhada · O patinho feio", bncc: "EF02LP04", adapted: true },
+  { when: "QUA", date: "07 MAI", disc: "Matemática", title: "Adição com material dourado até 50", bncc: "EF02MA05", adapted: true },
+  { when: "QUI", date: "08 MAI", disc: "Ciências", title: "Os sentidos · experimentos sensoriais", bncc: "EF02CI03", adapted: false },
+  { when: "SEX", date: "09 MAI", disc: "Arte", title: "Colagem coletiva · estações do ano", bncc: "EF15AR05", adapted: true },
+];
+
+const REG_ITEMS = [
+  { when: "HOJE · 14h05", who: "Sofia · IA", cat: "ped" as const, catLabel: "Pedagógico", body: "Aula de Frações adaptada com 3 estratégias (visual, pacing, mediação). Aguardando aplicação pela Profa. Camila às 16h.", att: ["📎 plano-aula-adaptado.pdf"] },
+  { when: "29 ABR · 10h12", who: "Profa. Camila Ribeiro", cat: "ped" as const, catLabel: "Pedagógico", body: "Pedrinho atingiu o objetivo PEI #6: sustentou trabalho em dupla com a Ana Clara por 22 minutos resolvendo um quebra-cabeça de números. Excelente regulação emocional.", att: ["📷 evidencia-dupla.jpg", "🎙️ audio-1m23s.m4a"] },
+  { when: "25 ABR · 19h30", who: "Família · Mãe (Juliana)", cat: "fam" as const, catLabel: "Família", body: "Reunião bimestral. Mãe relatou que em casa Pedrinho está nomeando frações ao dividir bolo (\"metade\", \"pedaço inteiro\"). Combinamos manter os fones abafadores também na hora do recreio.", att: ["📄 ata-reuniao-25-04.pdf"] },
+  { when: "18 ABR · 09h45", who: "Profa. Carla Mendonça (AEE)", cat: "sen" as const, catLabel: "Sensorial", body: "Crise sensorial breve durante aula de Música (volume da flauta). Resolvida em 3 min com fone abafador + canto da calma. Pedrinho retomou a atividade sozinho.", att: [] },
+  { when: "12 ABR · 14h00", who: "Profa. Camila Ribeiro", cat: "com" as const, catLabel: "Comportamental", body: "Solicitou pausa sozinho ao perceber sobrecarga (objetivo PEI #7 atingido novamente). Verbalizou: 'preciso respirar'.", att: [] },
+  { when: "04 ABR · 16h20", who: "Equipe pedagógica", cat: "ped" as const, catLabel: "Pedagógico", body: "PEI revisado em conjunto com AEE e família. Versão v3.2 publicada com 9 objetivos vigentes.", att: ["📄 PEI-v3.2.pdf"] },
+];
+
+const REL_PAST = [
+  { bim: "4º bimestre · 2025", date: "12/12/2025", status: "ok" as const, statusLabel: "Assinado" },
+  { bim: "3º bimestre · 2025", date: "26/09/2025", status: "ok" as const, statusLabel: "Assinado" },
+  { bim: "2º bimestre · 2025", date: "04/07/2025", status: "ok" as const, statusLabel: "Assinado" },
+  { bim: "1º bimestre · 2025", date: "11/04/2025", status: "ok" as const, statusLabel: "Assinado" },
+];
+
+const DOCS = [
+  { ic: "PDF", t: "Laudo médico · TEA Nível 1", who: "Dr. Ricardo Mendes · CRM 123456", date: "12/03/2025", size: "1.2 MB" },
+  { ic: "PEI", t: "PEI v3.2 · vigente", who: "Equipe pedagógica + AEE + família", date: "04/04/2026", size: "684 KB" },
+  { ic: "ATA", t: "Ata · reunião bimestral", who: "Família + Profa. Camila", date: "25/04/2026", size: "212 KB" },
+  { ic: "ATA", t: "Ata · revisão de PEI", who: "Equipe + AEE", date: "04/04/2026", size: "198 KB" },
+  { ic: "ATA", t: "Ata · acolhimento inicial", who: "Coordenação + família", date: "08/02/2025", size: "176 KB" },
+  { ic: "AVA", t: "Avaliação pedagógica diagnóstica", who: "Profa. Camila Ribeiro", date: "20/02/2026", size: "456 KB" },
+  { ic: "AUT", t: "Autorização · uso de imagem", who: "Família (Juliana Almeida)", date: "08/02/2025", size: "88 KB" },
+];
+
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
