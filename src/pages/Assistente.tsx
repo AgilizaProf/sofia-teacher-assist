@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil, Clock,
@@ -6,6 +6,7 @@ import {
   Calendar, CheckSquare, Star,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import ReactMarkdown from "react-markdown";
 
 const css = `
 .ap-root{
@@ -194,8 +195,49 @@ export function Assistente() {
   const [text, setText] = useState("");
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
+  type ChatMsg = { role: "user" | "assistant"; content: string };
+  const [messages, setMessages] = useState<ChatMsg[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem("sofia_chat");
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return [];
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("sofia_chat", JSON.stringify(messages)); } catch { /* ignore */ }
+  }, [messages]);
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, loading]);
 
-  const handleNew = () => setText("");
+  const handleNew = () => { setText(""); setMessages([]); };
+
+  const sendMessage = async (raw?: string) => {
+    const content = (raw ?? text).trim();
+    if (!content || loading) return;
+    const next: ChatMsg[] = [...messages, { role: "user", content }];
+    setMessages(next);
+    setText("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/sofia", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Falha na resposta da Sofia");
+      setMessages((m) => [...m, { role: "assistant", content: data.content || "" }]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
+      setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="ap-root">
