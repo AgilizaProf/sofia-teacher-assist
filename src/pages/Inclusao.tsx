@@ -164,17 +164,19 @@ const css = `
 @media(max-width:1024px){.col-r{position:static;}}
 
 /* Sofia card */
-.sofia-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;}
+.sofia-card{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border:1px solid transparent;border-radius:14px;padding:18px;color:#fff;position:relative;overflow:hidden;}
+.sofia-card::before{content:"";position:absolute;top:-40%;right:-15%;width:70%;height:140%;background:radial-gradient(circle,rgba(255,122,69,.32) 0%,transparent 60%);pointer-events:none;}
+.sofia-card > *{position:relative;z-index:1;}
 .sofia-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .sofia-head .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;}
-.sofia-head b{display:block;font-weight:700;font-size:13.5px;color:var(--text);}
-.sofia-head span{font-size:11.5px;color:var(--muted);}
-.sofia-q{font-style:italic;font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.sofia-head b{display:block;font-weight:700;font-size:13.5px;color:#fff;}
+.sofia-head span{font-size:11.5px;color:rgba(255,255,255,.7);}
+.sofia-q{font-style:italic;font-size:12.5px;color:rgba(255,255,255,.8);line-height:1.5;margin-bottom:12px;}
 .sofia-actions{display:flex;flex-direction:column;gap:6px;}
-.sofia-action{background:var(--bg);border:1px solid transparent;border-radius:9px;padding:10px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;text-align:left;width:100%;color:var(--text);font-weight:500;transition:.15s;}
-.sofia-action:hover{background:var(--accent-soft);border-color:#FFD4B8;color:#7A2E0A;}
+.sofia-action{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;text-align:left;width:100%;color:#fff;font-weight:500;transition:.15s;}
+.sofia-action:hover{background:rgba(255,122,69,.18);border-color:rgba(255,122,69,.45);color:#fff;}
 .sofia-action .ico{color:var(--accent);flex-shrink:0;}
-.sofia-action .arrow{margin-left:auto;color:var(--muted);font-size:14px;}
+.sofia-action .arrow{margin-left:auto;color:rgba(255,255,255,.6);font-size:14px;}
 
 /* Contexto rápido */
 .context-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
