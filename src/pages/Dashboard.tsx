@@ -216,9 +216,9 @@ const css = `
 @media(max-width:560px){.hero{padding:20px 18px;}.hero-title{font-size:26px;}.hero-metric-value{font-size:42px;}.stats{grid-template-columns:1fr;}.today-focus{flex-direction:column;align-items:flex-start;}.today-focus-action{width:100%;justify-content:center;}}
 `;
 
-const Svg = ({ d, ...rest }: { d: React.ReactNode } & React.SVGProps<SVGSVGElement>) => (
+const Svg = ({ c, ...rest }: { d: React.ReactNode } & React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...rest}>
-    {d}
+    {c}
   </svg>
 );
 
@@ -267,43 +267,43 @@ export function Dashboard() {
             <div className="sb-logo-text">Agiliza<span>Prof</span></div>
           </div>
           <button className="sb-cmdk" onClick={() => setCmdk(true)}>
-            <Svg d={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />
+            <Svg c={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />
             Buscar ou ir para...
             <span className="sb-cmdk-shortcut">⌘K</span>
           </button>
           <div className="sb-section-label">Sua sala</div>
           <nav className="sb-nav">
             <button className="sb-item active">
-              <Svg className="sb-icon" d={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />
+              <Svg className="sb-icon" c={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />
               Página inicial<span className="sb-shortcut">H</span>
             </button>
             <button className="sb-item">
-              <Svg className="sb-icon" d={<><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></>} />
+              <Svg className="sb-icon" c={<><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></>} />
               Assistente IA<span className="sb-badge">NOVO</span>
             </button>
             <button className="sb-item">
-              <Svg className="sb-icon" d={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
+              <Svg className="sb-icon" c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
               Planejamento<span className="sb-shortcut">P</span>
             </button>
             <button className="sb-item">
-              <Svg className="sb-icon" d={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
+              <Svg className="sb-icon" c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
               Relatórios<span className="sb-shortcut">R</span>
             </button>
             <button className="sb-item">
-              <Svg className="sb-icon" d={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />
+              <Svg className="sb-icon" c={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />
               Inclusão<span className="sb-shortcut">I</span>
             </button>
             <button className="sb-item">
-              <Svg className="sb-icon" d={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
+              <Svg className="sb-icon" c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
               Agenda escolar
             </button>
             <div className="sb-section-label" style={{ marginTop: 12 }}>Conta</div>
             <button className="sb-item">
-              <Svg className="sb-icon" d={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>} />
+              <Svg className="sb-icon" c={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>} />
               Configurações
             </button>
             <button className="sb-item">
-              <Svg className="sb-icon" d={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />
+              <Svg className="sb-icon" c={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />
               Sair
             </button>
           </nav>
@@ -325,21 +325,21 @@ export function Dashboard() {
             <div style={{ display: "flex", alignItems: "center" }}>
               <div className="crumbs">
                 <strong>Sua sala</strong>
-                <Svg strokeWidth={2.5} d={<polyline points="9 18 15 12 9 6"/>} />
+                <Svg strokeWidth={2.5} c={<polyline points="9 18 15 12 9 6"/>} />
                 <span>Página inicial</span>
               </div>
               <div className="streak-pill">🔥 <span className="num">12</span> dias seguidos</div>
             </div>
             <div className="topbar-actions">
               <button className="icon-action" aria-label="Buscar" onClick={() => setCmdk(true)}>
-                <Svg d={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />
+                <Svg c={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />
               </button>
               <button className="icon-action" aria-label="Notificações">
-                <Svg d={<><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></>} />
+                <Svg c={<><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></>} />
                 <span className="notif-dot" />
               </button>
               <button className="icon-action" aria-label="Ajuda">
-                <Svg d={<><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>} />
+                <Svg c={<><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>} />
               </button>
               <div className="user-pill">
                 <div className="user-avatar">CM</div>
@@ -359,17 +359,17 @@ export function Dashboard() {
               <div className="hero-cta-row">
                 <button className="hero-cta">
                   Começar pelos pareceres
-                  <Svg strokeWidth={2.5} d={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                  <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
                 </button>
                 <button className="hero-cta-ghost">
-                  <Svg strokeWidth={2.5} d={<polygon points="5 3 19 12 5 21 5 3"/>} />
+                  <Svg strokeWidth={2.5} c={<polygon points="5 3 19 12 5 21 5 3"/>} />
                   Tutorial · 90s
                 </button>
               </div>
             </div>
             <div className="hero-metric">
               <div className="hero-metric-tag">
-                <Svg strokeWidth={2.5} d={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />
+                <Svg strokeWidth={2.5} c={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />
                 Tempo devolvido a você
               </div>
               <div className="hero-metric-value">
@@ -385,7 +385,7 @@ export function Dashboard() {
             <div className="today-focus">
               <div className="today-focus-icon">
                 <div className="today-focus-icon-inner">
-                  <Svg d={<><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></>} />
+                  <Svg c={<><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></>} />
                 </div>
               </div>
               <div className="today-focus-content">
@@ -399,29 +399,29 @@ export function Dashboard() {
               </div>
               <button className="today-focus-action">
                 Adaptar agora
-                <Svg strokeWidth={2.5} d={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
               </button>
               <button className="today-focus-dismiss" aria-label="Dispensar" onClick={() => setShowFocus(false)}>
-                <Svg strokeWidth={2.5} d={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+                <Svg strokeWidth={2.5} c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
               </button>
             </div>
           )}
 
           <div className="stats">
             <div className="stat">
-              <div className="stat-icon s1"><Svg d={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
+              <div className="stat-icon s1"><Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
               <div className="stat-body"><div className="stat-value">4 <span className="stat-value-trend">+1</span></div><div className="stat-label">Escolas</div></div>
             </div>
             <div className="stat">
-              <div className="stat-icon s2"><Svg d={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
+              <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
               <div className="stat-body"><div className="stat-value">6 <span className="stat-value-trend">+2</span></div><div className="stat-label">Turmas ativas</div></div>
             </div>
             <div className="stat">
-              <div className="stat-icon s3"><Svg d={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} /></div>
+              <div className="stat-icon s3"><Svg c={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} /></div>
               <div className="stat-body"><div className="stat-value">6 <span className="stat-value-trend">+1</span></div><div className="stat-label">Alunos</div></div>
             </div>
             <div className="stat">
-              <div className="stat-icon s4"><Svg d={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} /></div>
+              <div className="stat-icon s4"><Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} /></div>
               <div className="stat-body"><div className="stat-value">23</div><div className="stat-label">Documentos gerados</div></div>
             </div>
           </div>
@@ -440,7 +440,7 @@ export function Dashboard() {
               <div className="class-group">
                 <div className="class-head" onClick={() => toggleClass("g1")}>
                   <span className={`class-toggle ${collapsed.g1 ? "collapsed" : ""}`}>
-                    <Svg width={12} height={12} strokeWidth={2.5} d={<polyline points="6 9 12 15 18 9"/>} />
+                    <Svg width={12} height={12} strokeWidth={2.5} c={<polyline points="6 9 12 15 18 9"/>} />
                   </span>
                   <div className="class-info">
                     <div className="class-name">1º ano · Teste</div>
@@ -456,8 +456,8 @@ export function Dashboard() {
                       <div className="student-meta">1º ano · sem laudo</div>
                     </div>
                     <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg d={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg d={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
+                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
+                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
                     </div>
                   </div>
                 )}
@@ -466,7 +466,7 @@ export function Dashboard() {
               <div className="class-group">
                 <div className="class-head" onClick={() => toggleClass("g2")}>
                   <span className={`class-toggle ${collapsed.g2 ? "collapsed" : ""}`}>
-                    <Svg width={12} height={12} strokeWidth={2.5} d={<polyline points="6 9 12 15 18 9"/>} />
+                    <Svg width={12} height={12} strokeWidth={2.5} c={<polyline points="6 9 12 15 18 9"/>} />
                   </span>
                   <div className="class-info">
                     <div className="class-name">2º ano · CAIC</div>
@@ -482,8 +482,8 @@ export function Dashboard() {
                       <div className="student-meta">2º ano · acompanhamento ativo</div>
                     </div>
                     <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg d={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg d={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
+                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
+                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
                     </div>
                   </div>
                   <div className="student">
@@ -493,8 +493,8 @@ export function Dashboard() {
                       <div className="student-meta">2º ano · sem laudo</div>
                     </div>
                     <div className="student-actions">
-                      <button className="icon-btn" aria-label="Editar"><Svg d={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
-                      <button className="icon-btn" aria-label="Mais"><Svg d={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
+                      <button className="icon-btn" aria-label="Editar"><Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></>} /></button>
+                      <button className="icon-btn" aria-label="Mais"><Svg c={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} /></button>
                     </div>
                   </div>
                 </>}
@@ -502,7 +502,7 @@ export function Dashboard() {
 
               <a href="#" className="card-link" style={{ marginTop: 14, display: "inline-flex" }}>
                 Ver todos os 6 alunos
-                <Svg strokeWidth={2.5} d={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
               </a>
             </div>
 
@@ -510,7 +510,7 @@ export function Dashboard() {
               <div className="card">
                 <div className="card-head">
                   <h3 className="card-title">📈 Esta semana</h3>
-                  <a href="#" className="card-link">Ver tudo<Svg strokeWidth={2.5} d={<path d="M5 12h14M13 5l7 7-7 7"/>} /></a>
+                  <a href="#" className="card-link">Ver tudo<Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} /></a>
                 </div>
                 <div className="activity-list">
                   <div className="activity">
@@ -531,14 +531,14 @@ export function Dashboard() {
               <div className="card">
                 <div className="card-head">
                   <h3 className="card-title">🗓️ Agenda</h3>
-                  <a href="#" className="card-link">Abrir<Svg strokeWidth={2.5} d={<path d="M5 12h14M13 5l7 7-7 7"/>} /></a>
+                  <a href="#" className="card-link">Abrir<Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} /></a>
                 </div>
                 <div className="agenda-empty">
                   <div className="agenda-empty-icon">📭</div>
                   <div className="agenda-empty-title">Sua semana está livre</div>
                   <p className="agenda-empty-sub">Adicione provas, entregas e reuniões pra não esquecer.</p>
                   <button className="btn-add">
-                    <Svg strokeWidth={2.5} d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />
+                    <Svg strokeWidth={2.5} c={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />
                     Adicionar evento
                   </button>
                 </div>
@@ -554,7 +554,7 @@ export function Dashboard() {
             </div>
             <button className="viral-action">
               Compartilhar link
-              <Svg strokeWidth={2.5} d={<><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></>} />
+              <Svg strokeWidth={2.5} c={<><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></>} />
             </button>
           </div>
 
@@ -575,29 +575,29 @@ export function Dashboard() {
           <div className="cmdk-list">
             <div className="cmdk-section">Sugestões da IA</div>
             <div className="cmdk-item active">
-              <Svg d={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
+              <Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
               Gerar parecer descritivo da Tereza<span className="cmdk-item-shortcut">↵</span>
             </div>
             <div className="cmdk-item">
-              <Svg d={<path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/>} />
+              <Svg c={<path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/>} />
               Adaptar atividade para Caio (TDAH)
             </div>
             <div className="cmdk-section">Ir para</div>
             <div className="cmdk-item">
-              <Svg d={<rect x="3" y="4" width="18" height="18" rx="2"/>} />
+              <Svg c={<rect x="3" y="4" width="18" height="18" rx="2"/>} />
               Planejamento<span className="cmdk-item-shortcut">G P</span>
             </div>
             <div className="cmdk-item">
-              <Svg d={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />
+              <Svg c={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />
               Inclusão<span className="cmdk-item-shortcut">G I</span>
             </div>
             <div className="cmdk-section">Ações rápidas</div>
             <div className="cmdk-item">
-              <Svg d={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />
+              <Svg c={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />
               Cadastrar novo aluno<span className="cmdk-item-shortcut">N A</span>
             </div>
             <div className="cmdk-item">
-              <Svg d={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />
+              <Svg c={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />
               Importar lista de alunos (CSV)
             </div>
           </div>
