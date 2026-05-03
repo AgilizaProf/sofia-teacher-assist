@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { validateSofiaOutput } from "@/lib/sofia-validator";
 
 const SOFIA_SYSTEM_PROMPT = `Você é Sofia, assistente pedagógica do AgilizaProf. Você apoia professoras e professores da educação básica brasileira. Antes de qualquer resposta, você obedece às regras abaixo de forma inegociável.
 
@@ -46,6 +47,7 @@ export const askSofia = createServerFn({ method: "POST" })
       throw new Error(`Falha no AI Gateway (${res.status}): ${t.slice(0, 300)}`);
     }
     const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const content = json.choices?.[0]?.message?.content || "";
-    return { content };
+    const raw = json.choices?.[0]?.message?.content || "";
+    const { ok, issues, sanitized } = validateSofiaOutput(raw);
+    return { content: sanitized, issues, sanitizedApplied: !ok };
   });

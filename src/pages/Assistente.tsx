@@ -196,7 +196,7 @@ export function Assistente() {
   const [text, setText] = useState("");
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
-  type ChatMsg = { role: "user" | "assistant"; content: string };
+  type ChatMsg = { role: "user" | "assistant"; content: string; issues?: Array<{ term: string; suggestion: string; principle: string }> };
   const [messages, setMessages] = useState<ChatMsg[]>(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -224,8 +224,8 @@ export function Assistente() {
     setText("");
     setLoading(true);
     try {
-      const data = await askSofia({ data: { messages: next } });
-      setMessages((m) => [...m, { role: "assistant", content: data.content || "" }]);
+      const data = await askSofia({ data: { messages: next.map(({ role, content }) => ({ role, content })) } });
+      setMessages((m) => [...m, { role: "assistant", content: data.content || "", issues: data.issues }]);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
       setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);
@@ -294,9 +294,18 @@ export function Assistente() {
                       }}
                     >
                       {m.role === "assistant" ? (
-                        <div className="prose prose-sm max-w-none">
-                          <ReactMarkdown>{m.content}</ReactMarkdown>
-                        </div>
+                        <>
+                          <div className="prose prose-sm max-w-none">
+                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                          </div>
+                          {m.issues && m.issues.length > 0 && (
+                            <div style={{ marginTop: 10, padding: "8px 10px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, fontSize: 12, color: "#7C2D12" }}>
+                              <b>Linguagem ajustada automaticamente</b> ({m.issues.length} termo{m.issues.length > 1 ? "s" : ""}): {m.issues.map((i, k) => (
+                                <span key={k}>{k > 0 ? ", " : " "}<i>"{i.term}"</i> → <b>{i.suggestion}</b></span>
+                              ))}
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
                       )}
