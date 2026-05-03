@@ -842,14 +842,51 @@ export function Inclusao() {
                       <span className="legal">2º Ano · TEA Nível 1</span>
                       <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
                     </div>
-                    <p style={{ color: "var(--muted)", fontSize: 13 }}>Cada eixo é preenchido com chips, textareas e sugestões rápidas contextualizadas ao ano e ao diagnóstico. Use as barras abaixo para ver o progresso.</p>
-                    <div className="anam-grid">
-                      {ANAMNESE_EIXOS.map((e) => (
-                        <div className="anam-row" key={e.l}>
-                          <div className="anam-row-head"><b>{e.l}</b><span>{e.p}%</span></div>
-                          <div className="anam-bar"><div className={"anam-fill " + e.tone} style={{ width: e.p + "%" }} /></div>
-                        </div>
-                      ))}
+                    <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
+                    <div className="anam-list">
+                      {anamData.map((e, ei) => {
+                        const p = eixoPct(e.items);
+                        const tone = eixoTone(p, e.items);
+                        const open = !!anamOpen[e.l];
+                        return (
+                          <div className="anam-item" key={e.l}>
+                            <button
+                              className={"anam-summary" + (open ? " open" : "")}
+                              onClick={() => setAnamOpen((o) => ({ ...o, [e.l]: !o[e.l] }))}
+                              aria-expanded={open}
+                            >
+                              <div className="label">
+                                <b>{e.l} <span style={{ fontWeight: 500, color: "var(--muted)", fontSize: 11 }}>· {e.items.length} descritores</span></b>
+                                <div className="bar"><div className={tone} style={{ width: p + "%" }} /></div>
+                              </div>
+                              <span className="pct">{p}%</span>
+                              <ChevronRight size={16} className="chev" />
+                            </button>
+                            {open && (
+                              <div className="anam-body">
+                                {e.items.map((it, ii) => (
+                                  <div className="anam-desc" key={ii}>
+                                    <p>{it.d}</p>
+                                    <div className="anam-status-group" role="radiogroup" aria-label={it.d}>
+                                      {(["naoObservado", "naoAlcancado", "desenvolvimento", "consolidado"] as AnamStatus[]).map((s) => (
+                                        <button
+                                          key={s}
+                                          className={"anam-status-btn " + s + (it.s === s ? " active" : "")}
+                                          onClick={() => setItemStatus(ei, ii, s)}
+                                          role="radio"
+                                          aria-checked={it.s === s}
+                                        >
+                                          {ANAM_STATUS_LABEL[s]}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
