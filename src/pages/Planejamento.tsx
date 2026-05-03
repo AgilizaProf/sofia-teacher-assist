@@ -399,9 +399,9 @@ export function Planejamento() {
         <div className="pl-main">
           <div className="pl-topbar">
             <div className="pl-crumbs">
-              <span>AgilizaProf</span><span className="sep">/</span>
-              <span>Planejamento</span><span className="sep">/</span>
-              <strong>{cfg.crumb}</strong>
+              <strong>Sua sala</strong><span className="sep">›</span>
+              <span>Planejamento</span><span className="sep">›</span>
+              <span>{cfg.crumb}</span>
             </div>
             <div className="pl-top-meta">
               <span><span className="sdot" />Sofia online</span>

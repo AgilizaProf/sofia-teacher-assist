@@ -164,9 +164,9 @@ export function Agenda() {
           <div className="ag-topbar">
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="ag-breadcrumb">
-                <span>Organização</span><span className="sep">›</span>
+                <b>Sua sala</b><span className="sep">›</span>
                 <span>Agenda</span><span className="sep">›</span>
-                <b>Abril 2026</b>
+                <span>Abril 2026</span>
               </div>
               <h1 className="ag-title">Agenda · Radar pedagógico</h1>
               <div className="ag-meta">
