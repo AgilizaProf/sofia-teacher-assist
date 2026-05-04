@@ -3,6 +3,8 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
+import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { useSofia } from "@/components/sofia/SofiaProvider";
 
 const css = `
 .ag-root{
@@ -180,6 +182,59 @@ const MONTHS_PT = [
   "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
 ];
+
+function AgendaSofiaSide() {
+  const ctx = useSofiaContext();
+  const sofia = useSofia();
+  const mes = MONTHS_PT[new Date().getMonth()].toLowerCase();
+  const eventos = ctx.dataState.eventos_agenda_mes;
+  const horas = ctx.user.horas_economizadas_mes;
+  return (
+    <>
+      <div className="ag-sofia-card">
+        <div className="ag-sofia-head">
+          <div className="ag-sofia-avatar">S</div>
+          <div className="ag-sofia-name">Sofia <small>Sua assistente · online</small></div>
+        </div>
+        {eventos === 0 ? (
+          <>
+            <div className="ag-sofia-msg">
+              Sua agenda de <b>{mes}</b> tá em branco. Posso já preencher os marcos do mês: reunião pedagógica, fechamento do bimestre, conselho de classe e feriados. 30 segundos.
+            </div>
+            <div className="ag-sofia-actions">
+              <button className="ag-sofia-action" onClick={() => sofia.openSofia({ prompt: `Preencha minha agenda de ${mes} com os marcos típicos do bimestre brasileiro.`, send: false })}>
+                <span className="ag-sofia-action-ic"><Sparkles size={13} color="#FF7A45" /></span>
+                <b>Preencher agenda de {mes}</b>
+              </button>
+              <button className="ag-sofia-action" onClick={() => sofia.openSofia({ prompt: "Como importar o calendário escolar?", send: false })}>
+                <span className="ag-sofia-action-ic">📅</span>
+                <b>Importar do calendário da escola</b>
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="ag-sofia-msg">
+            Você tem <b>{eventos}</b> evento(s) este mês. Quer que eu destaque os que precisam de preparação?
+          </div>
+        )}
+      </div>
+      <div className="ag-stat-card">
+        <div className="ag-stat-head"><Clock size={11} style={{ display: "inline", marginRight: 4 }} />Você esta semana</div>
+        {horas > 0 || eventos >= 1 ? (
+          <>
+            <div className="ag-stat-big">{horas}h <small>economizadas</small></div>
+            <div className="ag-stat-desc">Tempo devolvido a você este mês com a Sofia.</div>
+          </>
+        ) : (
+          <>
+            <div className="ag-stat-big">~2h <small>economizáveis</small></div>
+            <div className="ag-stat-desc" title="Potencial baseado em professoras com perfil parecido">Potencial estimado para esta semana.</div>
+          </>
+        )}
+      </div>
+    </>
+  );
+}
 
 function buildMonthGrid(year: number, month: number, todayKey: string): Day[] {
   // month: 0-11. Semana começa no domingo.
@@ -732,22 +787,7 @@ export function Agenda() {
             </div>
 
             <div className="ag-col-side">
-              <div className="ag-sofia-card">
-                <div className="ag-sofia-head">
-                  <div className="ag-sofia-avatar">S</div>
-                  <div className="ag-sofia-name">Sofia <small>Sua assistente · online</small></div>
-                </div>
-                <div className="ag-sofia-msg">
-                  Olá! Conforme você cadastra eventos, reuniões e prazos, eu vou preparar pautas e materiais automaticamente.
-                </div>
-                <div className="ag-sofia-actions" />
-              </div>
-
-              <div className="ag-stat-card">
-                <div className="ag-stat-head"><Clock size={11} style={{ display: "inline", marginRight: 4 }} />Você esta semana</div>
-                <div className="ag-stat-big">0min <small>economizadas</small></div>
-                <div className="ag-stat-desc">Conforme você usa a Sofia, o tempo economizado aparece aqui.</div>
-              </div>
+              <AgendaSofiaSide />
 
               <div className="ag-up-card">
                 <div className="ag-up-head">

@@ -536,7 +536,13 @@ export function Planejamento() {
                           </button>
                         );
                       })}
-                      <button className="pl-btn primary pl-replica-cta" onClick={() => showToast(`Semana replicada em ${pickCount} turma(s). Sofia adaptou 2 atividades para PCD. ✓`)}>
+                      <button
+                        className="pl-btn primary pl-replica-cta"
+                        disabled={pickCount === 0}
+                        title={pickCount === 0 ? "Cadastre pelo menos 1 turma pra replicar" : undefined}
+                        style={pickCount === 0 ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
+                        onClick={() => pickCount > 0 && showToast(`Semana replicada em ${pickCount} turma(s). Sofia adaptou 2 atividades para PCD. ✓`)}
+                      >
                         <Check size={14} /> Replicar em {pickCount} turmas
                       </button>
                     </div>

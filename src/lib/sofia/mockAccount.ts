@@ -36,8 +36,8 @@ export const PRO_DATASET = {
     plano: "pro" as const,
     streak_dias: 12,
     horas_economizadas_mes: 14,
-    creditos_usados: 1840,
-    creditos_total: 9000,
+    creditos_usados: 2000,
+    creditos_total: 3000,
   },
   turma: {
     id: "t-211-caic",
