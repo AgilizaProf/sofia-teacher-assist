@@ -120,17 +120,17 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           </button>
         </div>
         {isPro ? (
-          <button className="sb-bruna" onClick={openMentoria} aria-label="Abrir mentoria com Bruna Cassaro">
-            <div className="av">BC</div>
+          <button className="sb-bruna" onClick={openMentoria} aria-label="Abrir mentoria pedagógica">
+            <div className="av">MD</div>
             <div style={{ minWidth: 0 }}>
-              <div className="nm">Bruna Cassaro</div>
+              <div className="nm">Mentora Demo</div>
               <div className="sub">Mentoria pedagógica</div>
               <span className="live">🔴 LIVE QUINTA 16h</span>
             </div>
           </button>
         ) : (
           <div className="sb-bruna-locked" role="note">
-            <b>🔒 Mentoria com Bruna Cassaro</b>
+            <b>🔒 Mentoria pedagógica</b>
             Disponível no PRO
           </div>
         )}
