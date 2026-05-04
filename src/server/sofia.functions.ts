@@ -77,7 +77,7 @@ export const askSofia = createServerFn({ method: "POST" })
       user_id: userId,
       role: "assistant",
       content: sanitized,
-      issues: issues && issues.length ? issues : null,
+      issues: issues && issues.length ? (issues as unknown as Record<string, unknown>[]) : null,
     }]);
 
     return { conversationId, content: sanitized, issues, sanitizedApplied: !ok };
