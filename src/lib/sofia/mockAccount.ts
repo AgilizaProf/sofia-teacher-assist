@@ -1,4 +1,4 @@
-// Conta mock: alterna entre Free vazio e Pro cheio (Camila / 211 CAIC / Pedrinho TEA N1 / Caio TDAH).
+// Conta mock: alterna entre Free vazio e Pro Demo (Professora / Turma Demo A / Aluno Demo 1 TEA N1 / Aluno Demo 2 TDAH).
 // Persiste em localStorage para sobreviver a reload e ser observável por hooks.
 
 const KEY = "sofia_mock_account";
@@ -31,8 +31,8 @@ export function subscribeMockAccount(cb: (a: MockAccount) => void) {
 // IMPORTANTE: nada aqui aparece no JSX como string fixa; tudo passa por interpolação.
 export const PRO_DATASET = {
   user: {
-    nome: "Camila Mendes",
-    primeiro_nome: "Camila",
+    nome: "Professora Demo",
+    primeiro_nome: "Professora",
     plano: "pro" as const,
     streak_dias: 12,
     horas_economizadas_mes: 14,
@@ -40,32 +40,32 @@ export const PRO_DATASET = {
     creditos_total: 3000,
   },
   turma: {
-    id: "t-211-caic",
-    nome: "211 CAIC",
+    id: "t-demo-a",
+    nome: "Turma Demo A",
     ano: "2º ano",
     total_alunos: 27,
   },
   alunos: [
     {
-      id: "a-pedrinho",
-      nome: "Pedrinho Almeida",
-      primeiro_nome: "Pedrinho",
+      id: "a-demo-1",
+      nome: "Aluno Demo 1",
+      primeiro_nome: "Aluno Demo 1",
       ano_escolar: "2º ano",
-      turma: "211 CAIC",
+      turma: "Turma Demo A",
       cid: "F84.0",
       condicao_label: "TEA Nível 1",
-      mediadora: { nome: "Tereza Almeida", frequencia: "diária" },
+      mediadora: { nome: "Mediadora Demo", frequencia: "diária" },
       anamnese_eixos_preenchidos: 14,
       anamnese_eixos_total: 16,
       pei_status: "completo" as const,
       adaptacoes_registradas: 14,
     },
     {
-      id: "a-caio",
-      nome: "Caio Fernandes",
-      primeiro_nome: "Caio",
+      id: "a-demo-2",
+      nome: "Aluno Demo 2",
+      primeiro_nome: "Aluno Demo 2",
       ano_escolar: "2º ano",
-      turma: "211 CAIC",
+      turma: "Turma Demo A",
       cid: "F90",
       condicao_label: "TDAH",
       mediadora: null,
