@@ -4,6 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 export type FocoAluno = { id: string; nome: string; condicao: string | null };
 export type FocoAula = { disciplina: string; quando: string; tempo_restante: string; data_aula: string };
 export type FocoSugestao = { tipo: string; tempo_geracao: string; fonte: string };
+/**
+ * CONTRATO DA RESPOSTA — idêntico ao que uma futura server route
+ * `GET /api/sofia/foco-do-dia` deverá devolver. Não adicione/renomeie
+ * campos sem atualizar o server e o componente <SofiaFocoCard /> juntos.
+ */
 export type FocoDoDia = {
   exibir: boolean;
   motivo?: "sem_aula" | "sem_alunos" | "ok";
@@ -11,7 +16,6 @@ export type FocoDoDia = {
   aula?: FocoAula;
   sugestao?: FocoSugestao;
   prompt_pre_preenchido?: string;
-  storage_key?: string;
 };
 
 type Student = {
@@ -104,6 +108,28 @@ function pickAluno(students: Student[], aulaId: string, turma?: string): { aluno
   return { aluno: pool[0], razao: "generico" };
 }
 
+/**
+ * TODO: migrar para createServerFn quando alunos/agenda forem para o Supabase.
+ *
+ * Contrato esperado da futura server route `GET /api/sofia/foco-do-dia`
+ * (createServerFn({ method: "GET" }) com middleware `requireSupabaseAuth`):
+ *
+ *   Input  — nenhum (usa o usuário autenticado para resolver alunos/agenda).
+ *   Output — `FocoDoDia` (vide tipo acima). Mesmas chaves, mesmos tipos.
+ *            • `exibir: false` quando não houver aula na janela de 120min,
+ *              quando o professor não tiver alunos ou quando a sugestão já
+ *              tiver sido dispensada na sessão (controle anti-repetição
+ *              continua sendo do cliente, via sessionStorage).
+ *            • `aluno`, `aula`, `sugestao`, `prompt_pre_preenchido` populados
+ *              somente quando `exibir: true`.
+ *
+ * Quando migrar:
+ *   1. Mover esta função para `src/server/sofia-foco.server.ts` com a mesma
+ *      assinatura, lendo `students`/`agenda` via `supabase` do middleware.
+ *   2. Trocar `useFocoDoDia` para usar `useQuery({ queryFn: getFocoDoDia })`
+ *      mantendo o mesmo shape de retorno — nenhum componente da UI muda.
+ *   3. O cliente continua dono do dismiss (sessionStorage `sofia_foco_dismissed_*`).
+ */
 function buildFoco(students: Student[]): FocoDoDia {
   if (students.length === 0) return { exibir: false, motivo: "sem_alunos" };
   const aula = getProximaAula(students);
@@ -150,6 +176,9 @@ function buildFoco(students: Student[]): FocoDoDia {
 
 export function useFocoDoDia() {
   const [foco, setFoco] = useState<FocoDoDia>({ exibir: false });
+  // `storageKey` é estado puramente do cliente (anti-repetição via sessionStorage)
+  // e por isso fica FORA do contrato `FocoDoDia` que será espelhado pelo server.
+  const [storageKey, setStorageKey] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
@@ -175,23 +204,25 @@ export function useFocoDoDia() {
     const next = buildFoco(students);
     if (next.exibir && next.aluno && next.aula && userId) {
       const key = `sofia_foco_dismissed_${userId}_${next.aluno.id}_${next.aula.data_aula}`;
-      next.storage_key = key;
+      setStorageKey(key);
       try {
         if (window.sessionStorage.getItem(key)) {
           setFoco({ exibir: false, motivo: "ok" });
           return;
         }
       } catch { /* ignore */ }
+    } else {
+      setStorageKey(null);
     }
     setFoco(next);
   }, [userId, tick]);
 
   const dismiss = useCallback(() => {
-    if (foco.storage_key) {
-      try { window.sessionStorage.setItem(foco.storage_key, "1"); } catch { /* ignore */ }
+    if (storageKey) {
+      try { window.sessionStorage.setItem(storageKey, "1"); } catch { /* ignore */ }
     }
     setFoco({ exibir: false, motivo: "ok" });
-  }, [foco.storage_key]);
+  }, [storageKey]);
 
   return { foco, dismiss, refetch: () => setTick((t) => t + 1) };
 }
