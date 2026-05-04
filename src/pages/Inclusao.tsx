@@ -760,7 +760,7 @@ export function Inclusao() {
     } else {
       const cidTxt = selected.cid && selected.cid !== "nao_informado" ? selected.cid : "";
       const condTxt = selected.diag || "perfil singular";
-      const med = selected.mediadora ? `mediadora ${selected.mediadora}` : "sem mediadora";
+      const med = "apoio AEE/mediadora se houver";
       message = `Tô vendo o perfil do(a) ${firstName}. ${condTxt}${cidTxt ? ` (${cidTxt})` : ""} e ${med} já é boa base. Pra eu sugerir adaptações reais preciso da Anamnese — 8 minutos guiados. Topa?`;
       actionLabel = "Começar Anamnese";
       actionPrompt = `Vamos começar a Anamnese de ${selected.name}, eixo por eixo.`;
