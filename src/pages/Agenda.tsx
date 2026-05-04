@@ -734,22 +734,7 @@ export function Agenda() {
             </div>
 
             <div className="ag-col-side">
-              <div className="ag-sofia-card">
-                <div className="ag-sofia-head">
-                  <div className="ag-sofia-avatar">S</div>
-                  <div className="ag-sofia-name">Sofia <small>Sua assistente · online</small></div>
-                </div>
-                <div className="ag-sofia-msg">
-                  Olá! Conforme você cadastra eventos, reuniões e prazos, eu vou preparar pautas e materiais automaticamente.
-                </div>
-                <div className="ag-sofia-actions" />
-              </div>
-
-              <div className="ag-stat-card">
-                <div className="ag-stat-head"><Clock size={11} style={{ display: "inline", marginRight: 4 }} />Você esta semana</div>
-                <div className="ag-stat-big">0min <small>economizadas</small></div>
-                <div className="ag-stat-desc">Conforme você usa a Sofia, o tempo economizado aparece aqui.</div>
-              </div>
+              <AgendaSofiaSide />
 
               <div className="ag-up-card">
                 <div className="ag-up-head">
