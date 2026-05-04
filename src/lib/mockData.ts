@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { getMockAccount, subscribeMockAccount, PRO_DATASET, type MockAccount } from "./sofia/mockAccount";
+import { brHour } from "./datetime";
 
 export type UserContext = {
   name: string;
@@ -80,8 +81,6 @@ export const useUser = (): UserContext => {
   }, []);
   return buildUser(account);
 };
-
-import { brHour } from "./datetime";
 
 export const greeting = (name: string) => {
   const h = brHour();
