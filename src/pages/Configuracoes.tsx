@@ -125,6 +125,7 @@ export function Configuracoes() {
               </button>
             </div>
           </section>
+          </div>
         </main>
       </div>
     </div>
