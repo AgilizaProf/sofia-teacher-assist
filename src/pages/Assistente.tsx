@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil, Clock,
@@ -7,8 +7,8 @@ import {
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
-import { askSofia } from "@/server/sofia.functions";
 import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
+import { useSofia } from "@/components/sofia/SofiaProvider";
 
 const css = `
 .ap-root{
@@ -194,28 +194,44 @@ const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string
 
 export function Assistente() {
   const navigate = useNavigate();
-  const [text, setText] = useState("");
+  const sofia = useSofia();
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
-  type ChatMsg = { role: "user" | "assistant"; content: string; issues?: Array<{ term: string; suggestion: string; principle: string }> };
-  const [messages, setMessages] = useState<ChatMsg[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = window.localStorage.getItem("sofia_chat");
-      if (raw) return JSON.parse(raw);
-    } catch { /* ignore */ }
-    return [];
-  });
-  useEffect(() => {
-    try { window.localStorage.setItem("sofia_chat", JSON.stringify(messages)); } catch { /* ignore */ }
-  }, [messages]);
-  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const messages = sofia.messages;
+  const loading = sofia.loading;
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
-  const handleNew = () => { setText(""); setMessages([]); };
+  // Carrega lista de conversas ao montar
+  useEffect(() => { sofia.refreshConversations(); }, [sofia.refreshConversations]);
+
+  const handleNew = () => { sofia.startNew(); };
+
+  const sendMessage = (raw?: string) => {
+    const content = (raw ?? sofia.draft).trim();
+    if (!content || loading) return;
+    sofia.send(content);
+  };
+
+  // Agrupa conversas por data
+  const { today, week, older } = useMemo(() => {
+    const now = Date.now();
+    const t: typeof sofia.conversations = [];
+    const w: typeof sofia.conversations = [];
+    const o: typeof sofia.conversations = [];
+    const filter = search.trim().toLowerCase();
+    for (const c of sofia.conversations) {
+      if (filter && !(c.title || "").toLowerCase().includes(filter)) continue;
+      const age = now - new Date(c.updated_at).getTime();
+      if (age < 24 * 3600 * 1000) t.push(c);
+      else if (age < 7 * 24 * 3600 * 1000) w.push(c);
+      else o.push(c);
+    }
+    return { today: t, week: w, older: o };
+  }, [sofia.conversations, search]);
 
   const sendMessage = async (raw?: string) => {
     const content = (raw ?? text).trim();
@@ -374,8 +390,8 @@ export function Assistente() {
               <div className="composer-wrap">
                 <div className="composer">
                   <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    value={sofia.draft}
+                    onChange={(e) => sofia.setDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                     placeholder="Pergunte qualquer coisa pedagógica... ex: 'crie um plano de aula sobre frações para o 4º ano'"
                     aria-label="Mensagem para a Sofia"
@@ -421,22 +437,67 @@ export function Assistente() {
 
           <div className="history-search">
             <Search size={13} color="#7a8194" />
-            <input placeholder="Buscar conversa..." aria-label="Buscar conversa" />
+            <input
+              placeholder="Buscar conversa..."
+              aria-label="Buscar conversa"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
-          <div className="history-section">Hoje</div>
-          {HISTORY_TODAY.length === 0 && (
-            <div className="empty-today" style={{ padding: "0 16px 8px", fontSize: 12, color: "var(--muted)" }}>Nenhuma conversa hoje.</div>
-          )}
-
-          <div className="history-section">Esta semana</div>
-          <div className="history-list">
-            {HISTORY_WEEK.map((it, i) => (
-              <button className="h-item" key={i}>
-                <div className="h-icon">{it.icon}</div>
-                <div>
-                  <div className="h-text">{it.text}</div>
-                  <div className="h-meta">{it.meta}</div>
+          <div className="history-list" style={{ flex: 1 }}>
+            {!sofia.isAuthed && (
+              <div style={{ padding: "8px 16px", fontSize: 12, color: "var(--muted)" }}>
+                Faça login para ver suas conversas.
+              </div>
+            )}
+            {sofia.isAuthed && sofia.conversations.length === 0 && (
+              <div style={{ padding: "8px 16px", fontSize: 12, color: "var(--muted)" }}>
+                Suas conversas com a Sofia aparecerão aqui.
+              </div>
+            )}
+            {today.length > 0 && <div className="history-section">Hoje</div>}
+            {today.map((c) => (
+              <button
+                key={c.id}
+                className="h-item"
+                onClick={() => sofia.loadConversation(c.id)}
+                style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
+              >
+                <div className="h-icon"><FileText size={13} /></div>
+                <div style={{ minWidth: 0 }}>
+                  <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
+                  <div className="h-meta">{new Date(c.updated_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
+                </div>
+              </button>
+            ))}
+            {week.length > 0 && <div className="history-section">Esta semana</div>}
+            {week.map((c) => (
+              <button
+                key={c.id}
+                className="h-item"
+                onClick={() => sofia.loadConversation(c.id)}
+                style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
+              >
+                <div className="h-icon"><FileText size={13} /></div>
+                <div style={{ minWidth: 0 }}>
+                  <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
+                  <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</div>
+                </div>
+              </button>
+            ))}
+            {older.length > 0 && <div className="history-section">Anteriores</div>}
+            {older.map((c) => (
+              <button
+                key={c.id}
+                className="h-item"
+                onClick={() => sofia.loadConversation(c.id)}
+                style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
+              >
+                <div className="h-icon"><FileText size={13} /></div>
+                <div style={{ minWidth: 0 }}>
+                  <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
+                  <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR")}</div>
                 </div>
               </button>
             ))}
