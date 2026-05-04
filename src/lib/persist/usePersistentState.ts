@@ -29,9 +29,7 @@ export function usePersistentState<T>(key: string, initial: T) {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(lsKey, JSON.stringify(state));
-      const ts = Date.now();
-      window.localStorage.setItem(lsKey + ":ts", String(ts));
-      lastLocalUpdate.current = ts as unknown as number;
+      window.localStorage.setItem(lsKey + ":ts", String(Date.now()));
     } catch { /* ignore */ }
   }, [state, lsKey]);
 
@@ -61,7 +59,7 @@ export function usePersistentState<T>(key: string, initial: T) {
       try {
         await supabase
           .from("app_snapshots")
-          .upsert({ user_id: uid, key, data: value as object, updated_at: new Date().toISOString() }, { onConflict: "user_id,key" });
+          .upsert([{ user_id: uid, key, data: value as object, updated_at: new Date().toISOString() }], { onConflict: "user_id,key" });
       } catch { /* ignore */ }
     }, 800);
   }, [key]);
