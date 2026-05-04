@@ -5,7 +5,8 @@ import { useUser, greeting } from "@/lib/mockData";
 import { updateLoginStreak } from "@/lib/datetime";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { useSofia } from "@/components/sofia/SofiaProvider";
-import { SofiaSuggestionCard, SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
+import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
+import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 
 const css = `
@@ -384,7 +385,11 @@ export function Dashboard() {
             </div>
           </section>
 
-          {!onboardingDone && <DashboardFocoHero />}
+          {!onboardingDone && (
+            <div style={{ marginBottom: 18 }}>
+              <SofiaFocoCard showEmptyFallback />
+            </div>
+          )}
 
           <div className="stats">
             <button
@@ -779,13 +784,6 @@ export function Dashboard() {
       </div>
     </div>
   );
-}
-
-function DashboardFocoHero() {
-  const { suggestions } = useSofiaSuggestions("home");
-  const item = suggestions[0];
-  if (!item) return null;
-  return <div style={{ marginBottom: 18 }}><SofiaSuggestionCard suggestion={item} variant="hero" /></div>;
 }
 
 function DashboardCmdkSuggestions() {
