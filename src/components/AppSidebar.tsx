@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type React from "react";
+import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 
 export const sidebarCss = `
 .ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
@@ -30,6 +31,15 @@ export const sidebarCss = `
 .sb-plan-btn{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#FF6A2C;color:#fff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:700;border:none;cursor:pointer;}
 .sb-plan-btn:hover{filter:brightness(1.05);}
 .sb-version{font-size:10px;color:rgba(255,255,255,.30);text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;}
+.sb-bruna{margin:0 10px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 10px;display:flex;gap:10px;align-items:center;cursor:pointer;transition:.2s;color:#fff;text-align:left;width:calc(100% - 20px);}
+.sb-bruna:hover{background:rgba(255,122,69,.10);border-color:rgba(255,122,69,.32);}
+.sb-bruna .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#FF9466,#C2410C);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0;}
+.sb-bruna .nm{font-size:11.5px;font-weight:700;line-height:1.2;}
+.sb-bruna .sub{font-size:9.5px;color:rgba(255,255,255,.55);margin-top:1px;}
+.sb-bruna .live{display:inline-flex;align-items:center;gap:4px;font-size:8.5px;font-weight:800;color:#fff;background:#FF7A45;padding:2px 5px;border-radius:4px;letter-spacing:.04em;margin-top:4px;}
+.sb-bruna .live::before{content:"";width:5px;height:5px;border-radius:50%;background:#fff;animation:ap-pulse 2s infinite;}
+.sb-bruna-locked{margin:0 10px 10px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.16);border-radius:10px;padding:9px 10px;font-size:10.5px;color:rgba(255,255,255,.55);line-height:1.35;}
+.sb-bruna-locked b{color:rgba(255,255,255,.85);font-weight:700;display:block;font-size:11px;margin-bottom:2px;}
 @media(max-width:1100px){.ap-sidebar{width:72px;}.sb-logo-text,.sb-cmdk,.sb-section-label,.sb-shortcut,.sb-badge,.sb-version,.sb-plan,.sb-foot,.sb-item span:not(.sb-shortcut):not(.sb-badge){display:none;}.sb-head{justify-content:center;padding:16px 8px;}.sb-item{justify-content:center;}}
 @media(max-width:820px){.ap-sidebar{display:none;}}
 `;
@@ -42,6 +52,13 @@ export type SidebarKey = "home" | "assistant" | "planning" | "reports" | "inclus
 
 export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: () => void }) {
   const cls = (k: SidebarKey) => "sb-item" + (active === k ? " active" : "");
+  const ctx = useSofiaContext();
+  const isPro = ctx.user.plano === "pro";
+  const openMentoria = () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("sofia:intent", { detail: { intent: "abrir_mentoria_bruna" } }));
+    }
+  };
   return (
     <aside className="ap-sidebar">
       <div className="sb-head">
@@ -102,6 +119,21 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
+        {isPro ? (
+          <button className="sb-bruna" onClick={openMentoria} aria-label="Abrir mentoria com Bruna Cassaro">
+            <div className="av">BC</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="nm">Bruna Cassaro</div>
+              <div className="sub">Mentoria pedagógica</div>
+              <span className="live">🔴 LIVE QUINTA 16h</span>
+            </div>
+          </button>
+        ) : (
+          <div className="sb-bruna-locked" role="note">
+            <b>🔒 Mentoria com Bruna Cassaro</b>
+            Disponível no PRO
+          </div>
+        )}
       </div>
     </aside>
   );

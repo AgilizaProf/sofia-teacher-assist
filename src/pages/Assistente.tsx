@@ -12,6 +12,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
+import { AppHeader } from "@/components/layout/AppHeader";
 
 const css = `
 .ap-root{
@@ -247,31 +248,14 @@ export function Assistente() {
         <AppSidebar active="assistant" />
 
         <section className="ai-main">
-          <header className="ai-topbar">
-            <div className="ai-crumbs">
-              <b>Sua sala</b>
-              <span className="sep">›</span>
-              <span>Assistente IA</span>
-            </div>
-            <div className="sofia-id">
-              <div className="sofia-avatar-token sofia-avatar-token--md"><Sparkles size={18} /></div>
-              <div>
-                <div className="sofia-name">Sofia <span className="tag-beta">IA · BETA</span></div>
-                <div className="sofia-sub"><span className="dot-online" /> Sua assistente pedagógica · online agora</div>
-              </div>
-            </div>
-            <div className="topbar-right">
-              <div className="credits" title="Créditos do mês">
-                <div className="ring" style={{ ['--p' as never]: ctx.user.creditos_total > 0 ? Math.round((ctx.user.creditos_usados / ctx.user.creditos_total) * 100) : 0 }} />
-                <div>
-                  <b>{ctx.user.creditos_usados.toLocaleString("pt-BR")}<span style={{ color: "var(--muted)", fontWeight: 500 }}>/{ctx.user.creditos_total.toLocaleString("pt-BR")}</span></b>
-                  <small>CRÉDITOS · {mesAtual}</small>
-                </div>
-              </div>
-              <button className="icon-btn" aria-label="Compartilhar"><Share2 size={16} /></button>
-              <button className="icon-btn" aria-label="Ajuda"><HelpCircle size={16} /></button>
-            </div>
-          </header>
+          <AppHeader
+            actions={
+              <>
+                <button className="ah-icon" aria-label="Compartilhar"><Share2 size={16} /></button>
+                <button className="ah-icon" aria-label="Ajuda"><HelpCircle size={16} /></button>
+              </>
+            }
+          />
 
           <div className="ai-context">
             <span className="ctx-label">Contexto ativo:</span>

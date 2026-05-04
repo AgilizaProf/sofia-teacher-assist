@@ -5,6 +5,7 @@ import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
+import { AppHeader } from "@/components/layout/AppHeader";
 
 const css = `
 .ag-root{
@@ -550,21 +551,19 @@ export function Agenda() {
       <div className="ag-app">
         <AppSidebar active="agenda" />
         <main className="ag-main">
-          <div className="ag-topbar">
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ag-breadcrumb">
-                <b>Sua sala</b><span className="sep">›</span>
-                <span>Agenda</span><span className="sep">›</span>
-                <span>{headerLabel}</span>
-              </div>
-              <h1 className="ag-title">Agenda · Radar pedagógico</h1>
-              <div className="ag-meta">
-                <span><b>{counts.weekCount} {counts.weekCount === 1 ? "evento" : "eventos"}</b> esta semana</span>
-              </div>
-            </div>
-            <div className="ag-actions">
-              <button className="ag-btn"><Filter size={14} /> Filtrar</button>
-              <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
+          <AppHeader
+            breadcrumb={[{ label: "Sua sala" }, { label: "Agenda" }, { label: headerLabel }]}
+            actions={
+              <>
+                <button className="ag-btn"><Filter size={14} /> Filtrar</button>
+                <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
+              </>
+            }
+          />
+          <div style={{ padding: "16px 32px 0" }}>
+            <h1 className="ag-title" style={{ margin: 0 }}>Agenda · Radar pedagógico</h1>
+            <div className="ag-meta">
+              <span><b>{counts.weekCount} {counts.weekCount === 1 ? "evento" : "eventos"}</b> esta semana</span>
             </div>
           </div>
 

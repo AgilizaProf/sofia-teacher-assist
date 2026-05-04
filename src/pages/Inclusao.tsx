@@ -13,6 +13,7 @@ import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { AppHeader } from "@/components/layout/AppHeader";
 
 const css = `
 .inc-root{
@@ -857,45 +858,57 @@ export function Inclusao() {
         <AppSidebar active="inclusion" />
 
         <main className="inc-main">
-          <div className="inc-topbar">
-            <div className="inc-crumbs">
-              <b className="now">Sua sala</b>
-              <span className="sep">›</span>
-              {view === "list" ? (
-                <span>Inclusão</span>
-              ) : (
-                <>
-                  <a onClick={() => goView("list")}>Inclusão</a>
-                  <span className="sep">›</span>
-                  <a onClick={() => goView("list")}>{selected?.turma || "Aluno"}</a>
-                  <span className="sep">›</span>
-                  <span>{selected?.name || "—"}</span>
-                </>
-              )}
-            </div>
-            <div className="inc-spacer" />
-            {view === "detail" && selected && (
-              <SofiaContextChip
-                context={`o PEI de ${selected.name}`}
-                suggestion={`Me ajude com o PEI de ${selected.name}. O que é mais urgente agora?`}
-                hiddenContext={`Aluno: ${selected.name} · ${selected.diag} · ${selected.turma} · Inclusão`}
+          {(() => {
+            const alunoCtx = sofiaCtx.entity.aluno_atual;
+            const eixos = alunoCtx?.anamnese_eixos_preenchidos ?? 0;
+            const proxAula = sofiaCtx.dataState.proxima_aula;
+            const adaptarDisabled = eixos < 4 || !proxAula;
+            const adaptarTooltip = "Disponível após Anamnese 4/16 + planejamento da semana cadastrado";
+            const crumbs =
+              view === "list"
+                ? [{ label: "Sua sala" }, { label: "Inclusão" }]
+                : [
+                    { label: "Sua sala" },
+                    { label: "Inclusão", onClick: () => goView("list") },
+                    { label: selected?.turma || "Aluno", onClick: () => goView("list") },
+                    { label: selected?.name || "—" },
+                  ];
+            return (
+              <AppHeader
+                breadcrumb={crumbs}
+                secondaryStatus={view === "detail" && selected ? "PEI ainda não criado · comece pela Anamnese" : null}
+                actions={
+                  <>
+                    {view === "detail" && (
+                      <button
+                        className="inc-btn-ghost"
+                        disabled={adaptarDisabled}
+                        title={adaptarDisabled ? adaptarTooltip : "Adaptar a próxima aula com a Sofia"}
+                        style={adaptarDisabled ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
+                        onClick={() => {
+                          if (adaptarDisabled) return;
+                          sofia.openSofia({
+                            prompt: `Adapte a aula de ${proxAula!.disciplina} para ${selected!.name}.`,
+                            send: false,
+                          });
+                        }}
+                      >
+                        <Sparkles size={14} /> Adaptar aula de hoje
+                      </button>
+                    )}
+                    <button className="inc-btn-ghost" onClick={() => setTutorialOpen(true)}>
+                      <HelpCircle size={14} /> Tutorial Inclusão
+                    </button>
+                    {view === "detail" && (
+                      <button className="inc-btn-ghost" onClick={() => setPeiOpen(true)}>
+                        <Download size={14} /> Exportar PEI
+                      </button>
+                    )}
+                  </>
+                }
               />
-            )}
-            {view === "list" && (
-              <SofiaContextChip
-                context="a lista de alunos da Inclusão"
-                suggestion="Quais alunos da Inclusão precisam de atenção esta semana?"
-                hiddenContext="Tela: Inclusão · lista de alunos"
-              />
-            )}
-            {view === "detail" && selected && (
-              <div className="inc-status-pill"><span className="dot" /> PEI ainda não criado · comece pela Anamnese</div>
-            )}
-            <button className="inc-btn-ghost" onClick={() => setTutorialOpen(true)}><HelpCircle size={14} /> Tutorial Inclusão</button>
-            {view === "detail" && (
-              <button className="inc-btn-ghost" onClick={() => setPeiOpen(true)}><Download size={14} /> Exportar PEI</button>
-            )}
-          </div>
+            );
+          })()}
 
           <div className="inc-content">
             {view === "list" && (

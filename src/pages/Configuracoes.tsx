@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Shield, ChevronDown, Download } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/layout/AppHeader";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 
 const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: string }> = [
@@ -38,11 +39,13 @@ export function Configuracoes() {
       <style dangerouslySetInnerHTML={{ __html: sidebarCss }} />
       <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", minHeight: "100vh" }}>
         <AppSidebar active="settings" />
-        <main style={{ padding: "32px 36px", maxWidth: 920, width: "100%" }}>
-          <header style={{ marginBottom: 24 }}>
+        <main style={{ width: "100%" }}>
+          <AppHeader />
+          <div style={{ padding: "24px 36px 0", maxWidth: 920 }}>
             <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 700, margin: 0 }}>Configurações</h1>
             <p style={{ color: "#6B7691", fontSize: 14, marginTop: 4 }}>Ajustes da sua conta e princípios da Sofia.</p>
-          </header>
+          </div>
+          <div style={{ padding: "16px 36px 32px", maxWidth: 920 }}>
 
           <section aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
@@ -122,6 +125,7 @@ export function Configuracoes() {
               </button>
             </div>
           </section>
+          </div>
         </main>
       </div>
     </div>
