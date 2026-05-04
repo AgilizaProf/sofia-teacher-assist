@@ -398,21 +398,9 @@ export function Planejamento() {
       <div className="pl-app">
         <AppSidebar active="planning" />
         <div className="pl-main">
-          <div className="pl-topbar">
-            <div className="pl-crumbs">
-              <strong>Sua sala</strong><span className="sep">›</span>
-              <span>Planejamento</span><span className="sep">›</span>
-              <span>{cfg.crumb}</span>
-            </div>
-            <div className="pl-top-meta">
-              <SofiaContextChip
-                context={`o planejamento — ${cfg.crumb}`}
-                suggestion={`Me ajude com ${cfg.crumb.toLowerCase()}. O que devo priorizar agora?`}
-                hiddenContext={`Tela: Planejamento · ${cfg.crumb}`}
-              />
-              <div className="av" title="Você">P</div>
-            </div>
-          </div>
+          <AppHeader
+            breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }, { label: cfg.crumb }]}
+          />
 
           {/* HERO */}
           <div className="pl-hero">
