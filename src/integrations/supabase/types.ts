@@ -161,6 +161,33 @@ export type Database = {
         }
         Relationships: []
       }
+      app_snapshots: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pareceres: {
         Row: {
           aluno_client_id: string | null
