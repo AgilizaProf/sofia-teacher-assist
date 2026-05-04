@@ -12,6 +12,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
+import { AppHeader } from "@/components/layout/AppHeader";
 
 const css = `
 .ap-root{
