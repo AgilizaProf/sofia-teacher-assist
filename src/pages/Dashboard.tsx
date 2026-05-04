@@ -8,6 +8,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
+import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 
 const css = `
 .ap-root{
@@ -335,6 +336,7 @@ export function Dashboard() {
               )}
             </div>
             <div className="topbar-actions">
+              <SofiaActiveChip />
               <button className="icon-action" aria-label="Buscar" onClick={() => setCmdk(true)}>
                 <Svg c={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />
               </button>

@@ -10,6 +10,7 @@ import ReactMarkdown from "react-markdown";
 import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
+import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 
 const css = `
 .ap-root{
@@ -266,7 +267,7 @@ export function Assistente() {
 
           <div className="ai-context">
             <span className="ctx-label">Contexto ativo:</span>
-            <span className="chip blue"><span className="d" />Adicione contexto pra Sofia te ajudar melhor</span>
+            <SofiaActiveChip />
             <button className="edit-context" aria-label="Editar contexto"><Pencil size={13} /> Editar contexto</button>
           </div>
 
