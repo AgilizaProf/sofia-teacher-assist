@@ -179,9 +179,6 @@ const css = `
 @media(max-width:820px){.ai-app,.ai-app.collapsed{grid-template-columns:1fr;}.history{display:none;}.greet{font-size:30px;}}
 `;
 
-const HISTORY_TODAY: Array<{ icon: React.ReactNode; text: string; meta: string }> = [];
-const HISTORY_WEEK: Array<{ icon: React.ReactNode; text: string; meta: string }> = [];
-
 type TaskTab = "Mais usadas" | "Inclusão" | "Avaliação" | "Tudo";
 const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string; top?: boolean }> = [
   { emoji: "📚", name: "Plano de aula", desc: "BNCC alinhado, com objetivos e avaliação", shortcut: "⌘ + 1", top: true },
