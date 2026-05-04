@@ -38,7 +38,7 @@ export const askSofia = createServerFn({ method: "POST" })
       const title = firstUser.slice(0, 80);
       const { data: conv, error } = await supabase
         .from("sofia_conversations")
-        .insert({ user_id: userId, title, origin_route: data.originRoute, context: data.routeContext ? { route: data.routeContext } : {} })
+        .insert([{ user_id: userId, title, origin_route: data.originRoute ?? null, context: data.routeContext ? { route: data.routeContext } : {} }])
         .select("id")
         .single();
       if (error || !conv) throw new Error("Falha ao criar conversa: " + (error?.message || ""));
@@ -48,12 +48,12 @@ export const askSofia = createServerFn({ method: "POST" })
     // persist last user message
     const lastUser = [...data.messages].reverse().find((m) => m.role === "user");
     if (lastUser) {
-      await supabase.from("sofia_messages").insert({
+      await supabase.from("sofia_messages").insert([{
         conversation_id: conversationId,
         user_id: userId,
         role: "user",
         content: lastUser.content,
-      });
+      }]);
     }
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -72,13 +72,13 @@ export const askSofia = createServerFn({ method: "POST" })
     const raw = json.choices?.[0]?.message?.content || "";
     const { ok, issues, sanitized } = validateSofiaOutput(raw);
 
-    await supabase.from("sofia_messages").insert({
+    await supabase.from("sofia_messages").insert([{
       conversation_id: conversationId,
       user_id: userId,
       role: "assistant",
       content: sanitized,
       issues: issues && issues.length ? issues : null,
-    });
+    }]);
 
     return { conversationId, content: sanitized, issues, sanitizedApplied: !ok };
   });
