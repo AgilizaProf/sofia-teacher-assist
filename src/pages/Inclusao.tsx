@@ -8,6 +8,7 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { toast } from "sonner";
+import { useSofia } from "@/components/sofia/SofiaProvider";
 
 const css = `
 .inc-root{
@@ -604,6 +605,7 @@ export function Inclusao() {
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
+  const sofia = useSofia();
   const [peiOpen, setPeiOpen] = useState(false);
   const [anamPrintOpen, setAnamPrintOpen] = useState(false);
   const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
@@ -895,7 +897,7 @@ export function Inclusao() {
                   </div>
                   <div className="hero-r">
                     <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> Ver PEI completo</button>
-                    <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Adaptar aula de hoje</button>
+                     <button className="btn btn-primary" onClick={() => sofia.openSofia({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> Adaptar aula de hoje</button>
                   </div>
                 </div>
 
@@ -1006,10 +1008,10 @@ export function Inclusao() {
                         </div>
                         <p className="sofia-q">"Posso te ajudar com {selected.name.split(" ")[0]} agora. O que faz mais sentido?"</p>
                         <div className="sofia-actions">
-                          <button className="sofia-action" onClick={() => setAdaptOpen(true)}><Sparkles size={14} className="ico" /> Adaptar aula de hoje <span className="arrow">›</span></button>
-                          <button className="sofia-action" onClick={() => setActiveTab("plan")}><FileText size={14} className="ico" /> Gerar plano de aula adaptado <span className="arrow">›</span></button>
-                          <button className="sofia-action" onClick={() => setActiveTab("rel")}><BookOpen size={14} className="ico" /> Gerar parecer descritivo bimestral <span className="arrow">›</span></button>
-                          <button className="sofia-action"><Send size={14} className="ico" /> Preparar reunião com família <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => sofia.openSofia({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno: ${selected.name}` })}><Sparkles size={14} className="ico" /> Adaptar aula de hoje <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => sofia.openSofia({ prompt: `Gere um plano de aula adaptado para ${selected.name}`, context: `Aluno: ${selected.name}` })}><FileText size={14} className="ico" /> Gerar plano de aula adaptado <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => sofia.openSofia({ prompt: `Gere um parecer descritivo bimestral para ${selected.name}`, context: `Aluno: ${selected.name}` })}><BookOpen size={14} className="ico" /> Gerar parecer descritivo bimestral <span className="arrow">›</span></button>
+                          <button className="sofia-action" onClick={() => sofia.openSofia({ prompt: `Me ajuda a preparar uma reunião com a família de ${selected.name}`, context: `Aluno: ${selected.name}` })}><Send size={14} className="ico" /> Preparar reunião com família <span className="arrow">›</span></button>
                         </div>
                       </div>
 
