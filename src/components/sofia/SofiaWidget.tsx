@@ -230,12 +230,12 @@ export function SofiaWidget() {
                 value={s.draft}
                 onChange={(e) => s.setDraft(e.target.value)}
                 onKeyDown={onKey}
-                placeholder={s.isAuthed ? "Pergunte algo à Sofia…" : "Faça login para conversar"}
-                disabled={!s.isAuthed || s.loading}
+                placeholder="Pergunte algo à Sofia…"
+                disabled={s.loading}
               />
               <div className="sofia-composer-row">
                 <span className="sofia-composer-hint">Enter para enviar · Shift+Enter para quebrar linha</span>
-                <button className="sofia-send" onClick={() => s.send()} disabled={!s.draft.trim() || s.loading || !s.isAuthed}>
+                <button className="sofia-send" onClick={() => s.send()} disabled={!s.draft.trim() || s.loading}>
                   <Send size={13} /> Enviar
                 </button>
               </div>
