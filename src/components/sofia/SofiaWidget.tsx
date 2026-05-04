@@ -193,11 +193,24 @@ export function SofiaWidget() {
                   </div>
                 </div>
               ) : (
-                s.messages.map((m, i) => (
-                  <div key={i} className={"sofia-msg " + m.role}>
-                    {m.role === "assistant" ? <ReactMarkdown>{m.content}</ReactMarkdown> : m.content}
-                  </div>
-                ))
+                <>
+                  {s.messages.length > 6 && (
+                    <button
+                      onClick={() => { s.setOpen(false); navigate({ to: "/assistente" }); }}
+                      style={{
+                        alignSelf: "center", background: "transparent", border: "1px dashed #E7E9EF",
+                        color: "#6B7691", fontSize: 11.5, padding: "6px 10px", borderRadius: 8, cursor: "pointer",
+                      }}
+                    >
+                      Ver {s.messages.length - 6} mensagens anteriores na conversa completa →
+                    </button>
+                  )}
+                  {s.messages.slice(-6).map((m, i) => (
+                    <div key={i} className={"sofia-msg " + m.role}>
+                      {m.role === "assistant" ? <ReactMarkdown>{m.content}</ReactMarkdown> : m.content}
+                    </div>
+                  ))}
+                </>
               )}
               {s.loading && (
                 <div className="sofia-typing"><span /><span /><span /></div>

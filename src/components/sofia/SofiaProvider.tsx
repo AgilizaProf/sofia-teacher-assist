@@ -100,6 +100,10 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const [proactive, setProactive] = useState<SofiaProactive | null>(null);
   const proactiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingAutoSend = useRef<string | null>(null);
+  // Marcador invisível de navegação — anexado ao próximo envio.
+  // Não vira mensagem visível; é mandado via routeContext extra.
+  const pendingRouteMarker = useRef<string | null>(null);
+  const lastRouteMarker = useRef<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -118,6 +122,16 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { if (isAuthed && open) refreshConversations(); }, [isAuthed, open, refreshConversations]);
 
+  // Quando a professora navega entre telas com uma conversa ativa,
+  // registra um marcador invisível para a próxima pergunta.
+  useEffect(() => {
+    if (!conversationId) return;
+    const marker = `[professora navegou para ${routeName} — ${loc.pathname}]`;
+    if (marker === lastRouteMarker.current) return;
+    lastRouteMarker.current = marker;
+    pendingRouteMarker.current = marker;
+  }, [loc.pathname, routeName, conversationId]);
+
   const send = useCallback(async (raw?: string) => {
     const text = (raw ?? draft).trim();
     if (!text || loading) return;
@@ -129,12 +143,18 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     setMessages(next);
     setDraft("");
     setLoading(true);
+    // Compõe o routeContext com o marcador invisível, se houver.
+    const marker = pendingRouteMarker.current;
+    pendingRouteMarker.current = null;
+    const composedRouteContext = marker
+      ? `${routeContext}\n${marker}`
+      : routeContext;
     try {
       const data = await askSofia({
         data: {
           conversationId: conversationId ?? undefined,
           messages: next.map(({ role, content }) => ({ role, content })),
-          routeContext,
+          routeContext: composedRouteContext,
           originRoute: loc.pathname,
         },
       });
