@@ -9,6 +9,7 @@ import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
+import { AppHeader } from "@/components/layout/AppHeader";
 
 const css = `
 .ap-root{
