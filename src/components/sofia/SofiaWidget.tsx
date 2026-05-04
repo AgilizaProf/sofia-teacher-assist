@@ -192,9 +192,6 @@ export function SofiaWidget() {
                   </div>
                   <h3>{greeting()}, professora 👋</h3>
                   <p>Vamos juntas? Posso preparar um <span className="sofia-em">parecer em ~4 min</span>, um <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação inclusiva — escolha por onde começar.</p>
-                  {!s.isAuthed && (
-                    <p style={{ marginTop: 12, color: "var(--sofia-primary)", fontWeight: 700 }}>Faça login para conversar comigo.</p>
-                  )}
                   <div className="sofia-suggest">
                     {SUGGESTIONS.map((q) => (
                       <button key={q} className="sofia-sg-btn" onClick={() => s.send(q)}>
