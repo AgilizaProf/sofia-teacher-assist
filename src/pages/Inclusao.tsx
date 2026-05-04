@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
