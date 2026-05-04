@@ -9,6 +9,7 @@ export type SofiaSuggestion = {
   prompt: string;
   context?: string;
   actionLabel?: string;
+  priority?: "urgent" | "recommended" | "info";
 };
 
 type Variant = "hero" | "inline" | "compact";
