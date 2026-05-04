@@ -358,21 +358,15 @@ export function Relatorios() {
       <AppSidebar active="reports" />
 
       <main className="rel-main">
-        <header className="rel-topbar">
-          <div className="rel-crumbs">
-            <b>Sua sala</b>
-            <span className="sep">›</span><span>Relatórios</span>
-            <span className="sep">›</span><span className="accent">Pareceres descritivos</span>
-          </div>
-          <div className="rel-topbar-right">
-            <button className="rel-icon-btn" aria-label="Buscar"><Search size={16} /></button>
-            <button className="rel-icon-btn" aria-label="Notificações"><Bell size={16} /></button>
-            <div className="rel-user-pill" aria-label={`Usuária ${user.name}, Plano ${user.plan}`}>
-              <div className="av">{user.initials}</div>
-              <div><b>{user.name}</b><small>PLANO {user.plan}</small></div>
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          breadcrumb={[{ label: "Sua sala" }, { label: "Relatórios" }, { label: "Pareceres descritivos" }]}
+          actions={
+            <>
+              <button className="ah-icon" aria-label="Buscar"><Search size={16} /></button>
+              <button className="ah-icon" aria-label="Notificações"><Bell size={16} /></button>
+            </>
+          }
+        />
 
         <div className="rel-page">
           {/* HERO */}
