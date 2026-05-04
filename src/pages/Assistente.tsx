@@ -233,24 +233,6 @@ export function Assistente() {
     return { today: t, week: w, older: o };
   }, [sofia.conversations, search]);
 
-  const sendMessage = async (raw?: string) => {
-    const content = (raw ?? text).trim();
-    if (!content || loading) return;
-    const next: ChatMsg[] = [...messages, { role: "user", content }];
-    setMessages(next);
-    setText("");
-    setLoading(true);
-    try {
-      const data = await askSofia({ data: { messages: next.map(({ role, content }) => ({ role, content })) } });
-      setMessages((m) => [...m, { role: "assistant", content: data.content || "", issues: data.issues }]);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
-      setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="ap-root">
       <style dangerouslySetInnerHTML={{ __html: sidebarCss + css }} />
