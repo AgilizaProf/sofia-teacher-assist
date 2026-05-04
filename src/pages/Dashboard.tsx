@@ -4,6 +4,7 @@ import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
 import { updateLoginStreak } from "@/lib/datetime";
 import { CID_OPTIONS } from "@/lib/cidsBR";
+import { useSofia } from "@/components/sofia/SofiaProvider";
 
 const css = `
 .ap-root{
@@ -295,6 +296,7 @@ export function Dashboard() {
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
   const [streak, setStreak] = useState<number>(0);
+  const sofia = useSofia();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
