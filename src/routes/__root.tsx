@@ -2,6 +2,9 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import { Toaster } from "@/components/ui/sonner";
 import { SofiaProvider } from "@/components/sofia/SofiaProvider";
 import { SofiaWidget } from "@/components/sofia/SofiaWidget";
+import { SofiaContextProvider } from "@/lib/sofia/sofiaContext";
+import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
+import { MockAccountSwitcher } from "@/components/sofia/MockAccountSwitcher";
 
 import appCss from "../styles.css?url";
 
@@ -80,9 +83,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <SofiaProvider>
-      <Outlet />
-      <SofiaWidget />
-      <Toaster position="top-right" richColors />
+      <SofiaContextProvider>
+        <Outlet />
+        <SofiaWidget />
+        <SofiaSpeechBubble />
+        <MockAccountSwitcher />
+        <Toaster position="top-right" richColors />
+      </SofiaContextProvider>
     </SofiaProvider>
   );
 }
