@@ -8,6 +8,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
+import { AppHeader } from "@/components/layout/AppHeader";
 
 const css = `
 .pl-root{
