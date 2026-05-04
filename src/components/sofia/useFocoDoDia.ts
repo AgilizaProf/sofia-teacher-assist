@@ -176,6 +176,9 @@ function buildFoco(students: Student[]): FocoDoDia {
 
 export function useFocoDoDia() {
   const [foco, setFoco] = useState<FocoDoDia>({ exibir: false });
+  // `storageKey` é estado puramente do cliente (anti-repetição via sessionStorage)
+  // e por isso fica FORA do contrato `FocoDoDia` que será espelhado pelo server.
+  const [storageKey, setStorageKey] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
@@ -201,23 +204,25 @@ export function useFocoDoDia() {
     const next = buildFoco(students);
     if (next.exibir && next.aluno && next.aula && userId) {
       const key = `sofia_foco_dismissed_${userId}_${next.aluno.id}_${next.aula.data_aula}`;
-      next.storage_key = key;
+      setStorageKey(key);
       try {
         if (window.sessionStorage.getItem(key)) {
           setFoco({ exibir: false, motivo: "ok" });
           return;
         }
       } catch { /* ignore */ }
+    } else {
+      setStorageKey(null);
     }
     setFoco(next);
   }, [userId, tick]);
 
   const dismiss = useCallback(() => {
-    if (foco.storage_key) {
-      try { window.sessionStorage.setItem(foco.storage_key, "1"); } catch { /* ignore */ }
+    if (storageKey) {
+      try { window.sessionStorage.setItem(storageKey, "1"); } catch { /* ignore */ }
     }
     setFoco({ exibir: false, motivo: "ok" });
-  }, [foco.storage_key]);
+  }, [storageKey]);
 
   return { foco, dismiss, refetch: () => setTick((t) => t + 1) };
 }
