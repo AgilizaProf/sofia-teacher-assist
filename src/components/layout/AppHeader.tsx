@@ -44,8 +44,8 @@ const ROUTE_LABELS: Record<string, string> = {
   configuracoes: "Configurações",
 };
 
-function deriveBreadcrumb(ctx: ReturnType<typeof useSofiaContext>): Array<{ label: string }> {
-  const out: Array<{ label: string }> = [{ label: "Sua sala" }];
+function deriveBreadcrumb(ctx: ReturnType<typeof useSofiaContext>): Array<{ label: string; onClick?: () => void }> {
+  const out: Array<{ label: string; onClick?: () => void }> = [{ label: "Sua sala" }];
   const routeLabel = ROUTE_LABELS[ctx.route] ?? "—";
   out.push({ label: routeLabel });
   if (ctx.route === "inclusao" && ctx.entity.aluno_atual) {
