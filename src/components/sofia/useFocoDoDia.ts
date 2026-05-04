@@ -78,19 +78,10 @@ function getProximaAula(students: Student[]): AgendaEvento | null {
     const { ts: _ts, ...rest } = candidata;
     return rest;
   }
-  // Fallback sintético — próxima hora cheia, usa primeira turma com aluno PCD.
-  if (students.length === 0) return null;
-  const next = new Date();
-  next.setMinutes(0, 0, 0);
-  next.setHours(next.getHours() + 1);
-  const turma = students[0].turma || "Turma";
-  return {
-    id: `synth_${next.getTime()}`,
-    tipo: "aula",
-    disciplina: "matemática",
-    turma,
-    inicio_em: next.toISOString(),
-  };
+  // Sem aula real cadastrada na janela → não exibe o card. NUNCA inventar
+  // disciplina/horário (regra: o card só aparece quando há aula planejada).
+  void students;
+  return null;
 }
 
 function pickAluno(students: Student[], aulaId: string, turma?: string): { aluno: Student; razao: "pcd" | "atencao" | "parecer" | "generico" } | null {
