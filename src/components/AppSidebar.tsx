@@ -52,13 +52,7 @@ export type SidebarKey = "home" | "assistant" | "planning" | "reports" | "inclus
 
 export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: () => void }) {
   const cls = (k: SidebarKey) => "sb-item" + (active === k ? " active" : "");
-  const ctx = useSofiaContext();
-  const isPro = ctx.user.plano === "pro";
-  const openMentoria = () => {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("sofia:intent", { detail: { intent: "abrir_mentoria_bruna" } }));
-    }
-  };
+  useSofiaContext();
   return (
     <aside className="ap-sidebar">
       <div className="sb-head">
@@ -119,21 +113,6 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
-        {isPro ? (
-          <button className="sb-bruna" onClick={openMentoria} aria-label="Abrir mentoria pedagógica">
-            <div className="av">MD</div>
-            <div style={{ minWidth: 0 }}>
-              <div className="nm">Mentora Demo</div>
-              <div className="sub">Mentoria pedagógica</div>
-              <span className="live">🔴 LIVE QUINTA 16h</span>
-            </div>
-          </button>
-        ) : (
-          <div className="sb-bruna-locked" role="note">
-            <b>🔒 Mentoria pedagógica</b>
-            Disponível no PRO
-          </div>
-        )}
       </div>
     </aside>
   );
