@@ -610,6 +610,7 @@ export function Inclusao() {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
   const sofia = useSofia();
+  const sofiaCtx = useSofiaContext();
   const [peiOpen, setPeiOpen] = useState(false);
   const [anamPrintOpen, setAnamPrintOpen] = useState(false);
   const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
@@ -743,17 +744,35 @@ export function Inclusao() {
     if (proactiveSeen.current.has(key)) return;
     proactiveSeen.current.add(key);
     const firstName = selected.name.split(" ")[0];
+    const proxima = sofiaCtx.dataState.proxima_aula;
+    const eixosPreench = (anamByStudent[selected.id] || []).filter(
+      (e) => e.items.some((i) => i.s !== "naoObservado") || (e.obs && e.obs.trim())
+    ).length;
+    let message: string;
+    let actionLabel = `Adaptar para ${firstName}`;
+    let actionPrompt = `Adapte uma atividade para ${selected.name}${selected.diag ? ` (${selected.diag})` : ""}.`;
+    if (proxima && proxima.minutos_ate <= 180) {
+      message = `Tô vendo o perfil do(a) ${firstName}. Próxima aula em ${proxima.minutos_ate}min (${proxima.disciplina}). Adapto agora?`;
+      actionPrompt = `Adapte a aula de ${proxima.disciplina} (${proxima.bncc_codigo || "BNCC"}) para ${selected.name}${selected.diag ? ` (${selected.diag})` : ""}. Sugira 3 ajustes práticos com tempo estimado.`;
+    } else if (eixosPreench >= 4) {
+      message = `Já dá pra eu sugerir uma adaptação simples pra próxima aula do(a) ${firstName}. Continuar Anamnese ou gerar adaptação agora?`;
+      actionLabel = "Sugerir adaptação";
+    } else {
+      const cidTxt = selected.cid && selected.cid !== "nao_informado" ? selected.cid : "";
+      const condTxt = selected.diag || "perfil singular";
+      const med = selected.mediadora ? `mediadora ${selected.mediadora}` : "sem mediadora";
+      message = `Tô vendo o perfil do(a) ${firstName}. ${condTxt}${cidTxt ? ` (${cidTxt})` : ""} e ${med} já é boa base. Pra eu sugerir adaptações reais preciso da Anamnese — 8 minutos guiados. Topa?`;
+      actionLabel = "Começar Anamnese";
+      actionPrompt = `Vamos começar a Anamnese de ${selected.name}, eixo por eixo.`;
+    }
     const t = setTimeout(() => {
       sofia.pushProactive({
-        message: `Vi que você abriu o perfil do(a) ${firstName}. A próxima aula dele(a) é em ~2h. Quer que eu adapte agora?`,
-        action: {
-          label: `Adaptar aula para ${firstName}`,
-          prompt: `Adapte a próxima aula para ${selected.name}, considerando ${selected.diag}. Sugira 3 ajustes práticos com tempo estimado.`,
-        },
+        message,
+        action: { label: actionLabel, prompt: actionPrompt },
       });
     }, 800);
     return () => clearTimeout(t);
-  }, [view, selected, sofia]);
+  }, [view, selected, sofia, sofiaCtx, anamByStudent]);
 
   useEffect(() => {
     if (view !== "list") return;
