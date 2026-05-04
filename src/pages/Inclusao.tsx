@@ -1438,8 +1438,12 @@ export function Inclusao() {
         <div className="inc-modal" style={{ maxWidth: 760 }}>
           <div className="inc-modal-bar" />
           <div className="inc-modal-head">
-            <h2>Adaptar aula · Frações e Partilha Justa</h2>
-            <span className="meta">Matemática · 16h00<br />BNCC EF02MA08</span>
+            <h2>Adaptar aula{selected ? ` · ${selected.name.split(" ")[0]}` : ""}</h2>
+            <span className="meta">
+              {sofiaCtx.dataState.proxima_aula
+                ? <>{sofiaCtx.dataState.proxima_aula.disciplina} · {new Date(sofiaCtx.dataState.proxima_aula.horario).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}<br />BNCC {sofiaCtx.dataState.proxima_aula.bncc_codigo || "—"}</>
+                : <>—<br />Sem próxima aula cadastrada</>}
+            </span>
             <button className="inc-modal-close" onClick={() => setAdaptOpen(false)} aria-label="Fechar"><X size={16} /></button>
           </div>
           <div className="inc-modal-body plain">
@@ -1456,7 +1460,7 @@ export function Inclusao() {
             ))}
           </div>
           <div className="inc-modal-foot">
-            <span className="legal">As adaptações serão registradas no histórico do Pedrinho automaticamente.</span>
+            <span className="legal">As adaptações serão registradas no histórico {selected ? `de ${selected.name.split(" ")[0]}` : "do(a) aluno(a)"} automaticamente.</span>
             <button className="inc-btn-ghost" onClick={() => setAdaptOpen(false)}>Cancelar</button>
             <button className="btn btn-primary" onClick={() => setAdaptOpen(false)}><CheckCircle2 size={14} /> Aplicar 3 adaptações</button>
           </div>
@@ -1468,7 +1472,7 @@ export function Inclusao() {
         <div className="inc-modal" style={{ maxWidth: 880 }}>
           <div className="inc-modal-bar" />
           <div className="inc-modal-head">
-            <h2>Plano Educacional Individualizado · Pedrinho Almeida</h2>
+            <h2>Plano Educacional Individualizado{selected ? ` · ${selected.name}` : ""}</h2>
             <span className="meta">PEI-2026-PA-v3.2<br />Lei 14.254/2021</span>
             <button className="inc-modal-close" onClick={() => setPeiOpen(false)} aria-label="Fechar"><X size={16} /></button>
           </div>
@@ -1484,7 +1488,7 @@ export function Inclusao() {
               </div>
               <h1>Plano Educacional Individualizado</h1>
               <div className="ident">
-                <span><b>Educando:</b> Pedro Henrique Almeida</span>
+                <span><b>Educando:</b> {selected ? selected.name : "—"}</span>
                 <span><b>Idade:</b> 7 anos</span>
                 <span><b>Turma:</b> 2º Ano A · Manhã</span>
                 <span><b>Ref. curricular:</b> 2º Ano EF</span>
