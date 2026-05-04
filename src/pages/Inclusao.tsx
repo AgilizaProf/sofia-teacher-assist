@@ -605,6 +605,7 @@ export function Inclusao() {
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
+  const sofia = useSofia();
   const [peiOpen, setPeiOpen] = useState(false);
   const [anamPrintOpen, setAnamPrintOpen] = useState(false);
   const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
