@@ -59,7 +59,7 @@ export function usePersistentState<T>(key: string, initial: T) {
       try {
         await supabase
           .from("app_snapshots")
-          .upsert([{ user_id: uid, key, data: value as object, updated_at: new Date().toISOString() }], { onConflict: "user_id,key" });
+          .upsert([{ user_id: uid, key, data: JSON.parse(JSON.stringify(value)), updated_at: new Date().toISOString() }], { onConflict: "user_id,key" });
       } catch { /* ignore */ }
     }, 800);
   }, [key]);
