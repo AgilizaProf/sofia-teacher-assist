@@ -271,6 +271,9 @@ export function Assistente() {
 
           <div className="convo">
             <div className="convo-inner" ref={scrollRef}>
+              <div style={{ marginBottom: 16 }}>
+                <SofiaFocoCard />
+              </div>
               {messages.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
                   {messages.map((m, i) => (
