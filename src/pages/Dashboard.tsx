@@ -381,7 +381,7 @@ export function Dashboard() {
           </section>
 
           {!onboardingDone && (
-            <div className="today-focus">
+            <div className="today-focus" onClick={() => sofia.openSofia({ prompt: "Me ajude a dar os próximos passos no AgilizaProf", context: "Foco de hoje" })} style={{ cursor: "pointer" }}>
               <div className="today-focus-icon">
                 <div className="today-focus-icon-inner">
                   <Svg c={<><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></>} />
