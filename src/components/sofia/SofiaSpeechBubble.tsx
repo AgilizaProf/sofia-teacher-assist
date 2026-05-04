@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Sparkles, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
 import { useSofia } from "./SofiaProvider";
@@ -28,6 +29,7 @@ const STORAGE_PREFIX = "sofia_bubble_seen_";
 export function SofiaSpeechBubble() {
   const ctx = useSofiaContext();
   const sofia = useSofia();
+  const navigate = useNavigate();
   const fala = gerarFalaSofia(ctx);
   const [dismissed, setDismissed] = useState(false);
 
@@ -48,7 +50,7 @@ export function SofiaSpeechBubble() {
       window.dispatchEvent(new CustomEvent("sofia:intent", { detail: acao }));
     }
     if (acao.to) {
-      window.dispatchEvent(new CustomEvent("sofia:nav", { detail: acao.to }));
+      navigate({ to: acao.to as string });
     }
     if (acao.prompt) {
       sofia.openSofia({ prompt: acao.prompt, send: false });
