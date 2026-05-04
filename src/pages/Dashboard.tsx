@@ -768,3 +768,15 @@ export function Dashboard() {
     </div>
   );
 }
+
+function DashboardFocoHero() {
+  const { suggestions } = useSofiaSuggestions("home");
+  const item = suggestions[0];
+  if (!item) return null;
+  return <div style={{ marginBottom: 18 }}><SofiaSuggestionCard suggestion={item} variant="hero" /></div>;
+}
+
+function DashboardCmdkSuggestions() {
+  const { suggestions } = useSofiaSuggestions("cmdk");
+  return <SofiaSuggestionList suggestions={suggestions} variant="compact" />;
+}
