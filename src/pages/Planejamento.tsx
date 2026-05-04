@@ -536,7 +536,6 @@ export function Planejamento() {
                           </button>
                         );
                       })}
-                      <button className="pl-btn primary pl-replica-cta" onClick={() => showToast(`Semana replicada em ${pickCount} turma(s). Sofia adaptou 2 atividades para PCD. ✓`)}>
                       <button
                         className="pl-btn primary pl-replica-cta"
                         disabled={pickCount === 0}
