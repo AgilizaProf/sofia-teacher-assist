@@ -14,6 +14,7 @@ import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 const css = `
 .inc-root{
