@@ -1,0 +1,73 @@
+/*
+ * Tokens visuais e de voz da Sofia.
+ * Tudo o que se refere à assistente (FAB, drawer, hero, sugestões, tela cheia)
+ * deve consumir estas variáveis em vez de cores hardcoded.
+ *
+ * Variações antigas (caixa lilás, cinza, branca) ficam DEPRECATED.
+ * Use sempre var(--sofia-*) abaixo.
+ */
+
+:root {
+  /* Cor primária e gradiente */
+  --sofia-primary: #F97316;
+  --sofia-primary-deep: #EA580C;
+  --sofia-primary-soft: #FFF5EE;       /* tinta para fundos de chip/sugestão */
+  --sofia-primary-ring: rgba(249, 115, 22, 0.35);
+  --sofia-gradient: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+  --sofia-gradient-soft: linear-gradient(135deg, #FFF5EE 0%, #FFE4D2 100%);
+
+  /* Fundo dark (hero) */
+  --sofia-dark: #1E1B2E;
+  --sofia-dark-2: #2A2440;
+  --sofia-on-dark: #FFFFFF;
+  --sofia-on-dark-muted: rgba(255, 255, 255, 0.72);
+
+  /* Texto e neutros para superfícies claras */
+  --sofia-ink: #1B2A4E;
+  --sofia-ink-soft: #5B6B82;
+  --sofia-line: #E7E9EF;
+  --sofia-surface: #FFFFFF;
+  --sofia-surface-2: #FBFAF6;
+
+  /* Tipografia da Sofia */
+  --sofia-font-display: "Fraunces", Georgia, serif;
+  --sofia-font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Sombras/efeitos */
+  --sofia-shadow-fab: 0 18px 40px -12px rgba(249, 115, 22, 0.55),
+                      0 4px 12px -4px rgba(249, 115, 22, 0.45);
+  --sofia-shadow-card: 0 18px 40px -18px rgba(11, 18, 32, 0.35);
+  --sofia-radius: 14px;
+  --sofia-radius-lg: 18px;
+}
+
+/* Avatar circular com gradiente Sofia — usar com qualquer ícone (sparkle, "S", etc.) */
+.sofia-avatar-token {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 9999px;
+  background: var(--sofia-gradient);
+  color: var(--sofia-on-dark);
+  box-shadow: 0 8px 18px -8px var(--sofia-primary-ring);
+  flex-shrink: 0;
+}
+.sofia-avatar-token--sm { width: 28px; height: 28px; }
+.sofia-avatar-token--md { width: 36px; height: 36px; }
+.sofia-avatar-token--lg { width: 56px; height: 56px; }
+
+/* Realce tipográfico de palavras-chave (laranja) em títulos da Sofia.
+   Uso: <h2>3 pareceres em <span class="sofia-em">12 minutos</span></h2> */
+.sofia-em {
+  color: var(--sofia-primary);
+  font-weight: inherit;
+}
+
+/* Hero dark padrão da Sofia (fundo --sofia-dark com glow laranja) */
+.sofia-hero-surface {
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(249, 115, 22, 0.18), transparent 55%),
+    var(--sofia-dark);
+  color: var(--sofia-on-dark);
+  border: 1px solid var(--sofia-primary-ring);
+  border-radius: var(--sofia-radius-lg);
+}
