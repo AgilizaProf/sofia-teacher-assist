@@ -3,6 +3,8 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
+import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { useSofia } from "@/components/sofia/SofiaProvider";
 
 const css = `
 .ag-root{
