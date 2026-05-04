@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
+import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 
 const css = `
 .inc-root{
@@ -814,6 +815,20 @@ export function Inclusao() {
               )}
             </div>
             <div className="inc-spacer" />
+            {view === "detail" && selected && (
+              <SofiaContextChip
+                context={`o PEI de ${selected.name}`}
+                suggestion={`Me ajude com o PEI de ${selected.name}. O que é mais urgente agora?`}
+                hiddenContext={`Aluno: ${selected.name} · ${selected.diag} · ${selected.turma} · Inclusão`}
+              />
+            )}
+            {view === "list" && (
+              <SofiaContextChip
+                context="a lista de alunos da Inclusão"
+                suggestion="Quais alunos da Inclusão precisam de atenção esta semana?"
+                hiddenContext="Tela: Inclusão · lista de alunos"
+              />
+            )}
             {view === "detail" && selected && (
               <div className="inc-status-pill"><span className="dot" /> PEI ainda não criado · comece pela Anamnese</div>
             )}
