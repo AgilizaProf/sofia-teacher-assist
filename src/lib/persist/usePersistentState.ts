@@ -20,12 +20,6 @@ export function usePersistentState<T>(key: string, initial: T) {
     } catch { /* ignore */ }
     return initial;
   });
-  const lastLocalUpdate = useRef<number>(() => {
-    try {
-      const raw = window.localStorage.getItem(lsKey + ":ts");
-      return raw ? Number(raw) : 0;
-    } catch { return 0; }
-  } as unknown as number);
   const userIdRef = useRef<string | null>(null);
   const hydratedRef = useRef(false);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
