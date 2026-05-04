@@ -16,7 +16,7 @@ export function MockAccountSwitcher() {
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <div className="mock-acc" role="group" aria-label="Conta mock para demo">
         <button className={acc === "free_vazio" ? "on" : ""} onClick={() => set("free_vazio")}>Free vazio</button>
-        <button className={acc === "pro_cheio" ? "on" : ""} onClick={() => set("pro_cheio")}>Pro · Camila</button>
+        <button className={acc === "pro_cheio" ? "on" : ""} onClick={() => set("pro_cheio")}>Pro Demo</button>
       </div>
     </>
   );
