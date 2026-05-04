@@ -687,7 +687,7 @@ export function Dashboard() {
                 <textarea
                   id="student-names"
                   name="names"
-                  placeholder={"Cole um nome por linha. Ex.:\nAna Beatriz Souza\nBruno Lima\nCarla Mendes"}
+                  placeholder={"Cole um nome por linha (um nome por aluno)."}
                   required
                 />
                 <span className="school-hint">Um nome por linha (também aceita vírgula ou ponto e vírgula).</span>
