@@ -589,17 +589,7 @@ const ANAM_SUGESTOES: Record<string, string[]> = {
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const [students, setStudents] = useState<Student[]>(() => {
-    if (typeof window === "undefined") return INITIAL_STUDENTS;
-    try {
-      const raw = window.localStorage.getItem("inc_students");
-      if (raw) return JSON.parse(raw) as Student[];
-    } catch { /* ignore */ }
-    return INITIAL_STUDENTS;
-  });
-  useEffect(() => {
-    try { window.localStorage.setItem("inc_students", JSON.stringify(students)); } catch { /* ignore */ }
-  }, [students]);
+  const [students, setStudents] = usePersistentState<Student[]>("inc_students", INITIAL_STUDENTS);
   const [view, setView] = useState<ViewKey>(students.length === 0 ? "list" : (search.view || "list"));
   const [selectedId, setSelectedId] = useState<string | null>(search.aluno || null);
   const [nsName, setNsName] = useState("");
@@ -622,17 +612,7 @@ export function Inclusao() {
   const [planYearFilter, setPlanYearFilter] = useState<string>("");
   type RegCat = "ped" | "com" | "sen" | "fam";
   type RegItem = { id: string; when: string; who: string; cat: RegCat; body: string };
-  const [regByStudent, setRegByStudent] = useState<Record<string, RegItem[]>>(() => {
-    if (typeof window === "undefined") return {};
-    try {
-      const raw = window.localStorage.getItem("inc_reg");
-      if (raw) return JSON.parse(raw);
-    } catch { /* ignore */ }
-    return {};
-  });
-  useEffect(() => {
-    try { window.localStorage.setItem("inc_reg", JSON.stringify(regByStudent)); } catch { /* ignore */ }
-  }, [regByStudent]);
+  const [regByStudent, setRegByStudent] = usePersistentState<Record<string, RegItem[]>>("inc_reg", {});
   const [regFilter, setRegFilter] = useState<"todos" | RegCat>("todos");
   const [regModalOpen, setRegModalOpen] = useState(false);
   const [nrCat, setNrCat] = useState<RegCat>("ped");
@@ -678,17 +658,7 @@ export function Inclusao() {
   const studentKey = selectedId || "_none";
   const studentRegs = regByStudent[studentKey] || [];
   const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
-  const [anamByStudent, setAnamByStudent] = useState<Record<string, ReturnType<typeof buildBlankAnam>>>(() => {
-    if (typeof window === "undefined") return {};
-    try {
-      const raw = window.localStorage.getItem("inc_anam");
-      if (raw) return JSON.parse(raw);
-    } catch { /* ignore */ }
-    return {};
-  });
-  useEffect(() => {
-    try { window.localStorage.setItem("inc_anam", JSON.stringify(anamByStudent)); } catch { /* ignore */ }
-  }, [anamByStudent]);
+  const [anamByStudent, setAnamByStudent] = usePersistentState<Record<string, ReturnType<typeof buildBlankAnam>>>("inc_anam", {});
   const anamData = anamByStudent[studentKey] || buildBlankAnam();
   const setAnamData = (updater: (prev: ReturnType<typeof buildBlankAnam>) => ReturnType<typeof buildBlankAnam>) => {
     setAnamByStudent((all) => ({ ...all, [studentKey]: updater(all[studentKey] || buildBlankAnam()) }));
@@ -844,11 +814,6 @@ export function Inclusao() {
     }
     // All state already auto-syncs to localStorage via useEffect; this
     // forces a write and confirms to the user.
-    try {
-      window.localStorage.setItem("inc_students", JSON.stringify(students));
-      window.localStorage.setItem("inc_anam", JSON.stringify(anamByStudent));
-      window.localStorage.setItem("inc_reg", JSON.stringify(regByStudent));
-    } catch { /* ignore */ }
     toast.success(`${label} salvo`, { description: `Sincronizado para ${selected.name}.` });
   };
 
