@@ -1649,3 +1649,12 @@ export function Inclusao() {
     </div>
   );
 }
+
+function InclusaoSuggestions({ entityId }: { entityId: string }) {
+  const { suggestions } = useSofiaSuggestions("inclusao", entityId);
+  return (
+    <div className="sofia-card" style={{ padding: 0, background: "transparent", border: "none", boxShadow: "none" }}>
+      <SofiaSuggestionList suggestions={suggestions} variant="inline" />
+    </div>
+  );
+}
