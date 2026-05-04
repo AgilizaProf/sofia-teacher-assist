@@ -244,7 +244,7 @@ export function Assistente() {
               <span>Assistente IA</span>
             </div>
             <div className="sofia-id">
-              <div className="sofia-avatar"><Sparkles size={18} /></div>
+              <div className="sofia-avatar-token sofia-avatar-token--md"><Sparkles size={18} /></div>
               <div>
                 <div className="sofia-name">Sofia <span className="tag-beta">IA · BETA</span></div>
                 <div className="sofia-sub"><span className="dot-online" /> Sua assistente pedagógica · online agora</div>
