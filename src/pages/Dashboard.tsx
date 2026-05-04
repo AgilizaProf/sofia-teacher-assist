@@ -5,6 +5,8 @@ import { useUser, greeting } from "@/lib/mockData";
 import { updateLoginStreak } from "@/lib/datetime";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { useSofia } from "@/components/sofia/SofiaProvider";
+import { SofiaSuggestionCard, SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
+import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 
 const css = `
 .ap-root{
@@ -380,27 +382,7 @@ export function Dashboard() {
             </div>
           </section>
 
-          {!onboardingDone && (
-            <div className="today-focus" onClick={() => sofia.openSofia({ prompt: "Me ajude a dar os próximos passos no AgilizaProf", context: "Foco de hoje" })} style={{ cursor: "pointer" }}>
-              <div className="today-focus-icon">
-                <div className="today-focus-icon-inner">
-                  <Svg c={<><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></>} />
-                </div>
-              </div>
-              <div className="today-focus-content">
-                <span className="today-focus-tag">✨ Bem-vinda · primeiros passos</span>
-                <div className="today-focus-title">
-                  ✅ Conta criada &nbsp;·&nbsp;
-                  {totalClasses > 0 ? "✅" : "⬜"} Cadastrar primeira turma &nbsp;·&nbsp;
-                  {totalStudents > 0 ? "✅" : "⬜"} Adicionar alunos &nbsp;·&nbsp;
-                  {documentsGenerated > 0 ? "✅" : "⬜"} Conversar com a Sofia
-                </div>
-                <div className="today-focus-meta">
-                  <span>Conclua os passos pra liberar todo o potencial da Sofia.</span>
-                </div>
-              </div>
-            </div>
-          )}
+          {!onboardingDone && <DashboardFocoHero />}
 
           <div className="stats">
             <button
@@ -760,15 +742,8 @@ export function Dashboard() {
         <div className="cmdk">
           <input className="cmdk-input" placeholder="O que você quer fazer? (ex: gerar parecer, adicionar aluno...)" autoComplete="off" autoFocus={cmdk} />
           <div className="cmdk-list">
-            <div className="cmdk-section">Sugestões da IA</div>
-            <div className="cmdk-item active">
-              <Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
-              Gerar parecer descritivo<span className="cmdk-item-shortcut">↵</span>
-            </div>
-            <div className="cmdk-item">
-              <Svg c={<path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3"/>} />
-              Adaptar atividade para aluno PCD
-            </div>
+              <div className="cmdk-section">Sugestões da IA</div>
+              <DashboardCmdkSuggestions />
             <div className="cmdk-section">Ir para</div>
             <div className="cmdk-item">
               <Svg c={<rect x="3" y="4" width="18" height="18" rx="2"/>} />
@@ -792,4 +767,16 @@ export function Dashboard() {
       </div>
     </div>
   );
+}
+
+function DashboardFocoHero() {
+  const { suggestions } = useSofiaSuggestions("home");
+  const item = suggestions[0];
+  if (!item) return null;
+  return <div style={{ marginBottom: 18 }}><SofiaSuggestionCard suggestion={item} variant="hero" /></div>;
+}
+
+function DashboardCmdkSuggestions() {
+  const { suggestions } = useSofiaSuggestions("cmdk");
+  return <SofiaSuggestionList suggestions={suggestions} variant="compact" />;
 }

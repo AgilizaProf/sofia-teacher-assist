@@ -9,6 +9,8 @@ import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { toast } from "sonner";
 import { useSofia } from "@/components/sofia/SofiaProvider";
+import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
+import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 
 const css = `
 .inc-root{
@@ -998,22 +1000,7 @@ export function Inclusao() {
                     </div>
 
                     <aside className="col-r">
-                      <div className="sofia-card">
-                        <div className="sofia-head">
-                          <div className="av">S</div>
-                          <div>
-                            <b>Sofia · IA pedagógica</b>
-                            <span>especialista em PEI e BNCC inclusão</span>
-                          </div>
-                        </div>
-                        <p className="sofia-q">"Posso te ajudar com {selected.name.split(" ")[0]} agora. O que faz mais sentido?"</p>
-                        <div className="sofia-actions">
-                          <button className="sofia-action" onClick={() => sofia.openSofia({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno: ${selected.name}` })}><Sparkles size={14} className="ico" /> Adaptar aula de hoje <span className="arrow">›</span></button>
-                          <button className="sofia-action" onClick={() => sofia.openSofia({ prompt: `Gere um plano de aula adaptado para ${selected.name}`, context: `Aluno: ${selected.name}` })}><FileText size={14} className="ico" /> Gerar plano de aula adaptado <span className="arrow">›</span></button>
-                          <button className="sofia-action" onClick={() => sofia.openSofia({ prompt: `Gere um parecer descritivo bimestral para ${selected.name}`, context: `Aluno: ${selected.name}` })}><BookOpen size={14} className="ico" /> Gerar parecer descritivo bimestral <span className="arrow">›</span></button>
-                          <button className="sofia-action" onClick={() => sofia.openSofia({ prompt: `Me ajuda a preparar uma reunião com a família de ${selected.name}`, context: `Aluno: ${selected.name}` })}><Send size={14} className="ico" /> Preparar reunião com família <span className="arrow">›</span></button>
-                        </div>
-                      </div>
+                      <InclusaoSuggestions entityId={selected.id ? String(selected.id) : selected.name} />
 
                       <div className="context-card">
                         <h4>Contexto rápido</h4>
@@ -1659,6 +1646,15 @@ export function Inclusao() {
           </form>
         </div>
       </div>
+    </div>
+  );
+}
+
+function InclusaoSuggestions({ entityId }: { entityId: string }) {
+  const { suggestions } = useSofiaSuggestions("inclusao", entityId);
+  return (
+    <div className="sofia-card" style={{ padding: 0, background: "transparent", border: "none", boxShadow: "none" }}>
+      <SofiaSuggestionList suggestions={suggestions} variant="inline" />
     </div>
   );
 }
