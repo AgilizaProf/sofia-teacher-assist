@@ -5,6 +5,7 @@ import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
+import { AppHeader } from "@/components/layout/AppHeader";
 
 const css = `
 .ag-root{
