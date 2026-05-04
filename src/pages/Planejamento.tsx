@@ -9,6 +9,7 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 const css = `
 .pl-root{
@@ -338,7 +339,7 @@ export function Planejamento() {
   const search = useSearch({ from: "/planejamento" }) as { m?: MKey };
   const navigate = useNavigate({ from: "/planejamento" });
   const [m, setM] = useState<MKey>(search.m || "m5");
-  const [week, setWeek] = useState<Week>(INITIAL_WEEK);
+  const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
   const [dropDay, setDropDay] = useState<DayKey | null>(null);
   const dragCard = useRef<{ from: DayKey; id: string } | null>(null);
   const [picks, setPicks] = useState<Record<string, boolean>>({});
@@ -353,7 +354,7 @@ export function Planejamento() {
     aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
   });
   const toggleLayer = (k: string) => setLayers((s) => ({ ...s, [k]: !s[k] }));
-  const [diary, setDiary] = useState<Record<string, "ok" | "warn" | "next" | undefined>>({});
+  const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
 
   const sendChat = (msg?: string) => {
     const t = (msg ?? chatTxt).trim(); if (!t) return;

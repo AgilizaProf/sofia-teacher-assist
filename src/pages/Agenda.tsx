@@ -6,6 +6,7 @@ import { brNow } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 const css = `
 .ag-root{
@@ -394,7 +395,7 @@ export function Agenda() {
   }, [nowTick]);
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = usePersistentState<Event[]>("agenda_events", []);
   const [openDate, setOpenDate] = useState<string | null>(null);
   const [editing, setEditing] = useState<Event | null>(null);
   const [draft, setDraft] = useState<{ title: string; time: string; type: EventType; notes: string }>({

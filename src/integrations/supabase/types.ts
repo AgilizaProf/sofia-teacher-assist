@@ -14,6 +14,255 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_eventos: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          data: Json
+          data_evento: string
+          hora: string | null
+          id: string
+          notas: string | null
+          tipo: string | null
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          data?: Json
+          data_evento: string
+          hora?: string | null
+          id?: string
+          notas?: string | null
+          tipo?: string | null
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          data?: Json
+          data_evento?: string
+          hora?: string | null
+          id?: string
+          notas?: string | null
+          tipo?: string | null
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      alunos_anamnese: {
+        Row: {
+          aluno_client_id: string
+          created_at: string
+          data: Json
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aluno_client_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aluno_client_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      alunos_inclusao: {
+        Row: {
+          aee: string | null
+          cid: string | null
+          client_id: string | null
+          condicao: string | null
+          created_at: string
+          data: Json
+          id: string
+          idade: number | null
+          nivel_suporte: string | null
+          nome: string
+          observacoes: string | null
+          turma: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aee?: string | null
+          cid?: string | null
+          client_id?: string | null
+          condicao?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          idade?: number | null
+          nivel_suporte?: string | null
+          nome: string
+          observacoes?: string | null
+          turma?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aee?: string | null
+          cid?: string | null
+          client_id?: string | null
+          condicao?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          idade?: number | null
+          nivel_suporte?: string | null
+          nome?: string
+          observacoes?: string | null
+          turma?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      alunos_registros: {
+        Row: {
+          aluno_client_id: string
+          created_at: string
+          data: Json
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aluno_client_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aluno_client_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      app_snapshots: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pareceres: {
+        Row: {
+          aluno_client_id: string | null
+          aluno_nome: string | null
+          bimestre: string | null
+          client_id: string | null
+          created_at: string
+          data: Json
+          id: string
+          texto: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aluno_client_id?: string | null
+          aluno_nome?: string | null
+          bimestre?: string | null
+          client_id?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          texto?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aluno_client_id?: string | null
+          aluno_nome?: string | null
+          bimestre?: string | null
+          client_id?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          texto?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      planos_aula: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          data: Json
+          dia: string | null
+          id: string
+          semana: string | null
+          titulo: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          data?: Json
+          dia?: string | null
+          id?: string
+          semana?: string | null
+          titulo?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          data?: Json
+          dia?: string | null
+          id?: string
+          semana?: string | null
+          titulo?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sofia_conversations: {
         Row: {
           context: Json
