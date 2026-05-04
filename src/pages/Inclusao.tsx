@@ -8,6 +8,7 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { toast } from "sonner";
+import { useSofia } from "@/components/sofia/SofiaProvider";
 
 const css = `
 .inc-root{
