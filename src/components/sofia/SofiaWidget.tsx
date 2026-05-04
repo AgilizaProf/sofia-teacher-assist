@@ -88,6 +88,13 @@ const SUGGESTIONS = [
   "Sugira atividades para hoje na minha turma",
 ];
 
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
 export function SofiaWidget() {
   const s = useSofia();
   const navigate = useNavigate();
