@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
+import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 
 const css = `
 .pl-root{
@@ -404,7 +405,11 @@ export function Planejamento() {
               <span>{cfg.crumb}</span>
             </div>
             <div className="pl-top-meta">
-              <span><span className="sdot" />Sofia online</span>
+              <SofiaContextChip
+                context={`o planejamento — ${cfg.crumb}`}
+                suggestion={`Me ajude com ${cfg.crumb.toLowerCase()}. O que devo priorizar agora?`}
+                hiddenContext={`Tela: Planejamento · ${cfg.crumb}`}
+              />
               <div className="av" title="Você">P</div>
             </div>
           </div>
