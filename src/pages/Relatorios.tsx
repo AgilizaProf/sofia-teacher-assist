@@ -3,6 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser } from "@/lib/mockData";
+import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { useSofia } from "@/components/sofia/SofiaProvider";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -265,6 +267,8 @@ const ActionIcon = ({ name }: { name: NonNullable<Parecer["actions"][number]["ic
 
 export function Relatorios() {
   const user = useUser();
+  const ctx = useSofiaContext();
+  const sofia = useSofia();
   const navigate = useNavigate();
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
   const [search, setSearch] = useState("");
@@ -274,6 +278,51 @@ export function Relatorios() {
   const [filterTurma, setFilterTurma] = useState("Todas");
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState("Todos");
+
+  // Deriva valores reais do SofiaContext
+  const totalBim = ctx.dataState.pareceres_total_bimestre;
+  const finalizados = ctx.dataState.pareceres_finalizados;
+  const alunosCount = ctx.dataState.alunos_count;
+  const pct = totalBim > 0 ? Math.round((finalizados / totalBim) * 100) : 0;
+  const restantes = Math.max(0, totalBim - finalizados);
+  const aFazer = Math.max(0, alunosCount - finalizados - Math.min(3, restantes));
+  const rascunhos = Math.min(3, restantes);
+  const horasEcon = ctx.user.horas_economizadas_mes;
+  const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
+  const isPro = ctx.user.plano === "pro";
+  const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
+
+  // Lista por aluno (estado Pro)
+  const alunosLista = useMemo(() => {
+    if (!isPro || alunosCount === 0) return [] as Array<{ id: string; nome: string; status: "done" | "draft" | "todo"; statusLabel: string }>;
+    const out: Array<{ id: string; nome: string; status: "done" | "draft" | "todo"; statusLabel: string }> = [];
+    // Usa alunos PCD nominais + completar até total
+    const pcd = ctx.entity.todos_alunos_pcd;
+    for (let i = 0; i < alunosCount; i++) {
+      const nome = i < pcd.length ? pcd[i].nome : `Aluno(a) ${i + 1}`;
+      let status: "done" | "draft" | "todo" = "todo";
+      let statusLabel = "A FAZER";
+      if (i < finalizados) { status = "done"; statusLabel = "FINALIZADO"; }
+      else if (i < finalizados + rascunhos) { status = "draft"; statusLabel = "RASCUNHO"; }
+      out.push({ id: `al-${i}`, nome, status, statusLabel });
+    }
+    return out;
+  }, [isPro, alunosCount, finalizados, rascunhos, ctx.entity.todos_alunos_pcd]);
+
+  const alunosFiltered = useMemo(() => alunosLista.filter((a) => {
+    if (tab !== "all" && a.status !== tab) return false;
+    if (search && !a.nome.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }), [alunosLista, tab, search]);
+
+  // Bubble Sofia contextual (proativo)
+  const bubbleMsg = (() => {
+    if (!isPro) return null;
+    if (totalBim === 0 && alunosCount > 0) return `${alunosCount} alunos prontos pra parecer. Gero todos em rascunho de uma vez ou começamos pelo ${alunoFoco}?`;
+    if (pct >= 100) return `Bimestre fechado! 🧡 ${horasEcon}h economizadas. Quer exportar tudo em PDF pra coordenação?`;
+    if (pct > 0 && pct < 100) return `${finalizados} prontos, faltam ${restantes}. Sigo gerando ou você quer revisar antes?`;
+    return null;
+  })();
 
   const filtered = useMemo(() => {
     return PARECERES.filter((p) => {
@@ -330,12 +379,21 @@ export function Relatorios() {
           <section className="rel-hero">
             <div className="rel-hero-grid">
               <div>
-                <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> COMECE PELOS PARECERES</span>
-                <h1>Nenhum parecer<br />gerado ainda.</h1>
-                <p>Cadastre seus alunos e gere o primeiro parecer descritivo com a Sofia em poucos minutos.</p>
+                <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> {totalBim > 0 ? `BIMESTRE ${bimestreNum}º · EM ANDAMENTO` : "COMECE PELOS PARECERES"}</span>
+                {totalBim === 0 ? (
+                  <>
+                    <h1>Nenhum parecer<br />gerado ainda.</h1>
+                    <p>Cadastre seus alunos e gere o primeiro parecer descritivo com a Sofia em poucos minutos.</p>
+                  </>
+                ) : (
+                  <>
+                    <h1>Pareceres do {bimestreNum}º bimestre<br /><em>{finalizados}/{alunosCount}</em> prontos.</h1>
+                    <p>{restantes > 0 ? `Faltam ${restantes} pra fechar o bimestre. A Sofia gera em rascunho e você só revisa.` : `Todos os pareceres do bimestre estão fechados. Bora exportar pra coordenação?`}</p>
+                  </>
+                )}
                 <div className="rel-hero-cta">
-                  <button className="rel-btn-primary" onClick={goLote} aria-label="Gerar todos com a Sofia">
-                    <Sparkles size={14} strokeWidth={2.4} /> Gerar primeiro parecer <ArrowRight size={14} strokeWidth={2.4} />
+                  <button className="rel-btn-primary" onClick={goLote} aria-label="Gerar com a Sofia">
+                    <Sparkles size={14} strokeWidth={2.4} /> {totalBim === 0 ? "Gerar primeiro parecer" : restantes > 0 ? `Gerar ${restantes} restantes` : "Exportar tudo (PDF)"} <ArrowRight size={14} strokeWidth={2.4} />
                   </button>
                   <button className="rel-btn-ghost" aria-label="Ver vídeo de como funciona">
                     <PlayCircle size={14} /> Como funciona · 60s
@@ -344,9 +402,9 @@ export function Relatorios() {
               </div>
               <div className="rel-pc">
                 <div className="rel-pc-title">PROGRESSO DO BIMESTRE</div>
-                <div className="rel-pc-num">{user.reportsDoneBimester}<span>/{user.reportsTotalBimester} alunos</span></div>
-                <div className="rel-pc-bar"><i style={{ width: "0%" }} /></div>
-                <div className="rel-pc-meta"><span>0% concluído</span><span>—</span></div>
+                <div className="rel-pc-num">{finalizados}<span>/{alunosCount} alunos</span></div>
+                <div className="rel-pc-bar"><i style={{ width: `${pct}%` }} /></div>
+                <div className="rel-pc-meta"><span>{pct}% concluído</span><span>{horasEcon > 0 ? `~${horasEcon}h economizadas` : "—"}</span></div>
               </div>
             </div>
           </section>
@@ -355,25 +413,33 @@ export function Relatorios() {
           <div className="rel-kpis">
             <div className="rel-kpi">
               <div className="rel-kpi-top"><span className="rel-kpi-label">A FAZER</span><div className="rel-kpi-icon amber"><Clock size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">0<small> alunos</small></div>
-              <div className="rel-kpi-foot">—</div>
+              <div className="rel-kpi-num">{aFazer}<small> alunos</small></div>
+              <div className="rel-kpi-foot">{aFazer > 0 ? `${aFazer} pendente(s)` : "—"}</div>
             </div>
             <div className="rel-kpi">
               <div className="rel-kpi-top"><span className="rel-kpi-label">EM RASCUNHO</span><div className="rel-kpi-icon violet"><Edit3 size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">0<small> pareceres</small></div>
-              <div className="rel-kpi-foot">—</div>
+              <div className="rel-kpi-num">{rascunhos}<small> pareceres</small></div>
+              <div className="rel-kpi-foot">{rascunhos > 0 ? "aguardando revisão" : "—"}</div>
             </div>
             <div className="rel-kpi">
               <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">0<small>/0</small></div>
-              <div className="rel-kpi-foot">—</div>
+              <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
+              <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
             <div className="rel-kpi">
               <div className="rel-kpi-top"><span className="rel-kpi-label">TEMPO ECONOMIZADO</span><div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">0h<small>00min</small></div>
-              <div className="rel-kpi-foot">—</div>
+              <div className="rel-kpi-num">{Math.floor(horasEcon)}h<small>{String(Math.round((horasEcon % 1) * 60)).padStart(2, "0")}min</small></div>
+              <div className="rel-kpi-foot">{horasEcon > 0 ? "vs. escrita manual" : "—"}</div>
             </div>
           </div>
+
+          {bubbleMsg && (
+            <div style={{ marginTop: 18, background: "linear-gradient(135deg,#1E1B2E 0%,#15131F 100%)", border: "1px solid #2A2438", borderRadius: 14, padding: "16px 18px", color: "#fff", display: "flex", gap: 14, alignItems: "center" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#F97316,#EA580C)", display: "grid", placeItems: "center" }}><Sparkles size={16} color="#fff" /></div>
+              <div style={{ flex: 1, fontSize: 14, lineHeight: 1.5 }}>{bubbleMsg}</div>
+              <button onClick={goLote} style={{ background: "linear-gradient(135deg,#F97316,#EA580C)", color: "#fff", padding: "9px 14px", borderRadius: 10, fontWeight: 700, fontSize: 13, border: 0, cursor: "pointer" }}>Continuar com a Sofia</button>
+            </div>
+          )}
 
           {/* Section header */}
           <div className="rel-sec-head">
@@ -418,7 +484,7 @@ export function Relatorios() {
 
           {/* Cards grid */}
           <div className="rel-grid">
-            {filtered.length === 0 && (
+            {filtered.length === 0 && alunosFiltered.length === 0 && (
               <EmptyState
                 icon="📝"
                 title="Nenhum parecer gerado ainda."
@@ -427,6 +493,36 @@ export function Relatorios() {
                 onCta={goLote}
               />
             )}
+
+            {alunosFiltered.map((a) => (
+              <article key={a.id} className="rel-card">
+                <div className="rel-card-head">
+                  <div className="rel-av">{a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}</div>
+                  <div className="rel-stu">
+                    <b>{a.nome}</b>
+                    <small>{ctx.entity.turma_atual?.nome || ""} · {bimestreNum}º bimestre</small>
+                  </div>
+                </div>
+                <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
+                <div className="rel-card-foot">
+                  {a.status === "todo" && (
+                    <button className="rel-btn-card accent" onClick={() => sofia.openSofia({ prompt: `Gere o parecer descritivo bimestral de ${a.nome} alinhado à BNCC.`, send: false })}>
+                      <Sparkles size={13} /> Gerar com Sofia
+                    </button>
+                  )}
+                  {a.status === "draft" && (
+                    <button className="rel-btn-card dark" onClick={() => sofia.openSofia({ prompt: `Vamos revisar o rascunho do parecer de ${a.nome}.`, send: false })}>
+                      <Edit3 size={13} /> Abrir rascunho
+                    </button>
+                  )}
+                  {a.status === "done" && (
+                    <button className="rel-btn-card" onClick={() => sofia.openSofia({ prompt: `Mostre o parecer finalizado de ${a.nome}.`, send: false })}>
+                      <CheckCircle2 size={13} /> Ver finalizado
+                    </button>
+                  )}
+                </div>
+              </article>
+            ))}
 
             {filtered.map((p) => (
               <article key={p.id} className="rel-card">
