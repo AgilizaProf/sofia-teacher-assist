@@ -197,6 +197,8 @@ const css = `
 .btn-add{display:inline-flex;align-items:center;gap:5px;background:var(--primary);color:#fff;padding:7px 12px;border-radius:7px;font-size:11px;font-weight:700;transition:all .2s;}
 .btn-add:hover{background:var(--primary-dark);transform:translateY(-1px);}
 .btn-add svg{width:11px;height:11px;}
+.sofia-week-ask{margin-top:12px;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#FFF4EC,#FFE7D6);border:1px dashed #F97316;color:#9A3F12;padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.18s;font-family:inherit;}
+.sofia-week-ask:hover{background:linear-gradient(135deg,#FFE7D6,#FFD8BF);border-style:solid;color:#7A2E08;transform:translateY(-1px);box-shadow:0 6px 16px rgba(249,115,22,.18);}
 .viral-strip{background:linear-gradient(135deg,#fff,var(--accent-soft));border:1px solid #FFD9BF;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:18px;}
 .viral-icon{width:42px;height:42px;border-radius:11px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-accent);font-size:19px;}
 .viral-content{flex:1;min-width:0;}
@@ -439,6 +441,16 @@ export function Dashboard() {
                   icon="📈"
                   title="Suas atividades aparecerão aqui conforme você usar a Sofia."
                 />
+                <button
+                  type="button"
+                  className="sofia-week-ask"
+                  onClick={() => sofia.openSofia({
+                    prompt: "Me dê um panorama desta semana: o que aconteceu, o que falta e onde devo focar amanhã?",
+                    context: "Tela: Página inicial · card Esta semana",
+                  })}
+                >
+                  💬 Pergunte à Sofia sobre esta semana
+                </button>
               </div>
 
               <div className="card">
