@@ -732,6 +732,45 @@ export function Inclusao() {
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, view: "detail", aluno: id }) as never, replace: true });
   };
   const selected = students.find((s) => s.id === selectedId) || null;
+
+  // ---- Sugestões proativas da Sofia (Tray) ----
+  // Dispara apenas uma vez por aluno por sessão para não virar ruído.
+  const proactiveSeen = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (view !== "detail" || !selected) return;
+    const key = `aluno:${selected.id}`;
+    if (proactiveSeen.current.has(key)) return;
+    proactiveSeen.current.add(key);
+    const firstName = selected.name.split(" ")[0];
+    const t = setTimeout(() => {
+      sofia.pushProactive({
+        message: `Vi que você abriu o perfil do(a) ${firstName}. A próxima aula dele(a) é em ~2h. Quer que eu adapte agora?`,
+        action: {
+          label: `Adaptar aula para ${firstName}`,
+          prompt: `Adapte a próxima aula para ${selected.name}, considerando ${selected.diag}. Sugira 3 ajustes práticos com tempo estimado.`,
+        },
+      });
+    }, 800);
+    return () => clearTimeout(t);
+  }, [view, selected, sofia]);
+
+  useEffect(() => {
+    if (view !== "list") return;
+    const key = "list:inclusao";
+    if (proactiveSeen.current.has(key)) return;
+    proactiveSeen.current.add(key);
+    const t = setTimeout(() => {
+      sofia.pushProactive({
+        message: "Bem-vinda à Inclusão. Quer que eu te mostre quem precisa de atenção esta semana?",
+        action: {
+          label: "Ver prioridades da semana",
+          prompt: "Quais alunos da Inclusão precisam de atenção esta semana? Liste em ordem de urgência.",
+        },
+      });
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [view, sofia]);
+
   const setActiveTab = (t: TabKey) => {
     setTab(t);
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, tab: t }) as never, replace: true });
