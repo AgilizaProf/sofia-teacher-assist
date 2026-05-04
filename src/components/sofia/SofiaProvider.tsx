@@ -16,6 +16,12 @@ export type SofiaConversationSummary = {
   updated_at: string;
 };
 
+export type SofiaProactive = {
+  id: string;
+  message: string;
+  action?: { label: string; prompt?: string; to?: string };
+};
+
 type OpenOptions = {
   prompt?: string;       // pre-fills composer
   send?: boolean;        // send immediately
@@ -39,6 +45,12 @@ type SofiaCtx = {
   refreshConversations: () => Promise<void>;
   isAuthed: boolean;
   routeContext: string;
+  routeName: string;
+  unread: number;
+  resetUnread: () => void;
+  proactive: SofiaProactive | null;
+  pushProactive: (p: Omit<SofiaProactive, "id"> & { id?: string }) => void;
+  dismissProactive: () => void;
 };
 
 const Ctx = createContext<SofiaCtx | null>(null);
@@ -57,10 +69,26 @@ function useRouteContext() {
   }, [loc.pathname]);
 }
 
+function useRouteName() {
+  const loc = useLocation();
+  return useMemo(() => {
+    const p = loc.pathname;
+    if (p.startsWith("/inclusao")) return "Inclusão";
+    if (p.startsWith("/planejamento")) return "Planejamento";
+    if (p.startsWith("/relatorios")) return "Relatórios";
+    if (p.startsWith("/agenda")) return "Agenda";
+    if (p.startsWith("/assistente")) return "Assistente IA";
+    if (p.startsWith("/configuracoes")) return "Configurações";
+    if (p.startsWith("/auth")) return "Login";
+    return "Página inicial";
+  }, [loc.pathname]);
+}
+
 export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const loc = useLocation();
   const routeContext = useRouteContext();
+  const routeName = useRouteName();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<SofiaMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -68,6 +96,9 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<SofiaConversationSummary[]>([]);
   const [isAuthed, setIsAuthed] = useState(false);
+  const [unread, setUnread] = useState(0);
+  const [proactive, setProactive] = useState<SofiaProactive | null>(null);
+  const proactiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingAutoSend = useRef<string | null>(null);
 
   useEffect(() => {
@@ -109,6 +140,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       });
       setConversationId(data.conversationId);
       setMessages((m) => [...m, { role: "assistant", content: data.content || "", issues: data.issues }]);
+      if (!open) setUnread((n) => n + 1);
       refreshConversations();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
@@ -116,7 +148,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [draft, loading, messages, conversationId, routeContext, loc.pathname, isAuthed, navigate, refreshConversations]);
+  }, [draft, loading, messages, conversationId, routeContext, loc.pathname, isAuthed, navigate, refreshConversations, open]);
 
   const startNew = useCallback(() => {
     setMessages([]);
@@ -150,7 +182,31 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       pendingAutoSend.current = opts.context ? `${opts.prompt}\n\n[Contexto: ${opts.context}]` : opts.prompt;
     }
     setOpen(true);
+    setUnread(0);
+    setProactive(null);
   }, [startNew]);
+
+  const dismissProactive = useCallback(() => {
+    if (proactiveTimer.current) clearTimeout(proactiveTimer.current);
+    proactiveTimer.current = null;
+    setProactive(null);
+  }, []);
+
+  const pushProactive = useCallback((p: Omit<SofiaProactive, "id"> & { id?: string }) => {
+    if (proactiveTimer.current) clearTimeout(proactiveTimer.current);
+    const item: SofiaProactive = { id: p.id ?? crypto.randomUUID(), message: p.message, action: p.action };
+    setProactive(item);
+    setUnread((n) => n + 1);
+    proactiveTimer.current = setTimeout(() => setProactive(null), 12000);
+  }, []);
+
+  const resetUnread = useCallback(() => setUnread(0), []);
+
+  // Wrap setOpen so opening clears unread/proactive
+  const setOpenWrapped = useCallback((v: boolean) => {
+    setOpen(v);
+    if (v) { setUnread(0); dismissProactive(); }
+  }, [dismissProactive]);
 
   // Trigger pending auto-send after open
   useEffect(() => {
@@ -162,9 +218,10 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   }, [open, send]);
 
   const value: SofiaCtx = {
-    open, setOpen, openSofia, messages, loading, draft, setDraft, send,
+    open, setOpen: setOpenWrapped, openSofia, messages, loading, draft, setDraft, send,
     conversationId, startNew, conversations, loadConversation, refreshConversations,
-    isAuthed, routeContext,
+    isAuthed, routeContext, routeName, unread, resetUnread,
+    proactive, pushProactive, dismissProactive,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

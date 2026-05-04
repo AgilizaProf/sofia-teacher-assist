@@ -1,30 +1,45 @@
 import { useEffect, useRef } from "react";
-import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight } from "lucide-react";
+import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useNavigate } from "@tanstack/react-router";
 import { useSofia } from "./SofiaProvider";
 
 const css = `
-.sofia-fab{position:fixed;right:22px;bottom:22px;z-index:60;display:flex;align-items:center;gap:10px;padding:12px 18px 12px 14px;border:none;border-radius:999px;cursor:pointer;
-  background:linear-gradient(135deg,#FF7A45,#FF9466);color:#fff;font-weight:700;font-family:'Inter',sans-serif;font-size:13px;letter-spacing:.01em;
-  box-shadow:0 18px 40px -12px rgba(255,122,69,.55),0 4px 12px -4px rgba(255,122,69,.4);transition:transform .18s, box-shadow .18s;}
-.sofia-fab:hover{transform:translateY(-2px);box-shadow:0 24px 48px -10px rgba(255,122,69,.65);}
-.sofia-fab .sofia-fab-pulse{position:absolute;inset:0;border-radius:999px;animation:sofiaPulse 2.4s ease-out infinite;background:radial-gradient(circle,rgba(255,122,69,.45),transparent 60%);pointer-events:none;}
+.sofia-fab{position:fixed;right:24px;bottom:24px;z-index:50;width:56px;height:56px;border:none;border-radius:50%;cursor:pointer;
+  background:linear-gradient(135deg,#F97316,#FF9466);color:#fff;font-family:'Fraunces',serif;font-weight:900;font-size:22px;
+  display:grid;place-items:center;
+  box-shadow:0 18px 40px -12px rgba(249,115,22,.55),0 4px 12px -4px rgba(249,115,22,.45);transition:transform .18s, box-shadow .18s;}
+.sofia-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 24px 48px -10px rgba(249,115,22,.7);}
+.sofia-fab-pulse{position:absolute;inset:0;border-radius:50%;animation:sofiaPulse 2.4s ease-out infinite;background:radial-gradient(circle,rgba(249,115,22,.45),transparent 60%);pointer-events:none;}
 @keyframes sofiaPulse{0%{opacity:.55;transform:scale(.95);}100%{opacity:0;transform:scale(1.35);}}
-.sofia-fab-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;color:#fff;}
+.sofia-fab-badge{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#E11D48;color:#fff;font-family:'Inter',sans-serif;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid #fff;}
+
+.sofia-bubble{position:fixed;right:92px;bottom:32px;z-index:50;max-width:280px;background:#fff;border:1px solid #E7E9EF;border-radius:14px;padding:12px 14px;box-shadow:0 18px 40px -12px rgba(11,18,32,.25);font-family:'Inter',sans-serif;color:#1B2A4E;font-size:13px;line-height:1.45;animation:sofiaBubbleIn .25s cubic-bezier(.2,.8,.2,1);}
+.sofia-bubble::after{content:"";position:absolute;right:-8px;bottom:18px;width:0;height:0;border-left:8px solid #fff;border-top:8px solid transparent;border-bottom:8px solid transparent;}
+.sofia-bubble-close{position:absolute;top:6px;right:6px;background:transparent;border:none;color:#8A98AE;cursor:pointer;padding:2px;border-radius:6px;}
+.sofia-bubble-close:hover{background:#F4F6FB;color:#1B2A4E;}
+.sofia-bubble-head{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:#F97316;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.sofia-bubble-action{margin-top:8px;background:linear-gradient(135deg,#F97316,#FF9466);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;}
+@keyframes sofiaBubbleIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
 .sofia-overlay{position:fixed;inset:0;background:rgba(11,18,32,.45);z-index:65;backdrop-filter:blur(2px);animation:sofiaFade .2s ease-out;}
 @keyframes sofiaFade{from{opacity:0;}to{opacity:1;}}
-.sofia-drawer{position:fixed;right:0;top:0;bottom:0;width:min(440px,100%);background:#FBFAF6;z-index:70;display:flex;flex-direction:column;
+.sofia-drawer{position:fixed;right:0;top:0;bottom:0;width:400px;max-width:100vw;background:#FBFAF6;z-index:70;display:flex;flex-direction:column;
   box-shadow:-30px 0 60px -20px rgba(11,18,32,.35);font-family:'Inter',sans-serif;color:#1B2A4E;animation:sofiaSlide .25s cubic-bezier(.2,.8,.2,1);}
+@media(max-width:640px){.sofia-drawer{width:100vw;}.sofia-bubble{right:24px;bottom:88px;}}
 @keyframes sofiaSlide{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
 .sofia-head{display:flex;align-items:center;gap:12px;padding:14px 16px;background:linear-gradient(135deg,#1B2A4E,#0F1B36);color:#fff;}
-.sofia-head-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#FF7A45,#FF9466);display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px -8px rgba(255,122,69,.6);}
+.sofia-head-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F97316,#FF9466);display:grid;place-items:center;color:#fff;font-family:'Fraunces',serif;font-weight:900;font-size:16px;box-shadow:0 8px 18px -8px rgba(249,115,22,.6);}
 .sofia-head-name{font-family:'Fraunces',serif;font-weight:700;font-size:16px;}
 .sofia-head-sub{font-size:11px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:6px;}
 .sofia-head-sub .dot{width:6px;height:6px;border-radius:50%;background:#16A36B;}
 .sofia-head-actions{margin-left:auto;display:flex;gap:6px;}
 .sofia-head-btn{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer;}
 .sofia-head-btn:hover{background:rgba(255,255,255,.16);}
+
+.sofia-expand{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#FFF5EE;border-bottom:1px solid #FFD9C2;color:#9A3412;font-size:12px;font-weight:600;}
+.sofia-expand button{background:#fff;border:1px solid #FFD9C2;color:#F97316;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.sofia-expand button:hover{background:#F97316;color:#fff;border-color:#F97316;}
 
 .sofia-context{padding:8px 16px;background:#fff;border-bottom:1px solid #E7E9EF;font-size:11.5px;color:#5B6B82;display:flex;align-items:center;gap:6px;}
 .sofia-context b{color:#1B2A4E;font-weight:700;}
@@ -76,6 +91,7 @@ const SUGGESTIONS = [
 
 export function SofiaWidget() {
   const s = useSofia();
+  const navigate = useNavigate();
   const bodyRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -92,11 +108,31 @@ export function SofiaWidget() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
+      {!s.open && s.proactive && (
+        <div className="sofia-bubble" role="status">
+          <button className="sofia-bubble-close" aria-label="Fechar" onClick={s.dismissProactive}><X size={14} /></button>
+          <div className="sofia-bubble-head"><Sparkles size={11} /> Sofia</div>
+          <div>{s.proactive.message}</div>
+          {s.proactive.action && (
+            <button
+              className="sofia-bubble-action"
+              onClick={() => {
+                const act = s.proactive!.action!;
+                s.dismissProactive();
+                if (act.to) navigate({ to: act.to });
+                s.openSofia(act.prompt ? { prompt: act.prompt } : undefined);
+              }}
+            >
+              {s.proactive.action.label}
+            </button>
+          )}
+        </div>
+      )}
       {!s.open && (
         <button className="sofia-fab" aria-label="Abrir Sofia" onClick={() => s.setOpen(true)}>
           <span className="sofia-fab-pulse" />
-          <span className="sofia-fab-avatar"><Sparkles size={16} /></span>
-          <span>Sofia</span>
+          <span style={{ position: "relative", zIndex: 1 }}>S</span>
+          {s.unread > 0 && <span className="sofia-fab-badge">{s.unread > 9 ? "9+" : s.unread}</span>}
         </button>
       )}
       {s.open && (
@@ -104,9 +140,9 @@ export function SofiaWidget() {
           <div className="sofia-overlay" onClick={() => s.setOpen(false)} />
           <aside className="sofia-drawer" role="dialog" aria-label="Sofia">
             <header className="sofia-head">
-              <div className="sofia-head-avatar"><Sparkles size={18} /></div>
+              <div className="sofia-head-avatar">S</div>
               <div>
-                <div className="sofia-head-name">Sofia</div>
+                <div className="sofia-head-name">Sofia · {s.routeName}</div>
                 <div className="sofia-head-sub"><span className="dot" /> Assistente pedagógica · online</div>
               </div>
               <div className="sofia-head-actions">
@@ -114,6 +150,16 @@ export function SofiaWidget() {
                 <button className="sofia-head-btn" title="Fechar" onClick={() => s.setOpen(false)}><X size={16} /></button>
               </div>
             </header>
+
+            <div className="sofia-expand">
+              <span>💬 Mini-chat contextual</span>
+              <button
+                onClick={() => { s.setOpen(false); navigate({ to: "/assistente" }); }}
+                title="Abrir conversa completa"
+              >
+                <Maximize2 size={12} /> Abrir conversa completa
+              </button>
+            </div>
 
             <div className="sofia-context">
               <MessageSquare size={12} /> <b>Contexto:</b> {s.routeContext}
