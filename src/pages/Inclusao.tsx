@@ -1505,8 +1505,8 @@ export function Inclusao() {
                 <span><b>Idade:</b> 7 anos</span>
                 <span><b>Turma:</b> 2º Ano A · Manhã</span>
                 <span><b>Ref. curricular:</b> 2º Ano EF</span>
-                <span><b>CID:</b> F84.0 · TEA Nível 1</span>
-                <span><b>AEE:</b> 2x/semana · Profa. Carla Mendonça</span>
+                <span><b>CID:</b> —</span>
+                <span><b>AEE:</b> —</span>
               </div>
               <h2>1. Caracterização e Anamnese</h2>
               <p>O educando apresenta diagnóstico de TEA (Nível 1). Reconhece o alfabeto e lê palavras CV com mediação. Em Matemática demonstra fluência com material concreto. Sensibilidade auditiva alta — fones abafadores em uso. Família participativa.</p>
