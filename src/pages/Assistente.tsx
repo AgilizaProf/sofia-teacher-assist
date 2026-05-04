@@ -9,8 +9,9 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
 import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { useSofia } from "@/components/sofia/SofiaProvider";
-import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
+import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
 
 const css = `
 .ap-root{
@@ -194,6 +195,13 @@ const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string
 export function Assistente() {
   const navigate = useNavigate();
   const sofia = useSofia();
+  const ctx = useSofiaContext();
+  const fala = gerarFalaSofia(ctx);
+  const isPro = ctx.user.plano === "pro";
+  const periodoLabel = ctx.temporal.periodo === "manha" ? "Bom dia" : ctx.temporal.periodo === "tarde" ? "Boa tarde" : "Boa noite";
+  const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long" }).toUpperCase();
+  const proxima = ctx.dataState.proxima_aula;
+  const pcdComAula = isPro && proxima && proxima.minutos_ate <= 180 && ctx.entity.todos_alunos_pcd[0] ? ctx.entity.todos_alunos_pcd[0] : null;
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
@@ -254,10 +262,10 @@ export function Assistente() {
             </div>
             <div className="topbar-right">
               <div className="credits" title="Créditos do mês">
-                <div className="ring" />
+                <div className="ring" style={{ ['--p' as never]: ctx.user.creditos_total > 0 ? Math.round((ctx.user.creditos_usados / ctx.user.creditos_total) * 100) : 0 }} />
                 <div>
-                  <b>2.000<span style={{ color: "var(--muted)", fontWeight: 500 }}>/3.000</span></b>
-                  <small>CRÉDITOS · MAIO</small>
+                  <b>{ctx.user.creditos_usados.toLocaleString("pt-BR")}<span style={{ color: "var(--muted)", fontWeight: 500 }}>/{ctx.user.creditos_total.toLocaleString("pt-BR")}</span></b>
+                  <small>CRÉDITOS · {mesAtual}</small>
                 </div>
               </div>
               <button className="icon-btn" aria-label="Compartilhar"><Share2 size={16} /></button>
@@ -273,9 +281,23 @@ export function Assistente() {
 
           <div className="convo">
             <div className="convo-inner" ref={scrollRef}>
-              <div style={{ marginBottom: 16 }}>
-                <SofiaFocoCard />
-              </div>
+              {pcdComAula && proxima && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ background: "linear-gradient(135deg,#1E1B2E 0%,#15131F 100%)", border: "1px solid #2A2438", borderRadius: 16, padding: "18px 20px", color: "#fff", boxShadow: "0 14px 36px rgba(15,13,30,.28)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                      <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#F97316,#EA580C)", display: "grid", placeItems: "center", color: "#fff" }}><Sparkles size={16} /></div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: "#F97316", letterSpacing: ".04em", textTransform: "uppercase" }}>✨ Foco de hoje · sugerido pela IA</div>
+                    </div>
+                    <div style={{ fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,.95)", fontWeight: 500, marginBottom: 6 }}>
+                      <b>{pcdComAula.nome}</b> ({pcdComAula.condicao}) precisa de uma atividade adaptada para a aula de <b>{proxima.disciplina}</b> de hoje. A próxima aula dele(a) é em <span style={{ color: "#FDBA74", fontWeight: 700 }}>~{proxima.minutos_ate}min</span>. Quer que eu adapte agora?
+                    </div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,.55)", marginBottom: 14 }}>~<b style={{ color: "#FDBA74" }}>2 minutos</b> para gerar · baseado no laudo já cadastrado</div>
+                    <button onClick={() => sofia.openSofia({ prompt: `Adapte a aula de ${proxima.disciplina} (${proxima.bncc_codigo || "BNCC"}) para ${pcdComAula.nome} (${pcdComAula.condicao}). Sugira 3 ajustes práticos com tempo estimado.`, send: false })} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg,#F97316,#EA580C)", color: "#fff", border: 0, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                      Adaptar agora <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
               {messages.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
                   {messages.map((m, i) => (
@@ -320,24 +342,38 @@ export function Assistente() {
                 </div>
               ) : (
                 <>
-              <div className="stamp"><Clock size={12} /> QUINTA-FEIRA · 08:14</div>
-              <h1 className="greet">
-                Olá 👋<br />
-                Por onde <em><u>a gente começa hoje?</u></em>
-              </h1>
+              <div className="stamp"><Clock size={12} /> {ctx.temporal.dia_semana.toUpperCase()} · {ctx.temporal.hora_local}</div>
+              {isPro ? (
+                <h1 className="greet">
+                  {periodoLabel}, <em>{ctx.user.primeiro_nome}</em>.<br />
+                  O que vamos resolver agora?
+                </h1>
+              ) : (
+                <h1 className="greet">
+                  Olá 👋<br />
+                  Por onde <em><u>a gente começa hoje?</u></em>
+                </h1>
+              )}
               <p className="greet-sub">
-                Cadastre suas turmas e alunos para que eu tenha contexto e possa gerar pareceres, planos e adaptações em minutos.
+                {isPro
+                  ? `Tô de olho na ${ctx.entity.turma_atual?.nome || "sua turma"} · ${ctx.dataState.alunos_count} alunos. Pode pedir parecer, plano, adaptação ou registro.`
+                  : "Cadastre suas turmas e alunos para que eu tenha contexto e possa gerar pareceres, planos e adaptações em minutos."}
               </p>
 
               <div className="suggest">
                 <div className="ico-tile"><FileText size={22} /></div>
                 <div>
                   <div className="label"><Star size={11} fill="currentColor" /> SUGESTÃO PRA VOCÊ AGORA</div>
-                  <h3>Comece cadastrando sua primeira turma</h3>
-                  <p>Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui.</p>
+                  <h3 dangerouslySetInnerHTML={{ __html: fala.texto || "Comece cadastrando sua primeira turma" }} />
+                  <p>{fala.acoes[0]?.prompt ? "A Sofia sugere essa próxima ação com base no seu contexto agora." : "Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui."}</p>
                 </div>
-                <button className="btn-cta" onClick={() => navigate({ to: "/" })} aria-label="Começar agora">
-                  Começar agora <ArrowRight size={14} />
+                <button className="btn-cta" onClick={() => {
+                  const a = fala.acoes[0];
+                  if (a?.prompt) sofia.openSofia({ prompt: a.prompt, send: false });
+                  else if (a?.to) navigate({ to: a.to as string });
+                  else navigate({ to: "/" });
+                }} aria-label={fala.acoes[0]?.label || "Começar agora"}>
+                  {fala.acoes[0]?.label || "Começar agora"} <ArrowRight size={14} />
                 </button>
               </div>
 
