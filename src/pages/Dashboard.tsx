@@ -439,6 +439,16 @@ export function Dashboard() {
                   icon="📈"
                   title="Suas atividades aparecerão aqui conforme você usar a Sofia."
                 />
+                <button
+                  type="button"
+                  className="sofia-week-ask"
+                  onClick={() => sofia.openSofia({
+                    prompt: "Me dê um panorama desta semana: o que aconteceu, o que falta e onde devo focar amanhã?",
+                    context: "Tela: Página inicial · card Esta semana",
+                  })}
+                >
+                  💬 Pergunte à Sofia sobre esta semana
+                </button>
               </div>
 
               <div className="card">
