@@ -192,9 +192,6 @@ export function SofiaWidget() {
                   </div>
                   <h3>{greeting()}, professora 👋</h3>
                   <p>Vamos juntas? Posso preparar um <span className="sofia-em">parecer em ~4 min</span>, um <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação inclusiva — escolha por onde começar.</p>
-                  {!s.isAuthed && (
-                    <p style={{ marginTop: 12, color: "var(--sofia-primary)", fontWeight: 700 }}>Faça login para conversar comigo.</p>
-                  )}
                   <div className="sofia-suggest">
                     {SUGGESTIONS.map((q) => (
                       <button key={q} className="sofia-sg-btn" onClick={() => s.send(q)}>
@@ -233,12 +230,12 @@ export function SofiaWidget() {
                 value={s.draft}
                 onChange={(e) => s.setDraft(e.target.value)}
                 onKeyDown={onKey}
-                placeholder={s.isAuthed ? "Pergunte algo à Sofia…" : "Faça login para conversar"}
-                disabled={!s.isAuthed || s.loading}
+                placeholder="Pergunte algo à Sofia…"
+                disabled={s.loading}
               />
               <div className="sofia-composer-row">
                 <span className="sofia-composer-hint">Enter para enviar · Shift+Enter para quebrar linha</span>
-                <button className="sofia-send" onClick={() => s.send()} disabled={!s.draft.trim() || s.loading || !s.isAuthed}>
+                <button className="sofia-send" onClick={() => s.send()} disabled={!s.draft.trim() || s.loading}>
                   <Send size={13} /> Enviar
                 </button>
               </div>
