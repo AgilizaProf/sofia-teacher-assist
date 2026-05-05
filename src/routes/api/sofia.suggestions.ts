@@ -43,7 +43,7 @@ export const Route = createFileRoute("/api/sofia/suggestions")({
         let items = sortByPriority([...ruleHits, ...base]);
 
         // 5. (Opcional) Polir títulos com IA — desativado por padrão
-        items = await maybePolishTitlesWithAI(items, { enabled: false });
+        items = await maybePolishTitlesWithAI(items, { enabled: true });
 
         setCached(key, items);
         return Response.json({ screen, entityId, suggestions: items, cached: false });
