@@ -204,17 +204,57 @@ export function setCached(key: string, value: SofiaSuggestion[]) {
   CACHE.set(key, { value, expiresAt: Date.now() + TTL_MS });
 }
 
+// ---------- Métricas do polimento (latência + custo) ----------
+// Preços aproximados do Gemini 2.5 Flash via Lovable AI Gateway
+// (USD por 1M tokens — ajuste se a tabela oficial mudar).
+const GEMINI_25_FLASH_USD_PER_M = { input: 0.075, output: 0.30 };
+
+export type PolishMetrics = {
+  enabled: boolean;
+  called: boolean;
+  ok: boolean;
+  model: string;
+  latencyMs: number;
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  estimatedCostUSD: number;
+  itemsIn: number;
+  itemsOut: number;
+  error?: string;
+};
+
+const EMPTY_METRICS: PolishMetrics = {
+  enabled: false,
+  called: false,
+  ok: false,
+  model: "google/gemini-2.5-flash",
+  latencyMs: 0,
+  promptTokens: 0,
+  completionTokens: 0,
+  totalTokens: 0,
+  estimatedCostUSD: 0,
+  itemsIn: 0,
+  itemsOut: 0,
+};
+
 // ---------- Geração opcional de título empático via IA ----------
 // Só chamada quando a regra produz sugestões e queremos refinar o tom.
 // Hoje fica desativada por padrão para evitar custo; controlada por flag.
 export async function maybePolishTitlesWithAI(
   items: SofiaSuggestion[],
   opts: { enabled: boolean }
-): Promise<SofiaSuggestion[]> {
-  if (!opts.enabled || items.length === 0) return items;
+): Promise<{ items: SofiaSuggestion[]; metrics: PolishMetrics }> {
+  const metrics: PolishMetrics = { ...EMPTY_METRICS, enabled: opts.enabled, itemsIn: items.length, itemsOut: items.length };
+  if (!opts.enabled || items.length === 0) return { items, metrics };
   const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) return items;
+  if (!apiKey) {
+    metrics.error = "missing_api_key";
+    return { items, metrics };
+  }
 
+  const startedAt = Date.now();
+  metrics.called = true;
   try {
     const titles = items.map((i, idx) => `${idx + 1}. ${i.title}`).join("\n");
     const task = [
@@ -239,16 +279,37 @@ export async function maybePolishTitlesWithAI(
         ],
       }),
     });
-    if (!res.ok) return items;
-    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    metrics.latencyMs = Date.now() - startedAt;
+    if (!res.ok) {
+      metrics.error = `http_${res.status}`;
+      return { items, metrics };
+    }
+    const json = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+    };
+    const usage = json.usage || {};
+    metrics.promptTokens = usage.prompt_tokens ?? 0;
+    metrics.completionTokens = usage.completion_tokens ?? 0;
+    metrics.totalTokens = usage.total_tokens ?? metrics.promptTokens + metrics.completionTokens;
+    metrics.estimatedCostUSD =
+      (metrics.promptTokens / 1_000_000) * GEMINI_25_FLASH_USD_PER_M.input +
+      (metrics.completionTokens / 1_000_000) * GEMINI_25_FLASH_USD_PER_M.output;
     const content = json.choices?.[0]?.message?.content || "";
     const { sanitized } = validateSofiaOutput(content);
     const lines = sanitized
       .split("\n")
       .map((l) => l.replace(/^\s*\d+[\.\)]\s*/, "").trim())
       .filter(Boolean);
-    return items.map((i, idx) => (lines[idx] ? { ...i, title: lines[idx].slice(0, 120) } : i));
-  } catch {
-    return items;
+    const out = items.map((i, idx) => (lines[idx] ? { ...i, title: lines[idx].slice(0, 120) } : i));
+    metrics.ok = true;
+    metrics.itemsOut = out.length;
+    console.log("[sofia.polish]", JSON.stringify(metrics));
+    return { items: out, metrics };
+  } catch (e) {
+    metrics.latencyMs = Date.now() - startedAt;
+    metrics.error = e instanceof Error ? e.message : "unknown";
+    console.error("[sofia.polish] error", metrics);
+    return { items, metrics };
   }
 }
