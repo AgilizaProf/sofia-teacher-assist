@@ -42,11 +42,18 @@ export const Route = createFileRoute("/api/sofia/suggestions")({
         // 4. Combinar e ordenar por prioridade
         let items = sortByPriority([...ruleHits, ...base]);
 
-        // 5. (Opcional) Polir títulos com IA — desativado por padrão
-        items = await maybePolishTitlesWithAI(items, { enabled: true });
+        // 5. Polimento de títulos com IA (Gemini 2.5 Flash + Constituição)
+        const polished = await maybePolishTitlesWithAI(items, { enabled: true });
+        items = polished.items;
 
         setCached(key, items);
-        return Response.json({ screen, entityId, suggestions: items, cached: false });
+        return Response.json({
+          screen,
+          entityId,
+          suggestions: items,
+          cached: false,
+          polish: polished.metrics,
+        });
       },
     },
   },
