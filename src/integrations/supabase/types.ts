@@ -263,6 +263,66 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          cidade: string | null
+          created_at: string
+          disciplinas: string[] | null
+          display_name: string | null
+          email: string | null
+          escola: string | null
+          etapa_ensino: string | null
+          id: string
+          preferencias: Json
+          sofia_lembretes: boolean
+          sofia_tom: string | null
+          telefone: string | null
+          turmas: string[] | null
+          uf: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          cidade?: string | null
+          created_at?: string
+          disciplinas?: string[] | null
+          display_name?: string | null
+          email?: string | null
+          escola?: string | null
+          etapa_ensino?: string | null
+          id?: string
+          preferencias?: Json
+          sofia_lembretes?: boolean
+          sofia_tom?: string | null
+          telefone?: string | null
+          turmas?: string[] | null
+          uf?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          cidade?: string | null
+          created_at?: string
+          disciplinas?: string[] | null
+          display_name?: string | null
+          email?: string | null
+          escola?: string | null
+          etapa_ensino?: string | null
+          id?: string
+          preferencias?: Json
+          sofia_lembretes?: boolean
+          sofia_tom?: string | null
+          telefone?: string | null
+          turmas?: string[] | null
+          uf?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sofia_conversations: {
         Row: {
           context: Json
