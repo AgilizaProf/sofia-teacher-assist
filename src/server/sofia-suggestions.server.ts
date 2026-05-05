@@ -1,4 +1,6 @@
 import type { SofiaSuggestion } from "@/components/sofia/SofiaSuggestionCard";
+import { buildSofiaPrompt } from "@/lib/sofia-constitution";
+import { validateSofiaOutput } from "@/lib/sofia-validator";
 
 // ---------- Tipos de contexto (preenchidos quando as tabelas existirem) ----------
 export type ProfessoraContext = {
@@ -215,17 +217,24 @@ export async function maybePolishTitlesWithAI(
 
   try {
     const titles = items.map((i, idx) => `${idx + 1}. ${i.title}`).join("\n");
+    const task = [
+      "Reescreva cada título de sugestão mantendo o sentido original.",
+      "Requisitos OBRIGATÓRIOS:",
+      "• Tom acolhedor de parceira da professora (nunca professoral).",
+      "• Máximo 80 caracteres por título.",
+      "• Linguagem não-capacitista (Princípio 3 da Constituição).",
+      "• Quando o título envolver plano, atividade, adaptação ou parecer, sinalizar alinhamento à BNCC de forma natural (ex.: 'alinhado à BNCC', 'na linha das habilidades da BNCC').",
+      "• Não inventar dados de alunos, datas, turmas ou prazos.",
+      "Responda APENAS com a lista numerada, um título por linha, sem comentários.",
+    ].join("\n");
+    const prompt = buildSofiaPrompt(task, `Títulos atuais:\n${titles}`);
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          {
-            role: "system",
-            content:
-              "Você é a Sofia, assistente de uma professora. Reescreva cada título mantendo o sentido, em tom acolhedor, curto (máx 80 caracteres), sem capacitismo. Responda apenas com a lista numerada.",
-          },
+          { role: "system", content: prompt },
           { role: "user", content: titles },
         ],
       }),
@@ -233,7 +242,8 @@ export async function maybePolishTitlesWithAI(
     if (!res.ok) return items;
     const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
     const content = json.choices?.[0]?.message?.content || "";
-    const lines = content
+    const { sanitized } = validateSofiaOutput(content);
+    const lines = sanitized
       .split("\n")
       .map((l) => l.replace(/^\s*\d+[\.\)]\s*/, "").trim())
       .filter(Boolean);
