@@ -1137,6 +1137,26 @@ export function Planejamento() {
     showToast(`Cartão movido para ${to.toUpperCase()}. Sofia confirmou ausência de conflito. ✓`);
   };
 
+  // === M1 — Drag & drop entre dias do calendário ===
+  const m1DragCard = useRef<{ from: DayKey; id: string } | null>(null);
+  const [m1DropDay, setM1DropDay] = useState<DayKey | null>(null);
+  const onM1DragStart = (from: DayKey, id: string) => { m1DragCard.current = { from, id }; };
+  const onM1DragOver = (e: React.DragEvent, day: DayKey) => { e.preventDefault(); setM1DropDay(day); };
+  const onM1DragLeave = () => setM1DropDay(null);
+  const onM1Drop = (e: React.DragEvent, to: DayKey) => {
+    e.preventDefault();
+    setM1DropDay(null);
+    const d = m1DragCard.current; if (!d) return;
+    if (d.from === to) return;
+    setM1Plan((p) => {
+      const card = p[d.from].find((c) => c.id === d.id); if (!card) return p;
+      return { ...p, [d.from]: p[d.from].filter((c) => c.id !== d.id), [to]: [...p[to], card] };
+    });
+    m1DragCard.current = null;
+    const dayName = m1Week.days.find((x) => x.k === to)?.n ?? to.toUpperCase();
+    showToast(`Atividade movida para ${dayName}. ✓`);
+  };
+
   const cfg = M_CONFIG[m];
   const pickCount = useMemo(() => Object.values(picks).filter(Boolean).length, [picks]);
 
