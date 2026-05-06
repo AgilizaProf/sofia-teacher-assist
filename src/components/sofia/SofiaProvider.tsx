@@ -51,6 +51,8 @@ type SofiaCtx = {
   proactive: SofiaProactive | null;
   pushProactive: (p: Omit<SofiaProactive, "id"> & { id?: string }) => void;
   dismissProactive: () => void;
+  bootError: string | null;
+  retryBootstrap: () => Promise<void>;
 };
 
 const Ctx = createContext<SofiaCtx | null>(null);
@@ -98,6 +100,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const [isAuthed, setIsAuthed] = useState(false);
   const [unread, setUnread] = useState(0);
   const [proactive, setProactive] = useState<SofiaProactive | null>(null);
+  const [bootError, setBootError] = useState<string | null>(null);
   const proactiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingAutoSend = useRef<string | null>(null);
   // Marcador invisível de navegação — anexado ao próximo envio.
@@ -105,47 +108,67 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const pendingRouteMarker = useRef<string | null>(null);
   const lastRouteMarker = useRef<string | null>(null);
 
+  // Inicialização da Sofia (sessão + conversas). Extraída para permitir
+  // que o usuário acione "Tentar novamente" sem recarregar a página.
+  const bootstrap = useCallback(async () => {
+    setBootError(null);
+    let authedNow = false;
+    try {
+      const { data } = await supabase.auth.getSession();
+      authedNow = !!data.session;
+      setIsAuthed(authedNow);
+    } catch (err) {
+      console.warn("[Sofia] getSession falhou:", err);
+      setIsAuthed(false);
+      setBootError(err instanceof Error ? err.message : "Não foi possível conectar a Sofia.");
+      return;
+    }
+    if (authedNow) {
+      try {
+        const { conversations: list } = await listSofiaConversations();
+        setConversations(list as SofiaConversationSummary[]);
+      } catch (err) {
+        console.warn("[Sofia] listSofiaConversations falhou:", err);
+        setBootError(err instanceof Error ? err.message : "Não foi possível carregar suas conversas.");
+      }
+    }
+  }, []);
+
+  const retryBootstrap = useCallback(() => bootstrap(), [bootstrap]);
+
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession()
-      .then(({ data }) => { if (mounted) setIsAuthed(!!data.session); })
-      .catch((err) => {
-        // Falha de rede/sessão não deve travar a página — apenas segue desautenticado.
-        console.warn("[Sofia] getSession falhou, seguindo desautenticado:", err);
-        if (mounted) setIsAuthed(false);
-      });
+    void bootstrap();
     let sub: { subscription: { unsubscribe: () => void } } | null = null;
     try {
       const res = supabase.auth.onAuthStateChange((event, s) => {
-      setIsAuthed(!!s);
-      // Conecta a Sofia automaticamente assim que o usuário faz login.
-      if (event === "SIGNED_IN" && s) {
-        // Carrega conversas anteriores em background.
-        setTimeout(() => { refreshConversationsRef.current?.(); }, 0);
-        // Mensagem proativa de boas-vindas.
-        const nome = (s.user.user_metadata?.display_name as string | undefined)
-          || (s.user.user_metadata?.name as string | undefined)
-          || (s.user.email ? s.user.email.split("@")[0] : "professora");
-        setTimeout(() => {
-          pushProactiveRef.current?.({
-            id: "sofia-welcome",
-            message: `Olá, ${nome}! Sou a Sofia e já estou conectada. Posso ajudar com planejamento, pareceres, inclusão e agenda. É só me chamar. ✨`,
-            action: { label: "Conversar com a Sofia" },
-          });
-        }, 600);
-      }
-      if (event === "SIGNED_OUT") {
-        setMessages([]);
-        setConversationId(null);
-        setConversations([]);
-      }
+        if (!mounted) return;
+        setIsAuthed(!!s);
+        if (event === "SIGNED_IN" && s) {
+          setTimeout(() => { refreshConversationsRef.current?.(); }, 0);
+          const nome = (s.user.user_metadata?.display_name as string | undefined)
+            || (s.user.user_metadata?.name as string | undefined)
+            || (s.user.email ? s.user.email.split("@")[0] : "professora");
+          setTimeout(() => {
+            pushProactiveRef.current?.({
+              id: "sofia-welcome",
+              message: `Olá, ${nome}! Sou a Sofia e já estou conectada. Posso ajudar com planejamento, pareceres, inclusão e agenda. É só me chamar. ✨`,
+              action: { label: "Conversar com a Sofia" },
+            });
+          }, 600);
+        }
+        if (event === "SIGNED_OUT") {
+          setMessages([]);
+          setConversationId(null);
+          setConversations([]);
+        }
       });
       sub = res.data;
     } catch (err) {
       console.warn("[Sofia] onAuthStateChange falhou ao registrar:", err);
     }
     return () => { mounted = false; try { sub?.subscription.unsubscribe(); } catch { /* ignore */ } };
-  }, []);
+  }, [bootstrap]);
 
   const refreshConversations = useCallback(async () => {
     if (!isAuthed) return;
@@ -290,6 +313,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     conversationId, startNew, conversations, loadConversation, refreshConversations,
     isAuthed, routeContext, routeName, unread, resetUnread,
     proactive, pushProactive, dismissProactive,
+    bootError, retryBootstrap,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
