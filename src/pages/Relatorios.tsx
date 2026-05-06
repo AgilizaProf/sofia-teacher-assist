@@ -450,10 +450,17 @@ export function Relatorios() {
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
-            <div className="rel-kpi">
-              <div className="rel-kpi-top"><span className="rel-kpi-label">TEMPO ECONOMIZADO</span><div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">{Math.floor(horasEcon)}h<small>{String(Math.round((horasEcon % 1) * 60)).padStart(2, "0")}min</small></div>
-              <div className="rel-kpi-foot">{horasEcon > 0 ? "vs. escrita manual" : "—"}</div>
+            <div className="rel-kpi" style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent" }}>
+              <div className="rel-kpi-top">
+                <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
+                <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
+              </div>
+              <div className="rel-kpi-num" style={{ color: "#fff" }}>
+                {savedH}h<small style={{ color: "rgba(255,255,255,.75)" }}>{String(savedM).padStart(2, "0")}min</small>
+              </div>
+              <div className="rel-kpi-foot" style={{ color: "rgba(255,255,255,.7)" }}>
+                {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
+              </div>
             </div>
           </div>
 
