@@ -316,6 +316,25 @@ const BNCC_SOCIO: string[] = [
   "Autorregulação e persistência diante de desafios",
 ];
 
+// Comportamento e socialização — avaliados para todos os alunos
+const BNCC_COMPORTAMENTO: string[] = [
+  "Cumprimento de combinados e regras de convivência",
+  "Atenção e engajamento nas atividades propostas",
+  "Relacionamento respeitoso com colegas e professores",
+  "Participação em atividades coletivas e trabalhos em grupo",
+  "Resolução de conflitos pelo diálogo",
+];
+
+// Indicadores adicionais para alunos PCD (somente exibido quando aluno é PCD)
+const BNCC_PCD: string[] = [
+  "Resposta às adaptações curriculares e recursos de acessibilidade",
+  "Comunicação e expressão de necessidades",
+  "Autonomia nas atividades da rotina escolar",
+  "Interação social e vínculo com colegas",
+  "Regulação emocional e tolerância à frustração",
+  "Progresso em relação às metas do PEI",
+];
+
 // Habilidades BNCC por ano de escolaridade (Ensino Fundamental).
 // Resumos didáticos por ano — mantidos curtos pra interface.
 const BNCC_BY_YEAR: Record<string, BnccArea[]> = {
