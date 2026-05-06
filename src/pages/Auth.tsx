@@ -199,7 +199,7 @@ export function AuthPage() {
 const css = `
 :root{--primary:#1B2A4E;--primary-dark:#0F1B36;--primary-soft:#EEF1F8;--accent:#FF7A45;--accent-warm:#FF9466;--uol-orange:#FF6600;--bg:#FFFFFF;--bg-soft:#F7F8FB;--text:#1B2A4E;--text-soft:#5B6B82;--border:#DDE3EE;}
 .split{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;font-family:'Inter',-apple-system,sans-serif;color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;}
-.split h1,.split h2{font-family:'Fraunces',Georgia,serif;letter-spacing:-0.02em;color:var(--primary);line-height:1.15;}
+.split h2{font-family:'Fraunces',Georgia,serif;letter-spacing:-0.02em;color:var(--primary);line-height:1.15;}
 .left{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#fff;padding:56px 64px;display:flex;flex-direction:column;position:relative;overflow:hidden;}
 .left::before{content:"";position:absolute;top:-150px;right:-150px;width:500px;height:500px;background:radial-gradient(circle,rgba(255,122,69,.20) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
 .left::after{content:"";position:absolute;bottom:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(255,148,102,.10) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
