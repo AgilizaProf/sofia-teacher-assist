@@ -247,6 +247,9 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     proactiveTimer.current = setTimeout(() => setProactive(null), 12000);
   }, []);
 
+  const pushProactiveRef = useRef(pushProactive);
+  useEffect(() => { pushProactiveRef.current = pushProactive; }, [pushProactive]);
+
   const resetUnread = useCallback(() => setUnread(0), []);
 
   // Wrap setOpen so opening clears unread/proactive
