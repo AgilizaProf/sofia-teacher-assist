@@ -941,6 +941,8 @@ export function Planejamento() {
       intensidade: mdInt,
       diaISO: m1DayModal.iso,
       interdisciplinar: mdInter && mdPodeInter,
+      quantidade: mdModo === "quantidade" ? mdQtd : undefined,
+      minutosAlvo: mdModo === "tempo" ? mdMin : undefined,
     });
     setM1Plan((p) => ({ ...p, [m1DayModal.dia]: [...p[m1DayModal.dia], ...novos] }));
     showToast(`Sofia adicionou ${novos.length} atividade(s) em ${m1DayModal.n}. ✓`);
