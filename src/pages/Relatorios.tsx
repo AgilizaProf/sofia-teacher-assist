@@ -10,7 +10,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
-  MessageSquare, Download, Copy,
+  MessageSquare, Download, Copy, X, ClipboardList,
 } from "lucide-react";
 
 const css = `
@@ -300,6 +300,58 @@ function useAnimatedNumber(target: number, duration = 800) {
   return value;
 }
 
+// Status BNCC clicáveis
+type BnccStatus = "no" | "na" | "ed" | "co"; // não observada / não alcançada / em desenvolvimento / consolidada
+const BNCC_STATUS: Array<{ k: BnccStatus; label: string; short: string; color: string; bg: string }> = [
+  { k: "no", label: "Não observada", short: "NO", color: "#6B7280", bg: "#F3F4F6" },
+  { k: "na", label: "Não alcançada", short: "NA", color: "#DC2626", bg: "#FDECEC" },
+  { k: "ed", label: "Em desenvolvimento", short: "ED", color: "#E9A23B", bg: "#FCF1DC" },
+  { k: "co", label: "Consolidada", short: "CO", color: "#16A36B", bg: "#E7F6EE" },
+];
+
+const BNCC_AREAS: Array<{ area: string; comps: string[] }> = [
+  {
+    area: "Língua Portuguesa",
+    comps: [
+      "Leitura fluente e compreensão de textos diversos",
+      "Produção de textos orais e escritos com coesão",
+      "Análise linguística e ortografia em contextos",
+      "Oralidade: escuta atenta e expressão de ideias",
+    ],
+  },
+  {
+    area: "Matemática",
+    comps: [
+      "Números e operações no sistema decimal",
+      "Resolução de problemas com raciocínio lógico",
+      "Grandezas, medidas e geometria básica",
+      "Probabilidade, estatística e leitura de gráficos",
+    ],
+  },
+  {
+    area: "Ciências",
+    comps: [
+      "Observação, registro e levantamento de hipóteses",
+      "Vida, ambiente e sustentabilidade",
+    ],
+  },
+  {
+    area: "Humanas (História/Geografia)",
+    comps: [
+      "Tempo, espaço e identidade cultural",
+      "Cidadania, convivência e diversidade",
+    ],
+  },
+  {
+    area: "Competências socioemocionais",
+    comps: [
+      "Autonomia e responsabilidade nas tarefas",
+      "Cooperação e respeito nas relações",
+      "Autorregulação e persistência diante de desafios",
+    ],
+  },
+];
+
 export function Relatorios() {
   const user = useUser();
   const ctx = useSofiaContext();
@@ -313,6 +365,38 @@ export function Relatorios() {
   const [filterTurma, setFilterTurma] = useState("Todas");
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState("Todos");
+
+  // Rubrica BNCC por aluno (persistido)
+  const [bnccByAluno, setBnccByAluno] = usePersistentState<Record<string, Record<string, BnccStatus>>>("rel_bncc", {});
+  const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string } | null>(null);
+
+  const competKeys = useMemo(() => {
+    const out: string[] = [];
+    BNCC_AREAS.forEach((a, i) => a.comps.forEach((_c, j) => out.push(`${i}.${j}`)));
+    return out;
+  }, []);
+  const getAlunoRubric = (id: string) => bnccByAluno[id] || {};
+  const setAlunoStatus = (id: string, key: string, status: BnccStatus) =>
+    setBnccByAluno((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: status } }));
+  const cycleStatus = (cur: BnccStatus | undefined): BnccStatus => {
+    const order: BnccStatus[] = ["no", "na", "ed", "co"];
+    return order[(order.indexOf(cur || "no") + 1) % order.length];
+  };
+  const computeProgress = (id: string) => {
+    const rub = getAlunoRubric(id);
+    let preenchido = 0; let pesoTotal = 0; let pontos = 0;
+    competKeys.forEach((k) => {
+      const s = rub[k];
+      pesoTotal += 3; // máximo CO=3
+      if (s && s !== "no") preenchido += 1;
+      if (s === "na") pontos += 0;
+      else if (s === "ed") pontos += 2;
+      else if (s === "co") pontos += 3;
+    });
+    const pctPreenchido = Math.round((preenchido / competKeys.length) * 100);
+    const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
+    return { pctPreenchido, pctDesempenho };
+  };
 
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
@@ -598,7 +682,26 @@ export function Relatorios() {
                   {a.pcd && <span className="rel-badge pcd">PCD</span>}
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
+                {(() => {
+                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id);
+                  return (
+                    <div style={{ marginTop: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
+                        <span>BNCC · {pctPreenchido}% avaliado</span>
+                        <span>Desempenho {pctDesempenho}%</span>
+                      </div>
+                      <div className="rel-progress"><i style={{ width: `${pctPreenchido}%` }} /></div>
+                    </div>
+                  );
+                })()}
                 <div className="rel-card-foot">
+                  <button
+                    className="rel-btn-card"
+                    onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma })}
+                    aria-label={`Avaliar competências BNCC de ${a.nome}`}
+                  >
+                    <ClipboardList size={13} /> Avaliar BNCC
+                  </button>
                   {a.status === "todo" && (
                     <button className="rel-btn-card accent" onClick={() => sofia.openSofia({ prompt: `Gere o parecer descritivo bimestral de ${a.nome} alinhado à BNCC.`, send: false })}>
                       <Sparkles size={13} /> Gerar com Sofia
@@ -712,6 +815,116 @@ export function Relatorios() {
           </div>
         </div>
       )}
+
+      {bnccOpen && (() => {
+        const { id, nome, turma } = bnccOpen;
+        const rub = getAlunoRubric(id);
+        const { pctPreenchido, pctDesempenho } = computeProgress(id);
+        return (
+          <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setBnccOpen(null)}>
+            <div className="rel-modal" style={{ maxWidth: 760, width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "18px 20px", borderBottom: "1px solid var(--line-soft)" }}>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ margin: 0, fontSize: 18 }}>Avaliação BNCC · {nome}</h3>
+                  <div style={{ fontSize: 12, color: "var(--text-soft)", marginTop: 2 }}>{turma || "Sem turma"} · {bimestreNum}º bimestre</div>
+                </div>
+                <button onClick={() => setBnccOpen(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+              </div>
+
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--line-soft)", background: "#FAF8F2" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
+                  <span>Progresso da avaliação</span>
+                  <span>{pctPreenchido}% avaliado · Desempenho {pctDesempenho}%</span>
+                </div>
+                <div style={{ height: 8, background: "#EEE9DC", borderRadius: 99, overflow: "hidden" }}>
+                  <div style={{ width: `${pctPreenchido}%`, height: "100%", background: "linear-gradient(90deg,#FF6A2C,#FFB47A)", transition: "width .3s" }} />
+                </div>
+                <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+                  {BNCC_STATUS.map((s) => (
+                    <span key={s.k} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: s.color, background: s.bg, padding: "3px 8px", borderRadius: 99 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: s.color }} /> {s.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ overflowY: "auto", padding: "8px 20px 16px" }}>
+                {BNCC_AREAS.map((area, ai) => (
+                  <div key={area.area} style={{ marginTop: 14 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-soft)", marginBottom: 6 }}>{area.area}</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {area.comps.map((comp, ci) => {
+                        const key = `${ai}.${ci}`;
+                        const cur = rub[key];
+                        return (
+                          <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "1px solid var(--line-soft)", borderRadius: 10, background: "#fff" }}>
+                            <div style={{ flex: 1, fontSize: 13, color: "var(--text)" }}>{comp}</div>
+                            <div style={{ display: "inline-flex", gap: 4 }}>
+                              {BNCC_STATUS.map((s) => {
+                                const active = cur === s.k;
+                                return (
+                                  <button
+                                    key={s.k}
+                                    type="button"
+                                    onClick={() => setAlunoStatus(id, key, s.k)}
+                                    title={s.label}
+                                    aria-pressed={active}
+                                    style={{
+                                      cursor: "pointer", border: `1px solid ${active ? s.color : "var(--line-soft)"}`,
+                                      background: active ? s.color : "#fff", color: active ? "#fff" : s.color,
+                                      borderRadius: 8, padding: "5px 9px", fontSize: 11, fontWeight: 800, minWidth: 38,
+                                      transition: "all .15s",
+                                    }}
+                                  >{s.short}</button>
+                                );
+                              })}
+                              <button
+                                type="button"
+                                onClick={() => setAlunoStatus(id, key, cycleStatus(cur))}
+                                title="Alternar status"
+                                aria-label="Alternar status"
+                                style={{ cursor: "pointer", border: "1px solid var(--line-soft)", background: "#fff", borderRadius: 8, padding: "5px 7px", color: "var(--text-soft)" }}
+                              >↻</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: "flex", gap: 8, justifyContent: "space-between", padding: "14px 20px", borderTop: "1px solid var(--line-soft)", background: "#fff" }}>
+                <button
+                  onClick={() => { setBnccByAluno((p) => { const cp = { ...p }; delete cp[id]; return cp; }); }}
+                  style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "var(--text-soft)", cursor: "pointer" }}
+                >Limpar avaliação</button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => setBnccOpen(null)}
+                    style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                  >Fechar</button>
+                  <button
+                    onClick={() => {
+                      const linhas = BNCC_AREAS.flatMap((area, ai) => area.comps.map((c, ci) => {
+                        const s = rub[`${ai}.${ci}`];
+                        const lbl = BNCC_STATUS.find((x) => x.k === s)?.label || "Não observada";
+                        return `- (${area.area}) ${c}: ${lbl}`;
+                      })).join("\n");
+                      sofia.openSofia({
+                        prompt: `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.`,
+                        send: true,
+                      });
+                      setBnccOpen(null);
+                    }}
+                    style={{ background: "linear-gradient(135deg,#FF6A2C,#EA580C)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                  ><Sparkles size={13} /> Gerar parecer com a Sofia</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
