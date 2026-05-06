@@ -532,13 +532,43 @@ function sofiaGenerateForDay(opts: {
   if (opts.competencias.length === 0) return out;
 
   if (opts.interdisciplinar) {
-    // Agrupa competências de disciplinas diferentes em uma única atividade.
-    // Ex.: perDay=2 com 4 competências de 3 disciplinas → 2 atividades, cada
-    // uma juntando ~2 competências de disciplinas distintas.
+    // Agrupa competências de disciplinas diferentes em uma única atividade,
+    // de forma coerente: cada atividade puxa, quando possível, 1 competência
+    // de cada disciplina selecionada (round-robin), garantindo que NENHUMA
+    // competência se repita entre as atividades do dia.
+    const porDisciplina = new Map<string, Array<CompetenciaBNCC & { disciplina: string }>>();
+    for (const c of opts.competencias) {
+      const arr = porDisciplina.get(c.disciplina) ?? [];
+      arr.push(c);
+      porDisciplina.set(c.disciplina, arr);
+    }
+    const disciplinasOrdem = Array.from(porDisciplina.keys());
     const total = Math.max(1, perDay);
-    const groupSize = Math.max(2, Math.ceil(opts.competencias.length / total));
+    // Tamanho de grupo coerente: nunca menos que 2, nunca mais que o nº de disciplinas
+    // selecionadas, e o suficiente para distribuir todas as competências.
+    const groupSize = Math.max(
+      2,
+      Math.min(disciplinasOrdem.length, Math.ceil(opts.competencias.length / total)),
+    );
     for (let i = 0; i < total; i++) {
-      const grupo = opts.competencias.slice(i * groupSize, i * groupSize + groupSize);
+      const grupo: Array<CompetenciaBNCC & { disciplina: string }> = [];
+      // 1ª passada: 1 competência por disciplina diferente (coerência interdisciplinar)
+      for (const d of disciplinasOrdem) {
+        if (grupo.length >= groupSize) break;
+        const arr = porDisciplina.get(d);
+        if (arr && arr.length > 0) grupo.push(arr.shift()!);
+      }
+      // 2ª passada: completa o grupo com sobras (sem repetir, pois usamos shift)
+      if (grupo.length < groupSize) {
+        for (const d of disciplinasOrdem) {
+          while (grupo.length < groupSize) {
+            const arr = porDisciplina.get(d);
+            if (!arr || arr.length === 0) break;
+            grupo.push(arr.shift()!);
+          }
+          if (grupo.length >= groupSize) break;
+        }
+      }
       if (grupo.length === 0) break;
       const disciplinas = Array.from(new Set(grupo.map((c) => c.disciplina)));
       const tags = Array.from(new Set(grupo.map((c) => c.tag)));
@@ -547,16 +577,20 @@ function sofiaGenerateForDay(opts: {
         id: `m1di_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
         v: grupo[0].v,
         tag: disciplinas.length > 1 ? "Interdisciplinar" : grupo[0].tag,
-        title: `${disciplinas.join(" + ")} · ${tags.slice(0, 2).join(" / ")}: ${tema}`,
+        title:
+          disciplinas.length > 1
+            ? `Projeto integrador (${disciplinas.join(" + ")}) · ${tags.slice(0, 2).join(" / ")}: ${tema}`
+            : `${disciplinas[0]} · ${tags.slice(0, 2).join(" / ")}: ${tema}`,
         bncc: grupo.map((c) => c.code).join(" + "),
         minutos,
         foco: disciplinas.join(" + "),
       });
     }
   } else {
-    const total = Math.min(perDay, opts.competencias.length) || opts.competencias.length;
+    // Sem interdisciplinar: também evita repetir a mesma competência.
+    const total = Math.min(perDay, opts.competencias.length);
     for (let i = 0; i < total; i++) {
-      const c = opts.competencias[i % opts.competencias.length];
+      const c = opts.competencias[i];
       out.push({
         id: `m1d_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
         v: c.v,
