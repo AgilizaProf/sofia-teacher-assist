@@ -578,6 +578,96 @@ export function Assistente() {
 
         </aside>
       </div>
+      {ctxOpen && (
+        <div className="ctx-modal-overlay" onClick={() => setCtxOpen(false)}>
+          <div className="ctx-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ctx-modal-head">
+              <div>
+                <h3>Editar contexto</h3>
+                <p>Ajuste as informações que a Sofia usa para personalizar respostas.</p>
+              </div>
+              <button className="ctx-modal-close" onClick={() => setCtxOpen(false)} aria-label="Fechar"><X size={16} /></button>
+            </div>
+            <div className="ctx-modal-body">
+              <div className="ctx-section">
+                <div className="ctx-section-label">Professor(a)</div>
+                <div className="ctx-grid">
+                  <div className="ctx-field">
+                    <label>Nome</label>
+                    <input value={ctxForm.nome} onChange={(e) => setCtxForm({ ...ctxForm, nome: e.target.value })} />
+                  </div>
+                  <div className="ctx-field">
+                    <label>Plano</label>
+                    <select value={ctxForm.plano} onChange={(e) => setCtxForm({ ...ctxForm, plano: e.target.value as "free" | "pro" })}>
+                      <option value="free">Free</option>
+                      <option value="pro">Pro</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Turma atual</div>
+                <div className="ctx-grid">
+                  <div className="ctx-field">
+                    <label>Nome da turma</label>
+                    <input value={ctxForm.turma} onChange={(e) => setCtxForm({ ...ctxForm, turma: e.target.value })} placeholder="Ex.: Turma A" />
+                  </div>
+                  <div className="ctx-field">
+                    <label>Ano escolar</label>
+                    <input value={ctxForm.ano} onChange={(e) => setCtxForm({ ...ctxForm, ano: e.target.value })} placeholder="Ex.: 2º ano" />
+                  </div>
+                  <div className="ctx-field">
+                    <label>Total de alunos</label>
+                    <input type="number" min={0} value={ctxForm.total_alunos} onChange={(e) => setCtxForm({ ...ctxForm, total_alunos: Number(e.target.value) || 0 })} />
+                  </div>
+                  <div className="ctx-field">
+                    <label>Pareceres no bimestre</label>
+                    <input value={`${ctx.dataState.pareceres_finalizados}/${ctx.dataState.pareceres_total_bimestre}`} disabled />
+                  </div>
+                </div>
+              </div>
+
+              {ctx.entity.todos_alunos_pcd.length > 0 && (
+                <div className="ctx-section">
+                  <div className="ctx-section-label">Alunos PCD ({ctx.entity.todos_alunos_pcd.length})</div>
+                  <div className="ctx-pcd-list">
+                    {ctx.entity.todos_alunos_pcd.map((a, i) => (
+                      <span key={i} className="ctx-pcd-tag"><b>{a.nome}</b> · {a.condicao}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Observações para a Sofia</div>
+                <div className="ctx-field">
+                  <textarea
+                    rows={3}
+                    placeholder="Ex.: Foco em alfabetização, evitar atividades com som alto, etc."
+                    value={ctxForm.observacoes}
+                    onChange={(e) => setCtxForm({ ...ctxForm, observacoes: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="ctx-modal-foot">
+              <button className="ctx-btn-cancel" onClick={() => setCtxOpen(false)}>Cancelar</button>
+              <button
+                className="ctx-btn-save"
+                onClick={() => {
+                  if (ctxForm.observacoes.trim()) {
+                    sofia.openSofia({ prompt: `Atualize meu contexto: ${ctxForm.observacoes.trim()}`, send: false });
+                  }
+                  setCtxOpen(false);
+                }}
+              >
+                Salvar contexto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
