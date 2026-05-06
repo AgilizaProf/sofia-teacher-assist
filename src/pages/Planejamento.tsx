@@ -1137,6 +1137,26 @@ export function Planejamento() {
     showToast(`Cartão movido para ${to.toUpperCase()}. Sofia confirmou ausência de conflito. ✓`);
   };
 
+  // === M1 — Drag & drop entre dias do calendário ===
+  const m1DragCard = useRef<{ from: DayKey; id: string } | null>(null);
+  const [m1DropDay, setM1DropDay] = useState<DayKey | null>(null);
+  const onM1DragStart = (from: DayKey, id: string) => { m1DragCard.current = { from, id }; };
+  const onM1DragOver = (e: React.DragEvent, day: DayKey) => { e.preventDefault(); setM1DropDay(day); };
+  const onM1DragLeave = () => setM1DropDay(null);
+  const onM1Drop = (e: React.DragEvent, to: DayKey) => {
+    e.preventDefault();
+    setM1DropDay(null);
+    const d = m1DragCard.current; if (!d) return;
+    if (d.from === to) return;
+    setM1Plan((p) => {
+      const card = p[d.from].find((c) => c.id === d.id); if (!card) return p;
+      return { ...p, [d.from]: p[d.from].filter((c) => c.id !== d.id), [to]: [...p[to], card] };
+    });
+    m1DragCard.current = null;
+    const dayName = m1Week.days.find((x) => x.k === to)?.n ?? to.toUpperCase();
+    showToast(`Atividade movida para ${dayName}. ✓`);
+  };
+
   const cfg = M_CONFIG[m];
   const pickCount = useMemo(() => Object.values(picks).filter(Boolean).length, [picks]);
 
@@ -1352,8 +1372,11 @@ export function Planejamento() {
                         return (
                           <div
                             key={day.k}
-                            className={"pl-cal-day" + (calSel === day.k ? " selected" : "") + (cards.length > 0 ? " has-ai" : "")}
+                            className={"pl-cal-day" + (calSel === day.k ? " selected" : "") + (cards.length > 0 ? " has-ai" : "") + (m1DropDay === day.k ? " drop" : "")}
                             onClick={() => setCalSel(day.k)}
+                            onDragOver={(e) => onM1DragOver(e, day.k)}
+                            onDragLeave={onM1DragLeave}
+                            onDrop={(e) => onM1Drop(e, day.k)}
                             style={isToday ? { borderColor: "var(--orange)", boxShadow: "0 0 0 2px var(--orange-soft-2)" } : undefined}
                           >
                             <div className="pl-cd-head">
@@ -1370,7 +1393,14 @@ export function Planejamento() {
                             ) : (
                               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
                                 {cards.map((c) => (
-                                  <div key={c.id} className={"pl-ai " + c.v} onClick={(e) => e.stopPropagation()}>
+                                  <div
+                                    key={c.id}
+                                    className={"pl-ai " + c.v}
+                                    draggable
+                                    onDragStart={() => onM1DragStart(day.k, c.id)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ cursor: "grab" }}
+                                  >
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
                                       <div style={{ minWidth: 0 }}>
                                         <div className="sub">{c.tag}</div>
