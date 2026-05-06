@@ -532,42 +532,71 @@ function sofiaGenerateForDay(opts: {
   if (opts.competencias.length === 0) return out;
 
   if (opts.interdisciplinar) {
-    // Agrupa competências de disciplinas diferentes em uma única atividade,
-    // de forma coerente: cada atividade puxa, quando possível, 1 competência
-    // de cada disciplina selecionada (round-robin), garantindo que NENHUMA
-    // competência se repita entre as atividades do dia.
-    const porDisciplina = new Map<string, Array<CompetenciaBNCC & { disciplina: string }>>();
-    for (const c of opts.competencias) {
-      const arr = porDisciplina.get(c.disciplina) ?? [];
-      arr.push(c);
-      porDisciplina.set(c.disciplina, arr);
-    }
-    const disciplinasOrdem = Array.from(porDisciplina.keys());
+    // Agrupa por afinidade temática: tokeniza tag+desc, calcula similaridade
+    // (Jaccard com stopwords PT-BR) e forma grupos maximizando coerência,
+    // preferindo competências de disciplinas diferentes e sem repetição.
+    const STOP = new Set([
+      "a","o","e","de","da","do","das","dos","em","no","na","nos","nas","um","uma","uns","umas",
+      "para","por","com","sem","que","se","ao","aos","à","às","como","ou","mais","menos","seu","sua",
+      "seus","suas","entre","sobre","ser","sao","são","é","ter","há","pelo","pela","pelos","pelas",
+      "este","esta","esse","essa","isto","isso","aquilo","já","também","muito","pouco","cada",
+      "outros","outras","outro","outra","etc","quando","onde","porque","porquê","então",
+    ]);
+    const tokens = (c: CompetenciaBNCC): Set<string> => {
+      const raw = `${c.tag} ${c.desc}`.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const words = raw.split(/[^a-z0-9]+/).filter((w) => w.length >= 4 && !STOP.has(w));
+      return new Set(words);
+    };
+    const sim = (a: Set<string>, b: Set<string>) => {
+      if (a.size === 0 || b.size === 0) return 0;
+      let inter = 0;
+      a.forEach((w) => { if (b.has(w)) inter++; });
+      return inter / (a.size + b.size - inter);
+    };
+    type Item = CompetenciaBNCC & { disciplina: string; _tok: Set<string>; _used: boolean };
+    const pool: Item[] = opts.competencias.map((c) => ({ ...c, _tok: tokens(c), _used: false }));
+    const disciplinasOrdem = Array.from(new Set(pool.map((p) => p.disciplina)));
     const total = Math.max(1, perDay);
-    // Tamanho de grupo coerente: nunca menos que 2, nunca mais que o nº de disciplinas
-    // selecionadas, e o suficiente para distribuir todas as competências.
     const groupSize = Math.max(
       2,
-      Math.min(disciplinasOrdem.length, Math.ceil(opts.competencias.length / total)),
+      Math.min(disciplinasOrdem.length, Math.ceil(pool.length / total)),
     );
-    for (let i = 0; i < total; i++) {
-      const grupo: Array<CompetenciaBNCC & { disciplina: string }> = [];
-      // 1ª passada: 1 competência por disciplina diferente (coerência interdisciplinar)
-      for (const d of disciplinasOrdem) {
-        if (grupo.length >= groupSize) break;
-        const arr = porDisciplina.get(d);
-        if (arr && arr.length > 0) grupo.push(arr.shift()!);
+
+    const pickSeed = (): Item | null => {
+      // Semente = competência ainda livre com maior afinidade média com as demais livres.
+      const livres = pool.filter((p) => !p._used);
+      if (livres.length === 0) return null;
+      let best = livres[0]; let bestScore = -1;
+      for (const cand of livres) {
+        let s = 0; let n = 0;
+        for (const o of livres) { if (o === cand) continue; s += sim(cand._tok, o._tok); n++; }
+        const avg = n > 0 ? s / n : 0;
+        if (avg > bestScore) { bestScore = avg; best = cand; }
       }
-      // 2ª passada: completa o grupo com sobras (sem repetir, pois usamos shift)
-      if (grupo.length < groupSize) {
-        for (const d of disciplinasOrdem) {
-          while (grupo.length < groupSize) {
-            const arr = porDisciplina.get(d);
-            if (!arr || arr.length === 0) break;
-            grupo.push(arr.shift()!);
-          }
-          if (grupo.length >= groupSize) break;
+      return best;
+    };
+
+    for (let i = 0; i < total; i++) {
+      const seed = pickSeed();
+      if (!seed) break;
+      seed._used = true;
+      const grupo: Item[] = [seed];
+      const disciplinasNoGrupo = new Set<string>([seed.disciplina]);
+      while (grupo.length < groupSize) {
+        const livres = pool.filter((p) => !p._used);
+        if (livres.length === 0) break;
+        // Pontua: similaridade média ao grupo + bônus por disciplina nova (coerência interdisciplinar).
+        let best = livres[0]; let bestScore = -Infinity;
+        for (const cand of livres) {
+          const simAvg = grupo.reduce((s, g) => s + sim(cand._tok, g._tok), 0) / grupo.length;
+          const bonusDisc = disciplinasNoGrupo.has(cand.disciplina) ? 0 : 0.35;
+          const score = simAvg + bonusDisc;
+          if (score > bestScore) { bestScore = score; best = cand; }
         }
+        best._used = true;
+        grupo.push(best);
+        disciplinasNoGrupo.add(best.disciplina);
       }
       if (grupo.length === 0) break;
       const disciplinas = Array.from(new Set(grupo.map((c) => c.disciplina)));
