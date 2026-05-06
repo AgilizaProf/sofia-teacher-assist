@@ -316,6 +316,25 @@ const BNCC_SOCIO: string[] = [
   "Autorregulação e persistência diante de desafios",
 ];
 
+// Comportamento e socialização — avaliados para todos os alunos
+const BNCC_COMPORTAMENTO: string[] = [
+  "Cumprimento de combinados e regras de convivência",
+  "Atenção e engajamento nas atividades propostas",
+  "Relacionamento respeitoso com colegas e professores",
+  "Participação em atividades coletivas e trabalhos em grupo",
+  "Resolução de conflitos pelo diálogo",
+];
+
+// Indicadores adicionais para alunos PCD (somente exibido quando aluno é PCD)
+const BNCC_PCD: string[] = [
+  "Resposta às adaptações curriculares e recursos de acessibilidade",
+  "Comunicação e expressão de necessidades",
+  "Autonomia nas atividades da rotina escolar",
+  "Interação social e vínculo com colegas",
+  "Regulação emocional e tolerância à frustração",
+  "Progresso em relação às metas do PEI",
+];
+
 // Habilidades BNCC por ano de escolaridade (Ensino Fundamental).
 // Resumos didáticos por ano — mantidos curtos pra interface.
 const BNCC_BY_YEAR: Record<string, BnccArea[]> = {
@@ -421,10 +440,15 @@ export function Relatorios() {
     const g = cls?.grade?.replace(/\D/g, "");
     return g && YEAR_OPTIONS.includes(g) ? g : "2";
   };
-  const areasFor = (id: string, turma: string) => bnccAreasFor(yearForAluno(id, turma));
-  const competKeysFor = (id: string, turma: string) => {
+  const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
+    const base = bnccAreasFor(yearForAluno(id, turma));
+    const extra: BnccArea[] = [{ area: "Comportamento e socialização", comps: BNCC_COMPORTAMENTO }];
+    if (pcd) extra.push({ area: "Indicadores PCD (PEI)", comps: BNCC_PCD });
+    return [...base, ...extra];
+  };
+  const competKeysFor = (id: string, turma: string, pcd?: string) => {
     const out: string[] = [];
-    areasFor(id, turma).forEach((a, i) => a.comps.forEach((_c, j) => out.push(`${i}.${j}`)));
+    areasFor(id, turma, pcd).forEach((a, i) => a.comps.forEach((_c, j) => out.push(`${i}.${j}`)));
     return out;
   };
   const getAlunoRubric = (id: string) => bnccByAluno[id] || {};
@@ -446,9 +470,9 @@ export function Relatorios() {
     const order: BnccStatus[] = ["no", "na", "ed", "co"];
     return order[(order.indexOf(cur || "no") + 1) % order.length];
   };
-  const computeProgress = (id: string, turma: string) => {
+  const computeProgress = (id: string, turma: string, pcd?: string) => {
     const rub = getAlunoRubric(id);
-    const keys = competKeysFor(id, turma);
+    const keys = competKeysFor(id, turma, pcd);
     let preenchido = 0; let pesoTotal = 0; let pontos = 0;
     keys.forEach((k) => {
       const s = rub[k];
@@ -741,7 +765,7 @@ export function Relatorios() {
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
-                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma);
+                   const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
@@ -877,9 +901,9 @@ export function Relatorios() {
       {bnccOpen && (() => {
         const { id, nome, turma, pcd } = bnccOpen;
         const rub = getAlunoRubric(id);
-        const { pctPreenchido, pctDesempenho } = computeProgress(id, turma);
+        const { pctPreenchido, pctDesempenho } = computeProgress(id, turma, pcd);
         const year = yearForAluno(id, turma);
-        const areas = areasFor(id, turma);
+        const areas = areasFor(id, turma, pcd);
         const cls = dashClasses.find((c) => c.name === turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
