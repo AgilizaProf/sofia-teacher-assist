@@ -861,18 +861,26 @@ export function Planejamento() {
                       <div className="pl-chain-list" style={{ marginTop: 12 }}>
                         {m2Steps.map((s) => {
                           const editing = m2EditId === s.id;
+                          const isOver = m2DragOverId === s.id && m2DraggingId !== s.id;
+                          const showPhBefore = isOver && m2DragPos === "before";
+                          const showPhAfter = isOver && m2DragPos === "after";
                           return (
+                          <React.Fragment key={s.id}>
+                            {showPhBefore && <div className="pl-drop-ph" aria-hidden="true" />}
                             <div
-                              key={s.id}
-                              className={"pl-step" + (s.suggest ? " suggest" : "")}
+                              className={
+                                "pl-step"
+                                + (s.suggest ? " suggest" : "")
+                                + (m2DraggingId === s.id ? " dragging" : "")
+                                + (isOver ? " drop-target" : "")
+                              }
                               onDragOver={(e) => onM2DragOver(e, s.id)}
                               onDrop={(e) => onM2Drop(e, s.id)}
-                              style={m2DragOverId === s.id ? { background: "rgba(255,122,69,.06)", borderRadius: 11 } : undefined}
                             >
                               <div
                                 className="day"
                                 draggable={!editing}
-                                onDragStart={() => onM2DragStart(s.id)}
+                                onDragStart={(e) => onM2DragStart(e, s.id)}
                                 onDragEnd={onM2DragEnd}
                                 title="Arraste para reordenar"
                                 style={{ cursor: editing ? "default" : "grab", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}
