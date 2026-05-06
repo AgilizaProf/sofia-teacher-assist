@@ -947,6 +947,24 @@ export function Planejamento() {
                           ))}
                         </div>
                       </div>
+                      <div className="pl-field">
+                        <label>Focos por geração</label>
+                        <div className="pl-pills">
+                          {([1, 2, 3, "all"] as const).map((p) => (
+                            <button
+                              key={String(p)}
+                              className={"pl-pill" + (m1MaxFocos === p ? " on" : "")}
+                              onClick={() => setM1MaxFocos(p)}
+                              title={p === "all" ? "Usa todos os focos selecionados" : `Sofia usa só ${p} foco(s) por geração`}
+                            >{p === "all" ? "Todos" : `${p} foco${p === 1 ? "" : "s"}`}</button>
+                          ))}
+                        </div>
+                        <p className="lead" style={{ margin: "6px 0 0" }}>
+                          {m1MaxFocos === "all"
+                            ? `Sofia vai usar os ${focosSelecionados.length} foco(s) marcados.`
+                            : `Sofia vai pegar os primeiros ${Math.min(m1MaxFocos, focosSelecionados.length || m1MaxFocos)} foco(s) marcados — menos sugestões por dia, mais profundidade.`}
+                        </p>
+                      </div>
                       <button
                         className="pl-btn primary pl-replica-cta"
                         onClick={gerarComSofia}
