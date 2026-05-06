@@ -325,6 +325,34 @@ export function Dashboard() {
 
   const [streak, setStreak] = useState<number>(0);
   const sofia = useSofia();
+  const navigate = useNavigate();
+
+  // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
+  const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
+  const upcomingAgenda = useMemo(() => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const todayKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const nowHHMM = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    return [...agendaEvents]
+      .filter((e) => {
+        if (e.date > todayKey) return true;
+        if (e.date < todayKey) return false;
+        if (!e.time) return true;
+        return e.time >= nowHHMM;
+      })
+      .sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return (a.time || "99:99").localeCompare(b.time || "99:99");
+      });
+  }, [agendaEvents]);
+  const todayKeyMemo = useMemo(() => {
+    const d = new Date(); const p = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }, []);
+  const todayEvents = upcomingAgenda.filter((e) => e.date === todayKeyMemo);
+  const agendaToShow = todayEvents.length > 0 ? todayEvents.slice(0, 4) : upcomingAgenda.slice(0, 1);
+  const agendaSectionTitle = todayEvents.length > 0 ? "Hoje" : (upcomingAgenda.length > 0 ? "Próximo compromisso" : "");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
