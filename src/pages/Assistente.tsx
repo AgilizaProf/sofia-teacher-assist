@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil, Clock,
   FileText, Send, User, Sparkles, ArrowRight,
-  Calendar, CheckSquare, Star,
+  Calendar, CheckSquare, Star, X,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
@@ -71,6 +71,29 @@ const css = `
 .chip.blue .d{background:#3B82F6;}
 .ap-root .edit-context{margin-left:auto;font-size:12px;color:#fff !important;background:var(--accent) !important;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border-radius:999px;border:none;box-shadow:0 6px 14px -6px rgba(255,106,44,.55);}
 .ap-root .edit-context:hover{filter:brightness(1.05);}
+
+/* Modal Editar contexto */
+.ctx-modal-overlay{position:fixed;inset:0;background:rgba(11,18,32,.55);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:80;padding:20px;}
+.ctx-modal{background:#fff;border-radius:18px;width:100%;max-width:560px;max-height:85vh;overflow:auto;box-shadow:0 30px 80px -20px rgba(11,18,32,.45);border:1px solid var(--line-soft);}
+.ctx-modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line-soft);position:sticky;top:0;background:#fff;}
+.ctx-modal-head h3{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--text);}
+.ctx-modal-head p{font-size:12px;color:var(--muted);margin-top:2px;}
+.ctx-modal-close{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--muted);background:transparent;border:1px solid var(--line-soft);}
+.ctx-modal-close:hover{background:var(--paper);}
+.ctx-modal-body{padding:18px 22px;display:flex;flex-direction:column;gap:16px;}
+.ctx-section{display:flex;flex-direction:column;gap:8px;}
+.ctx-section-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.ctx-field{display:flex;flex-direction:column;gap:4px;}
+.ctx-field label{font-size:12px;color:var(--text-soft);font-weight:600;}
+.ctx-field input,.ctx-field select,.ctx-field textarea{padding:9px 12px;border-radius:10px;border:1px solid var(--line-soft);font-size:13px;font-family:inherit;color:var(--text);background:#fff;}
+.ctx-field input:focus,.ctx-field select:focus,.ctx-field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,106,44,.15);}
+.ctx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ctx-pcd-list{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--paper);border-radius:10px;border:1px solid var(--line-soft);}
+.ctx-pcd-tag{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line-soft);padding:5px 10px;border-radius:999px;font-size:11.5px;color:var(--text-soft);}
+.ctx-pcd-tag b{color:var(--text);font-weight:700;}
+.ctx-modal-foot{padding:14px 22px;border-top:1px solid var(--line-soft);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:#fff;}
+.ctx-btn-cancel{padding:9px 16px;border-radius:10px;border:1px solid var(--line-soft);background:#fff;color:var(--text-soft);font-weight:600;font-size:13px;}
+.ctx-btn-save{padding:9px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-weight:700;font-size:13px;box-shadow:0 6px 14px -6px rgba(255,106,44,.55);}
 
 /* Convo */
 .convo{flex:1;display:flex;flex-direction:column;align-items:center;padding:48px 24px 24px;}
@@ -208,6 +231,25 @@ export function Assistente() {
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
+  const [ctxOpen, setCtxOpen] = useState(false);
+  const [ctxForm, setCtxForm] = useState({
+    nome: ctx.user.nome,
+    plano: ctx.user.plano,
+    turma: ctx.entity.turma_atual?.nome ?? "",
+    ano: ctx.entity.turma_atual?.ano ?? "",
+    total_alunos: ctx.entity.turma_atual?.total_alunos ?? 0,
+    observacoes: "",
+  });
+  useEffect(() => {
+    setCtxForm((f) => ({
+      ...f,
+      nome: ctx.user.nome,
+      plano: ctx.user.plano,
+      turma: ctx.entity.turma_atual?.nome ?? f.turma,
+      ano: ctx.entity.turma_atual?.ano ?? f.ano,
+      total_alunos: ctx.entity.turma_atual?.total_alunos ?? f.total_alunos,
+    }));
+  }, [ctx.user.nome, ctx.user.plano, ctx.entity.turma_atual]);
   const messages = sofia.messages;
   const loading = sofia.loading;
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -266,7 +308,7 @@ export function Assistente() {
           <div className="ai-context">
             <span className="ctx-label">Contexto ativo:</span>
             <SofiaActiveChip />
-            <button className="edit-context" aria-label="Editar contexto"><Pencil size={13} /> Editar contexto</button>
+            <button className="edit-context" aria-label="Editar contexto" onClick={() => setCtxOpen(true)}><Pencil size={13} /> Editar contexto</button>
           </div>
 
           <div className="convo">
@@ -536,6 +578,96 @@ export function Assistente() {
 
         </aside>
       </div>
+      {ctxOpen && (
+        <div className="ctx-modal-overlay" onClick={() => setCtxOpen(false)}>
+          <div className="ctx-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ctx-modal-head">
+              <div>
+                <h3>Editar contexto</h3>
+                <p>Ajuste as informações que a Sofia usa para personalizar respostas.</p>
+              </div>
+              <button className="ctx-modal-close" onClick={() => setCtxOpen(false)} aria-label="Fechar"><X size={16} /></button>
+            </div>
+            <div className="ctx-modal-body">
+              <div className="ctx-section">
+                <div className="ctx-section-label">Professor(a)</div>
+                <div className="ctx-grid">
+                  <div className="ctx-field">
+                    <label>Nome</label>
+                    <input value={ctxForm.nome} onChange={(e) => setCtxForm({ ...ctxForm, nome: e.target.value })} />
+                  </div>
+                  <div className="ctx-field">
+                    <label>Plano</label>
+                    <select value={ctxForm.plano} onChange={(e) => setCtxForm({ ...ctxForm, plano: e.target.value as "free" | "pro" })}>
+                      <option value="free">Free</option>
+                      <option value="pro">Pro</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Turma atual</div>
+                <div className="ctx-grid">
+                  <div className="ctx-field">
+                    <label>Nome da turma</label>
+                    <input value={ctxForm.turma} onChange={(e) => setCtxForm({ ...ctxForm, turma: e.target.value })} placeholder="Ex.: Turma A" />
+                  </div>
+                  <div className="ctx-field">
+                    <label>Ano escolar</label>
+                    <input value={ctxForm.ano} onChange={(e) => setCtxForm({ ...ctxForm, ano: e.target.value })} placeholder="Ex.: 2º ano" />
+                  </div>
+                  <div className="ctx-field">
+                    <label>Total de alunos</label>
+                    <input type="number" min={0} value={ctxForm.total_alunos} onChange={(e) => setCtxForm({ ...ctxForm, total_alunos: Number(e.target.value) || 0 })} />
+                  </div>
+                  <div className="ctx-field">
+                    <label>Pareceres no bimestre</label>
+                    <input value={`${ctx.dataState.pareceres_finalizados}/${ctx.dataState.pareceres_total_bimestre}`} disabled />
+                  </div>
+                </div>
+              </div>
+
+              {ctx.entity.todos_alunos_pcd.length > 0 && (
+                <div className="ctx-section">
+                  <div className="ctx-section-label">Alunos PCD ({ctx.entity.todos_alunos_pcd.length})</div>
+                  <div className="ctx-pcd-list">
+                    {ctx.entity.todos_alunos_pcd.map((a, i) => (
+                      <span key={i} className="ctx-pcd-tag"><b>{a.nome}</b> · {a.condicao}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Observações para a Sofia</div>
+                <div className="ctx-field">
+                  <textarea
+                    rows={3}
+                    placeholder="Ex.: Foco em alfabetização, evitar atividades com som alto, etc."
+                    value={ctxForm.observacoes}
+                    onChange={(e) => setCtxForm({ ...ctxForm, observacoes: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="ctx-modal-foot">
+              <button className="ctx-btn-cancel" onClick={() => setCtxOpen(false)}>Cancelar</button>
+              <button
+                className="ctx-btn-save"
+                onClick={() => {
+                  if (ctxForm.observacoes.trim()) {
+                    sofia.openSofia({ prompt: `Atualize meu contexto: ${ctxForm.observacoes.trim()}`, send: false });
+                  }
+                  setCtxOpen(false);
+                }}
+              >
+                Salvar contexto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
