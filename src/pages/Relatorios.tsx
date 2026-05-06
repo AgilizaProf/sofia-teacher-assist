@@ -485,7 +485,12 @@ export function Relatorios() {
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
-            <div className={"rel-kpi rel-kpi-dark" + (bump ? " is-bump" : "")} style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent", overflow: "hidden", position: "relative" }}>
+            <div
+              className={"rel-kpi rel-kpi-dark kpi-tip-host" + (bump ? " is-bump" : "")}
+              tabIndex={0}
+              aria-label="Como calculamos o tempo economizado"
+              style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent", position: "relative", cursor: "help" }}
+            >
               <div className="rel-kpi-top">
                 <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
                 <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
@@ -497,6 +502,18 @@ export function Relatorios() {
                 {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
               </div>
               <span aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(circle at 80% 0%, rgba(255,106,44,.25), transparent 60%)", opacity: bump ? 1 : 0, transition: "opacity .6s ease" }} />
+              <div className="kpi-tip" role="tooltip">
+                <div className="kpi-tip-title">Como calculamos</div>
+                <ul className="kpi-tip-list">
+                  <li><span>Baseline semanal</span><b>{user.hoursSavedWeek}h {String(user.minutesSavedWeek).padStart(2,"0")}min</b></li>
+                  <li><span>Escolas cadastradas · {dashSchools.length} × 10min</span><b>{dashSchools.length * 10}min</b></li>
+                  <li><span>Turmas cadastradas · {dashClasses.length} × 20min</span><b>{dashClasses.length * 20}min</b></li>
+                  <li><span>Alunos cadastrados · {dashStudents.length} × 5min</span><b>{dashStudents.length * 5}min</b></li>
+                  <li><span>Documentos finalizados · {(user.documentsGenerated || finalizados)} × 30min</span><b>{(user.documentsGenerated || finalizados) * 30}min</b></li>
+                </ul>
+                <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
+                <span className="kpi-tip-arrow" aria-hidden />
+              </div>
             </div>
           </div>
 
