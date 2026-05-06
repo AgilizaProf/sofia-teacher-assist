@@ -364,6 +364,35 @@ export function Planejamento() {
   ] as const;
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
+  // Semana mostrada na M1 (offset em semanas a partir da semana atual).
+  const [weekOffset, setWeekOffset] = useState<number>(0);
+  const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  const m1Week = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dow = today.getDay(); // 0=dom .. 6=sab
+    const diffToMon = dow === 0 ? -6 : 1 - dow;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diffToMon + weekOffset * 7);
+    const days: Array<{ k: DayKey; n: string; d: number; date: Date; iso: string }> = [];
+    const labels: Array<{ k: DayKey; n: string }> = [
+      { k: "seg", n: "SEG" }, { k: "ter", n: "TER" }, { k: "qua", n: "QUA" },
+      { k: "qui", n: "QUI" }, { k: "sex", n: "SEX" },
+    ];
+    for (let i = 0; i < 5; i++) {
+      const dt = new Date(monday);
+      dt.setDate(monday.getDate() + i);
+      days.push({ k: labels[i].k, n: labels[i].n, d: dt.getDate(), date: dt, iso: dt.toISOString().slice(0, 10) });
+    }
+    const first = days[0].date;
+    const last = days[4].date;
+    const sameMonth = first.getMonth() === last.getMonth();
+    const range = sameMonth
+      ? `${first.getDate()}–${last.getDate()} de ${MONTHS_PT[first.getMonth()]} de ${first.getFullYear()}`
+      : `${first.getDate()} de ${MONTHS_PT[first.getMonth()]} – ${last.getDate()} de ${MONTHS_PT[last.getMonth()]} de ${last.getFullYear()}`;
+    const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
+    return { days, range, label };
+  }, [weekOffset]);
   const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([]);
   const [chatTxt, setChatTxt] = useState("");
   const [layers, setLayers] = useState<Record<string, boolean>>({
