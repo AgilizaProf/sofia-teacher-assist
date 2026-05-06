@@ -869,16 +869,44 @@ export function Relatorios() {
       )}
 
       {bnccOpen && (() => {
-        const { id, nome, turma } = bnccOpen;
+        const { id, nome, turma, pcd } = bnccOpen;
         const rub = getAlunoRubric(id);
-        const { pctPreenchido, pctDesempenho } = computeProgress(id);
+        const { pctPreenchido, pctDesempenho } = computeProgress(id, turma);
+        const year = yearForAluno(id, turma);
+        const areas = areasFor(id, turma);
+        const cls = dashClasses.find((c) => c.name === turma);
+        const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
+        const isPcd = !!pcd;
         return (
           <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setBnccOpen(null)}>
             <div className="rel-modal" style={{ maxWidth: 760, width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "18px 20px", borderBottom: "1px solid var(--line-soft)" }}>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: 0, fontSize: 18 }}>Avaliação BNCC · {nome}</h3>
-                  <div style={{ fontSize: 12, color: "var(--text-soft)", marginTop: 2 }}>{turma || "Sem turma"} · {bimestreNum}º bimestre</div>
+                  <div style={{ fontSize: 12, color: "var(--text-soft)", marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span>{turma || "Sem turma"} · {bimestreNum}º bimestre</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 99, background: "#F3F4F6", color: "var(--text)", fontWeight: 700 }}>
+                      Ano de referência:
+                      <select
+                        value={year}
+                        disabled={!isPcd && !!turmaYear}
+                        onChange={(e) => setYearOverride((p) => ({ ...p, [id]: e.target.value }))}
+                        title={isPcd ? "Aluno PCD: você pode ajustar o ano de referência" : (turmaYear ? "Definido pela turma" : "Selecione")}
+                        style={{ border: 0, background: "transparent", fontWeight: 800, color: "var(--text)", cursor: isPcd ? "pointer" : (turmaYear ? "not-allowed" : "pointer") }}
+                      >
+                        {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}º ano EF</option>)}
+                      </select>
+                      {isPcd && yearOverride[id] && (
+                        <button
+                          type="button"
+                          onClick={() => setYearOverride((p) => { const cp = { ...p }; delete cp[id]; return cp; })}
+                          style={{ background: "transparent", border: 0, color: "var(--text-soft)", cursor: "pointer", fontSize: 11 }}
+                          title="Voltar ao ano da turma"
+                        >resetar</button>
+                      )}
+                    </span>
+                    {isPcd && <span style={{ background: "#FDECEC", color: "#DC2626", fontWeight: 800, padding: "2px 8px", borderRadius: 99 }}>PCD</span>}
+                  </div>
                 </div>
                 <button onClick={() => setBnccOpen(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
               </div>
@@ -901,9 +929,23 @@ export function Relatorios() {
               </div>
 
               <div style={{ overflowY: "auto", padding: "8px 20px 16px" }}>
-                {BNCC_AREAS.map((area, ai) => (
+                {areas.map((area, ai) => (
                   <div key={area.area} style={{ marginTop: 14 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-soft)", marginBottom: 6 }}>{area.area}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-soft)", flex: 1 }}>{area.area}</div>
+                      <div style={{ display: "inline-flex", gap: 4 }}>
+                        <span style={{ fontSize: 10, color: "var(--text-soft)", alignSelf: "center", marginRight: 4 }}>Aplicar a todos:</span>
+                        {BNCC_STATUS.map((s) => (
+                          <button
+                            key={s.k}
+                            type="button"
+                            onClick={() => setAreaStatus(id, ai, area.comps.length, s.k)}
+                            title={`Marcar todas como ${s.label}`}
+                            style={{ cursor: "pointer", border: `1px dashed ${s.color}`, background: "#fff", color: s.color, borderRadius: 8, padding: "3px 7px", fontSize: 10, fontWeight: 800 }}
+                          >{s.short}</button>
+                        ))}
+                      </div>
+                    </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {area.comps.map((comp, ci) => {
                         const key = `${ai}.${ci}`;
@@ -958,13 +1000,13 @@ export function Relatorios() {
                   >Fechar</button>
                   <button
                     onClick={() => {
-                      const linhas = BNCC_AREAS.flatMap((area, ai) => area.comps.map((c, ci) => {
+                      const linhas = areas.flatMap((area, ai) => area.comps.map((c, ci) => {
                         const s = rub[`${ai}.${ci}`];
                         const lbl = BNCC_STATUS.find((x) => x.k === s)?.label || "Não observada";
                         return `- (${area.area}) ${c}: ${lbl}`;
                       })).join("\n");
                       sofia.openSofia({
-                        prompt: `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.`,
+                        prompt: `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC do ${year}º ano do Ensino Fundamental${isPcd && yearOverride[id] ? " (ano de referência ajustado para aluno PCD)" : ""}. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.`,
                         send: true,
                       });
                       setBnccOpen(null);
