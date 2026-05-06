@@ -308,6 +308,8 @@ export function Dashboard() {
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   const [students, setStudents] = usePersistentState<DashStudent[]>("dash_students", []);
   const [studentDetail, setStudentDetail] = useState<{ index: number; student: DashStudent } | null>(null);
+  const [editingStudent, setEditingStudent] = useState(false);
+  const [editForm, setEditForm] = useState<DashStudent | null>(null);
   const baseStudents = 0;
   const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
@@ -996,7 +998,7 @@ export function Dashboard() {
 
       <div
         className={`cmdk-overlay ${studentDetail ? "show" : ""}`}
-        onClick={(e) => { if (e.target === e.currentTarget) setStudentDetail(null); }}
+        onClick={(e) => { if (e.target === e.currentTarget) { setStudentDetail(null); setEditingStudent(false); } }}
         style={{ paddingTop: 80 }}
       >
         {studentDetail && (() => {
@@ -1012,6 +1014,10 @@ export function Dashboard() {
             if (!d) return "—";
             try { return new Date(d + "T00:00:00").toLocaleDateString("pt-BR"); } catch { return d; }
           };
+          const f = editForm ?? s;
+          const updateField = <K extends keyof DashStudent>(k: K, v: DashStudent[K]) =>
+            setEditForm((prev) => ({ ...(prev ?? s), [k]: v }));
+          const closeAll = () => { setStudentDetail(null); setEditingStudent(false); setEditForm(null); };
           return (
             <div className="school-modal" role="dialog" aria-label={`Detalhes de ${s.name}`}>
               <div className="school-modal-head">
@@ -1020,11 +1026,46 @@ export function Dashboard() {
                   <div className="school-modal-title">{s.name}</div>
                   <div className="school-modal-sub">{s.classRef || "Sem turma"}</div>
                 </div>
-                <button className="school-modal-close" aria-label="Fechar" onClick={() => setStudentDetail(null)}>
+                <button className="school-modal-close" aria-label="Fechar" onClick={closeAll}>
                   <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
                 </button>
               </div>
               <div className="school-modal-body">
+                {editingStudent ? (
+                  <>
+                    <div className="school-field">
+                      <label htmlFor="edit-name">Nome completo</label>
+                      <input id="edit-name" value={f.name} onChange={(e) => updateField("name", e.target.value)} maxLength={120} required />
+                    </div>
+                    <div className="school-row">
+                      <div className="school-field">
+                        <label htmlFor="edit-class">Turma</label>
+                        <input id="edit-class" value={f.classRef} onChange={(e) => updateField("classRef", e.target.value)} placeholder="Ex.: 2º ano A" />
+                      </div>
+                      <div className="school-field">
+                        <label htmlFor="edit-birth">Nascimento</label>
+                        <input id="edit-birth" type="date" value={f.birth} onChange={(e) => updateField("birth", e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="school-field">
+                      <label htmlFor="edit-pcd">PCD / laudo</label>
+                      <select id="edit-pcd" value={f.pcd} onChange={(e) => updateField("pcd", e.target.value)}>
+                        <option value="nao">Não é PCD</option>
+                        <option value="nao_informado">PCD — Não informado</option>
+                        {CID_OPTIONS.filter((o) => o.value !== "nao_informado").map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.cid && o.cid !== "—" ? `${o.label} · CID ${o.cid}` : o.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="school-field">
+                      <label htmlFor="edit-notes">Anotações pedagógicas</label>
+                      <textarea id="edit-notes" value={f.notes} onChange={(e) => updateField("notes", e.target.value)} placeholder="Pontos fortes, atenção, etc." />
+                    </div>
+                  </>
+                ) : (
+                <>
                 <div className="school-row">
                   <div className="school-field">
                     <label>Turma</label>
@@ -1075,23 +1116,62 @@ export function Dashboard() {
                     <div>🩺 Status PCD: <strong style={{ color: "var(--text)" }}>{isPcd ? (cidInfo?.label || s.pcd) : "Não é PCD"}</strong></div>
                   </div>
                 </div>
+                </>
+                )}
               </div>
               <div className="school-modal-foot">
-                <button
-                  type="button"
-                  className="school-cancel"
-                  style={{ marginLeft: 0, color: "#B91C1C", borderColor: "#FCA5A5" }}
-                  onClick={() => {
-                    if (!confirm(`Remover ${s.name}?`)) return;
-                    setStudents((arr) => arr.filter((_, idx) => idx !== studentDetail.index));
-                    setStudentDetail(null);
-                  }}
-                >
-                  Remover aluno
-                </button>
-                <button type="button" className="school-save" onClick={() => setStudentDetail(null)}>
-                  Fechar
-                </button>
+                {editingStudent ? (
+                  <>
+                    <button
+                      type="button"
+                      className="school-cancel"
+                      style={{ marginLeft: 0 }}
+                      onClick={() => { setEditingStudent(false); setEditForm(null); }}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      className="school-save"
+                      onClick={() => {
+                        if (!editForm) { setEditingStudent(false); return; }
+                        const trimmed = { ...editForm, name: editForm.name.trim() };
+                        if (!trimmed.name) return;
+                        setStudents((arr) => arr.map((x, idx) => idx === studentDetail.index ? trimmed : x));
+                        setStudentDetail({ index: studentDetail.index, student: trimmed });
+                        setEditingStudent(false);
+                        setEditForm(null);
+                      }}
+                    >
+                      Salvar alterações
+                      <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="school-cancel"
+                      style={{ marginLeft: 0, color: "#B91C1C", borderColor: "#FCA5A5" }}
+                      onClick={() => {
+                        if (!confirm(`Remover ${s.name}?`)) return;
+                        setStudents((arr) => arr.filter((_, idx) => idx !== studentDetail.index));
+                        closeAll();
+                      }}
+                    >
+                      <Svg width={13} height={13} c={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></>} />
+                      Remover
+                    </button>
+                    <button
+                      type="button"
+                      className="school-save"
+                      onClick={() => { setEditForm(s); setEditingStudent(true); }}
+                    >
+                      <Svg width={13} height={13} c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></>} />
+                      Editar
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           );
