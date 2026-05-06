@@ -521,26 +521,52 @@ const BNCC_BY_ETAPA: Record<Etapa, { label: string; anos: AnoBNCC[] }> = {
 
 function sofiaGenerateForDay(opts: {
   tema: string;
-  competencias: CompetenciaBNCC[];
+  competencias: Array<CompetenciaBNCC & { disciplina: string }>;
   intensidade: "Leve" | "Equilibrada" | "Densa";
   diaISO: string;
-  disciplina: string;
+  interdisciplinar?: boolean;
 }): M1Card[] {
   const tema = (opts.tema || "tema do dia").trim() || "tema do dia";
   const perDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
-  const total = Math.min(perDay, opts.competencias.length) || opts.competencias.length;
   const out: M1Card[] = [];
-  for (let i = 0; i < total; i++) {
-    const c = opts.competencias[i % opts.competencias.length];
-    out.push({
-      id: `m1d_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
-      v: c.v,
-      tag: c.tag,
-      title: `${opts.disciplina} · ${c.tag}: ${tema}`,
-      bncc: c.code,
-      minutos: c.minutos,
-      foco: opts.disciplina,
-    });
+  if (opts.competencias.length === 0) return out;
+
+  if (opts.interdisciplinar) {
+    // Agrupa competências de disciplinas diferentes em uma única atividade.
+    // Ex.: perDay=2 com 4 competências de 3 disciplinas → 2 atividades, cada
+    // uma juntando ~2 competências de disciplinas distintas.
+    const total = Math.max(1, perDay);
+    const groupSize = Math.max(2, Math.ceil(opts.competencias.length / total));
+    for (let i = 0; i < total; i++) {
+      const grupo = opts.competencias.slice(i * groupSize, i * groupSize + groupSize);
+      if (grupo.length === 0) break;
+      const disciplinas = Array.from(new Set(grupo.map((c) => c.disciplina)));
+      const tags = Array.from(new Set(grupo.map((c) => c.tag)));
+      const minutos = Math.round(grupo.reduce((s, c) => s + c.minutos, 0) / grupo.length) + 5;
+      out.push({
+        id: `m1di_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
+        v: grupo[0].v,
+        tag: disciplinas.length > 1 ? "Interdisciplinar" : grupo[0].tag,
+        title: `${disciplinas.join(" + ")} · ${tags.slice(0, 2).join(" / ")}: ${tema}`,
+        bncc: grupo.map((c) => c.code).join(" + "),
+        minutos,
+        foco: disciplinas.join(" + "),
+      });
+    }
+  } else {
+    const total = Math.min(perDay, opts.competencias.length) || opts.competencias.length;
+    for (let i = 0; i < total; i++) {
+      const c = opts.competencias[i % opts.competencias.length];
+      out.push({
+        id: `m1d_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
+        v: c.v,
+        tag: c.tag,
+        title: `${c.disciplina} · ${c.tag}: ${tema}`,
+        bncc: c.code,
+        minutos: c.minutos,
+        foco: c.disciplina,
+      });
+    }
   }
   return out;
 }
