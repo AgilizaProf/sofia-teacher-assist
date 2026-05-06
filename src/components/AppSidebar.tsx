@@ -114,7 +114,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           </span>
           <h4>Créditos ilimitados por R$ 247/ano</h4>
           <p>~9.000 créditos/ano · economize 41%.</p>
-          <button className="sb-plan-btn" aria-label="Ver oferta do plano anual">
+          <button className="sb-plan-btn bg-orange-500" aria-label="Ver oferta do plano anual">
             Ver oferta
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
