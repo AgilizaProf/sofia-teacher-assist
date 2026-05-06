@@ -346,6 +346,22 @@ export function Planejamento() {
   const [tipOpen, setTipOpen] = useState(true);
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
+  const FOCO_OPTS = [
+    "Letramento",
+    "Numeramento",
+    "Socioemocional",
+    "Pensamento científico",
+    "Cultura e identidade",
+    "Leitura e produção textual",
+    "Resolução de problemas",
+    "Educação ambiental",
+    "Cidadania e ética",
+    "Tecnologia e mídias",
+    "Arte e expressão",
+    "Corpo e movimento",
+    "Inclusão e diversidade",
+    "Projeto de vida",
+  ] as const;
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
   const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([]);
@@ -612,7 +628,7 @@ export function Planejamento() {
                       <div className="pl-field">
                         <label>Foco da semana</label>
                         <div className="pl-pills">
-                          {(["Letramento", "Numeramento", "Socioemocional"] as const).map((p) => (
+                          {FOCO_OPTS.map((p) => (
                             <button key={p} className={"pl-pill" + (pillsFoco[p] ? " on" : "")} onClick={() => setPillsFoco((s) => ({ ...s, [p]: !s[p] }))}>{p}</button>
                           ))}
                         </div>
