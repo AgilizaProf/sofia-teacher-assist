@@ -897,7 +897,11 @@ export function Dashboard() {
           <form className="school-modal-body" onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
-            const classRef = String(fd.get("classRef") || "");
+            const className = studentClassSel || String(fd.get("classRefManual") || "").trim();
+            const schoolName = studentSchoolSel || (classes.find((c) => c.name === studentClassSel)?.school || "");
+            const classRef = className
+              ? (schoolName ? `${className} · ${schoolName}` : className)
+              : (schoolName || "");
             const pcd = String(fd.get("pcd") || "nao");
             if (bulkMode) {
               const raw = String(fd.get("names") || "");
@@ -923,6 +927,7 @@ export function Dashboard() {
               }]);
             }
             (e.currentTarget as HTMLFormElement).reset();
+            setStudentClassSel(""); setStudentSchoolSel("");
             setStudentOpen(false);
           }}>
             <div className="school-mode" role="tablist" aria-label="Modo de cadastro">
@@ -948,16 +953,88 @@ export function Dashboard() {
             )}
             <div className="school-row">
               <div className="school-field">
-                <label htmlFor="student-class">Turma</label>
-                <input id="student-class" name="classRef" placeholder="Ex.: 2º ano A · sua escola" />
+                <label htmlFor="student-school">Escola</label>
+                {schools.length > 0 ? (
+                  <select
+                    id="student-school"
+                    value={studentSchoolSel}
+                    onChange={(e) => {
+                      setStudentSchoolSel(e.target.value);
+                      // Se a turma selecionada não pertence à escola escolhida, limpa
+                      const cls = classes.find((c) => c.name === studentClassSel);
+                      if (cls && e.target.value && cls.school !== e.target.value) setStudentClassSel("");
+                    }}
+                  >
+                    <option value="">Sem escola</option>
+                    {schools.map((sch, i) => (
+                      <option key={`${sch.name}-${i}`} value={sch.name}>{sch.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    id="student-school"
+                    value={studentSchoolSel}
+                    onChange={(e) => setStudentSchoolSel(e.target.value)}
+                    placeholder="Cadastre uma escola"
+                  />
+                )}
               </div>
-              {!bulkMode && (
-                <div className="school-field">
-                  <label htmlFor="student-birth">Data de nascimento</label>
-                  <input id="student-birth" name="birth" type="date" />
-                </div>
-              )}
+              <div className="school-field">
+                <label htmlFor="student-class">Turma</label>
+                {classes.length > 0 ? (
+                  <select
+                    id="student-class"
+                    value={studentClassSel}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setStudentClassSel(v);
+                      // Auto-vincula escola da turma escolhida
+                      const cls = classes.find((c) => c.name === v);
+                      if (cls?.school) setStudentSchoolSel(cls.school);
+                    }}
+                  >
+                    <option value="">Sem turma</option>
+                    {classes
+                      .filter((c) => !studentSchoolSel || c.school === studentSchoolSel || !c.school)
+                      .map((c, i) => (
+                        <option key={`${c.name}-${i}`} value={c.name}>
+                          {c.name}{c.school ? ` · ${c.school}` : ""}
+                        </option>
+                      ))}
+                  </select>
+                ) : (
+                  <input
+                    id="student-class"
+                    name="classRefManual"
+                    placeholder="Cadastre uma turma"
+                  />
+                )}
+              </div>
             </div>
+            {!bulkMode && (
+              <div className="school-field">
+                <label htmlFor="student-birth">Data de nascimento</label>
+                <input id="student-birth" name="birth" type="date" />
+              </div>
+            )}
+            {(classes.length === 0 || schools.length === 0) && (
+              <span className="school-hint" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                {schools.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setStudentOpen(false); setSchoolOpen(true); }}
+                    style={{ background: "none", border: 0, color: "var(--accent)", padding: 0, cursor: "pointer", font: "inherit", fontWeight: 700 }}
+                  >+ Cadastrar escola</button>
+                )}
+                {classes.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setStudentOpen(false); setClassOpen(true); }}
+                    style={{ background: "none", border: 0, color: "var(--accent)", padding: 0, cursor: "pointer", font: "inherit", fontWeight: 700 }}
+                  >+ Cadastrar turma</button>
+                )}
+              </span>
+            )}
             {!bulkMode && (
               <div className="school-field">
                 <label htmlFor="student-pcd">PCD / laudo</label>
