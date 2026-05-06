@@ -433,7 +433,10 @@ export function Planejamento() {
                   <div className="right">
                     <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
-                    <button className="pl-btn"><Plus size={14} /> Adicionar atividade</button>
+                     <button
+                       className="pl-btn"
+                       onClick={() => navigate({ to: "/planejamento/atividade", search: {} })}
+                     ><Plus size={14} /> Adicionar atividade</button>
                     <button className="pl-btn primary" onClick={() => showToast("Sofia está montando sugestões... ✨")}><Sparkles size={14} /> Gerar com Sofia</button>
                   </div>
                 </div>
@@ -462,7 +465,11 @@ export function Planejamento() {
                           >
                             <div className="pl-day-head">
                               <div><div className="dn">{d.n}</div><div className="dd">{d.d}</div></div>
-                              <button className="add" aria-label={`Adicionar atividade em ${d.n}`}><Plus size={14} /></button>
+                              <button
+                                className="add"
+                                aria-label={`Adicionar atividade em ${d.n}`}
+                                onClick={() => navigate({ to: "/planejamento/atividade", search: { dia: d.k } })}
+                              ><Plus size={14} /></button>
                             </div>
                             {cards.map((c) => (
                               <div
