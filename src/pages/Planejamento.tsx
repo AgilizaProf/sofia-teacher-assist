@@ -813,6 +813,53 @@ export function Planejamento() {
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
   const [auditOpen, setAuditOpen] = useState<Record<string, boolean>>({});
+
+  // ===== Contexto por aba: Turma cadastrada OU Ano escolar (sem turma) =====
+  // Persistido por aba (m1..m6). Estrutura:
+  //   { turma?: string; etapa?: Etapa; anoIdx?: number }
+  // Se `turma` está preenchida, a Sofia usa a turma cadastrada (que carrega seu próprio ano).
+  // Se não, exige `etapa + anoIdx` para gerar com base no ano de escolaridade.
+  type TurmaCtx = { turma?: string; etapa?: Etapa; anoIdx?: number };
+  const [ctxByTab, setCtxByTab] = usePersistentState<Record<MKey, TurmaCtx>>(
+    "plan_ctx_by_tab",
+    { m1: {}, m2: {}, m3: {}, m4: {}, m5: {}, m6: {} },
+  );
+  const ctxAtual: TurmaCtx = ctxByTab[m] ?? {};
+  const setCtxAtual = (next: TurmaCtx) =>
+    setCtxByTab((p) => ({ ...p, [m]: next }));
+
+  // Turmas cadastradas no perfil
+  const [turmasPerfil, setTurmasPerfil] = useState<string[]>([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !active) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("turmas")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (active && data?.turmas) setTurmasPerfil(data.turmas as string[]);
+    })();
+    return () => { active = false; };
+  }, []);
+
+  // Resolve etapa/ano efetivos do contexto atual (usado pela Sofia ao gerar).
+  const ctxResolvido = useMemo(() => {
+    const etapa = ctxAtual.etapa ?? "EF1";
+    const anos = BNCC_BY_ETAPA[etapa].anos;
+    const anoIdx = Math.min(ctxAtual.anoIdx ?? 1, anos.length - 1);
+    const ano = anos[anoIdx];
+    return {
+      pronto: !!(ctxAtual.turma || (ctxAtual.etapa && ctxAtual.anoIdx !== undefined)),
+      turma: ctxAtual.turma ?? "",
+      etapa,
+      anoIdx,
+      anoLabel: ano?.ano ?? "",
+      etapaLabel: BNCC_BY_ETAPA[etapa].label,
+    };
+  }, [ctxAtual]);
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1_PLAN);
   const [m1Generating, setM1Generating] = useState(false);
