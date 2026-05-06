@@ -356,7 +356,21 @@ const M2_BNCC_OPTS = [
 ] as const;
 
 // === M1 — Geração da semana pela Sofia ===
-type M1Card = { id: string; v: Variant; tag: string; title: string; bncc: string; minutos: number; foco: string; motivo?: string };
+type M1AuditToken = {
+  token: string;
+  origens: Array<{ code: string; disciplina: string; tag: string; desc: string }>;
+};
+type M1Card = {
+  id: string;
+  v: Variant;
+  tag: string;
+  title: string;
+  bncc: string;
+  minutos: number;
+  foco: string;
+  motivo?: string;
+  auditoria?: M1AuditToken[];
+};
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
