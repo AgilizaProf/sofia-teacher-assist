@@ -436,9 +436,8 @@ export function Relatorios() {
   };
   const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
     const base = bnccAreasFor(yearForAluno(id, turma));
-    const extra: BnccArea[] = [{ area: "Comportamento e socialização", comps: BNCC_COMPORTAMENTO }];
-    if (pcd) extra.push({ area: "Indicadores PCD (PEI)", comps: BNCC_PCD });
-    return [...base, ...extra];
+    if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
+    return base;
   };
   const competKeysFor = (id: string, turma: string, pcd?: string) => {
     const out: string[] = [];
