@@ -903,8 +903,8 @@ export function Planejamento() {
     (ano?.disciplinas ?? []).forEach((d) => { todas[d.nome] = true; });
     setMdDiscOn(todas);
     setMdSel({});
-    // Liga interdisciplinar por padrão (será ignorado pela geração se < 2 disciplinas com seleção).
-    setMdInter(true);
+    // Usa o padrão global (modal Ajustar parâmetros).
+    setMdInter(interdisciplinarPadrao);
     setMdTema(m1Tema);
   };
   const fecharDayModal = () => setM1DayModal(null);
