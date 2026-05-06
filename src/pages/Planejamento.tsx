@@ -813,6 +813,7 @@ export function Planejamento() {
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
   const [auditOpen, setAuditOpen] = useState<Record<string, boolean>>({});
+  const [paramsModalOpen, setParamsModalOpen] = useState(false);
 
   // ===== Contexto por aba: Turma cadastrada OU Ano escolar (sem turma) =====
   // Persistido por aba (m1..m6). Estrutura:
@@ -1148,7 +1149,15 @@ export function Planejamento() {
             <p className="lead">{cfg.lead}</p>
             <div className="chips">
               {cfg.chips.map((c, i) => (
-                <button key={i} className={"hbc " + (c.solid ? "solid" : "outline")}>{c.label}</button>
+                <button
+                  key={i}
+                  className={"hbc " + (c.solid ? "solid" : "outline")}
+                  onClick={() => {
+                    if (c.label.toLowerCase().includes("ajustar parâmetros")) {
+                      setParamsModalOpen(true);
+                    }
+                  }}
+                >{c.label}</button>
               ))}
             </div>
           </div>
@@ -1162,82 +1171,39 @@ export function Planejamento() {
             ))}
           </div>
 
-          {/* Contexto da aba: turma cadastrada OU ano de escolaridade */}
-          <div
+          {/* Resumo do contexto da aba (clicável para abrir o modal Ajustar parâmetros) */}
+          <button
+            type="button"
+            onClick={() => setParamsModalOpen(true)}
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: 10,
+              gap: 8,
               alignItems: "center",
-              padding: "10px 14px",
+              padding: "8px 14px",
               margin: "0 0 12px",
               background: ctxResolvido.pronto ? "#F0FDF4" : "#FFFBEB",
               border: `1px solid ${ctxResolvido.pronto ? "#BBF7D0" : "#FDE68A"}`,
               borderRadius: 10,
               fontSize: 12.5,
+              cursor: "pointer",
+              width: "100%",
+              textAlign: "left",
             }}
+            title="Ajustar parâmetros e contexto"
           >
-            <span style={{ fontWeight: 700, color: "var(--ink)" }}>
-              📚 Contexto desta aba:
-            </span>
-            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "var(--ink-2)" }}>Turma:</span>
-              <select
-                value={ctxAtual.turma ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setCtxAtual({ ...ctxAtual, turma: v || undefined });
-                }}
-                style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
-              >
-                <option value="">— Sem turma cadastrada —</option>
-                {turmasPerfil.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </label>
-            {!ctxAtual.turma && (
-              <>
-                <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ color: "var(--ink-2)" }}>Etapa:</span>
-                  <select
-                    value={ctxAtual.etapa ?? ""}
-                    onChange={(e) => {
-                      const v = (e.target.value || undefined) as Etapa | undefined;
-                      setCtxAtual({ ...ctxAtual, etapa: v, anoIdx: v ? 0 : undefined });
-                    }}
-                    style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
-                  >
-                    <option value="">— Selecione —</option>
-                    {(Object.keys(BNCC_BY_ETAPA) as Etapa[]).map((e) => (
-                      <option key={e} value={e}>{BNCC_BY_ETAPA[e].label}</option>
-                    ))}
-                  </select>
-                </label>
-                {ctxAtual.etapa && (
-                  <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ color: "var(--ink-2)" }}>Ano:</span>
-                    <select
-                      value={ctxAtual.anoIdx ?? 0}
-                      onChange={(e) => setCtxAtual({ ...ctxAtual, anoIdx: Number(e.target.value) })}
-                      style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
-                    >
-                      {BNCC_BY_ETAPA[ctxAtual.etapa].anos.map((a, i) => (
-                        <option key={a.ano} value={i}>{a.ano}</option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </>
-            )}
-            <span style={{ marginLeft: "auto", color: ctxResolvido.pronto ? "#047857" : "#B45309", fontWeight: 600 }}>
+            <span style={{ fontWeight: 700, color: "var(--ink)" }}>📚 Contexto:</span>
+            <span style={{ color: ctxResolvido.pronto ? "#047857" : "#B45309", fontWeight: 600 }}>
               {ctxResolvido.pronto
                 ? (ctxAtual.turma
-                    ? `Sofia gera para a turma ${ctxAtual.turma}.`
-                    : `Sofia gera para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}).`)
-                : "Selecione uma turma OU um ano de escolaridade para a Sofia gerar."}
+                    ? `Turma ${ctxAtual.turma}`
+                    : `${ctxResolvido.anoLabel} · ${ctxResolvido.etapaLabel}`)
+                : "Nenhuma turma/ano selecionado"}
             </span>
-          </div>
+            <span style={{ marginLeft: "auto", color: "var(--orange)", fontWeight: 700 }}>
+              ✏️ Ajustar parâmetros
+            </span>
+          </button>
 
           <div className="pl-workspace">
             {m === "m5" && (
@@ -2191,6 +2157,119 @@ export function Planejamento() {
               <button className="pl-btn primary" onClick={gerarDayModal} disabled={mdSelecionadas.length === 0}>
                 <Sparkles size={14} /> Gerar com a Sofia
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {paramsModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Ajustar parâmetros"
+          onClick={() => setParamsModalOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 1000 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "#fff", borderRadius: 14, width: "min(560px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                  ✏️ Ajustar parâmetros
+                </div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Contexto desta aba</h3>
+              </div>
+              <button onClick={() => setParamsModalOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6 }}><X size={18} /></button>
+            </div>
+
+            <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+              <p className="lead" style={{ margin: 0, color: "var(--ink-2)", fontSize: 12.5 }}>
+                Escolha uma <b>turma cadastrada</b> ou — se ainda não cadastrou — selecione manualmente a <b>etapa e o ano de escolaridade</b> para a Sofia gerar.
+              </p>
+
+              <div className="pl-field">
+                <label>Turma cadastrada</label>
+                <select
+                  value={ctxAtual.turma ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setCtxAtual({ ...ctxAtual, turma: v || undefined });
+                  }}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", background: "#fff" }}
+                >
+                  <option value="">— Sem turma cadastrada —</option>
+                  {turmasPerfil.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+                {turmasPerfil.length === 0 && (
+                  <p className="lead" style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: 11.5 }}>
+                    Você ainda não cadastrou turmas no perfil. Selecione abaixo a etapa/ano.
+                  </p>
+                )}
+              </div>
+
+              {!ctxAtual.turma && (
+                <>
+                  <div className="pl-field">
+                    <label>Etapa de ensino</label>
+                    <div className="pl-pills">
+                      {(Object.keys(BNCC_BY_ETAPA) as Etapa[]).map((e) => (
+                        <button
+                          key={e}
+                          type="button"
+                          className={"pl-pill" + (ctxAtual.etapa === e ? " on" : "")}
+                          onClick={() => setCtxAtual({ ...ctxAtual, etapa: e, anoIdx: 0 })}
+                        >{BNCC_BY_ETAPA[e].label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  {ctxAtual.etapa && (
+                    <div className="pl-field">
+                      <label>Ano de escolaridade</label>
+                      <div className="pl-pills">
+                        {BNCC_BY_ETAPA[ctxAtual.etapa].anos.map((a, i) => (
+                          <button
+                            key={a.ano}
+                            type="button"
+                            className={"pl-pill" + ((ctxAtual.anoIdx ?? 0) === i ? " on" : "")}
+                            onClick={() => setCtxAtual({ ...ctxAtual, anoIdx: i })}
+                          >{a.ano}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: ctxResolvido.pronto ? "#F0FDF4" : "#FFFBEB",
+                  border: `1px solid ${ctxResolvido.pronto ? "#BBF7D0" : "#FDE68A"}`,
+                  color: ctxResolvido.pronto ? "#047857" : "#B45309",
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                }}
+              >
+                {ctxResolvido.pronto
+                  ? (ctxAtual.turma
+                      ? `✓ Sofia vai gerar para a turma ${ctxAtual.turma}.`
+                      : `✓ Sofia vai gerar para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}).`)
+                  : "Selecione uma turma OU um ano de escolaridade."}
+              </div>
+            </div>
+
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="pl-btn ghost" onClick={() => setParamsModalOpen(false)}>Cancelar</button>
+              <button
+                className="pl-btn primary"
+                onClick={() => setParamsModalOpen(false)}
+                disabled={!ctxResolvido.pronto}
+              ><Check size={14} /> Salvar parâmetros</button>
             </div>
           </div>
         </div>
