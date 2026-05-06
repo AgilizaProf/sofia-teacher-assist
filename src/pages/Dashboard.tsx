@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
@@ -10,6 +11,26 @@ import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
+
+type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
+type AgendaEvent = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  time?: string;
+  type: AgendaType;
+  notes?: string;
+};
+const AGENDA_TYPE_LABEL: Record<AgendaType, string> = {
+  meeting: "Reunião", eval: "Avaliação", report: "Entrega",
+  plan: "Planejamento", pcd: "Inclusão", personal: "Pessoal",
+};
+const AGENDA_TYPE_COLOR: Record<AgendaType, string> = {
+  meeting: "#6366F1", eval: "#EF4444", report: "#F59E0B",
+  plan: "#10B981", pcd: "#8B5CF6", personal: "#64748B",
+};
+const MONTHS_PT_SHORT = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 
 const css = `
 .ap-root{
@@ -304,6 +325,34 @@ export function Dashboard() {
 
   const [streak, setStreak] = useState<number>(0);
   const sofia = useSofia();
+  const navigate = useNavigate();
+
+  // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
+  const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
+  const upcomingAgenda = useMemo(() => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const todayKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const nowHHMM = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    return [...agendaEvents]
+      .filter((e) => {
+        if (e.date > todayKey) return true;
+        if (e.date < todayKey) return false;
+        if (!e.time) return true;
+        return e.time >= nowHHMM;
+      })
+      .sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return (a.time || "99:99").localeCompare(b.time || "99:99");
+      });
+  }, [agendaEvents]);
+  const todayKeyMemo = useMemo(() => {
+    const d = new Date(); const p = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }, []);
+  const todayEvents = upcomingAgenda.filter((e) => e.date === todayKeyMemo);
+  const agendaToShow = todayEvents.length > 0 ? todayEvents.slice(0, 4) : upcomingAgenda.slice(0, 1);
+  const agendaSectionTitle = todayEvents.length > 0 ? "Hoje" : (upcomingAgenda.length > 0 ? "Próximo compromisso" : "");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -447,17 +496,90 @@ export function Dashboard() {
               <div className="card">
                 <div className="card-head">
                   <h3 className="card-title">🗓️ Agenda</h3>
-                  <a href="#" className="card-link">Abrir<Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} /></a>
-                </div>
-                <div className="agenda-empty">
-                  <div className="agenda-empty-icon">📭</div>
-                  <div className="agenda-empty-title">Sua semana está livre</div>
-                  <p className="agenda-empty-sub">Adicione provas, entregas e reuniões pra não esquecer.</p>
-                  <button className="btn-add">
-                    <Svg strokeWidth={2.5} c={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />
-                    Adicionar evento
+                  <button
+                    type="button"
+                    className="card-link"
+                    onClick={() => navigate({ to: "/agenda" })}
+                    style={{ background: "transparent", border: 0, padding: 0, font: "inherit", cursor: "pointer", color: "inherit", display: "inline-flex", alignItems: "center", gap: 4 }}
+                  >
+                    Abrir<Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
                   </button>
                 </div>
+                {agendaToShow.length === 0 ? (
+                  <div className="agenda-empty">
+                    <div className="agenda-empty-icon">📭</div>
+                    <div className="agenda-empty-title">Sua semana está livre</div>
+                    <p className="agenda-empty-sub">Adicione provas, entregas e reuniões pra não esquecer.</p>
+                    <button className="btn-add" onClick={() => navigate({ to: "/agenda" })}>
+                      <Svg strokeWidth={2.5} c={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />
+                      Adicionar evento
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
+                      {agendaSectionTitle}
+                    </div>
+                    {agendaToShow.map((ev) => {
+                      const [, mm, dd] = ev.date.split("-");
+                      const color = AGENDA_TYPE_COLOR[ev.type];
+                      return (
+                        <button
+                          key={ev.id}
+                          type="button"
+                          onClick={() => navigate({ to: "/agenda" })}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 10,
+                            padding: "10px 12px", borderRadius: 10,
+                            background: "var(--bg-soft)", border: "1px solid var(--border-soft)",
+                            cursor: "pointer", textAlign: "left", width: "100%",
+                          }}
+                        >
+                          <div style={{
+                            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                            minWidth: 38, padding: "4px 0", borderRadius: 8,
+                            background: "#fff", border: "1px solid var(--border)",
+                          }}>
+                            <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: 14, color: "var(--primary)", lineHeight: 1 }}>{dd}</div>
+                            <div style={{ fontSize: 9, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", marginTop: 2 }}>
+                              {MONTHS_PT_SHORT[Number(mm) - 1]}
+                            </div>
+                          </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                              <span style={{
+                                fontSize: 9.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".05em",
+                                padding: "2px 6px", borderRadius: 5,
+                                background: `color-mix(in oklab, ${color} 18%, white)`, color,
+                              }}>
+                                {AGENDA_TYPE_LABEL[ev.type]}
+                              </span>
+                              {ev.time && (
+                                <span style={{ fontSize: 11, color: "var(--text-soft)", fontWeight: 600 }}>{ev.time}</span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {ev.title}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                    {upcomingAgenda.length > agendaToShow.length && (
+                      <button
+                        type="button"
+                        onClick={() => navigate({ to: "/agenda" })}
+                        style={{
+                          marginTop: 2, padding: "6px 0", border: 0, background: "transparent",
+                          color: "var(--accent)", fontWeight: 700, fontSize: 11.5, cursor: "pointer",
+                          textTransform: "uppercase", letterSpacing: ".05em", textAlign: "center",
+                        }}
+                      >
+                        Ver todos ({upcomingAgenda.length})
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
