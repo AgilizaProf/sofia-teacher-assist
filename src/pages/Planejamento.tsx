@@ -1149,7 +1149,15 @@ export function Planejamento() {
             <p className="lead">{cfg.lead}</p>
             <div className="chips">
               {cfg.chips.map((c, i) => (
-                <button key={i} className={"hbc " + (c.solid ? "solid" : "outline")}>{c.label}</button>
+                <button
+                  key={i}
+                  className={"hbc " + (c.solid ? "solid" : "outline")}
+                  onClick={() => {
+                    if (c.label.toLowerCase().includes("ajustar parâmetros")) {
+                      setParamsModalOpen(true);
+                    }
+                  }}
+                >{c.label}</button>
               ))}
             </div>
           </div>
