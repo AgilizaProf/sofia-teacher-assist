@@ -735,7 +735,7 @@ export function Relatorios() {
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
-                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id);
+                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma);
                   return (
                     <div style={{ marginTop: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
@@ -749,7 +749,7 @@ export function Relatorios() {
                 <div className="rel-card-foot">
                   <button
                     className="rel-btn-card"
-                    onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma })}
+                    onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
                     aria-label={`Avaliar competências BNCC de ${a.nome}`}
                   >
                     <ClipboardList size={13} /> Avaliar BNCC
