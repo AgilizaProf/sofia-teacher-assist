@@ -1250,6 +1250,21 @@ export function Planejamento() {
                                         <div className="sub">{c.tag}</div>
                                         <div className="tt">{c.title}</div>
                                         <div className="mn">{c.bncc} · {c.minutos}min</div>
+                                        {c.motivo && (
+                                          <div
+                                            className="mn"
+                                            style={{
+                                              marginTop: 4,
+                                              fontStyle: "italic",
+                                              color: "var(--muted)",
+                                              fontSize: 10.5,
+                                              lineHeight: 1.35,
+                                            }}
+                                            title={c.motivo}
+                                          >
+                                            ✨ {c.motivo}
+                                          </div>
+                                        )}
                                       </div>
                                       <button
                                         type="button"
