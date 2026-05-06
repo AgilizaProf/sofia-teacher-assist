@@ -2173,15 +2173,65 @@ export function Planejamento() {
               </div>
 
               <div className="pl-field" style={{ marginTop: 0 }}>
-                <label>Intensidade do dia</label>
+                <label>Como dimensionar o dia?</label>
                 <div className="pl-pills">
-                  {(["Leve", "Equilibrada", "Densa"] as const).map((p) => (
-                    <button key={p} className={"pl-pill" + (mdInt === p ? " on" : "")} onClick={() => setMdInt(p)}>{p}</button>
-                  ))}
+                  <button className={"pl-pill" + (mdModo === "intensidade" ? " on" : "")} onClick={() => setMdModo("intensidade")}>Por intensidade</button>
+                  <button className={"pl-pill" + (mdModo === "quantidade" ? " on" : "")} onClick={() => setMdModo("quantidade")}>Nº de atividades</button>
+                  <button className={"pl-pill" + (mdModo === "tempo" ? " on" : "")} onClick={() => setMdModo("tempo")}>Tempo disponível</button>
                 </div>
-                <p className="lead" style={{ margin: "6px 0 0" }}>
-                  Sofia vai gerar <b>{Math.min(mdInt === "Leve" ? 1 : mdInt === "Densa" ? 3 : 2, mdSelecionadas.length || 1)}</b> atividade(s) para {m1DayModal.n}.
-                </p>
+
+                {mdModo === "intensidade" && (
+                  <>
+                    <div className="pl-pills" style={{ marginTop: 8 }}>
+                      {(["Leve", "Equilibrada", "Densa"] as const).map((p) => (
+                        <button key={p} className={"pl-pill" + (mdInt === p ? " on" : "")} onClick={() => setMdInt(p)}>{p}</button>
+                      ))}
+                    </div>
+                    <p className="lead" style={{ margin: "6px 0 0" }}>
+                      Sofia vai gerar <b>{Math.min(mdInt === "Leve" ? 1 : mdInt === "Densa" ? 3 : 2, mdSelecionadas.length || 1)}</b> atividade(s) para {m1DayModal.n}.
+                    </p>
+                  </>
+                )}
+
+                {mdModo === "quantidade" && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                    <input
+                      type="number"
+                      className="pl-input"
+                      style={{ width: 100 }}
+                      min={1}
+                      max={8}
+                      value={mdQtd}
+                      onChange={(e) => setMdQtd(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
+                    />
+                    <span className="lead" style={{ margin: 0 }}>atividade(s) sugerida(s) para {m1DayModal.n}.</span>
+                  </div>
+                )}
+
+                {mdModo === "tempo" && (
+                  <>
+                    <div className="pl-pills" style={{ marginTop: 8 }}>
+                      {[30, 60, 90, 120, 180, 240].map((t) => (
+                        <button key={t} className={"pl-pill" + (mdMin === t ? " on" : "")} onClick={() => setMdMin(t)}>
+                          {t >= 60 ? `${Math.floor(t / 60)}h${t % 60 ? ` ${t % 60}min` : ""}` : `${t} min`}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                      <input
+                        type="number"
+                        className="pl-input"
+                        style={{ width: 110 }}
+                        min={15}
+                        max={480}
+                        step={5}
+                        value={mdMin}
+                        onChange={(e) => setMdMin(Math.max(15, Math.min(480, Number(e.target.value) || 60)))}
+                      />
+                      <span className="lead" style={{ margin: 0 }}>minutos totais — Sofia ajusta a duração de cada atividade.</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
