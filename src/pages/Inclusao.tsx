@@ -242,8 +242,9 @@ const css = `
 .inc-modal-head{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
 .inc-modal-head h2{font-family:'Fraunces',serif;font-weight:800;font-size:20px;flex:1;}
 .inc-modal-head .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-align:right;line-height:1.5;}
-.inc-modal-close{background:var(--bg);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--muted);}
+.inc-modal-close{background:var(--bg);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--muted);border:0;cursor:pointer;padding:0;font:inherit;}
 .inc-modal-close:hover{background:var(--danger);color:#fff;}
+.inc-modal-close > *{pointer-events:none;}
 .inc-modal-body{padding:22px 24px;overflow-y:auto;flex:1;background:#F0F2F7;}
 .inc-modal-body.plain{background:#fff;}
 .inc-modal-foot{padding:14px 24px;border-top:1px solid var(--border);background:var(--bg);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
