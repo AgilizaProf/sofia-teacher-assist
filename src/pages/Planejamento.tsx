@@ -776,9 +776,19 @@ function sofiaGenerateWeek(opts: {
   focos: string[];
   intensidade: "Leve" | "Equilibrada" | "Densa";
   diasISO: string[];
+  // Override: quantidade exata de atividades por dia.
+  quantidadePorDia?: number;
+  // Override: tempo total por dia (em min). Recalibra a duração de cada atividade.
+  minutosPorDia?: number;
 }): M1Plan {
   const tema = (opts.tema || "tema do mês").trim() || "tema do mês";
-  const perDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  const baseDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  let perDay = baseDay;
+  if (typeof opts.quantidadePorDia === "number" && opts.quantidadePorDia > 0) {
+    perDay = Math.max(1, Math.floor(opts.quantidadePorDia));
+  } else if (typeof opts.minutosPorDia === "number" && opts.minutosPorDia > 0) {
+    perDay = Math.max(1, Math.round(opts.minutosPorDia / 35));
+  }
   const focos = opts.focos.length > 0 ? opts.focos : ["Letramento", "Numeramento"];
   const pool: Array<Omit<M1Card, "id">> = [];
   focos.forEach((f) => {
@@ -791,14 +801,16 @@ function sofiaGenerateWeek(opts: {
   const plan: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
   let i = 0;
   for (let d = 0; d < 5; d++) {
+    const cardsDoDia: M1Card[] = [];
     for (let k = 0; k < perDay; k++) {
       const t = pool[i % pool.length];
       i++;
-      plan[dayKeys[d]].push({
+      cardsDoDia.push({
         ...t,
         id: `m1_${opts.diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}`,
       });
     }
+    plan[dayKeys[d]] = scaleToTarget(cardsDoDia, opts.minutosPorDia);
   }
   return plan;
 }
