@@ -13,6 +13,7 @@ import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { brDateKey, diffDaysBR } from "@/lib/datetime";
 
 const css = `
 .ap-root{
