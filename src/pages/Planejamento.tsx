@@ -951,6 +951,8 @@ export function Planejamento() {
                                 )}
                               </div>
                             </div>
+                            {showPhAfter && <div className="pl-drop-ph" aria-hidden="true" />}
+                          </React.Fragment>
                           );
                         })}
                       </div>
