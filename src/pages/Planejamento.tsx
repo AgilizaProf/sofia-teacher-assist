@@ -603,10 +603,20 @@ function sofiaGenerateForDay(opts: {
       const tags = Array.from(new Set(grupo.map((c) => c.tag)));
       const minutos = Math.round(grupo.reduce((s, c) => s + c.minutos, 0) / grupo.length) + 5;
       // Justificativa: tokens compartilhados por ≥2 competências do grupo.
+      // Validação: cada token só entra se aparecer no texto normalizado de
+      // pelo menos 2 competências (interseção real, não ruído).
       const freq = new Map<string, number>();
       for (const g of grupo) g._tok.forEach((w) => freq.set(w, (freq.get(w) ?? 0) + 1));
+      const textosNorm = grupo.map((g) =>
+        `${g.tag} ${g.desc}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+      );
       const compartilhados = Array.from(freq.entries())
-        .filter(([, n]) => n >= 2)
+        .filter(([w, n]) => {
+          if (n < 2) return false;
+          const re = new RegExp(`\\b${w}\\b`);
+          const matches = textosNorm.reduce((acc, t) => acc + (re.test(t) ? 1 : 0), 0);
+          return matches >= 2;
+        })
         .sort((a, b) => b[1] - a[1])
         .slice(0, 4)
         .map(([w]) => w);
@@ -631,6 +641,21 @@ function sofiaGenerateForDay(opts: {
         motivo,
       });
     }
+    // Validação final: nenhuma competência (code) pode repetir entre atividades do dia.
+    const vistos = new Set<string>();
+    const limpos: M1Card[] = [];
+    for (const card of out) {
+      const codes = card.bncc.split(" + ").map((s) => s.trim()).filter(Boolean);
+      if (codes.some((c) => vistos.has(c))) {
+        if (typeof console !== "undefined") {
+          console.warn("[sofiaGenerateForDay] competência repetida descartada:", card.bncc);
+        }
+        continue;
+      }
+      codes.forEach((c) => vistos.add(c));
+      limpos.push(card);
+    }
+    return limpos;
   } else {
     // Sem interdisciplinar: também evita repetir a mesma competência.
     const total = Math.min(perDay, opts.competencias.length);
