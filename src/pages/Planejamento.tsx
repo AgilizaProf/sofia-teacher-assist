@@ -813,6 +813,7 @@ export function Planejamento() {
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
   const [auditOpen, setAuditOpen] = useState<Record<string, boolean>>({});
+  const [paramsModalOpen, setParamsModalOpen] = useState(false);
 
   // ===== Contexto por aba: Turma cadastrada OU Ano escolar (sem turma) =====
   // Persistido por aba (m1..m6). Estrutura:
