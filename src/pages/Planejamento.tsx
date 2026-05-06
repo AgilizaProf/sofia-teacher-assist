@@ -445,6 +445,9 @@ export function Planejamento() {
   };
   const aceitarSugestao = (id: string) => setM2Steps((arr) => arr.map((s) => s.id === id ? { ...s, suggest: false } : s));
   const removerStep = (id: string) => setM2Steps((arr) => arr.filter((s) => s.id !== id));
+  const [m2EditId, setM2EditId] = useState<string | null>(null);
+  const updateStep = (id: string, patch: Partial<M2Step>) =>
+    setM2Steps((arr) => arr.map((s) => s.id === id ? { ...s, ...patch } : s));
 
   const sendChat = (msg?: string) => {
     const t = (msg ?? chatTxt).trim(); if (!t) return;
