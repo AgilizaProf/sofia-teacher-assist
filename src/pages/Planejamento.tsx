@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
@@ -10,6 +10,7 @@ import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { supabase } from "@/integrations/supabase/client";
 
 const css = `
 .pl-root{
