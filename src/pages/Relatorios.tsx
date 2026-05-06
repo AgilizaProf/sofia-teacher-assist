@@ -213,6 +213,15 @@ const css = `
   .rel-hero h1{font-size:28px;}
   .rel-page{padding:18px;}
 }
+.kpi-tip-host{position:relative;}
+.kpi-tip{position:absolute;left:50%;top:calc(100% + 10px);transform:translate(-50%,4px);min-width:280px;max-width:320px;background:#0B1220;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;box-shadow:0 18px 40px -16px rgba(0,0,0,.6);font-size:12px;line-height:1.45;opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;z-index:40;}
+.kpi-tip-host:hover .kpi-tip,.kpi-tip-host:focus-visible .kpi-tip,.kpi-tip-host:focus-within .kpi-tip{opacity:1;transform:translate(-50%,0);}
+.kpi-tip-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:700;margin-bottom:8px;}
+.kpi-tip-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.kpi-tip-list li{display:flex;justify-content:space-between;gap:14px;color:rgba(255,255,255,.85);}
+.kpi-tip-list li b{color:#fff;font-weight:700;white-space:nowrap;}
+.kpi-tip-total{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.14);display:flex;justify-content:space-between;font-weight:700;color:#FFB47A;}
+.kpi-tip-arrow{position:absolute;top:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:12px;height:12px;background:#0B1220;border-left:1px solid rgba(255,255,255,.08);border-top:1px solid rgba(255,255,255,.08);border-radius:2px;}
 `;
 
 type Status = "todo" | "draft" | "review" | "done";
