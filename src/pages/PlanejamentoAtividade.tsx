@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Sparkles, BookOpen, Target, Layers, Clock, Users, ChevronDown } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { useSofia } from "@/components/sofia/SofiaProvider";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
@@ -105,8 +106,46 @@ export function PlanejamentoAtividade() {
   const [recursos, setRecursos] = useState<string>("");
   const [adapt, setAdapt] = useState<string>("");
   const [foco, setFoco] = useState<Record<string, boolean>>({ Letramento: true });
-  const [turma] = useState<string>(search.turma || "");
+  const [turma, setTurma] = useState<string>(search.turma || "");
   const [dia] = useState<string>(search.dia || "");
+  const [minhasTurmas, setMinhasTurmas] = useState<string[]>([]);
+  const [loadingTurmas, setLoadingTurmas] = useState<boolean>(true);
+  const [novaTurma, setNovaTurma] = useState<string>("");
+
+  // Carrega as turmas cadastradas no perfil da professora.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { if (active) setLoadingTurmas(false); return; }
+        const { data } = await supabase
+          .from("profiles")
+          .select("turmas")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!active) return;
+        const list = (data?.turmas ?? []).filter(Boolean);
+        setMinhasTurmas(list);
+        // Se já veio turma por search e não está na lista, mantém; senão pré-seleciona a primeira.
+        if (!turma && list.length > 0) setTurma(list[0]);
+      } finally {
+        if (active) setLoadingTurmas(false);
+      }
+    })();
+    return () => { active = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const adicionarTurma = () => {
+    const t = novaTurma.trim();
+    if (!t) return;
+    if (minhasTurmas.includes(t)) { setTurma(t); setNovaTurma(""); return; }
+    setMinhasTurmas((prev) => [...prev, t]);
+    setTurma(t);
+    setNovaTurma("");
+    toast.success("Turma adicionada para esta atividade. Para salvar no perfil, acesse Configurações.");
+  };
 
   const anos = useMemo(() => ANOS_BY_ETAPA[etapa] || [], [etapa]);
 
@@ -173,6 +212,47 @@ export function PlanejamentoAtividade() {
 
           <div className="pa-grid">
             <form className="pa-card" onSubmit={(e) => { e.preventDefault(); onGerar(); }}>
+              <h2><Users size={16} /> Turma</h2>
+              <p className="sub">Escolha uma das suas turmas cadastradas. Você pode gerenciá-las em Configurações &rsaquo; Perfil.</p>
+
+              <div className="pa-row">
+                <div className="pa-field">
+                  <label>Turma cadastrada</label>
+                  <select
+                    className="pa-select"
+                    value={turma}
+                    onChange={(e) => setTurma(e.target.value)}
+                    disabled={loadingTurmas}
+                  >
+                    <option value="">{loadingTurmas ? "Carregando turmas…" : (minhasTurmas.length === 0 ? "Nenhuma turma cadastrada" : "Selecione uma turma")}</option>
+                    {minhasTurmas.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  {!loadingTurmas && minhasTurmas.length === 0 && (
+                    <span className="pa-help">
+                      Nenhuma turma encontrada no seu perfil.{" "}
+                      <Link to="/configuracoes" style={{ color: "#FF7A45", fontWeight: 700 }}>Cadastrar agora</Link>.
+                    </span>
+                  )}
+                </div>
+                <div className="pa-field">
+                  <label>Adicionar turma rápida</label>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <input
+                      className="pa-input"
+                      value={novaTurma}
+                      onChange={(e) => setNovaTurma(e.target.value)}
+                      placeholder="Ex.: 3º A"
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); adicionarTurma(); } }}
+                    />
+                    <button type="button" className="pa-btn" onClick={adicionarTurma}>+ Adicionar</button>
+                  </div>
+                  <span className="pa-help">Usada só nesta atividade. Para persistir, edite seu perfil.</span>
+                </div>
+              </div>
+
+              <div style={{ height: 6 }} />
               <h2><BookOpen size={16} /> Etapa, ano e componente</h2>
               <p className="sub">Define o recorte curricular para a Sofia escolher a habilidade certa.</p>
 
