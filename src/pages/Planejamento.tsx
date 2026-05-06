@@ -903,6 +903,10 @@ export function Planejamento() {
   const [mdTema, setMdTema] = useState<string>("");
   const [mdInt, setMdInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [mdInter, setMdInter] = useState<boolean>(false);
+  // Modo de dimensionamento do dia: por intensidade (padrão), por quantidade fixa, ou por tempo total.
+  const [mdModo, setMdModo] = useState<"intensidade" | "quantidade" | "tempo">("intensidade");
+  const [mdQtd, setMdQtd] = useState<number>(2);
+  const [mdMin, setMdMin] = useState<number>(60);
   const mdAno = BNCC_BY_ETAPA[mdEtapa].anos[Math.min(mdAnoIdx, BNCC_BY_ETAPA[mdEtapa].anos.length - 1)];
   const mdDiscList = mdAno?.disciplinas.filter((d) => mdDiscOn[d.nome]) ?? [];
   const mdSelecionadas: Array<CompetenciaBNCC & { disciplina: string }> = mdDiscList.flatMap(
