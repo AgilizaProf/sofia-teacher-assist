@@ -516,8 +516,15 @@ export function Dashboard() {
                             const isPcd = s.pcd && s.pcd !== "nao";
                             const cidInfo = isPcd ? CID_LABEL[s.pcd] : null;
                             const avClass = `av-${(i % 3) + 1}`;
+                            const realIndex = students.indexOf(s);
                             return (
-                              <div key={`${turma}-${i}`} className="student">
+                              <button
+                                key={`${turma}-${i}`}
+                                type="button"
+                                className="student"
+                                onClick={() => setStudentDetail({ index: realIndex, student: s })}
+                                style={{ width: "100%", textAlign: "left", background: "transparent", cursor: "pointer", font: "inherit" }}
+                              >
                                 <div className={`student-avatar ${avClass}`}>{initials}</div>
                                 <div className="student-info">
                                   <div className="student-name">
@@ -532,7 +539,8 @@ export function Dashboard() {
                                     <div className="student-meta">{s.notes || cidInfo?.label}</div>
                                   )}
                                 </div>
-                              </div>
+                                <Svg width={14} height={14} c={<polyline points="9 18 15 12 9 6"/>} />
+                              </button>
                             );
                           })}
                         </div>
