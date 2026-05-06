@@ -1315,6 +1315,63 @@ export function Planejamento() {
                                             ✨ {c.motivo}
                                           </div>
                                         )}
+                                        {c.auditoria && c.auditoria.length > 0 && (
+                                          <>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setAuditOpen((s) => ({ ...s, [c.id]: !s[c.id] }));
+                                              }}
+                                              style={{
+                                                marginTop: 4,
+                                                background: "none",
+                                                border: "none",
+                                                padding: 0,
+                                                color: "var(--orange)",
+                                                fontSize: 10.5,
+                                                fontWeight: 700,
+                                                cursor: "pointer",
+                                              }}
+                                            >
+                                              {auditOpen[c.id] ? "▾ Ocultar auditoria" : "▸ Auditar agrupamento"}
+                                            </button>
+                                            {auditOpen[c.id] && (
+                                              <div
+                                                style={{
+                                                  marginTop: 6,
+                                                  padding: "6px 8px",
+                                                  background: "#FFF7ED",
+                                                  border: "1px solid #FED7AA",
+                                                  borderRadius: 6,
+                                                  display: "flex",
+                                                  flexDirection: "column",
+                                                  gap: 6,
+                                                  fontSize: 10.5,
+                                                  lineHeight: 1.4,
+                                                }}
+                                              >
+                                                {c.auditoria.map((a) => (
+                                                  <div key={a.token}>
+                                                    <div style={{ fontWeight: 700, color: "var(--ink)" }}>
+                                                      {a.token}{" "}
+                                                      <span style={{ color: "var(--muted)", fontWeight: 500 }}>
+                                                        ({a.origens.length} competências)
+                                                      </span>
+                                                    </div>
+                                                    <ul style={{ margin: "2px 0 0", paddingLeft: 14, color: "var(--ink-2)" }}>
+                                                      {a.origens.map((o) => (
+                                                        <li key={o.code}>
+                                                          <b>{o.code}</b> · {o.disciplina} · {o.tag} — {o.desc}
+                                                        </li>
+                                                      ))}
+                                                    </ul>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </>
+                                        )}
                                       </div>
                                       <button
                                         type="button"
