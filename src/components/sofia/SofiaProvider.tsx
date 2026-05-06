@@ -108,7 +108,30 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => mounted && setIsAuthed(!!data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setIsAuthed(!!s));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      setIsAuthed(!!s);
+      // Conecta a Sofia automaticamente assim que o usuário faz login.
+      if (event === "SIGNED_IN" && s) {
+        // Carrega conversas anteriores em background.
+        setTimeout(() => { refreshConversationsRef.current?.(); }, 0);
+        // Mensagem proativa de boas-vindas.
+        const nome = (s.user.user_metadata?.display_name as string | undefined)
+          || (s.user.user_metadata?.name as string | undefined)
+          || (s.user.email ? s.user.email.split("@")[0] : "professora");
+        setTimeout(() => {
+          pushProactiveRef.current?.({
+            id: "sofia-welcome",
+            message: `Olá, ${nome}! Sou a Sofia e já estou conectada. Posso ajudar com planejamento, pareceres, inclusão e agenda. É só me chamar. ✨`,
+            action: { label: "Conversar com a Sofia" },
+          });
+        }, 600);
+      }
+      if (event === "SIGNED_OUT") {
+        setMessages([]);
+        setConversationId(null);
+        setConversations([]);
+      }
+    });
     return () => { mounted = false; sub.subscription.unsubscribe(); };
   }, []);
 
@@ -119,6 +142,10 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       setConversations(list as SofiaConversationSummary[]);
     } catch { /* ignore */ }
   }, [isAuthed]);
+
+  // Refs para uso dentro do listener de auth (que roda apenas uma vez).
+  const refreshConversationsRef = useRef(refreshConversations);
+  useEffect(() => { refreshConversationsRef.current = refreshConversations; }, [refreshConversations]);
 
   useEffect(() => { if (isAuthed && open) refreshConversations(); }, [isAuthed, open, refreshConversations]);
 
