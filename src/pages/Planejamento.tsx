@@ -2379,6 +2379,61 @@ export function Planejamento() {
                   Quando ativado, novos modais de atividade já vêm com o modo interdisciplinar ligado — você ainda pode desligar caso a caso.
                 </p>
               </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Como dimensionar cada dia da semana?</label>
+                <div className="pl-pills">
+                  <button type="button" className={"pl-pill" + (m1Modo === "intensidade" ? " on" : "")} onClick={() => setM1Modo("intensidade")}>Por intensidade</button>
+                  <button type="button" className={"pl-pill" + (m1Modo === "quantidade" ? " on" : "")} onClick={() => setM1Modo("quantidade")}>Nº de atividades</button>
+                  <button type="button" className={"pl-pill" + (m1Modo === "tempo" ? " on" : "")} onClick={() => setM1Modo("tempo")}>Tempo disponível</button>
+                </div>
+
+                {m1Modo === "intensidade" && (
+                  <p className="lead" style={{ margin: "6px 0 0" }}>
+                    Sofia usa a intensidade selecionada acima ({pillsInt.toLowerCase()}) para decidir quantas atividades sugerir por dia.
+                  </p>
+                )}
+
+                {m1Modo === "quantidade" && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                    <input
+                      type="number"
+                      className="pl-input"
+                      style={{ width: 100 }}
+                      min={1}
+                      max={8}
+                      value={m1Qtd}
+                      onChange={(e) => setM1Qtd(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
+                    />
+                    <span className="lead" style={{ margin: 0 }}>atividade(s) por dia (×5 dias).</span>
+                  </div>
+                )}
+
+                {m1Modo === "tempo" && (
+                  <>
+                    <div className="pl-pills" style={{ marginTop: 8 }}>
+                      {[60, 90, 120, 180, 240, 300].map((t) => (
+                        <button key={t} type="button" className={"pl-pill" + (m1Min === t ? " on" : "")} onClick={() => setM1Min(t)}>
+                          {t >= 60 ? `${Math.floor(t / 60)}h${t % 60 ? ` ${t % 60}min` : ""}` : `${t} min`}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                      <input
+                        type="number"
+                        className="pl-input"
+                        style={{ width: 110 }}
+                        min={30}
+                        max={480}
+                        step={5}
+                        value={m1Min}
+                        onChange={(e) => setM1Min(Math.max(30, Math.min(480, Number(e.target.value) || 60)))}
+                      />
+                      <span className="lead" style={{ margin: 0 }}>minutos por dia — Sofia recalibra a duração de cada atividade.</span>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
