@@ -828,8 +828,13 @@ export function Planejamento() {
                 <div className="pl-tools">
                   <div><h2>Sofia preenche a semana <small>· defina turma e tema</small></h2></div>
                   <div className="right">
-                    <button className="pl-btn ghost"><RefreshCw size={14} /> Regenerar</button>
-                    <button className="pl-btn primary"><Check size={14} /> Aceitar semana toda</button>
+                    <button className="pl-btn ghost" onClick={limparSemanaM1} disabled={m1Stats.atividades === 0}><X size={14} /> Limpar</button>
+                    <button className="pl-btn ghost" onClick={gerarComSofia} disabled={m1Generating}><RefreshCw size={14} /> Regenerar</button>
+                    <button
+                      className="pl-btn primary"
+                      onClick={gerarComSofia}
+                      disabled={m1Generating}
+                    ><Sparkles size={14} /> {m1Generating ? "Sofia montando…" : (m1Stats.atividades === 0 ? "Gerar com a Sofia" : "Aceitar semana toda")}</button>
                   </div>
                 </div>
 
@@ -850,16 +855,17 @@ export function Planejamento() {
                           >Hoje</button>
                         )}
                       </div>
-                      <div className="stat">✨ <b>0 sugestões</b></div>
+                      <div className="stat">✨ <b>{m1Stats.atividades} sugestões</b></div>
                     </div>
                     <div className="pl-cal-grid">
                       {m1Week.days.map((day) => {
                         const todayIso = new Date().toISOString().slice(0, 10);
                         const isToday = day.iso === todayIso;
+                        const cards = m1Plan[day.k] || [];
                         return (
-                          <button
+                          <div
                             key={day.k}
-                            className={"pl-cal-day" + (calSel === day.k ? " selected" : "")}
+                            className={"pl-cal-day" + (calSel === day.k ? " selected" : "") + (cards.length > 0 ? " has-ai" : "")}
                             onClick={() => setCalSel(day.k)}
                             style={isToday ? { borderColor: "var(--orange)", boxShadow: "0 0 0 2px var(--orange-soft-2)" } : undefined}
                           >
@@ -870,15 +876,37 @@ export function Planejamento() {
                               </div>
                               {isToday && <span className="pl-cd-pill">hoje</span>}
                             </div>
-                            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 11, textAlign: "center", padding: "10px 6px" }}>
-                              <span>Sem atividades.<br/>Clique para adicionar ou gerar com a Sofia.</span>
-                            </div>
+                            {cards.length === 0 ? (
+                              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 11, textAlign: "center", padding: "10px 6px" }}>
+                                <span>Sem atividades.<br/>Clique em <b>Gerar com a Sofia</b>.</span>
+                              </div>
+                            ) : (
+                              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                                {cards.map((c) => (
+                                  <div key={c.id} className={"pl-ai " + c.v} onClick={(e) => e.stopPropagation()}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
+                                      <div style={{ minWidth: 0 }}>
+                                        <div className="sub">{c.tag}</div>
+                                        <div className="tt">{c.title}</div>
+                                        <div className="mn">{c.bncc} · {c.minutos}min</div>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        aria-label="Remover"
+                                        onClick={(e) => { e.stopPropagation(); removerCardM1(day.k, c.id); }}
+                                        style={{ color: "var(--muted)", padding: 2, borderRadius: 4, background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
+                                      ><X size={11} /></button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); navigate({ to: "/planejamento/atividade", search: { dia: day.k } }); }}
                               style={{ marginTop: "auto", border: "1px dashed var(--line)", background: "#fff", color: "var(--orange)", fontWeight: 700, fontSize: 11.5, padding: "6px 8px", borderRadius: 8, cursor: "pointer" }}
                             >+ Atividade</button>
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -890,7 +918,12 @@ export function Planejamento() {
                       <p className="lead">Ajuste e regenere se quiser outra direção.</p>
                       <div className="pl-field">
                         <label>Tema do mês</label>
-                        <input className="pl-input" placeholder="Ex.: Listas e contagem" />
+                        <input
+                          className="pl-input"
+                          placeholder="Ex.: Listas e contagem"
+                          value={m1Tema}
+                          onChange={(e) => setM1Tema(e.target.value)}
+                        />
                       </div>
                       <div className="pl-field">
                         <label>Foco da semana</label>
@@ -908,17 +941,24 @@ export function Planejamento() {
                           ))}
                         </div>
                       </div>
-                      <button className="pl-btn primary pl-replica-cta"><RefreshCw size={14} /> Regenerar com esses parâmetros</button>
+                      <button
+                        className="pl-btn primary pl-replica-cta"
+                        onClick={gerarComSofia}
+                        disabled={m1Generating}
+                      ><Sparkles size={14} /> {m1Generating ? "Sofia montando…" : "Gerar com esses parâmetros"}</button>
                     </div>
 
                     <div className="pl-panel">
                       <h3>O que Sofia considerou</h3>
                       <div className="pl-stats">
-                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Atividades</div></div>
-                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Habilidades BNCC</div></div>
-                        <div className="pl-stat-box"><div className="v">0</div><div className="l">Adapt. PCD</div></div>
-                        <div className="pl-stat-box"><div className="v">—</div><div className="l">Pra revisar</div></div>
+                        <div className="pl-stat-box"><div className="v">{m1Stats.atividades}</div><div className="l">Atividades</div></div>
+                        <div className="pl-stat-box"><div className="v">{m1Stats.habilidades}</div><div className="l">Habilidades BNCC</div></div>
+                        <div className="pl-stat-box"><div className="v">{focosSelecionados.length}</div><div className="l">Focos ativos</div></div>
+                        <div className="pl-stat-box"><div className="v">{pillsInt[0]}</div><div className="l">Intensidade</div></div>
                       </div>
+                      {m1Stats.atividades === 0 && (
+                        <p className="lead" style={{ marginTop: 10 }}>Defina <b>tema</b> e <b>focos</b> ao lado e clique em <b>Gerar com a Sofia</b>.</p>
+                      )}
                     </div>
                   </aside>
                 </div>
