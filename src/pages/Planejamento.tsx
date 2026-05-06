@@ -905,6 +905,10 @@ export function Planejamento() {
   // Limita quantos focos a Sofia usa numa geração (controla volume de sugestões).
   // "all" = usa todos os focos selecionados.
   const [m1MaxFocos, setM1MaxFocos] = usePersistentState<1 | 2 | 3 | "all">("plan_m1_max_focos", 2);
+  // Modo de dimensionamento da SEMANA (M1): por intensidade, quantidade fixa por dia, ou tempo total por dia.
+  const [m1Modo, setM1Modo] = usePersistentState<"intensidade" | "quantidade" | "tempo">("plan_m1_modo", "intensidade");
+  const [m1Qtd, setM1Qtd] = usePersistentState<number>("plan_m1_qtd", 2);
+  const [m1Min, setM1Min] = usePersistentState<number>("plan_m1_min", 60);
   // Modal "Preencher só este dia"
   const [m1DayModal, setM1DayModal] = useState<{ dia: DayKey; iso: string; n: string; d: number } | null>(null);
   const [mdEtapa, setMdEtapa] = useState<Etapa>("EF1");
