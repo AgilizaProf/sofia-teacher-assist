@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2, AlertTriangle, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "@tanstack/react-router";
@@ -105,6 +105,8 @@ export function SofiaWidget() {
   const s = useSofia();
   const navigate = useNavigate();
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
@@ -120,7 +122,7 @@ export function SofiaWidget() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      {!s.open && s.proactive && (
+      {mounted && !s.open && s.proactive && (
         <div className="sofia-bubble" role="status">
           <button className="sofia-bubble-close" aria-label="Fechar" onClick={s.dismissProactive}><X size={14} /></button>
           <div className="sofia-bubble-head"><Sparkles size={11} /> Sofia</div>

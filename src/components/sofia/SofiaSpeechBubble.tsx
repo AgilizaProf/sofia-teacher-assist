@@ -32,12 +32,16 @@ export function SofiaSpeechBubble() {
   const navigate = useNavigate();
   const fala = gerarFalaSofia(ctx);
   const [dismissed, setDismissed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Reseta ao trocar de rota / personalidade
   useEffect(() => {
     setDismissed(false);
   }, [ctx.route, fala.estado]);
 
+  // Evita mismatch de hidratação: o conteúdo depende do horário local.
+  if (!mounted) return null;
   if (sofia.open || fala.estado === "muda" || !fala.texto || dismissed) return null;
 
   const key = `${STORAGE_PREFIX}${ctx.route}_${fala.estado}`;
