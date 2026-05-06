@@ -847,12 +847,36 @@ export function Agenda() {
           <div className="ag-overlay" onClick={closePanel}>
             <div className="ag-panel" onClick={(e) => e.stopPropagation()}>
               <div className="ag-panel-head">
-                <div style={{ minWidth: 0 }}>
-                  <div className="ag-panel-title">{openDateLabel}</div>
-                  <div className="ag-panel-sub">
-                    {openDate === todayKey ? "Hoje" : ""}
-                    {openDateHoliday ? (openDate === todayKey ? " · " : "") + "Feriado · " + openDateHoliday : ""}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                  <button
+                    className="ag-panel-close"
+                    aria-label="Dia anterior"
+                    onClick={() => {
+                      const [y, m, d] = openDate!.split("-").map(Number);
+                      const dt = new Date(y, m - 1, d - 1);
+                      const p = (n: number) => String(n).padStart(2, "0");
+                      setOpenDate(`${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}`);
+                      cancelEdit();
+                    }}
+                  ><ChevronLeft size={16} /></button>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="ag-panel-title">{openDateLabel}</div>
+                    <div className="ag-panel-sub">
+                      {openDate === todayKey ? "Hoje" : ""}
+                      {openDateHoliday ? (openDate === todayKey ? " · " : "") + "Feriado · " + openDateHoliday : ""}
+                    </div>
                   </div>
+                  <button
+                    className="ag-panel-close"
+                    aria-label="Próximo dia"
+                    onClick={() => {
+                      const [y, m, d] = openDate!.split("-").map(Number);
+                      const dt = new Date(y, m - 1, d + 1);
+                      const p = (n: number) => String(n).padStart(2, "0");
+                      setOpenDate(`${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}`);
+                      cancelEdit();
+                    }}
+                  ><ChevronRight size={16} /></button>
                 </div>
                 <button className="ag-panel-close" onClick={closePanel} aria-label="Fechar"><X size={16} /></button>
               </div>
