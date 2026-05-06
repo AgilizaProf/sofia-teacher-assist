@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
@@ -19,6 +20,11 @@ import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RelatoriosRoute = RelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/inclusao': typeof InclusaoRoute
   '/planejamento': typeof PlanejamentoRoute
   '/relatorios': typeof RelatoriosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
+    | '/reset-password'
     | '/api/sofia/suggestions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
+    | '/reset-password'
     | '/api/sofia/suggestions'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/inclusao'
     | '/planejamento'
     | '/relatorios'
+    | '/reset-password'
     | '/api/sofia/suggestions'
   fileRoutesById: FileRoutesById
 }
@@ -144,11 +156,19 @@ export interface RootRouteChildren {
   InclusaoRoute: typeof InclusaoRoute
   PlanejamentoRoute: typeof PlanejamentoRoute
   RelatoriosRoute: typeof RelatoriosRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiSofiaSuggestionsRoute: typeof ApiSofiaSuggestionsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/relatorios': {
       id: '/relatorios'
       path: '/relatorios'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   InclusaoRoute: InclusaoRoute,
   PlanejamentoRoute: PlanejamentoRoute,
   RelatoriosRoute: RelatoriosRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ApiSofiaSuggestionsRoute: ApiSofiaSuggestionsRoute,
 }
 export const routeTree = rootRouteImport
