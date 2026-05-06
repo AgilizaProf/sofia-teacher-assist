@@ -191,7 +191,7 @@ export function AuthPage() {
             </div>
             {showMore && (
               <div className="more-content show">
-                <button type="button" className="apple-btn"> Continuar com Apple</button>
+                <button type="button" className="apple-btn" onClick={apple}> Continuar com Apple</button>
               </div>
             )}
 
