@@ -837,8 +837,24 @@ export function Planejamento() {
                         {m2Steps.map((s) => {
                           const editing = m2EditId === s.id;
                           return (
-                            <div key={s.id} className={"pl-step" + (s.suggest ? " suggest" : "")}>
-                              <div className="day">{s.d}</div>
+                            <div
+                              key={s.id}
+                              className={"pl-step" + (s.suggest ? " suggest" : "")}
+                              onDragOver={(e) => onM2DragOver(e, s.id)}
+                              onDrop={(e) => onM2Drop(e, s.id)}
+                              style={m2DragOverId === s.id ? { background: "rgba(255,122,69,.06)", borderRadius: 11 } : undefined}
+                            >
+                              <div
+                                className="day"
+                                draggable={!editing}
+                                onDragStart={() => onM2DragStart(s.id)}
+                                onDragEnd={onM2DragEnd}
+                                title="Arraste para reordenar"
+                                style={{ cursor: editing ? "default" : "grab", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}
+                              >
+                                {!editing && <GripVertical size={11} style={{ opacity: .55 }} />}
+                                {s.d}
+                              </div>
                               <div className="body">
                                 {editing ? (
                                   <div style={{ display: "grid", gap: 8 }}>
