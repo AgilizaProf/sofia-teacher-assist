@@ -885,8 +885,12 @@ export function Planejamento() {
   const mdPodeInter = mdDisciplinasComSel.length >= 2;
   const openDayModal = (day: { k: DayKey; iso: string; n: string; d: number }) => {
     setM1DayModal({ dia: day.k, iso: day.iso, n: day.n, d: day.d });
-    // por padrão, marca a primeira disciplina/campo do ano selecionado
-    const ano = BNCC_BY_ETAPA[mdEtapa].anos[Math.min(mdAnoIdx, BNCC_BY_ETAPA[mdEtapa].anos.length - 1)];
+    // Pré-seleciona etapa/ano a partir do contexto da aba quando disponível.
+    const etapaInicial: Etapa = ctxResolvido.etapa;
+    const anoIdxInicial = ctxResolvido.anoIdx;
+    setMdEtapa(etapaInicial);
+    setMdAnoIdx(anoIdxInicial);
+    const ano = BNCC_BY_ETAPA[etapaInicial].anos[Math.min(anoIdxInicial, BNCC_BY_ETAPA[etapaInicial].anos.length - 1)];
     setMdDiscOn(ano && ano.disciplinas[0] ? { [ano.disciplinas[0].nome]: true } : {});
     setMdSel({});
     setMdInter(false);
