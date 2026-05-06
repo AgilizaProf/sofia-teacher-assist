@@ -971,6 +971,10 @@ export function Planejamento() {
     };
   }, [focosSelecionados, m1MaxFocos, pillsInt]);
   const gerarComSofia = () => {
+    if (!ctxResolvido.pronto) {
+      showToast("Selecione uma turma cadastrada ou um ano de escolaridade no topo da aba.");
+      return;
+    }
     setM1Generating(true);
     setTimeout(() => {
       const focosLimitados = m1MaxFocos === "all"
