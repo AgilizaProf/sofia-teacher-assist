@@ -133,14 +133,15 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     let mounted = true;
     async function loadProfile(uid: string, fallbackEmail: string | null, metaName: string | null) {
-      let data: { display_name: string | null; email: string | null } | null = null;
+      type ProfileRow = { display_name: string | null; email: string | null };
+      let data: ProfileRow | null = null;
       try {
         const res = await supabase
           .from("profiles")
           .select("display_name, email")
           .eq("user_id", uid)
           .maybeSingle();
-        data = res.data as typeof data;
+        data = (res.data ?? null) as ProfileRow | null;
       } catch (err) {
         // Falha de rede/permissão não pode travar a Sofia — usa fallback.
         console.warn("[SofiaContext] loadProfile falhou, usando fallback:", err);
