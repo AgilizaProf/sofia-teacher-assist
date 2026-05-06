@@ -317,6 +317,7 @@ export function Dashboard() {
   const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsedClasses, setCollapsedClasses] = useState<Record<string, boolean>>({});
+  const [editingClassIdx, setEditingClassIdx] = useState<number | null>(null);
   const totalSchools = baseSchools + schools.length;
   const totalClasses = baseClasses + classes.length;
   const totalStudents = baseStudents + students.length;
@@ -530,6 +531,18 @@ export function Dashboard() {
                               )}
                             </div>
                             <span className="class-count">{list.length} {list.length === 1 ? "aluno" : "alunos"}</span>
+                            {classMeta && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setEditingClassIdx(classes.indexOf(classMeta)); }}
+                                aria-label={`Editar turma ${turma}`}
+                                title="Editar turma"
+                                style={{ marginLeft: 8, background: "transparent", border: "1px solid var(--border, #E4E8F0)", borderRadius: 6, padding: "3px 6px", cursor: "pointer", color: "var(--text-soft, #6B7691)", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600 }}
+                              >
+                                <Svg width={12} height={12} c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></>} />
+                                Editar
+                              </button>
+                            )}
                           </div>
                           {!isCollapsed && list.map((s, i) => {
                             const initials = s.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
@@ -894,6 +907,104 @@ export function Dashboard() {
           </form>
         </div>
       </div>
+
+      {editingClassIdx !== null && classes[editingClassIdx] && (
+        <div className="cmdk-overlay show" onClick={(e) => { if (e.target === e.currentTarget) setEditingClassIdx(null); }}>
+          <div className="school-modal" role="dialog" aria-label="Editar turma">
+            <div className="school-modal-head">
+              <div className="school-modal-icon">
+                <Svg c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></>} />
+              </div>
+              <div>
+                <div className="school-modal-title">Editar turma</div>
+                <div className="school-modal-sub">Atualize os dados da turma selecionada.</div>
+              </div>
+              <button className="school-modal-close" aria-label="Fechar" onClick={() => setEditingClassIdx(null)}>
+                <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+              </button>
+            </div>
+            <form className="school-modal-body" onSubmit={(e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const name = String(fd.get("name") || "").trim();
+              if (!name) return;
+              const oldName = classes[editingClassIdx!].name;
+              const updated = {
+                name,
+                school: String(fd.get("school") || ""),
+                grade: String(fd.get("grade") || ""),
+                shift: String(fd.get("shift") || ""),
+                students: String(fd.get("students") || ""),
+              };
+              setClasses((arr) => arr.map((c, i) => i === editingClassIdx ? updated : c));
+              if (oldName !== name) {
+                setStudents((arr) => arr.map((s) => s.classRef === oldName ? { ...s, classRef: name } : s));
+              }
+              setEditingClassIdx(null);
+            }}>
+              <div className="school-field">
+                <label htmlFor="edit-class-name">Nome da turma</label>
+                <input id="edit-class-name" name="name" defaultValue={classes[editingClassIdx].name} required />
+              </div>
+              <div className="school-field">
+                <label htmlFor="edit-class-school">Escola</label>
+                {schools.length > 0 ? (
+                  <select id="edit-class-school" name="school" defaultValue={classes[editingClassIdx].school}>
+                    <option value="">Sem escola vinculada</option>
+                    {schools.map((sch, i) => (
+                      <option key={`${sch.name}-${i}`} value={sch.name}>{sch.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input id="edit-class-school" name="school" defaultValue={classes[editingClassIdx].school} />
+                )}
+              </div>
+              <div className="school-row">
+                <div className="school-field">
+                  <label htmlFor="edit-class-grade">Série / Ano</label>
+                  <select id="edit-class-grade" name="grade" defaultValue={classes[editingClassIdx].grade || "2"}>
+                    {["1","2","3","4","5","6","7","8","9"].map((g) => <option key={g} value={g}>{g}º ano</option>)}
+                  </select>
+                </div>
+                <div className="school-field">
+                  <label htmlFor="edit-class-shift">Turno</label>
+                  <select id="edit-class-shift" name="shift" defaultValue={classes[editingClassIdx].shift || "manha"}>
+                    <option value="manha">Manhã</option>
+                    <option value="tarde">Tarde</option>
+                    <option value="integral">Integral</option>
+                    <option value="noite">Noite</option>
+                  </select>
+                </div>
+              </div>
+              <div className="school-field">
+                <label htmlFor="edit-class-students">Nº de alunos</label>
+                <input id="edit-class-students" name="students" type="number" min={1} defaultValue={classes[editingClassIdx].students} />
+              </div>
+              <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0, justifyContent: "space-between" }}>
+                <button
+                  type="button"
+                  className="school-cancel"
+                  style={{ color: "#DC2626" }}
+                  onClick={() => {
+                    if (!confirm("Excluir esta turma? Os alunos vinculados ficarão sem turma.")) return;
+                    const oldName = classes[editingClassIdx!].name;
+                    setClasses((arr) => arr.filter((_, i) => i !== editingClassIdx));
+                    setStudents((arr) => arr.map((s) => s.classRef === oldName ? { ...s, classRef: "" } : s));
+                    setEditingClassIdx(null);
+                  }}
+                >Excluir</button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button type="button" className="school-cancel" onClick={() => setEditingClassIdx(null)}>Cancelar</button>
+                  <button type="submit" className="school-save">
+                    Salvar
+                    <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className={`cmdk-overlay ${studentOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setStudentOpen(false); }}>
         <div className="school-modal" role="dialog" aria-label="Cadastrar aluno">
