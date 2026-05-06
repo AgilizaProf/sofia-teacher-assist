@@ -154,6 +154,9 @@ export function ProfileEditor() {
       toast.error("Erro ao salvar: " + error.message);
     } else {
       toast.success("Perfil atualizado.");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("sofia:profile-updated"));
+      }
     }
   };
 
