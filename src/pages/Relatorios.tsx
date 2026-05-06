@@ -310,23 +310,17 @@ const BNCC_STATUS: Array<{ k: BnccStatus; label: string; short: string; color: s
 ];
 
 type BnccArea = { area: string; comps: string[] };
+// Comportamento e socialização — avaliado para todos os alunos, mesmo padrão das demais áreas
 const BNCC_SOCIO: string[] = [
   "Autonomia e responsabilidade nas tarefas",
   "Cooperação e respeito nas relações",
   "Autorregulação e persistência diante de desafios",
-];
-
-// Comportamento e socialização — avaliados para todos os alunos
-const BNCC_COMPORTAMENTO: string[] = [
   "Cumprimento de combinados e regras de convivência",
-  "Atenção e engajamento nas atividades propostas",
-  "Relacionamento respeitoso com colegas e professores",
   "Participação em atividades coletivas e trabalhos em grupo",
   "Resolução de conflitos pelo diálogo",
 ];
-
-// Indicadores adicionais para alunos PCD (somente exibido quando aluno é PCD)
-const BNCC_PCD: string[] = [
+// Inclusão (PEI) — adicionado apenas para alunos PCD, mesmo padrão das demais áreas
+const BNCC_INCLUSAO: string[] = [
   "Resposta às adaptações curriculares e recursos de acessibilidade",
   "Comunicação e expressão de necessidades",
   "Autonomia nas atividades da rotina escolar",
