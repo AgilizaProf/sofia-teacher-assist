@@ -283,8 +283,21 @@ export function Relatorios() {
 
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
+  type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
   const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
   const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
+  const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
+
+  // Mesmo cálculo da página inicial (Tempo devolvido)
+  const _docs = ctx.user.documentos_gerados ?? finalizados;
+  const earnedMinutes =
+    dashSchools.length * 10 +
+    dashClasses.length * 20 +
+    dashStudents.length * 5 +
+    _docs * 30;
+  const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
+  const savedH = Math.floor(totalSavedMin / 60);
+  const savedM = totalSavedMin % 60;
 
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
