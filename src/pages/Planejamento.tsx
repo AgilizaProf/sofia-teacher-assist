@@ -612,38 +612,51 @@ export function Planejamento() {
                   <div className="pl-cal-card">
                     <div className="pl-cal-head">
                       <div className="nav">
-                        <button aria-label="Anterior"><ChevronLeft size={14} /></button>
-                        <div className="month">Semana atual</div>
-                        <button aria-label="Próxima"><ChevronRight size={14} /></button>
+                        <button aria-label="Semana anterior" onClick={() => setWeekOffset((w) => w - 1)}><ChevronLeft size={14} /></button>
+                        <div className="month" style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
+                          <span>{m1Week.label}</span>
+                          <small style={{ fontFamily: "'Inter',sans-serif", fontSize: 11.5, color: "var(--muted)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{m1Week.range}</small>
+                        </div>
+                        <button aria-label="Próxima semana" onClick={() => setWeekOffset((w) => w + 1)}><ChevronRight size={14} /></button>
+                        {weekOffset !== 0 && (
+                          <button
+                            onClick={() => setWeekOffset(0)}
+                            style={{ marginLeft: 6, padding: "4px 10px", borderRadius: 7, border: "1px solid var(--line)", background: "#fff", color: "var(--ink-2)", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}
+                          >Hoje</button>
+                        )}
                       </div>
                       <div className="stat">✨ <b>0 sugestões</b></div>
                     </div>
-                    {M1_DAYS.length === 0 ? (
-                      <EmptyState
-                        icon="✨"
-                        title="Sem sugestões geradas ainda."
-                        description="Configure tema e turma ao lado para a Sofia esboçar a semana inteira em segundos."
-                        ctaLabel="Gerar com a Sofia"
-                      />
-                    ) : (
-                      <div className="pl-cal-grid">
-                        {M1_DAYS.map((day) => (
-                          <button key={day.k} className={"pl-cal-day has-ai" + (calSel === day.k ? " selected" : "")} onClick={() => setCalSel(day.k)}>
+                    <div className="pl-cal-grid">
+                      {m1Week.days.map((day) => {
+                        const todayIso = new Date().toISOString().slice(0, 10);
+                        const isToday = day.iso === todayIso;
+                        return (
+                          <button
+                            key={day.k}
+                            className={"pl-cal-day" + (calSel === day.k ? " selected" : "")}
+                            onClick={() => setCalSel(day.k)}
+                            style={isToday ? { borderColor: "var(--orange)", boxShadow: "0 0 0 2px var(--orange-soft-2)" } : undefined}
+                          >
                             <div className="pl-cd-head">
-                              <div><div className="dn">{day.n}</div><div className="dd">{day.d}</div></div>
-                              <span className="pl-cd-pill">{day.count}</span>
-                            </div>
-                            {day.items.map((it, i) => (
-                              <div key={i} className={"pl-ai " + it.v}>
-                                <div className="sub">{it.sub}</div>
-                                <div className="tt">{it.tt}</div>
-                                <div className="mn">{it.mn}</div>
+                              <div>
+                                <div className="dn">{day.n}</div>
+                                <div className="dd">{day.d}</div>
                               </div>
-                            ))}
+                              {isToday && <span className="pl-cd-pill">hoje</span>}
+                            </div>
+                            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 11, textAlign: "center", padding: "10px 6px" }}>
+                              <span>Sem atividades.<br/>Clique para adicionar ou gerar com a Sofia.</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); navigate({ to: "/planejamento/atividade", search: { dia: day.k } }); }}
+                              style={{ marginTop: "auto", border: "1px dashed var(--line)", background: "#fff", color: "var(--orange)", fontWeight: 700, fontSize: 11.5, padding: "6px 8px", borderRadius: 8, cursor: "pointer" }}
+                            >+ Atividade</button>
                           </button>
-                        ))}
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <aside className="pl-side">
