@@ -415,6 +415,37 @@ export function Planejamento() {
   const toggleLayer = (k: string) => setLayers((s) => ({ ...s, [k]: !s[k] }));
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
 
+  // M2 — Sequência didática
+  const [m2Steps, setM2Steps] = usePersistentState<M2Step[]>("plan_m2_steps", []);
+  const [m2Form, setM2Form] = useState<{ d: string; tag: string; t: string; p: string }>({
+    d: "SEG", tag: M2_TAG_OPTS[0], t: "", p: M2_BNCC_OPTS[0],
+  });
+  const addM2Step = () => {
+    const t = m2Form.t.trim();
+    if (!t) { showToast("Dê um título à aula antes de adicionar."); return; }
+    const novo: M2Step = { id: `s_${Date.now()}`, d: m2Form.d, tag: m2Form.tag, t, p: m2Form.p };
+    setM2Steps((arr) => [...arr, novo]);
+    setM2Form((f) => ({ ...f, t: "" }));
+    showToast("Aula adicionada à cadeia. Sofia já conectou. ✓");
+  };
+  const sugerirProxima = () => {
+    if (m2Steps.length === 0) { showToast("Adicione uma aula base primeiro."); return; }
+    const last = m2Steps[m2Steps.length - 1];
+    const idx = M2_DAY_OPTS.indexOf(last.d as typeof M2_DAY_OPTS[number]);
+    const nextDay = M2_DAY_OPTS[Math.min(idx + 1, M2_DAY_OPTS.length - 1)];
+    const sugest: M2Step = {
+      id: `s_${Date.now()}`,
+      d: nextDay,
+      tag: "Aprofundamento",
+      t: `Continuação: ${last.t}`,
+      p: last.p,
+      suggest: true,
+    };
+    setM2Steps((arr) => [...arr, sugest]);
+  };
+  const aceitarSugestao = (id: string) => setM2Steps((arr) => arr.map((s) => s.id === id ? { ...s, suggest: false } : s));
+  const removerStep = (id: string) => setM2Steps((arr) => arr.filter((s) => s.id !== id));
+
   const sendChat = (msg?: string) => {
     const t = (msg ?? chatTxt).trim(); if (!t) return;
     setChatLog((l) => [...l, { from: "user", t }]);
