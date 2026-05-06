@@ -331,7 +331,6 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
 
 const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [];
 
-const M1_DAYS: Array<{ k: DayKey; n: string; d: string; count: string; items: Array<{ v: Variant | ""; sub: string; tt: string; mn: string }> }> = [];
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
 const M6_AULAS: Array<{ id: string; t: string; s: string }> = [];
 
