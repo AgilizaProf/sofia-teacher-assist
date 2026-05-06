@@ -1629,6 +1629,124 @@ export function Planejamento() {
           <button onClick={() => setToast(null)}>Desfazer</button>
         </div>
       )}
+
+      {m1DayModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preencher ${m1DayModal.n}`}
+          onClick={fecharDayModal}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "#fff", borderRadius: 14, width: "min(720px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                  ✨ Preencher só {m1DayModal.n} · dia {m1DayModal.d}
+                </div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>A Sofia gera com base nas competências da BNCC</h3>
+              </div>
+              <button onClick={fecharDayModal} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6 }}><X size={18} /></button>
+            </div>
+
+            <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Etapa</label>
+                <div className="pl-pills">
+                  {(Object.keys(BNCC_BY_ETAPA) as Etapa[]).map((e) => (
+                    <button
+                      key={e}
+                      className={"pl-pill" + (mdEtapa === e ? " on" : "")}
+                      onClick={() => { setMdEtapa(e); setMdAnoIdx(0); setMdDiscIdx(0); setMdSel({}); }}
+                    >{BNCC_BY_ETAPA[e].label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="pl-field" style={{ marginTop: 0 }}>
+                  <label>{mdEtapa === "EI" ? "Faixa etária" : "Ano"}</label>
+                  <select
+                    className="pl-input"
+                    value={mdAnoIdx}
+                    onChange={(e) => { setMdAnoIdx(Number(e.target.value)); setMdDiscIdx(0); setMdSel({}); }}
+                  >
+                    {BNCC_BY_ETAPA[mdEtapa].anos.map((a, i) => <option key={a.ano} value={i}>{a.ano}</option>)}
+                  </select>
+                </div>
+                <div className="pl-field" style={{ marginTop: 0 }}>
+                  <label>{mdEtapa === "EI" ? "Campo de experiência" : "Disciplina"}</label>
+                  <select
+                    className="pl-input"
+                    value={mdDiscIdx}
+                    onChange={(e) => { setMdDiscIdx(Number(e.target.value)); setMdSel({}); }}
+                  >
+                    {mdAno?.disciplinas.map((d, i) => <option key={d.nome} value={i}>{d.nome}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Tema do dia (opcional)</label>
+                <input
+                  className="pl-input"
+                  placeholder="Ex.: Animais do quintal"
+                  value={mdTema}
+                  maxLength={120}
+                  onChange={(e) => setMdTema(e.target.value)}
+                />
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Competências ({mdSelecionadas.length} selecionada{mdSelecionadas.length === 1 ? "" : "s"})</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {mdDisc?.competencias.map((c) => {
+                    const on = !!mdSel[c.code];
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => setMdSel((s) => ({ ...s, [c.code]: !s[c.code] }))}
+                        className={"pl-trow" + (on ? " on" : "")}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <span className="chk">{on && <Check size={11} />}</span>
+                        <span className="info">
+                          <span className="name" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{c.code} · {c.tag}</span>
+                          <span className="sub" style={{ display: "block" }}>{c.desc}</span>
+                        </span>
+                        <span className="gain">{c.minutos} min</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Intensidade do dia</label>
+                <div className="pl-pills">
+                  {(["Leve", "Equilibrada", "Densa"] as const).map((p) => (
+                    <button key={p} className={"pl-pill" + (mdInt === p ? " on" : "")} onClick={() => setMdInt(p)}>{p}</button>
+                  ))}
+                </div>
+                <p className="lead" style={{ margin: "6px 0 0" }}>
+                  Sofia vai gerar <b>{Math.min(mdInt === "Leve" ? 1 : mdInt === "Densa" ? 3 : 2, mdSelecionadas.length || 1)}</b> atividade(s) para {m1DayModal.n}.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="pl-btn ghost" onClick={fecharDayModal}>Cancelar</button>
+              <button className="pl-btn primary" onClick={gerarDayModal} disabled={mdSelecionadas.length === 0}>
+                <Sparkles size={14} /> Gerar com a Sofia
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
