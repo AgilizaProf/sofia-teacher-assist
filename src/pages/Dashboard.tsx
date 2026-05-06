@@ -828,7 +828,25 @@ export function Dashboard() {
             </div>
             <div className="school-field">
               <label htmlFor="class-school">Escola</label>
-              <input id="class-school" name="school" placeholder="Ex.: nome da sua escola" />
+              {schools.length > 0 ? (
+                <select id="class-school" name="school" defaultValue="">
+                  <option value="">Sem escola vinculada</option>
+                  {schools.map((sch, i) => (
+                    <option key={`${sch.name}-${i}`} value={sch.name}>{sch.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input id="class-school" name="school" placeholder="Cadastre uma escola para vincular" />
+              )}
+              {schools.length === 0 && (
+                <span className="school-hint">
+                  <button
+                    type="button"
+                    onClick={() => { setClassOpen(false); setSchoolOpen(true); }}
+                    style={{ background: "none", border: 0, color: "var(--accent)", padding: 0, cursor: "pointer", font: "inherit", fontWeight: 700 }}
+                  >+ Cadastrar nova escola</button>
+                </span>
+              )}
             </div>
             <div className="school-row">
               <div className="school-field">
