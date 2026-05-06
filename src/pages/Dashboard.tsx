@@ -317,6 +317,7 @@ export function Dashboard() {
   const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsedClasses, setCollapsedClasses] = useState<Record<string, boolean>>({});
+  const [editingClassIdx, setEditingClassIdx] = useState<number | null>(null);
   const totalSchools = baseSchools + schools.length;
   const totalClasses = baseClasses + classes.length;
   const totalStudents = baseStudents + students.length;
