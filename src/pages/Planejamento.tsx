@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
@@ -231,6 +231,12 @@ const css = `
 .pl-step.suggest .body{background:#FFF8F2;border-color:#FED7C4;border-style:dashed;}
 .pl-step.suggest .ttl{color:var(--orange-2);}
 .pl-step.suggest .body::before{border-color:var(--orange);background:var(--orange);}
+.pl-step{transition:transform .18s ease, opacity .18s ease, background .18s ease;}
+.pl-step.dragging{opacity:.45;transform:scale(.98);}
+.pl-step.drop-target > .body{box-shadow:0 0 0 2px var(--orange), 0 8px 22px rgba(255,122,69,.22);border-color:var(--orange);background:#FFF4EC;}
+.pl-step.drop-target > .day{color:var(--orange);}
+.pl-drop-ph{grid-column:1 / -1;height:0;margin:0;border-radius:8px;background:linear-gradient(90deg,var(--orange-soft),rgba(255,122,69,.35),var(--orange-soft));box-shadow:0 0 0 2px var(--orange-soft) inset;animation:plPhIn .18s ease forwards;}
+@keyframes plPhIn{from{height:0;opacity:0;margin:0;}to{height:10px;opacity:1;margin:6px 0;}}
 
 /* M3 — chat */
 .pl-chat{display:grid;grid-template-columns:1fr 320px;gap:18px;}
@@ -452,27 +458,46 @@ export function Planejamento() {
   // passa a refletir a sua posição na sequência (1ª = SEG, 2ª = TER, …).
   const m2DragId = useRef<string | null>(null);
   const [m2DragOverId, setM2DragOverId] = useState<string | null>(null);
+  const [m2DragPos, setM2DragPos] = useState<"before" | "after">("before");
+  const [m2DraggingId, setM2DraggingId] = useState<string | null>(null);
   const reassignDays = (arr: M2Step[]): M2Step[] =>
     arr.map((s, i) => ({ ...s, d: M2_DAY_OPTS[Math.min(i, M2_DAY_OPTS.length - 1)] }));
-  const onM2DragStart = (id: string) => { m2DragId.current = id; };
+  const onM2DragStart = (e: React.DragEvent, id: string) => {
+    m2DragId.current = id;
+    setM2DraggingId(id);
+    try { e.dataTransfer.effectAllowed = "move"; } catch { /* noop */ }
+  };
   const onM2DragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
+    try { e.dataTransfer.dropEffect = "move"; } catch { /* noop */ }
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const pos: "before" | "after" = (e.clientY - rect.top) < rect.height / 2 ? "before" : "after";
     if (m2DragOverId !== id) setM2DragOverId(id);
+    if (m2DragPos !== pos) setM2DragPos(pos);
   };
-  const onM2DragEnd = () => { m2DragId.current = null; setM2DragOverId(null); };
+  const onM2DragEnd = () => {
+    m2DragId.current = null;
+    setM2DragOverId(null);
+    setM2DraggingId(null);
+  };
   const onM2Drop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
     const fromId = m2DragId.current;
+    const pos = m2DragPos;
     setM2DragOverId(null);
+    setM2DraggingId(null);
     m2DragId.current = null;
     if (!fromId || fromId === targetId) return;
     setM2Steps((arr) => {
       const from = arr.findIndex((s) => s.id === fromId);
-      const to = arr.findIndex((s) => s.id === targetId);
+      let to = arr.findIndex((s) => s.id === targetId);
       if (from < 0 || to < 0) return arr;
       const next = arr.slice();
       const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
+      // ajusta o índice de destino quando o item arrastado vinha antes do alvo
+      if (from < to) to -= 1;
+      const insertAt = pos === "after" ? to + 1 : to;
+      next.splice(insertAt, 0, moved);
       return reassignDays(next);
     });
     showToast("Sequência reordenada. Dias atualizados. ✓");
@@ -836,18 +861,26 @@ export function Planejamento() {
                       <div className="pl-chain-list" style={{ marginTop: 12 }}>
                         {m2Steps.map((s) => {
                           const editing = m2EditId === s.id;
+                          const isOver = m2DragOverId === s.id && m2DraggingId !== s.id;
+                          const showPhBefore = isOver && m2DragPos === "before";
+                          const showPhAfter = isOver && m2DragPos === "after";
                           return (
+                          <React.Fragment key={s.id}>
+                            {showPhBefore && <div className="pl-drop-ph" aria-hidden="true" />}
                             <div
-                              key={s.id}
-                              className={"pl-step" + (s.suggest ? " suggest" : "")}
+                              className={
+                                "pl-step"
+                                + (s.suggest ? " suggest" : "")
+                                + (m2DraggingId === s.id ? " dragging" : "")
+                                + (isOver ? " drop-target" : "")
+                              }
                               onDragOver={(e) => onM2DragOver(e, s.id)}
                               onDrop={(e) => onM2Drop(e, s.id)}
-                              style={m2DragOverId === s.id ? { background: "rgba(255,122,69,.06)", borderRadius: 11 } : undefined}
                             >
                               <div
                                 className="day"
                                 draggable={!editing}
-                                onDragStart={() => onM2DragStart(s.id)}
+                                onDragStart={(e) => onM2DragStart(e, s.id)}
                                 onDragEnd={onM2DragEnd}
                                 title="Arraste para reordenar"
                                 style={{ cursor: editing ? "default" : "grab", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}
@@ -918,6 +951,8 @@ export function Planejamento() {
                                 )}
                               </div>
                             </div>
+                            {showPhAfter && <div className="pl-drop-ph" aria-hidden="true" />}
+                          </React.Fragment>
                           );
                         })}
                       </div>
