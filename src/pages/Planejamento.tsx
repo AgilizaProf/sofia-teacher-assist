@@ -1149,7 +1149,7 @@ export function Planejamento() {
                             )}
                             <button
                               type="button"
-                              onClick={(e) => { e.stopPropagation(); navigate({ to: "/planejamento/atividade", search: { dia: day.k } }); }}
+                              onClick={(e) => { e.stopPropagation(); openDayModal(day); }}
                               style={{ marginTop: "auto", border: "1px dashed var(--line)", background: "#fff", color: "var(--orange)", fontWeight: 700, fontSize: 11.5, padding: "6px 8px", borderRadius: 8, cursor: "pointer" }}
                             >+ Atividade</button>
                           </div>
