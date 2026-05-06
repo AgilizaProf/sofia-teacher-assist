@@ -4,7 +4,6 @@ import { SofiaProvider } from "@/components/sofia/SofiaProvider";
 import { SofiaWidget } from "@/components/sofia/SofiaWidget";
 import { SofiaContextProvider } from "@/lib/sofia/sofiaContext";
 import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
-import { MockAccountSwitcher } from "@/components/sofia/MockAccountSwitcher";
 
 import appCss from "../styles.css?url";
 
@@ -87,7 +86,6 @@ function RootComponent() {
         <Outlet />
         <SofiaWidget />
         <SofiaSpeechBubble />
-        <MockAccountSwitcher />
         <Toaster position="top-right" richColors />
       </SofiaContextProvider>
     </SofiaProvider>
