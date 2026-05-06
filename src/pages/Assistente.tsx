@@ -185,13 +185,14 @@ const css = `
 `;
 
 type TaskTab = "Mais usadas" | "Inclusão" | "Avaliação" | "Tudo";
-const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string; top?: boolean }> = [
-  { emoji: "📚", name: "Plano de aula", desc: "BNCC alinhado, com objetivos e avaliação", shortcut: "⌘ + 1", top: true },
-  { emoji: "📝", name: "Parecer descritivo", desc: "Bimestral, individual, em 4 minutos", shortcut: "⌘ + 2", top: true },
-  { emoji: "✨", name: "Adaptar conteúdo", desc: "Para alunos PCD ou com dificuldades", shortcut: "⌘ + 3" },
-  { emoji: "📊", name: "Atividade avaliativa", desc: "Com gabarito e níveis de dificuldade", shortcut: "⌘ + 4" },
-  { emoji: "💬", name: "Feedback ao aluno", desc: "Construtivo, alinhado à neurociência", shortcut: "⌘ + 5" },
-  { emoji: "🎲", name: "Dinâmica de grupo", desc: "Para socialização e aprendizado ativo", shortcut: "⌘ + 6" },
+type TaskCategory = "Inclusão" | "Avaliação" | "Outros";
+const TASKS: Array<{ emoji: string; name: string; desc: string; shortcut: string; top?: boolean; categories: TaskCategory[] }> = [
+  { emoji: "📚", name: "Plano de aula", desc: "BNCC alinhado, com objetivos e avaliação", shortcut: "⌘ + 1", top: true, categories: ["Outros"] },
+  { emoji: "📝", name: "Parecer descritivo", desc: "Bimestral, individual, em 4 minutos", shortcut: "⌘ + 2", top: true, categories: ["Avaliação"] },
+  { emoji: "✨", name: "Adaptar conteúdo", desc: "Para alunos PCD ou com dificuldades", shortcut: "⌘ + 3", categories: ["Inclusão"] },
+  { emoji: "📊", name: "Atividade avaliativa", desc: "Com gabarito e níveis de dificuldade", shortcut: "⌘ + 4", categories: ["Avaliação"] },
+  { emoji: "💬", name: "Feedback ao aluno", desc: "Construtivo, alinhado à neurociência", shortcut: "⌘ + 5", categories: ["Avaliação"] },
+  { emoji: "🎲", name: "Dinâmica de grupo", desc: "Para socialização e aprendizado ativo", shortcut: "⌘ + 6", categories: ["Inclusão"] },
 ];
 
 export function Assistente() {
@@ -382,7 +383,11 @@ export function Assistente() {
                   </div>
                 </div>
                 <div className="tasks-grid">
-                  {TASKS.map((t) => (
+                  {TASKS.filter((t) => {
+                    if (tab === "Tudo") return true;
+                    if (tab === "Mais usadas") return t.top;
+                    return t.categories.includes(tab as TaskCategory);
+                  }).map((t) => (
                     <button key={t.shortcut} className="task-card" aria-label={t.name} onClick={() => sendMessage(`${t.name}: ${t.desc}`)}>
                       {t.top && <span className="task-top-pill">🔥 Top</span>}
                       <div className="task-emoji">{t.emoji}</div>
@@ -391,6 +396,15 @@ export function Assistente() {
                       <span className="task-shortcut">{t.shortcut}</span>
                     </button>
                   ))}
+                  {TASKS.filter((t) => {
+                    if (tab === "Tudo") return true;
+                    if (tab === "Mais usadas") return t.top;
+                    return t.categories.includes(tab as TaskCategory);
+                  }).length === 0 && (
+                    <div style={{ gridColumn: "1 / -1", padding: 16, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                      Nenhuma tarefa nesta categoria.
+                    </div>
+                  )}
                 </div>
               </div>
                 </>
