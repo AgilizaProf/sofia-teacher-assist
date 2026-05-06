@@ -624,21 +624,23 @@ function sofiaGenerateForDay(opts: {
       const textosNorm = grupo.map((g) =>
         `${g.tag} ${g.desc}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
       );
-      // Para cada token compartilhado, lista os códigos das competências que o contêm.
-      const compartilhados: Array<{ token: string; codes: string[] }> = Array.from(freq.entries())
-        .filter(([, n]) => n >= 2)
-        .map(([w]) => {
-          const re = new RegExp(`\\b${w}\\b`);
-          const codes = grupo
-            .filter((_, idx) => re.test(textosNorm[idx]))
-            .map((g) => g.code);
-          return { token: w, codes };
-        })
-        .filter((x) => x.codes.length >= 2)
-        .sort((a, b) => b.codes.length - a.codes.length)
-        .slice(0, 4);
+      // Para cada token compartilhado, lista as competências (com origem completa) que o contêm.
+      const compartilhados: Array<{ token: string; codes: string[]; origens: M1AuditToken["origens"] }> =
+        Array.from(freq.entries())
+          .filter(([, n]) => n >= 2)
+          .map(([w]) => {
+            const re = new RegExp(`\\b${w}\\b`);
+            const origens = grupo
+              .filter((_, idx) => re.test(textosNorm[idx]))
+              .map((g) => ({ code: g.code, disciplina: g.disciplina, tag: g.tag, desc: g.desc }));
+            return { token: w, codes: origens.map((o) => o.code), origens };
+          })
+          .filter((x) => x.codes.length >= 2)
+          .sort((a, b) => b.codes.length - a.codes.length)
+          .slice(0, 6);
       const codes = grupo.map((g) => g.code).join(", ");
       const detalhes = compartilhados
+        .slice(0, 4)
         .map((x) => `${x.token} (${x.codes.join(", ")})`)
         .join("; ");
       const motivo =
@@ -647,6 +649,7 @@ function sofiaGenerateForDay(opts: {
             (detalhes ? ` em torno de: ${detalhes}.` : ".")
           : `Articula ${codes}` +
             (detalhes ? ` por: ${detalhes}.` : ".");
+      const auditoria: M1AuditToken[] = compartilhados.map((x) => ({ token: x.token, origens: x.origens }));
       out.push({
         id: `m1di_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
         v: grupo[0].v,
@@ -659,6 +662,7 @@ function sofiaGenerateForDay(opts: {
         minutos,
         foco: disciplinas.join(" + "),
         motivo,
+        auditoria: auditoria.length > 0 ? auditoria : undefined,
       });
     }
     // Validação final: nenhuma competência (code) pode repetir entre atividades do dia.
