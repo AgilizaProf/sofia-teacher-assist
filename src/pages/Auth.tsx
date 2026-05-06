@@ -198,7 +198,7 @@ export function AuthPage() {
                   <input type="checkbox" id="remember" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                   <label htmlFor="remember">Permanecer conectado</label>
                 </div>
-                <a href="#" className="forgot-link">Esqueci minha senha</a>
+                <button type="button" className="forgot-link" onClick={() => { setForgotEmail(email); setForgotOpen(true); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Esqueci minha senha</button>
               </div>
 
               <button type="submit" className="cta" disabled={loading}>
