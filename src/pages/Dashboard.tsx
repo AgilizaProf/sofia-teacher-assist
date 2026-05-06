@@ -1137,13 +1137,79 @@ export function Dashboard() {
                     </div>
                     <div className="school-row">
                       <div className="school-field">
-                        <label htmlFor="edit-class">Turma</label>
-                        <input id="edit-class" value={f.classRef} onChange={(e) => updateField("classRef", e.target.value)} placeholder="Ex.: 2º ano A" />
+                        <label htmlFor="edit-school">Escola</label>
+                        {(() => {
+                          const [curClass, curSchool] = (f.classRef || "").split(" · ").map((p) => p.trim());
+                          const setClassRef = (cls: string, sch: string) =>
+                            updateField("classRef", cls ? (sch ? `${cls} · ${sch}` : cls) : (sch || ""));
+                          return schools.length > 0 ? (
+                            <select
+                              id="edit-school"
+                              value={curSchool || ""}
+                              onChange={(e) => {
+                                const sch = e.target.value;
+                                const cls = classes.find((c) => c.name === curClass);
+                                const newCls = cls && cls.school && cls.school !== sch ? "" : (curClass || "");
+                                setClassRef(newCls, sch);
+                              }}
+                            >
+                              <option value="">Sem escola</option>
+                              {schools.map((sch, i) => (
+                                <option key={`${sch.name}-${i}`} value={sch.name}>{sch.name}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              id="edit-school"
+                              value={curSchool || ""}
+                              onChange={(e) => setClassRef(curClass || "", e.target.value)}
+                              placeholder="Sem escolas cadastradas"
+                            />
+                          );
+                        })()}
                       </div>
+                      <div className="school-field">
+                        <label htmlFor="edit-class">Turma</label>
+                        {(() => {
+                          const [curClass, curSchool] = (f.classRef || "").split(" · ").map((p) => p.trim());
+                          const setClassRef = (cls: string, sch: string) =>
+                            updateField("classRef", cls ? (sch ? `${cls} · ${sch}` : cls) : (sch || ""));
+                          return classes.length > 0 ? (
+                            <select
+                              id="edit-class"
+                              value={curClass || ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                const cls = classes.find((c) => c.name === v);
+                                setClassRef(v, cls?.school || curSchool || "");
+                              }}
+                            >
+                              <option value="">Sem turma</option>
+                              {classes
+                                .filter((c) => !curSchool || c.school === curSchool || !c.school)
+                                .map((c, i) => (
+                                  <option key={`${c.name}-${i}`} value={c.name}>
+                                    {c.name}{c.school ? ` · ${c.school}` : ""}
+                                  </option>
+                                ))}
+                            </select>
+                          ) : (
+                            <input
+                              id="edit-class"
+                              value={curClass || ""}
+                              onChange={(e) => setClassRef(e.target.value, curSchool || "")}
+                              placeholder="Sem turmas cadastradas"
+                            />
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    <div className="school-row">
                       <div className="school-field">
                         <label htmlFor="edit-birth">Nascimento</label>
                         <input id="edit-birth" type="date" value={f.birth} onChange={(e) => updateField("birth", e.target.value)} />
                       </div>
+                      <div className="school-field" />
                     </div>
                     <div className="school-field">
                       <label htmlFor="edit-pcd">PCD / laudo</label>
