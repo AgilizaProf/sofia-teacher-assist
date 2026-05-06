@@ -524,16 +524,21 @@ export function Planejamento() {
       ? focosSelecionados
       : focosSelecionados.slice(0, m1MaxFocos);
     const perDay = pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
-    const poolSize = focosUsados.reduce(
-      (n, f) => n + (M1_TEMPLATES[f]?.length ?? 0),
-      0,
-    );
+    const tempos = focosUsados.flatMap((f) => (M1_TEMPLATES[f] ?? []).map((t) => t.minutos));
+    const poolSize = tempos.length;
+    const mediaMin = poolSize > 0 ? Math.round(tempos.reduce((a, b) => a + b, 0) / poolSize) : 0;
+    const totalAtiv = focosUsados.length === 0 ? 0 : perDay * 5;
+    const totalMin = mediaMin * totalAtiv;
+    const minPorDia = mediaMin * perDay;
     return {
       focosUsados,
       focosCount: focosUsados.length,
       perDay,
-      total: focosUsados.length === 0 ? 0 : perDay * 5,
+      total: totalAtiv,
       poolSize,
+      mediaMin,
+      minPorDia,
+      totalMin,
     };
   }, [focosSelecionados, m1MaxFocos, pillsInt]);
   const gerarComSofia = () => {
