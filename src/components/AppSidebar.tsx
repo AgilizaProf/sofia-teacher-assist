@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import type React from "react";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export const sidebarCss = `
 .ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
@@ -53,6 +54,11 @@ export type SidebarKey = "home" | "assistant" | "planning" | "reports" | "inclus
 export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: () => void }) {
   const cls = (k: SidebarKey) => "sb-item" + (active === k ? " active" : "");
   useSofiaContext();
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    try { await supabase.auth.signOut(); } catch { /* ignore */ }
+    navigate({ to: "/auth" });
+  };
   return (
     <aside className="ap-sidebar">
       <div className="sb-head">
@@ -95,7 +101,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <Svg className="sb-icon" c={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>} />
           <span>Configurações</span>
         </Link>
-        <button className="sb-item" aria-label="Sair">
+        <button className="sb-item" aria-label="Sair" onClick={handleLogout}>
           <Svg className="sb-icon" c={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />
           <span>Sair</span>
         </button>
