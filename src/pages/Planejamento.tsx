@@ -1014,6 +1014,13 @@ export function Planejamento() {
                               <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>
                                 {m1Preview.focosCount} foco{m1Preview.focosCount === 1 ? "" : "s"} ativo{m1Preview.focosCount === 1 ? "" : "s"} · intensidade {pillsInt.toLowerCase()}
                               </div>
+                              <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>
+                                ~<b style={{ color: "var(--ink-2)" }}>{m1Preview.mediaMin} min</b> por atividade ·{" "}
+                                ~<b style={{ color: "var(--ink-2)" }}>{m1Preview.minPorDia} min/dia</b> ·{" "}
+                                ~<b style={{ color: "var(--ink-2)" }}>
+                                  {Math.floor(m1Preview.totalMin / 60)}h{(m1Preview.totalMin % 60).toString().padStart(2, "0")}
+                                </b> na semana
+                              </div>
                             </>
                           )}
                         </div>
