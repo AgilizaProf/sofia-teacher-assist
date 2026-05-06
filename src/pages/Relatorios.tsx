@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
@@ -267,6 +267,30 @@ const ActionIcon = ({ name }: { name: NonNullable<Parecer["actions"][number]["ic
   }
 };
 
+function useAnimatedNumber(target: number, duration = 800) {
+  const [value, setValue] = useState(target);
+  const fromRef = useRef(target);
+  const startRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (target === value) return;
+    fromRef.current = value;
+    startRef.current = null;
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+    const step = (ts: number) => {
+      if (startRef.current === null) startRef.current = ts;
+      const p = Math.min(1, (ts - startRef.current) / duration);
+      const next = fromRef.current + (target - fromRef.current) * ease(p);
+      setValue(p === 1 ? target : next);
+      if (p < 1) rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, duration]);
+  return value;
+}
+
 export function Relatorios() {
   const user = useUser();
   const ctx = useSofiaContext();
@@ -305,8 +329,19 @@ export function Relatorios() {
     dashStudents.length * 5 +
     (user.documentsGenerated || finalizados) * 30;
   const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
-  const savedH = Math.floor(totalSavedMin / 60);
-  const savedM = totalSavedMin % 60;
+  const animatedMin = useAnimatedNumber(totalSavedMin, 900);
+  const savedH = Math.floor(animatedMin / 60);
+  const savedM = Math.round(animatedMin % 60);
+  const [bump, setBump] = useState(false);
+  const prevTotalRef = useRef(totalSavedMin);
+  useEffect(() => {
+    if (prevTotalRef.current !== totalSavedMin) {
+      prevTotalRef.current = totalSavedMin;
+      setBump(true);
+      const t = setTimeout(() => setBump(false), 700);
+      return () => clearTimeout(t);
+    }
+  }, [totalSavedMin]);
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
   const isPro = ctx.user.plano === "pro" || dashStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
@@ -450,17 +485,18 @@ export function Relatorios() {
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
-            <div className="rel-kpi" style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent" }}>
+            <div className={"rel-kpi rel-kpi-dark" + (bump ? " is-bump" : "")} style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent", overflow: "hidden", position: "relative" }}>
               <div className="rel-kpi-top">
                 <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
                 <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
               </div>
-              <div className="rel-kpi-num" style={{ color: "#fff" }}>
+              <div className="rel-kpi-num rel-kpi-anim" style={{ color: "#fff", transition: "transform .4s cubic-bezier(.2,.8,.2,1)", transform: bump ? "scale(1.06)" : "scale(1)" }}>
                 {savedH}h<small style={{ color: "rgba(255,255,255,.75)" }}>{String(savedM).padStart(2, "0")}min</small>
               </div>
               <div className="rel-kpi-foot" style={{ color: "rgba(255,255,255,.7)" }}>
                 {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
               </div>
+              <span aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(circle at 80% 0%, rgba(255,106,44,.25), transparent 60%)", opacity: bump ? 1 : 0, transition: "opacity .6s ease" }} />
             </div>
           </div>
 
