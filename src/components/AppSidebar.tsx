@@ -41,7 +41,7 @@ export const sidebarCss = `
 .sb-bruna .live::before{content:"";width:5px;height:5px;border-radius:50%;background:#fff;animation:ap-pulse 2s infinite;}
 .sb-bruna-locked{margin:0 10px 10px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.16);border-radius:10px;padding:9px 10px;font-size:10.5px;color:rgba(255,255,255,.55);line-height:1.35;}
 .sb-bruna-locked b{color:rgba(255,255,255,.85);font-weight:700;display:block;font-size:11px;margin-bottom:2px;}
-@media(max-width:1100px){.ap-sidebar{width:72px;}.sb-logo-text,.sb-cmdk,.sb-section-label,.sb-shortcut,.sb-badge,.sb-version,.sb-plan,.sb-foot,.sb-item span:not(.sb-shortcut):not(.sb-badge){display:none;}.sb-head{justify-content:center;padding:16px 8px;}.sb-item{justify-content:center;}}
+@media(max-width:1100px){.ap-sidebar{width:240px;}}
 @media(max-width:820px){.ap-sidebar{display:none;}}
 `;
 
