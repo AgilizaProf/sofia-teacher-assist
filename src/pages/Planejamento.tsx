@@ -360,6 +360,191 @@ type M1Card = { id: string; v: Variant; tag: string; title: string; bncc: string
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
+// === M1 — Modal "Preencher só este dia" — BNCC por etapa/ano ===
+type Etapa = "EI" | "EF1" | "EF2" | "EM";
+type CompetenciaBNCC = { code: string; desc: string; v: Variant; tag: string; minutos: number };
+type DisciplinaBNCC = { nome: string; competencias: CompetenciaBNCC[] };
+type AnoBNCC = { ano: string; disciplinas: DisciplinaBNCC[] };
+
+const BNCC_BY_ETAPA: Record<Etapa, { label: string; anos: AnoBNCC[] }> = {
+  EI: {
+    label: "Educação Infantil (Campos de experiência)",
+    anos: [
+      { ano: "Bebês (0–1a6m)", disciplinas: [
+        { nome: "O eu, o outro e o nós", competencias: [
+          { code: "EI01EO01", desc: "Perceber que suas ações têm efeitos nas outras crianças e nos adultos.", v: "esc", tag: "Identidade", minutos: 30 },
+          { code: "EI01EO03", desc: "Interagir com crianças da mesma faixa etária e adultos.", v: "esc", tag: "Convivência", minutos: 30 },
+        ]},
+        { nome: "Corpo, gestos e movimentos", competencias: [
+          { code: "EI01CG01", desc: "Movimentar partes do corpo para exprimir corporalmente emoções.", v: "esc", tag: "Movimento", minutos: 25 },
+        ]},
+      ]},
+      { ano: "Crianças bem pequenas (1a7m–3a11m)", disciplinas: [
+        { nome: "Escuta, fala, pensamento e imaginação", competencias: [
+          { code: "EI02EF01", desc: "Dialogar com crianças e adultos, expressando desejos e necessidades.", v: "port", tag: "Linguagem oral", minutos: 30 },
+          { code: "EI02EF04", desc: "Formular e responder perguntas sobre fatos da história narrada.", v: "port", tag: "Narrativa", minutos: 30 },
+        ]},
+        { nome: "Espaços, tempos, quantidades, relações e transformações", competencias: [
+          { code: "EI02ET06", desc: "Utilizar conceitos básicos de tempo (agora, antes, durante, depois).", v: "ci", tag: "Tempo", minutos: 30 },
+        ]},
+      ]},
+      { ano: "Crianças pequenas (4a–5a11m)", disciplinas: [
+        { nome: "Escuta, fala, pensamento e imaginação", competencias: [
+          { code: "EI03EF01", desc: "Expressar ideias, desejos e sentimentos sobre vivências em diferentes contextos.", v: "port", tag: "Oralidade", minutos: 35 },
+          { code: "EI03EF09", desc: "Levantar hipóteses sobre gêneros textuais veiculados em portadores conhecidos.", v: "port", tag: "Letramento", minutos: 35 },
+        ]},
+        { nome: "Traços, sons, cores e formas", competencias: [
+          { code: "EI03TS02", desc: "Expressar-se livremente por meio de desenho, pintura, colagem, dobradura e escultura.", v: "esc", tag: "Arte", minutos: 40 },
+        ]},
+        { nome: "Espaços, tempos, quantidades, relações e transformações", competencias: [
+          { code: "EI03ET01", desc: "Estabelecer relações de comparação entre objetos.", v: "mat", tag: "Comparação", minutos: 30 },
+          { code: "EI03ET07", desc: "Relacionar números às suas respectivas quantidades.", v: "mat", tag: "Quantidade", minutos: 30 },
+        ]},
+      ]},
+    ],
+  },
+  EF1: {
+    label: "Ensino Fundamental — Anos Iniciais",
+    anos: [
+      { ano: "1º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF01LP01", desc: "Reconhecer que textos são lidos e escritos da esquerda para a direita.", v: "port", tag: "Leitura", minutos: 40 },
+          { code: "EF01LP04", desc: "Distinguir letras do alfabeto de outros sinais gráficos.", v: "port", tag: "Alfabetização", minutos: 30 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF01MA01", desc: "Utilizar números naturais como indicador de quantidade ou de ordem em diferentes contextos.", v: "mat", tag: "Números", minutos: 40 },
+          { code: "EF01MA08", desc: "Resolver problemas de adição e subtração com números até 20.", v: "mat", tag: "Operações", minutos: 45 },
+        ]},
+        { nome: "Ciências", competencias: [
+          { code: "EF01CI02", desc: "Identificar partes do corpo humano e suas funções.", v: "ci", tag: "Corpo humano", minutos: 35 },
+        ]},
+      ]},
+      { ano: "2º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF02LP01", desc: "Ler e compreender textos curtos com autonomia.", v: "port", tag: "Leitura", minutos: 40 },
+          { code: "EF02LP07", desc: "Escrever textos curtos sobre vivências e temas estudados.", v: "port", tag: "Produção textual", minutos: 45 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF02MA05", desc: "Construir fatos básicos da adição e subtração.", v: "mat", tag: "Operações", minutos: 45 },
+          { code: "EF02MA06", desc: "Compor e decompor números até 1000.", v: "mat", tag: "Sistema decimal", minutos: 40 },
+        ]},
+        { nome: "Ciências", competencias: [
+          { code: "EF02CI04", desc: "Descrever características de plantas e animais do entorno.", v: "ci", tag: "Seres vivos", minutos: 40 },
+        ]},
+        { nome: "História", competencias: [
+          { code: "EF02HI03", desc: "Selecionar situações cotidianas que remetam à percepção de mudança.", v: "esc", tag: "Tempo", minutos: 35 },
+        ]},
+      ]},
+      { ano: "3º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF03LP02", desc: "Ler e compreender textos com fluência.", v: "port", tag: "Fluência", minutos: 40 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF03MA03", desc: "Compor e decompor números naturais até a ordem das unidades de milhar.", v: "mat", tag: "Sistema decimal", minutos: 45 },
+          { code: "EF03MA08", desc: "Resolver problemas de multiplicação por meio de adição de parcelas iguais.", v: "mat", tag: "Multiplicação", minutos: 45 },
+        ]},
+      ]},
+      { ano: "4º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF04LP10", desc: "Ler e compreender textos informativos identificando ideias-chave.", v: "port", tag: "Compreensão", minutos: 45 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF04MA02", desc: "Mostrar relações entre números naturais por meio de comparação.", v: "mat", tag: "Números", minutos: 40 },
+          { code: "EF04MA10", desc: "Resolver problemas envolvendo divisão com números naturais.", v: "mat", tag: "Divisão", minutos: 50 },
+        ]},
+      ]},
+      { ano: "5º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF05LP09", desc: "Ler e compreender textos argumentativos identificando posicionamentos.", v: "port", tag: "Argumentação", minutos: 50 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF05MA01", desc: "Ler, escrever e ordenar números racionais na forma decimal.", v: "mat", tag: "Decimais", minutos: 50 },
+        ]},
+      ]},
+    ],
+  },
+  EF2: {
+    label: "Ensino Fundamental — Anos Finais",
+    anos: [
+      { ano: "6º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF06LP02", desc: "Estabelecer relação entre contexto de produção e gêneros textuais.", v: "port", tag: "Gêneros", minutos: 50 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF06MA03", desc: "Resolver problemas que envolvem múltiplos e divisores.", v: "mat", tag: "Números", minutos: 50 },
+        ]},
+      ]},
+      { ano: "7º ano", disciplinas: [
+        { nome: "Matemática", competencias: [
+          { code: "EF07MA04", desc: "Resolver problemas com números racionais positivos e negativos.", v: "mat", tag: "Inteiros", minutos: 50 },
+        ]},
+        { nome: "Ciências", competencias: [
+          { code: "EF07CI01", desc: "Discutir aplicação de máquinas térmicas no cotidiano.", v: "ci", tag: "Energia", minutos: 50 },
+        ]},
+      ]},
+      { ano: "8º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF08LP02", desc: "Justificar diferenças de uso da norma-padrão em contextos diversos.", v: "port", tag: "Variação", minutos: 50 },
+        ]},
+      ]},
+      { ano: "9º ano", disciplinas: [
+        { nome: "Matemática", competencias: [
+          { code: "EF09MA09", desc: "Compreender os processos de fatoração de expressões algébricas.", v: "mat", tag: "Álgebra", minutos: 50 },
+        ]},
+      ]},
+    ],
+  },
+  EM: {
+    label: "Ensino Médio (Áreas)",
+    anos: [
+      { ano: "1º ano", disciplinas: [
+        { nome: "Linguagens", competencias: [
+          { code: "EM13LP01", desc: "Relacionar textos a contextos de produção, considerando autoria, época e valores.", v: "port", tag: "Leitura crítica", minutos: 50 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EM13MAT101", desc: "Interpretar criticamente situações com dados estatísticos.", v: "mat", tag: "Estatística", minutos: 50 },
+        ]},
+      ]},
+      { ano: "2º ano", disciplinas: [
+        { nome: "Ciências da Natureza", competencias: [
+          { code: "EM13CNT201", desc: "Analisar processos naturais e tecnológicos relativos à matéria e energia.", v: "ci", tag: "Energia", minutos: 50 },
+        ]},
+      ]},
+      { ano: "3º ano", disciplinas: [
+        { nome: "Ciências Humanas", competencias: [
+          { code: "EM13CHS301", desc: "Problematizar hábitos e práticas individuais e coletivas no tempo e no espaço.", v: "esc", tag: "Sociedade", minutos: 50 },
+        ]},
+      ]},
+    ],
+  },
+};
+
+function sofiaGenerateForDay(opts: {
+  tema: string;
+  competencias: CompetenciaBNCC[];
+  intensidade: "Leve" | "Equilibrada" | "Densa";
+  diaISO: string;
+  disciplina: string;
+}): M1Card[] {
+  const tema = (opts.tema || "tema do dia").trim() || "tema do dia";
+  const perDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  const total = Math.min(perDay, opts.competencias.length) || opts.competencias.length;
+  const out: M1Card[] = [];
+  for (let i = 0; i < total; i++) {
+    const c = opts.competencias[i % opts.competencias.length];
+    out.push({
+      id: `m1d_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
+      v: c.v,
+      tag: c.tag,
+      title: `${opts.disciplina} · ${c.tag}: ${tema}`,
+      bncc: c.code,
+      minutos: c.minutos,
+      foco: opts.disciplina,
+    });
+  }
+  return out;
+}
+
 const M1_TEMPLATES: Record<string, Array<Omit<M1Card, "id" | "minutos"> & { minutos: number }>> = {
   Letramento: [
     { v: "port", tag: "Leitura", title: "Roda de leitura: {tema}", bncc: "EF02LP01", minutos: 40, foco: "Letramento" },
