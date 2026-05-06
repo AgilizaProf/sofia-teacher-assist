@@ -57,7 +57,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const navigate = useNavigate();
   const handleLogout = async () => {
     try { await supabase.auth.signOut(); } catch { /* ignore */ }
-    navigate({ to: "/login" });
+    navigate({ to: "/auth" });
   };
   return (
     <aside className="ap-sidebar">
