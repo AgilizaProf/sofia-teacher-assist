@@ -523,6 +523,7 @@ export function Dashboard() {
                     {agendaToShow.map((ev) => {
                       const [, mm, dd] = ev.date.split("-");
                       const color = AGENDA_TYPE_COLOR[ev.type];
+                      const isToday = ev.date === todayKeyMemo;
                       return (
                         <button
                           key={ev.id}
@@ -531,7 +532,9 @@ export function Dashboard() {
                           style={{
                             display: "flex", alignItems: "center", gap: 10,
                             padding: "10px 12px", borderRadius: 10,
-                            background: "var(--bg-soft)", border: "1px solid var(--border-soft)",
+                            background: isToday ? "color-mix(in oklab, var(--accent) 8%, white)" : "var(--bg-soft)",
+                            border: isToday ? "2px solid var(--accent)" : "1px solid var(--border-soft)",
+                            boxShadow: isToday ? "0 4px 12px color-mix(in oklab, var(--accent) 22%, transparent)" : "none",
                             cursor: "pointer", textAlign: "left", width: "100%",
                           }}
                         >
@@ -554,6 +557,16 @@ export function Dashboard() {
                               }}>
                                 {AGENDA_TYPE_LABEL[ev.type]}
                               </span>
+                              {isToday && (
+                                <span style={{
+                                  fontSize: 9.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em",
+                                  padding: "2px 7px", borderRadius: 100,
+                                  background: "var(--accent)", color: "#fff",
+                                  boxShadow: "0 2px 6px color-mix(in oklab, var(--accent) 35%, transparent)",
+                                }}>
+                                  ● Hoje
+                                </span>
+                              )}
                               {ev.time && (
                                 <span style={{ fontSize: 11, color: "var(--text-soft)", fontWeight: 600 }}>{ev.time}</span>
                               )}
