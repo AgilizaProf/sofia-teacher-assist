@@ -892,9 +892,13 @@ export function Planejamento() {
     setMdEtapa(etapaInicial);
     setMdAnoIdx(anoIdxInicial);
     const ano = BNCC_BY_ETAPA[etapaInicial].anos[Math.min(anoIdxInicial, BNCC_BY_ETAPA[etapaInicial].anos.length - 1)];
-    setMdDiscOn(ano && ano.disciplinas[0] ? { [ano.disciplinas[0].nome]: true } : {});
+    // Por padrão, ativa TODAS as disciplinas/campos do ano para habilitar interdisciplinar logo de cara.
+    const todas: Record<string, boolean> = {};
+    (ano?.disciplinas ?? []).forEach((d) => { todas[d.nome] = true; });
+    setMdDiscOn(todas);
     setMdSel({});
-    setMdInter(false);
+    // Liga interdisciplinar por padrão (será ignorado pela geração se < 2 disciplinas com seleção).
+    setMdInter(true);
     setMdTema(m1Tema);
   };
   const fecharDayModal = () => setM1DayModal(null);
