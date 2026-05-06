@@ -133,11 +133,18 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     let mounted = true;
     async function loadProfile(uid: string, fallbackEmail: string | null, metaName: string | null) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, email")
-        .eq("user_id", uid)
-        .maybeSingle();
+      let data: { display_name: string | null; email: string | null } | null = null;
+      try {
+        const res = await supabase
+          .from("profiles")
+          .select("display_name, email")
+          .eq("user_id", uid)
+          .maybeSingle();
+        data = res.data as typeof data;
+      } catch (err) {
+        // Falha de rede/permissão não pode travar a Sofia — usa fallback.
+        console.warn("[SofiaContext] loadProfile falhou, usando fallback:", err);
+      }
       if (!mounted) return;
       const nome =
         (data?.display_name && data.display_name.trim()) ||
@@ -157,8 +164,13 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         (typeof meta.name === "string" ? meta.name : null) ||
         (typeof meta.full_name === "string" ? meta.full_name : null);
       loadProfile(u.id, u.email ?? null, metaName);
+    }).catch((err) => {
+      console.warn("[SofiaContext] getSession falhou:", err);
+      if (mounted) setAuthUser(null);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    let sub: { subscription: { unsubscribe: () => void } } | null = null;
+    try {
+      const res = supabase.auth.onAuthStateChange((_e, s) => {
       const u = s?.user;
       if (!u) { setAuthUser(null); return; }
       const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
@@ -167,17 +179,21 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         (typeof meta.name === "string" ? meta.name : null) ||
         (typeof meta.full_name === "string" ? meta.full_name : null);
       loadProfile(u.id, u.email ?? null, metaName);
-    });
+      });
+      sub = res.data;
+    } catch (err) {
+      console.warn("[SofiaContext] onAuthStateChange falhou ao registrar:", err);
+    }
     const onProfileUpdate = () => {
       supabase.auth.getSession().then(({ data }) => {
         const u = data.session?.user;
         if (u) loadProfile(u.id, u.email ?? null, null);
-      });
+      }).catch(() => { /* ignore */ });
     };
     window.addEventListener("sofia:profile-updated", onProfileUpdate);
     return () => {
       mounted = false;
-      sub.subscription.unsubscribe();
+      try { sub?.subscription.unsubscribe(); } catch { /* ignore */ }
       window.removeEventListener("sofia:profile-updated", onProfileUpdate);
     };
   }, []);
