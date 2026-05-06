@@ -6,6 +6,7 @@ import { useUser } from "@/lib/mockData";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -280,24 +281,38 @@ export function Relatorios() {
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState("Todos");
 
+  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
+  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
+
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
   const finalizados = ctx.dataState.pareceres_finalizados;
-  const alunosCount = ctx.dataState.alunos_count;
+  const alunosCount = dashStudents.length > 0 ? dashStudents.length : ctx.dataState.alunos_count;
   const pct = totalBim > 0 ? Math.round((finalizados / totalBim) * 100) : 0;
   const restantes = Math.max(0, totalBim - finalizados);
   const aFazer = Math.max(0, alunosCount - finalizados - Math.min(3, restantes));
   const rascunhos = Math.min(3, restantes);
   const horasEcon = ctx.user.horas_economizadas_mes;
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
-  const isPro = ctx.user.plano === "pro";
+  const isPro = ctx.user.plano === "pro" || dashStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
 
   // Lista por aluno (estado Pro)
   const alunosLista = useMemo(() => {
-    if (!isPro || alunosCount === 0) return [] as Array<{ id: string; nome: string; status: "done" | "draft" | "todo"; statusLabel: string }>;
-    const out: Array<{ id: string; nome: string; status: "done" | "draft" | "todo"; statusLabel: string }> = [];
-    // Usa alunos PCD nominais + completar até total
+    type Item = { id: string; nome: string; turma: string; pcd: string; status: "done" | "draft" | "todo"; statusLabel: string };
+    if (dashStudents.length > 0) {
+      return dashStudents.map((s, i): Item => {
+        let status: "done" | "draft" | "todo" = "todo";
+        let statusLabel = "A FAZER";
+        if (i < finalizados) { status = "done"; statusLabel = "FINALIZADO"; }
+        else if (i < finalizados + rascunhos) { status = "draft"; statusLabel = "RASCUNHO"; }
+        return { id: `al-${i}`, nome: s.name, turma: s.classRef || "", pcd: s.pcd && s.pcd !== "nao" ? s.pcd : "", status, statusLabel };
+      });
+    }
+    if (!isPro || alunosCount === 0) return [] as Item[];
+    const out: Item[] = [];
     const pcd = ctx.entity.todos_alunos_pcd;
     for (let i = 0; i < alunosCount; i++) {
       const nome = i < pcd.length ? pcd[i].nome : `Aluno(a) ${i + 1}`;
@@ -305,16 +320,18 @@ export function Relatorios() {
       let statusLabel = "A FAZER";
       if (i < finalizados) { status = "done"; statusLabel = "FINALIZADO"; }
       else if (i < finalizados + rascunhos) { status = "draft"; statusLabel = "RASCUNHO"; }
-      out.push({ id: `al-${i}`, nome, status, statusLabel });
+      out.push({ id: `al-${i}`, nome, turma: ctx.entity.turma_atual?.nome || "", pcd: "", status, statusLabel });
     }
     return out;
-  }, [isPro, alunosCount, finalizados, rascunhos, ctx.entity.todos_alunos_pcd]);
+  }, [isPro, alunosCount, finalizados, rascunhos, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, dashStudents]);
 
   const alunosFiltered = useMemo(() => alunosLista.filter((a) => {
     if (tab !== "all" && a.status !== tab) return false;
     if (search && !a.nome.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterTurma !== "Todas" && a.turma !== filterTurma) return false;
+    if (filterPcd === "Apenas PCD" && !a.pcd) return false;
     return true;
-  }), [alunosLista, tab, search]);
+  }), [alunosLista, tab, search, filterTurma, filterPcd]);
 
   // Bubble Sofia contextual (proativo)
   const bubbleMsg = (() => {
@@ -459,7 +476,7 @@ export function Relatorios() {
             <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")} aria-haspopup="menu">
               <Calendar size={13} /> Turma · {filterTurma} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="turma" value={filterTurma} onChange={setFilterTurma}
-                options={["Todas"]} />
+                options={["Todas", ...dashClasses.map((c) => c.name)]} />
             </button>
             <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "bim" ? null : "bim")} aria-haspopup="menu">
               <Calendar size={13} /> Bimestre · {filterBimestre} <ChevronDown size={11} strokeWidth={2.4} />
@@ -495,8 +512,9 @@ export function Relatorios() {
                   <div className="rel-av">{a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}</div>
                   <div className="rel-stu">
                     <b>{a.nome}</b>
-                    <small>{ctx.entity.turma_atual?.nome || ""} · {bimestreNum}º bimestre</small>
+                    <small>{a.turma || ctx.entity.turma_atual?.nome || "Sem turma"} · {bimestreNum}º bimestre</small>
                   </div>
+                  {a.pcd && <span className="rel-badge pcd">PCD</span>}
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 <div className="rel-card-foot">
