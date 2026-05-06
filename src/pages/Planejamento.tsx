@@ -540,9 +540,20 @@ function sofiaGenerateForDay(opts: {
   intensidade: "Leve" | "Equilibrada" | "Densa";
   diaISO: string;
   interdisciplinar?: boolean;
+  // Override: quando definido, ignora `intensidade` e usa exatamente este número de atividades.
+  quantidade?: number;
+  // Override: quando definido, calibra a quantidade e os minutos para caber no tempo total (em min).
+  minutosAlvo?: number;
 }): M1Card[] {
   const tema = (opts.tema || "tema do dia").trim() || "tema do dia";
-  const perDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  const baseDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  let perDay = baseDay;
+  if (typeof opts.quantidade === "number" && opts.quantidade > 0) {
+    perDay = Math.max(1, Math.floor(opts.quantidade));
+  } else if (typeof opts.minutosAlvo === "number" && opts.minutosAlvo > 0) {
+    // Estima ~35 min por atividade como ponto de partida; ajusta minutos depois.
+    perDay = Math.max(1, Math.round(opts.minutosAlvo / 35));
+  }
   const out: M1Card[] = [];
   if (opts.competencias.length === 0) return out;
 
