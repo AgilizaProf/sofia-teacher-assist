@@ -440,10 +440,15 @@ export function Relatorios() {
     const g = cls?.grade?.replace(/\D/g, "");
     return g && YEAR_OPTIONS.includes(g) ? g : "2";
   };
-  const areasFor = (id: string, turma: string) => bnccAreasFor(yearForAluno(id, turma));
-  const competKeysFor = (id: string, turma: string) => {
+  const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
+    const base = bnccAreasFor(yearForAluno(id, turma));
+    const extra: BnccArea[] = [{ area: "Comportamento e socialização", comps: BNCC_COMPORTAMENTO }];
+    if (pcd) extra.push({ area: "Indicadores PCD (PEI)", comps: BNCC_PCD });
+    return [...base, ...extra];
+  };
+  const competKeysFor = (id: string, turma: string, pcd?: string) => {
     const out: string[] = [];
-    areasFor(id, turma).forEach((a, i) => a.comps.forEach((_c, j) => out.push(`${i}.${j}`)));
+    areasFor(id, turma, pcd).forEach((a, i) => a.comps.forEach((_c, j) => out.push(`${i}.${j}`)));
     return out;
   };
   const getAlunoRubric = (id: string) => bnccByAluno[id] || {};
