@@ -472,6 +472,9 @@ export function Planejamento() {
   ] as const;
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
+  const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
+  const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1_PLAN);
+  const [m1Generating, setM1Generating] = useState(false);
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
   const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
