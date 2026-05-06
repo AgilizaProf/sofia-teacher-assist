@@ -751,32 +751,73 @@ export function Planejamento() {
                   <div><h2>Cadeia da semana <small>· selecione disciplina e turma</small></h2></div>
                   <div className="right">
                     <button className="pl-btn"><BookOpen size={14} /> Habilidades</button>
-                    <button className="pl-btn primary"><Link2 size={14} /> Conectar próxima aula</button>
+                    <button className="pl-btn primary" onClick={sugerirProxima}><Link2 size={14} /> Conectar próxima aula</button>
                   </div>
                 </div>
                 <div className="pl-chain">
                   <div className="pl-chain-card">
                     <h3 style={{ fontSize: 16 }}>Sequência didática</h3>
-                    {M2_STEPS.length === 0 ? (
+                    {/* Formulário de adição */}
+                    <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line)", borderRadius: 11, background: "#FAFBFD", display: "grid", gridTemplateColumns: "90px 150px 1fr", gap: 8, alignItems: "center" }}>
+                      <select
+                        value={m2Form.d}
+                        onChange={(e) => setM2Form((f) => ({ ...f, d: e.target.value }))}
+                        style={{ padding: "8px 10px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff", fontSize: 12.5, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}
+                      >
+                        {M2_DAY_OPTS.map((d) => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                      <select
+                        value={m2Form.tag}
+                        onChange={(e) => setM2Form((f) => ({ ...f, tag: e.target.value }))}
+                        style={{ padding: "8px 10px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff", fontSize: 12.5 }}
+                      >
+                        {M2_TAG_OPTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <input
+                        value={m2Form.t}
+                        onChange={(e) => setM2Form((f) => ({ ...f, t: e.target.value }))}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addM2Step(); } }}
+                        placeholder="Título da aula (ex: Introdução à adição com material concreto)"
+                        style={{ padding: "8px 10px", border: "1px solid var(--line)", borderRadius: 8, fontSize: 12.5, fontFamily: "inherit" }}
+                      />
+                      <select
+                        value={m2Form.p}
+                        onChange={(e) => setM2Form((f) => ({ ...f, p: e.target.value }))}
+                        style={{ gridColumn: "1 / span 2", padding: "8px 10px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff", fontSize: 12 }}
+                      >
+                        {M2_BNCC_OPTS.map((b) => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                      <button className="pl-btn primary" onClick={addM2Step} style={{ justifySelf: "stretch" }}>
+                        <Plus size={14} /> Adicionar à cadeia
+                      </button>
+                    </div>
+
+                    {m2Steps.length === 0 ? (
                       <div style={{ marginTop: 12 }}>
                         <EmptyState
                           icon="🔗"
                           title="Sem sequência montada ainda."
-                          description="Adicione aulas e a Sofia conecta cada atividade na cadeia ideal — preservando objetivo e BNCC."
-                          ctaLabel="Adicionar aula"
+                          description="Adicione a primeira aula acima — a Sofia conecta as próximas em cadeia, preservando objetivo e BNCC."
                         />
                       </div>
                     ) : (
-                      <div className="pl-chain-list">
-                        {M2_STEPS.map((s, i) => (
-                          <div key={i} className={"pl-step" + (s.suggest ? " suggest" : "")}>
+                      <div className="pl-chain-list" style={{ marginTop: 12 }}>
+                        {m2Steps.map((s) => (
+                          <div key={s.id} className={"pl-step" + (s.suggest ? " suggest" : "")}>
                             <div className="day">{s.d}</div>
                             <div className="body">
-                              <div className="tag">{s.tag}</div>
+                              <div className="tag">{s.tag}{s.suggest ? " · sugestão Sofia" : ""}</div>
                               <div className="ttl">{s.t}</div>
                               <div className="meta">
                                 <span className="pill">{s.p}</span>
-                                {s.suggest && <button className="pl-btn primary" style={{ padding: "5px 10px", fontSize: 11.5 }}><Check size={12} /> Aceitar</button>}
+                                {s.suggest && (
+                                  <button className="pl-btn primary" onClick={() => aceitarSugestao(s.id)} style={{ padding: "5px 10px", fontSize: 11.5 }}>
+                                    <Check size={12} /> Aceitar
+                                  </button>
+                                )}
+                                <button className="pl-btn ghost" onClick={() => removerStep(s.id)} style={{ padding: "5px 10px", fontSize: 11.5 }}>
+                                  <X size={12} /> Remover
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -787,7 +828,28 @@ export function Planejamento() {
                   <aside className="pl-side">
                     <div className="pl-panel">
                       <h3><Link2 size={14} /> Por que essa sequência?</h3>
-                      <p className="lead">Quando você cadastrar aulas, a Sofia explica aqui por que conecta cada atividade na ordem proposta.</p>
+                      {m2Steps.length === 0 ? (
+                        <p className="lead">Quando você cadastrar aulas, a Sofia explica aqui por que conecta cada atividade na ordem proposta.</p>
+                      ) : (
+                        <p className="lead">
+                          Sofia organiza <strong>{m2Steps.length}</strong> {m2Steps.length === 1 ? "aula" : "aulas"} respeitando uma escada de complexidade: <em>introdução → desenvolvimento → aprofundamento → avaliação</em>. As sugestões em laranja são propostas automáticas — aceite, edite ou remova.
+                        </p>
+                      )}
+                    </div>
+                    <div className="pl-panel" style={{ marginTop: 12 }}>
+                      <h3><BookOpen size={14} /> Habilidades cobertas</h3>
+                      {m2Steps.length === 0 ? (
+                        <p className="lead">Nenhuma habilidade BNCC mapeada ainda.</p>
+                      ) : (
+                        <div className="pl-bncc">
+                          {Array.from(new Set(m2Steps.map((s) => s.p))).map((b) => (
+                            <div key={b} className="pl-bncc-item">
+                              <span className="code">{b.split(" — ")[0]}</span>
+                              <span className="desc">{b.split(" — ")[1] ?? b}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </aside>
                 </div>
