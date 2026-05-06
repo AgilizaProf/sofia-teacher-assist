@@ -360,6 +360,191 @@ type M1Card = { id: string; v: Variant; tag: string; title: string; bncc: string
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
+// === M1 — Modal "Preencher só este dia" — BNCC por etapa/ano ===
+type Etapa = "EI" | "EF1" | "EF2" | "EM";
+type CompetenciaBNCC = { code: string; desc: string; v: Variant; tag: string; minutos: number };
+type DisciplinaBNCC = { nome: string; competencias: CompetenciaBNCC[] };
+type AnoBNCC = { ano: string; disciplinas: DisciplinaBNCC[] };
+
+const BNCC_BY_ETAPA: Record<Etapa, { label: string; anos: AnoBNCC[] }> = {
+  EI: {
+    label: "Educação Infantil (Campos de experiência)",
+    anos: [
+      { ano: "Bebês (0–1a6m)", disciplinas: [
+        { nome: "O eu, o outro e o nós", competencias: [
+          { code: "EI01EO01", desc: "Perceber que suas ações têm efeitos nas outras crianças e nos adultos.", v: "esc", tag: "Identidade", minutos: 30 },
+          { code: "EI01EO03", desc: "Interagir com crianças da mesma faixa etária e adultos.", v: "esc", tag: "Convivência", minutos: 30 },
+        ]},
+        { nome: "Corpo, gestos e movimentos", competencias: [
+          { code: "EI01CG01", desc: "Movimentar partes do corpo para exprimir corporalmente emoções.", v: "esc", tag: "Movimento", minutos: 25 },
+        ]},
+      ]},
+      { ano: "Crianças bem pequenas (1a7m–3a11m)", disciplinas: [
+        { nome: "Escuta, fala, pensamento e imaginação", competencias: [
+          { code: "EI02EF01", desc: "Dialogar com crianças e adultos, expressando desejos e necessidades.", v: "port", tag: "Linguagem oral", minutos: 30 },
+          { code: "EI02EF04", desc: "Formular e responder perguntas sobre fatos da história narrada.", v: "port", tag: "Narrativa", minutos: 30 },
+        ]},
+        { nome: "Espaços, tempos, quantidades, relações e transformações", competencias: [
+          { code: "EI02ET06", desc: "Utilizar conceitos básicos de tempo (agora, antes, durante, depois).", v: "ci", tag: "Tempo", minutos: 30 },
+        ]},
+      ]},
+      { ano: "Crianças pequenas (4a–5a11m)", disciplinas: [
+        { nome: "Escuta, fala, pensamento e imaginação", competencias: [
+          { code: "EI03EF01", desc: "Expressar ideias, desejos e sentimentos sobre vivências em diferentes contextos.", v: "port", tag: "Oralidade", minutos: 35 },
+          { code: "EI03EF09", desc: "Levantar hipóteses sobre gêneros textuais veiculados em portadores conhecidos.", v: "port", tag: "Letramento", minutos: 35 },
+        ]},
+        { nome: "Traços, sons, cores e formas", competencias: [
+          { code: "EI03TS02", desc: "Expressar-se livremente por meio de desenho, pintura, colagem, dobradura e escultura.", v: "esc", tag: "Arte", minutos: 40 },
+        ]},
+        { nome: "Espaços, tempos, quantidades, relações e transformações", competencias: [
+          { code: "EI03ET01", desc: "Estabelecer relações de comparação entre objetos.", v: "mat", tag: "Comparação", minutos: 30 },
+          { code: "EI03ET07", desc: "Relacionar números às suas respectivas quantidades.", v: "mat", tag: "Quantidade", minutos: 30 },
+        ]},
+      ]},
+    ],
+  },
+  EF1: {
+    label: "Ensino Fundamental — Anos Iniciais",
+    anos: [
+      { ano: "1º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF01LP01", desc: "Reconhecer que textos são lidos e escritos da esquerda para a direita.", v: "port", tag: "Leitura", minutos: 40 },
+          { code: "EF01LP04", desc: "Distinguir letras do alfabeto de outros sinais gráficos.", v: "port", tag: "Alfabetização", minutos: 30 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF01MA01", desc: "Utilizar números naturais como indicador de quantidade ou de ordem em diferentes contextos.", v: "mat", tag: "Números", minutos: 40 },
+          { code: "EF01MA08", desc: "Resolver problemas de adição e subtração com números até 20.", v: "mat", tag: "Operações", minutos: 45 },
+        ]},
+        { nome: "Ciências", competencias: [
+          { code: "EF01CI02", desc: "Identificar partes do corpo humano e suas funções.", v: "ci", tag: "Corpo humano", minutos: 35 },
+        ]},
+      ]},
+      { ano: "2º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF02LP01", desc: "Ler e compreender textos curtos com autonomia.", v: "port", tag: "Leitura", minutos: 40 },
+          { code: "EF02LP07", desc: "Escrever textos curtos sobre vivências e temas estudados.", v: "port", tag: "Produção textual", minutos: 45 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF02MA05", desc: "Construir fatos básicos da adição e subtração.", v: "mat", tag: "Operações", minutos: 45 },
+          { code: "EF02MA06", desc: "Compor e decompor números até 1000.", v: "mat", tag: "Sistema decimal", minutos: 40 },
+        ]},
+        { nome: "Ciências", competencias: [
+          { code: "EF02CI04", desc: "Descrever características de plantas e animais do entorno.", v: "ci", tag: "Seres vivos", minutos: 40 },
+        ]},
+        { nome: "História", competencias: [
+          { code: "EF02HI03", desc: "Selecionar situações cotidianas que remetam à percepção de mudança.", v: "esc", tag: "Tempo", minutos: 35 },
+        ]},
+      ]},
+      { ano: "3º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF03LP02", desc: "Ler e compreender textos com fluência.", v: "port", tag: "Fluência", minutos: 40 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF03MA03", desc: "Compor e decompor números naturais até a ordem das unidades de milhar.", v: "mat", tag: "Sistema decimal", minutos: 45 },
+          { code: "EF03MA08", desc: "Resolver problemas de multiplicação por meio de adição de parcelas iguais.", v: "mat", tag: "Multiplicação", minutos: 45 },
+        ]},
+      ]},
+      { ano: "4º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF04LP10", desc: "Ler e compreender textos informativos identificando ideias-chave.", v: "port", tag: "Compreensão", minutos: 45 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF04MA02", desc: "Mostrar relações entre números naturais por meio de comparação.", v: "mat", tag: "Números", minutos: 40 },
+          { code: "EF04MA10", desc: "Resolver problemas envolvendo divisão com números naturais.", v: "mat", tag: "Divisão", minutos: 50 },
+        ]},
+      ]},
+      { ano: "5º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF05LP09", desc: "Ler e compreender textos argumentativos identificando posicionamentos.", v: "port", tag: "Argumentação", minutos: 50 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF05MA01", desc: "Ler, escrever e ordenar números racionais na forma decimal.", v: "mat", tag: "Decimais", minutos: 50 },
+        ]},
+      ]},
+    ],
+  },
+  EF2: {
+    label: "Ensino Fundamental — Anos Finais",
+    anos: [
+      { ano: "6º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF06LP02", desc: "Estabelecer relação entre contexto de produção e gêneros textuais.", v: "port", tag: "Gêneros", minutos: 50 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EF06MA03", desc: "Resolver problemas que envolvem múltiplos e divisores.", v: "mat", tag: "Números", minutos: 50 },
+        ]},
+      ]},
+      { ano: "7º ano", disciplinas: [
+        { nome: "Matemática", competencias: [
+          { code: "EF07MA04", desc: "Resolver problemas com números racionais positivos e negativos.", v: "mat", tag: "Inteiros", minutos: 50 },
+        ]},
+        { nome: "Ciências", competencias: [
+          { code: "EF07CI01", desc: "Discutir aplicação de máquinas térmicas no cotidiano.", v: "ci", tag: "Energia", minutos: 50 },
+        ]},
+      ]},
+      { ano: "8º ano", disciplinas: [
+        { nome: "Língua Portuguesa", competencias: [
+          { code: "EF08LP02", desc: "Justificar diferenças de uso da norma-padrão em contextos diversos.", v: "port", tag: "Variação", minutos: 50 },
+        ]},
+      ]},
+      { ano: "9º ano", disciplinas: [
+        { nome: "Matemática", competencias: [
+          { code: "EF09MA09", desc: "Compreender os processos de fatoração de expressões algébricas.", v: "mat", tag: "Álgebra", minutos: 50 },
+        ]},
+      ]},
+    ],
+  },
+  EM: {
+    label: "Ensino Médio (Áreas)",
+    anos: [
+      { ano: "1º ano", disciplinas: [
+        { nome: "Linguagens", competencias: [
+          { code: "EM13LP01", desc: "Relacionar textos a contextos de produção, considerando autoria, época e valores.", v: "port", tag: "Leitura crítica", minutos: 50 },
+        ]},
+        { nome: "Matemática", competencias: [
+          { code: "EM13MAT101", desc: "Interpretar criticamente situações com dados estatísticos.", v: "mat", tag: "Estatística", minutos: 50 },
+        ]},
+      ]},
+      { ano: "2º ano", disciplinas: [
+        { nome: "Ciências da Natureza", competencias: [
+          { code: "EM13CNT201", desc: "Analisar processos naturais e tecnológicos relativos à matéria e energia.", v: "ci", tag: "Energia", minutos: 50 },
+        ]},
+      ]},
+      { ano: "3º ano", disciplinas: [
+        { nome: "Ciências Humanas", competencias: [
+          { code: "EM13CHS301", desc: "Problematizar hábitos e práticas individuais e coletivas no tempo e no espaço.", v: "esc", tag: "Sociedade", minutos: 50 },
+        ]},
+      ]},
+    ],
+  },
+};
+
+function sofiaGenerateForDay(opts: {
+  tema: string;
+  competencias: CompetenciaBNCC[];
+  intensidade: "Leve" | "Equilibrada" | "Densa";
+  diaISO: string;
+  disciplina: string;
+}): M1Card[] {
+  const tema = (opts.tema || "tema do dia").trim() || "tema do dia";
+  const perDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  const total = Math.min(perDay, opts.competencias.length) || opts.competencias.length;
+  const out: M1Card[] = [];
+  for (let i = 0; i < total; i++) {
+    const c = opts.competencias[i % opts.competencias.length];
+    out.push({
+      id: `m1d_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
+      v: c.v,
+      tag: c.tag,
+      title: `${opts.disciplina} · ${c.tag}: ${tema}`,
+      bncc: c.code,
+      minutos: c.minutos,
+      foco: opts.disciplina,
+    });
+  }
+  return out;
+}
+
 const M1_TEMPLATES: Record<string, Array<Omit<M1Card, "id" | "minutos"> & { minutos: number }>> = {
   Letramento: [
     { v: "port", tag: "Leitura", title: "Roda de leitura: {tema}", bncc: "EF02LP01", minutos: 40, foco: "Letramento" },
@@ -478,6 +663,37 @@ export function Planejamento() {
   // Limita quantos focos a Sofia usa numa geração (controla volume de sugestões).
   // "all" = usa todos os focos selecionados.
   const [m1MaxFocos, setM1MaxFocos] = usePersistentState<1 | 2 | 3 | "all">("plan_m1_max_focos", 2);
+  // Modal "Preencher só este dia"
+  const [m1DayModal, setM1DayModal] = useState<{ dia: DayKey; iso: string; n: string; d: number } | null>(null);
+  const [mdEtapa, setMdEtapa] = useState<Etapa>("EF1");
+  const [mdAnoIdx, setMdAnoIdx] = useState<number>(1); // 2º ano por padrão
+  const [mdDiscIdx, setMdDiscIdx] = useState<number>(0);
+  const [mdSel, setMdSel] = useState<Record<string, boolean>>({});
+  const [mdTema, setMdTema] = useState<string>("");
+  const [mdInt, setMdInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
+  const mdAno = BNCC_BY_ETAPA[mdEtapa].anos[Math.min(mdAnoIdx, BNCC_BY_ETAPA[mdEtapa].anos.length - 1)];
+  const mdDisc = mdAno?.disciplinas[Math.min(mdDiscIdx, (mdAno?.disciplinas.length || 1) - 1)];
+  const mdSelecionadas = mdDisc ? mdDisc.competencias.filter((c) => mdSel[c.code]) : [];
+  const openDayModal = (day: { k: DayKey; iso: string; n: string; d: number }) => {
+    setM1DayModal({ dia: day.k, iso: day.iso, n: day.n, d: day.d });
+    setMdSel({});
+    setMdTema(m1Tema);
+  };
+  const fecharDayModal = () => setM1DayModal(null);
+  const gerarDayModal = () => {
+    if (!m1DayModal || !mdDisc) return;
+    if (mdSelecionadas.length === 0) { showToast("Selecione ao menos 1 competência."); return; }
+    const novos = sofiaGenerateForDay({
+      tema: mdTema,
+      competencias: mdSelecionadas,
+      intensidade: mdInt,
+      diaISO: m1DayModal.iso,
+      disciplina: mdDisc.nome,
+    });
+    setM1Plan((p) => ({ ...p, [m1DayModal.dia]: [...p[m1DayModal.dia], ...novos] }));
+    showToast(`Sofia adicionou ${novos.length} atividade(s) em ${m1DayModal.n}. ✓`);
+    setM1DayModal(null);
+  };
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
   const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -933,7 +1149,7 @@ export function Planejamento() {
                             )}
                             <button
                               type="button"
-                              onClick={(e) => { e.stopPropagation(); navigate({ to: "/planejamento/atividade", search: { dia: day.k } }); }}
+                              onClick={(e) => { e.stopPropagation(); openDayModal(day); }}
                               style={{ marginTop: "auto", border: "1px dashed var(--line)", background: "#fff", color: "var(--orange)", fontWeight: 700, fontSize: 11.5, padding: "6px 8px", borderRadius: 8, cursor: "pointer" }}
                             >+ Atividade</button>
                           </div>
@@ -1411,6 +1627,124 @@ export function Planejamento() {
           <Move size={14} className="ic" />
           <span>{toast.msg}</span>
           <button onClick={() => setToast(null)}>Desfazer</button>
+        </div>
+      )}
+
+      {m1DayModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preencher ${m1DayModal.n}`}
+          onClick={fecharDayModal}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "#fff", borderRadius: 14, width: "min(720px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                  ✨ Preencher só {m1DayModal.n} · dia {m1DayModal.d}
+                </div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>A Sofia gera com base nas competências da BNCC</h3>
+              </div>
+              <button onClick={fecharDayModal} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6 }}><X size={18} /></button>
+            </div>
+
+            <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Etapa</label>
+                <div className="pl-pills">
+                  {(Object.keys(BNCC_BY_ETAPA) as Etapa[]).map((e) => (
+                    <button
+                      key={e}
+                      className={"pl-pill" + (mdEtapa === e ? " on" : "")}
+                      onClick={() => { setMdEtapa(e); setMdAnoIdx(0); setMdDiscIdx(0); setMdSel({}); }}
+                    >{BNCC_BY_ETAPA[e].label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div className="pl-field" style={{ marginTop: 0 }}>
+                  <label>{mdEtapa === "EI" ? "Faixa etária" : "Ano"}</label>
+                  <select
+                    className="pl-input"
+                    value={mdAnoIdx}
+                    onChange={(e) => { setMdAnoIdx(Number(e.target.value)); setMdDiscIdx(0); setMdSel({}); }}
+                  >
+                    {BNCC_BY_ETAPA[mdEtapa].anos.map((a, i) => <option key={a.ano} value={i}>{a.ano}</option>)}
+                  </select>
+                </div>
+                <div className="pl-field" style={{ marginTop: 0 }}>
+                  <label>{mdEtapa === "EI" ? "Campo de experiência" : "Disciplina"}</label>
+                  <select
+                    className="pl-input"
+                    value={mdDiscIdx}
+                    onChange={(e) => { setMdDiscIdx(Number(e.target.value)); setMdSel({}); }}
+                  >
+                    {mdAno?.disciplinas.map((d, i) => <option key={d.nome} value={i}>{d.nome}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Tema do dia (opcional)</label>
+                <input
+                  className="pl-input"
+                  placeholder="Ex.: Animais do quintal"
+                  value={mdTema}
+                  maxLength={120}
+                  onChange={(e) => setMdTema(e.target.value)}
+                />
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Competências ({mdSelecionadas.length} selecionada{mdSelecionadas.length === 1 ? "" : "s"})</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {mdDisc?.competencias.map((c) => {
+                    const on = !!mdSel[c.code];
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => setMdSel((s) => ({ ...s, [c.code]: !s[c.code] }))}
+                        className={"pl-trow" + (on ? " on" : "")}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <span className="chk">{on && <Check size={11} />}</span>
+                        <span className="info">
+                          <span className="name" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{c.code} · {c.tag}</span>
+                          <span className="sub" style={{ display: "block" }}>{c.desc}</span>
+                        </span>
+                        <span className="gain">{c.minutos} min</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Intensidade do dia</label>
+                <div className="pl-pills">
+                  {(["Leve", "Equilibrada", "Densa"] as const).map((p) => (
+                    <button key={p} className={"pl-pill" + (mdInt === p ? " on" : "")} onClick={() => setMdInt(p)}>{p}</button>
+                  ))}
+                </div>
+                <p className="lead" style={{ margin: "6px 0 0" }}>
+                  Sofia vai gerar <b>{Math.min(mdInt === "Leve" ? 1 : mdInt === "Densa" ? 3 : 2, mdSelecionadas.length || 1)}</b> atividade(s) para {m1DayModal.n}.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="pl-btn ghost" onClick={fecharDayModal}>Cancelar</button>
+              <button className="pl-btn primary" onClick={gerarDayModal} disabled={mdSelecionadas.length === 0}>
+                <Sparkles size={14} /> Gerar com a Sofia
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
