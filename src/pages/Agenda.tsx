@@ -949,6 +949,57 @@ export function Agenda() {
             </div>
           </div>
         )}
+        {showAllUpcoming && (
+          <div className="ag-overlay" onClick={() => setShowAllUpcoming(false)}>
+            <div className="ag-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="ag-panel-head">
+                <div style={{ minWidth: 0 }}>
+                  <div className="ag-panel-title">Todos os próximos compromissos</div>
+                  <div className="ag-panel-sub">{upcoming.length} {upcoming.length === 1 ? "compromisso" : "compromissos"} agendados</div>
+                </div>
+                <button className="ag-panel-close" onClick={() => setShowAllUpcoming(false)} aria-label="Fechar"><X size={16} /></button>
+              </div>
+              <div className="ag-panel-body">
+                {upcoming.length === 0 ? (
+                  <div className="ag-empty">Nenhum compromisso futuro.</div>
+                ) : (
+                  upcoming.map((ev) => {
+                    const [, mm, dd] = ev.date.split("-");
+                    return (
+                      <div
+                        key={ev.id}
+                        className="ag-up-item"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => { setShowAllUpcoming(false); openDayPanel(ev.date); }}
+                      >
+                        <div className="ag-up-day">
+                          <div className="ag-up-day-num">{dd}</div>
+                          <div className="ag-up-day-mo">{MONTHS_PT[Number(mm) - 1].slice(0, 3)}</div>
+                        </div>
+                        <div className="ag-up-body">
+                          <span
+                            className="ag-up-tag"
+                            style={{ background: "color-mix(in oklab, " + TYPE_COLOR[ev.type] + " 18%, white)", color: TYPE_COLOR[ev.type] }}
+                          >
+                            {TYPE_LABEL[ev.type]}
+                          </span>
+                          <div className="ag-up-name">{ev.title}</div>
+                          {ev.time && (
+                            <div className="ag-up-meta">
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                <Clock size={11} /> {ev.time}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
