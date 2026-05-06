@@ -458,27 +458,46 @@ export function Planejamento() {
   // passa a refletir a sua posição na sequência (1ª = SEG, 2ª = TER, …).
   const m2DragId = useRef<string | null>(null);
   const [m2DragOverId, setM2DragOverId] = useState<string | null>(null);
+  const [m2DragPos, setM2DragPos] = useState<"before" | "after">("before");
+  const [m2DraggingId, setM2DraggingId] = useState<string | null>(null);
   const reassignDays = (arr: M2Step[]): M2Step[] =>
     arr.map((s, i) => ({ ...s, d: M2_DAY_OPTS[Math.min(i, M2_DAY_OPTS.length - 1)] }));
-  const onM2DragStart = (id: string) => { m2DragId.current = id; };
+  const onM2DragStart = (e: React.DragEvent, id: string) => {
+    m2DragId.current = id;
+    setM2DraggingId(id);
+    try { e.dataTransfer.effectAllowed = "move"; } catch { /* noop */ }
+  };
   const onM2DragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
+    try { e.dataTransfer.dropEffect = "move"; } catch { /* noop */ }
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const pos: "before" | "after" = (e.clientY - rect.top) < rect.height / 2 ? "before" : "after";
     if (m2DragOverId !== id) setM2DragOverId(id);
+    if (m2DragPos !== pos) setM2DragPos(pos);
   };
-  const onM2DragEnd = () => { m2DragId.current = null; setM2DragOverId(null); };
+  const onM2DragEnd = () => {
+    m2DragId.current = null;
+    setM2DragOverId(null);
+    setM2DraggingId(null);
+  };
   const onM2Drop = (e: React.DragEvent, targetId: string) => {
     e.preventDefault();
     const fromId = m2DragId.current;
+    const pos = m2DragPos;
     setM2DragOverId(null);
+    setM2DraggingId(null);
     m2DragId.current = null;
     if (!fromId || fromId === targetId) return;
     setM2Steps((arr) => {
       const from = arr.findIndex((s) => s.id === fromId);
-      const to = arr.findIndex((s) => s.id === targetId);
+      let to = arr.findIndex((s) => s.id === targetId);
       if (from < 0 || to < 0) return arr;
       const next = arr.slice();
       const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
+      // ajusta o índice de destino quando o item arrastado vinha antes do alvo
+      if (from < to) to -= 1;
+      const insertAt = pos === "after" ? to + 1 : to;
+      next.splice(insertAt, 0, moved);
       return reassignDays(next);
     });
     showToast("Sequência reordenada. Dias atualizados. ✓");
