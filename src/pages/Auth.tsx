@@ -16,6 +16,9 @@ export function AuthPage() {
   const [strength, setStrength] = useState(0);
   const [showMore, setShowMore] = useState(false);
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -76,6 +79,24 @@ export function AuthPage() {
       return;
     }
     if (!result.redirected) navigate({ to: "/" });
+  };
+
+  const sendReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviamos um link de redefinição para seu e-mail.");
+      setForgotOpen(false);
+      setForgotEmail("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível enviar o e-mail.");
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   const pcts = ["25%", "50%", "75%", "100%"];
