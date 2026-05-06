@@ -476,7 +476,7 @@ export function Relatorios() {
             <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")} aria-haspopup="menu">
               <Calendar size={13} /> Turma · {filterTurma} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="turma" value={filterTurma} onChange={setFilterTurma}
-                options={["Todas"]} />
+                options={["Todas", ...dashClasses.map((c) => c.name)]} />
             </button>
             <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "bim" ? null : "bim")} aria-haspopup="menu">
               <Calendar size={13} /> Bimestre · {filterBimestre} <ChevronDown size={11} strokeWidth={2.4} />
@@ -512,8 +512,9 @@ export function Relatorios() {
                   <div className="rel-av">{a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}</div>
                   <div className="rel-stu">
                     <b>{a.nome}</b>
-                    <small>{ctx.entity.turma_atual?.nome || ""} · {bimestreNum}º bimestre</small>
+                    <small>{a.turma || ctx.entity.turma_atual?.nome || "Sem turma"} · {bimestreNum}º bimestre</small>
                   </div>
+                  {a.pcd && <span className="rel-badge pcd">PCD</span>}
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 <div className="rel-card-foot">
