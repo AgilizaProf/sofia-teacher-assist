@@ -1171,82 +1171,39 @@ export function Planejamento() {
             ))}
           </div>
 
-          {/* Contexto da aba: turma cadastrada OU ano de escolaridade */}
-          <div
+          {/* Resumo do contexto da aba (clicável para abrir o modal Ajustar parâmetros) */}
+          <button
+            type="button"
+            onClick={() => setParamsModalOpen(true)}
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: 10,
+              gap: 8,
               alignItems: "center",
-              padding: "10px 14px",
+              padding: "8px 14px",
               margin: "0 0 12px",
               background: ctxResolvido.pronto ? "#F0FDF4" : "#FFFBEB",
               border: `1px solid ${ctxResolvido.pronto ? "#BBF7D0" : "#FDE68A"}`,
               borderRadius: 10,
               fontSize: 12.5,
+              cursor: "pointer",
+              width: "100%",
+              textAlign: "left",
             }}
+            title="Ajustar parâmetros e contexto"
           >
-            <span style={{ fontWeight: 700, color: "var(--ink)" }}>
-              📚 Contexto desta aba:
-            </span>
-            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "var(--ink-2)" }}>Turma:</span>
-              <select
-                value={ctxAtual.turma ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setCtxAtual({ ...ctxAtual, turma: v || undefined });
-                }}
-                style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
-              >
-                <option value="">— Sem turma cadastrada —</option>
-                {turmasPerfil.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </label>
-            {!ctxAtual.turma && (
-              <>
-                <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ color: "var(--ink-2)" }}>Etapa:</span>
-                  <select
-                    value={ctxAtual.etapa ?? ""}
-                    onChange={(e) => {
-                      const v = (e.target.value || undefined) as Etapa | undefined;
-                      setCtxAtual({ ...ctxAtual, etapa: v, anoIdx: v ? 0 : undefined });
-                    }}
-                    style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
-                  >
-                    <option value="">— Selecione —</option>
-                    {(Object.keys(BNCC_BY_ETAPA) as Etapa[]).map((e) => (
-                      <option key={e} value={e}>{BNCC_BY_ETAPA[e].label}</option>
-                    ))}
-                  </select>
-                </label>
-                {ctxAtual.etapa && (
-                  <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ color: "var(--ink-2)" }}>Ano:</span>
-                    <select
-                      value={ctxAtual.anoIdx ?? 0}
-                      onChange={(e) => setCtxAtual({ ...ctxAtual, anoIdx: Number(e.target.value) })}
-                      style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
-                    >
-                      {BNCC_BY_ETAPA[ctxAtual.etapa].anos.map((a, i) => (
-                        <option key={a.ano} value={i}>{a.ano}</option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </>
-            )}
-            <span style={{ marginLeft: "auto", color: ctxResolvido.pronto ? "#047857" : "#B45309", fontWeight: 600 }}>
+            <span style={{ fontWeight: 700, color: "var(--ink)" }}>📚 Contexto:</span>
+            <span style={{ color: ctxResolvido.pronto ? "#047857" : "#B45309", fontWeight: 600 }}>
               {ctxResolvido.pronto
                 ? (ctxAtual.turma
-                    ? `Sofia gera para a turma ${ctxAtual.turma}.`
-                    : `Sofia gera para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}).`)
-                : "Selecione uma turma OU um ano de escolaridade para a Sofia gerar."}
+                    ? `Turma ${ctxAtual.turma}`
+                    : `${ctxResolvido.anoLabel} · ${ctxResolvido.etapaLabel}`)
+                : "Nenhuma turma/ano selecionado"}
             </span>
-          </div>
+            <span style={{ marginLeft: "auto", color: "var(--orange)", fontWeight: 700 }}>
+              ✏️ Ajustar parâmetros
+            </span>
+          </button>
 
           <div className="pl-workspace">
             {m === "m5" && (
