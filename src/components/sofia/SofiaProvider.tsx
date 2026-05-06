@@ -152,7 +152,10 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     try {
       const { conversations: list } = await listSofiaConversations();
       setConversations(list as SofiaConversationSummary[]);
-    } catch { /* ignore */ }
+    } catch (err) {
+      // Não trava a UI: apenas mantém a lista vazia e loga o erro.
+      console.warn("[Sofia] listSofiaConversations falhou:", err);
+    }
   }, [isAuthed]);
 
   // Refs para uso dentro do listener de auth (que roda apenas uma vez).
@@ -225,6 +228,9 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
           filter((m) => m.role === "user" || m.role === "assistant").
           map((m) => ({ role: m.role as "user" | "assistant", content: m.content, issues: m.issues as SofiaMessage["issues"] }))
       );
+    } catch (err) {
+      console.warn("[Sofia] getSofiaConversation falhou:", err);
+      setMessages((m) => [...m, { role: "assistant", content: "_Não foi possível carregar a conversa agora. Tente novamente em instantes._" }]);
     } finally {
       setLoading(false);
     }
