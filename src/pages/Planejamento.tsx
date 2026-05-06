@@ -776,9 +776,19 @@ function sofiaGenerateWeek(opts: {
   focos: string[];
   intensidade: "Leve" | "Equilibrada" | "Densa";
   diasISO: string[];
+  // Override: quantidade exata de atividades por dia.
+  quantidadePorDia?: number;
+  // Override: tempo total por dia (em min). Recalibra a duração de cada atividade.
+  minutosPorDia?: number;
 }): M1Plan {
   const tema = (opts.tema || "tema do mês").trim() || "tema do mês";
-  const perDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  const baseDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  let perDay = baseDay;
+  if (typeof opts.quantidadePorDia === "number" && opts.quantidadePorDia > 0) {
+    perDay = Math.max(1, Math.floor(opts.quantidadePorDia));
+  } else if (typeof opts.minutosPorDia === "number" && opts.minutosPorDia > 0) {
+    perDay = Math.max(1, Math.round(opts.minutosPorDia / 35));
+  }
   const focos = opts.focos.length > 0 ? opts.focos : ["Letramento", "Numeramento"];
   const pool: Array<Omit<M1Card, "id">> = [];
   focos.forEach((f) => {
@@ -791,14 +801,16 @@ function sofiaGenerateWeek(opts: {
   const plan: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
   let i = 0;
   for (let d = 0; d < 5; d++) {
+    const cardsDoDia: M1Card[] = [];
     for (let k = 0; k < perDay; k++) {
       const t = pool[i % pool.length];
       i++;
-      plan[dayKeys[d]].push({
+      cardsDoDia.push({
         ...t,
         id: `m1_${opts.diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}`,
       });
     }
+    plan[dayKeys[d]] = scaleToTarget(cardsDoDia, opts.minutosPorDia);
   }
   return plan;
 }
@@ -893,6 +905,10 @@ export function Planejamento() {
   // Limita quantos focos a Sofia usa numa geração (controla volume de sugestões).
   // "all" = usa todos os focos selecionados.
   const [m1MaxFocos, setM1MaxFocos] = usePersistentState<1 | 2 | 3 | "all">("plan_m1_max_focos", 2);
+  // Modo de dimensionamento da SEMANA (M1): por intensidade, quantidade fixa por dia, ou tempo total por dia.
+  const [m1Modo, setM1Modo] = usePersistentState<"intensidade" | "quantidade" | "tempo">("plan_m1_modo", "intensidade");
+  const [m1Qtd, setM1Qtd] = usePersistentState<number>("plan_m1_qtd", 2);
+  const [m1Min, setM1Min] = usePersistentState<number>("plan_m1_min", 60);
   // Modal "Preencher só este dia"
   const [m1DayModal, setM1DayModal] = useState<{ dia: DayKey; iso: string; n: string; d: number } | null>(null);
   const [mdEtapa, setMdEtapa] = useState<Etapa>("EF1");
@@ -1026,6 +1042,8 @@ export function Planejamento() {
         focos: focosLimitados,
         intensidade: pillsInt,
         diasISO: m1Week.days.map((d) => d.iso),
+        quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined,
+        minutosPorDia: m1Modo === "tempo" ? m1Min : undefined,
       });
       setM1Plan(plan);
       setM1Generating(false);
@@ -2360,6 +2378,61 @@ export function Planejamento() {
                 <p className="lead" style={{ margin: "6px 0 0" }}>
                   Quando ativado, novos modais de atividade já vêm com o modo interdisciplinar ligado — você ainda pode desligar caso a caso.
                 </p>
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Como dimensionar cada dia da semana?</label>
+                <div className="pl-pills">
+                  <button type="button" className={"pl-pill" + (m1Modo === "intensidade" ? " on" : "")} onClick={() => setM1Modo("intensidade")}>Por intensidade</button>
+                  <button type="button" className={"pl-pill" + (m1Modo === "quantidade" ? " on" : "")} onClick={() => setM1Modo("quantidade")}>Nº de atividades</button>
+                  <button type="button" className={"pl-pill" + (m1Modo === "tempo" ? " on" : "")} onClick={() => setM1Modo("tempo")}>Tempo disponível</button>
+                </div>
+
+                {m1Modo === "intensidade" && (
+                  <p className="lead" style={{ margin: "6px 0 0" }}>
+                    Sofia usa a intensidade selecionada acima ({pillsInt.toLowerCase()}) para decidir quantas atividades sugerir por dia.
+                  </p>
+                )}
+
+                {m1Modo === "quantidade" && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                    <input
+                      type="number"
+                      className="pl-input"
+                      style={{ width: 100 }}
+                      min={1}
+                      max={8}
+                      value={m1Qtd}
+                      onChange={(e) => setM1Qtd(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
+                    />
+                    <span className="lead" style={{ margin: 0 }}>atividade(s) por dia (×5 dias).</span>
+                  </div>
+                )}
+
+                {m1Modo === "tempo" && (
+                  <>
+                    <div className="pl-pills" style={{ marginTop: 8 }}>
+                      {[60, 90, 120, 180, 240, 300].map((t) => (
+                        <button key={t} type="button" className={"pl-pill" + (m1Min === t ? " on" : "")} onClick={() => setM1Min(t)}>
+                          {t >= 60 ? `${Math.floor(t / 60)}h${t % 60 ? ` ${t % 60}min` : ""}` : `${t} min`}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                      <input
+                        type="number"
+                        className="pl-input"
+                        style={{ width: 110 }}
+                        min={30}
+                        max={480}
+                        step={5}
+                        value={m1Min}
+                        onChange={(e) => setM1Min(Math.max(30, Math.min(480, Number(e.target.value) || 60)))}
+                      />
+                      <span className="lead" style={{ margin: 0 }}>minutos por dia — Sofia recalibra a duração de cada atividade.</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
