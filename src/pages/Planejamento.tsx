@@ -448,6 +448,35 @@ export function Planejamento() {
   const [m2EditId, setM2EditId] = useState<string | null>(null);
   const updateStep = (id: string, patch: Partial<M2Step>) =>
     setM2Steps((arr) => arr.map((s) => s.id === id ? { ...s, ...patch } : s));
+  // Reordenação por drag & drop. Após reordenar, o dia de cada aula
+  // passa a refletir a sua posição na sequência (1ª = SEG, 2ª = TER, …).
+  const m2DragId = useRef<string | null>(null);
+  const [m2DragOverId, setM2DragOverId] = useState<string | null>(null);
+  const reassignDays = (arr: M2Step[]): M2Step[] =>
+    arr.map((s, i) => ({ ...s, d: M2_DAY_OPTS[Math.min(i, M2_DAY_OPTS.length - 1)] }));
+  const onM2DragStart = (id: string) => { m2DragId.current = id; };
+  const onM2DragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (m2DragOverId !== id) setM2DragOverId(id);
+  };
+  const onM2DragEnd = () => { m2DragId.current = null; setM2DragOverId(null); };
+  const onM2Drop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const fromId = m2DragId.current;
+    setM2DragOverId(null);
+    m2DragId.current = null;
+    if (!fromId || fromId === targetId) return;
+    setM2Steps((arr) => {
+      const from = arr.findIndex((s) => s.id === fromId);
+      const to = arr.findIndex((s) => s.id === targetId);
+      if (from < 0 || to < 0) return arr;
+      const next = arr.slice();
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return reassignDays(next);
+    });
+    showToast("Sequência reordenada. Dias atualizados. ✓");
+  };
 
   const sendChat = (msg?: string) => {
     const t = (msg ?? chatTxt).trim(); if (!t) return;
