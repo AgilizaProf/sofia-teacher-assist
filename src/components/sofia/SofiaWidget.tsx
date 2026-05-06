@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useHydrated } from "@/hooks/useHydrated";
 import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2, AlertTriangle, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "@tanstack/react-router";
@@ -94,7 +95,10 @@ const SUGGESTIONS = [
   "Sugira atividades para hoje na minha turma",
 ];
 
-function greeting() {
+function greeting(hydrated: boolean) {
+  // Antes da hidratação, server e client precisam renderizar o MESMO texto,
+  // senão o React aborta a árvore e cai no errorBoundary ("Something went wrong").
+  if (!hydrated) return "Olá";
   const h = new Date().getHours();
   if (h < 12) return "Bom dia";
   if (h < 18) return "Boa tarde";
@@ -105,8 +109,7 @@ export function SofiaWidget() {
   const s = useSofia();
   const navigate = useNavigate();
   const bodyRef = useRef<HTMLDivElement | null>(null);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const hydrated = useHydrated();
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
@@ -122,7 +125,7 @@ export function SofiaWidget() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      {mounted && !s.open && s.proactive && (
+      {hydrated && !s.open && s.proactive && (
         <div className="sofia-bubble" role="status">
           <button className="sofia-bubble-close" aria-label="Fechar" onClick={s.dismissProactive}><X size={14} /></button>
           <div className="sofia-bubble-head"><Sparkles size={11} /> Sofia</div>
@@ -215,7 +218,7 @@ export function SofiaWidget() {
                   <div style={{ display: "grid", placeItems: "center", marginBottom: 10 }}>
                     <div className="sofia-avatar-token sofia-avatar-token--lg"><Sparkles size={28} /></div>
                   </div>
-                  <h3>{greeting()}, professora 👋</h3>
+                  <h3>{greeting(hydrated)}, professora 👋</h3>
                   <p>Vamos juntas? Posso preparar um <span className="sofia-em">parecer em ~4 min</span>, um <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação inclusiva — escolha por onde começar.</p>
                   <div className="sofia-suggest">
                     {SUGGESTIONS.map((q) => (

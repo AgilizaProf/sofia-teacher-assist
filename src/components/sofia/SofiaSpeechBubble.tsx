@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useHydrated } from "@/hooks/useHydrated";
 import { Sparkles, X } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
@@ -32,16 +33,16 @@ export function SofiaSpeechBubble() {
   const navigate = useNavigate();
   const fala = gerarFalaSofia(ctx);
   const [dismissed, setDismissed] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const hydrated = useHydrated();
 
   // Reseta ao trocar de rota / personalidade
   useEffect(() => {
     setDismissed(false);
   }, [ctx.route, fala.estado]);
 
-  // Evita mismatch de hidratação: o conteúdo depende do horário local.
-  if (!mounted) return null;
+  // Evita mismatch de hidratação: o conteúdo depende do horário local
+  // (gerarFalaSofia usa o relógio do cliente).
+  if (!hydrated) return null;
   if (sofia.open || fala.estado === "muda" || !fala.texto || dismissed) return null;
 
   const key = `${STORAGE_PREFIX}${ctx.route}_${fala.estado}`;
