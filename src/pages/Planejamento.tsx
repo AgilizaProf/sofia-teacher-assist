@@ -1696,32 +1696,48 @@ export function Planejamento() {
                     <button
                       key={e}
                       className={"pl-pill" + (mdEtapa === e ? " on" : "")}
-                      onClick={() => { setMdEtapa(e); setMdAnoIdx(0); setMdDiscIdx(0); setMdSel({}); }}
+                      onClick={() => {
+                        setMdEtapa(e);
+                        setMdAnoIdx(0);
+                        const first = BNCC_BY_ETAPA[e].anos[0]?.disciplinas[0]?.nome;
+                        setMdDiscOn(first ? { [first]: true } : {});
+                        setMdSel({});
+                      }}
                     >{BNCC_BY_ETAPA[e].label}</button>
                   ))}
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div className="pl-field" style={{ marginTop: 0 }}>
-                  <label>{mdEtapa === "EI" ? "Faixa etária" : "Ano"}</label>
-                  <select
-                    className="pl-input"
-                    value={mdAnoIdx}
-                    onChange={(e) => { setMdAnoIdx(Number(e.target.value)); setMdDiscIdx(0); setMdSel({}); }}
-                  >
-                    {BNCC_BY_ETAPA[mdEtapa].anos.map((a, i) => <option key={a.ano} value={i}>{a.ano}</option>)}
-                  </select>
-                </div>
-                <div className="pl-field" style={{ marginTop: 0 }}>
-                  <label>{mdEtapa === "EI" ? "Campo de experiência" : "Disciplina"}</label>
-                  <select
-                    className="pl-input"
-                    value={mdDiscIdx}
-                    onChange={(e) => { setMdDiscIdx(Number(e.target.value)); setMdSel({}); }}
-                  >
-                    {mdAno?.disciplinas.map((d, i) => <option key={d.nome} value={i}>{d.nome}</option>)}
-                  </select>
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>{mdEtapa === "EI" ? "Faixa etária" : "Ano"}</label>
+                <select
+                  className="pl-input"
+                  value={mdAnoIdx}
+                  onChange={(e) => {
+                    const i = Number(e.target.value);
+                    setMdAnoIdx(i);
+                    const first = BNCC_BY_ETAPA[mdEtapa].anos[i]?.disciplinas[0]?.nome;
+                    setMdDiscOn(first ? { [first]: true } : {});
+                    setMdSel({});
+                  }}
+                >
+                  {BNCC_BY_ETAPA[mdEtapa].anos.map((a, i) => <option key={a.ano} value={i}>{a.ano}</option>)}
+                </select>
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>{mdEtapa === "EI" ? "Campos de experiência" : "Disciplinas"} (selecione um ou mais)</label>
+                <div className="pl-pills">
+                  {mdAno?.disciplinas.map((d) => {
+                    const on = !!mdDiscOn[d.nome];
+                    return (
+                      <button
+                        key={d.nome}
+                        className={"pl-pill" + (on ? " on" : "")}
+                        onClick={() => setMdDiscOn((s) => ({ ...s, [d.nome]: !s[d.nome] }))}
+                      >{d.nome}</button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1738,27 +1754,58 @@ export function Planejamento() {
 
               <div className="pl-field" style={{ marginTop: 0 }}>
                 <label>Competências ({mdSelecionadas.length} selecionada{mdSelecionadas.length === 1 ? "" : "s"})</label>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {mdDisc?.competencias.map((c) => {
-                    const on = !!mdSel[c.code];
-                    return (
-                      <button
-                        key={c.code}
-                        type="button"
-                        onClick={() => setMdSel((s) => ({ ...s, [c.code]: !s[c.code] }))}
-                        className={"pl-trow" + (on ? " on" : "")}
-                        style={{ marginBottom: 0 }}
-                      >
-                        <span className="chk">{on && <Check size={11} />}</span>
-                        <span className="info">
-                          <span className="name" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{c.code} · {c.tag}</span>
-                          <span className="sub" style={{ display: "block" }}>{c.desc}</span>
-                        </span>
-                        <span className="gain">{c.minutos} min</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {mdDiscList.length === 0 ? (
+                  <p className="lead" style={{ margin: 0 }}>Selecione ao menos uma {mdEtapa === "EI" ? "área" : "disciplina"} acima.</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {mdDiscList.map((d) => (
+                      <div key={d.nome}>
+                        <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>{d.nome}</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          {d.competencias.map((c) => {
+                            const on = !!mdSel[c.code];
+                            return (
+                              <button
+                                key={c.code}
+                                type="button"
+                                onClick={() => setMdSel((s) => ({ ...s, [c.code]: !s[c.code] }))}
+                                className={"pl-trow" + (on ? " on" : "")}
+                                style={{ marginBottom: 0 }}
+                              >
+                                <span className="chk">{on && <Check size={11} />}</span>
+                                <span className="info">
+                                  <span className="name" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{c.code} · {c.tag}</span>
+                                  <span className="sub" style={{ display: "block" }}>{c.desc}</span>
+                                </span>
+                                <span className="gain">{c.minutos} min</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Atividades interdisciplinares</label>
+                <button
+                  type="button"
+                  onClick={() => mdPodeInter && setMdInter((v) => !v)}
+                  disabled={!mdPodeInter}
+                  className={"pl-pill" + (mdInter && mdPodeInter ? " on" : "")}
+                  style={{ alignSelf: "flex-start", opacity: mdPodeInter ? 1 : 0.5, cursor: mdPodeInter ? "pointer" : "not-allowed" }}
+                  title={mdPodeInter ? "Sofia junta competências de disciplinas diferentes em uma mesma atividade" : "Selecione competências de pelo menos 2 disciplinas/campos"}
+                >
+                  <Link2 size={12} style={{ marginRight: 4, verticalAlign: -2 }} />
+                  {mdInter && mdPodeInter ? "Interdisciplinar ativado" : "Ativar interdisciplinar"}
+                </button>
+                <p className="lead" style={{ margin: "6px 0 0" }}>
+                  {mdPodeInter
+                    ? "Sofia vai combinar competências de diferentes disciplinas/campos em cada atividade."
+                    : "Selecione competências de pelo menos 2 disciplinas para habilitar."}
+                </p>
               </div>
 
               <div className="pl-field" style={{ marginTop: 0 }}>
