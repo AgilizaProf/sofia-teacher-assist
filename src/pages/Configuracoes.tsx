@@ -3,6 +3,7 @@ import { Shield, ChevronDown, Download } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
+import { ProfileEditor } from "@/components/settings/ProfileEditor";
 
 const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: string }> = [
   { n: 1, emoji: "📋", name: "Dados reais", summary: "A Sofia só usa o que você cadastrou. Nunca inventa." },
@@ -46,6 +47,18 @@ export function Configuracoes() {
             <p style={{ color: "#6B7691", fontSize: 14, marginTop: 4 }}>Ajustes da sua conta e princípios da Sofia.</p>
           </div>
           <div style={{ padding: "16px 36px 32px", maxWidth: 920 }}>
+
+          <section aria-labelledby="perfil-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+              <h2 id="perfil-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
+                👤 Meu perfil
+              </h2>
+            </div>
+            <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 18px" }}>
+              Seus dados ficam privados. Só você consegue ver e editar.
+            </p>
+            <ProfileEditor />
+          </section>
 
           <section aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
