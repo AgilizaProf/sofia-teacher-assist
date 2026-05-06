@@ -610,23 +610,29 @@ function sofiaGenerateForDay(opts: {
       const textosNorm = grupo.map((g) =>
         `${g.tag} ${g.desc}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
       );
-      const compartilhados = Array.from(freq.entries())
-        .filter(([w, n]) => {
-          if (n < 2) return false;
+      // Para cada token compartilhado, lista os códigos das competências que o contêm.
+      const compartilhados: Array<{ token: string; codes: string[] }> = Array.from(freq.entries())
+        .filter(([, n]) => n >= 2)
+        .map(([w]) => {
           const re = new RegExp(`\\b${w}\\b`);
-          const matches = textosNorm.reduce((acc, t) => acc + (re.test(t) ? 1 : 0), 0);
-          return matches >= 2;
+          const codes = grupo
+            .filter((_, idx) => re.test(textosNorm[idx]))
+            .map((g) => g.code);
+          return { token: w, codes };
         })
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 4)
-        .map(([w]) => w);
+        .filter((x) => x.codes.length >= 2)
+        .sort((a, b) => b.codes.length - a.codes.length)
+        .slice(0, 4);
       const codes = grupo.map((g) => g.code).join(", ");
+      const detalhes = compartilhados
+        .map((x) => `${x.token} (${x.codes.join(", ")})`)
+        .join("; ");
       const motivo =
         disciplinas.length > 1
           ? `Conecta ${disciplinas.join(" + ")} (${codes})` +
-            (compartilhados.length > 0 ? ` em torno de: ${compartilhados.join(", ")}.` : ".")
+            (detalhes ? ` em torno de: ${detalhes}.` : ".")
           : `Articula ${codes}` +
-            (compartilhados.length > 0 ? ` por: ${compartilhados.join(", ")}.` : ".");
+            (detalhes ? ` por: ${detalhes}.` : ".");
       out.push({
         id: `m1di_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
         v: grupo[0].v,
