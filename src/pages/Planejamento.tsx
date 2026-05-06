@@ -2023,6 +2023,37 @@ export function Planejamento() {
             </div>
 
             <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+              {(() => {
+                const herdaTurma = !!ctxAtual.turma;
+                const herdaAno = !herdaTurma && ctxAtual.etapa !== undefined && ctxAtual.anoIdx !== undefined;
+                const herdadoIgual = mdEtapa === ctxResolvido.etapa && mdAnoIdx === ctxResolvido.anoIdx;
+                if (!herdaTurma && !herdaAno) return null;
+                const label = herdaTurma
+                  ? `herdado da turma ${ctxAtual.turma}`
+                  : `herdado do ano ${ctxResolvido.anoLabel}`;
+                return (
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignSelf: "flex-start",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      background: herdadoIgual ? "#F0FDF4" : "#FFFBEB",
+                      border: `1px solid ${herdadoIgual ? "#BBF7D0" : "#FDE68A"}`,
+                      color: herdadoIgual ? "#047857" : "#B45309",
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                    }}
+                    title={herdadoIgual
+                      ? "Etapa e ano vieram do contexto da aba."
+                      : "Você alterou em relação ao contexto da aba."}
+                  >
+                    📌 {label}{herdadoIgual ? "" : " · alterado"}
+                  </div>
+                );
+              })()}
               <div className="pl-field" style={{ marginTop: 0 }}>
                 <label>Etapa</label>
                 <div className="pl-pills">
