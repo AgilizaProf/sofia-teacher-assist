@@ -441,6 +441,7 @@ export function Agenda() {
 
   // Drag and drop: arrastar evento para outro dia
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const onDragStartEvent = (e: React.DragEvent, id: string) => {
     setDraggedId(id);
     e.dataTransfer.effectAllowed = "move";
