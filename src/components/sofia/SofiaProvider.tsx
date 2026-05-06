@@ -107,8 +107,16 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => mounted && setIsAuthed(!!data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+    supabase.auth.getSession()
+      .then(({ data }) => { if (mounted) setIsAuthed(!!data.session); })
+      .catch((err) => {
+        // Falha de rede/sessão não deve travar a página — apenas segue desautenticado.
+        console.warn("[Sofia] getSession falhou, seguindo desautenticado:", err);
+        if (mounted) setIsAuthed(false);
+      });
+    let sub: { subscription: { unsubscribe: () => void } } | null = null;
+    try {
+      const res = supabase.auth.onAuthStateChange((event, s) => {
       setIsAuthed(!!s);
       // Conecta a Sofia automaticamente assim que o usuário faz login.
       if (event === "SIGNED_IN" && s) {
@@ -131,8 +139,12 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
         setConversationId(null);
         setConversations([]);
       }
-    });
-    return () => { mounted = false; sub.subscription.unsubscribe(); };
+      });
+      sub = res.data;
+    } catch (err) {
+      console.warn("[Sofia] onAuthStateChange falhou ao registrar:", err);
+    }
+    return () => { mounted = false; try { sub?.subscription.unsubscribe(); } catch { /* ignore */ } };
   }, []);
 
   const refreshConversations = useCallback(async () => {
