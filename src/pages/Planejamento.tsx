@@ -331,7 +331,6 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
 
 const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [];
 
-const M1_DAYS: Array<{ k: DayKey; n: string; d: string; count: string; items: Array<{ v: Variant | ""; sub: string; tt: string; mn: string }> }> = [];
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
 const M6_AULAS: Array<{ id: string; t: string; s: string }> = [];
 
@@ -364,6 +363,35 @@ export function Planejamento() {
   ] as const;
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
+  // Semana mostrada na M1 (offset em semanas a partir da semana atual).
+  const [weekOffset, setWeekOffset] = useState<number>(0);
+  const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  const m1Week = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dow = today.getDay(); // 0=dom .. 6=sab
+    const diffToMon = dow === 0 ? -6 : 1 - dow;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diffToMon + weekOffset * 7);
+    const days: Array<{ k: DayKey; n: string; d: number; date: Date; iso: string }> = [];
+    const labels: Array<{ k: DayKey; n: string }> = [
+      { k: "seg", n: "SEG" }, { k: "ter", n: "TER" }, { k: "qua", n: "QUA" },
+      { k: "qui", n: "QUI" }, { k: "sex", n: "SEX" },
+    ];
+    for (let i = 0; i < 5; i++) {
+      const dt = new Date(monday);
+      dt.setDate(monday.getDate() + i);
+      days.push({ k: labels[i].k, n: labels[i].n, d: dt.getDate(), date: dt, iso: dt.toISOString().slice(0, 10) });
+    }
+    const first = days[0].date;
+    const last = days[4].date;
+    const sameMonth = first.getMonth() === last.getMonth();
+    const range = sameMonth
+      ? `${first.getDate()}–${last.getDate()} de ${MONTHS_PT[first.getMonth()]} de ${first.getFullYear()}`
+      : `${first.getDate()} de ${MONTHS_PT[first.getMonth()]} – ${last.getDate()} de ${MONTHS_PT[last.getMonth()]} de ${last.getFullYear()}`;
+    const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
+    return { days, range, label };
+  }, [weekOffset]);
   const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([]);
   const [chatTxt, setChatTxt] = useState("");
   const [layers, setLayers] = useState<Record<string, boolean>>({
@@ -583,38 +611,51 @@ export function Planejamento() {
                   <div className="pl-cal-card">
                     <div className="pl-cal-head">
                       <div className="nav">
-                        <button aria-label="Anterior"><ChevronLeft size={14} /></button>
-                        <div className="month">Semana atual</div>
-                        <button aria-label="Próxima"><ChevronRight size={14} /></button>
+                        <button aria-label="Semana anterior" onClick={() => setWeekOffset((w) => w - 1)}><ChevronLeft size={14} /></button>
+                        <div className="month" style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
+                          <span>{m1Week.label}</span>
+                          <small style={{ fontFamily: "'Inter',sans-serif", fontSize: 11.5, color: "var(--muted)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{m1Week.range}</small>
+                        </div>
+                        <button aria-label="Próxima semana" onClick={() => setWeekOffset((w) => w + 1)}><ChevronRight size={14} /></button>
+                        {weekOffset !== 0 && (
+                          <button
+                            onClick={() => setWeekOffset(0)}
+                            style={{ marginLeft: 6, padding: "4px 10px", borderRadius: 7, border: "1px solid var(--line)", background: "#fff", color: "var(--ink-2)", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}
+                          >Hoje</button>
+                        )}
                       </div>
                       <div className="stat">✨ <b>0 sugestões</b></div>
                     </div>
-                    {M1_DAYS.length === 0 ? (
-                      <EmptyState
-                        icon="✨"
-                        title="Sem sugestões geradas ainda."
-                        description="Configure tema e turma ao lado para a Sofia esboçar a semana inteira em segundos."
-                        ctaLabel="Gerar com a Sofia"
-                      />
-                    ) : (
-                      <div className="pl-cal-grid">
-                        {M1_DAYS.map((day) => (
-                          <button key={day.k} className={"pl-cal-day has-ai" + (calSel === day.k ? " selected" : "")} onClick={() => setCalSel(day.k)}>
+                    <div className="pl-cal-grid">
+                      {m1Week.days.map((day) => {
+                        const todayIso = new Date().toISOString().slice(0, 10);
+                        const isToday = day.iso === todayIso;
+                        return (
+                          <button
+                            key={day.k}
+                            className={"pl-cal-day" + (calSel === day.k ? " selected" : "")}
+                            onClick={() => setCalSel(day.k)}
+                            style={isToday ? { borderColor: "var(--orange)", boxShadow: "0 0 0 2px var(--orange-soft-2)" } : undefined}
+                          >
                             <div className="pl-cd-head">
-                              <div><div className="dn">{day.n}</div><div className="dd">{day.d}</div></div>
-                              <span className="pl-cd-pill">{day.count}</span>
-                            </div>
-                            {day.items.map((it, i) => (
-                              <div key={i} className={"pl-ai " + it.v}>
-                                <div className="sub">{it.sub}</div>
-                                <div className="tt">{it.tt}</div>
-                                <div className="mn">{it.mn}</div>
+                              <div>
+                                <div className="dn">{day.n}</div>
+                                <div className="dd">{day.d}</div>
                               </div>
-                            ))}
+                              {isToday && <span className="pl-cd-pill">hoje</span>}
+                            </div>
+                            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", fontSize: 11, textAlign: "center", padding: "10px 6px" }}>
+                              <span>Sem atividades.<br/>Clique para adicionar ou gerar com a Sofia.</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); navigate({ to: "/planejamento/atividade", search: { dia: day.k } }); }}
+                              style={{ marginTop: "auto", border: "1px dashed var(--line)", background: "#fff", color: "var(--orange)", fontWeight: 700, fontSize: 11.5, padding: "6px 8px", borderRadius: 8, cursor: "pointer" }}
+                            >+ Atividade</button>
                           </button>
-                        ))}
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <aside className="pl-side">
