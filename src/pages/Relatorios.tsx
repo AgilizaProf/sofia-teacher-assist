@@ -5,7 +5,7 @@ import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser } from "@/lib/mockData";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,

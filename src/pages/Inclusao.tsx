@@ -13,7 +13,7 @@ import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 const css = `

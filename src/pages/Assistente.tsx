@@ -12,7 +12,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { Header as AppHeader } from "@/components/Header";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 
