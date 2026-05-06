@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2 } from "lucide-react";
+import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2, AlertTriangle, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "@tanstack/react-router";
 import { useSofia } from "./SofiaProvider";
@@ -79,6 +79,12 @@ const css = `
 .sofia-composer-hint{font-size:10.5px;color:#8A98AE;}
 .sofia-send{background:var(--sofia-gradient);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-weight:700;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
 .sofia-send:disabled{opacity:.5;cursor:not-allowed;}
+.sofia-boot-error{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#FEF2F2;border-bottom:1px solid #FECACA;color:#991B1B;font-size:12px;}
+.sofia-boot-error svg{flex-shrink:0;}
+.sofia-boot-error-msg{flex:1;line-height:1.35;}
+.sofia-boot-retry{background:#fff;border:1px solid #FCA5A5;color:#991B1B;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.sofia-boot-retry:hover{background:#FEE2E2;}
+.sofia-boot-retry:disabled{opacity:.6;cursor:not-allowed;}
 `;
 
 const SUGGESTIONS = [
@@ -168,6 +174,23 @@ export function SofiaWidget() {
                 <Maximize2 size={12} /> Abrir conversa completa
               </button>
             </div>
+
+            {s.bootError && (
+              <div className="sofia-boot-error" role="alert">
+                <AlertTriangle size={14} />
+                <div className="sofia-boot-error-msg">
+                  <b>Erro ao carregar a Sofia.</b> {s.bootError}
+                </div>
+                <button
+                  className="sofia-boot-retry"
+                  onClick={() => s.retryBootstrap()}
+                  disabled={s.loading}
+                  title="Reexecutar o carregamento inicial"
+                >
+                  <RefreshCw size={12} /> Tentar novamente
+                </button>
+              </div>
+            )}
 
             <div className="sofia-context">
               <MessageSquare size={12} /> <b>Contexto:</b> {s.routeContext}
