@@ -682,7 +682,26 @@ export function Relatorios() {
                   {a.pcd && <span className="rel-badge pcd">PCD</span>}
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
+                {(() => {
+                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id);
+                  return (
+                    <div style={{ marginTop: 6 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
+                        <span>BNCC · {pctPreenchido}% avaliado</span>
+                        <span>Desempenho {pctDesempenho}%</span>
+                      </div>
+                      <div className="rel-progress"><i style={{ width: `${pctPreenchido}%` }} /></div>
+                    </div>
+                  );
+                })()}
                 <div className="rel-card-foot">
+                  <button
+                    className="rel-btn-card"
+                    onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma })}
+                    aria-label={`Avaliar competências BNCC de ${a.nome}`}
+                  >
+                    <ClipboardList size={13} /> Avaliar BNCC
+                  </button>
                   {a.status === "todo" && (
                     <button className="rel-btn-card accent" onClick={() => sofia.openSofia({ prompt: `Gere o parecer descritivo bimestral de ${a.nome} alinhado à BNCC.`, send: false })}>
                       <Sparkles size={13} /> Gerar com Sofia
