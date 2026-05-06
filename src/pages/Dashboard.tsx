@@ -305,7 +305,9 @@ export function Dashboard() {
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
-  const [students, setStudents] = usePersistentState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>("dash_students", []);
+  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  const [students, setStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const [studentDetail, setStudentDetail] = useState<{ index: number; student: DashStudent } | null>(null);
   const baseStudents = 0;
   const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
@@ -875,7 +877,7 @@ export function Dashboard() {
               if (names.length === 0) return;
               setStudents((arr) => [
                 ...arr,
-                ...names.map((name) => ({ name, classRef, birth: "", pcd, notes: "" })),
+                ...names.map((name) => ({ name, classRef, birth: "", pcd, notes: "", createdAt: new Date().toISOString() })),
               ]);
             } else {
               const name = String(fd.get("name") || "").trim();
@@ -886,6 +888,7 @@ export function Dashboard() {
                 birth: String(fd.get("birth") || ""),
                 pcd,
                 notes: String(fd.get("notes") || ""),
+                createdAt: new Date().toISOString(),
               }]);
             }
             (e.currentTarget as HTMLFormElement).reset();
