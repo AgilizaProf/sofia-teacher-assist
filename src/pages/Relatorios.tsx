@@ -213,6 +213,15 @@ const css = `
   .rel-hero h1{font-size:28px;}
   .rel-page{padding:18px;}
 }
+.kpi-tip-host{position:relative;}
+.kpi-tip{position:absolute;left:50%;top:calc(100% + 10px);transform:translate(-50%,4px);min-width:280px;max-width:320px;background:#0B1220;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;box-shadow:0 18px 40px -16px rgba(0,0,0,.6);font-size:12px;line-height:1.45;opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;z-index:40;}
+.kpi-tip-host:hover .kpi-tip,.kpi-tip-host:focus-visible .kpi-tip,.kpi-tip-host:focus-within .kpi-tip{opacity:1;transform:translate(-50%,0);}
+.kpi-tip-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:700;margin-bottom:8px;}
+.kpi-tip-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.kpi-tip-list li{display:flex;justify-content:space-between;gap:14px;color:rgba(255,255,255,.85);}
+.kpi-tip-list li b{color:#fff;font-weight:700;white-space:nowrap;}
+.kpi-tip-total{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.14);display:flex;justify-content:space-between;font-weight:700;color:#FFB47A;}
+.kpi-tip-arrow{position:absolute;top:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:12px;height:12px;background:#0B1220;border-left:1px solid rgba(255,255,255,.08);border-top:1px solid rgba(255,255,255,.08);border-radius:2px;}
 `;
 
 type Status = "todo" | "draft" | "review" | "done";
@@ -485,7 +494,12 @@ export function Relatorios() {
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
-            <div className={"rel-kpi rel-kpi-dark" + (bump ? " is-bump" : "")} style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent", overflow: "hidden", position: "relative" }}>
+            <div
+              className={"rel-kpi rel-kpi-dark kpi-tip-host" + (bump ? " is-bump" : "")}
+              tabIndex={0}
+              aria-label="Como calculamos o tempo economizado"
+              style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent", position: "relative", cursor: "help" }}
+            >
               <div className="rel-kpi-top">
                 <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
                 <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
@@ -497,6 +511,18 @@ export function Relatorios() {
                 {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
               </div>
               <span aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(circle at 80% 0%, rgba(255,106,44,.25), transparent 60%)", opacity: bump ? 1 : 0, transition: "opacity .6s ease" }} />
+              <div className="kpi-tip" role="tooltip">
+                <div className="kpi-tip-title">Como calculamos</div>
+                <ul className="kpi-tip-list">
+                  <li><span>Baseline semanal</span><b>{user.hoursSavedWeek}h {String(user.minutesSavedWeek).padStart(2,"0")}min</b></li>
+                  <li><span>Escolas cadastradas · {dashSchools.length} × 10min</span><b>{dashSchools.length * 10}min</b></li>
+                  <li><span>Turmas cadastradas · {dashClasses.length} × 20min</span><b>{dashClasses.length * 20}min</b></li>
+                  <li><span>Alunos cadastrados · {dashStudents.length} × 5min</span><b>{dashStudents.length * 5}min</b></li>
+                  <li><span>Documentos finalizados · {(user.documentsGenerated || finalizados)} × 30min</span><b>{(user.documentsGenerated || finalizados) * 30}min</b></li>
+                </ul>
+                <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
+                <span className="kpi-tip-arrow" aria-hidden />
+              </div>
             </div>
           </div>
 
