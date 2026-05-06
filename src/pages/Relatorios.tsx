@@ -300,6 +300,58 @@ function useAnimatedNumber(target: number, duration = 800) {
   return value;
 }
 
+// Status BNCC clicáveis
+type BnccStatus = "no" | "na" | "ed" | "co"; // não observada / não alcançada / em desenvolvimento / consolidada
+const BNCC_STATUS: Array<{ k: BnccStatus; label: string; short: string; color: string; bg: string }> = [
+  { k: "no", label: "Não observada", short: "NO", color: "#6B7280", bg: "#F3F4F6" },
+  { k: "na", label: "Não alcançada", short: "NA", color: "#DC2626", bg: "#FDECEC" },
+  { k: "ed", label: "Em desenvolvimento", short: "ED", color: "#E9A23B", bg: "#FCF1DC" },
+  { k: "co", label: "Consolidada", short: "CO", color: "#16A36B", bg: "#E7F6EE" },
+];
+
+const BNCC_AREAS: Array<{ area: string; comps: string[] }> = [
+  {
+    area: "Língua Portuguesa",
+    comps: [
+      "Leitura fluente e compreensão de textos diversos",
+      "Produção de textos orais e escritos com coesão",
+      "Análise linguística e ortografia em contextos",
+      "Oralidade: escuta atenta e expressão de ideias",
+    ],
+  },
+  {
+    area: "Matemática",
+    comps: [
+      "Números e operações no sistema decimal",
+      "Resolução de problemas com raciocínio lógico",
+      "Grandezas, medidas e geometria básica",
+      "Probabilidade, estatística e leitura de gráficos",
+    ],
+  },
+  {
+    area: "Ciências",
+    comps: [
+      "Observação, registro e levantamento de hipóteses",
+      "Vida, ambiente e sustentabilidade",
+    ],
+  },
+  {
+    area: "Humanas (História/Geografia)",
+    comps: [
+      "Tempo, espaço e identidade cultural",
+      "Cidadania, convivência e diversidade",
+    ],
+  },
+  {
+    area: "Competências socioemocionais",
+    comps: [
+      "Autonomia e responsabilidade nas tarefas",
+      "Cooperação e respeito nas relações",
+      "Autorregulação e persistência diante de desafios",
+    ],
+  },
+];
+
 export function Relatorios() {
   const user = useUser();
   const ctx = useSofiaContext();
