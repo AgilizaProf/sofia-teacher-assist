@@ -241,24 +241,31 @@ export function Assistente() {
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
   const [ctxOpen, setCtxOpen] = useState(false);
-  const [ctxForm, setCtxForm] = useState({
-    nome: ctx.user.nome,
-    plano: ctx.user.plano,
-    turma: ctx.entity.turma_atual?.nome ?? "",
-    ano: ctx.entity.turma_atual?.ano ?? "",
-    total_alunos: ctx.entity.turma_atual?.total_alunos ?? 0,
-    observacoes: "",
-  });
-  useEffect(() => {
-    setCtxForm((f) => ({
-      ...f,
-      nome: ctx.user.nome,
-      plano: ctx.user.plano,
-      turma: ctx.entity.turma_atual?.nome ?? f.turma,
-      ano: ctx.entity.turma_atual?.ano ?? f.ano,
-      total_alunos: ctx.entity.turma_atual?.total_alunos ?? f.total_alunos,
-    }));
-  }, [ctx.user.nome, ctx.user.plano, ctx.entity.turma_atual]);
+  const [observacoes, setObservacoes] = useState("");
+  const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
+
+  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
+  const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
+  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+
+  // Agrupa alunos por turma e identifica PCDs
+  const turmasInfo = useMemo(() => {
+    const map = new Map<string, { name: string; school?: string; grade?: string; shift?: string; alunos: DashStudent[]; pcds: DashStudent[] }>();
+    dashClasses.forEach((c) => {
+      map.set(c.name, { name: c.name, school: c.school, grade: c.grade, shift: c.shift, alunos: [], pcds: [] });
+    });
+    dashStudents.forEach((s) => {
+      const key = s.classRef || "Sem turma";
+      if (!map.has(key)) map.set(key, { name: key, alunos: [], pcds: [] });
+      const entry = map.get(key)!;
+      entry.alunos.push(s);
+      if (s.pcd && s.pcd.trim()) entry.pcds.push(s);
+    });
+    return Array.from(map.values()).filter((t) => t.alunos.length > 0 || dashClasses.some((c) => c.name === t.name));
+  }, [dashClasses, dashStudents]);
+
+  const turmaSelecionada = selectedTurma ? turmasInfo.find((t) => t.name === selectedTurma) : null;
   const messages = sofia.messages;
   const loading = sofia.loading;
   const scrollRef = useRef<HTMLDivElement | null>(null);
