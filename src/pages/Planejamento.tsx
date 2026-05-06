@@ -231,6 +231,12 @@ const css = `
 .pl-step.suggest .body{background:#FFF8F2;border-color:#FED7C4;border-style:dashed;}
 .pl-step.suggest .ttl{color:var(--orange-2);}
 .pl-step.suggest .body::before{border-color:var(--orange);background:var(--orange);}
+.pl-step{transition:transform .18s ease, opacity .18s ease, background .18s ease;}
+.pl-step.dragging{opacity:.45;transform:scale(.98);}
+.pl-step.drop-target > .body{box-shadow:0 0 0 2px var(--orange), 0 8px 22px rgba(255,122,69,.22);border-color:var(--orange);background:#FFF4EC;}
+.pl-step.drop-target > .day{color:var(--orange);}
+.pl-drop-ph{grid-column:1 / -1;height:0;margin:0;border-radius:8px;background:linear-gradient(90deg,var(--orange-soft),rgba(255,122,69,.35),var(--orange-soft));box-shadow:0 0 0 2px var(--orange-soft) inset;animation:plPhIn .18s ease forwards;}
+@keyframes plPhIn{from{height:0;opacity:0;margin:0;}to{height:10px;opacity:1;margin:6px 0;}}
 
 /* M3 — chat */
 .pl-chat{display:grid;grid-template-columns:1fr 320px;gap:18px;}
