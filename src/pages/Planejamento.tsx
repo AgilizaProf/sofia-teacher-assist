@@ -355,6 +355,94 @@ const M2_BNCC_OPTS = [
   "EF02HI03 — Comunidade e tempo",
 ] as const;
 
+// === M1 — Geração da semana pela Sofia ===
+type M1Card = { id: string; v: Variant; tag: string; title: string; bncc: string; minutos: number; foco: string };
+type M1Plan = Record<DayKey, M1Card[]>;
+const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
+
+const M1_TEMPLATES: Record<string, Array<Omit<M1Card, "id" | "minutos"> & { minutos: number }>> = {
+  Letramento: [
+    { v: "port", tag: "Leitura", title: "Roda de leitura: {tema}", bncc: "EF02LP01", minutos: 40, foco: "Letramento" },
+    { v: "port", tag: "Escrita", title: "Caça-palavras de {tema}", bncc: "EF02LP04", minutos: 30, foco: "Letramento" },
+    { v: "port", tag: "Oralidade", title: "Reconto coletivo sobre {tema}", bncc: "EF02LP02", minutos: 35, foco: "Letramento" },
+  ],
+  Numeramento: [
+    { v: "mat", tag: "Cálculo", title: "Problemas de adição com {tema}", bncc: "EF02MA05", minutos: 45, foco: "Numeramento" },
+    { v: "mat", tag: "Sistema decimal", title: "Agrupamentos de 10 em {tema}", bncc: "EF02MA06", minutos: 40, foco: "Numeramento" },
+    { v: "mat", tag: "Geometria", title: "Formas em {tema}", bncc: "EF02MA13", minutos: 30, foco: "Numeramento" },
+  ],
+  Socioemocional: [
+    { v: "esc", tag: "Roda", title: "Roda de conversa: como me sinto sobre {tema}", bncc: "EF02HI03", minutos: 30, foco: "Socioemocional" },
+    { v: "esc", tag: "Cooperação", title: "Jogo cooperativo inspirado em {tema}", bncc: "EF02EF02", minutos: 40, foco: "Socioemocional" },
+  ],
+  "Pensamento científico": [
+    { v: "ci", tag: "Investigação", title: "Investigando {tema} na natureza", bncc: "EF02CI04", minutos: 50, foco: "Pensamento científico" },
+    { v: "ci", tag: "Experimento", title: "Mini-experimento ligado a {tema}", bncc: "EF02CI05", minutos: 45, foco: "Pensamento científico" },
+  ],
+  "Cultura e identidade": [
+    { v: "esc", tag: "História", title: "Memórias da comunidade sobre {tema}", bncc: "EF02HI03", minutos: 40, foco: "Cultura e identidade" },
+  ],
+  "Leitura e produção textual": [
+    { v: "port", tag: "Produção", title: "Pequeno texto sobre {tema}", bncc: "EF02LP07", minutos: 45, foco: "Leitura e produção textual" },
+  ],
+  "Resolução de problemas": [
+    { v: "mat", tag: "Desafio", title: "Desafio matemático com {tema}", bncc: "EF02MA07", minutos: 40, foco: "Resolução de problemas" },
+  ],
+  "Educação ambiental": [
+    { v: "ci", tag: "Meio ambiente", title: "Cuidando do entorno: {tema}", bncc: "EF02CI06", minutos: 40, foco: "Educação ambiental" },
+  ],
+  "Cidadania e ética": [
+    { v: "esc", tag: "Convivência", title: "Combinados da turma sobre {tema}", bncc: "EF02HI04", minutos: 30, foco: "Cidadania e ética" },
+  ],
+  "Tecnologia e mídias": [
+    { v: "ci", tag: "Mídia", title: "Vídeo curto sobre {tema} + discussão", bncc: "EF02LP19", minutos: 35, foco: "Tecnologia e mídias" },
+  ],
+  "Arte e expressão": [
+    { v: "esc", tag: "Arte", title: "Releitura artística de {tema}", bncc: "EF02AR04", minutos: 45, foco: "Arte e expressão" },
+  ],
+  "Corpo e movimento": [
+    { v: "esc", tag: "Movimento", title: "Circuito motor temático: {tema}", bncc: "EF02EF01", minutos: 40, foco: "Corpo e movimento" },
+  ],
+  "Inclusão e diversidade": [
+    { v: "esc", tag: "Diversidade", title: "História inclusiva sobre {tema}", bncc: "EF02HI05", minutos: 35, foco: "Inclusão e diversidade" },
+  ],
+  "Projeto de vida": [
+    { v: "esc", tag: "Projeto", title: "O que aprendi com {tema} pra minha vida", bncc: "EF02HI06", minutos: 30, foco: "Projeto de vida" },
+  ],
+};
+
+function sofiaGenerateWeek(opts: {
+  tema: string;
+  focos: string[];
+  intensidade: "Leve" | "Equilibrada" | "Densa";
+  diasISO: string[];
+}): M1Plan {
+  const tema = (opts.tema || "tema do mês").trim() || "tema do mês";
+  const perDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  const focos = opts.focos.length > 0 ? opts.focos : ["Letramento", "Numeramento"];
+  const pool: Array<Omit<M1Card, "id">> = [];
+  focos.forEach((f) => {
+    (M1_TEMPLATES[f] || []).forEach((t) => {
+      pool.push({ ...t, title: t.title.replace("{tema}", tema) });
+    });
+  });
+  if (pool.length === 0) return EMPTY_M1_PLAN;
+  const dayKeys: DayKey[] = ["seg", "ter", "qua", "qui", "sex"];
+  const plan: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
+  let i = 0;
+  for (let d = 0; d < 5; d++) {
+    for (let k = 0; k < perDay; k++) {
+      const t = pool[i % pool.length];
+      i++;
+      plan[dayKeys[d]].push({
+        ...t,
+        id: `m1_${opts.diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}`,
+      });
+    }
+  }
+  return plan;
+}
+
 export function Planejamento() {
   const search = useSearch({ from: "/planejamento" }) as { m?: MKey };
   const navigate = useNavigate({ from: "/planejamento" });
