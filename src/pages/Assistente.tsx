@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil, Clock,
   FileText, Send, User, Sparkles, ArrowRight,
-  Calendar, CheckSquare, Star,
+  Calendar, CheckSquare, Star, X,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
@@ -231,6 +231,25 @@ export function Assistente() {
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
+  const [ctxOpen, setCtxOpen] = useState(false);
+  const [ctxForm, setCtxForm] = useState({
+    nome: ctx.user.nome,
+    plano: ctx.user.plano,
+    turma: ctx.entity.turma_atual?.nome ?? "",
+    ano: ctx.entity.turma_atual?.ano ?? "",
+    total_alunos: ctx.entity.turma_atual?.total_alunos ?? 0,
+    observacoes: "",
+  });
+  useEffect(() => {
+    setCtxForm((f) => ({
+      ...f,
+      nome: ctx.user.nome,
+      plano: ctx.user.plano,
+      turma: ctx.entity.turma_atual?.nome ?? f.turma,
+      ano: ctx.entity.turma_atual?.ano ?? f.ano,
+      total_alunos: ctx.entity.turma_atual?.total_alunos ?? f.total_alunos,
+    }));
+  }, [ctx.user.nome, ctx.user.plano, ctx.entity.turma_atual]);
   const messages = sofia.messages;
   const loading = sofia.loading;
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -289,7 +308,7 @@ export function Assistente() {
           <div className="ai-context">
             <span className="ctx-label">Contexto ativo:</span>
             <SofiaActiveChip />
-            <button className="edit-context" aria-label="Editar contexto"><Pencil size={13} /> Editar contexto</button>
+            <button className="edit-context" aria-label="Editar contexto" onClick={() => setCtxOpen(true)}><Pencil size={13} /> Editar contexto</button>
           </div>
 
           <div className="convo">
