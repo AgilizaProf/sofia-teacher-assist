@@ -423,15 +423,23 @@ export function Assistente() {
         </section>
 
         <aside className={"history" + (collapsed ? " collapsed" : "")}>
-          <div className="history-head">
+          <div
+            className="history-head"
+            onClick={() => setCollapsed((v) => !v)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCollapsed((v) => !v); } }}
+            style={{ cursor: "pointer" }}
+            aria-label={collapsed ? "Expandir histórico" : "Recolher histórico"}
+          >
             <div className="history-title">Histórico</div>
             <div className="history-actions">
-              <button className="btn-new" onClick={handleNew} aria-label="Nova conversa">
+              <button className="btn-new" onClick={(e) => { e.stopPropagation(); handleNew(); }} aria-label="Nova conversa">
                 <Plus size={12} /><span>Novo</span>
               </button>
               <button
                 className="btn-collapse"
-                onClick={() => setCollapsed((v) => !v)}
+                onClick={(e) => { e.stopPropagation(); setCollapsed((v) => !v); }}
                 aria-label={collapsed ? "Expandir histórico" : "Recolher histórico"}
               >
                 <ChevronsLeft size={14} />
