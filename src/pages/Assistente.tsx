@@ -200,7 +200,7 @@ export function Assistente() {
   const fala = gerarFalaSofia(ctx);
   const isPro = ctx.user.plano === "pro";
   const periodoLabel = ctx.temporal.periodo === "manha" ? "Bom dia" : ctx.temporal.periodo === "tarde" ? "Boa tarde" : "Boa noite";
-  const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long" }).toUpperCase();
+  const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long", timeZone: "America/Sao_Paulo" }).toUpperCase();
   const proxima = ctx.dataState.proxima_aula;
   const pcdComAula = isPro && proxima && proxima.minutos_ate <= 180 && ctx.entity.todos_alunos_pcd[0] ? ctx.entity.todos_alunos_pcd[0] : null;
   const [collapsed, setCollapsed] = useState(false);
@@ -226,16 +226,20 @@ export function Assistente() {
 
   // Agrupa conversas por data
   const { today, week, older } = useMemo(() => {
-    const now = Date.now();
+    const todayKey = brDateKey();
+    const dayMs = 24 * 3600 * 1000;
     const t: typeof sofia.conversations = [];
     const w: typeof sofia.conversations = [];
     const o: typeof sofia.conversations = [];
     const filter = search.trim().toLowerCase();
     for (const c of sofia.conversations) {
       if (filter && !(c.title || "").toLowerCase().includes(filter)) continue;
-      const age = now - new Date(c.updated_at).getTime();
-      if (age < 24 * 3600 * 1000) t.push(c);
-      else if (age < 7 * 24 * 3600 * 1000) w.push(c);
+      const updated = new Date(c.updated_at);
+      const updatedKey = brDateKey(updated);
+      const ageDays = diffDaysBR(updatedKey, todayKey);
+      if (updatedKey === todayKey) t.push(c);
+      else if (ageDays >= 0 && ageDays < 7) w.push(c);
+      else if (Date.now() - updated.getTime() < dayMs && updatedKey !== todayKey) w.push(c);
       else o.push(c);
     }
     return { today: t, week: w, older: o };
@@ -479,7 +483,7 @@ export function Assistente() {
                 <div className="h-icon"><FileText size={13} /></div>
                 <div style={{ minWidth: 0 }}>
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
-                  <div className="h-meta">{new Date(c.updated_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
+                  <div className="h-meta">{new Date(c.updated_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" })}</div>
                 </div>
               </button>
             ))}
@@ -494,7 +498,7 @@ export function Assistente() {
                 <div className="h-icon"><FileText size={13} /></div>
                 <div style={{ minWidth: 0 }}>
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
-                  <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}</div>
+                  <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" })}</div>
                 </div>
               </button>
             ))}
@@ -509,7 +513,7 @@ export function Assistente() {
                 <div className="h-icon"><FileText size={13} /></div>
                 <div style={{ minWidth: 0 }}>
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
-                  <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR")}</div>
+                  <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</div>
                 </div>
               </button>
             ))}
