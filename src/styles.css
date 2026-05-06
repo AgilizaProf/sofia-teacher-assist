@@ -3,6 +3,33 @@
 @import "tw-animate-css";
 @import "./styles/sofia-tokens.css";
 
+/* Modal close buttons: ensure clicks never get intercepted by inner icons. */
+.inc-modal-close,
+.ag-panel-close,
+.sb-close,
+.sofia-bubble-close,
+.sofia-head-btn,
+.pl-tip .x,
+button[aria-label="Fechar"],
+button[aria-label="Dispensar"] {
+  cursor: pointer;
+  border: 0;
+  padding: 4px;
+  background: transparent;
+  font: inherit;
+  pointer-events: auto;
+}
+.inc-modal-close > *,
+.ag-panel-close > *,
+.sb-close > *,
+.sofia-bubble-close > *,
+.sofia-head-btn > *,
+.pl-tip .x > *,
+button[aria-label="Fechar"] > *,
+button[aria-label="Dispensar"] > * {
+  pointer-events: none;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*
