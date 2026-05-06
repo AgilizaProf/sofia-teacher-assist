@@ -814,6 +814,12 @@ export function Planejamento() {
   const [calSel, setCalSel] = useState<DayKey>("seg");
   const [auditOpen, setAuditOpen] = useState<Record<string, boolean>>({});
   const [paramsModalOpen, setParamsModalOpen] = useState(false);
+  // Padrão global do modo interdisciplinar (ligado por padrão).
+  // Usado como default ao abrir novos modais de atividade.
+  const [interdisciplinarPadrao, setInterdisciplinarPadrao] = usePersistentState<boolean>(
+    "plan_interdisciplinar_padrao",
+    true,
+  );
 
   // ===== Contexto por aba: Turma cadastrada OU Ano escolar (sem turma) =====
   // Persistido por aba (m1..m6). Estrutura:
@@ -897,8 +903,8 @@ export function Planejamento() {
     (ano?.disciplinas ?? []).forEach((d) => { todas[d.nome] = true; });
     setMdDiscOn(todas);
     setMdSel({});
-    // Liga interdisciplinar por padrão (será ignorado pela geração se < 2 disciplinas com seleção).
-    setMdInter(true);
+    // Usa o padrão global (modal Ajustar parâmetros).
+    setMdInter(interdisciplinarPadrao);
     setMdTema(m1Tema);
   };
   const fecharDayModal = () => setM1DayModal(null);
@@ -2231,6 +2237,23 @@ export function Planejamento() {
                       ? `✓ Sofia vai gerar para a turma ${ctxAtual.turma}.`
                       : `✓ Sofia vai gerar para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}).`)
                   : "Selecione uma turma OU um ano de escolaridade."}
+              </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Modo Interdisciplinar</label>
+                <button
+                  type="button"
+                  className={"pl-pill" + (interdisciplinarPadrao ? " on" : "")}
+                  onClick={() => setInterdisciplinarPadrao((v) => !v)}
+                  style={{ alignSelf: "flex-start" }}
+                  title="Define o padrão usado em todos os modais de atividade"
+                >
+                  <Link2 size={12} style={{ marginRight: 4, verticalAlign: -2 }} />
+                  {interdisciplinarPadrao ? "Ativado (padrão)" : "Desativado"}
+                </button>
+                <p className="lead" style={{ margin: "6px 0 0" }}>
+                  Quando ativado, novos modais de atividade já vêm com o modo interdisciplinar ligado — você ainda pode desligar caso a caso.
+                </p>
               </div>
             </div>
 
