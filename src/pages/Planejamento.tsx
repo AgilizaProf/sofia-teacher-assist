@@ -2238,6 +2238,23 @@ export function Planejamento() {
                       : `✓ Sofia vai gerar para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}).`)
                   : "Selecione uma turma OU um ano de escolaridade."}
               </div>
+
+              <div className="pl-field" style={{ marginTop: 0 }}>
+                <label>Modo Interdisciplinar</label>
+                <button
+                  type="button"
+                  className={"pl-pill" + (interdisciplinarPadrao ? " on" : "")}
+                  onClick={() => setInterdisciplinarPadrao((v) => !v)}
+                  style={{ alignSelf: "flex-start" }}
+                  title="Define o padrão usado em todos os modais de atividade"
+                >
+                  <Link2 size={12} style={{ marginRight: 4, verticalAlign: -2 }} />
+                  {interdisciplinarPadrao ? "Ativado (padrão)" : "Desativado"}
+                </button>
+                <p className="lead" style={{ margin: "6px 0 0" }}>
+                  Quando ativado, novos modais de atividade já vêm com o modo interdisciplinar ligado — você ainda pode desligar caso a caso.
+                </p>
+              </div>
             </div>
 
             <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
