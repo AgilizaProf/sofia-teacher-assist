@@ -503,11 +503,25 @@ export function Dashboard() {
                     }
                     return entries.map(([turma, list]) => {
                       const classMeta = classes.find((c) => c.name === turma);
+                      const isCollapsed = !!collapsedClasses[turma];
                       return (
                         <div key={turma} className="class-group">
-                          <div className="class-head">
+                          <div
+                            className="class-head"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setCollapsedClasses((p) => ({ ...p, [turma]: !p[turma] }))}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCollapsedClasses((p) => ({ ...p, [turma]: !p[turma] })); } }}
+                            aria-expanded={!isCollapsed}
+                            style={{ cursor: "pointer", userSelect: "none" }}
+                          >
                             <div className="class-info">
-                              <div className="class-name">{turma}</div>
+                              <div className="class-name" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <span style={{ display: "inline-block", transition: "transform .15s", transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
+                                  <Svg width={12} height={12} c={<polyline points="6 9 12 15 18 9"/>} />
+                                </span>
+                                {turma}
+                              </div>
                               {classMeta && (
                                 <div className="class-meta">
                                   {classMeta.school && `${classMeta.school} · `}
@@ -517,7 +531,7 @@ export function Dashboard() {
                             </div>
                             <span className="class-count">{list.length} {list.length === 1 ? "aluno" : "alunos"}</span>
                           </div>
-                          {list.map((s, i) => {
+                          {!isCollapsed && list.map((s, i) => {
                             const initials = s.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
                             const isPcd = s.pcd && s.pcd !== "nao";
                             const cidInfo = isPcd ? CID_LABEL[s.pcd] : null;
