@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -65,6 +66,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanejamentoAtividadeRoute = PlanejamentoAtividadeRouteImport.update({
+  id: '/atividade',
+  path: '/atividade',
+  getParentRoute: () => PlanejamentoRoute,
+} as any)
 const ApiSofiaSuggestionsRoute = ApiSofiaSuggestionsRouteImport.update({
   id: '/api/sofia/suggestions',
   path: '/api/sofia/suggestions',
@@ -78,9 +84,10 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRoute
-  '/planejamento': typeof PlanejamentoRoute
+  '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRoutesByTo {
@@ -90,9 +97,10 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRoute
-  '/planejamento': typeof PlanejamentoRoute
+  '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRoutesById {
@@ -103,9 +111,10 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRoute
-  '/planejamento': typeof PlanejamentoRoute
+  '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/planejamento/atividade'
     | '/api/sofia/suggestions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/planejamento/atividade'
     | '/api/sofia/suggestions'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/planejamento/atividade'
     | '/api/sofia/suggestions'
   fileRoutesById: FileRoutesById
 }
@@ -154,7 +166,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   InclusaoRoute: typeof InclusaoRoute
-  PlanejamentoRoute: typeof PlanejamentoRoute
+  PlanejamentoRoute: typeof PlanejamentoRouteWithChildren
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiSofiaSuggestionsRoute: typeof ApiSofiaSuggestionsRoute
@@ -225,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/planejamento/atividade': {
+      id: '/planejamento/atividade'
+      path: '/atividade'
+      fullPath: '/planejamento/atividade'
+      preLoaderRoute: typeof PlanejamentoAtividadeRouteImport
+      parentRoute: typeof PlanejamentoRoute
+    }
     '/api/sofia/suggestions': {
       id: '/api/sofia/suggestions'
       path: '/api/sofia/suggestions'
@@ -235,6 +254,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface PlanejamentoRouteChildren {
+  PlanejamentoAtividadeRoute: typeof PlanejamentoAtividadeRoute
+}
+
+const PlanejamentoRouteChildren: PlanejamentoRouteChildren = {
+  PlanejamentoAtividadeRoute: PlanejamentoAtividadeRoute,
+}
+
+const PlanejamentoRouteWithChildren = PlanejamentoRoute._addFileChildren(
+  PlanejamentoRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
@@ -242,7 +273,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   InclusaoRoute: InclusaoRoute,
-  PlanejamentoRoute: PlanejamentoRoute,
+  PlanejamentoRoute: PlanejamentoRouteWithChildren,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiSofiaSuggestionsRoute: ApiSofiaSuggestionsRoute,
@@ -250,3 +281,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
