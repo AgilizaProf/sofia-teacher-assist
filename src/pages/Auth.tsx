@@ -228,6 +228,21 @@ export function AuthPage() {
           </div>
         </main>
       </div>
+      {forgotOpen && (
+        <div onClick={() => setForgotOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,27,54,.55)", display: "grid", placeItems: "center", zIndex: 50, padding: 20, fontFamily: "'Inter',-apple-system,sans-serif" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 420, background: "#fff", borderRadius: 18, padding: 28, boxShadow: "0 30px 60px -20px rgba(0,0,0,.35)" }}>
+            <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, color: "#1B2A4E", margin: 0 }}>Recuperar senha</h3>
+            <p style={{ fontSize: 14, color: "#5B6B82", marginTop: 6, marginBottom: 18 }}>Informe seu e-mail e enviaremos um link para você criar uma nova senha.</p>
+            <form onSubmit={sendReset} style={{ display: "grid", gap: 10 }}>
+              <input type="email" placeholder="seu@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required style={{ padding: "12px 14px", borderRadius: 10, border: "2px solid #DDE3EE", fontSize: 15, fontFamily: "inherit", outline: "none" }} />
+              <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+                <button type="button" onClick={() => setForgotOpen(false)} style={{ flex: 1, padding: "11px 14px", borderRadius: 10, border: "2px solid #DDE3EE", background: "#fff", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: "#1B2A4E" }}>Cancelar</button>
+                <button type="submit" disabled={forgotLoading} style={{ flex: 1, padding: "11px 14px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#FF7A45,#FF9466)", color: "#fff", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", opacity: forgotLoading ? .7 : 1 }}>{forgotLoading ? "Enviando..." : "Enviar link"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
