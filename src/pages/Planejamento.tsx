@@ -334,6 +334,21 @@ const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
 const M6_AULAS: Array<{ id: string; t: string; s: string }> = [];
 
+type M2Step = { id: string; d: string; tag: string; t: string; p: string; suggest?: boolean };
+const M2_DAY_OPTS = ["SEG", "TER", "QUA", "QUI", "SEX"] as const;
+const M2_TAG_OPTS = [
+  "Introdução", "Desenvolvimento", "Aprofundamento",
+  "Prática guiada", "Prática autônoma", "Avaliação", "Revisão", "Síntese",
+] as const;
+const M2_BNCC_OPTS = [
+  "EF02MA05 — Adição/subtração",
+  "EF02MA06 — Sistema decimal",
+  "EF02LP01 — Leitura fluente",
+  "EF02LP07 — Produção textual",
+  "EF02CI04 — Seres vivos",
+  "EF02HI03 — Comunidade e tempo",
+] as const;
+
 export function Planejamento() {
   const search = useSearch({ from: "/planejamento" }) as { m?: MKey };
   const navigate = useNavigate({ from: "/planejamento" });
