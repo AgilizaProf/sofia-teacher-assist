@@ -288,17 +288,6 @@ export function Relatorios() {
   const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
-  // Mesmo cálculo da página inicial (Tempo devolvido)
-  const _docs = ctx.user.documentos_gerados ?? finalizados;
-  const earnedMinutes =
-    dashSchools.length * 10 +
-    dashClasses.length * 20 +
-    dashStudents.length * 5 +
-    _docs * 30;
-  const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
-  const savedH = Math.floor(totalSavedMin / 60);
-  const savedM = totalSavedMin % 60;
-
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
   const finalizados = ctx.dataState.pareceres_finalizados;
@@ -308,6 +297,16 @@ export function Relatorios() {
   const aFazer = Math.max(0, alunosCount - finalizados - Math.min(3, restantes));
   const rascunhos = Math.min(3, restantes);
   const horasEcon = ctx.user.horas_economizadas_mes;
+
+  // Mesmo cálculo da página inicial (Tempo devolvido)
+  const earnedMinutes =
+    dashSchools.length * 10 +
+    dashClasses.length * 20 +
+    dashStudents.length * 5 +
+    (user.documentsGenerated || finalizados) * 30;
+  const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
+  const savedH = Math.floor(totalSavedMin / 60);
+  const savedM = totalSavedMin % 60;
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
   const isPro = ctx.user.plano === "pro" || dashStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
