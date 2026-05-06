@@ -445,6 +445,9 @@ export function Planejamento() {
   };
   const aceitarSugestao = (id: string) => setM2Steps((arr) => arr.map((s) => s.id === id ? { ...s, suggest: false } : s));
   const removerStep = (id: string) => setM2Steps((arr) => arr.filter((s) => s.id !== id));
+  const [m2EditId, setM2EditId] = useState<string | null>(null);
+  const updateStep = (id: string, patch: Partial<M2Step>) =>
+    setM2Steps((arr) => arr.map((s) => s.id === id ? { ...s, ...patch } : s));
 
   const sendChat = (msg?: string) => {
     const t = (msg ?? chatTxt).trim(); if (!t) return;
@@ -802,26 +805,76 @@ export function Planejamento() {
                       </div>
                     ) : (
                       <div className="pl-chain-list" style={{ marginTop: 12 }}>
-                        {m2Steps.map((s) => (
-                          <div key={s.id} className={"pl-step" + (s.suggest ? " suggest" : "")}>
-                            <div className="day">{s.d}</div>
-                            <div className="body">
-                              <div className="tag">{s.tag}{s.suggest ? " · sugestão Sofia" : ""}</div>
-                              <div className="ttl">{s.t}</div>
-                              <div className="meta">
-                                <span className="pill">{s.p}</span>
-                                {s.suggest && (
-                                  <button className="pl-btn primary" onClick={() => aceitarSugestao(s.id)} style={{ padding: "5px 10px", fontSize: 11.5 }}>
-                                    <Check size={12} /> Aceitar
-                                  </button>
+                        {m2Steps.map((s) => {
+                          const editing = m2EditId === s.id;
+                          return (
+                            <div key={s.id} className={"pl-step" + (s.suggest ? " suggest" : "")}>
+                              <div className="day">{s.d}</div>
+                              <div className="body">
+                                {editing ? (
+                                  <div style={{ display: "grid", gap: 8 }}>
+                                    <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 8 }}>
+                                      <select
+                                        value={s.d}
+                                        onChange={(e) => updateStep(s.id, { d: e.target.value })}
+                                        style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff", fontSize: 12, fontFamily: "'JetBrains Mono',monospace", fontWeight: 700 }}
+                                      >
+                                        {M2_DAY_OPTS.map((d) => <option key={d} value={d}>{d}</option>)}
+                                      </select>
+                                      <select
+                                        value={s.tag}
+                                        onChange={(e) => updateStep(s.id, { tag: e.target.value })}
+                                        style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff", fontSize: 12 }}
+                                      >
+                                        {M2_TAG_OPTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                                      </select>
+                                    </div>
+                                    <input
+                                      value={s.t}
+                                      onChange={(e) => updateStep(s.id, { t: e.target.value })}
+                                      placeholder="Título da aula"
+                                      style={{ padding: "8px 10px", border: "1px solid var(--line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" }}
+                                    />
+                                    <select
+                                      value={s.p}
+                                      onChange={(e) => updateStep(s.id, { p: e.target.value })}
+                                      style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff", fontSize: 12 }}
+                                    >
+                                      {M2_BNCC_OPTS.map((b) => <option key={b} value={b}>{b}</option>)}
+                                      {!M2_BNCC_OPTS.includes(s.p as typeof M2_BNCC_OPTS[number]) && (
+                                        <option value={s.p}>{s.p}</option>
+                                      )}
+                                    </select>
+                                    <div style={{ display: "flex", gap: 6 }}>
+                                      <button className="pl-btn primary" onClick={() => { setM2EditId(null); showToast("Aula atualizada. ✓"); }} style={{ padding: "5px 10px", fontSize: 11.5 }}>
+                                        <Check size={12} /> Concluir
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="tag">{s.tag}{s.suggest ? " · sugestão Sofia" : ""}</div>
+                                    <div className="ttl">{s.t}</div>
+                                    <div className="meta">
+                                      <span className="pill">{s.p}</span>
+                                      {s.suggest && (
+                                        <button className="pl-btn primary" onClick={() => aceitarSugestao(s.id)} style={{ padding: "5px 10px", fontSize: 11.5 }}>
+                                          <Check size={12} /> Aceitar
+                                        </button>
+                                      )}
+                                      <button className="pl-btn" onClick={() => setM2EditId(s.id)} style={{ padding: "5px 10px", fontSize: 11.5 }}>
+                                        ✏️ Editar
+                                      </button>
+                                      <button className="pl-btn ghost" onClick={() => removerStep(s.id)} style={{ padding: "5px 10px", fontSize: 11.5 }}>
+                                        <X size={12} /> Remover
+                                      </button>
+                                    </div>
+                                  </>
                                 )}
-                                <button className="pl-btn ghost" onClick={() => removerStep(s.id)} style={{ padding: "5px 10px", fontSize: 11.5 }}>
-                                  <X size={12} /> Remover
-                                </button>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
