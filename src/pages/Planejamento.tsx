@@ -1042,6 +1042,8 @@ export function Planejamento() {
         focos: focosLimitados,
         intensidade: pillsInt,
         diasISO: m1Week.days.map((d) => d.iso),
+        quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined,
+        minutosPorDia: m1Modo === "tempo" ? m1Min : undefined,
       });
       setM1Plan(plan);
       setM1Generating(false);
