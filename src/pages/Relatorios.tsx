@@ -366,6 +366,38 @@ export function Relatorios() {
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState("Todos");
 
+  // Rubrica BNCC por aluno (persistido)
+  const [bnccByAluno, setBnccByAluno] = usePersistentState<Record<string, Record<string, BnccStatus>>>("rel_bncc", {});
+  const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string } | null>(null);
+
+  const competKeys = useMemo(() => {
+    const out: string[] = [];
+    BNCC_AREAS.forEach((a, i) => a.comps.forEach((_c, j) => out.push(`${i}.${j}`)));
+    return out;
+  }, []);
+  const getAlunoRubric = (id: string) => bnccByAluno[id] || {};
+  const setAlunoStatus = (id: string, key: string, status: BnccStatus) =>
+    setBnccByAluno((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: status } }));
+  const cycleStatus = (cur: BnccStatus | undefined): BnccStatus => {
+    const order: BnccStatus[] = ["no", "na", "ed", "co"];
+    return order[(order.indexOf(cur || "no") + 1) % order.length];
+  };
+  const computeProgress = (id: string) => {
+    const rub = getAlunoRubric(id);
+    let preenchido = 0; let pesoTotal = 0; let pontos = 0;
+    competKeys.forEach((k) => {
+      const s = rub[k];
+      pesoTotal += 3; // máximo CO=3
+      if (s && s !== "no") preenchido += 1;
+      if (s === "na") pontos += 0;
+      else if (s === "ed") pontos += 2;
+      else if (s === "co") pontos += 3;
+    });
+    const pctPreenchido = Math.round((preenchido / competKeys.length) * 100);
+    const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
+    return { pctPreenchido, pctDesempenho };
+  };
+
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
   type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
