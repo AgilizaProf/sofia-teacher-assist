@@ -14,6 +14,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 const css = `
 .ap-root{
