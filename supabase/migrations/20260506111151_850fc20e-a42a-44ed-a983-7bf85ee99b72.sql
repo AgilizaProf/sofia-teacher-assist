@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.cleanup_old_sofia_conversations() FROM PUBLIC, anon, authenticated;
