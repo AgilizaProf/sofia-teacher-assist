@@ -517,6 +517,25 @@ export function Planejamento() {
     const bnccs = new Set(all.map((c) => c.bncc));
     return { atividades: all.length, habilidades: bnccs.size };
   }, [m1Plan]);
+  // Prévia da próxima geração: depende do nº de focos selecionados, do limite
+  // atual de focos por geração e da intensidade.
+  const m1Preview = useMemo(() => {
+    const focosUsados = m1MaxFocos === "all"
+      ? focosSelecionados
+      : focosSelecionados.slice(0, m1MaxFocos);
+    const perDay = pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
+    const poolSize = focosUsados.reduce(
+      (n, f) => n + (M1_TEMPLATES[f]?.length ?? 0),
+      0,
+    );
+    return {
+      focosUsados,
+      focosCount: focosUsados.length,
+      perDay,
+      total: focosUsados.length === 0 ? 0 : perDay * 5,
+      poolSize,
+    };
+  }, [focosSelecionados, m1MaxFocos, pillsInt]);
   const gerarComSofia = () => {
     setM1Generating(true);
     setTimeout(() => {
@@ -964,6 +983,35 @@ export function Planejamento() {
                             ? `Sofia vai usar os ${focosSelecionados.length} foco(s) marcados.`
                             : `Sofia vai pegar os primeiros ${Math.min(m1MaxFocos, focosSelecionados.length || m1MaxFocos)} foco(s) marcados — menos sugestões por dia, mais profundidade.`}
                         </p>
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          padding: "10px 12px",
+                          borderRadius: 10,
+                          border: "1px solid #FED7C4",
+                          background: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                        aria-live="polite"
+                      >
+                        <Sparkles size={16} color="var(--orange)" />
+                        <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.4 }}>
+                          {m1Preview.focosCount === 0 ? (
+                            <>Selecione ao menos <b>1 foco</b> para a Sofia gerar.</>
+                          ) : (
+                            <>
+                              Prévia: <b>{m1Preview.perDay}</b>{" "}
+                              {m1Preview.perDay === 1 ? "atividade" : "atividades"} por dia ·{" "}
+                              <b>{m1Preview.total}</b> na semana
+                              <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>
+                                {m1Preview.focosCount} foco{m1Preview.focosCount === 1 ? "" : "s"} ativo{m1Preview.focosCount === 1 ? "" : "s"} · intensidade {pillsInt.toLowerCase()}
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                       <button
                         className="pl-btn primary pl-replica-cta"
