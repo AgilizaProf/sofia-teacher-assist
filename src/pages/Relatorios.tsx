@@ -927,8 +927,13 @@ export function Relatorios() {
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
                   {BNCC_STATUS.map((s) => (
-                    <span key={s.k} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: s.color, background: s.bg, padding: "3px 8px", borderRadius: 99 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: s.color }} /> {s.label}
+                    <span
+                      key={s.k}
+                      title={s.label}
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: s.color, background: s.bg, padding: "3px 8px 3px 3px", borderRadius: 99, border: `1px solid ${s.color}22` }}
+                    >
+                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 22, height: 18, padding: "0 6px", borderRadius: 99, background: s.color, color: "#fff", fontSize: 10, fontWeight: 800, letterSpacing: ".04em" }}>{s.short}</span>
+                      {s.label}
                     </span>
                   ))}
                 </div>
