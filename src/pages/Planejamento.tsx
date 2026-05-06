@@ -475,6 +475,9 @@ export function Planejamento() {
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1_PLAN);
   const [m1Generating, setM1Generating] = useState(false);
+  // Limita quantos focos a Sofia usa numa geração (controla volume de sugestões).
+  // "all" = usa todos os focos selecionados.
+  const [m1MaxFocos, setM1MaxFocos] = usePersistentState<1 | 2 | 3 | "all">("plan_m1_max_focos", 2);
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
   const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
