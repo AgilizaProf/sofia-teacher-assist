@@ -602,6 +602,21 @@ function sofiaGenerateForDay(opts: {
       const disciplinas = Array.from(new Set(grupo.map((c) => c.disciplina)));
       const tags = Array.from(new Set(grupo.map((c) => c.tag)));
       const minutos = Math.round(grupo.reduce((s, c) => s + c.minutos, 0) / grupo.length) + 5;
+      // Justificativa: tokens compartilhados por ≥2 competências do grupo.
+      const freq = new Map<string, number>();
+      for (const g of grupo) g._tok.forEach((w) => freq.set(w, (freq.get(w) ?? 0) + 1));
+      const compartilhados = Array.from(freq.entries())
+        .filter(([, n]) => n >= 2)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([w]) => w);
+      const codes = grupo.map((g) => g.code).join(", ");
+      const motivo =
+        disciplinas.length > 1
+          ? `Conecta ${disciplinas.join(" + ")} (${codes})` +
+            (compartilhados.length > 0 ? ` em torno de: ${compartilhados.join(", ")}.` : ".")
+          : `Articula ${codes}` +
+            (compartilhados.length > 0 ? ` por: ${compartilhados.join(", ")}.` : ".");
       out.push({
         id: `m1di_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
         v: grupo[0].v,
@@ -613,6 +628,7 @@ function sofiaGenerateForDay(opts: {
         bncc: grupo.map((c) => c.code).join(" + "),
         minutos,
         foco: disciplinas.join(" + "),
+        motivo,
       });
     }
   } else {
