@@ -1171,39 +1171,6 @@ export function Planejamento() {
             ))}
           </div>
 
-          {/* Resumo do contexto da aba (clicável para abrir o modal Ajustar parâmetros) */}
-          <button
-            type="button"
-            onClick={() => setParamsModalOpen(true)}
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 8,
-              alignItems: "center",
-              padding: "8px 14px",
-              margin: "0 0 12px",
-              background: ctxResolvido.pronto ? "#F0FDF4" : "#FFFBEB",
-              border: `1px solid ${ctxResolvido.pronto ? "#BBF7D0" : "#FDE68A"}`,
-              borderRadius: 10,
-              fontSize: 12.5,
-              cursor: "pointer",
-              width: "100%",
-              textAlign: "left",
-            }}
-            title="Ajustar parâmetros e contexto"
-          >
-            <span style={{ fontWeight: 700, color: "var(--ink)" }}>📚 Contexto:</span>
-            <span style={{ color: ctxResolvido.pronto ? "#047857" : "#B45309", fontWeight: 600 }}>
-              {ctxResolvido.pronto
-                ? (ctxAtual.turma
-                    ? `Turma ${ctxAtual.turma}`
-                    : `${ctxResolvido.anoLabel} · ${ctxResolvido.etapaLabel}`)
-                : "Nenhuma turma/ano selecionado"}
-            </span>
-            <span style={{ marginLeft: "auto", color: "var(--orange)", fontWeight: 700 }}>
-              ✏️ Ajustar parâmetros
-            </span>
-          </button>
 
           <div className="pl-workspace">
             {m === "m5" && (
