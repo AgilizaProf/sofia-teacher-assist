@@ -10,7 +10,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
-  MessageSquare, Download, Copy,
+  MessageSquare, Download, Copy, X, ClipboardList,
 } from "lucide-react";
 
 const css = `
