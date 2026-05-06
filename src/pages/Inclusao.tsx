@@ -591,6 +591,48 @@ export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
   const [students, setStudents] = usePersistentState<Student[]>("inc_students", INITIAL_STUDENTS);
+  // Sincroniza alunos PCD cadastrados na página inicial (Dashboard) com a aba de Inclusão.
+  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  useEffect(() => {
+    const pcdList = dashStudents.filter((s) => s.pcd && s.pcd !== "nao");
+    if (pcdList.length === 0) return;
+    const calcAge = (birth: string) => {
+      if (!birth) return "";
+      try {
+        const d = new Date(birth + "T00:00:00");
+        const diff = Date.now() - d.getTime();
+        const age = Math.floor(diff / (365.25 * 24 * 3600 * 1000));
+        return age > 0 ? `${age} anos` : "";
+      } catch { return ""; }
+    };
+    setStudents((prev) => {
+      const existingIds = new Set(prev.map((s) => s.id));
+      const additions: Student[] = [];
+      pcdList.forEach((s) => {
+        const id = `dash-${(s.createdAt || s.name).replace(/\s+/g, "-")}-${s.name.toLowerCase().replace(/\s+/g, "-")}`;
+        if (existingIds.has(id)) return;
+        const cidInfo = CID_OPTIONS.find((o) => o.value === s.pcd);
+        const initials = s.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+        additions.push({
+          id,
+          name: s.name,
+          initials,
+          age: calcAge(s.birth),
+          turma: s.classRef || "Sem turma",
+          diag: cidInfo?.label || "PCD — Não informado",
+          cid: cidInfo?.cid && cidInfo.cid !== "—" ? cidInfo.cid : "",
+          aee: "",
+          anamnese: "Pendente",
+          registros: "0 registros",
+          trend: "Recém-cadastrado",
+          trendTone: "muted",
+        });
+      });
+      if (additions.length === 0) return prev;
+      return [...additions, ...prev];
+    });
+  }, [dashStudents, setStudents]);
   const [view, setView] = useState<ViewKey>(students.length === 0 ? "list" : (search.view || "list"));
   const [selectedId, setSelectedId] = useState<string | null>(search.aluno || null);
   const [nsName, setNsName] = useState("");
