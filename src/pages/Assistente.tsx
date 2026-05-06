@@ -607,50 +607,45 @@ export function Assistente() {
             </div>
             <div className="ctx-modal-body">
               <div className="ctx-section">
-                <div className="ctx-section-label">Professor(a)</div>
-                <div className="ctx-grid">
-                  <div className="ctx-field">
-                    <label>Nome</label>
-                    <input value={ctxForm.nome} onChange={(e) => setCtxForm({ ...ctxForm, nome: e.target.value })} />
+                <div className="ctx-section-label">Suas turmas (clique para selecionar)</div>
+                {turmasInfo.length === 0 ? (
+                  <div className="ctx-empty-turma">
+                    Você ainda não cadastrou turmas. Cadastre suas turmas e alunos no painel inicial para a Sofia identificar automaticamente a quantidade de alunos e os PCDs.
                   </div>
-                  <div className="ctx-field">
-                    <label>Plano</label>
-                    <select value={ctxForm.plano} onChange={(e) => setCtxForm({ ...ctxForm, plano: e.target.value as "free" | "pro" })}>
-                      <option value="free">Free</option>
-                      <option value="pro">Pro</option>
-                    </select>
+                ) : (
+                  <div className="ctx-turma-list">
+                    {turmasInfo.map((t) => {
+                      const isSel = selectedTurma === t.name;
+                      return (
+                        <button
+                          key={t.name}
+                          type="button"
+                          className={"ctx-turma-card" + (isSel ? " selected" : "")}
+                          onClick={() => setSelectedTurma(isSel ? null : t.name)}
+                        >
+                          <div style={{ minWidth: 0 }}>
+                            <div className="tname">{t.name}</div>
+                            <div className="tmeta">
+                              {[t.school, t.grade, t.shift].filter(Boolean).join(" · ") || "Turma cadastrada"}
+                            </div>
+                          </div>
+                          <div className="tcounts">
+                            <span><b>{t.alunos.length}</b> alunos</span>
+                            <span><b>{t.pcds.length}</b> PCD</span>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                </div>
+                )}
               </div>
 
-              <div className="ctx-section">
-                <div className="ctx-section-label">Turma atual</div>
-                <div className="ctx-grid">
-                  <div className="ctx-field">
-                    <label>Nome da turma</label>
-                    <input value={ctxForm.turma} onChange={(e) => setCtxForm({ ...ctxForm, turma: e.target.value })} placeholder="Ex.: Turma A" />
-                  </div>
-                  <div className="ctx-field">
-                    <label>Ano escolar</label>
-                    <input value={ctxForm.ano} onChange={(e) => setCtxForm({ ...ctxForm, ano: e.target.value })} placeholder="Ex.: 2º ano" />
-                  </div>
-                  <div className="ctx-field">
-                    <label>Total de alunos</label>
-                    <input type="number" min={0} value={ctxForm.total_alunos} onChange={(e) => setCtxForm({ ...ctxForm, total_alunos: Number(e.target.value) || 0 })} />
-                  </div>
-                  <div className="ctx-field">
-                    <label>Pareceres no bimestre</label>
-                    <input value={`${ctx.dataState.pareceres_finalizados}/${ctx.dataState.pareceres_total_bimestre}`} disabled />
-                  </div>
-                </div>
-              </div>
-
-              {ctx.entity.todos_alunos_pcd.length > 0 && (
+              {turmaSelecionada && turmaSelecionada.pcds.length > 0 && (
                 <div className="ctx-section">
-                  <div className="ctx-section-label">Alunos PCD ({ctx.entity.todos_alunos_pcd.length})</div>
+                  <div className="ctx-section-label">Alunos PCD em {turmaSelecionada.name} ({turmaSelecionada.pcds.length})</div>
                   <div className="ctx-pcd-list">
-                    {ctx.entity.todos_alunos_pcd.map((a, i) => (
-                      <span key={i} className="ctx-pcd-tag"><b>{a.nome}</b> · {a.condicao}</span>
+                    {turmaSelecionada.pcds.map((a, i) => (
+                      <span key={i} className="ctx-pcd-tag"><b>{a.name}</b> · {a.pcd}</span>
                     ))}
                   </div>
                 </div>
@@ -662,8 +657,8 @@ export function Assistente() {
                   <textarea
                     rows={3}
                     placeholder="Ex.: Foco em alfabetização, evitar atividades com som alto, etc."
-                    value={ctxForm.observacoes}
-                    onChange={(e) => setCtxForm({ ...ctxForm, observacoes: e.target.value })}
+                    value={observacoes}
+                    onChange={(e) => setObservacoes(e.target.value)}
                   />
                 </div>
               </div>
@@ -673,8 +668,16 @@ export function Assistente() {
               <button
                 className="ctx-btn-save"
                 onClick={() => {
-                  if (ctxForm.observacoes.trim()) {
-                    sofia.openSofia({ prompt: `Atualize meu contexto: ${ctxForm.observacoes.trim()}`, send: false });
+                  const partes: string[] = [];
+                  if (turmaSelecionada) {
+                    const pcdTxt = turmaSelecionada.pcds.length
+                      ? ` Alunos PCD: ${turmaSelecionada.pcds.map((p) => `${p.name} (${p.pcd})`).join(", ")}.`
+                      : " Sem alunos PCD registrados.";
+                    partes.push(`Foque na turma ${turmaSelecionada.name} com ${turmaSelecionada.alunos.length} alunos.${pcdTxt}`);
+                  }
+                  if (observacoes.trim()) partes.push(observacoes.trim());
+                  if (partes.length) {
+                    sofia.openSofia({ prompt: `Atualize meu contexto: ${partes.join(" ")}`, send: false });
                   }
                   setCtxOpen(false);
                 }}
