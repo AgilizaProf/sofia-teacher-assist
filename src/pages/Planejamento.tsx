@@ -524,16 +524,21 @@ export function Planejamento() {
       ? focosSelecionados
       : focosSelecionados.slice(0, m1MaxFocos);
     const perDay = pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
-    const poolSize = focosUsados.reduce(
-      (n, f) => n + (M1_TEMPLATES[f]?.length ?? 0),
-      0,
-    );
+    const tempos = focosUsados.flatMap((f) => (M1_TEMPLATES[f] ?? []).map((t) => t.minutos));
+    const poolSize = tempos.length;
+    const mediaMin = poolSize > 0 ? Math.round(tempos.reduce((a, b) => a + b, 0) / poolSize) : 0;
+    const totalAtiv = focosUsados.length === 0 ? 0 : perDay * 5;
+    const totalMin = mediaMin * totalAtiv;
+    const minPorDia = mediaMin * perDay;
     return {
       focosUsados,
       focosCount: focosUsados.length,
       perDay,
-      total: focosUsados.length === 0 ? 0 : perDay * 5,
+      total: totalAtiv,
       poolSize,
+      mediaMin,
+      minPorDia,
+      totalMin,
     };
   }, [focosSelecionados, m1MaxFocos, pillsInt]);
   const gerarComSofia = () => {
@@ -1008,6 +1013,13 @@ export function Planejamento() {
                               <b>{m1Preview.total}</b> na semana
                               <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>
                                 {m1Preview.focosCount} foco{m1Preview.focosCount === 1 ? "" : "s"} ativo{m1Preview.focosCount === 1 ? "" : "s"} · intensidade {pillsInt.toLowerCase()}
+                              </div>
+                              <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>
+                                ~<b style={{ color: "var(--ink-2)" }}>{m1Preview.mediaMin} min</b> por atividade ·{" "}
+                                ~<b style={{ color: "var(--ink-2)" }}>{m1Preview.minPorDia} min/dia</b> ·{" "}
+                                ~<b style={{ color: "var(--ink-2)" }}>
+                                  {Math.floor(m1Preview.totalMin / 60)}h{(m1Preview.totalMin % 60).toString().padStart(2, "0")}
+                                </b> na semana
                               </div>
                             </>
                           )}
