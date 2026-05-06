@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
@@ -10,6 +10,7 @@ import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { supabase } from "@/integrations/supabase/client";
 
 const css = `
 .pl-root{
@@ -812,6 +813,53 @@ export function Planejamento() {
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
   const [auditOpen, setAuditOpen] = useState<Record<string, boolean>>({});
+
+  // ===== Contexto por aba: Turma cadastrada OU Ano escolar (sem turma) =====
+  // Persistido por aba (m1..m6). Estrutura:
+  //   { turma?: string; etapa?: Etapa; anoIdx?: number }
+  // Se `turma` está preenchida, a Sofia usa a turma cadastrada (que carrega seu próprio ano).
+  // Se não, exige `etapa + anoIdx` para gerar com base no ano de escolaridade.
+  type TurmaCtx = { turma?: string; etapa?: Etapa; anoIdx?: number };
+  const [ctxByTab, setCtxByTab] = usePersistentState<Record<MKey, TurmaCtx>>(
+    "plan_ctx_by_tab",
+    { m1: {}, m2: {}, m3: {}, m4: {}, m5: {}, m6: {} },
+  );
+  const ctxAtual: TurmaCtx = ctxByTab[m] ?? {};
+  const setCtxAtual = (next: TurmaCtx) =>
+    setCtxByTab((p) => ({ ...p, [m]: next }));
+
+  // Turmas cadastradas no perfil
+  const [turmasPerfil, setTurmasPerfil] = useState<string[]>([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !active) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("turmas")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (active && data?.turmas) setTurmasPerfil(data.turmas as string[]);
+    })();
+    return () => { active = false; };
+  }, []);
+
+  // Resolve etapa/ano efetivos do contexto atual (usado pela Sofia ao gerar).
+  const ctxResolvido = useMemo(() => {
+    const etapa = ctxAtual.etapa ?? "EF1";
+    const anos = BNCC_BY_ETAPA[etapa].anos;
+    const anoIdx = Math.min(ctxAtual.anoIdx ?? 1, anos.length - 1);
+    const ano = anos[anoIdx];
+    return {
+      pronto: !!(ctxAtual.turma || (ctxAtual.etapa && ctxAtual.anoIdx !== undefined)),
+      turma: ctxAtual.turma ?? "",
+      etapa,
+      anoIdx,
+      anoLabel: ano?.ano ?? "",
+      etapaLabel: BNCC_BY_ETAPA[etapa].label,
+    };
+  }, [ctxAtual]);
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1_PLAN);
   const [m1Generating, setM1Generating] = useState(false);
@@ -837,8 +885,12 @@ export function Planejamento() {
   const mdPodeInter = mdDisciplinasComSel.length >= 2;
   const openDayModal = (day: { k: DayKey; iso: string; n: string; d: number }) => {
     setM1DayModal({ dia: day.k, iso: day.iso, n: day.n, d: day.d });
-    // por padrão, marca a primeira disciplina/campo do ano selecionado
-    const ano = BNCC_BY_ETAPA[mdEtapa].anos[Math.min(mdAnoIdx, BNCC_BY_ETAPA[mdEtapa].anos.length - 1)];
+    // Pré-seleciona etapa/ano a partir do contexto da aba quando disponível.
+    const etapaInicial: Etapa = ctxResolvido.etapa;
+    const anoIdxInicial = ctxResolvido.anoIdx;
+    setMdEtapa(etapaInicial);
+    setMdAnoIdx(anoIdxInicial);
+    const ano = BNCC_BY_ETAPA[etapaInicial].anos[Math.min(anoIdxInicial, BNCC_BY_ETAPA[etapaInicial].anos.length - 1)];
     setMdDiscOn(ano && ano.disciplinas[0] ? { [ano.disciplinas[0].nome]: true } : {});
     setMdSel({});
     setMdInter(false);
@@ -923,6 +975,10 @@ export function Planejamento() {
     };
   }, [focosSelecionados, m1MaxFocos, pillsInt]);
   const gerarComSofia = () => {
+    if (!ctxResolvido.pronto) {
+      showToast("Selecione uma turma cadastrada ou um ano de escolaridade no topo da aba.");
+      return;
+    }
     setM1Generating(true);
     setTimeout(() => {
       const focosLimitados = m1MaxFocos === "all"
@@ -1104,6 +1160,83 @@ export function Planejamento() {
                 <span className="num">{t.num}</span> {t.label}
               </button>
             ))}
+          </div>
+
+          {/* Contexto da aba: turma cadastrada OU ano de escolaridade */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              alignItems: "center",
+              padding: "10px 14px",
+              margin: "0 0 12px",
+              background: ctxResolvido.pronto ? "#F0FDF4" : "#FFFBEB",
+              border: `1px solid ${ctxResolvido.pronto ? "#BBF7D0" : "#FDE68A"}`,
+              borderRadius: 10,
+              fontSize: 12.5,
+            }}
+          >
+            <span style={{ fontWeight: 700, color: "var(--ink)" }}>
+              📚 Contexto desta aba:
+            </span>
+            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ color: "var(--ink-2)" }}>Turma:</span>
+              <select
+                value={ctxAtual.turma ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCtxAtual({ ...ctxAtual, turma: v || undefined });
+                }}
+                style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
+              >
+                <option value="">— Sem turma cadastrada —</option>
+                {turmasPerfil.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </label>
+            {!ctxAtual.turma && (
+              <>
+                <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ color: "var(--ink-2)" }}>Etapa:</span>
+                  <select
+                    value={ctxAtual.etapa ?? ""}
+                    onChange={(e) => {
+                      const v = (e.target.value || undefined) as Etapa | undefined;
+                      setCtxAtual({ ...ctxAtual, etapa: v, anoIdx: v ? 0 : undefined });
+                    }}
+                    style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
+                  >
+                    <option value="">— Selecione —</option>
+                    {(Object.keys(BNCC_BY_ETAPA) as Etapa[]).map((e) => (
+                      <option key={e} value={e}>{BNCC_BY_ETAPA[e].label}</option>
+                    ))}
+                  </select>
+                </label>
+                {ctxAtual.etapa && (
+                  <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "var(--ink-2)" }}>Ano:</span>
+                    <select
+                      value={ctxAtual.anoIdx ?? 0}
+                      onChange={(e) => setCtxAtual({ ...ctxAtual, anoIdx: Number(e.target.value) })}
+                      style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line)", background: "#fff" }}
+                    >
+                      {BNCC_BY_ETAPA[ctxAtual.etapa].anos.map((a, i) => (
+                        <option key={a.ano} value={i}>{a.ano}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </>
+            )}
+            <span style={{ marginLeft: "auto", color: ctxResolvido.pronto ? "#047857" : "#B45309", fontWeight: 600 }}>
+              {ctxResolvido.pronto
+                ? (ctxAtual.turma
+                    ? `Sofia gera para a turma ${ctxAtual.turma}.`
+                    : `Sofia gera para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}).`)
+                : "Selecione uma turma OU um ano de escolaridade para a Sofia gerar."}
+            </span>
           </div>
 
           <div className="pl-workspace">
