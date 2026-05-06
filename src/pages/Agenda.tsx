@@ -515,6 +515,29 @@ export function Agenda() {
   })() : "";
   const openDateHoliday = openDate && panelHolidays ? panelHolidays.get(openDate) : undefined;
 
+  // Atalhos de teclado no modal do dia: ←/→ navega, Esc fecha.
+  useEffect(() => {
+    if (!openDate) return;
+    const shiftDay = (delta: number) => {
+      const [y, m, d] = openDate.split("-").map(Number);
+      const dt = new Date(y, m - 1, d + delta);
+      const p = (n: number) => String(n).padStart(2, "0");
+      setOpenDate(`${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}`);
+      cancelEdit();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      const typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable);
+      if (e.key === "Escape") { e.preventDefault(); closePanel(); return; }
+      if (typing) return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); shiftDay(-1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); shiftDay(1); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openDate]);
+
   const shift = (dir: 1 | -1) => {
     const d = new Date(cursor);
     if (view === "dia") d.setDate(d.getDate() + dir);
