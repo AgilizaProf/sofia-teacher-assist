@@ -329,8 +329,19 @@ export function Relatorios() {
     dashStudents.length * 5 +
     (user.documentsGenerated || finalizados) * 30;
   const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
-  const savedH = Math.floor(totalSavedMin / 60);
-  const savedM = totalSavedMin % 60;
+  const animatedMin = useAnimatedNumber(totalSavedMin, 900);
+  const savedH = Math.floor(animatedMin / 60);
+  const savedM = Math.round(animatedMin % 60);
+  const [bump, setBump] = useState(false);
+  const prevTotalRef = useRef(totalSavedMin);
+  useEffect(() => {
+    if (prevTotalRef.current !== totalSavedMin) {
+      prevTotalRef.current = totalSavedMin;
+      setBump(true);
+      const t = setTimeout(() => setBump(false), 700);
+      return () => clearTimeout(t);
+    }
+  }, [totalSavedMin]);
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
   const isPro = ctx.user.plano === "pro" || dashStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
