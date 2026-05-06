@@ -540,9 +540,20 @@ function sofiaGenerateForDay(opts: {
   intensidade: "Leve" | "Equilibrada" | "Densa";
   diaISO: string;
   interdisciplinar?: boolean;
+  // Override: quando definido, ignora `intensidade` e usa exatamente este número de atividades.
+  quantidade?: number;
+  // Override: quando definido, calibra a quantidade e os minutos para caber no tempo total (em min).
+  minutosAlvo?: number;
 }): M1Card[] {
   const tema = (opts.tema || "tema do dia").trim() || "tema do dia";
-  const perDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  const baseDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  let perDay = baseDay;
+  if (typeof opts.quantidade === "number" && opts.quantidade > 0) {
+    perDay = Math.max(1, Math.floor(opts.quantidade));
+  } else if (typeof opts.minutosAlvo === "number" && opts.minutosAlvo > 0) {
+    // Estima ~35 min por atividade como ponto de partida; ajusta minutos depois.
+    perDay = Math.max(1, Math.round(opts.minutosAlvo / 35));
+  }
   const out: M1Card[] = [];
   if (opts.competencias.length === 0) return out;
 
@@ -680,7 +691,7 @@ function sofiaGenerateForDay(opts: {
       codes.forEach((c) => vistos.add(c));
       limpos.push(card);
     }
-    return limpos;
+    return scaleToTarget(limpos, opts.minutosAlvo);
   } else {
     // Sem interdisciplinar: também evita repetir a mesma competência.
     const total = Math.min(perDay, opts.competencias.length);
@@ -697,7 +708,16 @@ function sofiaGenerateForDay(opts: {
       });
     }
   }
-  return out;
+  return scaleToTarget(out, opts.minutosAlvo);
+}
+
+// Ajusta os minutos das atividades para somarem aproximadamente o tempo total desejado.
+function scaleToTarget(cards: M1Card[], minutosAlvo?: number): M1Card[] {
+  if (!minutosAlvo || cards.length === 0) return cards;
+  const total = cards.reduce((s, c) => s + c.minutos, 0);
+  if (total <= 0) return cards;
+  const ratio = minutosAlvo / total;
+  return cards.map((c) => ({ ...c, minutos: Math.max(10, Math.round((c.minutos * ratio) / 5) * 5) }));
 }
 
 const M1_TEMPLATES: Record<string, Array<Omit<M1Card, "id" | "minutos"> & { minutos: number }>> = {
@@ -883,6 +903,10 @@ export function Planejamento() {
   const [mdTema, setMdTema] = useState<string>("");
   const [mdInt, setMdInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [mdInter, setMdInter] = useState<boolean>(false);
+  // Modo de dimensionamento do dia: por intensidade (padrão), por quantidade fixa, ou por tempo total.
+  const [mdModo, setMdModo] = useState<"intensidade" | "quantidade" | "tempo">("intensidade");
+  const [mdQtd, setMdQtd] = useState<number>(2);
+  const [mdMin, setMdMin] = useState<number>(60);
   const mdAno = BNCC_BY_ETAPA[mdEtapa].anos[Math.min(mdAnoIdx, BNCC_BY_ETAPA[mdEtapa].anos.length - 1)];
   const mdDiscList = mdAno?.disciplinas.filter((d) => mdDiscOn[d.nome]) ?? [];
   const mdSelecionadas: Array<CompetenciaBNCC & { disciplina: string }> = mdDiscList.flatMap(
@@ -917,6 +941,8 @@ export function Planejamento() {
       intensidade: mdInt,
       diaISO: m1DayModal.iso,
       interdisciplinar: mdInter && mdPodeInter,
+      quantidade: mdModo === "quantidade" ? mdQtd : undefined,
+      minutosAlvo: mdModo === "tempo" ? mdMin : undefined,
     });
     setM1Plan((p) => ({ ...p, [m1DayModal.dia]: [...p[m1DayModal.dia], ...novos] }));
     showToast(`Sofia adicionou ${novos.length} atividade(s) em ${m1DayModal.n}. ✓`);
@@ -2147,15 +2173,65 @@ export function Planejamento() {
               </div>
 
               <div className="pl-field" style={{ marginTop: 0 }}>
-                <label>Intensidade do dia</label>
+                <label>Como dimensionar o dia?</label>
                 <div className="pl-pills">
-                  {(["Leve", "Equilibrada", "Densa"] as const).map((p) => (
-                    <button key={p} className={"pl-pill" + (mdInt === p ? " on" : "")} onClick={() => setMdInt(p)}>{p}</button>
-                  ))}
+                  <button className={"pl-pill" + (mdModo === "intensidade" ? " on" : "")} onClick={() => setMdModo("intensidade")}>Por intensidade</button>
+                  <button className={"pl-pill" + (mdModo === "quantidade" ? " on" : "")} onClick={() => setMdModo("quantidade")}>Nº de atividades</button>
+                  <button className={"pl-pill" + (mdModo === "tempo" ? " on" : "")} onClick={() => setMdModo("tempo")}>Tempo disponível</button>
                 </div>
-                <p className="lead" style={{ margin: "6px 0 0" }}>
-                  Sofia vai gerar <b>{Math.min(mdInt === "Leve" ? 1 : mdInt === "Densa" ? 3 : 2, mdSelecionadas.length || 1)}</b> atividade(s) para {m1DayModal.n}.
-                </p>
+
+                {mdModo === "intensidade" && (
+                  <>
+                    <div className="pl-pills" style={{ marginTop: 8 }}>
+                      {(["Leve", "Equilibrada", "Densa"] as const).map((p) => (
+                        <button key={p} className={"pl-pill" + (mdInt === p ? " on" : "")} onClick={() => setMdInt(p)}>{p}</button>
+                      ))}
+                    </div>
+                    <p className="lead" style={{ margin: "6px 0 0" }}>
+                      Sofia vai gerar <b>{Math.min(mdInt === "Leve" ? 1 : mdInt === "Densa" ? 3 : 2, mdSelecionadas.length || 1)}</b> atividade(s) para {m1DayModal.n}.
+                    </p>
+                  </>
+                )}
+
+                {mdModo === "quantidade" && (
+                  <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                    <input
+                      type="number"
+                      className="pl-input"
+                      style={{ width: 100 }}
+                      min={1}
+                      max={8}
+                      value={mdQtd}
+                      onChange={(e) => setMdQtd(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
+                    />
+                    <span className="lead" style={{ margin: 0 }}>atividade(s) sugerida(s) para {m1DayModal.n}.</span>
+                  </div>
+                )}
+
+                {mdModo === "tempo" && (
+                  <>
+                    <div className="pl-pills" style={{ marginTop: 8 }}>
+                      {[30, 60, 90, 120, 180, 240].map((t) => (
+                        <button key={t} className={"pl-pill" + (mdMin === t ? " on" : "")} onClick={() => setMdMin(t)}>
+                          {t >= 60 ? `${Math.floor(t / 60)}h${t % 60 ? ` ${t % 60}min` : ""}` : `${t} min`}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                      <input
+                        type="number"
+                        className="pl-input"
+                        style={{ width: 110 }}
+                        min={15}
+                        max={480}
+                        step={5}
+                        value={mdMin}
+                        onChange={(e) => setMdMin(Math.max(15, Math.min(480, Number(e.target.value) || 60)))}
+                      />
+                      <span className="lead" style={{ margin: 0 }}>minutos totais — Sofia ajusta a duração de cada atividade.</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
