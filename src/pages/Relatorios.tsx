@@ -120,7 +120,9 @@ const css = `
   padding:6px 10px;border-radius:10px;min-width:180px;flex:0 1 220px;}
 .rel-search-mini input{border:0;outline:0;background:transparent;font-size:12.5px;width:100%;min-width:0;}
 .rel-dropdown{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--line-soft);border-radius:10px;
-  box-shadow:0 10px 30px -10px rgba(17,24,39,.24);min-width:180px;padding:6px;z-index:10;}
+  box-shadow:0 10px 30px -10px rgba(17,24,39,.24);min-width:180px;padding:6px;z-index:60;max-height:280px;overflow-y:auto;}
+.rel-pill[aria-haspopup="menu"]{z-index:1;}
+.rel-pill[aria-haspopup="menu"]:focus-within,.rel-pill[aria-haspopup="menu"]:hover{z-index:60;}
 .rel-dropdown button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:6px;font-size:12.5px;color:var(--text);}
 .rel-dropdown button:hover{background:#F4F2EC;}
 
