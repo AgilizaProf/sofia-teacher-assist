@@ -984,6 +984,35 @@ export function Planejamento() {
                             : `Sofia vai pegar os primeiros ${Math.min(m1MaxFocos, focosSelecionados.length || m1MaxFocos)} foco(s) marcados — menos sugestões por dia, mais profundidade.`}
                         </p>
                       </div>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          padding: "10px 12px",
+                          borderRadius: 10,
+                          border: "1px solid #FED7C4",
+                          background: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                        aria-live="polite"
+                      >
+                        <Sparkles size={16} color="var(--orange)" />
+                        <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.4 }}>
+                          {m1Preview.focosCount === 0 ? (
+                            <>Selecione ao menos <b>1 foco</b> para a Sofia gerar.</>
+                          ) : (
+                            <>
+                              Prévia: <b>{m1Preview.perDay}</b>{" "}
+                              {m1Preview.perDay === 1 ? "atividade" : "atividades"} por dia ·{" "}
+                              <b>{m1Preview.total}</b> na semana
+                              <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>
+                                {m1Preview.focosCount} foco{m1Preview.focosCount === 1 ? "" : "s"} ativo{m1Preview.focosCount === 1 ? "" : "s"} · intensidade {pillsInt.toLowerCase()}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
                       <button
                         className="pl-btn primary pl-replica-cta"
                         onClick={gerarComSofia}
