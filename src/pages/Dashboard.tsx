@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
@@ -10,6 +11,26 @@ import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
+
+type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
+type AgendaEvent = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  time?: string;
+  type: AgendaType;
+  notes?: string;
+};
+const AGENDA_TYPE_LABEL: Record<AgendaType, string> = {
+  meeting: "Reunião", eval: "Avaliação", report: "Entrega",
+  plan: "Planejamento", pcd: "Inclusão", personal: "Pessoal",
+};
+const AGENDA_TYPE_COLOR: Record<AgendaType, string> = {
+  meeting: "#6366F1", eval: "#EF4444", report: "#F59E0B",
+  plan: "#10B981", pcd: "#8B5CF6", personal: "#64748B",
+};
+const MONTHS_PT_SHORT = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 
 const css = `
 .ap-root{
