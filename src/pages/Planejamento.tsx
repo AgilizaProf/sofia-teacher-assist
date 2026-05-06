@@ -520,9 +520,12 @@ export function Planejamento() {
   const gerarComSofia = () => {
     setM1Generating(true);
     setTimeout(() => {
+      const focosLimitados = m1MaxFocos === "all"
+        ? focosSelecionados
+        : focosSelecionados.slice(0, m1MaxFocos);
       const plan = sofiaGenerateWeek({
         tema: m1Tema,
-        focos: focosSelecionados,
+        focos: focosLimitados,
         intensidade: pillsInt,
         diasISO: m1Week.days.map((d) => d.iso),
       });
