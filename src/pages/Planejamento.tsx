@@ -814,6 +814,12 @@ export function Planejamento() {
   const [calSel, setCalSel] = useState<DayKey>("seg");
   const [auditOpen, setAuditOpen] = useState<Record<string, boolean>>({});
   const [paramsModalOpen, setParamsModalOpen] = useState(false);
+  // Padrão global do modo interdisciplinar (ligado por padrão).
+  // Usado como default ao abrir novos modais de atividade.
+  const [interdisciplinarPadrao, setInterdisciplinarPadrao] = usePersistentState<boolean>(
+    "plan_interdisciplinar_padrao",
+    true,
+  );
 
   // ===== Contexto por aba: Turma cadastrada OU Ano escolar (sem turma) =====
   // Persistido por aba (m1..m6). Estrutura:
