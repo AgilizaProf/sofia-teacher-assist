@@ -283,8 +283,10 @@ export function Relatorios() {
 
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
+  type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
   const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
   const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
+  const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
@@ -295,6 +297,16 @@ export function Relatorios() {
   const aFazer = Math.max(0, alunosCount - finalizados - Math.min(3, restantes));
   const rascunhos = Math.min(3, restantes);
   const horasEcon = ctx.user.horas_economizadas_mes;
+
+  // Mesmo cálculo da página inicial (Tempo devolvido)
+  const earnedMinutes =
+    dashSchools.length * 10 +
+    dashClasses.length * 20 +
+    dashStudents.length * 5 +
+    (user.documentsGenerated || finalizados) * 30;
+  const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
+  const savedH = Math.floor(totalSavedMin / 60);
+  const savedM = totalSavedMin % 60;
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
   const isPro = ctx.user.plano === "pro" || dashStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
@@ -438,10 +450,17 @@ export function Relatorios() {
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
-            <div className="rel-kpi">
-              <div className="rel-kpi-top"><span className="rel-kpi-label">TEMPO ECONOMIZADO</span><div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">{Math.floor(horasEcon)}h<small>{String(Math.round((horasEcon % 1) * 60)).padStart(2, "0")}min</small></div>
-              <div className="rel-kpi-foot">{horasEcon > 0 ? "vs. escrita manual" : "—"}</div>
+            <div className="rel-kpi" style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent" }}>
+              <div className="rel-kpi-top">
+                <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
+                <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
+              </div>
+              <div className="rel-kpi-num" style={{ color: "#fff" }}>
+                {savedH}h<small style={{ color: "rgba(255,255,255,.75)" }}>{String(savedM).padStart(2, "0")}min</small>
+              </div>
+              <div className="rel-kpi-foot" style={{ color: "rgba(255,255,255,.7)" }}>
+                {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
+              </div>
             </div>
           </div>
 
