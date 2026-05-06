@@ -517,6 +517,25 @@ export function Planejamento() {
     const bnccs = new Set(all.map((c) => c.bncc));
     return { atividades: all.length, habilidades: bnccs.size };
   }, [m1Plan]);
+  // Prévia da próxima geração: depende do nº de focos selecionados, do limite
+  // atual de focos por geração e da intensidade.
+  const m1Preview = useMemo(() => {
+    const focosUsados = m1MaxFocos === "all"
+      ? focosSelecionados
+      : focosSelecionados.slice(0, m1MaxFocos);
+    const perDay = pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
+    const poolSize = focosUsados.reduce(
+      (n, f) => n + (M1_TEMPLATES[f]?.length ?? 0),
+      0,
+    );
+    return {
+      focosUsados,
+      focosCount: focosUsados.length,
+      perDay,
+      total: focosUsados.length === 0 ? 0 : perDay * 5,
+      poolSize,
+    };
+  }, [focosSelecionados, m1MaxFocos, pillsInt]);
   const gerarComSofia = () => {
     setM1Generating(true);
     setTimeout(() => {
