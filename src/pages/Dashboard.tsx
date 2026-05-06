@@ -283,6 +283,10 @@ const css = `
 @media(max-width:560px){.hero{padding:20px 18px;}.hero-title{font-size:26px;}.hero-metric-value{font-size:42px;}.stats{grid-template-columns:1fr;}.today-focus{flex-direction:column;align-items:flex-start;}.today-focus-action{width:100%;justify-content:center;}}
 `;
 
+const CID_LABEL: Record<string, { label: string; cid: string }> = Object.fromEntries(
+  CID_OPTIONS.map((o) => [o.value, { label: o.label, cid: o.cid }])
+);
+
 const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...rest}>
     {c}
@@ -297,11 +301,11 @@ export function Dashboard() {
   const [schools, setSchools] = useState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>([]);
   const baseSchools = 0;
   const [classOpen, setClassOpen] = useState(false);
-  const [classes, setClasses] = useState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>([]);
+  const [classes, setClasses] = usePersistentState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>("dash_classes", []);
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
-  const [students, setStudents] = useState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>([]);
+  const [students, setStudents] = usePersistentState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>("dash_students", []);
   const baseStudents = 0;
   const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
@@ -462,13 +466,88 @@ export function Dashboard() {
                 </div>
               </div>
 
-              <EmptyState
-                icon="👥"
-                title="Você ainda não cadastrou alunos."
-                description="Crie sua primeira turma e cadastre os alunos para começar a usar a Sofia."
-                ctaLabel="Cadastrar primeiro aluno"
-                onCta={() => setStudentOpen(true)}
-              />
+              {totalStudents === 0 && totalClasses === 0 ? (
+                <EmptyState
+                  icon="👥"
+                  title="Você ainda não cadastrou alunos."
+                  description="Crie sua primeira turma e cadastre os alunos para começar a usar a Sofia."
+                  ctaLabel="Cadastrar primeiro aluno"
+                  onCta={() => setStudentOpen(true)}
+                />
+              ) : (
+                <div>
+                  {(() => {
+                    const filtered = students.filter((s) => {
+                      if (filter === "pcd") return s.pcd && s.pcd !== "nao";
+                      if (filter === "reg") return !s.pcd || s.pcd === "nao";
+                      return true;
+                    });
+                    const grouped = new Map<string, typeof filtered>();
+                    classes.forEach((c) => grouped.set(c.name, []));
+                    filtered.forEach((s) => {
+                      const key = s.classRef || "Sem turma";
+                      if (!grouped.has(key)) grouped.set(key, []);
+                      grouped.get(key)!.push(s);
+                    });
+                    const entries = Array.from(grouped.entries()).filter(([k, list]) => list.length > 0 || classes.some((c) => c.name === k));
+                    if (entries.length === 0) {
+                      return <div style={{ fontSize: 12, color: "var(--text-soft)", padding: "8px 4px" }}>Nenhum aluno neste filtro.</div>;
+                    }
+                    return entries.map(([turma, list]) => {
+                      const classMeta = classes.find((c) => c.name === turma);
+                      return (
+                        <div key={turma} className="class-group">
+                          <div className="class-head">
+                            <div className="class-info">
+                              <div className="class-name">{turma}</div>
+                              {classMeta && (
+                                <div className="class-meta">
+                                  {classMeta.school && `${classMeta.school} · `}
+                                  {classMeta.shift && `Turno: ${classMeta.shift}`}
+                                </div>
+                              )}
+                            </div>
+                            <span className="class-count">{list.length} {list.length === 1 ? "aluno" : "alunos"}</span>
+                          </div>
+                          {list.map((s, i) => {
+                            const initials = s.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+                            const isPcd = s.pcd && s.pcd !== "nao";
+                            const cidInfo = isPcd ? CID_LABEL[s.pcd] : null;
+                            const avClass = `av-${(i % 3) + 1}`;
+                            return (
+                              <div key={`${turma}-${i}`} className="student">
+                                <div className={`student-avatar ${avClass}`}>{initials}</div>
+                                <div className="student-info">
+                                  <div className="student-name">
+                                    {s.name}
+                                    {isPcd && (
+                                      <span className="student-tag">
+                                        PCD{cidInfo?.cid && cidInfo.cid !== "—" ? ` · ${cidInfo.cid}` : ""}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {(s.notes || cidInfo?.label) && (
+                                    <div className="student-meta">{s.notes || cidInfo?.label}</div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    });
+                  })()}
+                  <button
+                    type="button"
+                    className="btn-add"
+                    onClick={() => setStudentOpen(true)}
+                    style={{ marginTop: 12 }}
+                  >
+                    <Svg c={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />
+                    Adicionar aluno
+                  </button>
+                </div>
+              )}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
