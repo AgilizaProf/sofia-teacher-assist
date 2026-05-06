@@ -1372,8 +1372,11 @@ export function Planejamento() {
                         return (
                           <div
                             key={day.k}
-                            className={"pl-cal-day" + (calSel === day.k ? " selected" : "") + (cards.length > 0 ? " has-ai" : "")}
+                            className={"pl-cal-day" + (calSel === day.k ? " selected" : "") + (cards.length > 0 ? " has-ai" : "") + (m1DropDay === day.k ? " drop" : "")}
                             onClick={() => setCalSel(day.k)}
+                            onDragOver={(e) => onM1DragOver(e, day.k)}
+                            onDragLeave={onM1DragLeave}
+                            onDrop={(e) => onM1Drop(e, day.k)}
                             style={isToday ? { borderColor: "var(--orange)", boxShadow: "0 0 0 2px var(--orange-soft-2)" } : undefined}
                           >
                             <div className="pl-cd-head">
@@ -1390,7 +1393,14 @@ export function Planejamento() {
                             ) : (
                               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
                                 {cards.map((c) => (
-                                  <div key={c.id} className={"pl-ai " + c.v} onClick={(e) => e.stopPropagation()}>
+                                  <div
+                                    key={c.id}
+                                    className={"pl-ai " + c.v}
+                                    draggable
+                                    onDragStart={() => onM1DragStart(day.k, c.id)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ cursor: "grab" }}
+                                  >
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
                                       <div style={{ minWidth: 0 }}>
                                         <div className="sub">{c.tag}</div>
