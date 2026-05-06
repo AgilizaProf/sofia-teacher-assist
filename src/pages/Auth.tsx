@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 
 export function AuthPage() {
@@ -56,11 +57,25 @@ export function AuthPage() {
   };
 
   const google = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
-    if (error) setPopupBlocked(true);
+    if (result.error) {
+      setPopupBlocked(true);
+      return;
+    }
+    if (!result.redirected) navigate({ to: "/" });
+  };
+
+  const apple = async () => {
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      toast.error("Não foi possível entrar com a Apple.");
+      return;
+    }
+    if (!result.redirected) navigate({ to: "/" });
   };
 
   const pcts = ["25%", "50%", "75%", "100%"];
@@ -176,7 +191,7 @@ export function AuthPage() {
             </div>
             {showMore && (
               <div className="more-content show">
-                <button type="button" className="apple-btn"> Continuar com Apple</button>
+                <button type="button" className="apple-btn" onClick={apple}> Continuar com Apple</button>
               </div>
             )}
 
