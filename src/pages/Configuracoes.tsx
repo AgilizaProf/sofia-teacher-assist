@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Shield, ChevronDown, Download } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { Header as AppHeader } from "@/components/Header";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
 

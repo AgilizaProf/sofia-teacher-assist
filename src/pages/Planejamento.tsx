@@ -8,7 +8,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 const css = `

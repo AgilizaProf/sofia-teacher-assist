@@ -10,7 +10,7 @@ import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
-import { AppHeader } from "@/components/layout/AppHeader";
+import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
