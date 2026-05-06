@@ -475,6 +475,9 @@ export function Planejamento() {
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1_PLAN);
   const [m1Generating, setM1Generating] = useState(false);
+  // Limita quantos focos a Sofia usa numa geração (controla volume de sugestões).
+  // "all" = usa todos os focos selecionados.
+  const [m1MaxFocos, setM1MaxFocos] = usePersistentState<1 | 2 | 3 | "all">("plan_m1_max_focos", 2);
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
   const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -517,9 +520,12 @@ export function Planejamento() {
   const gerarComSofia = () => {
     setM1Generating(true);
     setTimeout(() => {
+      const focosLimitados = m1MaxFocos === "all"
+        ? focosSelecionados
+        : focosSelecionados.slice(0, m1MaxFocos);
       const plan = sofiaGenerateWeek({
         tema: m1Tema,
-        focos: focosSelecionados,
+        focos: focosLimitados,
         intensidade: pillsInt,
         diasISO: m1Week.days.map((d) => d.iso),
       });
@@ -940,6 +946,24 @@ export function Planejamento() {
                             <button key={p} className={"pl-pill" + (pillsInt === p ? " on" : "")} onClick={() => setPillsInt(p)}>{p}</button>
                           ))}
                         </div>
+                      </div>
+                      <div className="pl-field">
+                        <label>Focos por geração</label>
+                        <div className="pl-pills">
+                          {([1, 2, 3, "all"] as const).map((p) => (
+                            <button
+                              key={String(p)}
+                              className={"pl-pill" + (m1MaxFocos === p ? " on" : "")}
+                              onClick={() => setM1MaxFocos(p)}
+                              title={p === "all" ? "Usa todos os focos selecionados" : `Sofia usa só ${p} foco(s) por geração`}
+                            >{p === "all" ? "Todos" : `${p} foco${p === 1 ? "" : "s"}`}</button>
+                          ))}
+                        </div>
+                        <p className="lead" style={{ margin: "6px 0 0" }}>
+                          {m1MaxFocos === "all"
+                            ? `Sofia vai usar os ${focosSelecionados.length} foco(s) marcados.`
+                            : `Sofia vai pegar os primeiros ${Math.min(m1MaxFocos, focosSelecionados.length || m1MaxFocos)} foco(s) marcados — menos sugestões por dia, mais profundidade.`}
+                        </p>
                       </div>
                       <button
                         className="pl-btn primary pl-replica-cta"
