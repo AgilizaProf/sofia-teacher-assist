@@ -298,7 +298,7 @@ export function Dashboard() {
   const heroGreeting = greeting(user.name);
   const [cmdk, setCmdk] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
-  const [schools, setSchools] = useState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>([]);
+  const [schools, setSchools] = usePersistentState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>("dash_schools", []);
   const baseSchools = 0;
   const [classOpen, setClassOpen] = useState(false);
   const [classes, setClasses] = usePersistentState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>("dash_classes", []);
@@ -310,6 +310,9 @@ export function Dashboard() {
   const [studentDetail, setStudentDetail] = useState<{ index: number; student: DashStudent } | null>(null);
   const [editingStudent, setEditingStudent] = useState(false);
   const [editForm, setEditForm] = useState<DashStudent | null>(null);
+  // Estado controlado para os selects do modal de aluno (turma → escola sincroniza automaticamente).
+  const [studentClassSel, setStudentClassSel] = useState<string>("");
+  const [studentSchoolSel, setStudentSchoolSel] = useState<string>("");
   const baseStudents = 0;
   const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
