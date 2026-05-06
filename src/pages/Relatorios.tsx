@@ -309,48 +309,84 @@ const BNCC_STATUS: Array<{ k: BnccStatus; label: string; short: string; color: s
   { k: "co", label: "Consolidada", short: "CO", color: "#16A36B", bg: "#E7F6EE" },
 ];
 
-const BNCC_AREAS: Array<{ area: string; comps: string[] }> = [
-  {
-    area: "Língua Portuguesa",
-    comps: [
-      "Leitura fluente e compreensão de textos diversos",
-      "Produção de textos orais e escritos com coesão",
-      "Análise linguística e ortografia em contextos",
-      "Oralidade: escuta atenta e expressão de ideias",
-    ],
-  },
-  {
-    area: "Matemática",
-    comps: [
-      "Números e operações no sistema decimal",
-      "Resolução de problemas com raciocínio lógico",
-      "Grandezas, medidas e geometria básica",
-      "Probabilidade, estatística e leitura de gráficos",
-    ],
-  },
-  {
-    area: "Ciências",
-    comps: [
-      "Observação, registro e levantamento de hipóteses",
-      "Vida, ambiente e sustentabilidade",
-    ],
-  },
-  {
-    area: "Humanas (História/Geografia)",
-    comps: [
-      "Tempo, espaço e identidade cultural",
-      "Cidadania, convivência e diversidade",
-    ],
-  },
-  {
-    area: "Competências socioemocionais",
-    comps: [
-      "Autonomia e responsabilidade nas tarefas",
-      "Cooperação e respeito nas relações",
-      "Autorregulação e persistência diante de desafios",
-    ],
-  },
+type BnccArea = { area: string; comps: string[] };
+const BNCC_SOCIO: string[] = [
+  "Autonomia e responsabilidade nas tarefas",
+  "Cooperação e respeito nas relações",
+  "Autorregulação e persistência diante de desafios",
 ];
+
+// Habilidades BNCC por ano de escolaridade (Ensino Fundamental).
+// Resumos didáticos por ano — mantidos curtos pra interface.
+const BNCC_BY_YEAR: Record<string, BnccArea[]> = {
+  "1": [
+    { area: "Língua Portuguesa", comps: ["Reconhecer letras, sílabas e sons", "Ler palavras e frases curtas", "Escrever o próprio nome e palavras simples", "Participar de rodas de conversa"] },
+    { area: "Matemática", comps: ["Contar, ler e escrever números até 100", "Adição e subtração com material concreto", "Identificar formas geométricas básicas", "Comparar grandezas (maior/menor)"] },
+    { area: "Ciências", comps: ["Observar plantas, animais e fenômenos do dia a dia", "Reconhecer partes do corpo e cuidados de higiene"] },
+    { area: "Humanas (História/Geografia)", comps: ["Reconhecer-se na família e na escola", "Identificar lugares de vivência"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+  "2": [
+    { area: "Língua Portuguesa", comps: ["Ler frases e pequenos textos com fluência inicial", "Escrever frases com coerência ortográfica básica", "Compreender textos lidos pela professora", "Relatar experiências oralmente"] },
+    { area: "Matemática", comps: ["Números até 1000 e valor posicional", "Adição e subtração com reagrupamento", "Medidas de tempo, comprimento e massa", "Sólidos e figuras planas"] },
+    { area: "Ciências", comps: ["Ciclo de vida de plantas e animais", "Materiais e suas propriedades"] },
+    { area: "Humanas (História/Geografia)", comps: ["Comunidade, bairro e regras de convivência", "Linha do tempo pessoal e familiar"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+  "3": [
+    { area: "Língua Portuguesa", comps: ["Leitura fluente de textos curtos", "Produção de textos narrativos simples", "Ortografia regular e pontuação básica", "Oralidade em apresentações curtas"] },
+    { area: "Matemática", comps: ["Multiplicação e divisão (ideias iniciais)", "Resolução de problemas em uma operação", "Frações como parte do todo (intuição)", "Leitura de tabelas e gráficos simples"] },
+    { area: "Ciências", comps: ["Sistema solar e ambiente terrestre", "Saúde, alimentação e higiene"] },
+    { area: "Humanas (História/Geografia)", comps: ["Município, paisagem e mobilidade", "Marcadores de tempo (calendário, gerações)"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+  "4": [
+    { area: "Língua Portuguesa", comps: ["Compreensão de textos informativos", "Produção de relatos e cartas", "Ortografia: regras contextuais", "Argumentação oral em debates"] },
+    { area: "Matemática", comps: ["Operações com números naturais (até milhar)", "Frações e decimais (introdução)", "Perímetro, área e medidas", "Probabilidade e leitura de gráficos"] },
+    { area: "Ciências", comps: ["Cadeia alimentar e ecossistemas", "Ciclo da água e estados físicos"] },
+    { area: "Humanas (História/Geografia)", comps: ["Estado, regiões do Brasil e diversidade", "Patrimônio cultural"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+  "5": [
+    { area: "Língua Portuguesa", comps: ["Leitura crítica e inferência", "Produção de textos com coesão e revisão", "Análise linguística (classes de palavras)", "Oralidade argumentativa"] },
+    { area: "Matemática", comps: ["Operações com naturais e decimais", "Frações: equivalência e operações", "Geometria: ângulos e simetria", "Estatística: média, tabelas e gráficos"] },
+    { area: "Ciências", comps: ["Corpo humano e saúde", "Materiais, energia e sustentabilidade"] },
+    { area: "Humanas (História/Geografia)", comps: ["Brasil: povos originários e colonização", "Cartografia e representação do espaço"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+  "6": [
+    { area: "Língua Portuguesa", comps: ["Gêneros textuais variados (notícia, artigo)", "Produção de textos com revisão autoral", "Análise linguística: morfologia básica", "Práticas de oralidade formal"] },
+    { area: "Matemática", comps: ["Números racionais e operações", "Razão, proporção e porcentagem (intro)", "Geometria: figuras e construções", "Estatística e probabilidade"] },
+    { area: "Ciências", comps: ["Célula, vida e organização dos seres vivos", "Terra, universo e fenômenos naturais"] },
+    { area: "Humanas (História/Geografia)", comps: ["Civilizações antigas e formação cultural", "Espaço geográfico e paisagens"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+  "7": [
+    { area: "Língua Portuguesa", comps: ["Argumentação em textos opinativos", "Análise crítica de mídias", "Sintaxe: períodos simples", "Oralidade em debates regrados"] },
+    { area: "Matemática", comps: ["Inteiros e racionais: operações", "Equações de 1º grau", "Geometria: ângulos, polígonos e simetrias", "Estatística: amostra e gráficos"] },
+    { area: "Ciências", comps: ["Ecossistemas e impactos ambientais", "Máquinas simples, energia e movimento"] },
+    { area: "Humanas (História/Geografia)", comps: ["Idade Média e Moderna; Brasil colonial", "Regionalização e dinâmicas populacionais"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+  "8": [
+    { area: "Língua Portuguesa", comps: ["Textos argumentativos e dissertativos", "Análise de discursos e ideologia", "Sintaxe: período composto (intro)", "Oralidade: apresentações estruturadas"] },
+    { area: "Matemática", comps: ["Potências, raízes e notação científica", "Equações e sistemas de 1º grau", "Geometria: triângulos e quadriláteros", "Probabilidade e estatística aplicadas"] },
+    { area: "Ciências", comps: ["Corpo humano: sistemas integrados", "Eletricidade, magnetismo e ondas (intro)"] },
+    { area: "Humanas (História/Geografia)", comps: ["Revoluções modernas e Brasil Império", "Globalização e geopolítica"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+  "9": [
+    { area: "Língua Portuguesa", comps: ["Produção de artigos de opinião e ensaios", "Leitura crítica de literatura e mídia", "Análise sintática e semântica", "Oralidade em situações públicas"] },
+    { area: "Matemática", comps: ["Funções (intro) e equações de 2º grau", "Teorema de Pitágoras e semelhança", "Trigonometria no triângulo retângulo", "Estatística: medidas e inferências"] },
+    { area: "Ciências", comps: ["Genética, hereditariedade e evolução", "Química: substâncias, reações e ambiente"] },
+    { area: "Humanas (História/Geografia)", comps: ["Século XX: guerras, ditaduras, redemocratização", "Brasil contemporâneo e territórios"] },
+    { area: "Competências socioemocionais", comps: BNCC_SOCIO },
+  ],
+};
+const YEAR_OPTIONS = ["1","2","3","4","5","6","7","8","9"];
+function bnccAreasFor(year: string): BnccArea[] {
+  return BNCC_BY_YEAR[year] || BNCC_BY_YEAR["2"];
+}
 
 export function Relatorios() {
   const user = useUser();
@@ -366,44 +402,60 @@ export function Relatorios() {
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState("Todos");
 
-  // Rubrica BNCC por aluno (persistido)
-  const [bnccByAluno, setBnccByAluno] = usePersistentState<Record<string, Record<string, BnccStatus>>>("rel_bncc", {});
-  const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string } | null>(null);
-
-  const competKeys = useMemo(() => {
-    const out: string[] = [];
-    BNCC_AREAS.forEach((a, i) => a.comps.forEach((_c, j) => out.push(`${i}.${j}`)));
-    return out;
-  }, []);
-  const getAlunoRubric = (id: string) => bnccByAluno[id] || {};
-  const setAlunoStatus = (id: string, key: string, status: BnccStatus) =>
-    setBnccByAluno((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: status } }));
-  const cycleStatus = (cur: BnccStatus | undefined): BnccStatus => {
-    const order: BnccStatus[] = ["no", "na", "ed", "co"];
-    return order[(order.indexOf(cur || "no") + 1) % order.length];
-  };
-  const computeProgress = (id: string) => {
-    const rub = getAlunoRubric(id);
-    let preenchido = 0; let pesoTotal = 0; let pontos = 0;
-    competKeys.forEach((k) => {
-      const s = rub[k];
-      pesoTotal += 3; // máximo CO=3
-      if (s && s !== "no") preenchido += 1;
-      if (s === "na") pontos += 0;
-      else if (s === "ed") pontos += 2;
-      else if (s === "co") pontos += 3;
-    });
-    const pctPreenchido = Math.round((preenchido / competKeys.length) * 100);
-    const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
-    return { pctPreenchido, pctDesempenho };
-  };
-
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
   type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
   const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
   const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
+
+  // Rubrica BNCC por aluno (persistido)
+  const [bnccByAluno, setBnccByAluno] = usePersistentState<Record<string, Record<string, BnccStatus>>>("rel_bncc", {});
+  // Override de ano de referência por aluno (sobretudo PCD)
+  const [yearOverride, setYearOverride] = usePersistentState<Record<string, string>>("rel_bncc_year", {});
+  const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
+
+  const yearForAluno = (id: string, turma: string): string => {
+    if (yearOverride[id]) return yearOverride[id];
+    const cls = dashClasses.find((c) => c.name === turma);
+    const g = cls?.grade?.replace(/\D/g, "");
+    return g && YEAR_OPTIONS.includes(g) ? g : "2";
+  };
+  const areasFor = (id: string, turma: string) => bnccAreasFor(yearForAluno(id, turma));
+  const competKeysFor = (id: string, turma: string) => {
+    const out: string[] = [];
+    areasFor(id, turma).forEach((a, i) => a.comps.forEach((_c, j) => out.push(`${i}.${j}`)));
+    return out;
+  };
+  const getAlunoRubric = (id: string) => bnccByAluno[id] || {};
+  const setAlunoStatus = (id: string, key: string, status: BnccStatus) =>
+    setBnccByAluno((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: status } }));
+  const setAreaStatus = (id: string, areaIdx: number, count: number, status: BnccStatus) =>
+    setBnccByAluno((prev) => {
+      const cur = { ...(prev[id] || {}) };
+      for (let j = 0; j < count; j++) cur[`${areaIdx}.${j}`] = status;
+      return { ...prev, [id]: cur };
+    });
+  const cycleStatus = (cur: BnccStatus | undefined): BnccStatus => {
+    const order: BnccStatus[] = ["no", "na", "ed", "co"];
+    return order[(order.indexOf(cur || "no") + 1) % order.length];
+  };
+  const computeProgress = (id: string, turma: string) => {
+    const rub = getAlunoRubric(id);
+    const keys = competKeysFor(id, turma);
+    let preenchido = 0; let pesoTotal = 0; let pontos = 0;
+    keys.forEach((k) => {
+      const s = rub[k];
+      pesoTotal += 3;
+      if (s && s !== "no") preenchido += 1;
+      if (s === "na") pontos += 0;
+      else if (s === "ed") pontos += 2;
+      else if (s === "co") pontos += 3;
+    });
+    const pctPreenchido = keys.length ? Math.round((preenchido / keys.length) * 100) : 0;
+    const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
+    return { pctPreenchido, pctDesempenho };
+  };
 
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
@@ -683,7 +735,7 @@ export function Relatorios() {
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
-                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id);
+                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma);
                   return (
                     <div style={{ marginTop: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
@@ -697,7 +749,7 @@ export function Relatorios() {
                 <div className="rel-card-foot">
                   <button
                     className="rel-btn-card"
-                    onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma })}
+                    onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
                     aria-label={`Avaliar competências BNCC de ${a.nome}`}
                   >
                     <ClipboardList size={13} /> Avaliar BNCC
@@ -817,16 +869,44 @@ export function Relatorios() {
       )}
 
       {bnccOpen && (() => {
-        const { id, nome, turma } = bnccOpen;
+        const { id, nome, turma, pcd } = bnccOpen;
         const rub = getAlunoRubric(id);
-        const { pctPreenchido, pctDesempenho } = computeProgress(id);
+        const { pctPreenchido, pctDesempenho } = computeProgress(id, turma);
+        const year = yearForAluno(id, turma);
+        const areas = areasFor(id, turma);
+        const cls = dashClasses.find((c) => c.name === turma);
+        const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
+        const isPcd = !!pcd;
         return (
           <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setBnccOpen(null)}>
             <div className="rel-modal" style={{ maxWidth: 760, width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "18px 20px", borderBottom: "1px solid var(--line-soft)" }}>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: 0, fontSize: 18 }}>Avaliação BNCC · {nome}</h3>
-                  <div style={{ fontSize: 12, color: "var(--text-soft)", marginTop: 2 }}>{turma || "Sem turma"} · {bimestreNum}º bimestre</div>
+                  <div style={{ fontSize: 12, color: "var(--text-soft)", marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span>{turma || "Sem turma"} · {bimestreNum}º bimestre</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 99, background: "#F3F4F6", color: "var(--text)", fontWeight: 700 }}>
+                      Ano de referência:
+                      <select
+                        value={year}
+                        disabled={!isPcd && !!turmaYear}
+                        onChange={(e) => setYearOverride((p) => ({ ...p, [id]: e.target.value }))}
+                        title={isPcd ? "Aluno PCD: você pode ajustar o ano de referência" : (turmaYear ? "Definido pela turma" : "Selecione")}
+                        style={{ border: 0, background: "transparent", fontWeight: 800, color: "var(--text)", cursor: isPcd ? "pointer" : (turmaYear ? "not-allowed" : "pointer") }}
+                      >
+                        {YEAR_OPTIONS.map((y) => <option key={y} value={y}>{y}º ano EF</option>)}
+                      </select>
+                      {isPcd && yearOverride[id] && (
+                        <button
+                          type="button"
+                          onClick={() => setYearOverride((p) => { const cp = { ...p }; delete cp[id]; return cp; })}
+                          style={{ background: "transparent", border: 0, color: "var(--text-soft)", cursor: "pointer", fontSize: 11 }}
+                          title="Voltar ao ano da turma"
+                        >resetar</button>
+                      )}
+                    </span>
+                    {isPcd && <span style={{ background: "#FDECEC", color: "#DC2626", fontWeight: 800, padding: "2px 8px", borderRadius: 99 }}>PCD</span>}
+                  </div>
                 </div>
                 <button onClick={() => setBnccOpen(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
               </div>
@@ -849,9 +929,23 @@ export function Relatorios() {
               </div>
 
               <div style={{ overflowY: "auto", padding: "8px 20px 16px" }}>
-                {BNCC_AREAS.map((area, ai) => (
+                {areas.map((area, ai) => (
                   <div key={area.area} style={{ marginTop: 14 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-soft)", marginBottom: 6 }}>{area.area}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-soft)", flex: 1 }}>{area.area}</div>
+                      <div style={{ display: "inline-flex", gap: 4 }}>
+                        <span style={{ fontSize: 10, color: "var(--text-soft)", alignSelf: "center", marginRight: 4 }}>Aplicar a todos:</span>
+                        {BNCC_STATUS.map((s) => (
+                          <button
+                            key={s.k}
+                            type="button"
+                            onClick={() => setAreaStatus(id, ai, area.comps.length, s.k)}
+                            title={`Marcar todas como ${s.label}`}
+                            style={{ cursor: "pointer", border: `1px dashed ${s.color}`, background: "#fff", color: s.color, borderRadius: 8, padding: "3px 7px", fontSize: 10, fontWeight: 800 }}
+                          >{s.short}</button>
+                        ))}
+                      </div>
+                    </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {area.comps.map((comp, ci) => {
                         const key = `${ai}.${ci}`;
@@ -906,13 +1000,13 @@ export function Relatorios() {
                   >Fechar</button>
                   <button
                     onClick={() => {
-                      const linhas = BNCC_AREAS.flatMap((area, ai) => area.comps.map((c, ci) => {
+                      const linhas = areas.flatMap((area, ai) => area.comps.map((c, ci) => {
                         const s = rub[`${ai}.${ci}`];
                         const lbl = BNCC_STATUS.find((x) => x.k === s)?.label || "Não observada";
                         return `- (${area.area}) ${c}: ${lbl}`;
                       })).join("\n");
                       sofia.openSofia({
-                        prompt: `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.`,
+                        prompt: `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC do ${year}º ano do Ensino Fundamental${isPcd && yearOverride[id] ? " (ano de referência ajustado para aluno PCD)" : ""}. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.`,
                         send: true,
                       });
                       setBnccOpen(null);
