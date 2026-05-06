@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState, useCall
 import { useLocation, useParams } from "@tanstack/react-router";
 import type { SofiaContext, RouteKey, SofiaUser, SofiaAluno, SofiaTurma, ProximaAula, DiaSemana, Periodo } from "./types";
 import { getMockAccount, subscribeMockAccount, PRO_DATASET, type MockAccount } from "./mockAccount";
+import { supabase } from "@/integrations/supabase/client";
 
 // ----- Helpers -----
 function routeKeyOf(path: string): RouteKey {
@@ -117,6 +118,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
 
   const [account, setAccount] = useState<MockAccount>(() => (typeof window === "undefined" ? "free_vazio" : getMockAccount()));
   const [tick, setTick] = useState(0);
+  const [authUser, setAuthUser] = useState<{ nome: string; primeiro_nome: string } | null>(null);
 
   useEffect(() => {
     const unsub = subscribeMockAccount(setAccount);
@@ -126,7 +128,65 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
     return () => { unsub(); window.removeEventListener("sofia:mutate", onMutate); clearInterval(interval); };
   }, []);
 
-  const value = useMemo(() => buildContext(account, route, alunoId), [account, route, alunoId, tick]);
+  // Carrega o nome real do usuário autenticado (perfil do Supabase) para
+  // usar no header / saudações da Sofia.
+  useEffect(() => {
+    let mounted = true;
+    async function loadProfile(uid: string, fallbackEmail: string | null, metaName: string | null) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, email")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (!mounted) return;
+      const nome =
+        (data?.display_name && data.display_name.trim()) ||
+        (metaName && metaName.trim()) ||
+        (data?.email && data.email.split("@")[0]) ||
+        (fallbackEmail && fallbackEmail.split("@")[0]) ||
+        "Professora";
+      const primeiro = nome.split(" ")[0];
+      setAuthUser({ nome, primeiro_nome: primeiro });
+    }
+    supabase.auth.getSession().then(({ data }) => {
+      const u = data.session?.user;
+      if (!u) { setAuthUser(null); return; }
+      const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
+      const metaName =
+        (typeof meta.display_name === "string" ? meta.display_name : null) ||
+        (typeof meta.name === "string" ? meta.name : null) ||
+        (typeof meta.full_name === "string" ? meta.full_name : null);
+      loadProfile(u.id, u.email ?? null, metaName);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+      const u = s?.user;
+      if (!u) { setAuthUser(null); return; }
+      const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
+      const metaName =
+        (typeof meta.display_name === "string" ? meta.display_name : null) ||
+        (typeof meta.name === "string" ? meta.name : null) ||
+        (typeof meta.full_name === "string" ? meta.full_name : null);
+      loadProfile(u.id, u.email ?? null, metaName);
+    });
+    const onProfileUpdate = () => {
+      supabase.auth.getSession().then(({ data }) => {
+        const u = data.session?.user;
+        if (u) loadProfile(u.id, u.email ?? null, null);
+      });
+    };
+    window.addEventListener("sofia:profile-updated", onProfileUpdate);
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+      window.removeEventListener("sofia:profile-updated", onProfileUpdate);
+    };
+  }, []);
+
+  const value = useMemo(() => {
+    const base = buildContext(account, route, alunoId);
+    if (!authUser) return base;
+    return { ...base, user: { ...base.user, nome: authUser.nome, primeiro_nome: authUser.primeiro_nome } };
+  }, [account, route, alunoId, tick, authUser]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
