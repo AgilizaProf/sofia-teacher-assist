@@ -693,28 +693,38 @@ export function Planejamento() {
   const [m1DayModal, setM1DayModal] = useState<{ dia: DayKey; iso: string; n: string; d: number } | null>(null);
   const [mdEtapa, setMdEtapa] = useState<Etapa>("EF1");
   const [mdAnoIdx, setMdAnoIdx] = useState<number>(1); // 2º ano por padrão
-  const [mdDiscIdx, setMdDiscIdx] = useState<number>(0);
+  // Disciplinas/campos selecionados (multi). Chave = nome da disciplina.
+  const [mdDiscOn, setMdDiscOn] = useState<Record<string, boolean>>({});
   const [mdSel, setMdSel] = useState<Record<string, boolean>>({});
   const [mdTema, setMdTema] = useState<string>("");
   const [mdInt, setMdInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
+  const [mdInter, setMdInter] = useState<boolean>(false);
   const mdAno = BNCC_BY_ETAPA[mdEtapa].anos[Math.min(mdAnoIdx, BNCC_BY_ETAPA[mdEtapa].anos.length - 1)];
-  const mdDisc = mdAno?.disciplinas[Math.min(mdDiscIdx, (mdAno?.disciplinas.length || 1) - 1)];
-  const mdSelecionadas = mdDisc ? mdDisc.competencias.filter((c) => mdSel[c.code]) : [];
+  const mdDiscList = mdAno?.disciplinas.filter((d) => mdDiscOn[d.nome]) ?? [];
+  const mdSelecionadas: Array<CompetenciaBNCC & { disciplina: string }> = mdDiscList.flatMap(
+    (d) => d.competencias.filter((c) => mdSel[c.code]).map((c) => ({ ...c, disciplina: d.nome })),
+  );
+  const mdDisciplinasComSel = Array.from(new Set(mdSelecionadas.map((c) => c.disciplina)));
+  const mdPodeInter = mdDisciplinasComSel.length >= 2;
   const openDayModal = (day: { k: DayKey; iso: string; n: string; d: number }) => {
     setM1DayModal({ dia: day.k, iso: day.iso, n: day.n, d: day.d });
+    // por padrão, marca a primeira disciplina/campo do ano selecionado
+    const ano = BNCC_BY_ETAPA[mdEtapa].anos[Math.min(mdAnoIdx, BNCC_BY_ETAPA[mdEtapa].anos.length - 1)];
+    setMdDiscOn(ano && ano.disciplinas[0] ? { [ano.disciplinas[0].nome]: true } : {});
     setMdSel({});
+    setMdInter(false);
     setMdTema(m1Tema);
   };
   const fecharDayModal = () => setM1DayModal(null);
   const gerarDayModal = () => {
-    if (!m1DayModal || !mdDisc) return;
+    if (!m1DayModal) return;
     if (mdSelecionadas.length === 0) { showToast("Selecione ao menos 1 competência."); return; }
     const novos = sofiaGenerateForDay({
       tema: mdTema,
       competencias: mdSelecionadas,
       intensidade: mdInt,
       diaISO: m1DayModal.iso,
-      disciplina: mdDisc.nome,
+      interdisciplinar: mdInter && mdPodeInter,
     });
     setM1Plan((p) => ({ ...p, [m1DayModal.dia]: [...p[m1DayModal.dia], ...novos] }));
     showToast(`Sofia adicionou ${novos.length} atividade(s) em ${m1DayModal.n}. ✓`);
