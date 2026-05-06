@@ -436,6 +436,12 @@ export function Relatorios() {
       for (let j = 0; j < count; j++) cur[`${areaIdx}.${j}`] = status;
       return { ...prev, [id]: cur };
     });
+  const clearAreaStatus = (id: string, areaIdx: number, count: number) =>
+    setBnccByAluno((prev) => {
+      const cur = { ...(prev[id] || {}) };
+      for (let j = 0; j < count; j++) delete cur[`${areaIdx}.${j}`];
+      return { ...prev, [id]: cur };
+    });
   const cycleStatus = (cur: BnccStatus | undefined): BnccStatus => {
     const order: BnccStatus[] = ["no", "na", "ed", "co"];
     return order[(order.indexOf(cur || "no") + 1) % order.length];
@@ -944,6 +950,12 @@ export function Relatorios() {
                             style={{ cursor: "pointer", border: `1px dashed ${s.color}`, background: "#fff", color: s.color, borderRadius: 8, padding: "3px 7px", fontSize: 10, fontWeight: 800 }}
                           >{s.short}</button>
                         ))}
+                        <button
+                          type="button"
+                          onClick={() => clearAreaStatus(id, ai, area.comps.length)}
+                          title="Resetar competências desta área para o estado padrão (não observada)"
+                          style={{ cursor: "pointer", border: "1px dashed var(--line)", background: "#fff", color: "var(--text-soft)", borderRadius: 8, padding: "3px 7px", fontSize: 10, fontWeight: 800 }}
+                        >Limpar área</button>
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
