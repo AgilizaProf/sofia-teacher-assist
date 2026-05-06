@@ -356,7 +356,21 @@ const M2_BNCC_OPTS = [
 ] as const;
 
 // === M1 — Geração da semana pela Sofia ===
-type M1Card = { id: string; v: Variant; tag: string; title: string; bncc: string; minutos: number; foco: string; motivo?: string };
+type M1AuditToken = {
+  token: string;
+  origens: Array<{ code: string; disciplina: string; tag: string; desc: string }>;
+};
+type M1Card = {
+  id: string;
+  v: Variant;
+  tag: string;
+  title: string;
+  bncc: string;
+  minutos: number;
+  foco: string;
+  motivo?: string;
+  auditoria?: M1AuditToken[];
+};
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
@@ -610,21 +624,23 @@ function sofiaGenerateForDay(opts: {
       const textosNorm = grupo.map((g) =>
         `${g.tag} ${g.desc}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
       );
-      // Para cada token compartilhado, lista os códigos das competências que o contêm.
-      const compartilhados: Array<{ token: string; codes: string[] }> = Array.from(freq.entries())
-        .filter(([, n]) => n >= 2)
-        .map(([w]) => {
-          const re = new RegExp(`\\b${w}\\b`);
-          const codes = grupo
-            .filter((_, idx) => re.test(textosNorm[idx]))
-            .map((g) => g.code);
-          return { token: w, codes };
-        })
-        .filter((x) => x.codes.length >= 2)
-        .sort((a, b) => b.codes.length - a.codes.length)
-        .slice(0, 4);
+      // Para cada token compartilhado, lista as competências (com origem completa) que o contêm.
+      const compartilhados: Array<{ token: string; codes: string[]; origens: M1AuditToken["origens"] }> =
+        Array.from(freq.entries())
+          .filter(([, n]) => n >= 2)
+          .map(([w]) => {
+            const re = new RegExp(`\\b${w}\\b`);
+            const origens = grupo
+              .filter((_, idx) => re.test(textosNorm[idx]))
+              .map((g) => ({ code: g.code, disciplina: g.disciplina, tag: g.tag, desc: g.desc }));
+            return { token: w, codes: origens.map((o) => o.code), origens };
+          })
+          .filter((x) => x.codes.length >= 2)
+          .sort((a, b) => b.codes.length - a.codes.length)
+          .slice(0, 6);
       const codes = grupo.map((g) => g.code).join(", ");
       const detalhes = compartilhados
+        .slice(0, 4)
         .map((x) => `${x.token} (${x.codes.join(", ")})`)
         .join("; ");
       const motivo =
@@ -633,6 +649,7 @@ function sofiaGenerateForDay(opts: {
             (detalhes ? ` em torno de: ${detalhes}.` : ".")
           : `Articula ${codes}` +
             (detalhes ? ` por: ${detalhes}.` : ".");
+      const auditoria: M1AuditToken[] = compartilhados.map((x) => ({ token: x.token, origens: x.origens }));
       out.push({
         id: `m1di_${opts.diaISO}_${i}_${Math.random().toString(36).slice(2, 7)}`,
         v: grupo[0].v,
@@ -645,6 +662,7 @@ function sofiaGenerateForDay(opts: {
         minutos,
         foco: disciplinas.join(" + "),
         motivo,
+        auditoria: auditoria.length > 0 ? auditoria : undefined,
       });
     }
     // Validação final: nenhuma competência (code) pode repetir entre atividades do dia.
@@ -793,6 +811,7 @@ export function Planejamento() {
   ] as const;
   const [pillsInt, setPillsInt] = useState<"Leve" | "Equilibrada" | "Densa">("Equilibrada");
   const [calSel, setCalSel] = useState<DayKey>("seg");
+  const [auditOpen, setAuditOpen] = useState<Record<string, boolean>>({});
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1_PLAN);
   const [m1Generating, setM1Generating] = useState(false);
@@ -1295,6 +1314,63 @@ export function Planejamento() {
                                           >
                                             ✨ {c.motivo}
                                           </div>
+                                        )}
+                                        {c.auditoria && c.auditoria.length > 0 && (
+                                          <>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setAuditOpen((s) => ({ ...s, [c.id]: !s[c.id] }));
+                                              }}
+                                              style={{
+                                                marginTop: 4,
+                                                background: "none",
+                                                border: "none",
+                                                padding: 0,
+                                                color: "var(--orange)",
+                                                fontSize: 10.5,
+                                                fontWeight: 700,
+                                                cursor: "pointer",
+                                              }}
+                                            >
+                                              {auditOpen[c.id] ? "▾ Ocultar auditoria" : "▸ Auditar agrupamento"}
+                                            </button>
+                                            {auditOpen[c.id] && (
+                                              <div
+                                                style={{
+                                                  marginTop: 6,
+                                                  padding: "6px 8px",
+                                                  background: "#FFF7ED",
+                                                  border: "1px solid #FED7AA",
+                                                  borderRadius: 6,
+                                                  display: "flex",
+                                                  flexDirection: "column",
+                                                  gap: 6,
+                                                  fontSize: 10.5,
+                                                  lineHeight: 1.4,
+                                                }}
+                                              >
+                                                {c.auditoria.map((a) => (
+                                                  <div key={a.token}>
+                                                    <div style={{ fontWeight: 700, color: "var(--ink)" }}>
+                                                      {a.token}{" "}
+                                                      <span style={{ color: "var(--muted)", fontWeight: 500 }}>
+                                                        ({a.origens.length} competências)
+                                                      </span>
+                                                    </div>
+                                                    <ul style={{ margin: "2px 0 0", paddingLeft: 14, color: "var(--ink-2)" }}>
+                                                      {a.origens.map((o) => (
+                                                        <li key={o.code}>
+                                                          <b>{o.code}</b> · {o.disciplina} · {o.tag} — {o.desc}
+                                                        </li>
+                                                      ))}
+                                                    </ul>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </>
                                         )}
                                       </div>
                                       <button
