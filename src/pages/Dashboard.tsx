@@ -305,7 +305,9 @@ export function Dashboard() {
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
-  const [students, setStudents] = usePersistentState<Array<{ name: string; classRef: string; birth: string; pcd: string; notes: string }>>("dash_students", []);
+  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  const [students, setStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const [studentDetail, setStudentDetail] = useState<{ index: number; student: DashStudent } | null>(null);
   const baseStudents = 0;
   const [authorize, setAuthorize] = useState(false);
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
@@ -514,8 +516,15 @@ export function Dashboard() {
                             const isPcd = s.pcd && s.pcd !== "nao";
                             const cidInfo = isPcd ? CID_LABEL[s.pcd] : null;
                             const avClass = `av-${(i % 3) + 1}`;
+                            const realIndex = students.indexOf(s);
                             return (
-                              <div key={`${turma}-${i}`} className="student">
+                              <button
+                                key={`${turma}-${i}`}
+                                type="button"
+                                className="student"
+                                onClick={() => setStudentDetail({ index: realIndex, student: s })}
+                                style={{ width: "100%", textAlign: "left", background: "transparent", cursor: "pointer", font: "inherit" }}
+                              >
                                 <div className={`student-avatar ${avClass}`}>{initials}</div>
                                 <div className="student-info">
                                   <div className="student-name">
@@ -530,7 +539,8 @@ export function Dashboard() {
                                     <div className="student-meta">{s.notes || cidInfo?.label}</div>
                                   )}
                                 </div>
-                              </div>
+                                <Svg width={14} height={14} c={<polyline points="9 18 15 12 9 6"/>} />
+                              </button>
                             );
                           })}
                         </div>
@@ -875,7 +885,7 @@ export function Dashboard() {
               if (names.length === 0) return;
               setStudents((arr) => [
                 ...arr,
-                ...names.map((name) => ({ name, classRef, birth: "", pcd, notes: "" })),
+                ...names.map((name) => ({ name, classRef, birth: "", pcd, notes: "", createdAt: new Date().toISOString() })),
               ]);
             } else {
               const name = String(fd.get("name") || "").trim();
@@ -886,6 +896,7 @@ export function Dashboard() {
                 birth: String(fd.get("birth") || ""),
                 pcd,
                 notes: String(fd.get("notes") || ""),
+                createdAt: new Date().toISOString(),
               }]);
             }
             (e.currentTarget as HTMLFormElement).reset();
@@ -981,6 +992,110 @@ export function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div
+        className={`cmdk-overlay ${studentDetail ? "show" : ""}`}
+        onClick={(e) => { if (e.target === e.currentTarget) setStudentDetail(null); }}
+        style={{ paddingTop: 80 }}
+      >
+        {studentDetail && (() => {
+          const s = studentDetail.student;
+          const isPcd = s.pcd && s.pcd !== "nao";
+          const cidInfo = isPcd ? CID_LABEL[s.pcd] : null;
+          const initials = s.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+          const fmt = (iso?: string) => {
+            if (!iso) return "—";
+            try { return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }); } catch { return iso; }
+          };
+          const fmtBirth = (d?: string) => {
+            if (!d) return "—";
+            try { return new Date(d + "T00:00:00").toLocaleDateString("pt-BR"); } catch { return d; }
+          };
+          return (
+            <div className="school-modal" role="dialog" aria-label={`Detalhes de ${s.name}`}>
+              <div className="school-modal-head">
+                <div className="student-avatar av-1" style={{ width: 44, height: 44, fontSize: 14 }}>{initials}</div>
+                <div>
+                  <div className="school-modal-title">{s.name}</div>
+                  <div className="school-modal-sub">{s.classRef || "Sem turma"}</div>
+                </div>
+                <button className="school-modal-close" aria-label="Fechar" onClick={() => setStudentDetail(null)}>
+                  <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+                </button>
+              </div>
+              <div className="school-modal-body">
+                <div className="school-row">
+                  <div className="school-field">
+                    <label>Turma</label>
+                    <div style={{ fontSize: 13.5, color: "var(--text)", padding: "8px 0" }}>{s.classRef || "—"}</div>
+                  </div>
+                  <div className="school-field">
+                    <label>Nascimento</label>
+                    <div style={{ fontSize: 13.5, color: "var(--text)", padding: "8px 0" }}>{fmtBirth(s.birth)}</div>
+                  </div>
+                </div>
+
+                <div className="school-field">
+                  <label>PCD / CID</label>
+                  <div style={{ fontSize: 13.5, color: "var(--text)", padding: "8px 0", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    {isPcd ? (
+                      <>
+                        <span className="student-tag">PCD</span>
+                        <span>{cidInfo?.label || s.pcd}</span>
+                        {cidInfo?.cid && cidInfo.cid !== "—" && (
+                          <span style={{ fontSize: 11, color: "var(--text-soft)", fontWeight: 700 }}>CID {cidInfo.cid}</span>
+                        )}
+                      </>
+                    ) : <span style={{ color: "var(--text-soft)" }}>Não é PCD</span>}
+                  </div>
+                </div>
+
+                <div className="school-field">
+                  <label>Anotações pedagógicas</label>
+                  <div style={{
+                    fontSize: 13.5, color: "var(--text)", padding: "10px 12px",
+                    background: "var(--bg-soft)", border: "1px solid var(--border-soft)",
+                    borderRadius: 9, lineHeight: 1.5, minHeight: 60, whiteSpace: "pre-wrap",
+                  }}>
+                    {s.notes || <span style={{ color: "var(--text-soft)" }}>Sem anotações.</span>}
+                  </div>
+                </div>
+
+                <div className="school-field">
+                  <label>Histórico de cadastro</label>
+                  <div style={{
+                    fontSize: 12.5, color: "var(--text-soft)",
+                    padding: "10px 12px", background: "var(--bg-soft)",
+                    border: "1px solid var(--border-soft)", borderRadius: 9,
+                    display: "flex", flexDirection: "column", gap: 6,
+                  }}>
+                    <div>📌 Cadastrado em: <strong style={{ color: "var(--text)" }}>{fmt(s.createdAt)}</strong></div>
+                    <div>🏷️ Turma vinculada: <strong style={{ color: "var(--text)" }}>{s.classRef || "—"}</strong></div>
+                    <div>🩺 Status PCD: <strong style={{ color: "var(--text)" }}>{isPcd ? (cidInfo?.label || s.pcd) : "Não é PCD"}</strong></div>
+                  </div>
+                </div>
+              </div>
+              <div className="school-modal-foot">
+                <button
+                  type="button"
+                  className="school-cancel"
+                  style={{ marginLeft: 0, color: "#B91C1C", borderColor: "#FCA5A5" }}
+                  onClick={() => {
+                    if (!confirm(`Remover ${s.name}?`)) return;
+                    setStudents((arr) => arr.filter((_, idx) => idx !== studentDetail.index));
+                    setStudentDetail(null);
+                  }}
+                >
+                  Remover aluno
+                </button>
+                <button type="button" className="school-save" onClick={() => setStudentDetail(null)}>
+                  Fechar
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
