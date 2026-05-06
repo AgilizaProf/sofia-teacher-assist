@@ -504,6 +504,38 @@ export function Planejamento() {
     const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
     return { days, range, label };
   }, [weekOffset]);
+
+  const focosSelecionados = useMemo(
+    () => Object.keys(pillsFoco).filter((k) => pillsFoco[k]),
+    [pillsFoco],
+  );
+  const m1Stats = useMemo(() => {
+    const all = (Object.values(m1Plan) as M1Card[][]).flat();
+    const bnccs = new Set(all.map((c) => c.bncc));
+    return { atividades: all.length, habilidades: bnccs.size };
+  }, [m1Plan]);
+  const gerarComSofia = () => {
+    setM1Generating(true);
+    setTimeout(() => {
+      const plan = sofiaGenerateWeek({
+        tema: m1Tema,
+        focos: focosSelecionados,
+        intensidade: pillsInt,
+        diasISO: m1Week.days.map((d) => d.iso),
+      });
+      setM1Plan(plan);
+      setM1Generating(false);
+      const total = (Object.values(plan) as M1Card[][]).flat().length;
+      showToast(total > 0 ? `Sofia montou ${total} atividade(s) na semana. Revise e ajuste. ✨` : "Selecione ao menos um foco para a Sofia gerar.");
+    }, 350);
+  };
+  const limparSemanaM1 = () => {
+    setM1Plan(EMPTY_M1_PLAN);
+    showToast("Semana limpa. Quando quiser, peça pra Sofia gerar de novo.");
+  };
+  const removerCardM1 = (dia: DayKey, id: string) => {
+    setM1Plan((p) => ({ ...p, [dia]: p[dia].filter((c) => c.id !== id) }));
+  };
   const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([]);
   const [chatTxt, setChatTxt] = useState("");
   const [layers, setLayers] = useState<Record<string, boolean>>({
