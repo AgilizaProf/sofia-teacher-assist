@@ -793,7 +793,16 @@ export function Agenda() {
               <div className="ag-up-card">
                 <div className="ag-up-head">
                   <div className="ag-up-title">Próximos compromissos</div>
-                  <span className="ag-up-link">Ver todos</span>
+                  {upcoming.length > 8 && (
+                    <button
+                      type="button"
+                      className="ag-up-link"
+                      style={{ background: "transparent", border: 0, padding: 0, font: "inherit" }}
+                      onClick={() => setShowAllUpcoming(true)}
+                    >
+                      Ver todos ({upcoming.length})
+                    </button>
+                  )}
                 </div>
                 <div className="ag-up-list">
                   {upcoming.length === 0 ? (
@@ -801,7 +810,7 @@ export function Agenda() {
                       Nenhum compromisso futuro.
                     </div>
                   ) : (
-                    upcoming.map((ev) => {
+                    upcoming.slice(0, 8).map((ev) => {
                       const [, mm, dd] = ev.date.split("-");
                       return (
                         <div key={ev.id} className="ag-up-item" onClick={() => openDayPanel(ev.date)}>
