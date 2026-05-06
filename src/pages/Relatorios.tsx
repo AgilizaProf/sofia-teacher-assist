@@ -485,17 +485,18 @@ export function Relatorios() {
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
-            <div className="rel-kpi" style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent" }}>
+            <div className={"rel-kpi rel-kpi-dark" + (bump ? " is-bump" : "")} style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent", overflow: "hidden", position: "relative" }}>
               <div className="rel-kpi-top">
                 <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
                 <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
               </div>
-              <div className="rel-kpi-num" style={{ color: "#fff" }}>
+              <div className="rel-kpi-num rel-kpi-anim" style={{ color: "#fff", transition: "transform .4s cubic-bezier(.2,.8,.2,1)", transform: bump ? "scale(1.06)" : "scale(1)" }}>
                 {savedH}h<small style={{ color: "rgba(255,255,255,.75)" }}>{String(savedM).padStart(2, "0")}min</small>
               </div>
               <div className="rel-kpi-foot" style={{ color: "rgba(255,255,255,.7)" }}>
                 {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
               </div>
+              <span aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(circle at 80% 0%, rgba(255,106,44,.25), transparent 60%)", opacity: bump ? 1 : 0, transition: "opacity .6s ease" }} />
             </div>
           </div>
 
