@@ -267,6 +267,30 @@ const ActionIcon = ({ name }: { name: NonNullable<Parecer["actions"][number]["ic
   }
 };
 
+function useAnimatedNumber(target: number, duration = 800) {
+  const [value, setValue] = useState(target);
+  const fromRef = useRef(target);
+  const startRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (target === value) return;
+    fromRef.current = value;
+    startRef.current = null;
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+    const step = (ts: number) => {
+      if (startRef.current === null) startRef.current = ts;
+      const p = Math.min(1, (ts - startRef.current) / duration);
+      const next = fromRef.current + (target - fromRef.current) * ease(p);
+      setValue(p === 1 ? target : next);
+      if (p < 1) rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, duration]);
+  return value;
+}
+
 export function Relatorios() {
   const user = useUser();
   const ctx = useSofiaContext();
