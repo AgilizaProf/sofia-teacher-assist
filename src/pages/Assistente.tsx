@@ -14,6 +14,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 const css = `
 .ap-root{
@@ -91,6 +92,15 @@ const css = `
 .ctx-pcd-list{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--paper);border-radius:10px;border:1px solid var(--line-soft);}
 .ctx-pcd-tag{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line-soft);padding:5px 10px;border-radius:999px;font-size:11.5px;color:var(--text-soft);}
 .ctx-pcd-tag b{color:var(--text);font-weight:700;}
+.ctx-turma-list{display:flex;flex-direction:column;gap:8px;}
+.ctx-turma-card{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--line-soft);background:#fff;text-align:left;cursor:pointer;transition:.18s;font-family:inherit;width:100%;}
+.ctx-turma-card:hover{border-color:var(--accent);background:#FFF8F3;}
+.ctx-turma-card.selected{border-color:var(--accent);background:#FFF1E7;box-shadow:0 0 0 3px rgba(255,106,44,.12);}
+.ctx-turma-card .tname{font-weight:700;color:var(--text);font-size:13.5px;}
+.ctx-turma-card .tmeta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.ctx-turma-card .tcounts{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:11px;color:var(--text-soft);}
+.ctx-turma-card .tcounts b{font-size:14px;color:var(--accent);font-weight:800;}
+.ctx-empty-turma{padding:14px;background:var(--paper);border:1px dashed var(--line-soft);border-radius:10px;font-size:12.5px;color:var(--muted);text-align:center;}
 .ctx-modal-foot{padding:14px 22px;border-top:1px solid var(--line-soft);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:#fff;}
 .ctx-btn-cancel{padding:9px 16px;border-radius:10px;border:1px solid var(--line-soft);background:#fff;color:var(--text-soft);font-weight:600;font-size:13px;}
 .ctx-btn-save{padding:9px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-weight:700;font-size:13px;box-shadow:0 6px 14px -6px rgba(255,106,44,.55);}
@@ -232,24 +242,31 @@ export function Assistente() {
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
   const [ctxOpen, setCtxOpen] = useState(false);
-  const [ctxForm, setCtxForm] = useState({
-    nome: ctx.user.nome,
-    plano: ctx.user.plano,
-    turma: ctx.entity.turma_atual?.nome ?? "",
-    ano: ctx.entity.turma_atual?.ano ?? "",
-    total_alunos: ctx.entity.turma_atual?.total_alunos ?? 0,
-    observacoes: "",
-  });
-  useEffect(() => {
-    setCtxForm((f) => ({
-      ...f,
-      nome: ctx.user.nome,
-      plano: ctx.user.plano,
-      turma: ctx.entity.turma_atual?.nome ?? f.turma,
-      ano: ctx.entity.turma_atual?.ano ?? f.ano,
-      total_alunos: ctx.entity.turma_atual?.total_alunos ?? f.total_alunos,
-    }));
-  }, [ctx.user.nome, ctx.user.plano, ctx.entity.turma_atual]);
+  const [observacoes, setObservacoes] = useState("");
+  const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
+
+  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
+  const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
+  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+
+  // Agrupa alunos por turma e identifica PCDs
+  const turmasInfo = useMemo(() => {
+    const map = new Map<string, { name: string; school?: string; grade?: string; shift?: string; alunos: DashStudent[]; pcds: DashStudent[] }>();
+    dashClasses.forEach((c) => {
+      map.set(c.name, { name: c.name, school: c.school, grade: c.grade, shift: c.shift, alunos: [], pcds: [] });
+    });
+    dashStudents.forEach((s) => {
+      const key = s.classRef || "Sem turma";
+      if (!map.has(key)) map.set(key, { name: key, alunos: [], pcds: [] });
+      const entry = map.get(key)!;
+      entry.alunos.push(s);
+      if (s.pcd && s.pcd.trim()) entry.pcds.push(s);
+    });
+    return Array.from(map.values()).filter((t) => t.alunos.length > 0 || dashClasses.some((c) => c.name === t.name));
+  }, [dashClasses, dashStudents]);
+
+  const turmaSelecionada = selectedTurma ? turmasInfo.find((t) => t.name === selectedTurma) : null;
   const messages = sofia.messages;
   const loading = sofia.loading;
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -590,50 +607,45 @@ export function Assistente() {
             </div>
             <div className="ctx-modal-body">
               <div className="ctx-section">
-                <div className="ctx-section-label">Professor(a)</div>
-                <div className="ctx-grid">
-                  <div className="ctx-field">
-                    <label>Nome</label>
-                    <input value={ctxForm.nome} onChange={(e) => setCtxForm({ ...ctxForm, nome: e.target.value })} />
+                <div className="ctx-section-label">Suas turmas (clique para selecionar)</div>
+                {turmasInfo.length === 0 ? (
+                  <div className="ctx-empty-turma">
+                    Você ainda não cadastrou turmas. Cadastre suas turmas e alunos no painel inicial para a Sofia identificar automaticamente a quantidade de alunos e os PCDs.
                   </div>
-                  <div className="ctx-field">
-                    <label>Plano</label>
-                    <select value={ctxForm.plano} onChange={(e) => setCtxForm({ ...ctxForm, plano: e.target.value as "free" | "pro" })}>
-                      <option value="free">Free</option>
-                      <option value="pro">Pro</option>
-                    </select>
+                ) : (
+                  <div className="ctx-turma-list">
+                    {turmasInfo.map((t) => {
+                      const isSel = selectedTurma === t.name;
+                      return (
+                        <button
+                          key={t.name}
+                          type="button"
+                          className={"ctx-turma-card" + (isSel ? " selected" : "")}
+                          onClick={() => setSelectedTurma(isSel ? null : t.name)}
+                        >
+                          <div style={{ minWidth: 0 }}>
+                            <div className="tname">{t.name}</div>
+                            <div className="tmeta">
+                              {[t.school, t.grade, t.shift].filter(Boolean).join(" · ") || "Turma cadastrada"}
+                            </div>
+                          </div>
+                          <div className="tcounts">
+                            <span><b>{t.alunos.length}</b> alunos</span>
+                            <span><b>{t.pcds.length}</b> PCD</span>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                </div>
+                )}
               </div>
 
-              <div className="ctx-section">
-                <div className="ctx-section-label">Turma atual</div>
-                <div className="ctx-grid">
-                  <div className="ctx-field">
-                    <label>Nome da turma</label>
-                    <input value={ctxForm.turma} onChange={(e) => setCtxForm({ ...ctxForm, turma: e.target.value })} placeholder="Ex.: Turma A" />
-                  </div>
-                  <div className="ctx-field">
-                    <label>Ano escolar</label>
-                    <input value={ctxForm.ano} onChange={(e) => setCtxForm({ ...ctxForm, ano: e.target.value })} placeholder="Ex.: 2º ano" />
-                  </div>
-                  <div className="ctx-field">
-                    <label>Total de alunos</label>
-                    <input type="number" min={0} value={ctxForm.total_alunos} onChange={(e) => setCtxForm({ ...ctxForm, total_alunos: Number(e.target.value) || 0 })} />
-                  </div>
-                  <div className="ctx-field">
-                    <label>Pareceres no bimestre</label>
-                    <input value={`${ctx.dataState.pareceres_finalizados}/${ctx.dataState.pareceres_total_bimestre}`} disabled />
-                  </div>
-                </div>
-              </div>
-
-              {ctx.entity.todos_alunos_pcd.length > 0 && (
+              {turmaSelecionada && turmaSelecionada.pcds.length > 0 && (
                 <div className="ctx-section">
-                  <div className="ctx-section-label">Alunos PCD ({ctx.entity.todos_alunos_pcd.length})</div>
+                  <div className="ctx-section-label">Alunos PCD em {turmaSelecionada.name} ({turmaSelecionada.pcds.length})</div>
                   <div className="ctx-pcd-list">
-                    {ctx.entity.todos_alunos_pcd.map((a, i) => (
-                      <span key={i} className="ctx-pcd-tag"><b>{a.nome}</b> · {a.condicao}</span>
+                    {turmaSelecionada.pcds.map((a, i) => (
+                      <span key={i} className="ctx-pcd-tag"><b>{a.name}</b> · {a.pcd}</span>
                     ))}
                   </div>
                 </div>
@@ -645,8 +657,8 @@ export function Assistente() {
                   <textarea
                     rows={3}
                     placeholder="Ex.: Foco em alfabetização, evitar atividades com som alto, etc."
-                    value={ctxForm.observacoes}
-                    onChange={(e) => setCtxForm({ ...ctxForm, observacoes: e.target.value })}
+                    value={observacoes}
+                    onChange={(e) => setObservacoes(e.target.value)}
                   />
                 </div>
               </div>
@@ -656,8 +668,16 @@ export function Assistente() {
               <button
                 className="ctx-btn-save"
                 onClick={() => {
-                  if (ctxForm.observacoes.trim()) {
-                    sofia.openSofia({ prompt: `Atualize meu contexto: ${ctxForm.observacoes.trim()}`, send: false });
+                  const partes: string[] = [];
+                  if (turmaSelecionada) {
+                    const pcdTxt = turmaSelecionada.pcds.length
+                      ? ` Alunos PCD: ${turmaSelecionada.pcds.map((p) => `${p.name} (${p.pcd})`).join(", ")}.`
+                      : " Sem alunos PCD registrados.";
+                    partes.push(`Foque na turma ${turmaSelecionada.name} com ${turmaSelecionada.alunos.length} alunos.${pcdTxt}`);
+                  }
+                  if (observacoes.trim()) partes.push(observacoes.trim());
+                  if (partes.length) {
+                    sofia.openSofia({ prompt: `Atualize meu contexto: ${partes.join(" ")}`, send: false });
                   }
                   setCtxOpen(false);
                 }}
