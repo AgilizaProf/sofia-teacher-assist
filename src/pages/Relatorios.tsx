@@ -470,9 +470,9 @@ export function Relatorios() {
     const order: BnccStatus[] = ["no", "na", "ed", "co"];
     return order[(order.indexOf(cur || "no") + 1) % order.length];
   };
-  const computeProgress = (id: string, turma: string) => {
+  const computeProgress = (id: string, turma: string, pcd?: string) => {
     const rub = getAlunoRubric(id);
-    const keys = competKeysFor(id, turma);
+    const keys = competKeysFor(id, turma, pcd);
     let preenchido = 0; let pesoTotal = 0; let pontos = 0;
     keys.forEach((k) => {
       const s = rub[k];
@@ -765,7 +765,7 @@ export function Relatorios() {
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
-                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma);
+                   const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
@@ -901,9 +901,9 @@ export function Relatorios() {
       {bnccOpen && (() => {
         const { id, nome, turma, pcd } = bnccOpen;
         const rub = getAlunoRubric(id);
-        const { pctPreenchido, pctDesempenho } = computeProgress(id, turma);
+        const { pctPreenchido, pctDesempenho } = computeProgress(id, turma, pcd);
         const year = yearForAluno(id, turma);
-        const areas = areasFor(id, turma);
+        const areas = areasFor(id, turma, pcd);
         const cls = dashClasses.find((c) => c.name === turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
