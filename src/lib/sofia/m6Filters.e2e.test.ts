@@ -44,7 +44,6 @@ describe("M6 filtros — pipeline E2E (URL → sanitização → filtro)", () =>
   it.each([
     ["XSS em tag",      "tag=%3Cscript%3Ealert(1)%3C%2Fscript%3E"],
     ["regex injection", "turma=.%2A%7C5A"], // ".*|5A"
-    ["controle",        "aluno=Maria%00%0A"],
     ["oversize >80",    "tag=" + encodeURIComponent("a".repeat(120))],
     ["template lit",    "turma=%24%7Bx%7D"], // "${x}"
     ["path traversal",  "aluno=..%2F..%2Fetc%2Fpasswd"],
@@ -52,6 +51,15 @@ describe("M6 filtros — pipeline E2E (URL → sanitização → filtro)", () =>
   ])("URL inválida (%s) é descartada e lista permanece igual à sem filtro", (_label, qs) => {
     const raw = parseURLFilters(qs);
     expect(filterM6Entries(ENTRIES, raw)).toEqual(ENTRIES);
+  });
+
+  it("caracteres de controle são strippados, mantendo o conteúdo válido", () => {
+    // "Maria\u0000\n" → "Maria" (não é descarte; é limpeza). A lista
+    // resultante reflete o filtro válido após a limpeza.
+    const raw = parseURLFilters("aluno=Maria%00%0A");
+    const out = filterM6Entries(ENTRIES, raw);
+    expect(out).toHaveLength(1);
+    expect(out[0].text).toContain("Maria");
   });
 
   it("URL parcialmente inválida mantém apenas campos válidos", () => {
