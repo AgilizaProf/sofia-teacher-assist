@@ -1068,6 +1068,23 @@ export function Planejamento() {
 
   // M2 — Sequência didática
   const [m2Steps, setM2Steps] = usePersistentState<M2Step[]>("plan_m2_steps", []);
+  // Progresso da sequência: índice da etapa "em andamento". Etapas anteriores
+  // são consideradas concluídas; posteriores, futuras.
+  const [m2CurIdx, setM2CurIdx] = usePersistentState<number>("plan_m2_cur_idx", 0);
+  const [m2PrintOpen, setM2PrintOpen] = useState(false);
+  const m2Total = m2Steps.length;
+  const m2DoneCount = Math.min(m2CurIdx, m2Total);
+  const m2Pct = m2Total === 0 ? 0 : Math.round((m2DoneCount / m2Total) * 100);
+  const avancarEtapa = () => {
+    if (m2Total === 0) { showToast("Adicione uma aula antes de avançar."); return; }
+    if (m2CurIdx >= m2Total) { showToast("Sequência já concluída. 🎉"); return; }
+    const next = m2CurIdx + 1;
+    setM2CurIdx(next);
+    if (next >= m2Total) showToast("Sequência concluída! 🎉");
+    else showToast(`Etapa ${next} concluída. Avançando para ${next + 1} de ${m2Total}. ✓`);
+  };
+  const reiniciarProgresso = () => { setM2CurIdx(0); showToast("Progresso reiniciado."); };
+  const imprimirSequencia = () => setM2PrintOpen(true);
   const [m2Form, setM2Form] = useState<{ d: string; tag: string; t: string; p: string }>({
     d: "SEG", tag: M2_TAG_OPTS[0], t: "", p: M2_BNCC_OPTS[0],
   });
