@@ -856,7 +856,12 @@ function sofiaGenerateWeek(opts: {
 }
 
 export function Planejamento() {
-  const search = useSearch({ from: "/planejamento" }) as { m?: MKey };
+  const search = useSearch({ from: "/planejamento" }) as {
+    m?: MKey;
+    tag?: string;
+    turma?: string;
+    aluno?: string;
+  };
   const navigate = useNavigate({ from: "/planejamento" });
   const [m, setM] = useState<MKey>(search.m || "m5");
   const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
