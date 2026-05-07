@@ -4,6 +4,7 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
+import { useReducedMotion, type ReducedMotionMode } from "@/hooks/useReducedMotion";
 
 const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: string }> = [
   { n: 1, emoji: "📋", name: "Dados reais", summary: "A Sofia só usa o que você cadastrou. Nunca inventa." },
@@ -34,6 +35,12 @@ function getPrincipleBody(idx: number): string {
 export function Configuracoes() {
   const [open, setOpen] = useState<Record<number, boolean>>({});
   const toggle = (n: number) => setOpen((o) => ({ ...o, [n]: !o[n] }));
+  const { mode: rmMode, setMode: setRmMode } = useReducedMotion();
+  const RM_OPTS: Array<{ v: ReducedMotionMode; label: string; desc: string }> = [
+    { v: "system", label: "Seguir sistema", desc: "Usa a preferência do seu dispositivo." },
+    { v: "on", label: "Ativado", desc: "Reduz animações em todo o app." },
+    { v: "off", label: "Desativado", desc: "Mantém todas as animações." },
+  ];
 
   return (
     <div style={{ minHeight: "100vh", background: "#F4F6FB", color: "#1B2A4E", fontFamily: "'Inter',-apple-system,sans-serif" }}>
