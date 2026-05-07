@@ -1058,7 +1058,28 @@ export function Planejamento() {
   const removerCardM1 = (dia: DayKey, id: string) => {
     setM1Plan((p) => ({ ...p, [dia]: p[dia].filter((c) => c.id !== id) }));
   };
-  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([]);
+  // M3 — Editor conversacional
+  type M3Etapa = { id: string; titulo: string; min: number; novo?: boolean };
+  type M3Adapt = { id: string; aluno: string; texto: string; novo?: boolean };
+  type M3Plan = { titulo: string; bncc: string[]; duracaoMin: number; etapas: M3Etapa[]; adaptacoes: M3Adapt[] };
+  const M3_INITIAL_PLAN: M3Plan = {
+    titulo: "Adição com material concreto · 3º ano",
+    bncc: ["EF03MA03", "EF03MA05"],
+    duracaoMin: 50,
+    etapas: [
+      { id: "e1", titulo: "Acolhida e mobilização", min: 5 },
+      { id: "e2", titulo: "Exploração com material dourado (duplas)", min: 20 },
+      { id: "e3", titulo: "Sistematização no caderno", min: 15 },
+      { id: "e4", titulo: "Verificação rápida", min: 10 },
+    ],
+    adaptacoes: [],
+  };
+  const M3_INITIAL_LOG: Array<{ from: "user" | "sofia"; t: string }> = [
+    { from: "sofia", t: "Oi! Quer ajustar essa atividade? É só me dizer em linguagem natural — eu mantenho o objetivo e a BNCC." },
+  ];
+  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>(M3_INITIAL_LOG);
+  const [m3Plan, setM3Plan] = useState<M3Plan>(M3_INITIAL_PLAN);
+  const [m3Loading, setM3Loading] = useState(false);
   const [chatTxt, setChatTxt] = useState("");
   const [layers, setLayers] = useState<Record<string, boolean>>({
     aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
