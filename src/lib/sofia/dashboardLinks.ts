@@ -32,6 +32,23 @@ export function actionOpenAluno(alunoNome?: string, label = "Ver aluno"): SofiaN
   };
 }
 
+/**
+ * Abre o Dashboard no contexto de um momento PCD (M1, M3 ou M5).
+ * Filtra a lista de alunos por PCD e exibe um banner contextual.
+ * Se `alunoNome` for passado, abre também o detalhe do aluno.
+ */
+export function actionOpenAlunoNoMomento(
+  momento: "m1" | "m3" | "m5",
+  alunoNome?: string,
+  label = "Ver no painel",
+): SofiaNotifAction {
+  return {
+    label,
+    to: "/",
+    search: { open: "students", target: alunoNome, m: momento },
+  };
+}
+
 /** Abre a seção de escolas. */
 export function actionOpenEscolas(label = "Ver escolas"): SofiaNotifAction {
   return { label, to: "/", search: { open: "schools" } };
