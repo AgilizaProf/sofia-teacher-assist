@@ -2763,10 +2763,19 @@ export function Planejamento() {
                       <EmptyState icon="📓" title="Nenhum registro ainda." description="Salve seu primeiro diário acima." />
                     ) : (
                       m6Entries.map((e) => (
-                        <div key={e.id} className="pl-d6-entry" style={m6EditingId === e.id ? { borderColor: "var(--orange)", background: "var(--orange-soft)" } : undefined}>
+                        <div
+                          key={e.id}
+                          className="pl-d6-entry"
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => m6StartEdit(e)}
+                          onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); m6StartEdit(e); } }}
+                          title="Clique para editar"
+                          style={{ cursor: "pointer", ...(m6EditingId === e.id ? { borderColor: "var(--orange)", background: "var(--orange-soft)" } : null) }}
+                        >
                           <div className="head" style={{ justifyContent: "space-between" }}>
                             <span>{e.date}</span>
-                            <span style={{ display: "flex", gap: 6 }}>
+                            <span style={{ display: "flex", gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
                               <button onClick={() => m6StartEdit(e)} title="Editar" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 8px", fontSize: 11, fontWeight: 600, color: "var(--ink)", cursor: "pointer" }}>Editar</button>
                               <button onClick={() => m6DeleteEntry(e.id)} title="Excluir" aria-label="Excluir" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 6px", color: "#b91c1c", cursor: "pointer", display: "inline-flex", alignItems: "center" }}><X size={12} /></button>
                             </span>
