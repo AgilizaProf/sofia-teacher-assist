@@ -32,6 +32,8 @@ export type SofiaNotification = {
   read: boolean;
   dismissed?: boolean;    // descartada nesta sessão (não some, mas vira "ignorada")
   action?: SofiaNotifAction;
+  /** Ações secundárias renderizadas como chips ao lado do botão principal. */
+  actions?: SofiaNotifAction[];
   // dedupKey: identificador estável para evitar disparar 2x o mesmo lembrete.
   dedupKey?: string;
 };
@@ -114,6 +116,7 @@ export function SofiaNotificationsProvider({ children }: { children: React.React
         category: n.category,
         text: n.text,
         action: n.action,
+        actions: n.actions,
         dedupKey: n.dedupKey,
         createdAt: Date.now(),
         read: false,

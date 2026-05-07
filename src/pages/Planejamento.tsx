@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
+import { mentionsName } from "@/lib/sofia/mentions";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
@@ -856,7 +857,12 @@ function sofiaGenerateWeek(opts: {
 }
 
 export function Planejamento() {
-  const search = useSearch({ from: "/planejamento" }) as { m?: MKey };
+  const search = useSearch({ from: "/planejamento" }) as {
+    m?: MKey;
+    tag?: string;
+    turma?: string;
+    aluno?: string;
+  };
   const navigate = useNavigate({ from: "/planejamento" });
   const [m, setM] = useState<MKey>(search.m || "m5");
   const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
@@ -1425,6 +1431,33 @@ export function Planejamento() {
   const m6FormRef = useRef<HTMLDivElement | null>(null);
   const m6Registradas = m6Entries.length;
   const m6Pct = Math.min(100, Math.round((m6Registradas / m6Total) * 100));
+  // ── Filtros do diário (M6) vindos de search params ─────────────────────
+  // Sofia (resumo semanal e ações de notificação) usa esses params para
+  // abrir o M6 já filtrado por tag, turma ou aluno PCD citado.
+  const m6FilterTag = search.tag?.trim() ?? "";
+  const m6FilterTurma = search.turma?.trim() ?? "";
+  const m6FilterAluno = search.aluno?.trim() ?? "";
+  const m6HasFilter = !!(m6FilterTag || m6FilterTurma || m6FilterAluno);
+  const m6FilteredEntries = useMemo(() => {
+    if (!m6HasFilter) return m6Entries;
+    return m6Entries.filter((e) => {
+      if (m6FilterTag && !e.tags.some((t) => t.toLowerCase().includes(m6FilterTag.toLowerCase()))) return false;
+      const corpo = `${e.title ?? ""} ${e.text ?? ""}`.trim();
+      if (m6FilterTurma && !corpo.toLowerCase().includes(m6FilterTurma.toLowerCase())) return false;
+      if (m6FilterAluno && !mentionsName(corpo, m6FilterAluno)) return false;
+      return true;
+    });
+  }, [m6Entries, m6HasFilter, m6FilterTag, m6FilterTurma, m6FilterAluno]);
+  const m6ClearFilters = () => {
+    navigate({
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        tag: undefined,
+        turma: undefined,
+        aluno: undefined,
+      }),
+    });
+  };
   const m6ToggleTag = (t: string) => setM6Tags((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
   const m6ResetForm = () => { setM6Emoji(""); setM6Text(""); setM6Tags([]); setM6EditingId(null); };
   const m6StartEdit = (e: M6Entry) => {
@@ -2758,6 +2791,49 @@ export function Planejamento() {
                     </div>
 
                     <h3 style={{ fontSize: 15, margin: "20px 0 10px" }}>Histórico de registros</h3>
+                    {m6HasFilter && (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "8px 10px",
+                          marginBottom: 10,
+                          borderRadius: 10,
+                          background: "#FFF7ED",
+                          border: "1px solid #FED7AA",
+                          fontSize: 12,
+                          color: "#9A3412",
+                        }}
+                      >
+                        <strong style={{ marginRight: 4 }}>Filtrando por:</strong>
+                        {m6FilterTag && (
+                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                            tag · {m6FilterTag}
+                          </span>
+                        )}
+                        {m6FilterTurma && (
+                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                            turma · {m6FilterTurma}
+                          </span>
+                        )}
+                        {m6FilterAluno && (
+                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                            aluno · {m6FilterAluno}
+                          </span>
+                        )}
+                        <span style={{ marginLeft: "auto", color: "#7C2D12" }}>
+                          {m6FilteredEntries.length} de {m6Entries.length}
+                        </span>
+                        <button
+                          onClick={m6ClearFilters}
+                          style={{ background: "transparent", border: "1px solid #FDBA74", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: "#9A3412", fontWeight: 600 }}
+                        >
+                          Limpar
+                        </button>
+                      </div>
+                    )}
                     {!m6PatternDismissed && (
                       <div className="pl-d6-pattern">
                         <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>✨ Sofia detectou um padrão</div>
@@ -2770,10 +2846,10 @@ export function Planejamento() {
                         </div>
                       </div>
                     )}
-                    {m6Entries.length === 0 ? (
+                    {m6FilteredEntries.length === 0 ? (
                       <EmptyState icon="📓" title="Nenhum registro ainda." description="Salve seu primeiro diário acima." />
                     ) : (
-                      m6Entries.map((e) => (
+                      m6FilteredEntries.map((e) => (
                         <div
                           key={e.id}
                           className="pl-d6-entry"

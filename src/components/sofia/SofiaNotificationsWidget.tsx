@@ -6,7 +6,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { useSofiaNotifications, type SofiaNotifCategory, type SofiaNotification } from "@/lib/sofia/notifications";
+import { useSofiaNotifications, type SofiaNotifAction, type SofiaNotifCategory, type SofiaNotification } from "@/lib/sofia/notifications";
 import { useSofia } from "./SofiaProvider";
 import { askSofia } from "@/server/sofia.functions";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
@@ -86,27 +86,36 @@ export function SofiaNotificationsWidget() {
     }
   }, [draft, asking, sofia.isAuthed, navigate, userData]);
 
-  const handleAction = useCallback((n: SofiaNotification) => {
-    markRead(n.id);
-    if (n.action?.to) {
+  const runAction = useCallback((action: SofiaNotifAction) => {
+    if (action.to) {
       // `search` aceita chaves opcionais; o TanStack Router faz o merge.
-      navigate({ to: n.action.to, search: (n.action.search ?? {}) as never });
+      navigate({ to: action.to, search: (action.search ?? {}) as never });
       setOpen(false);
       return;
     }
-    if (n.action?.prompt) {
-      sofia.openSofia({ prompt: n.action.prompt, send: false });
+    if (action.prompt) {
+      sofia.openSofia({ prompt: action.prompt, send: false });
       setOpen(false);
       return;
     }
-    if (n.action?.intent) {
+    if (action.intent) {
       // dispara um evento global; outras telas podem escutar.
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("sofia:intent", { detail: { intent: n.action.intent, notification: n } }));
+        window.dispatchEvent(new CustomEvent("sofia:intent", { detail: { intent: action.intent } }));
       }
       setOpen(false);
     }
-  }, [markRead, navigate, sofia]);
+  }, [navigate, sofia]);
+
+  const handleAction = useCallback((n: SofiaNotification) => {
+    markRead(n.id);
+    if (n.action) runAction(n.action);
+  }, [markRead, runAction]);
+
+  const handleSecondary = useCallback((n: SofiaNotification, action: SofiaNotifAction) => {
+    markRead(n.id);
+    runAction(action);
+  }, [markRead, runAction]);
 
   if (!hydrated) return null;
 
@@ -194,6 +203,17 @@ export function SofiaNotificationsWidget() {
                             {n.action.label}
                           </Button>
                         )}
+                        {n.actions?.map((a, i) => (
+                          <Button
+                            key={`${n.id}-act-${i}`}
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleSecondary(n, a)}
+                          >
+                            {a.label}
+                          </Button>
+                        ))}
                         <Button
                           size="sm"
                           variant="ghost"
