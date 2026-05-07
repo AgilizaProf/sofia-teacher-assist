@@ -211,6 +211,79 @@ export function SofiaAutoReminders() {
           }
         }
       }
+
+      // ── 6) Resumo semanal proativo (Fase 5) ────────────────────────────
+      // Uma vez por semana ISO, segunda a quinta entre 8h e 19h, Sofia
+      // empurra um único card consolidando: turmas ativas, alunos PCD
+      // citados em diário recente, padrão de tags e pendências do diário.
+      // Todas as informações vêm do que o usuário JÁ cadastrou — nunca
+      // inventa. Dedup por semana ISO garante 1×/semana.
+      const weekday = now.getDay(); // 0=Dom, 1=Seg .. 6=Sáb
+      const dentroJanela = weekday >= 1 && weekday <= 4 && hour >= 8 && hour < 19;
+      if (dentroJanela) {
+        const wk = weekKey();
+        const linhas: string[] = [];
+
+        // Turmas
+        if (data.turmas.length > 0) {
+          linhas.push(
+            `📚 **${data.turmas.length} turma(s)** ativa(s)` +
+              (data.alunos.length > 0 ? ` · ${data.alunos.length} aluno(s) cadastrado(s)` : ""),
+          );
+        }
+
+        // PCDs citados no diário recente (até 14 entradas)
+        if (data.alunosPCD.length > 0 && data.diario.entries.length > 0) {
+          const recentesSemana = data.diario.entries.slice(0, 14);
+          const citados = new Set<string>();
+          for (const entry of recentesSemana) {
+            const corpo = `${entry.title ?? ""} ${entry.text ?? ""}`.trim();
+            if (!corpo) continue;
+            for (const aluno of data.alunosPCD) {
+              if (mentionsName(corpo, aluno.nome)) citados.add(aluno.primeiro_nome);
+            }
+          }
+          if (citados.size > 0) {
+            const nomes = Array.from(citados).slice(0, 4).join(", ");
+            const extra = citados.size > 4 ? ` e mais ${citados.size - 4}` : "";
+            linhas.push(`🧩 PCD citados no diário: **${nomes}**${extra}`);
+          } else {
+            linhas.push(`🧩 ${data.alunosPCD.length} aluno(s) PCD cadastrado(s) — nenhum citado no diário esta semana`);
+          }
+        }
+
+        // Padrão de tags
+        const recentesT = data.diario.entries.slice(0, 14);
+        if (recentesT.length >= 3) {
+          const cont: Record<string, number> = {};
+          for (const e of recentesT) for (const t of e.tags ?? []) cont[t] = (cont[t] ?? 0) + 1;
+          const top = Object.entries(cont)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 2)
+            .filter(([, n]) => n >= 2);
+          if (top.length > 0) {
+            const txt = top.map(([t, n]) => `**${t}** (${n}×)`).join(", ");
+            linhas.push(`🏷️ Tags em destaque: ${txt}`);
+          }
+        }
+
+        // Pendências do diário (meta do mês)
+        if (data.diario.meta_mes > 0 && data.diario.total_no_mes < data.diario.meta_mes) {
+          const falta = data.diario.meta_mes - data.diario.total_no_mes;
+          linhas.push(`📝 Faltam **${falta}** registro(s) no diário para a meta do mês (${data.diario.pct_mes}%)`);
+        }
+
+        // Só dispara se houver ao menos 2 linhas relevantes (evita card vazio).
+        if (linhas.length >= 2) {
+          const texto = `**Resumo da semana**\n\n${linhas.map((l) => `• ${l}`).join("\n")}\n\nQuer revisar o que está em aberto?`;
+          notif.push({
+            category: "lembrete",
+            text: texto,
+            dedupKey: `resumo:semanal:${wk}`,
+            action: actionOpenPlanejamento("m6", "Abrir diário"),
+          });
+        }
+      }
     };
 
     // Primeira avaliação um pouco depois do mount (evita disparar antes da
