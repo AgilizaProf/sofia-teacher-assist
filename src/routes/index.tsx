@@ -5,6 +5,9 @@ export const Route = createFileRoute("/")({
   validateSearch: (s: Record<string, unknown>) => ({
     open: typeof s.open === "string" ? (s.open as string) : undefined,
     target: typeof s.target === "string" ? (s.target as string) : undefined,
+    m: typeof s.m === "string" && ["m1", "m3", "m5"].includes(s.m as string)
+      ? (s.m as "m1" | "m3" | "m5")
+      : undefined,
   }),
   head: () => ({
     meta: [
