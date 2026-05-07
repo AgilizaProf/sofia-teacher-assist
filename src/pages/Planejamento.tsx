@@ -1122,7 +1122,7 @@ export function Planejamento() {
     sofia: { color: "#FF7A45", label: "Sofia" },
   };
   const [m4Month, setM4Month] = usePersistentState<{ y: number; m: number }>("plan_m4_month", { y: 2026, m: 3 }); // abril 2026 (0-index)
-  const [m4SelectedDay, setM4SelectedDay] = useState<number | null>(null);
+  const [m4SelectedDay, setM4SelectedDay] = usePersistentState<number | null>("plan_m4_selected_day", null);
   const m4Label = useMemo(() => {
     const d = new Date(m4Month.y, m4Month.m, 1);
     const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
@@ -1138,7 +1138,6 @@ export function Planejamento() {
     return cells;
   }, [m4Month]);
   const m4ChangeMonth = (delta: number) => {
-    setM4SelectedDay(null);
     setM4Month((s) => {
       const nm = s.m + delta;
       if (nm < 0) return { y: s.y - 1, m: 11 };
