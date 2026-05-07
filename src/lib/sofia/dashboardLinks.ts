@@ -67,3 +67,19 @@ export function actionOpenPlanejamento(aba?: "m1" | "m2" | "m3" | "m4" | "m5" | 
     search: aba ? { m: aba } : undefined,
   };
 }
+
+/**
+ * Abre o diário (M6) já filtrado por tag, turma e/ou aluno citado.
+ * Sofia usa estes deep-links no card de resumo semanal e em alertas
+ * relacionados a um padrão específico.
+ */
+export function actionOpenDiarioFiltrado(
+  filtro: { tag?: string; turma?: string; aluno?: string },
+  label = "Abrir diário",
+): SofiaNotifAction {
+  const search: Record<string, string | number | undefined> = { m: "m6" };
+  if (filtro.tag) search.tag = filtro.tag;
+  if (filtro.turma) search.turma = filtro.turma;
+  if (filtro.aluno) search.aluno = filtro.aluno;
+  return { label, to: "/planejamento", search };
+}
