@@ -838,6 +838,118 @@ export function Planejamento() {
   const dragCard = useRef<{ from: DayKey; id: string } | null>(null);
   const [picks, setPicks] = useState<Record<string, boolean>>({});
   const [tipOpen, setTipOpen] = useState(true);
+  // ===== M5 — Kanban semanal =====
+  const M5_VARIANTS: Variant[] = ["port", "mat", "ci", "aval", "esc"];
+  const M5_TURMAS = ["3º Ano B · manhã", "3º Ano C · manhã", "3º Ano A · tarde", "4º Ano A · manhã"];
+  const [m5Turma, setM5Turma] = usePersistentState<string>("plan_m5_turma", M5_TURMAS[0]);
+  const [m5Selected, setM5Selected] = useState<Set<string>>(new Set());
+  const [m5Generating, setM5Generating] = useState(false);
+  const [m5ReplicaOpen, setM5ReplicaOpen] = useState(false);
+  const [m5ReplicaPicks, setM5ReplicaPicks] = useState<Record<string, boolean>>({});
+  const [m5HistoryOpen, setM5HistoryOpen] = useState(false);
+  type M5HistoryEntry = { id: string; ts: number; label: string; undo?: () => void };
+  const [m5History, setM5History] = useState<M5HistoryEntry[]>([]);
+  const [m5UndoMove, setM5UndoMove] = useState<null | { card: Card; from: DayKey; to: DayKey }>(null);
+  const m5LogHistory = (label: string, undo?: () => void) => {
+    setM5History((h) => [{ id: `h_${Date.now()}_${Math.random().toString(36).slice(2,7)}`, ts: Date.now(), label, undo }, ...h].slice(0, 30));
+  };
+  const m5UndoLast = (entry: M5HistoryEntry) => {
+    entry.undo?.();
+    setM5History((h) => h.filter((x) => x.id !== entry.id));
+    showToast("Ação desfeita.");
+  };
+  const m5ReplicaCount = Object.values(m5ReplicaPicks).filter(Boolean).length;
+  const m5SugerirAula = (day: DayKey) => {
+    const variants: Variant[] = ["port", "mat", "ci"];
+    const tags = ["PORT", "MAT", "CIE"];
+    const titles = ["Leitura compartilhada", "Resolução de problemas", "Observação científica"];
+    const i = Math.floor(Math.random() * 3);
+    const card: Card = { id: `c_${Date.now()}`, v: variants[i], tag: tags[i], title: titles[i], meta: "45 min · sugestão Sofia" };
+    setWeek((w) => ({ ...w, [day]: [...w[day], card] }));
+    m5LogHistory(`Sugeriu aula em ${day.toUpperCase()}`, () => setWeek((w) => ({ ...w, [day]: w[day].filter((c) => c.id !== card.id) })));
+    showToast(`Sofia sugeriu uma aula para ${day.toUpperCase()}. ✨`);
+  };
+  const m5GerarComSofia = () => {
+    setM5Generating(true);
+    setTimeout(() => {
+      const before = week;
+      setWeek((w) => {
+        const next = { ...w };
+        const fillers: Record<DayKey, Card[]> = {
+          seg: [{ id: `c_${Date.now()}_s1`, v: "port", tag: "PORT", title: "Leitura compartilhada", meta: "45 min · 3ºA" }],
+          ter: [{ id: `c_${Date.now()}_t1`, v: "mat", tag: "MAT", title: "Adição com material concreto", meta: "50 min · 3ºA" }],
+          qua: [{ id: `c_${Date.now()}_q1`, v: "ci", tag: "CIE", title: "Ciclo da água", meta: "45 min · 3ºA" }],
+          qui: [{ id: `c_${Date.now()}_qi1`, v: "port", tag: "PORT", title: "Produção textual", meta: "50 min · 3ºA" }],
+          sex: [{ id: `c_${Date.now()}_x1`, v: "mat", tag: "MAT", title: "Jogos matemáticos", meta: "40 min · 3ºA" }],
+        };
+        (Object.keys(fillers) as DayKey[]).forEach((d) => {
+          if ((next[d] || []).length === 0) next[d] = fillers[d];
+        });
+        return next;
+      });
+      m5LogHistory("Gerou semana com Sofia", () => setWeek(before));
+      setM5Generating(false);
+      showToast("Sofia preencheu os dias vazios. ✨");
+    }, 1500);
+  };
+  const m5TrocarTurma = (t: string) => {
+    const before = week;
+    setM5Turma(t);
+    setWeek(INITIAL_WEEK);
+    m5LogHistory(`Trocou para ${t}`, () => { setWeek(before); });
+    showToast(`Carregada semana em branco de ${t}.`);
+  };
+  const m5ToggleSelect = (id: string, e: React.MouseEvent) => {
+    if (!e.shiftKey && m5Selected.size === 0) return; // só ativa em shift+click
+    setM5Selected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+  const m5ClearSelection = () => setM5Selected(new Set());
+  const m5BulkMove = (to: DayKey) => {
+    const ids = Array.from(m5Selected);
+    if (ids.length === 0) return;
+    const before = week;
+    setWeek((w) => {
+      const next: Week = { seg: [...w.seg], ter: [...w.ter], qua: [...w.qua], qui: [...w.qui], sex: [...w.sex] };
+      const moving: Card[] = [];
+      (Object.keys(next) as DayKey[]).forEach((d) => {
+        next[d] = next[d].filter((c) => {
+          if (ids.includes(c.id)) { moving.push(c); return false; }
+          return true;
+        });
+      });
+      next[to] = [...next[to], ...moving];
+      return next;
+    });
+    m5LogHistory(`Moveu ${ids.length} cartões para ${to.toUpperCase()}`, () => setWeek(before));
+    showToast(`↔ ${ids.length} cartões movidos para ${to.toUpperCase()}.`);
+    m5ClearSelection();
+  };
+  const m5BulkDelete = () => {
+    const ids = Array.from(m5Selected);
+    if (ids.length === 0) return;
+    const before = week;
+    setWeek((w) => {
+      const next: Week = { seg: [...w.seg], ter: [...w.ter], qua: [...w.qua], qui: [...w.qui], sex: [...w.sex] };
+      (Object.keys(next) as DayKey[]).forEach((d) => { next[d] = next[d].filter((c) => !ids.includes(c.id)); });
+      return next;
+    });
+    m5LogHistory(`Excluiu ${ids.length} cartões`, () => setWeek(before));
+    showToast(`${ids.length} cartões excluídos.`);
+    m5ClearSelection();
+  };
+  const m5OpenReplicar = () => { setM5ReplicaPicks({}); setM5ReplicaOpen(true); };
+  const m5ConfirmarReplicar = () => {
+    const sel = Object.entries(m5ReplicaPicks).filter(([, v]) => v).map(([k]) => k);
+    if (sel.length === 0) { showToast("Selecione ao menos uma turma."); return; }
+    m5LogHistory(`Replicou semana em ${sel.length} turma(s)`);
+    showToast(`Semana replicada em ${sel.length} turma(s). ✓`);
+    setM5ReplicaOpen(false);
+  };
+
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
   const FOCO_OPTS = [
