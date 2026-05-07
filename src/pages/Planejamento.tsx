@@ -1534,12 +1534,22 @@ export function Planejamento() {
     setDropDay(null);
     const d = dragCard.current; if (!d) return;
     if (d.from === to) return;
+    let movedCard: Card | null = null;
+    const fromDay = d.from;
     setWeek((w) => {
       const card = w[d.from].find((c) => c.id === d.id); if (!card || card.locked) return w;
+      movedCard = card;
       return { ...w, [d.from]: w[d.from].filter((c) => c.id !== d.id), [to]: [...w[to], card] };
     });
     dragCard.current = null;
-    showToast(`Cartão movido para ${to.toUpperCase()}. Sofia confirmou ausência de conflito. ✓`);
+    if (movedCard) {
+      const card = movedCard as Card;
+      setM5UndoMove({ card, from: fromDay, to });
+      m5LogHistory(`Moveu "${card.title}" de ${fromDay.toUpperCase()} para ${to.toUpperCase()}`, () => {
+        setWeek((w) => ({ ...w, [to]: w[to].filter((c) => c.id !== card.id), [fromDay]: [...w[fromDay], card] }));
+      });
+    }
+    showToast(`↔ Cartão movido com sucesso.`);
   };
 
   // === M1 — Drag & drop entre dias do calendário ===
