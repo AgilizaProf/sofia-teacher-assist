@@ -2154,6 +2154,52 @@ export function Planejamento() {
         </div>
       )}
 
+      {m2PrintOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Imprimir sequência didática"
+          onClick={() => setM2PrintOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "#fff", borderRadius: 14, width: "min(760px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                  🖨 Versão para impressão
+                </div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Sequência didática · {m2Total} {m2Total === 1 ? "etapa" : "etapas"}</h3>
+              </div>
+              <button onClick={() => setM2PrintOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6 }}><X size={18} /></button>
+            </div>
+            <div id="m2-print-area" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
+                Progresso: <strong>{m2DoneCount}/{m2Total}</strong> ({m2Pct}%)
+              </p>
+              <ol style={{ paddingLeft: 20, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                {m2Steps.map((s, idx) => {
+                  const status = idx < m2CurIdx ? "Concluída" : idx === m2CurIdx ? "Em andamento" : "Futura";
+                  return (
+                    <li key={s.id} style={{ borderLeft: "3px solid " + (idx < m2CurIdx ? "#16a34a" : idx === m2CurIdx ? "#F97316" : "#cbd5e1"), paddingLeft: 12 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .3, textTransform: "uppercase", color: "var(--muted)" }}>{s.d} · {s.tag} · {status}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>{s.t}</div>
+                      <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{s.p}</div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="pl-btn" onClick={() => setM2PrintOpen(false)}>Fechar</button>
+              <button className="pl-btn primary" onClick={() => window.print()}>Imprimir agora</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {m1DayModal && (
         <div
           role="dialog"
