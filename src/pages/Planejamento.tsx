@@ -1090,7 +1090,7 @@ export function Planejamento() {
   const [m3Plan, setM3Plan] = useState<M3Plan>(M3_INITIAL_PLAN);
   const [m3Loading, setM3Loading] = useState(false);
   const [chatTxt, setChatTxt] = useState("");
-  const [layers, setLayers] = useState<Record<string, boolean>>({
+  const [layers, setLayers] = usePersistentState<Record<string, boolean>>("plan_m4_layers", {
     aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
   });
   const toggleLayer = (k: string) => setLayers((s) => ({ ...s, [k]: !s[k] }));
@@ -1121,7 +1121,7 @@ export function Planejamento() {
     bncc: { color: "#06B6D4", label: "BNCC" },
     sofia: { color: "#FF7A45", label: "Sofia" },
   };
-  const [m4Month, setM4Month] = useState<{ y: number; m: number }>({ y: 2026, m: 3 }); // abril 2026 (0-index)
+  const [m4Month, setM4Month] = usePersistentState<{ y: number; m: number }>("plan_m4_month", { y: 2026, m: 3 }); // abril 2026 (0-index)
   const [m4SelectedDay, setM4SelectedDay] = useState<number | null>(null);
   const m4Label = useMemo(() => {
     const d = new Date(m4Month.y, m4Month.m, 1);
