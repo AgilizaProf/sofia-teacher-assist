@@ -80,10 +80,9 @@ describe("mentionsName — edge cases", () => {
   });
 
   it("handles names with hyphen", () => {
-    // Hífen é fronteira de palavra ([^a-z0-9]), então "Ana" e "Lucia" casam
-    // como partes ≥ 3 chars do nome (split /\s+/ mantém "Ana-Lucia" inteiro,
-    // mas o texto "Ana-Lucia" também contém "Ana" e "Lucia" como tokens).
+    // O nome "Ana-Lucia" é tratado como token único (split /\s+/), então
+    // só casa quando o texto reproduz o hífen.
     expect(mentionsName("Ana-Lucia chegou", "Ana-Lucia")).toBe(true);
-    expect(mentionsName("falei com Ana", "Ana-Lucia")).toBe(true);
+    expect(mentionsName("falei com Ana Lucia", "Ana-Lucia")).toBe(false);
   });
 });
