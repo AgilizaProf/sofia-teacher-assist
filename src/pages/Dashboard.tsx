@@ -746,11 +746,12 @@ export function Dashboard() {
                             const cidInfo = isPcd ? CID_LABEL[s.pcd] : null;
                             const avClass = `av-${(i % 3) + 1}`;
                             const realIndex = students.indexOf(s);
+                            const isHighlighted = realIndex === highlightedStudentIdx;
                             return (
                               <button
                                 key={`${turma}-${i}`}
                                 type="button"
-                                className="student"
+                                className={`student${isHighlighted ? " sofia-highlight" : ""}`}
                                 onClick={() => setStudentDetail({ index: realIndex, student: s })}
                                 style={{ width: "100%", textAlign: "left", background: "transparent", cursor: "pointer", font: "inherit" }}
                               >
