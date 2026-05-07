@@ -2789,8 +2789,6 @@ export function Planejamento() {
 
       {m5ConfirmDelete && (
         <div role="dialog" aria-modal="true" onClick={() => setM5ConfirmDelete(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}>
-
-      {false && null}
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(420px,100%)", boxShadow: "0 24px 60px rgba(15,23,42,.35)", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)" }}>
               <div style={{ fontSize: 11, color: "#b91c1c", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>⚠ Confirmar exclusão</div>
