@@ -1428,8 +1428,9 @@ export function Planejamento() {
     setM6Text(e.text);
     setM6Tags([...e.tags]);
     if (typeof window !== "undefined") {
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       requestAnimationFrame(() => {
-        m6FormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        m6FormRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
       });
     }
   };
