@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
@@ -279,6 +279,10 @@ const css = `
 @media(max-width:1200px){.hero{grid-template-columns:1fr;gap:22px;padding:24px;}.stats{grid-template-columns:1fr 1fr;}.grid-2{grid-template-columns:1fr;}}
 @media(max-width:900px){.ap-app{grid-template-columns:1fr;}.ap-sidebar{display:none;}.ap-main{padding:18px;}}
 @media(max-width:560px){.hero{padding:20px 18px;}.hero-title{font-size:26px;}.hero-metric-value{font-size:42px;}.stats{grid-template-columns:1fr;}.today-focus{flex-direction:column;align-items:flex-start;}.today-focus-action{width:100%;justify-content:center;}}
+
+/* Highlight visual quando a Sofia abre uma seção via deep-link. */
+.sofia-highlight{position:relative;outline:2px solid var(--accent, #FF7A45);outline-offset:3px;border-radius:14px;animation:sofiaPulseHighlight 1.6s ease-out 1;box-shadow:0 0 0 6px rgba(255,122,69,.15);}
+@keyframes sofiaPulseHighlight{0%{box-shadow:0 0 0 0 rgba(255,122,69,.55);}100%{box-shadow:0 0 0 14px rgba(255,122,69,0);}}
 `;
 
 const CID_LABEL: Record<string, { label: string; cid: string }> = Object.fromEntries(
@@ -337,6 +341,66 @@ export function Dashboard() {
   const [streak, setStreak] = useState<number>(0);
   const sofia = useSofia();
   const navigate = useNavigate();
+
+  // ── Deep-link vindo das notificações da Sofia ─────────────────────────────
+  // Lê ?open=schools|classes|students|agenda&target=<nome>, rola até a seção
+  // correspondente, destaca-a e abre o modal certo. O target é casado por
+  // nome (case-insensitive) com a turma ou aluno cadastrado pelo usuário.
+  const search = useSearch({ from: "/" }) as { open?: string; target?: string };
+  const schoolsRef = useRef<HTMLElement | null>(null);
+  const classesRef = useRef<HTMLElement | null>(null);
+  const studentsRef = useRef<HTMLElement | null>(null);
+  const agendaRef = useRef<HTMLElement | null>(null);
+  const [highlight, setHighlight] = useState<null | "schools" | "classes" | "students" | "agenda">(null);
+  const lastDeepLink = useRef<string>("");
+  useEffect(() => {
+    const open = search.open;
+    if (!open) return;
+    const key = `${open}|${search.target ?? ""}`;
+    if (key === lastDeepLink.current) return;
+    lastDeepLink.current = key;
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const scrollTo = (el: HTMLElement | null) => {
+      if (!el) return;
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }));
+    };
+    if (open === "schools") {
+      scrollTo(schoolsRef.current); setHighlight("schools");
+      setSchoolOpen(true);
+    } else if (open === "classes") {
+      scrollTo(classesRef.current); setHighlight("classes");
+      // Se o target casa com uma turma existente, abre o modal de edição;
+      // caso contrário, abre o modal de criar nova turma.
+      const t = (search.target ?? "").trim().toLowerCase();
+      if (t) {
+        const idx = classes.findIndex((c) => c.name.toLowerCase() === t);
+        if (idx >= 0) setEditingClassIdx(idx);
+        else setClassOpen(true);
+      } else {
+        setClassOpen(true);
+      }
+    } else if (open === "students") {
+      scrollTo(studentsRef.current); setHighlight("students");
+      const t = (search.target ?? "").trim().toLowerCase();
+      if (t) {
+        const idx = students.findIndex((s) => s.name.toLowerCase() === t);
+        if (idx >= 0) setStudentDetail({ index: idx, student: students[idx] });
+        else setStudentOpen(true);
+      } else {
+        setStudentOpen(true);
+      }
+    } else if (open === "agenda") {
+      scrollTo(agendaRef.current); setHighlight("agenda");
+    }
+    // Limpa o destaque após 2.5s.
+    const t = setTimeout(() => setHighlight(null), 2500);
+    // Remove os search params para não reabrir ao voltar.
+    const cleanup = setTimeout(() => {
+      navigate({ to: "/", search: {}, replace: true });
+    }, 600);
+    return () => { clearTimeout(t); clearTimeout(cleanup); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.open, search.target]);
 
   // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
   const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
@@ -437,9 +501,13 @@ export function Dashboard() {
             </div>
           )}
 
-          <div className="stats">
+          <div
+            className="stats"
+            data-sofia-section="stats"
+          >
             <button
-              className="stat school-clickable"
+              ref={schoolsRef as unknown as React.Ref<HTMLButtonElement>}
+              className={`stat school-clickable${highlight === "schools" ? " sofia-highlight" : ""}`}
               type="button"
               onClick={() => setSchoolOpen(true)}
               aria-label="Adicionar escola"
@@ -448,7 +516,7 @@ export function Dashboard() {
               <div className="stat-icon s1"><Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
               <div className="stat-body"><div className="stat-value">{baseSchools + schools.length} {schools.length > 0 && <span className="stat-value-trend">+{schools.length}</span>}</div><div className="stat-label">Escolas</div></div>
             </button>
-            <button className="stat school-clickable" type="button" onClick={() => setClassOpen(true)} aria-label="Adicionar turma" style={{ textAlign: "left" }}>
+            <button ref={classesRef as unknown as React.Ref<HTMLButtonElement>} className={`stat school-clickable${highlight === "classes" ? " sofia-highlight" : ""}`} type="button" onClick={() => setClassOpen(true)} aria-label="Adicionar turma" style={{ textAlign: "left" }}>
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
               <div className="stat-body"><div className="stat-value">{baseClasses + classes.length} {classes.length > 0 && <span className="stat-value-trend">+{classes.length}</span>}</div><div className="stat-label">Turmas ativas</div></div>
             </button>
@@ -463,7 +531,7 @@ export function Dashboard() {
           </div>
 
           <div className="grid-2">
-            <div className="card">
+            <div ref={studentsRef as unknown as React.Ref<HTMLDivElement>} className={`card${highlight === "students" ? " sofia-highlight" : ""}`}>
               <div className="card-head">
                 <h3 className="card-title">Seus alunos<span className="card-title-count">{totalStudents}</span></h3>
                 <div className="filter-pills">
@@ -613,7 +681,7 @@ export function Dashboard() {
                 </button>
               </div>
 
-              <div className="card">
+              <div ref={agendaRef as unknown as React.Ref<HTMLDivElement>} className={`card${highlight === "agenda" ? " sofia-highlight" : ""}`}>
                 <div className="card-head">
                   <h3 className="card-title">🗓️ Agenda</h3>
                   <button
