@@ -1435,16 +1435,28 @@ export function Planejamento() {
   };
   const m6Save = () => {
     if (!m6Emoji && !m6Text.trim() && m6Tags.length === 0) { showToast("Selecione um emoji ou escreva uma anotação."); return; }
-    const words = m6Text.trim().split(/\s+/).slice(0, 6).join(" ");
-    const title = words || "Registro rápido";
+    const trimmed = m6Text.trim();
+    const words = trimmed.split(/\s+/).slice(0, 6).join(" ");
     const now = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     if (m6EditingId) {
-      setM6Entries((prev) => prev.map((x) => x.id === m6EditingId ? { ...x, emoji: m6Emoji || x.emoji, title, text: m6Text.trim(), tags: [...m6Tags], date: `${x.date.split(" · ")[0]} · ${now} (editado)` } : x));
+      setM6Entries((prev) => prev.map((x) => {
+        if (x.id !== m6EditingId) return x;
+        const newTitle = words || x.title || "Registro rápido";
+        const dayLabel = (x.date.split(" · ")[0] || "Hoje").replace(/\s*\(editado\)\s*$/, "");
+        return {
+          ...x,
+          emoji: m6Emoji || x.emoji,
+          title: newTitle,
+          text: trimmed,
+          tags: [...m6Tags],
+          date: `${dayLabel} · ${now} (editado)`,
+        };
+      }));
       m6ResetForm();
       showToast("✓ Registro atualizado.");
       return;
     }
-    const entry: M6Entry = { id: `e-${Date.now()}`, emoji: m6Emoji || "🙂", title, text: m6Text.trim(), tags: [...m6Tags], date: `Hoje · ${now}` };
+    const entry: M6Entry = { id: `e-${Date.now()}`, emoji: m6Emoji || "🙂", title: words || "Registro rápido", text: trimmed, tags: [...m6Tags], date: `Hoje · ${now}` };
     setM6Entries((prev) => [entry, ...prev]);
     m6ResetForm();
     showToast("✓ Diário salvo.");
