@@ -1449,7 +1449,14 @@ export function Planejamento() {
     });
   }, [m6Entries, m6HasFilter, m6FilterTag, m6FilterTurma, m6FilterAluno]);
   const m6ClearFilters = () => {
-    navigate({ search: (prev) => ({ ...prev, tag: undefined, turma: undefined, aluno: undefined }) });
+    navigate({
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        tag: undefined,
+        turma: undefined,
+        aluno: undefined,
+      }),
+    });
   };
   const m6ToggleTag = (t: string) => setM6Tags((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
   const m6ResetForm = () => { setM6Emoji(""); setM6Text(""); setM6Tags([]); setM6EditingId(null); };
