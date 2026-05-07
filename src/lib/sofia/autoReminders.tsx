@@ -3,6 +3,7 @@ import { useSofiaUserData } from "./SofiaUserContext";
 import { useSofiaNotifications } from "./notifications";
 import {
   actionOpenAgenda,
+  actionOpenAluno,
   actionOpenAlunoNoMomento,
   actionOpenPlanejamento,
 } from "./dashboardLinks";
@@ -42,6 +43,23 @@ function weekKey(): string {
 function describePcd(nome: string, codigo: string | null): string {
   if (!codigo) return `**${nome}**`;
   return `**${nome}** (${codigo.toUpperCase()})`;
+}
+
+// Normaliza para comparação (sem acento, lower-case).
+function norm(s: string): string {
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// Procura menções a um nome dentro de um texto, com fronteira de palavra.
+function mentionsName(text: string, fullName: string): boolean {
+  const t = norm(text);
+  // Tenta nome completo primeiro, depois cada parte (>= 3 chars).
+  const candidates = [fullName, ...fullName.split(/\s+/)].filter((n) => n.length >= 3);
+  for (const c of candidates) {
+    const re = new RegExp(`(^|[^a-z0-9])${norm(c).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`);
+    if (re.test(t)) return true;
+  }
+  return false;
 }
 
 export function SofiaAutoReminders() {
@@ -179,6 +197,31 @@ export function SofiaAutoReminders() {
               // Deep-link com momento: filtra PCD, destaca o aluno na lista
               // e abre o modal de detalhe com o bloco "Contexto Sofia".
               action: actionOpenAlunoNoMomento("m1", primeiro.nome, "Ver aluno (M1)"),
+            });
+          }
+        }
+      }
+
+      // ── 5) Menção de aluno PCD no diário de bordo (Fase 4) ─────────────
+      // Para cada entrada recente do diário (até 10 mais novas), verifica
+      // se o título/texto cita o nome de um aluno PCD cadastrado. Se sim,
+      // oferece um atalho contextual para revisar as anotações de PCD.
+      // Sofia só age sobre alunos que existem; nunca inventa.
+      if (data.alunosPCD.length > 0 && data.diario.entries.length > 0) {
+        const recentesD = data.diario.entries.slice(0, 10);
+        for (const entry of recentesD) {
+          const corpo = `${entry.title ?? ""} ${entry.text ?? ""}`.trim();
+          if (!corpo) continue;
+          for (const aluno of data.alunosPCD) {
+            if (!mentionsName(corpo, aluno.nome)) continue;
+            const codigo = aluno.pcd_codigo ? aluno.pcd_codigo.toUpperCase() : "PCD";
+            notif.push({
+              category: "pcd",
+              text: `Você citou **${aluno.primeiro_nome}** (${codigo}) no diário. Quer adicionar/atualizar a anotação de PCD?`,
+              // Dedup por aluno + entrada — não repete o mesmo aviso, mas
+              // permite alertas distintos para outras entradas que o citem.
+              dedupKey: `pcd:mencao-diario:${aluno.id}:${entry.id}`,
+              action: actionOpenAluno(aluno.nome, "Abrir aluno"),
             });
           }
         }
