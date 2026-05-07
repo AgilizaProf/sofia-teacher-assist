@@ -5,8 +5,10 @@ import {
   actionOpenAgenda,
   actionOpenAluno,
   actionOpenAlunoNoMomento,
+  actionOpenDiarioFiltrado,
   actionOpenPlanejamento,
 } from "./dashboardLinks";
+import type { SofiaNotifAction } from "./notifications";
 import { mentionsName } from "./mentions";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -223,6 +225,12 @@ export function SofiaAutoReminders() {
       if (dentroJanela) {
         const wk = weekKey();
         const linhas: string[] = [];
+        // Ações secundárias (chips) que aparecem ao lado de "Abrir diário".
+        // Cada uma é um deep-link já filtrado para o M6.
+        const acoes: SofiaNotifAction[] = [];
+        const turmasAtivas = new Set<string>();
+        const tagsTop: string[] = [];
+        const alunosPcdCitadosNomes: string[] = [];
 
         // Turmas
         if (data.turmas.length > 0) {
@@ -230,6 +238,7 @@ export function SofiaAutoReminders() {
             `📚 **${data.turmas.length} turma(s)** ativa(s)` +
               (data.alunos.length > 0 ? ` · ${data.alunos.length} aluno(s) cadastrado(s)` : ""),
           );
+          for (const t of data.turmas) turmasAtivas.add(t.nome);
         }
 
         // PCDs citados no diário recente (até 14 entradas)
@@ -247,6 +256,7 @@ export function SofiaAutoReminders() {
             const nomes = Array.from(citados).slice(0, 4).join(", ");
             const extra = citados.size > 4 ? ` e mais ${citados.size - 4}` : "";
             linhas.push(`🧩 PCD citados no diário: **${nomes}**${extra}`);
+            for (const n of citados) alunosPcdCitadosNomes.push(n);
           } else {
             linhas.push(`🧩 ${data.alunosPCD.length} aluno(s) PCD cadastrado(s) — nenhum citado no diário esta semana`);
           }
@@ -264,6 +274,7 @@ export function SofiaAutoReminders() {
           if (top.length > 0) {
             const txt = top.map(([t, n]) => `**${t}** (${n}×)`).join(", ");
             linhas.push(`🏷️ Tags em destaque: ${txt}`);
+            for (const [t] of top) tagsTop.push(t);
           }
         }
 
@@ -276,11 +287,23 @@ export function SofiaAutoReminders() {
         // Só dispara se houver ao menos 2 linhas relevantes (evita card vazio).
         if (linhas.length >= 2) {
           const texto = `**Resumo da semana**\n\n${linhas.map((l) => `• ${l}`).join("\n")}\n\nQuer revisar o que está em aberto?`;
+          // Monta as ações secundárias (até ~5 chips) com base no que foi
+          // detectado. Cada uma abre o diário já filtrado.
+          for (const tag of tagsTop.slice(0, 2)) {
+            acoes.push(actionOpenDiarioFiltrado({ tag }, `🏷️ ${tag}`));
+          }
+          for (const turma of Array.from(turmasAtivas).slice(0, 2)) {
+            acoes.push(actionOpenDiarioFiltrado({ turma }, `📚 ${turma}`));
+          }
+          for (const aluno of alunosPcdCitadosNomes.slice(0, 2)) {
+            acoes.push(actionOpenDiarioFiltrado({ aluno }, `🧩 ${aluno}`));
+          }
           notif.push({
             category: "lembrete",
             text: texto,
             dedupKey: `resumo:semanal:${wk}`,
             action: actionOpenPlanejamento("m6", "Abrir diário"),
+            actions: acoes.length > 0 ? acoes : undefined,
           });
         }
       }
