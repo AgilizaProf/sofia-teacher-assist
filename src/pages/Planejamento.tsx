@@ -965,40 +965,91 @@ export function Planejamento() {
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 40;
+    const contentW = pageW - margin * 2;
+    const bottomLimit = pageH - margin - 24; // leave room for footer
     let y = margin;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+    let pageNum = 1;
+
+    const drawFooter = () => {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(150);
+      doc.text(`Página ${pageNum}`, pageW - margin, pageH - margin / 2, { align: "right" });
+      doc.text(`Planejamento · ${m5Turma}`, margin, pageH - margin / 2);
+    };
+    const newPage = () => {
+      drawFooter();
+      doc.addPage();
+      pageNum += 1;
+      y = margin;
+    };
+    const ensureSpace = (h: number) => { if (y + h > bottomLimit) newPage(); };
+
+    // Header
+    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(15, 23, 42);
     doc.text("Planejamento da Semana", margin, y); y += 22;
     doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(90);
     doc.text(`Turma: ${m5Turma}`, margin, y); y += 14;
     doc.text(`Exportado em: ${new Date().toLocaleString("pt-BR")}`, margin, y); y += 18;
     doc.setDrawColor(220); doc.line(margin, y, pageW - margin, y); y += 16;
+
+    // Pre-measure cards (with wrapped title + meta)
+    const cardPadX = 10;
+    const tagColW = 70;
+    const titleW = contentW - cardPadX * 2 - tagColW;
+    const metaW = contentW - cardPadX * 2;
+    const measureCard = (c: Card) => {
+      doc.setFontSize(11);
+      const titleLines = doc.splitTextToSize(c.title || "", titleW) as string[];
+      doc.setFontSize(9);
+      const metaLines = doc.splitTextToSize(c.meta || "", metaW) as string[];
+      const h = 10 /*top pad*/ + titleLines.length * 13 + 4 + metaLines.length * 11 + 10 /*bottom pad*/;
+      return { titleLines, metaLines, h };
+    };
+
     DAYS.forEach((day) => {
       const cards = week[day.k] || [];
-      const blockHeight = 28 + Math.max(cards.length, 1) * 32;
-      if (y + blockHeight > pageH - margin) { doc.addPage(); y = margin; }
+      const measured = cards.map(measureCard);
+      const headerH = 22;
+      const emptyH = 22;
+      const dayTotal = headerH + (cards.length === 0 ? emptyH : measured.reduce((s, m) => s + m.h + 6, 0)) + 10;
+
+      // Keep day intact if it fits on a page; otherwise allow card-level split
+      const fitsOnPage = dayTotal <= bottomLimit - margin;
+      if (fitsOnPage) ensureSpace(dayTotal);
+      else ensureSpace(headerH + (measured[0]?.h ?? emptyH) + 6);
+
+      // Day header
       doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "bold"); doc.setFontSize(13);
       doc.text(`${day.n} · ${day.d}  (${cards.length} ${cards.length === 1 ? "atividade" : "atividades"})`, margin, y);
       y += 16;
+
       if (cards.length === 0) {
         doc.setFont("helvetica", "italic"); doc.setFontSize(10); doc.setTextColor(150);
         doc.text("Sem atividades.", margin + 12, y); y += 18;
       } else {
-        cards.forEach((c) => {
-          if (y + 30 > pageH - margin) { doc.addPage(); y = margin; }
+        cards.forEach((c, i) => {
+          const m = measured[i];
+          ensureSpace(m.h + 6);
+          // Card box
           doc.setDrawColor(230); doc.setFillColor(248, 250, 252);
-          doc.roundedRect(margin, y - 10, pageW - margin * 2, 28, 4, 4, "FD");
+          doc.roundedRect(margin, y, contentW, m.h, 6, 6, "FD");
+          // Tag
           doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(249, 115, 22);
-          doc.text(c.tag, margin + 8, y + 2);
+          doc.text(c.tag || "", margin + cardPadX, y + 16);
+          // Title (wrapped)
           doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(15, 23, 42);
-          const title = doc.splitTextToSize(c.title, pageW - margin * 2 - 120)[0] || "";
-          doc.text(title, margin + 70, y + 2);
+          let ty = y + 16;
+          m.titleLines.forEach((line) => { doc.text(line, margin + cardPadX + tagColW, ty); ty += 13; });
+          // Meta (wrapped)
           doc.setFontSize(9); doc.setTextColor(110);
-          doc.text(c.meta, margin + 8, y + 13);
-          y += 32;
+          let my = y + 16 + m.titleLines.length * 13 + 6;
+          m.metaLines.forEach((line) => { doc.text(line, margin + cardPadX, my); my += 11; });
+          y += m.h + 6;
         });
       }
       y += 6;
     });
+    drawFooter();
+
     const safeTurma = m5Turma.replace(/[^\w-]+/g, "_");
     doc.save(`planejamento-semana-${safeTurma}.pdf`);
     showToast("📄 PDF exportado.");
