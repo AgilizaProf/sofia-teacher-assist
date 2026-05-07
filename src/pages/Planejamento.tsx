@@ -303,6 +303,11 @@ const css = `
 .pl-d6-progress > div{height:100%;background:linear-gradient(90deg,var(--orange),#FB923C);transition:width .4s;}
 .pl-d6-pattern{padding:14px;border-radius:12px;background:linear-gradient(135deg,#FFF4ED,#FFFAF7);border:1px dashed var(--orange);margin-bottom:12px;}
 @keyframes fade-in{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion: reduce){
+  .pl-d6-entry{animation:none !important;}
+  .pl-d6-emojis button{transition:none !important;}
+  .pl-d6-emojis button:hover{transform:none !important;}
+}
 
 .pl-toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,80px);background:var(--navy);color:#fff;padding:11px 16px;border-radius:10px;box-shadow:var(--shadow-lg);font-size:12.5px;display:flex;align-items:center;gap:10px;z-index:60;opacity:0;transition:.25s;pointer-events:none;}
 .pl-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}
