@@ -1831,11 +1831,13 @@ export function Planejamento() {
                       </div>
                     ) : (
                       <div className="pl-chain-list" style={{ marginTop: 12 }}>
-                        {m2Steps.map((s) => {
+                        {m2Steps.map((s, idx) => {
                           const editing = m2EditId === s.id;
                           const isOver = m2DragOverId === s.id && m2DraggingId !== s.id;
                           const showPhBefore = isOver && m2DragPos === "before";
                           const showPhAfter = isOver && m2DragPos === "after";
+                          const status: "done" | "current" | "future" =
+                            idx < m2CurIdx ? "done" : idx === m2CurIdx ? "current" : "future";
                           return (
                           <React.Fragment key={s.id}>
                             {showPhBefore && <div className="pl-drop-ph" aria-hidden="true" />}
@@ -1848,6 +1850,13 @@ export function Planejamento() {
                               }
                               onDragOver={(e) => onM2DragOver(e, s.id)}
                               onDrop={(e) => onM2Drop(e, s.id)}
+                              style={
+                                status === "done"
+                                  ? { opacity: 0.55 }
+                                  : status === "current"
+                                  ? { borderColor: "var(--primary, #F97316)", borderWidth: 2, boxShadow: "0 0 0 3px rgba(249,115,22,.12)" }
+                                  : undefined
+                              }
                             >
                               <div
                                 className="day"
@@ -1903,8 +1912,14 @@ export function Planejamento() {
                                   </div>
                                 ) : (
                                   <>
-                                    <div className="tag">{s.tag}{s.suggest ? " · sugestão Sofia" : ""}</div>
-                                    <div className="ttl">{s.t}</div>
+                                    <div className="tag" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                      {status === "done" && <Check size={12} style={{ color: "#16a34a" }} />}
+                                      {status === "current" && <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 99, background: "var(--primary, #F97316)" }} />}
+                                      <span>{s.tag}{s.suggest ? " · sugestão Sofia" : ""}</span>
+                                      {status === "current" && <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--primary, #F97316)", letterSpacing: .3 }}>· EM ANDAMENTO</span>}
+                                      {status === "done" && <span style={{ fontSize: 10.5, fontWeight: 700, color: "#16a34a", letterSpacing: .3 }}>· CONCLUÍDA</span>}
+                                    </div>
+                                    <div className="ttl" style={status === "done" ? { textDecoration: "line-through" } : undefined}>{s.t}</div>
                                     <div className="meta">
                                       <span className="pill">{s.p}</span>
                                       {s.suggest && (
