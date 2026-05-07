@@ -89,7 +89,8 @@ export function SofiaNotificationsWidget() {
   const handleAction = useCallback((n: SofiaNotification) => {
     markRead(n.id);
     if (n.action?.to) {
-      navigate({ to: n.action.to });
+      // `search` aceita chaves opcionais; o TanStack Router faz o merge.
+      navigate({ to: n.action.to, search: (n.action.search ?? {}) as never });
       setOpen(false);
       return;
     }
