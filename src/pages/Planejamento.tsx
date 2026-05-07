@@ -1295,19 +1295,18 @@ export function Planejamento() {
                   onClick={() => {
                     const l = c.label.toLowerCase();
                     if (l.includes("ajustar parâmetros")) { setParamsModalOpen(true); return; }
+                    const scrollToAnchor = (id: string) => {
+                      const el = document.getElementById(id);
+                      if (!el) return;
+                      const topbar = document.querySelector(".pl-topbar") as HTMLElement | null;
+                      const offset = (topbar?.offsetHeight ?? 48) + 16;
+                      const y = el.getBoundingClientRect().top + window.scrollY - offset;
+                      window.scrollTo({ top: y, behavior: "smooth" });
+                    };
                     if (m === "m2") {
-                      if (l.includes("ver cadeia")) {
-                        document.getElementById("m2-cadeia")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        return;
-                      }
-                      if (l.includes("habilidades")) {
-                        document.getElementById("m2-habilidades")?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        return;
-                      }
-                      if (l.includes("reordenar")) {
-                        reordenarSequencia();
-                        return;
-                      }
+                      if (l.includes("ver cadeia")) { scrollToAnchor("m2-cadeia"); return; }
+                      if (l.includes("habilidades")) { scrollToAnchor("m2-habilidades"); return; }
+                      if (l.includes("reordenar")) { reordenarSequencia(); return; }
                     }
                   }}
                 >{c.label}</button>
@@ -1744,7 +1743,7 @@ export function Planejamento() {
                     <button className="pl-btn primary" onClick={sugerirProxima}><Link2 size={14} /> Conectar próxima aula</button>
                   </div>
                 </div>
-                <div className="pl-chain" id="m2-cadeia">
+                <div className="pl-chain" id="m2-cadeia" style={{ scrollMarginTop: 96 }}>
                   <div className="pl-chain-card">
                     <h3 style={{ fontSize: 16 }}>Sequência didática</h3>
                     {/* Formulário de adição */}
@@ -1902,7 +1901,7 @@ export function Planejamento() {
                         </p>
                       )}
                     </div>
-                    <div className="pl-panel" id="m2-habilidades" style={{ marginTop: 12, scrollMarginTop: 80 }}>
+                    <div className="pl-panel" id="m2-habilidades" style={{ marginTop: 12, scrollMarginTop: 96 }}>
                       <h3><BookOpen size={14} /> Habilidades cobertas</h3>
                       {m2Steps.length === 0 ? (
                         <p className="lead">Nenhuma habilidade BNCC mapeada ainda.</p>
