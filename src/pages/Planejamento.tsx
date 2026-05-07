@@ -1715,6 +1715,7 @@ export function Planejamento() {
                   <div><h2>Cadeia da semana <small>· selecione disciplina e turma</small></h2></div>
                   <div className="right">
                     <button className="pl-btn"><BookOpen size={14} /> Habilidades</button>
+                    <button className="pl-btn" onClick={reordenarSequencia} title="Reorganiza as etapas existentes na ordem Introdução → Síntese, preservando todos os blocos."><ArrowDownUp size={14} /> Reordenar na ordem completa</button>
                     <button className="pl-btn primary" onClick={sugerirProxima}><Link2 size={14} /> Conectar próxima aula</button>
                   </div>
                 </div>
