@@ -89,14 +89,15 @@ test.describe("M6 — filtros (URL/localStorage inválidos)", () => {
   });
 
   test("localStorage com filtro válido é restaurado ao voltar ao M6 sem params", async ({ browser }) => {
-    // Usa um contexto fresco e semeia localStorage ANTES do primeiro load,
-    // para que o ref m6FilterRestored ainda esteja virgem na montagem.
-    const context = await browser.newContext();
-    await context.addInitScript(() => {
-      try {
-        localStorage.setItem("plan_m6_filters", JSON.stringify({ turma: "Turma" }));
-      } catch {}
+    // Semeia localStorage ANTES do primeiro load para que o ref interno
+    // m6FilterRestored ainda esteja virgem na montagem do componente.
+    const context = await browser.newContext({ baseURL: process.env.E2E_BASE_URL ?? "http://localhost:8080" });
+    const seed = await context.newPage();
+    await seed.goto("/");
+    await seed.evaluate(() => {
+      localStorage.setItem("plan_m6_filters", JSON.stringify({ turma: "Turma" }));
     });
+    await seed.close();
     const page = await context.newPage();
     await page.goto(M6);
     await expect(page.getByTestId("m6-filter-turma")).toBeVisible();
