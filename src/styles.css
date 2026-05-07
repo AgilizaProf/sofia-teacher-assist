@@ -182,9 +182,20 @@ button[aria-label="Dispensar"] > * {
   }
 }
 
-/* Global "reduce motion" — respects the user's OS-level preference.
-   Neutralizes animations, transitions and smooth scroll across the entire app
-   (Tailwind utilities, shadcn/ui Radix components, custom keyframes). */
+/* Global "reduce motion" — respects either the OS-level preference
+   (prefers-reduced-motion: reduce) OR an in-app toggle that adds the
+   `reduce-motion` class to <html> via useReducedMotion(). */
+.reduce-motion,
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

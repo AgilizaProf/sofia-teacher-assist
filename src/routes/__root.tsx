@@ -6,6 +6,7 @@ import { SofiaWidget } from "@/components/sofia/SofiaWidget";
 import { SofiaContextProvider } from "@/lib/sofia/sofiaContext";
 import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 import appCss from "../styles.css?url";
 
@@ -83,6 +84,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   useEffect(() => { installHydrationTelemetry(); }, []);
+  useReducedMotion();
   return (
     <SofiaProvider>
       <SofiaContextProvider>
