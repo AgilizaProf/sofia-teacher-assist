@@ -2721,7 +2721,7 @@ export function Planejamento() {
                   </div>
                 </div>
                 <div className="pl-d6">
-                  <div className="pl-d6-card">
+                  <div className="pl-d6-card" ref={m6FormRef}>
                     <h3 style={{ fontSize: 15, marginBottom: 4 }}>{m6EditingId ? "Editando registro" : "Como foi a aula?"}</h3>
                     <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>
                       {m6EditingId ? "Ajuste os campos e salve as alterações." : "Selecione um humor, anote algo e marque tags."}
