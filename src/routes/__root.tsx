@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SofiaProvider } from "@/components/sofia/SofiaProvider";
 import { SofiaWidget } from "@/components/sofia/SofiaWidget";
 import { SofiaContextProvider } from "@/lib/sofia/sofiaContext";
+import { SofiaUserDataProvider } from "@/lib/sofia/SofiaUserContext";
 import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -88,10 +89,12 @@ function RootComponent() {
   return (
     <SofiaProvider>
       <SofiaContextProvider>
-        <Outlet />
-        <SofiaWidget />
-        <SofiaSpeechBubble />
-        <Toaster position="top-right" richColors />
+        <SofiaUserDataProvider>
+          <Outlet />
+          <SofiaWidget />
+          <SofiaSpeechBubble />
+          <Toaster position="top-right" richColors />
+        </SofiaUserDataProvider>
       </SofiaContextProvider>
     </SofiaProvider>
   );
