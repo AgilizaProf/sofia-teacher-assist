@@ -47,3 +47,35 @@ export function sanitizeM6Filters(raw: unknown): M6FilterState {
     aluno: sanitizeFilter(r.aluno),
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Predicado puro de filtro do M6.
+//
+// Reproduz exatamente a lógica do memo `m6FilteredEntries` em
+// src/pages/Planejamento.tsx, mas exposto como função pura para permitir
+// testes E2E do pipeline completo (URL/localStorage → sanitização → filtro)
+// sem precisar montar a página inteira no jsdom.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { mentionsName } from "./mentions";
+
+export interface M6EntryLike {
+  title?: string;
+  text?: string;
+  tags: string[];
+}
+
+export function filterM6Entries<T extends M6EntryLike>(entries: T[], rawFilters: unknown): T[] {
+  const f = sanitizeM6Filters(rawFilters);
+  const tag = f.tag ?? "";
+  const turma = f.turma ?? "";
+  const aluno = f.aluno ?? "";
+  if (!tag && !turma && !aluno) return entries;
+  return entries.filter((e) => {
+    if (tag && !e.tags.some((t) => t.toLowerCase().includes(tag.toLowerCase()))) return false;
+    const corpo = `${e.title ?? ""} ${e.text ?? ""}`.trim();
+    if (turma && !corpo.toLowerCase().includes(turma.toLowerCase())) return false;
+    if (aluno && !mentionsName(corpo, aluno)) return false;
+    return true;
+  });
+}
