@@ -2791,6 +2791,49 @@ export function Planejamento() {
                     </div>
 
                     <h3 style={{ fontSize: 15, margin: "20px 0 10px" }}>Histórico de registros</h3>
+                    {m6HasFilter && (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "8px 10px",
+                          marginBottom: 10,
+                          borderRadius: 10,
+                          background: "#FFF7ED",
+                          border: "1px solid #FED7AA",
+                          fontSize: 12,
+                          color: "#9A3412",
+                        }}
+                      >
+                        <strong style={{ marginRight: 4 }}>Filtrando por:</strong>
+                        {m6FilterTag && (
+                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                            tag · {m6FilterTag}
+                          </span>
+                        )}
+                        {m6FilterTurma && (
+                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                            turma · {m6FilterTurma}
+                          </span>
+                        )}
+                        {m6FilterAluno && (
+                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                            aluno · {m6FilterAluno}
+                          </span>
+                        )}
+                        <span style={{ marginLeft: "auto", color: "#7C2D12" }}>
+                          {m6FilteredEntries.length} de {m6Entries.length}
+                        </span>
+                        <button
+                          onClick={m6ClearFilters}
+                          style={{ background: "transparent", border: "1px solid #FDBA74", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: "#9A3412", fontWeight: 600 }}
+                        >
+                          Limpar
+                        </button>
+                      </div>
+                    )}
                     {!m6PatternDismissed && (
                       <div className="pl-d6-pattern">
                         <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>✨ Sofia detectou um padrão</div>
@@ -2803,10 +2846,10 @@ export function Planejamento() {
                         </div>
                       </div>
                     )}
-                    {m6Entries.length === 0 ? (
+                    {m6FilteredEntries.length === 0 ? (
                       <EmptyState icon="📓" title="Nenhum registro ainda." description="Salve seu primeiro diário acima." />
                     ) : (
-                      m6Entries.map((e) => (
+                      m6FilteredEntries.map((e) => (
                         <div
                           key={e.id}
                           className="pl-d6-entry"
