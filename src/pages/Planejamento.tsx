@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
+import { mentionsName } from "@/lib/sofia/mentions";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
