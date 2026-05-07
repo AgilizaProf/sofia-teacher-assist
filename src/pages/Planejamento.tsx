@@ -2145,10 +2145,10 @@ export function Planejamento() {
                       <h3><Layers size={14} /> Etapas ({m3Plan.etapas.length})</h3>
                       <ol style={{ paddingLeft: 18, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                         {m3Plan.etapas.map((e) => (
-                          <li key={e.id} style={{ fontSize: 12.5, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <li key={e.id} className={e.novo ? "pl-novo" : undefined} style={{ fontSize: 12.5, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                             <span>{e.titulo}</span>
                             <span style={{ color: "var(--muted)", fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>· {e.min} min</span>
-                            {e.novo && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
+                            {e.novo && <span className="pl-badge-novo" style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
                           </li>
                         ))}
                       </ol>
@@ -2160,10 +2160,10 @@ export function Planejamento() {
                       ) : (
                         <ul style={{ paddingLeft: 0, listStyle: "none", margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
                           {m3Plan.adaptacoes.map((a) => (
-                            <li key={a.id} style={{ fontSize: 12.5, padding: 8, border: "1px solid var(--line)", borderRadius: 8, background: "#FAFBFD" }}>
+                            <li key={a.id} className={a.novo ? "pl-novo" : undefined} style={{ fontSize: 12.5, padding: 8, border: "1px solid var(--line)", borderRadius: 8, background: "#FAFBFD" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                                 <strong>{a.aluno}</strong>
-                                {a.novo && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
+                                {a.novo && <span className="pl-badge-novo" style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
                               </div>
                               <div style={{ color: "var(--muted)" }}>{a.texto}</div>
                             </li>
