@@ -1268,9 +1268,58 @@ export function Planejamento() {
     const t = (msg ?? chatTxt).trim(); if (!t) return;
     setChatLog((l) => [...l, { from: "user", t }]);
     setChatTxt("");
+    setM3Loading(true);
     setTimeout(() => {
-      setChatLog((l) => [...l, { from: "sofia", t: `Ajustei a atividade considerando "${t}". Mantive o objetivo e a habilidade BNCC.` }]);
-    }, 400);
+      const low = t.toLowerCase();
+      const mudancas: string[] = [];
+      let resposta = `Ajustei a atividade considerando "${t}". Mantive o objetivo e a habilidade BNCC.`;
+      setM3Plan((p) => {
+        let next: M3Plan = { ...p, etapas: p.etapas.map((e) => ({ ...e, novo: false })), adaptacoes: p.adaptacoes.map((a) => ({ ...a, novo: false })) };
+        // Roda de fechamento
+        if (low.includes("roda")) {
+          next = { ...next, etapas: [...next.etapas, { id: `e_${Date.now()}`, titulo: "Roda de fechamento", min: 10, novo: true }] };
+          mudancas.push("adicionei uma roda de fechamento de 10 min");
+        }
+        // Adaptação para Júlia / TEA
+        if (low.includes("júlia") || low.includes("julia") || low.includes("tea")) {
+          const aluno = (low.includes("júlia") || low.includes("julia")) ? "Júlia" : "Aluno com TEA";
+          next = {
+            ...next,
+            adaptacoes: [
+              ...next.adaptacoes,
+              { id: `a_${Date.now()}`, aluno, texto: "Antecipar pictogramas da rotina, oferecer fone abafador e dupla com colega-âncora.", novo: true },
+            ],
+          };
+          mudancas.push(`incluí adaptação específica para ${aluno}`);
+        }
+        // Encurtar / 30 min
+        const matchMin = low.match(/(\d{2,3})\s*min/);
+        if (low.includes("encurt") || low.includes("mais curt") || matchMin) {
+          const novaDur = matchMin ? Math.max(10, Math.min(180, parseInt(matchMin[1], 10))) : 30;
+          const fator = novaDur / next.duracaoMin;
+          const etapas = next.etapas.map((e) => ({ ...e, min: Math.max(5, Math.round(e.min * fator)) }));
+          next = { ...next, duracaoMin: novaDur, etapas };
+          mudancas.push(`reduzi a duração total para ${novaDur} min, redistribuindo as etapas proporcionalmente`);
+        }
+        // Trocar dupla por individual
+        if (low.includes("individual") && (low.includes("dupla") || low.includes("trio") || low.includes("grupo"))) {
+          const etapas = next.etapas.map((e) => ({ ...e, titulo: e.titulo.replace(/\(duplas?\)|\(em duplas?\)|em duplas?/gi, "(individual)") }));
+          next = { ...next, etapas };
+          mudancas.push("troquei a execução em dupla por individual");
+        }
+        return next;
+      });
+      if (mudancas.length > 0) {
+        resposta = `Pronto! Eu ${mudancas.join("; ")}. Mantive o objetivo e a BNCC intactos.`;
+      }
+      setChatLog((l) => [...l, { from: "sofia", t: resposta }]);
+      setM3Loading(false);
+    }, 1500);
+  };
+  const restaurarPlanoOriginal = () => {
+    setM3Plan(M3_INITIAL_PLAN);
+    setChatLog(M3_INITIAL_LOG);
+    showToast("Plano restaurado ao original. ✓");
   };
 
   const setMudanca = (k: MKey) => {
