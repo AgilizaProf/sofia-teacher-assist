@@ -357,6 +357,10 @@ export function Dashboard() {
   const [pcdMomento, setPcdMomento] = useState<null | "m1" | "m3" | "m5">(null);
   // Índice do aluno destacado pela Sofia via deep-link (?m=...&target=...).
   const [highlightedStudentIdx, setHighlightedStudentIdx] = useState<number | null>(null);
+  // Quando a Sofia tenta abrir um aluno via deep-link mas o nome/slug não
+  // casa com nenhum aluno cadastrado, guardamos o termo procurado para
+  // mostrar um empty state com sugestões.
+  const [missingTarget, setMissingTarget] = useState<null | { term: string; momento: "m1" | "m3" | "m5" | null }>(null);
   const lastDeepLink = useRef<string>("");
   // Quando a Sofia abre o painel com um momento PCD, já filtra a lista por PCD.
   // (declarado depois junto com o filter — ver useEffect logo abaixo)
@@ -423,8 +427,9 @@ export function Dashboard() {
           } else {
             setStudentDetail({ index: idx, student: students[idx] });
           }
-        } else if (!m) {
-          setStudentOpen(true);
+        } else {
+          // Não casou — mostra empty state em vez de inventar.
+          setMissingTarget({ term: search.target ?? "", momento: m ?? null });
         }
       } else {
         setStudentOpen(true);
@@ -446,6 +451,8 @@ export function Dashboard() {
           setTimeout(() => {
             setStudentDetail({ index: idx, student: students[idx] });
           }, reduce ? 0 : 450);
+        } else {
+          setMissingTarget({ term: t, momento: m });
         }
       }
     }
