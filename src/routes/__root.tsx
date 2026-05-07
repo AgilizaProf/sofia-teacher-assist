@@ -7,6 +7,7 @@ import { SofiaContextProvider } from "@/lib/sofia/sofiaContext";
 import { SofiaUserDataProvider } from "@/lib/sofia/SofiaUserContext";
 import { SofiaNotificationsProvider } from "@/lib/sofia/notifications";
 import { SofiaNotificationsWidget } from "@/components/sofia/SofiaNotificationsWidget";
+import { SofiaAutoReminders } from "@/lib/sofia/autoReminders";
 import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -96,6 +97,7 @@ function RootComponent() {
             <Outlet />
             <SofiaWidget />
             <SofiaNotificationsWidget />
+            <SofiaAutoReminders />
             <SofiaSpeechBubble />
             <Toaster position="top-right" richColors />
           </SofiaNotificationsProvider>
