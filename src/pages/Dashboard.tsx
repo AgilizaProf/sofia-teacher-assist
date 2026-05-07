@@ -1529,6 +1529,31 @@ export function Dashboard() {
                   </div>
                 </div>
 
+                {isPcd && pcdMomento && (
+                  <div
+                    style={{
+                      padding: "10px 12px", borderRadius: 9,
+                      background: "#F5F3FF", border: "1px solid #DDD6FE",
+                      fontSize: 12.5, color: "#5B21B6", lineHeight: 1.45,
+                      display: "flex", flexDirection: "column", gap: 6,
+                    }}
+                  >
+                    <strong>Contexto Sofia · {pcdMomento.toUpperCase()}</strong>
+                    <span>{pcdMomentoMeta[pcdMomento].sub}</span>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: "/planejamento", search: { m: pcdMomento } })}
+                      style={{
+                        alignSelf: "flex-start",
+                        padding: "5px 10px", borderRadius: 7, border: "none",
+                        background: "#7C3AED", color: "#fff", fontWeight: 700, fontSize: 11.5, cursor: "pointer",
+                      }}
+                    >
+                      {pcdMomentoMeta[pcdMomento].cta}
+                    </button>
+                  </div>
+                )}
+
                 <div className="school-field">
                   <label>Anotações pedagógicas</label>
                   <div style={{
