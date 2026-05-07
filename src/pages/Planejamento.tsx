@@ -1094,6 +1094,58 @@ export function Planejamento() {
     aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
   });
   const toggleLayer = (k: string) => setLayers((s) => ({ ...s, [k]: !s[k] }));
+  // M4 — Calendário mensal por camadas
+  type M4Cat = "aulas" | "aval" | "eventos" | "feriados" | "bncc" | "sofia";
+  type M4Evt = { cat: M4Cat; title: string; meta?: string };
+  // Eventos mockados pinados em datas absolutas (mês/dia) — independente do mês
+  // exibido, são reaplicados em datas equivalentes via lookup por dia.
+  const M4_EVENTS_BY_DAY: Record<number, M4Evt[]> = {
+    3: [{ cat: "aulas", title: "PORT · Leitura compartilhada", meta: "07:30 · 3ºA" }],
+    7: [{ cat: "aulas", title: "MAT · Adição com material concreto", meta: "08:20 · 3ºA" }, { cat: "bncc", title: "EF03MA03", meta: "Operações" }],
+    9: [{ cat: "sofia", title: "Sugestão: revisão lúdica", meta: "Sofia propõe" }],
+    11: [{ cat: "aulas", title: "PORT · Produção textual", meta: "07:30 · 3ºA" }, { cat: "bncc", title: "EF03LP25", meta: "Escrita" }],
+    14: [{ cat: "eventos", title: "Conselho de classe", meta: "14h · sala dos profs" }],
+    15: [{ cat: "feriados", title: "Tiradentes", meta: "Feriado nacional" }],
+    18: [{ cat: "aulas", title: "CIE · Ciclo da água", meta: "08:20 · 3ºA" }],
+    22: [{ cat: "aval", title: "Avaliação de Matemática", meta: "08:20 · 3ºA" }],
+    23: [{ cat: "eventos", title: "Reunião de pais", meta: "19h · auditório" }],
+    25: [{ cat: "sofia", title: "Sugestão: projeto interdisciplinar", meta: "Sofia propõe" }],
+    28: [{ cat: "aulas", title: "HIS · Brasil colônia", meta: "09:10 · 3ºA" }, { cat: "aval", title: "Quiz de História", meta: "rápido · 15 min" }],
+    30: [{ cat: "aulas", title: "ART · Releitura de obras", meta: "13:30 · 3ºA" }],
+  };
+  const M4_CAT_META: Record<M4Cat, { color: string; label: string }> = {
+    aulas: { color: "#3B82F6", label: "Aula" },
+    aval: { color: "#F59E0B", label: "Avaliação" },
+    eventos: { color: "#10B981", label: "Evento" },
+    feriados: { color: "#EF4444", label: "Feriado" },
+    bncc: { color: "#06B6D4", label: "BNCC" },
+    sofia: { color: "#FF7A45", label: "Sofia" },
+  };
+  const [m4Month, setM4Month] = useState<{ y: number; m: number }>({ y: 2026, m: 3 }); // abril 2026 (0-index)
+  const [m4SelectedDay, setM4SelectedDay] = useState<number | null>(null);
+  const m4Label = useMemo(() => {
+    const d = new Date(m4Month.y, m4Month.m, 1);
+    const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }, [m4Month]);
+  const m4Grid = useMemo(() => {
+    const first = new Date(m4Month.y, m4Month.m, 1).getDay(); // 0=Dom
+    const days = new Date(m4Month.y, m4Month.m + 1, 0).getDate();
+    const cells: Array<{ day: number | null }> = [];
+    for (let i = 0; i < first; i++) cells.push({ day: null });
+    for (let d = 1; d <= days; d++) cells.push({ day: d });
+    while (cells.length % 7 !== 0) cells.push({ day: null });
+    return cells;
+  }, [m4Month]);
+  const m4ChangeMonth = (delta: number) => {
+    setM4SelectedDay(null);
+    setM4Month((s) => {
+      const nm = s.m + delta;
+      if (nm < 0) return { y: s.y - 1, m: 11 };
+      if (nm > 11) return { y: s.y + 1, m: 0 };
+      return { y: s.y, m: nm };
+    });
+  };
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
 
   // M2 — Sequência didática
