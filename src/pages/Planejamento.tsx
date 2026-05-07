@@ -1760,6 +1760,29 @@ export function Planejamento() {
                     <button className="pl-btn primary" onClick={sugerirProxima}><Link2 size={14} /> Conectar próxima aula</button>
                   </div>
                 </div>
+                {m2Total > 0 && (
+                  <div style={{ marginTop: 12, padding: 14, border: "1px solid var(--line)", borderRadius: 12, background: "#fff", display: "grid", gap: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <strong style={{ fontSize: 13.5 }}>
+                          Etapa {Math.min(m2CurIdx + 1, m2Total)} de {m2Total}
+                          {m2CurIdx >= m2Total && " · concluída 🎉"}
+                        </strong>
+                        <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                          {m2DoneCount} {m2DoneCount === 1 ? "etapa concluída" : "etapas concluídas"} · {m2Pct}%
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <button className="pl-btn" onClick={reiniciarProgresso} title="Reinicia o progresso para a etapa 1."><RefreshCw size={14} /> Reiniciar</button>
+                        <button className="pl-btn" onClick={imprimirSequencia}><BookOpen size={14} /> Imprimir sequência</button>
+                        <button className="pl-btn primary" onClick={avancarEtapa} disabled={m2CurIdx >= m2Total}><ArrowRight size={14} /> Próxima etapa</button>
+                      </div>
+                    </div>
+                    <div style={{ height: 8, background: "#EEF1F6", borderRadius: 99, overflow: "hidden" }}>
+                      <div style={{ width: `${m2Pct}%`, height: "100%", background: "linear-gradient(90deg, var(--primary, #F97316), #FB923C)", transition: "width .35s ease" }} />
+                    </div>
+                  </div>
+                )}
                 <div className="pl-chain" id="m2-cadeia" style={{ scrollMarginTop: 96 }}>
                   <div className="pl-chain-card">
                     <h3 style={{ fontSize: 16 }}>Sequência didática</h3>
