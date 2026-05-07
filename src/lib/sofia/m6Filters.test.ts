@@ -5,7 +5,7 @@ describe("sanitizeFilter", () => {
   it("aceita strings comuns com acentos", () => {
     expect(sanitizeFilter("3º Ano A")).toBe("3º Ano A");
     expect(sanitizeFilter("João Pedro")).toBe("João Pedro");
-    expect(sanitizeFilter("+ funcionou")).toBeUndefined(); // '+' não está na whitelist
+    expect(sanitizeFilter("+ funcionou")).toBe("+ funcionou"); // tags reais do M6
   });
 
   it("trim e colapsa espaços", () => {
