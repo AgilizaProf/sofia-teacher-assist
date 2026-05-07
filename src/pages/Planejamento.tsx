@@ -2671,44 +2671,86 @@ export function Planejamento() {
             {m === "m6" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Diário de bordo <small>· hoje</small></h2></div>
+                  <div>
+                    <h2>Diário de bordo <small>· registro de 30 segundos</small></h2>
+                  </div>
                   <div className="right">
-                    <button className="pl-btn primary"><Sparkles size={14} /> Resumo da semana</button>
+                    <button className="pl-btn" onClick={() => { setM6Reminder(true); showToast("✓ Você será lembrada todo dia às 18h."); }}>
+                      <Clock size={14} /> {m6Reminder ? "Lembrete ativo" : "Ativar lembrete"}
+                    </button>
+                    <button className="pl-btn primary" onClick={() => setM6ReportOpen(true)}>
+                      <Sparkles size={14} /> Ver relatório bimestral
+                    </button>
                   </div>
                 </div>
-                <div className="pl-diary">
-                  <div className="pl-diary-card">
-                    <h3 style={{ fontSize: 16, marginBottom: 10 }}>Aulas de hoje</h3>
-                    {M6_AULAS.length === 0 ? (
-                      <EmptyState
-                        icon="📓"
-                        title="Nenhuma aula registrada hoje."
-                        description="Após cada aula, marque funcionou / travou / próximo passo. A Sofia aprende com cada registro."
-                      />
+                <div className="pl-d6">
+                  <div className="pl-d6-card">
+                    <h3 style={{ fontSize: 15, marginBottom: 4 }}>Como foi a aula?</h3>
+                    <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>Selecione um humor, anote algo e marque tags.</p>
+                    <div className="pl-d6-emojis">
+                      {M6_EMOJIS.map((e) => (
+                        <button key={e} className={m6Emoji === e ? "on" : ""} onClick={() => setM6Emoji(e)} aria-label={`Humor ${e}`}>{e}</button>
+                      ))}
+                    </div>
+                    <textarea
+                      className="pl-d6-textarea"
+                      placeholder="O que funcionou? O que travou? Algo a destacar…"
+                      value={m6Text}
+                      onChange={(e) => setM6Text(e.target.value)}
+                    />
+                    <div className="pl-d6-tags">
+                      {M6_TAGS.map((t) => (
+                        <button key={t} className={m6Tags.includes(t) ? "on" : ""} onClick={() => m6ToggleTag(t)}>{t}</button>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <button className="pl-btn primary" onClick={m6Save}><Check size={14} /> Salvar diário</button>
+                    </div>
+
+                    <h3 style={{ fontSize: 15, margin: "20px 0 10px" }}>Histórico de registros</h3>
+                    {!m6PatternDismissed && (
+                      <div className="pl-d6-pattern">
+                        <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>✨ Sofia detectou um padrão</div>
+                        <p style={{ fontSize: 13, color: "#7A2E0A", lineHeight: 1.5, margin: 0 }}>
+                          3 dos últimos 5 registros mencionam <strong>"agitação após recreio"</strong>. Quer que eu sugira atividades de respiração?
+                        </p>
+                        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                          <button className="pl-btn primary" onClick={() => { showToast("✓ Sugestões de respiração adicionadas ao planejamento."); setM6PatternDismissed(true); }}>Sim, sugerir</button>
+                          <button className="pl-btn ghost" onClick={() => setM6PatternDismissed(true)}>Agora não</button>
+                        </div>
+                      </div>
+                    )}
+                    {m6Entries.length === 0 ? (
+                      <EmptyState icon="📓" title="Nenhum registro ainda." description="Salve seu primeiro diário acima." />
                     ) : (
-                      M6_AULAS.map((a) => (
-                        <div key={a.id} className="pl-diary-row">
-                          <div>
-                            <div className="ttl">{a.t}</div>
-                            <div className="sub">{a.s}</div>
-                          </div>
-                          <div className="pl-mood">
-                            <button className={"ok" + (diary[a.id] === "ok" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "ok" }))} aria-label="Funcionou"><Smile size={16} /></button>
-                            <button className={"warn" + (diary[a.id] === "warn" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "warn" }))} aria-label="Travou"><Frown size={16} /></button>
-                            <button className={"next" + (diary[a.id] === "next" ? " on" : "")} onClick={() => setDiary((d) => ({ ...d, [a.id]: "next" }))} aria-label="Próximo passo"><ArrowRight size={16} /></button>
-                          </div>
+                      m6Entries.map((e) => (
+                        <div key={e.id} className="pl-d6-entry">
+                          <div className="head"><span>{e.date}</span></div>
+                          <div className="ttl"><span style={{ fontSize: 18 }}>{e.emoji}</span> {e.title}</div>
+                          {e.text && <div className="body">{e.text}</div>}
+                          {e.tags.length > 0 && (
+                            <div className="chips">{e.tags.map((t) => <span key={t}>{t}</span>)}</div>
+                          )}
                         </div>
                       ))
                     )}
                   </div>
                   <aside className="pl-side">
                     <div className="pl-panel">
-                      <h3><Clock size={14} /> Esta semana</h3>
-                      <EmptyState icon="📊" title="Sem dados ainda." description="O resumo da semana aparece após os primeiros registros." />
+                      <h3><BookOpen size={14} /> Aulas registradas</h3>
+                      <p className="lead" style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "4px 0" }}>{m6Registradas}/{m6Total}</p>
+                      <div className="pl-d6-progress"><div style={{ width: `${m6Pct}%` }} /></div>
+                      <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 6 }}>{m6Pct}% concluído nesta quinzena</p>
+                    </div>
+                    <div className="pl-panel">
+                      <h3><Sparkles size={14} /> Relatório bimestral</h3>
+                      <p className="lead" style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "4px 0" }}>42% pronto</p>
+                      <div className="pl-d6-progress"><div style={{ width: "42%" }} /></div>
+                      <button className="pl-btn" style={{ marginTop: 10, width: "100%" }} onClick={() => setM6ReportOpen(true)}>Ver relatório</button>
                     </div>
                     <div className="pl-panel accent">
-                      <h3><Sparkles size={14} /> Sugestão da Sofia</h3>
-                      <p className="lead">Conforme você registra o que funcionou ou travou, a Sofia sugere ajustes para a próxima semana.</p>
+                      <h3><Sparkles size={14} /> Sofia aprende</h3>
+                      <p className="lead">Cada registro ajuda a Sofia a sugerir ajustes mais precisos para a próxima semana.</p>
                     </div>
                   </aside>
                 </div>
