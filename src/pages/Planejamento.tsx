@@ -839,7 +839,6 @@ export function Planejamento() {
   const [picks, setPicks] = useState<Record<string, boolean>>({});
   const [tipOpen, setTipOpen] = useState(true);
   // ===== M5 — Kanban semanal =====
-  const M5_VARIANTS: Variant[] = ["port", "mat", "ci", "aval", "esc"];
   const M5_TURMAS = ["3º Ano B · manhã", "3º Ano C · manhã", "3º Ano A · tarde", "4º Ano A · manhã"];
   const [m5Turma, setM5Turma] = usePersistentState<string>("plan_m5_turma", M5_TURMAS[0]);
   const [m5Selected, setM5Selected] = useState<Set<string>>(new Set());
