@@ -12,17 +12,26 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function usePersistentState<T>(key: string, initial: T) {
   const lsKey = `aprof:${key}`;
-  const [state, setState] = useState<T>(() => {
-    if (typeof window === "undefined") return initial;
-    try {
-      const raw = window.localStorage.getItem(lsKey);
-      if (raw) return JSON.parse(raw) as T;
-    } catch { /* ignore */ }
-    return initial;
-  });
+  // Always start with `initial` so SSR HTML matches the first client render.
+  // Reading from localStorage during useState init causes a hydration mismatch
+  // because the server has no access to it. We restore the persisted value in
+  // a useEffect after mount instead.
+  const [state, setState] = useState<T>(initial);
   const userIdRef = useRef<string | null>(null);
   const hydratedRef = useRef(false);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Restore from localStorage after hydration (client-only).
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(lsKey);
+      if (raw) setState(JSON.parse(raw) as T);
+    } catch { /* ignore */ }
+  }, [lsKey]);
 
   // Persist to localStorage on every change
   useEffect(() => {
