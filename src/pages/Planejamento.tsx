@@ -1416,17 +1416,37 @@ export function Planejamento() {
   const [m6Reminder, setM6Reminder] = usePersistentState<boolean>("plan_m6_reminder", false);
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
   const [m6PatternDismissed, setM6PatternDismissed] = usePersistentState<boolean>("plan_m6_pattern_dismissed", false);
+  const [m6EditingId, setM6EditingId] = useState<string | null>(null);
   const m6Registradas = m6Entries.length;
   const m6Pct = Math.min(100, Math.round((m6Registradas / m6Total) * 100));
   const m6ToggleTag = (t: string) => setM6Tags((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
+  const m6ResetForm = () => { setM6Emoji(""); setM6Text(""); setM6Tags([]); setM6EditingId(null); };
+  const m6StartEdit = (e: M6Entry) => {
+    setM6EditingId(e.id);
+    setM6Emoji(e.emoji);
+    setM6Text(e.text);
+    setM6Tags([...e.tags]);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const m6DeleteEntry = (id: string) => {
+    setM6Entries((prev) => prev.filter((x) => x.id !== id));
+    if (m6EditingId === id) m6ResetForm();
+    showToast("Registro excluído.");
+  };
   const m6Save = () => {
     if (!m6Emoji && !m6Text.trim() && m6Tags.length === 0) { showToast("Selecione um emoji ou escreva uma anotação."); return; }
     const words = m6Text.trim().split(/\s+/).slice(0, 6).join(" ");
     const title = words || "Registro rápido";
     const now = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    if (m6EditingId) {
+      setM6Entries((prev) => prev.map((x) => x.id === m6EditingId ? { ...x, emoji: m6Emoji || x.emoji, title, text: m6Text.trim(), tags: [...m6Tags], date: `${x.date.split(" · ")[0]} · ${now} (editado)` } : x));
+      m6ResetForm();
+      showToast("✓ Registro atualizado.");
+      return;
+    }
     const entry: M6Entry = { id: `e-${Date.now()}`, emoji: m6Emoji || "🙂", title, text: m6Text.trim(), tags: [...m6Tags], date: `Hoje · ${now}` };
     setM6Entries((prev) => [entry, ...prev]);
-    setM6Emoji(""); setM6Text(""); setM6Tags([]);
+    m6ResetForm();
     showToast("✓ Diário salvo.");
   };
 
