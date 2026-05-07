@@ -355,6 +355,8 @@ export function Dashboard() {
   // Contexto PCD vindo do parâmetro ?m=m1|m3|m5. Persiste em estado para
   // sobreviver ao cleanup que remove os search params da URL.
   const [pcdMomento, setPcdMomento] = useState<null | "m1" | "m3" | "m5">(null);
+  // Índice do aluno destacado pela Sofia via deep-link (?m=...&target=...).
+  const [highlightedStudentIdx, setHighlightedStudentIdx] = useState<number | null>(null);
   const lastDeepLink = useRef<string>("");
   // Quando a Sofia abre o painel com um momento PCD, já filtra a lista por PCD.
   // (declarado depois junto com o filter — ver useEffect logo abaixo)
@@ -370,6 +372,24 @@ export function Dashboard() {
     const scrollTo = (el: HTMLElement | null) => {
       if (!el) return;
       requestAnimationFrame(() => el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }));
+    };
+    // Helper: encontra o aluno PCD por target (nome OU slug do id) e
+    // prepara highlight + modal aberto. Sofia nunca inventa: se não casar
+    // com nenhum aluno cadastrado, simplesmente não abre nada.
+    const slug = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const findStudentByTarget = (tgt: string): number => {
+      const t = tgt.trim().toLowerCase();
+      if (!t) return -1;
+      // 1) match exato por nome
+      let idx = students.findIndex((s) => s.name.toLowerCase() === t);
+      if (idx >= 0) return idx;
+      // 2) match por slug do nome (casa com o id exposto pelo SofiaUserContext)
+      const ts = slug(t);
+      idx = students.findIndex((s) => slug(s.name) === ts);
+      if (idx >= 0) return idx;
+      // 3) match parcial (ex.: primeiro nome)
+      idx = students.findIndex((s) => s.name.toLowerCase().includes(t));
+      return idx;
     };
     if (open === "schools") {
       scrollTo(schoolsRef.current); setHighlight("schools");
@@ -390,9 +410,22 @@ export function Dashboard() {
       scrollTo(studentsRef.current); setHighlight("students");
       const t = (search.target ?? "").trim().toLowerCase();
       if (t) {
-        const idx = students.findIndex((s) => s.name.toLowerCase() === t);
-        if (idx >= 0) setStudentDetail({ index: idx, student: students[idx] });
-        else setStudentOpen(true);
+        const idx = findStudentByTarget(t);
+        if (idx >= 0) {
+          // Garante que o grupo da turma do aluno esteja expandido.
+          const turmaKey = students[idx].classRef || "Sem turma";
+          setCollapsedClasses((p) => ({ ...p, [turmaKey]: false }));
+          setHighlightedStudentIdx(idx);
+          // Se veio com momento, mantém o modal fechado e foca o card.
+          // Sem momento, abre o modal de detalhe direto.
+          if (m) {
+            setStudentDetail(null);
+          } else {
+            setStudentDetail({ index: idx, student: students[idx] });
+          }
+        } else if (!m) {
+          setStudentOpen(true);
+        }
       } else {
         setStudentOpen(true);
       }
@@ -401,14 +434,30 @@ export function Dashboard() {
     } else if (m && !open) {
       // Só recebeu ?m=... — rola até a lista de alunos para evidenciar PCDs.
       scrollTo(studentsRef.current); setHighlight("students");
+      const t = (search.target ?? "").trim();
+      if (t) {
+        const idx = findStudentByTarget(t);
+        if (idx >= 0) {
+          const turmaKey = students[idx].classRef || "Sem turma";
+          setCollapsedClasses((p) => ({ ...p, [turmaKey]: false }));
+          setHighlightedStudentIdx(idx);
+          // Após pequena pausa, abre o modal do aluno PCD para mostrar o
+          // bloco "Contexto Sofia · M{X}".
+          setTimeout(() => {
+            setStudentDetail({ index: idx, student: students[idx] });
+          }, reduce ? 0 : 450);
+        }
+      }
     }
     // Limpa o destaque após 2.5s.
     const t = setTimeout(() => setHighlight(null), 2500);
+    // Highlight individual do aluno dura um pouco mais (até o usuário fechar o modal).
+    const tStudent = setTimeout(() => setHighlightedStudentIdx(null), 6000);
     // Remove os search params para não reabrir ao voltar.
     const cleanup = setTimeout(() => {
       navigate({ to: "/", search: {}, replace: true });
     }, 600);
-    return () => { clearTimeout(t); clearTimeout(cleanup); };
+    return () => { clearTimeout(t); clearTimeout(tStudent); clearTimeout(cleanup); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.open, search.target, search.m]);
 
