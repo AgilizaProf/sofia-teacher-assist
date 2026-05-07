@@ -295,8 +295,8 @@ const css = `
   60%{background:rgba(249,115,22,.12);box-shadow:0 0 0 2px rgba(249,115,22,.08);}
   100%{background:transparent;box-shadow:0 0 0 0 transparent;}
 }
-.pl-novo{animation:pl-highlight 1.6s ease-out;border-radius:8px;padding:2px 6px;margin:-2px -6px;}
-.pl-badge-novo{animation:pl-blink 1.2s ease-in-out 2;}
+.pl-novo{animation:pl-highlight 1.6s ease-out, pl-blink 1s ease-in-out 2;border-radius:8px;padding:2px 6px;margin:-2px -6px;}
+.pl-badge-novo{animation:pl-blink 1s ease-in-out 3;}
 
 @media(max-width:880px){.pl-app{grid-template-columns:1fr;}}
 `;
