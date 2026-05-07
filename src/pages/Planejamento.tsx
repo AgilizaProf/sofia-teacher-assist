@@ -2856,23 +2856,23 @@ export function Planejamento() {
                           color: "#9A3412",
                         }}
                       >
-                        <strong style={{ marginRight: 4 }}>Filtrando por:</strong>
-                        {m6FilterTag && (
-                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                         <strong style={{ marginRight: 4 }}>Filtrando por:</strong>
+                         {m6FilterTag && (
+                           <span data-testid="m6-filter-tag" style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
                             tag · {m6FilterTag}
                           </span>
                         )}
                         {m6FilterTurma && (
-                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                          <span data-testid="m6-filter-turma" style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
                             turma · {m6FilterTurma}
                           </span>
                         )}
                         {m6FilterAluno && (
-                          <span style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                          <span data-testid="m6-filter-aluno" style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
                             aluno · {m6FilterAluno}
                           </span>
                         )}
-                        <span style={{ marginLeft: "auto", color: "#7C2D12" }}>
+                        <span data-testid="m6-filter-count" style={{ marginLeft: "auto", color: "#7C2D12" }}>
                           {m6FilteredEntries.length} de {m6Entries.length}
                         </span>
                         <button
@@ -2901,6 +2901,7 @@ export function Planejamento() {
                       m6FilteredEntries.map((e) => (
                         <div
                           key={e.id}
+                          data-testid="m6-entry"
                           className="pl-d6-entry"
                           role="button"
                           tabIndex={0}
