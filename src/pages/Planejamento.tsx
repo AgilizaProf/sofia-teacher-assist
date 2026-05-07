@@ -1293,8 +1293,21 @@ export function Planejamento() {
                   key={i}
                   className={"hbc " + (c.solid ? "solid" : "outline")}
                   onClick={() => {
-                    if (c.label.toLowerCase().includes("ajustar parâmetros")) {
-                      setParamsModalOpen(true);
+                    const l = c.label.toLowerCase();
+                    if (l.includes("ajustar parâmetros")) { setParamsModalOpen(true); return; }
+                    if (m === "m2") {
+                      if (l.includes("ver cadeia")) {
+                        document.getElementById("m2-cadeia")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        return;
+                      }
+                      if (l.includes("habilidades")) {
+                        document.getElementById("m2-habilidades")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        return;
+                      }
+                      if (l.includes("reordenar")) {
+                        reordenarSequencia();
+                        return;
+                      }
                     }
                   }}
                 >{c.label}</button>
