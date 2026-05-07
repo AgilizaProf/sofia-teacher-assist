@@ -289,6 +289,8 @@ const css = `
 .pl-toast button{color:var(--orange);font-weight:600;font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;background:none;border:none;}
 .pl-toast button:hover{background:rgba(255,255,255,.08);}
 
+@keyframes pl-blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+
 @media(max-width:880px){.pl-app{grid-template-columns:1fr;}}
 `;
 
@@ -1058,7 +1060,28 @@ export function Planejamento() {
   const removerCardM1 = (dia: DayKey, id: string) => {
     setM1Plan((p) => ({ ...p, [dia]: p[dia].filter((c) => c.id !== id) }));
   };
-  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>([]);
+  // M3 — Editor conversacional
+  type M3Etapa = { id: string; titulo: string; min: number; novo?: boolean };
+  type M3Adapt = { id: string; aluno: string; texto: string; novo?: boolean };
+  type M3Plan = { titulo: string; bncc: string[]; duracaoMin: number; etapas: M3Etapa[]; adaptacoes: M3Adapt[] };
+  const M3_INITIAL_PLAN: M3Plan = {
+    titulo: "Adição com material concreto · 3º ano",
+    bncc: ["EF03MA03", "EF03MA05"],
+    duracaoMin: 50,
+    etapas: [
+      { id: "e1", titulo: "Acolhida e mobilização", min: 5 },
+      { id: "e2", titulo: "Exploração com material dourado (duplas)", min: 20 },
+      { id: "e3", titulo: "Sistematização no caderno", min: 15 },
+      { id: "e4", titulo: "Verificação rápida", min: 10 },
+    ],
+    adaptacoes: [],
+  };
+  const M3_INITIAL_LOG: Array<{ from: "user" | "sofia"; t: string }> = [
+    { from: "sofia", t: "Oi! Quer ajustar essa atividade? É só me dizer em linguagem natural — eu mantenho o objetivo e a BNCC." },
+  ];
+  const [chatLog, setChatLog] = useState<Array<{ from: "user" | "sofia"; t: string }>>(M3_INITIAL_LOG);
+  const [m3Plan, setM3Plan] = useState<M3Plan>(M3_INITIAL_PLAN);
+  const [m3Loading, setM3Loading] = useState(false);
   const [chatTxt, setChatTxt] = useState("");
   const [layers, setLayers] = useState<Record<string, boolean>>({
     aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
@@ -1247,9 +1270,58 @@ export function Planejamento() {
     const t = (msg ?? chatTxt).trim(); if (!t) return;
     setChatLog((l) => [...l, { from: "user", t }]);
     setChatTxt("");
+    setM3Loading(true);
     setTimeout(() => {
-      setChatLog((l) => [...l, { from: "sofia", t: `Ajustei a atividade considerando "${t}". Mantive o objetivo e a habilidade BNCC.` }]);
-    }, 400);
+      const low = t.toLowerCase();
+      const mudancas: string[] = [];
+      let resposta = `Ajustei a atividade considerando "${t}". Mantive o objetivo e a habilidade BNCC.`;
+      setM3Plan((p) => {
+        let next: M3Plan = { ...p, etapas: p.etapas.map((e) => ({ ...e, novo: false })), adaptacoes: p.adaptacoes.map((a) => ({ ...a, novo: false })) };
+        // Roda de fechamento
+        if (low.includes("roda")) {
+          next = { ...next, etapas: [...next.etapas, { id: `e_${Date.now()}`, titulo: "Roda de fechamento", min: 10, novo: true }] };
+          mudancas.push("adicionei uma roda de fechamento de 10 min");
+        }
+        // Adaptação para Júlia / TEA
+        if (low.includes("júlia") || low.includes("julia") || low.includes("tea")) {
+          const aluno = (low.includes("júlia") || low.includes("julia")) ? "Júlia" : "Aluno com TEA";
+          next = {
+            ...next,
+            adaptacoes: [
+              ...next.adaptacoes,
+              { id: `a_${Date.now()}`, aluno, texto: "Antecipar pictogramas da rotina, oferecer fone abafador e dupla com colega-âncora.", novo: true },
+            ],
+          };
+          mudancas.push(`incluí adaptação específica para ${aluno}`);
+        }
+        // Encurtar / 30 min
+        const matchMin = low.match(/(\d{2,3})\s*min/);
+        if (low.includes("encurt") || low.includes("mais curt") || matchMin) {
+          const novaDur = matchMin ? Math.max(10, Math.min(180, parseInt(matchMin[1], 10))) : 30;
+          const fator = novaDur / next.duracaoMin;
+          const etapas = next.etapas.map((e) => ({ ...e, min: Math.max(5, Math.round(e.min * fator)) }));
+          next = { ...next, duracaoMin: novaDur, etapas };
+          mudancas.push(`reduzi a duração total para ${novaDur} min, redistribuindo as etapas proporcionalmente`);
+        }
+        // Trocar dupla por individual
+        if (low.includes("individual") && (low.includes("dupla") || low.includes("trio") || low.includes("grupo"))) {
+          const etapas = next.etapas.map((e) => ({ ...e, titulo: e.titulo.replace(/\(duplas?\)|\(em duplas?\)|em duplas?/gi, "(individual)") }));
+          next = { ...next, etapas };
+          mudancas.push("troquei a execução em dupla por individual");
+        }
+        return next;
+      });
+      if (mudancas.length > 0) {
+        resposta = `Pronto! Eu ${mudancas.join("; ")}. Mantive o objetivo e a BNCC intactos.`;
+      }
+      setChatLog((l) => [...l, { from: "sofia", t: resposta }]);
+      setM3Loading(false);
+    }, 1500);
+  };
+  const restaurarPlanoOriginal = () => {
+    setM3Plan(M3_INITIAL_PLAN);
+    setChatLog(M3_INITIAL_LOG);
+    showToast("Plano restaurado ao original. ✓");
   };
 
   const setMudanca = (k: MKey) => {
@@ -2007,49 +2079,90 @@ export function Planejamento() {
             {m === "m3" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Editar com Sofia <small>· selecione uma atividade</small></h2></div>
+                  <div><h2>Editar com Sofia <small>· {m3Plan.titulo}</small></h2></div>
                   <div className="right">
-                    <button className="pl-btn"><RefreshCw size={14} /> Restaurar original</button>
-                    <button className="pl-btn primary"><Check size={14} /> Salvar alterações</button>
+                    <button className="pl-btn" onClick={restaurarPlanoOriginal}><RefreshCw size={14} /> Restaurar original</button>
+                    <button className="pl-btn primary" onClick={() => showToast("Alterações salvas. ✓")}><Check size={14} /> Salvar alterações</button>
                   </div>
                 </div>
                 <div className="pl-chat">
                   <div className="pl-chat-card">
-                    <EmptyState
-                      icon="💬"
-                      title="Nenhuma atividade selecionada."
-                      description="Escolha uma atividade do seu plano para editar com a Sofia em linguagem natural."
-                    />
-
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 280, overflowY: "auto" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 360, minHeight: 240, overflowY: "auto", padding: 4 }}>
                       {chatLog.map((m, i) => (
                         <div key={i} className={"pl-msg " + m.from}>
                           <div className="av">{m.from === "user" ? "P" : "S"}</div>
                           <div className="bub">{m.t}</div>
                         </div>
                       ))}
+                      {m3Loading && (
+                        <div className="pl-msg sofia" aria-live="polite">
+                          <div className="av">S</div>
+                          <div className="bub" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontStyle: "italic", color: "var(--muted)" }}>
+                            <span className="pl-typing" style={{ display: "inline-flex", gap: 3 }}>
+                              <span style={{ width: 6, height: 6, borderRadius: 99, background: "currentColor", opacity: .4, animation: "pl-blink 1s infinite" }} />
+                              <span style={{ width: 6, height: 6, borderRadius: 99, background: "currentColor", opacity: .4, animation: "pl-blink 1s infinite .15s" }} />
+                              <span style={{ width: 6, height: 6, borderRadius: 99, background: "currentColor", opacity: .4, animation: "pl-blink 1s infinite .3s" }} />
+                            </span>
+                            Sofia está editando…
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pl-quickies">
-                      {["Torna mais fácil", "Encurta pra 30min", "Adapta pra TDAH", "Versão para PCD (TEA)", "Mais lúdica"].map((q) => (
-                        <button key={q} onClick={() => sendChat(q)}>{q}</button>
+                      {["Encurtar pra 30 min", "Adicionar roda de fechamento", "Adaptar pra Júlia (TEA)", "Trocar dupla por individual", "Mais lúdica"].map((q) => (
+                        <button key={q} onClick={() => setChatTxt(q)} disabled={m3Loading}>{q}</button>
                       ))}
                     </div>
 
                     <form className="pl-chat-input" onSubmit={(e) => { e.preventDefault(); sendChat(); }}>
-                      <input value={chatTxt} onChange={(e) => setChatTxt(e.target.value)} placeholder="Diga o que mudar... (ex: 'transforma em jogo')" />
-                      <button type="submit"><Send size={12} /> Enviar</button>
+                      <input value={chatTxt} onChange={(e) => setChatTxt(e.target.value)} placeholder="Diga o que mudar... (ex: 'encurta pra 30 min')" disabled={m3Loading} />
+                      <button type="submit" disabled={m3Loading || !chatTxt.trim()}><Send size={12} /> {m3Loading ? "Editando…" : "Enviar"}</button>
                     </form>
                   </div>
 
                   <aside className="pl-side">
                     <div className="pl-panel accent">
-                      <h3><MessageSquare size={14} /> O que fica preservado</h3>
-                      <p className="lead">Sofia <b>nunca muda</b> objetivo pedagógico nem código BNCC. Só ajusta tempo, complexidade, materiais e modo de execução.</p>
+                      <h3><MessageSquare size={14} /> Plano atual</h3>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{m3Plan.titulo}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, color: "var(--muted)", fontSize: 12 }}>
+                        <Clock size={12} /> Duração total: <strong style={{ color: "var(--ink, #0F172A)" }}>{m3Plan.duracaoMin} min</strong>
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                        {m3Plan.bncc.map((b) => (
+                          <span key={b} style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: "rgba(59,130,246,.12)", color: "#1d4ed8", fontFamily: "'JetBrains Mono',monospace" }}>{b}</span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="pl-panel">
-                      <h3><Clock size={14} /> Histórico desta atividade</h3>
-                      <EmptyState icon="🕘" title="Sem histórico ainda." description="Edições da atividade aparecem aqui." />
+                    <div className="pl-panel" style={{ marginTop: 12 }}>
+                      <h3><Layers size={14} /> Etapas ({m3Plan.etapas.length})</h3>
+                      <ol style={{ paddingLeft: 18, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                        {m3Plan.etapas.map((e) => (
+                          <li key={e.id} style={{ fontSize: 12.5, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                            <span>{e.titulo}</span>
+                            <span style={{ color: "var(--muted)", fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>· {e.min} min</span>
+                            {e.novo && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                    <div className="pl-panel" style={{ marginTop: 12 }}>
+                      <h3>♿ Adaptações ({m3Plan.adaptacoes.length})</h3>
+                      {m3Plan.adaptacoes.length === 0 ? (
+                        <p className="lead" style={{ fontSize: 12 }}>Nenhuma adaptação registrada. Peça à Sofia, ex: "adapta pra Júlia (TEA)".</p>
+                      ) : (
+                        <ul style={{ paddingLeft: 0, listStyle: "none", margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                          {m3Plan.adaptacoes.map((a) => (
+                            <li key={a.id} style={{ fontSize: 12.5, padding: 8, border: "1px solid var(--line)", borderRadius: 8, background: "#FAFBFD" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                <strong>{a.aluno}</strong>
+                                {a.novo && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
+                              </div>
+                              <div style={{ color: "var(--muted)" }}>{a.texto}</div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   </aside>
                 </div>
