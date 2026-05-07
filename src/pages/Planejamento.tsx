@@ -1128,8 +1128,10 @@ export function Planejamento() {
   // Reordena as etapas existentes seguindo SEQ, preservando todos os blocos.
   // Etapas com a mesma tag mantêm a ordem relativa atual; tags fora da SEQ
   // vão para o final, também na ordem original.
+  const [m2ReorderBackup, setM2ReorderBackup] = useState<M2Step[] | null>(null);
   const reordenarSequencia = () => {
     if (m2Steps.length < 2) { showToast("Adicione ao menos duas aulas para reordenar."); return; }
+    const snapshot = m2Steps;
     setM2Steps((arr) => {
       const rank = (tag: string) => {
         const i = (SEQ as readonly string[]).indexOf(tag);
@@ -1149,7 +1151,14 @@ export function Planejamento() {
       }
       return reassignDays(next);
     });
+    setM2ReorderBackup(snapshot);
     showToast("Etapas reordenadas na ordem completa. Dias atualizados. ✓");
+  };
+  const desfazerReordenacao = () => {
+    if (!m2ReorderBackup) return;
+    setM2Steps(m2ReorderBackup);
+    setM2ReorderBackup(null);
+    showToast("Reordenação desfeita. Sequência anterior restaurada. ✓");
   };
   const aceitarSugestao = (id: string) => setM2Steps((arr) => arr.map((s) => s.id === id ? { ...s, suggest: false } : s));
   const removerStep = (id: string) => setM2Steps((arr) => arr.filter((s) => s.id !== id));
