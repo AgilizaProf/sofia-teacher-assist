@@ -566,6 +566,53 @@ export function Dashboard() {
 
           <div className="grid-2">
             <div ref={studentsRef as unknown as React.Ref<HTMLDivElement>} className={`card${highlight === "students" ? " sofia-highlight" : ""}`}>
+              {pcdMomento && (
+                <div
+                  role="status"
+                  style={{
+                    margin: "-2px 0 14px",
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    background: "linear-gradient(135deg,#EDE9FE,#F5F3FF)",
+                    border: "1px solid #DDD6FE",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>🧒</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: "#5B21B6" }}>
+                      {pcdMomentoMeta[pcdMomento].titulo}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: "#6D28D9", marginTop: 3, lineHeight: 1.4 }}>
+                      {pcdMomentoMeta[pcdMomento].sub}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => navigate({ to: "/planejamento", search: { m: pcdMomento } })}
+                        style={{
+                          padding: "6px 12px", borderRadius: 8, border: "none",
+                          background: "#7C3AED", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer",
+                        }}
+                      >
+                        {pcdMomentoMeta[pcdMomento].cta}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPcdMomento(null)}
+                        style={{
+                          padding: "6px 10px", borderRadius: 8, border: "1px solid #DDD6FE",
+                          background: "#fff", color: "#6D28D9", fontWeight: 700, fontSize: 12, cursor: "pointer",
+                        }}
+                      >
+                        Dispensar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="card-head">
                 <h3 className="card-title">Seus alunos<span className="card-title-count">{totalStudents}</span></h3>
                 <div className="filter-pills">
