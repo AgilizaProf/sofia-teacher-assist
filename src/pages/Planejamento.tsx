@@ -1645,15 +1645,25 @@ export function Planejamento() {
             {m === "m5" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Semana atual <small>· selecione uma turma</small></h2></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <h2 style={{ margin: 0 }}>Semana atual</h2>
+                    <select
+                      value={m5Turma}
+                      onChange={(e) => m5TrocarTurma(e.target.value)}
+                      style={{ padding: "6px 10px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff", fontSize: 12.5, fontWeight: 600 }}
+                      title="Trocar turma"
+                    >
+                      {M5_TURMAS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
                   <div className="right">
                     <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
-                     <button
-                       className="pl-btn"
-                       onClick={() => navigate({ to: "/planejamento/atividade", search: {} })}
-                     ><Plus size={14} /> Adicionar atividade</button>
-                    <button className="pl-btn primary" onClick={() => showToast("Sofia está montando sugestões... ✨")}><Sparkles size={14} /> Gerar com Sofia</button>
+                    <button className="pl-btn" onClick={() => setM5HistoryOpen(true)}><Clock size={14} /> Histórico {m5History.length > 0 && `(${m5History.length})`}</button>
+                    <button className="pl-btn" onClick={m5OpenReplicar}><Copy size={14} /> Replicar em turmas</button>
+                    <button className="pl-btn primary" onClick={m5GerarComSofia} disabled={m5Generating}>
+                      <Sparkles size={14} /> {m5Generating ? "Sofia montando…" : "Gerar com Sofia"}
+                    </button>
                   </div>
                 </div>
 
@@ -1684,15 +1694,34 @@ export function Planejamento() {
                               <button
                                 className="add"
                                 aria-label={`Adicionar atividade em ${d.n}`}
-                                onClick={() => navigate({ to: "/planejamento/atividade", search: { dia: d.k } })}
+                                onClick={() => { setM5InlineDay(d.k); setM5InlineNome(""); }}
                               ><Plus size={14} /></button>
                             </div>
+                            {m5InlineDay === d.k && (
+                              <div style={{ display: "grid", gap: 6, padding: 8, border: "1px dashed var(--line)", borderRadius: 8, background: "#FAFBFD", marginBottom: 6 }}>
+                                <input autoFocus value={m5InlineNome} onChange={(e) => setM5InlineNome(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") m5AddInline(d.k); if (e.key === "Escape") setM5InlineDay(null); }} placeholder="Nome da atividade" style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12 }} />
+                                <div style={{ display: "flex", gap: 4 }}>
+                                  <input value={m5InlineMin} onChange={(e) => setM5InlineMin(e.target.value)} placeholder="min" style={{ width: 60, padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12 }} />
+                                  <button className="pl-btn primary" onClick={() => m5AddInline(d.k)} style={{ padding: "5px 8px", fontSize: 11.5, flex: 1 }}>Adicionar</button>
+                                  <button className="pl-btn ghost" onClick={() => setM5InlineDay(null)} style={{ padding: "5px 8px", fontSize: 11.5 }}>×</button>
+                                </div>
+                              </div>
+                            )}
                             {cards.map((c) => (
                               <div
                                 key={c.id}
                                 className={"pl-card " + c.v + (c.locked ? " locked" : "")}
+                                style={m5Selected.has(c.id) ? { outline: "2px solid var(--orange, #F97316)", outlineOffset: 2 } : undefined}
                                 draggable={!c.locked}
                                 onDragStart={() => onDragStart(d.k, c.id)}
+                                onClick={(e) => {
+                                  if (e.shiftKey) {
+                                    e.preventDefault();
+                                    setM5Selected((s) => { const n = new Set(s); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; });
+                                  } else if (m5Selected.size > 0) {
+                                    m5ToggleSelect(c.id, e);
+                                  }
+                                }}
                               >
                                 {c.locked && <span className="lock"><Lock size={11} /></span>}
                                 <div className="top">
@@ -1705,11 +1734,11 @@ export function Planejamento() {
                                 ))}</div>
                               </div>
                             ))}
-                            {empty && (
+                            {empty && m5InlineDay !== d.k && (
                               <div className="pl-empty-slot">
                                 <div className="ic"><Plus size={14} /></div>
                                 <div>Solte um cartão aqui<br />ou peça pra Sofia</div>
-                                <button className="sb" onClick={() => showToast("Sofia está sugerindo uma aula... ✨")}><Sparkles size={11} /> Sugerir aula</button>
+                                <button className="sb" onClick={() => m5SugerirAula(d.k)}><Sparkles size={11} /> Sugerir aula</button>
                               </div>
                             )}
                           </div>
