@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
-import { filterM6Entries } from "@/lib/sofia/m6Filters";
 import { sanitizeFilter, sanitizeM6Filters, type M6FilterState } from "@/lib/sofia/m6Filters";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
