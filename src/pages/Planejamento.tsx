@@ -289,6 +289,8 @@ const css = `
 .pl-toast button{color:var(--orange);font-weight:600;font-size:12px;padding:4px 8px;border-radius:6px;cursor:pointer;background:none;border:none;}
 .pl-toast button:hover{background:rgba(255,255,255,.08);}
 
+@keyframes pl-blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+
 @media(max-width:880px){.pl-app{grid-template-columns:1fr;}}
 `;
 
