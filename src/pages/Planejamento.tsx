@@ -345,7 +345,12 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
   { k: "m6", num: "M6", label: "Diário de bordo" },
 ];
 
-const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [];
+const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [
+  { id: "t1", name: "3º Ano B", sub: "28 alunos · manhã", pcd: "1 PCD", gain: "~25 min" },
+  { id: "t2", name: "3º Ano C", sub: "30 alunos · manhã", gain: "~25 min" },
+  { id: "t3", name: "3º Ano A", sub: "26 alunos · tarde", pcd: "2 PCD", warn: "⚠ adapt.", gain: "~25 min" },
+  { id: "t4", name: "4º Ano A", sub: "27 alunos · manhã", warn: "⚠ ano diferente", gain: "~20 min" },
+];
 
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
 const M6_AULAS: Array<{ id: string; t: string; s: string }> = [];
@@ -833,6 +838,129 @@ export function Planejamento() {
   const dragCard = useRef<{ from: DayKey; id: string } | null>(null);
   const [picks, setPicks] = useState<Record<string, boolean>>({});
   const [tipOpen, setTipOpen] = useState(true);
+  // ===== M5 — Kanban semanal =====
+  const M5_TURMAS = ["3º Ano B · manhã", "3º Ano C · manhã", "3º Ano A · tarde", "4º Ano A · manhã"];
+  const [m5Turma, setM5Turma] = usePersistentState<string>("plan_m5_turma", M5_TURMAS[0]);
+  const [m5Selected, setM5Selected] = useState<Set<string>>(new Set());
+  const [m5Generating, setM5Generating] = useState(false);
+  const [m5ReplicaOpen, setM5ReplicaOpen] = useState(false);
+  const [m5ReplicaPicks, setM5ReplicaPicks] = useState<Record<string, boolean>>({});
+  const [m5HistoryOpen, setM5HistoryOpen] = useState(false);
+  const [m5InlineDay, setM5InlineDay] = useState<DayKey | null>(null);
+  const [m5InlineNome, setM5InlineNome] = useState("");
+  const [m5InlineMin, setM5InlineMin] = useState("45");
+  const m5AddInline = (day: DayKey) => {
+    const nome = m5InlineNome.trim();
+    if (!nome) { showToast("Dê um nome à atividade."); return; }
+    const min = parseInt(m5InlineMin, 10) || 45;
+    const card: Card = { id: `c_${Date.now()}`, v: "port", tag: "ATIV", title: nome, meta: `${min} min` };
+    setWeek((w) => ({ ...w, [day]: [...w[day], card] }));
+    m5LogHistory(`Adicionou "${nome}" em ${day.toUpperCase()}`, () => setWeek((w) => ({ ...w, [day]: w[day].filter((c) => c.id !== card.id) })));
+    setM5InlineNome(""); setM5InlineMin("45"); setM5InlineDay(null);
+  };
+  type M5HistoryEntry = { id: string; ts: number; label: string; undo?: () => void };
+  const [m5History, setM5History] = useState<M5HistoryEntry[]>([]);
+  const [m5UndoMove, setM5UndoMove] = useState<null | { card: Card; from: DayKey; to: DayKey }>(null);
+  const m5LogHistory = (label: string, undo?: () => void) => {
+    setM5History((h) => [{ id: `h_${Date.now()}_${Math.random().toString(36).slice(2,7)}`, ts: Date.now(), label, undo }, ...h].slice(0, 30));
+  };
+  const m5UndoLast = (entry: M5HistoryEntry) => {
+    entry.undo?.();
+    setM5History((h) => h.filter((x) => x.id !== entry.id));
+    showToast("Ação desfeita.");
+  };
+  const m5ReplicaCount = Object.values(m5ReplicaPicks).filter(Boolean).length;
+  const m5SugerirAula = (day: DayKey) => {
+    const variants: Variant[] = ["port", "mat", "ci"];
+    const tags = ["PORT", "MAT", "CIE"];
+    const titles = ["Leitura compartilhada", "Resolução de problemas", "Observação científica"];
+    const i = Math.floor(Math.random() * 3);
+    const card: Card = { id: `c_${Date.now()}`, v: variants[i], tag: tags[i], title: titles[i], meta: "45 min · sugestão Sofia" };
+    setWeek((w) => ({ ...w, [day]: [...w[day], card] }));
+    m5LogHistory(`Sugeriu aula em ${day.toUpperCase()}`, () => setWeek((w) => ({ ...w, [day]: w[day].filter((c) => c.id !== card.id) })));
+    showToast(`Sofia sugeriu uma aula para ${day.toUpperCase()}. ✨`);
+  };
+  const m5GerarComSofia = () => {
+    setM5Generating(true);
+    setTimeout(() => {
+      const before = week;
+      setWeek((w) => {
+        const next = { ...w };
+        const fillers: Record<DayKey, Card[]> = {
+          seg: [{ id: `c_${Date.now()}_s1`, v: "port", tag: "PORT", title: "Leitura compartilhada", meta: "45 min · 3ºA" }],
+          ter: [{ id: `c_${Date.now()}_t1`, v: "mat", tag: "MAT", title: "Adição com material concreto", meta: "50 min · 3ºA" }],
+          qua: [{ id: `c_${Date.now()}_q1`, v: "ci", tag: "CIE", title: "Ciclo da água", meta: "45 min · 3ºA" }],
+          qui: [{ id: `c_${Date.now()}_qi1`, v: "port", tag: "PORT", title: "Produção textual", meta: "50 min · 3ºA" }],
+          sex: [{ id: `c_${Date.now()}_x1`, v: "mat", tag: "MAT", title: "Jogos matemáticos", meta: "40 min · 3ºA" }],
+        };
+        (Object.keys(fillers) as DayKey[]).forEach((d) => {
+          if ((next[d] || []).length === 0) next[d] = fillers[d];
+        });
+        return next;
+      });
+      m5LogHistory("Gerou semana com Sofia", () => setWeek(before));
+      setM5Generating(false);
+      showToast("Sofia preencheu os dias vazios. ✨");
+    }, 1500);
+  };
+  const m5TrocarTurma = (t: string) => {
+    const before = week;
+    setM5Turma(t);
+    setWeek(INITIAL_WEEK);
+    m5LogHistory(`Trocou para ${t}`, () => { setWeek(before); });
+    showToast(`Carregada semana em branco de ${t}.`);
+  };
+  const m5ToggleSelect = (id: string, e: React.MouseEvent) => {
+    if (!e.shiftKey && m5Selected.size === 0) return; // só ativa em shift+click
+    setM5Selected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+  const m5ClearSelection = () => setM5Selected(new Set());
+  const m5BulkMove = (to: DayKey) => {
+    const ids = Array.from(m5Selected);
+    if (ids.length === 0) return;
+    const before = week;
+    setWeek((w) => {
+      const next: Week = { seg: [...w.seg], ter: [...w.ter], qua: [...w.qua], qui: [...w.qui], sex: [...w.sex] };
+      const moving: Card[] = [];
+      (Object.keys(next) as DayKey[]).forEach((d) => {
+        next[d] = next[d].filter((c) => {
+          if (ids.includes(c.id)) { moving.push(c); return false; }
+          return true;
+        });
+      });
+      next[to] = [...next[to], ...moving];
+      return next;
+    });
+    m5LogHistory(`Moveu ${ids.length} cartões para ${to.toUpperCase()}`, () => setWeek(before));
+    showToast(`↔ ${ids.length} cartões movidos para ${to.toUpperCase()}.`);
+    m5ClearSelection();
+  };
+  const m5BulkDelete = () => {
+    const ids = Array.from(m5Selected);
+    if (ids.length === 0) return;
+    const before = week;
+    setWeek((w) => {
+      const next: Week = { seg: [...w.seg], ter: [...w.ter], qua: [...w.qua], qui: [...w.qui], sex: [...w.sex] };
+      (Object.keys(next) as DayKey[]).forEach((d) => { next[d] = next[d].filter((c) => !ids.includes(c.id)); });
+      return next;
+    });
+    m5LogHistory(`Excluiu ${ids.length} cartões`, () => setWeek(before));
+    showToast(`${ids.length} cartões excluídos.`);
+    m5ClearSelection();
+  };
+  const m5OpenReplicar = () => { setM5ReplicaPicks({}); setM5ReplicaOpen(true); };
+  const m5ConfirmarReplicar = () => {
+    const sel = Object.entries(m5ReplicaPicks).filter(([, v]) => v).map(([k]) => k);
+    if (sel.length === 0) { showToast("Selecione ao menos uma turma."); return; }
+    m5LogHistory(`Replicou semana em ${sel.length} turma(s)`);
+    showToast(`Semana replicada em ${sel.length} turma(s). ✓`);
+    setM5ReplicaOpen(false);
+  };
+
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
   const FOCO_OPTS = [
@@ -1418,12 +1546,22 @@ export function Planejamento() {
     setDropDay(null);
     const d = dragCard.current; if (!d) return;
     if (d.from === to) return;
+    let movedCard: Card | null = null;
+    const fromDay = d.from;
     setWeek((w) => {
       const card = w[d.from].find((c) => c.id === d.id); if (!card || card.locked) return w;
+      movedCard = card;
       return { ...w, [d.from]: w[d.from].filter((c) => c.id !== d.id), [to]: [...w[to], card] };
     });
     dragCard.current = null;
-    showToast(`Cartão movido para ${to.toUpperCase()}. Sofia confirmou ausência de conflito. ✓`);
+    if (movedCard) {
+      const card = movedCard as Card;
+      setM5UndoMove({ card, from: fromDay, to });
+      m5LogHistory(`Moveu "${card.title}" de ${fromDay.toUpperCase()} para ${to.toUpperCase()}`, () => {
+        setWeek((w) => ({ ...w, [to]: w[to].filter((c) => c.id !== card.id), [fromDay]: [...w[fromDay], card] }));
+      });
+    }
+    showToast(`↔ Cartão movido com sucesso.`);
   };
 
   // === M1 — Drag & drop entre dias do calendário ===
@@ -1507,15 +1645,25 @@ export function Planejamento() {
             {m === "m5" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Semana atual <small>· selecione uma turma</small></h2></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <h2 style={{ margin: 0 }}>Semana atual</h2>
+                    <select
+                      value={m5Turma}
+                      onChange={(e) => m5TrocarTurma(e.target.value)}
+                      style={{ padding: "6px 10px", border: "1px solid var(--line)", borderRadius: 8, background: "#fff", fontSize: 12.5, fontWeight: 600 }}
+                      title="Trocar turma"
+                    >
+                      {M5_TURMAS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
                   <div className="right">
                     <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
-                     <button
-                       className="pl-btn"
-                       onClick={() => navigate({ to: "/planejamento/atividade", search: {} })}
-                     ><Plus size={14} /> Adicionar atividade</button>
-                    <button className="pl-btn primary" onClick={() => showToast("Sofia está montando sugestões... ✨")}><Sparkles size={14} /> Gerar com Sofia</button>
+                    <button className="pl-btn" onClick={() => setM5HistoryOpen(true)}><Clock size={14} /> Histórico {m5History.length > 0 && `(${m5History.length})`}</button>
+                    <button className="pl-btn" onClick={m5OpenReplicar}><Copy size={14} /> Replicar em turmas</button>
+                    <button className="pl-btn primary" onClick={m5GerarComSofia} disabled={m5Generating}>
+                      <Sparkles size={14} /> {m5Generating ? "Sofia montando…" : "Gerar com Sofia"}
+                    </button>
                   </div>
                 </div>
 
@@ -1546,15 +1694,34 @@ export function Planejamento() {
                               <button
                                 className="add"
                                 aria-label={`Adicionar atividade em ${d.n}`}
-                                onClick={() => navigate({ to: "/planejamento/atividade", search: { dia: d.k } })}
+                                onClick={() => { setM5InlineDay(d.k); setM5InlineNome(""); }}
                               ><Plus size={14} /></button>
                             </div>
+                            {m5InlineDay === d.k && (
+                              <div style={{ display: "grid", gap: 6, padding: 8, border: "1px dashed var(--line)", borderRadius: 8, background: "#FAFBFD", marginBottom: 6 }}>
+                                <input autoFocus value={m5InlineNome} onChange={(e) => setM5InlineNome(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") m5AddInline(d.k); if (e.key === "Escape") setM5InlineDay(null); }} placeholder="Nome da atividade" style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12 }} />
+                                <div style={{ display: "flex", gap: 4 }}>
+                                  <input value={m5InlineMin} onChange={(e) => setM5InlineMin(e.target.value)} placeholder="min" style={{ width: 60, padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12 }} />
+                                  <button className="pl-btn primary" onClick={() => m5AddInline(d.k)} style={{ padding: "5px 8px", fontSize: 11.5, flex: 1 }}>Adicionar</button>
+                                  <button className="pl-btn ghost" onClick={() => setM5InlineDay(null)} style={{ padding: "5px 8px", fontSize: 11.5 }}>×</button>
+                                </div>
+                              </div>
+                            )}
                             {cards.map((c) => (
                               <div
                                 key={c.id}
                                 className={"pl-card " + c.v + (c.locked ? " locked" : "")}
+                                style={m5Selected.has(c.id) ? { outline: "2px solid var(--orange, #F97316)", outlineOffset: 2 } : undefined}
                                 draggable={!c.locked}
                                 onDragStart={() => onDragStart(d.k, c.id)}
+                                onClick={(e) => {
+                                  if (e.shiftKey) {
+                                    e.preventDefault();
+                                    setM5Selected((s) => { const n = new Set(s); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; });
+                                  } else if (m5Selected.size > 0) {
+                                    m5ToggleSelect(c.id, e);
+                                  }
+                                }}
                               >
                                 {c.locked && <span className="lock"><Lock size={11} /></span>}
                                 <div className="top">
@@ -1567,11 +1734,11 @@ export function Planejamento() {
                                 ))}</div>
                               </div>
                             ))}
-                            {empty && (
+                            {empty && m5InlineDay !== d.k && (
                               <div className="pl-empty-slot">
                                 <div className="ic"><Plus size={14} /></div>
                                 <div>Solte um cartão aqui<br />ou peça pra Sofia</div>
-                                <button className="sb" onClick={() => showToast("Sofia está sugerindo uma aula... ✨")}><Sparkles size={11} /> Sugerir aula</button>
+                                <button className="sb" onClick={() => m5SugerirAula(d.k)}><Sparkles size={11} /> Sugerir aula</button>
                               </div>
                             )}
                           </div>
@@ -2399,7 +2566,94 @@ export function Planejamento() {
         <div key={toast.key} className="pl-toast show">
           <Move size={14} className="ic" />
           <span>{toast.msg}</span>
-          <button onClick={() => setToast(null)}>Desfazer</button>
+          <button onClick={() => {
+            if (m5UndoMove) {
+              const { card, from, to } = m5UndoMove;
+              setWeek((w) => ({ ...w, [to]: w[to].filter((c) => c.id !== card.id), [from]: [...w[from], card] }));
+              setM5UndoMove(null);
+            }
+            setToast(null);
+          }}>Desfazer</button>
+        </div>
+      )}
+
+      {m5Selected.size >= 2 && (
+        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "var(--navy, #0F172A)", color: "#fff", padding: "10px 14px", borderRadius: 12, boxShadow: "0 16px 40px rgba(15,23,42,.35)", zIndex: 70, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <strong style={{ fontSize: 13 }}>{m5Selected.size} selecionados</strong>
+          <select onChange={(e) => { if (e.target.value) { m5BulkMove(e.target.value as DayKey); e.target.value = ""; } }} defaultValue="" style={{ padding: "6px 8px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600 }}>
+            <option value="" disabled>Mover para…</option>
+            {DAYS.map((d) => <option key={d.k} value={d.k}>{d.n}</option>)}
+          </select>
+          <button onClick={m5BulkDelete} style={{ background: "rgba(239,68,68,.85)", color: "#fff", border: "none", padding: "6px 10px", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600 }}><X size={12} /> Excluir selecionados</button>
+          <button onClick={m5ClearSelection} style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,.3)", padding: "6px 10px", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>Cancelar</button>
+        </div>
+      )}
+
+      {m5ReplicaOpen && (
+        <div role="dialog" aria-modal="true" onClick={() => setM5ReplicaOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(560px,100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📋 Replicar semana</div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Escolha as turmas</h3>
+              </div>
+              <button onClick={() => setM5ReplicaOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 6 }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+              {TURMAS.map((t) => {
+                const on = !!m5ReplicaPicks[t.id];
+                return (
+                  <button key={t.id} onClick={() => setM5ReplicaPicks((p) => ({ ...p, [t.id]: !p[t.id] }))} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: on ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)", borderRadius: 10, background: on ? "rgba(249,115,22,.06)" : "#fff", cursor: "pointer", textAlign: "left" }}>
+                    <span style={{ width: 18, height: 18, borderRadius: 4, border: "1px solid var(--line)", background: on ? "var(--orange, #F97316)" : "#fff", display: "grid", placeItems: "center", color: "#fff" }}>{on && <Check size={12} />}</span>
+                    <span style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{t.name}
+                        {t.warn && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(239,68,68,.12)", color: "#b91c1c" }}>{t.warn}</span>}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{t.sub}{t.pcd && ` · ${t.pcd}`}</div>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
+                <strong style={{ color: "var(--ink, #0F172A)" }}>{m5ReplicaCount}</strong> turma(s) selecionada(s) · Economia: <strong style={{ color: "#16a34a" }}>~{m5ReplicaCount * 25} min</strong> (25 min/turma)
+              </span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="pl-btn" onClick={() => setM5ReplicaOpen(false)}>Cancelar</button>
+                <button className="pl-btn primary" onClick={m5ConfirmarReplicar} disabled={m5ReplicaCount === 0}><Check size={14} /> Replicar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {m5HistoryOpen && (
+        <div role="dialog" aria-modal="true" onClick={() => setM5HistoryOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", zIndex: 80 }}>
+          <aside onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(420px,100%)", background: "#fff", boxShadow: "-12px 0 40px rgba(15,23,42,.25)", display: "flex", flexDirection: "column", animation: "fade-in .25s ease-out" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, margin: 0 }}>🕘 Histórico</h3>
+              <button onClick={() => setM5HistoryOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 6 }}><X size={18} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+              {m5History.length === 0 ? (
+                <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhuma ação registrada ainda.</p>
+              ) : m5History.map((h) => (
+                <div key={h.id} style={{ padding: 10, border: "1px solid var(--line)", borderRadius: 10, background: "#FAFBFD", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600 }}>{h.label}</div>
+                    <div style={{ fontSize: 11, color: "var(--muted)" }}>{new Date(h.ts).toLocaleTimeString()}</div>
+                  </div>
+                  {h.undo && <button className="pl-btn ghost" onClick={() => m5UndoLast(h)} style={{ padding: "4px 8px", fontSize: 11.5 }}>Desfazer</button>}
+                </div>
+              ))}
+            </div>
+            {m5History.length > 0 && (
+              <div style={{ padding: 12, borderTop: "1px solid var(--line)" }}>
+                <button className="pl-btn" onClick={() => { setM5History([]); showToast("Histórico limpo."); }} style={{ width: "100%" }}>Limpar histórico</button>
+              </div>
+            )}
+          </aside>
         </div>
       )}
 
