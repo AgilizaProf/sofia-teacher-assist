@@ -2077,49 +2077,90 @@ export function Planejamento() {
             {m === "m3" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Editar com Sofia <small>· selecione uma atividade</small></h2></div>
+                  <div><h2>Editar com Sofia <small>· {m3Plan.titulo}</small></h2></div>
                   <div className="right">
-                    <button className="pl-btn"><RefreshCw size={14} /> Restaurar original</button>
-                    <button className="pl-btn primary"><Check size={14} /> Salvar alterações</button>
+                    <button className="pl-btn" onClick={restaurarPlanoOriginal}><RefreshCw size={14} /> Restaurar original</button>
+                    <button className="pl-btn primary" onClick={() => showToast("Alterações salvas. ✓")}><Check size={14} /> Salvar alterações</button>
                   </div>
                 </div>
                 <div className="pl-chat">
                   <div className="pl-chat-card">
-                    <EmptyState
-                      icon="💬"
-                      title="Nenhuma atividade selecionada."
-                      description="Escolha uma atividade do seu plano para editar com a Sofia em linguagem natural."
-                    />
-
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 280, overflowY: "auto" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 360, minHeight: 240, overflowY: "auto", padding: 4 }}>
                       {chatLog.map((m, i) => (
                         <div key={i} className={"pl-msg " + m.from}>
                           <div className="av">{m.from === "user" ? "P" : "S"}</div>
                           <div className="bub">{m.t}</div>
                         </div>
                       ))}
+                      {m3Loading && (
+                        <div className="pl-msg sofia" aria-live="polite">
+                          <div className="av">S</div>
+                          <div className="bub" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontStyle: "italic", color: "var(--muted)" }}>
+                            <span className="pl-typing" style={{ display: "inline-flex", gap: 3 }}>
+                              <span style={{ width: 6, height: 6, borderRadius: 99, background: "currentColor", opacity: .4, animation: "pl-blink 1s infinite" }} />
+                              <span style={{ width: 6, height: 6, borderRadius: 99, background: "currentColor", opacity: .4, animation: "pl-blink 1s infinite .15s" }} />
+                              <span style={{ width: 6, height: 6, borderRadius: 99, background: "currentColor", opacity: .4, animation: "pl-blink 1s infinite .3s" }} />
+                            </span>
+                            Sofia está editando…
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pl-quickies">
-                      {["Torna mais fácil", "Encurta pra 30min", "Adapta pra TDAH", "Versão para PCD (TEA)", "Mais lúdica"].map((q) => (
-                        <button key={q} onClick={() => sendChat(q)}>{q}</button>
+                      {["Encurtar pra 30 min", "Adicionar roda de fechamento", "Adaptar pra Júlia (TEA)", "Trocar dupla por individual", "Mais lúdica"].map((q) => (
+                        <button key={q} onClick={() => setChatTxt(q)} disabled={m3Loading}>{q}</button>
                       ))}
                     </div>
 
                     <form className="pl-chat-input" onSubmit={(e) => { e.preventDefault(); sendChat(); }}>
-                      <input value={chatTxt} onChange={(e) => setChatTxt(e.target.value)} placeholder="Diga o que mudar... (ex: 'transforma em jogo')" />
-                      <button type="submit"><Send size={12} /> Enviar</button>
+                      <input value={chatTxt} onChange={(e) => setChatTxt(e.target.value)} placeholder="Diga o que mudar... (ex: 'encurta pra 30 min')" disabled={m3Loading} />
+                      <button type="submit" disabled={m3Loading || !chatTxt.trim()}><Send size={12} /> {m3Loading ? "Editando…" : "Enviar"}</button>
                     </form>
                   </div>
 
                   <aside className="pl-side">
                     <div className="pl-panel accent">
-                      <h3><MessageSquare size={14} /> O que fica preservado</h3>
-                      <p className="lead">Sofia <b>nunca muda</b> objetivo pedagógico nem código BNCC. Só ajusta tempo, complexidade, materiais e modo de execução.</p>
+                      <h3><MessageSquare size={14} /> Plano atual</h3>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{m3Plan.titulo}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, color: "var(--muted)", fontSize: 12 }}>
+                        <Clock size={12} /> Duração total: <strong style={{ color: "var(--ink, #0F172A)" }}>{m3Plan.duracaoMin} min</strong>
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                        {m3Plan.bncc.map((b) => (
+                          <span key={b} style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 99, background: "rgba(59,130,246,.12)", color: "#1d4ed8", fontFamily: "'JetBrains Mono',monospace" }}>{b}</span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="pl-panel">
-                      <h3><Clock size={14} /> Histórico desta atividade</h3>
-                      <EmptyState icon="🕘" title="Sem histórico ainda." description="Edições da atividade aparecem aqui." />
+                    <div className="pl-panel" style={{ marginTop: 12 }}>
+                      <h3><Layers size={14} /> Etapas ({m3Plan.etapas.length})</h3>
+                      <ol style={{ paddingLeft: 18, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                        {m3Plan.etapas.map((e) => (
+                          <li key={e.id} style={{ fontSize: 12.5, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                            <span>{e.titulo}</span>
+                            <span style={{ color: "var(--muted)", fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>· {e.min} min</span>
+                            {e.novo && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                    <div className="pl-panel" style={{ marginTop: 12 }}>
+                      <h3>♿ Adaptações ({m3Plan.adaptacoes.length})</h3>
+                      {m3Plan.adaptacoes.length === 0 ? (
+                        <p className="lead" style={{ fontSize: 12 }}>Nenhuma adaptação registrada. Peça à Sofia, ex: "adapta pra Júlia (TEA)".</p>
+                      ) : (
+                        <ul style={{ paddingLeft: 0, listStyle: "none", margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                          {m3Plan.adaptacoes.map((a) => (
+                            <li key={a.id} style={{ fontSize: 12.5, padding: 8, border: "1px solid var(--line)", borderRadius: 8, background: "#FAFBFD" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                <strong>{a.aluno}</strong>
+                                {a.novo && <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
+                              </div>
+                              <div style={{ color: "var(--muted)" }}>{a.texto}</div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   </aside>
                 </div>
