@@ -1744,7 +1744,7 @@ export function Planejamento() {
                     <button className="pl-btn primary" onClick={sugerirProxima}><Link2 size={14} /> Conectar próxima aula</button>
                   </div>
                 </div>
-                <div className="pl-chain">
+                <div className="pl-chain" id="m2-cadeia">
                   <div className="pl-chain-card">
                     <h3 style={{ fontSize: 16 }}>Sequência didática</h3>
                     {/* Formulário de adição */}
