@@ -1417,6 +1417,7 @@ export function Planejamento() {
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
   const [m6PatternDismissed, setM6PatternDismissed] = usePersistentState<boolean>("plan_m6_pattern_dismissed", false);
   const [m6EditingId, setM6EditingId] = useState<string | null>(null);
+  const m6FormRef = useRef<HTMLDivElement | null>(null);
   const m6Registradas = m6Entries.length;
   const m6Pct = Math.min(100, Math.round((m6Registradas / m6Total) * 100));
   const m6ToggleTag = (t: string) => setM6Tags((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
@@ -1426,7 +1427,11 @@ export function Planejamento() {
     setM6Emoji(e.emoji);
     setM6Text(e.text);
     setM6Tags([...e.tags]);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      requestAnimationFrame(() => {
+        m6FormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   };
   const m6DeleteEntry = (id: string) => {
     setM6Entries((prev) => prev.filter((x) => x.id !== id));
