@@ -1084,20 +1084,6 @@ export function Planejamento() {
     const last = m2Steps[m2Steps.length - 1];
     const idx = M2_DAY_OPTS.indexOf(last.d as typeof M2_DAY_OPTS[number]);
     const nextDay = M2_DAY_OPTS[Math.min(idx + 1, M2_DAY_OPTS.length - 1)];
-    // Escada didática completa. Sofia respeita a ordem da sequência e nunca
-    // pula uma etapa que ainda não exista na cadeia: sempre sugere a próxima
-    // etapa da SEQ que ainda não foi adicionada, percorrendo da introdução
-    // até a síntese.
-    const SEQ = [
-      "Introdução",
-      "Desenvolvimento",
-      "Aprofundamento",
-      "Prática guiada",
-      "Prática autônoma",
-      "Avaliação",
-      "Revisão",
-      "Síntese",
-    ] as const;
     const usadas = new Set(m2Steps.map((s) => s.tag));
     // Primeira etapa da sequência que ainda não está na cadeia — garante que
     // nenhuma etapa anterior seja pulada antes de avançar.
@@ -1126,6 +1112,44 @@ export function Planejamento() {
       suggest: true,
     };
     setM2Steps((arr) => [...arr, sugest]);
+  };
+  // Escada didática completa, usada tanto para sugerir a próxima aula quanto
+  // para reordenar as etapas já criadas na ordem canônica.
+  const SEQ = [
+    "Introdução",
+    "Desenvolvimento",
+    "Aprofundamento",
+    "Prática guiada",
+    "Prática autônoma",
+    "Avaliação",
+    "Revisão",
+    "Síntese",
+  ] as const;
+  // Reordena as etapas existentes seguindo SEQ, preservando todos os blocos.
+  // Etapas com a mesma tag mantêm a ordem relativa atual; tags fora da SEQ
+  // vão para o final, também na ordem original.
+  const reordenarSequencia = () => {
+    if (m2Steps.length < 2) { showToast("Adicione ao menos duas aulas para reordenar."); return; }
+    setM2Steps((arr) => {
+      const rank = (tag: string) => {
+        const i = (SEQ as readonly string[]).indexOf(tag);
+        return i === -1 ? SEQ.length : i;
+      };
+      const indexed = arr.map((s, i) => ({ s, i }));
+      indexed.sort((a, b) => {
+        const ra = rank(a.s.tag), rb = rank(b.s.tag);
+        if (ra !== rb) return ra - rb;
+        return a.i - b.i;
+      });
+      const next = indexed.map((x) => x.s);
+      const mudou = next.some((s, i) => s.id !== arr[i].id);
+      if (!mudou) {
+        showToast("A sequência já está na ordem completa. ✓");
+        return arr;
+      }
+      return reassignDays(next);
+    });
+    showToast("Etapas reordenadas na ordem completa. Dias atualizados. ✓");
   };
   const aceitarSugestao = (id: string) => setM2Steps((arr) => arr.map((s) => s.id === id ? { ...s, suggest: false } : s));
   const removerStep = (id: string) => setM2Steps((arr) => arr.filter((s) => s.id !== id));
