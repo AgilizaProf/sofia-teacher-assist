@@ -356,6 +356,8 @@ export function Dashboard() {
   // sobreviver ao cleanup que remove os search params da URL.
   const [pcdMomento, setPcdMomento] = useState<null | "m1" | "m3" | "m5">(null);
   const lastDeepLink = useRef<string>("");
+  // Quando a Sofia abre o painel com um momento PCD, já filtra a lista por PCD.
+  // (declarado depois junto com o filter — ver useEffect logo abaixo)
   useEffect(() => {
     const open = search.open;
     const m = search.m;
@@ -409,6 +411,30 @@ export function Dashboard() {
     return () => { clearTimeout(t); clearTimeout(cleanup); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.open, search.target, search.m]);
+
+  // Quando entra um momento PCD via deep-link, aplica o filtro PCD na lista.
+  useEffect(() => {
+    if (pcdMomento) setFilter("pcd");
+  }, [pcdMomento]);
+
+  // Texto contextual exibido no banner / modal conforme o momento.
+  const pcdMomentoMeta: Record<"m1" | "m3" | "m5", { titulo: string; sub: string; cta: string }> = {
+    m1: {
+      titulo: "Sofia destacou os alunos PCD para a montagem da semana (M1).",
+      sub: "Antes de gerar o plano, revise as anotações pedagógicas para que a Sofia inclua adaptações.",
+      cta: "Voltar ao M1",
+    },
+    m3: {
+      titulo: "Edição conversacional (M3) — incluir suportes específicos.",
+      sub: "Verifique o que cada aluno PCD precisa antes de pedir à Sofia para ajustar o plano.",
+      cta: "Voltar ao M3",
+    },
+    m5: {
+      titulo: "Antes de replicar entre turmas (M5), confira os PCDs.",
+      sub: "A turma de destino pode precisar de adaptações que não existem na turma de origem.",
+      cta: "Voltar ao M5",
+    },
+  };
 
   // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
   const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
