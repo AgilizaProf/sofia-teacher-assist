@@ -2,12 +2,29 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Planejamento } from "@/pages/Planejamento";
 
 type MKey = "m1" | "m2" | "m3" | "m4" | "m5" | "m6";
-type Search = { m?: MKey };
+type Search = {
+  m?: MKey;
+  /** Filtro por tag do diário (M6). */
+  tag?: string;
+  /** Filtro por turma do diário (M6). */
+  turma?: string;
+  /** Filtro por nome de aluno mencionado no diário (M6). */
+  aluno?: string;
+};
 
 export const Route = createFileRoute("/planejamento")({
   validateSearch: (s: Record<string, unknown>): Search => {
     const ms: MKey[] = ["m1", "m2", "m3", "m4", "m5", "m6"];
-    return { m: ms.includes(s.m as MKey) ? (s.m as MKey) : "m5" };
+    const str = (k: string): string | undefined => {
+      const v = s[k];
+      return typeof v === "string" && v.trim().length > 0 ? v : undefined;
+    };
+    return {
+      m: ms.includes(s.m as MKey) ? (s.m as MKey) : "m5",
+      tag: str("tag"),
+      turma: str("turma"),
+      aluno: str("aluno"),
+    };
   },
   head: () => ({
     meta: [
