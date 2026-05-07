@@ -1072,6 +1072,18 @@ export function Planejamento() {
   // são consideradas concluídas; posteriores, futuras.
   const [m2CurIdx, setM2CurIdx] = usePersistentState<number>("plan_m2_cur_idx", 0);
   const [m2PrintOpen, setM2PrintOpen] = useState(false);
+  // Indicador "Salvo automaticamente": pisca brevemente sempre que m2Steps ou
+  // m2CurIdx mudam (ou seja, são gravados no localStorage pelo usePersistentState).
+  const [m2SavedAt, setM2SavedAt] = useState<number | null>(null);
+  const [m2JustSaved, setM2JustSaved] = useState(false);
+  const m2FirstRender = useRef(true);
+  useEffect(() => {
+    if (m2FirstRender.current) { m2FirstRender.current = false; return; }
+    setM2SavedAt(Date.now());
+    setM2JustSaved(true);
+    const t = setTimeout(() => setM2JustSaved(false), 1800);
+    return () => clearTimeout(t);
+  }, [m2Steps, m2CurIdx]);
   const m2Total = m2Steps.length;
   const m2DoneCount = Math.min(m2CurIdx, m2Total);
   const m2Pct = m2Total === 0 ? 0 : Math.round((m2DoneCount / m2Total) * 100);
