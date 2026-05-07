@@ -1084,9 +1084,10 @@ export function Planejamento() {
     const last = m2Steps[m2Steps.length - 1];
     const idx = M2_DAY_OPTS.indexOf(last.d as typeof M2_DAY_OPTS[number]);
     const nextDay = M2_DAY_OPTS[Math.min(idx + 1, M2_DAY_OPTS.length - 1)];
-    // Escada didática: a próxima aula avança para o próximo estágio da
-    // sequência, completando introdução → desenvolvimento → aprofundamento →
-    // prática guiada → prática autônoma → avaliação → revisão → síntese.
+    // Escada didática completa. Sofia respeita a ordem da sequência e nunca
+    // pula uma etapa que ainda não exista na cadeia: sempre sugere a próxima
+    // etapa da SEQ que ainda não foi adicionada, percorrendo da introdução
+    // até a síntese.
     const SEQ = [
       "Introdução",
       "Desenvolvimento",
@@ -1098,15 +1099,14 @@ export function Planejamento() {
       "Síntese",
     ] as const;
     const usadas = new Set(m2Steps.map((s) => s.tag));
-    const lastIdx = SEQ.indexOf(last.tag as typeof SEQ[number]);
-    let nextTag: string =
-      lastIdx >= 0 && lastIdx < SEQ.length - 1
-        ? SEQ[lastIdx + 1]
-        : SEQ.find((t) => !usadas.has(t)) ?? "Síntese";
-    // Se a próxima etapa já existe na cadeia, pula para a próxima ainda livre.
-    if (usadas.has(nextTag)) {
-      nextTag = SEQ.slice(SEQ.indexOf(nextTag as typeof SEQ[number]) + 1).find((t) => !usadas.has(t)) ?? nextTag;
+    // Primeira etapa da sequência que ainda não está na cadeia — garante que
+    // nenhuma etapa anterior seja pulada antes de avançar.
+    const proximaLivre = SEQ.find((t) => !usadas.has(t));
+    if (!proximaLivre) {
+      showToast("A sequência já cobre todas as etapas (Introdução → Síntese).");
+      return;
     }
+    const nextTag: string = proximaLivre;
     const titulosPorTag: Record<string, string> = {
       "Introdução": `Introdução: ${last.t}`,
       "Desenvolvimento": `Desenvolvimento: ${last.t}`,
