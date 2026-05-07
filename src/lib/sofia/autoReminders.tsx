@@ -3,10 +3,10 @@ import { useSofiaUserData } from "./SofiaUserContext";
 import { useSofiaNotifications } from "./notifications";
 import {
   actionOpenAgenda,
+  actionOpenAluno,
   actionOpenAlunoNoMomento,
   actionOpenPlanejamento,
 } from "./dashboardLinks";
-import { actionOpenAluno } from "./dashboardLinks";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sofia — Lembretes automáticos (Fase 3)
