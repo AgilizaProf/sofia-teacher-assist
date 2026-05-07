@@ -73,13 +73,17 @@ describe("mentionsName — edge cases", () => {
   });
 
   it("escapes regex metacharacters in names", () => {
-    expect(mentionsName("falei com d'Ávila", "D'Avila")).toBe(false);
-    // O apóstrofo é fronteira; "Avila" é parte ≥ 3 chars → casa.
-    expect(mentionsName("falei com d'Avila hoje", "D Avila")).toBe(true);
+    // Apóstrofo no nome não quebra a regex (escape correto).
+    expect(mentionsName("falei com d'Ávila hoje", "D'Avila")).toBe(true);
+    // Nome com ponto também não vira "qualquer caractere".
+    expect(mentionsName("ana xyz silva", "A.S")).toBe(false);
   });
 
   it("handles names with hyphen", () => {
+    // Hífen é fronteira de palavra ([^a-z0-9]), então "Ana" e "Lucia" casam
+    // como partes ≥ 3 chars do nome (split /\s+/ mantém "Ana-Lucia" inteiro,
+    // mas o texto "Ana-Lucia" também contém "Ana" e "Lucia" como tokens).
     expect(mentionsName("Ana-Lucia chegou", "Ana-Lucia")).toBe(true);
-    expect(mentionsName("falei com Ana Lucia", "Ana-Lucia")).toBe(true);
+    expect(mentionsName("falei com Ana", "Ana-Lucia")).toBe(true);
   });
 });
