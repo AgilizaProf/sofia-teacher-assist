@@ -1431,6 +1431,26 @@ export function Planejamento() {
   const m6FormRef = useRef<HTMLDivElement | null>(null);
   const m6Registradas = m6Entries.length;
   const m6Pct = Math.min(100, Math.round((m6Registradas / m6Total) * 100));
+  // ── Filtros do diário (M6) vindos de search params ─────────────────────
+  // Sofia (resumo semanal e ações de notificação) usa esses params para
+  // abrir o M6 já filtrado por tag, turma ou aluno PCD citado.
+  const m6FilterTag = search.tag?.trim() ?? "";
+  const m6FilterTurma = search.turma?.trim() ?? "";
+  const m6FilterAluno = search.aluno?.trim() ?? "";
+  const m6HasFilter = !!(m6FilterTag || m6FilterTurma || m6FilterAluno);
+  const m6FilteredEntries = useMemo(() => {
+    if (!m6HasFilter) return m6Entries;
+    return m6Entries.filter((e) => {
+      if (m6FilterTag && !e.tags.some((t) => t.toLowerCase().includes(m6FilterTag.toLowerCase()))) return false;
+      const corpo = `${e.title ?? ""} ${e.text ?? ""}`.trim();
+      if (m6FilterTurma && !corpo.toLowerCase().includes(m6FilterTurma.toLowerCase())) return false;
+      if (m6FilterAluno && !mentionsName(corpo, m6FilterAluno)) return false;
+      return true;
+    });
+  }, [m6Entries, m6HasFilter, m6FilterTag, m6FilterTurma, m6FilterAluno]);
+  const m6ClearFilters = () => {
+    navigate({ search: (prev) => ({ ...prev, tag: undefined, turma: undefined, aluno: undefined }) });
+  };
   const m6ToggleTag = (t: string) => setM6Tags((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
   const m6ResetForm = () => { setM6Emoji(""); setM6Text(""); setM6Tags([]); setM6EditingId(null); };
   const m6StartEdit = (e: M6Entry) => {
