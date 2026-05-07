@@ -343,10 +343,10 @@ export function Dashboard() {
   // correspondente, destaca-a e abre o modal certo. O target é casado por
   // nome (case-insensitive) com a turma ou aluno cadastrado pelo usuário.
   const search = useSearch({ from: "/" }) as { open?: string; target?: string };
-  const schoolsRef = useRef<HTMLDivElement | null>(null);
-  const classesRef = useRef<HTMLDivElement | null>(null);
-  const studentsRef = useRef<HTMLDivElement | null>(null);
-  const agendaRef = useRef<HTMLDivElement | null>(null);
+  const schoolsRef = useRef<HTMLElement | null>(null);
+  const classesRef = useRef<HTMLElement | null>(null);
+  const studentsRef = useRef<HTMLElement | null>(null);
+  const agendaRef = useRef<HTMLElement | null>(null);
   const [highlight, setHighlight] = useState<null | "schools" | "classes" | "students" | "agenda">(null);
   const lastDeepLink = useRef<string>("");
   useEffect(() => {
@@ -502,7 +502,7 @@ export function Dashboard() {
             data-sofia-section="stats"
           >
             <button
-              ref={schoolsRef as React.RefObject<HTMLButtonElement>}
+              ref={schoolsRef as unknown as React.Ref<HTMLButtonElement>}
               className={`stat school-clickable${highlight === "schools" ? " sofia-highlight" : ""}`}
               type="button"
               onClick={() => setSchoolOpen(true)}
@@ -512,7 +512,7 @@ export function Dashboard() {
               <div className="stat-icon s1"><Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
               <div className="stat-body"><div className="stat-value">{baseSchools + schools.length} {schools.length > 0 && <span className="stat-value-trend">+{schools.length}</span>}</div><div className="stat-label">Escolas</div></div>
             </button>
-            <button ref={classesRef as React.RefObject<HTMLButtonElement>} className={`stat school-clickable${highlight === "classes" ? " sofia-highlight" : ""}`} type="button" onClick={() => setClassOpen(true)} aria-label="Adicionar turma" style={{ textAlign: "left" }}>
+            <button ref={classesRef as unknown as React.Ref<HTMLButtonElement>} className={`stat school-clickable${highlight === "classes" ? " sofia-highlight" : ""}`} type="button" onClick={() => setClassOpen(true)} aria-label="Adicionar turma" style={{ textAlign: "left" }}>
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
               <div className="stat-body"><div className="stat-value">{baseClasses + classes.length} {classes.length > 0 && <span className="stat-value-trend">+{classes.length}</span>}</div><div className="stat-label">Turmas ativas</div></div>
             </button>
