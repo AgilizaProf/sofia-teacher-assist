@@ -2120,8 +2120,8 @@ export function Planejamento() {
                     </div>
                     <div className="pl-cal-grid">
                       {m1Week.days.map((day) => {
-                        const todayIso = new Date().toISOString().slice(0, 10);
-                        const isToday = day.iso === todayIso;
+                        const todayIso = hydrated ? new Date().toISOString().slice(0, 10) : "";
+                        const isToday = hydrated && day.iso === todayIso;
                         const cards = m1Plan[day.k] || [];
                         return (
                           <div
