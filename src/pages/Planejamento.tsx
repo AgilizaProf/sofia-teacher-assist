@@ -1283,6 +1283,10 @@ export function Planejamento() {
       const mudancas: string[] = [];
       let resposta = `Ajustei a atividade considerando "${t}". Mantive o objetivo e a habilidade BNCC.`;
       setM3Plan((p) => {
+        // Snapshot do estado anterior, sem flags "novo", para detectar
+        // qualquer mudança (criação OU atualização) ao final.
+        const prevEtapas = new Map(p.etapas.map((e) => [e.id, { titulo: e.titulo, min: e.min }]));
+        const prevAdapt = new Map(p.adaptacoes.map((a) => [a.id, { aluno: a.aluno, texto: a.texto }]));
         let next: M3Plan = { ...p, etapas: p.etapas.map((e) => ({ ...e, novo: false })), adaptacoes: p.adaptacoes.map((a) => ({ ...a, novo: false })) };
         // Roda de fechamento
         if (low.includes("roda")) {
@@ -1316,6 +1320,22 @@ export function Planejamento() {
           next = { ...next, etapas };
           mudancas.push("troquei a execução em dupla por individual");
         }
+        // Marca como "novo" qualquer etapa/adaptação criada OU cujo conteúdo
+        // mudou em relação ao snapshot anterior — assim o pl-blink dispara
+        // também em atualizações, não só em adições.
+        next = {
+          ...next,
+          etapas: next.etapas.map((e) => {
+            const prev = prevEtapas.get(e.id);
+            const mudou = !prev || prev.titulo !== e.titulo || prev.min !== e.min;
+            return mudou ? { ...e, novo: true } : { ...e, novo: false };
+          }),
+          adaptacoes: next.adaptacoes.map((a) => {
+            const prev = prevAdapt.get(a.id);
+            const mudou = !prev || prev.aluno !== a.aluno || prev.texto !== a.texto;
+            return mudou ? { ...a, novo: true } : { ...a, novo: false };
+          }),
+        };
         return next;
       });
       if (mudancas.length > 0) {
