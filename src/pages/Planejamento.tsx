@@ -2901,6 +2901,7 @@ export function Planejamento() {
                       m6FilteredEntries.map((e) => (
                         <div
                           key={e.id}
+                          data-testid="m6-entry"
                           className="pl-d6-entry"
                           role="button"
                           tabIndex={0}
