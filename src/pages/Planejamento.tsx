@@ -290,6 +290,13 @@ const css = `
 .pl-toast button:hover{background:rgba(255,255,255,.08);}
 
 @keyframes pl-blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+@keyframes pl-highlight{
+  0%{background:rgba(249,115,22,.28);box-shadow:0 0 0 3px rgba(249,115,22,.18);}
+  60%{background:rgba(249,115,22,.12);box-shadow:0 0 0 2px rgba(249,115,22,.08);}
+  100%{background:transparent;box-shadow:0 0 0 0 transparent;}
+}
+.pl-novo{animation:pl-highlight 1.6s ease-out;border-radius:8px;padding:2px 6px;margin:-2px -6px;}
+.pl-badge-novo{animation:pl-blink 1.2s ease-in-out 2;}
 
 @media(max-width:880px){.pl-app{grid-template-columns:1fr;}}
 `;
