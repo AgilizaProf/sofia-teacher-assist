@@ -942,6 +942,11 @@ export function Planejamento() {
   const m5BulkDelete = () => {
     const ids = Array.from(m5Selected);
     if (ids.length === 0) return;
+    setM5ConfirmDelete(true);
+  };
+  const m5ConfirmBulkDelete = () => {
+    const ids = Array.from(m5Selected);
+    if (ids.length === 0) { setM5ConfirmDelete(false); return; }
     const before = week;
     setWeek((w) => {
       const next: Week = { seg: [...w.seg], ter: [...w.ter], qua: [...w.qua], qui: [...w.qui], sex: [...w.sex] };
@@ -951,6 +956,7 @@ export function Planejamento() {
     m5LogHistory(`Excluiu ${ids.length} cartões`, () => setWeek(before));
     showToast(`${ids.length} cartões excluídos.`);
     m5ClearSelection();
+    setM5ConfirmDelete(false);
   };
   const m5OpenReplicar = () => { setM5ReplicaPicks({}); setM5ReplicaOpen(true); };
   const m5ConfirmarReplicar = () => {
