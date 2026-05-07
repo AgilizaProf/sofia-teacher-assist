@@ -3,6 +3,7 @@ import { useSofiaUserData } from "./SofiaUserContext";
 import { useSofiaNotifications } from "./notifications";
 import {
   actionOpenAgenda,
+  actionOpenAluno,
   actionOpenPlanejamento,
 } from "./dashboardLinks";
 
@@ -35,6 +36,12 @@ function weekKey(): string {
   const diffDays = Math.floor((d.getTime() - start.getTime()) / 86400000);
   const week = Math.ceil((diffDays + start.getDay() + 1) / 7);
   return `${d.getFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+
+// Texto curto descrevendo um aluno PCD ("Ana (TEA)" ou só "Ana").
+function describePcd(nome: string, codigo: string | null): string {
+  if (!codigo) return `**${nome}**`;
+  return `**${nome}** (${codigo.toUpperCase()})`;
 }
 
 export function SofiaAutoReminders() {
@@ -117,6 +124,61 @@ export function SofiaAutoReminders() {
             dedupKey: `padrao:tag:${tag}:${weekKey()}`,
             action: actionOpenPlanejamento("m6", "Ver diário"),
           });
+        }
+      }
+
+      // ── 4) Alertas PCD nos momentos M1, M3 e M5 ────────────────────────
+      // Sofia só avisa sobre alunos PCD que JÁ estão cadastrados (nunca
+      // inventa). Cada alerta é deduplicado por turma + momento + semana
+      // para não repetir na mesma sessão nem após refresh.
+      if (data.alunosPCD.length > 0) {
+        const wk = weekKey();
+
+        // Para cada turma que tem alunos PCD, monta o resumo curto.
+        const turmasComPcd = Object.entries(data.alunosPCDPorTurma).filter(
+          ([turma, lista]) => turma !== "_sem_turma" && lista.length > 0,
+        );
+
+        for (const [turma, lista] of turmasComPcd) {
+          // Limita a 3 nomes para o texto não estourar.
+          const nomes = lista.slice(0, 3).map((a) => describePcd(a.primeiro_nome, a.pcd_codigo)).join(", ");
+          const extra = lista.length > 3 ? ` e mais ${lista.length - 3}` : "";
+          const primeiro = lista[0];
+
+          // M1 — ao gerar/revisar a semana, lembrar de adaptar para PCD.
+          notif.push({
+            category: "pcd",
+            text: `Na turma **${turma}** você tem ${lista.length} aluno(s) PCD: ${nomes}${extra}. Quer que eu sugira adaptações ao montar a semana?`,
+            dedupKey: `pcd:m1:${turma}:${wk}`,
+            action: actionOpenPlanejamento("m1", "Abrir M1 com a turma"),
+          });
+
+          // M3 — editor conversacional: lembrar nominalmente do(s) aluno(s).
+          notif.push({
+            category: "pcd",
+            text: `Ao editar o plano de **${turma}**, lembre de incluir suportes para ${nomes}${extra}. Posso abrir o editor agora?`,
+            dedupKey: `pcd:m3:${turma}:${wk}`,
+            action: actionOpenPlanejamento("m3", "Abrir editor (M3)"),
+          });
+
+          // M5 — replicar entre turmas: aviso de que a turma de destino tem PCDs.
+          notif.push({
+            category: "pcd",
+            text: `Antes de replicar para **${turma}**, lembre que ${nomes}${extra} pode(m) precisar de ajustes específicos.`,
+            dedupKey: `pcd:m5:${turma}:${wk}`,
+            action: actionOpenPlanejamento("m5", "Revisar antes de replicar"),
+          });
+
+          // Atalho extra: abrir o detalhe do primeiro aluno PCD da turma
+          // direto no Dashboard (anotações de PCD).
+          if (primeiro) {
+            notif.push({
+              category: "pcd",
+              text: `Há anotações de PCD para **${primeiro.primeiro_nome}** (${turma}). Quer revisar antes de planejar?`,
+              dedupKey: `pcd:detalhe:${turma}:${primeiro.id}:${wk}`,
+              action: actionOpenAluno(primeiro.nome, "Ver aluno"),
+            });
+          }
         }
       }
     };
