@@ -968,6 +968,7 @@ export function Planejamento() {
   };
 
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
+  const [m5ConfirmDelete, setM5ConfirmDelete] = useState(false);
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
   const FOCO_OPTS = [
     "Letramento",
