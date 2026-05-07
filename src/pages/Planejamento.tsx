@@ -1068,6 +1068,23 @@ export function Planejamento() {
 
   // M2 — Sequência didática
   const [m2Steps, setM2Steps] = usePersistentState<M2Step[]>("plan_m2_steps", []);
+  // Progresso da sequência: índice da etapa "em andamento". Etapas anteriores
+  // são consideradas concluídas; posteriores, futuras.
+  const [m2CurIdx, setM2CurIdx] = usePersistentState<number>("plan_m2_cur_idx", 0);
+  const [m2PrintOpen, setM2PrintOpen] = useState(false);
+  const m2Total = m2Steps.length;
+  const m2DoneCount = Math.min(m2CurIdx, m2Total);
+  const m2Pct = m2Total === 0 ? 0 : Math.round((m2DoneCount / m2Total) * 100);
+  const avancarEtapa = () => {
+    if (m2Total === 0) { showToast("Adicione uma aula antes de avançar."); return; }
+    if (m2CurIdx >= m2Total) { showToast("Sequência já concluída. 🎉"); return; }
+    const next = m2CurIdx + 1;
+    setM2CurIdx(next);
+    if (next >= m2Total) showToast("Sequência concluída! 🎉");
+    else showToast(`Etapa ${next} concluída. Avançando para ${next + 1} de ${m2Total}. ✓`);
+  };
+  const reiniciarProgresso = () => { setM2CurIdx(0); showToast("Progresso reiniciado."); };
+  const imprimirSequencia = () => setM2PrintOpen(true);
   const [m2Form, setM2Form] = useState<{ d: string; tag: string; t: string; p: string }>({
     d: "SEG", tag: M2_TAG_OPTS[0], t: "", p: M2_BNCC_OPTS[0],
   });
@@ -1743,6 +1760,29 @@ export function Planejamento() {
                     <button className="pl-btn primary" onClick={sugerirProxima}><Link2 size={14} /> Conectar próxima aula</button>
                   </div>
                 </div>
+                {m2Total > 0 && (
+                  <div style={{ marginTop: 12, padding: 14, border: "1px solid var(--line)", borderRadius: 12, background: "#fff", display: "grid", gap: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <strong style={{ fontSize: 13.5 }}>
+                          Etapa {Math.min(m2CurIdx + 1, m2Total)} de {m2Total}
+                          {m2CurIdx >= m2Total && " · concluída 🎉"}
+                        </strong>
+                        <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                          {m2DoneCount} {m2DoneCount === 1 ? "etapa concluída" : "etapas concluídas"} · {m2Pct}%
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <button className="pl-btn" onClick={reiniciarProgresso} title="Reinicia o progresso para a etapa 1."><RefreshCw size={14} /> Reiniciar</button>
+                        <button className="pl-btn" onClick={imprimirSequencia}><BookOpen size={14} /> Imprimir sequência</button>
+                        <button className="pl-btn primary" onClick={avancarEtapa} disabled={m2CurIdx >= m2Total}><ArrowRight size={14} /> Próxima etapa</button>
+                      </div>
+                    </div>
+                    <div style={{ height: 8, background: "#EEF1F6", borderRadius: 99, overflow: "hidden" }}>
+                      <div style={{ width: `${m2Pct}%`, height: "100%", background: "linear-gradient(90deg, var(--primary, #F97316), #FB923C)", transition: "width .35s ease" }} />
+                    </div>
+                  </div>
+                )}
                 <div className="pl-chain" id="m2-cadeia" style={{ scrollMarginTop: 96 }}>
                   <div className="pl-chain-card">
                     <h3 style={{ fontSize: 16 }}>Sequência didática</h3>
@@ -1791,11 +1831,13 @@ export function Planejamento() {
                       </div>
                     ) : (
                       <div className="pl-chain-list" style={{ marginTop: 12 }}>
-                        {m2Steps.map((s) => {
+                        {m2Steps.map((s, idx) => {
                           const editing = m2EditId === s.id;
                           const isOver = m2DragOverId === s.id && m2DraggingId !== s.id;
                           const showPhBefore = isOver && m2DragPos === "before";
                           const showPhAfter = isOver && m2DragPos === "after";
+                          const status: "done" | "current" | "future" =
+                            idx < m2CurIdx ? "done" : idx === m2CurIdx ? "current" : "future";
                           return (
                           <React.Fragment key={s.id}>
                             {showPhBefore && <div className="pl-drop-ph" aria-hidden="true" />}
@@ -1808,6 +1850,13 @@ export function Planejamento() {
                               }
                               onDragOver={(e) => onM2DragOver(e, s.id)}
                               onDrop={(e) => onM2Drop(e, s.id)}
+                              style={
+                                status === "done"
+                                  ? { opacity: 0.55 }
+                                  : status === "current"
+                                  ? { borderColor: "var(--primary, #F97316)", borderWidth: 2, boxShadow: "0 0 0 3px rgba(249,115,22,.12)" }
+                                  : undefined
+                              }
                             >
                               <div
                                 className="day"
@@ -1863,8 +1912,14 @@ export function Planejamento() {
                                   </div>
                                 ) : (
                                   <>
-                                    <div className="tag">{s.tag}{s.suggest ? " · sugestão Sofia" : ""}</div>
-                                    <div className="ttl">{s.t}</div>
+                                    <div className="tag" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                      {status === "done" && <Check size={12} style={{ color: "#16a34a" }} />}
+                                      {status === "current" && <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 99, background: "var(--primary, #F97316)" }} />}
+                                      <span>{s.tag}{s.suggest ? " · sugestão Sofia" : ""}</span>
+                                      {status === "current" && <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--primary, #F97316)", letterSpacing: .3 }}>· EM ANDAMENTO</span>}
+                                      {status === "done" && <span style={{ fontSize: 10.5, fontWeight: 700, color: "#16a34a", letterSpacing: .3 }}>· CONCLUÍDA</span>}
+                                    </div>
+                                    <div className="ttl" style={status === "done" ? { textDecoration: "line-through" } : undefined}>{s.t}</div>
                                     <div className="meta">
                                       <span className="pill">{s.p}</span>
                                       {s.suggest && (
@@ -2096,6 +2151,52 @@ export function Planejamento() {
           <Move size={14} className="ic" />
           <span>{toast.msg}</span>
           <button onClick={() => setToast(null)}>Desfazer</button>
+        </div>
+      )}
+
+      {m2PrintOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Imprimir sequência didática"
+          onClick={() => setM2PrintOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: "#fff", borderRadius: 14, width: "min(760px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+          >
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                  🖨 Versão para impressão
+                </div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Sequência didática · {m2Total} {m2Total === 1 ? "etapa" : "etapas"}</h3>
+              </div>
+              <button onClick={() => setM2PrintOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6 }}><X size={18} /></button>
+            </div>
+            <div id="m2-print-area" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
+                Progresso: <strong>{m2DoneCount}/{m2Total}</strong> ({m2Pct}%)
+              </p>
+              <ol style={{ paddingLeft: 20, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                {m2Steps.map((s, idx) => {
+                  const status = idx < m2CurIdx ? "Concluída" : idx === m2CurIdx ? "Em andamento" : "Futura";
+                  return (
+                    <li key={s.id} style={{ borderLeft: "3px solid " + (idx < m2CurIdx ? "#16a34a" : idx === m2CurIdx ? "#F97316" : "#cbd5e1"), paddingLeft: 12 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .3, textTransform: "uppercase", color: "var(--muted)" }}>{s.d} · {s.tag} · {status}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>{s.t}</div>
+                      <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{s.p}</div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="pl-btn" onClick={() => setM2PrintOpen(false)}>Fechar</button>
+              <button className="pl-btn primary" onClick={() => window.print()}>Imprimir agora</button>
+            </div>
+          </div>
         </div>
       )}
 
