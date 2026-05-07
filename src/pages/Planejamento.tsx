@@ -1902,7 +1902,7 @@ export function Planejamento() {
                         </p>
                       )}
                     </div>
-                    <div className="pl-panel" style={{ marginTop: 12 }}>
+                    <div className="pl-panel" id="m2-habilidades" style={{ marginTop: 12, scrollMarginTop: 80 }}>
                       <h3><BookOpen size={14} /> Habilidades cobertas</h3>
                       {m2Steps.length === 0 ? (
                         <p className="lead">Nenhuma habilidade BNCC mapeada ainda.</p>
