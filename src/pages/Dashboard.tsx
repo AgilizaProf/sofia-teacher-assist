@@ -346,19 +346,26 @@ export function Dashboard() {
   // Lê ?open=schools|classes|students|agenda&target=<nome>, rola até a seção
   // correspondente, destaca-a e abre o modal certo. O target é casado por
   // nome (case-insensitive) com a turma ou aluno cadastrado pelo usuário.
-  const search = useSearch({ from: "/" }) as { open?: string; target?: string };
+  const search = useSearch({ from: "/" }) as { open?: string; target?: string; m?: "m1" | "m3" | "m5" };
   const schoolsRef = useRef<HTMLElement | null>(null);
   const classesRef = useRef<HTMLElement | null>(null);
   const studentsRef = useRef<HTMLElement | null>(null);
   const agendaRef = useRef<HTMLElement | null>(null);
   const [highlight, setHighlight] = useState<null | "schools" | "classes" | "students" | "agenda">(null);
+  // Contexto PCD vindo do parâmetro ?m=m1|m3|m5. Persiste em estado para
+  // sobreviver ao cleanup que remove os search params da URL.
+  const [pcdMomento, setPcdMomento] = useState<null | "m1" | "m3" | "m5">(null);
   const lastDeepLink = useRef<string>("");
+  // Quando a Sofia abre o painel com um momento PCD, já filtra a lista por PCD.
+  // (declarado depois junto com o filter — ver useEffect logo abaixo)
   useEffect(() => {
     const open = search.open;
-    if (!open) return;
-    const key = `${open}|${search.target ?? ""}`;
+    const m = search.m;
+    if (!open && !m) return;
+    const key = `${open ?? ""}|${search.target ?? ""}|${m ?? ""}`;
     if (key === lastDeepLink.current) return;
     lastDeepLink.current = key;
+    if (m) setPcdMomento(m);
     const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const scrollTo = (el: HTMLElement | null) => {
       if (!el) return;
@@ -391,6 +398,9 @@ export function Dashboard() {
       }
     } else if (open === "agenda") {
       scrollTo(agendaRef.current); setHighlight("agenda");
+    } else if (m && !open) {
+      // Só recebeu ?m=... — rola até a lista de alunos para evidenciar PCDs.
+      scrollTo(studentsRef.current); setHighlight("students");
     }
     // Limpa o destaque após 2.5s.
     const t = setTimeout(() => setHighlight(null), 2500);
@@ -400,7 +410,31 @@ export function Dashboard() {
     }, 600);
     return () => { clearTimeout(t); clearTimeout(cleanup); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.open, search.target]);
+  }, [search.open, search.target, search.m]);
+
+  // Quando entra um momento PCD via deep-link, aplica o filtro PCD na lista.
+  useEffect(() => {
+    if (pcdMomento) setFilter("pcd");
+  }, [pcdMomento]);
+
+  // Texto contextual exibido no banner / modal conforme o momento.
+  const pcdMomentoMeta: Record<"m1" | "m3" | "m5", { titulo: string; sub: string; cta: string }> = {
+    m1: {
+      titulo: "Sofia destacou os alunos PCD para a montagem da semana (M1).",
+      sub: "Antes de gerar o plano, revise as anotações pedagógicas para que a Sofia inclua adaptações.",
+      cta: "Voltar ao M1",
+    },
+    m3: {
+      titulo: "Edição conversacional (M3) — incluir suportes específicos.",
+      sub: "Verifique o que cada aluno PCD precisa antes de pedir à Sofia para ajustar o plano.",
+      cta: "Voltar ao M3",
+    },
+    m5: {
+      titulo: "Antes de replicar entre turmas (M5), confira os PCDs.",
+      sub: "A turma de destino pode precisar de adaptações que não existem na turma de origem.",
+      cta: "Voltar ao M5",
+    },
+  };
 
   // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
   const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
@@ -532,6 +566,53 @@ export function Dashboard() {
 
           <div className="grid-2">
             <div ref={studentsRef as unknown as React.Ref<HTMLDivElement>} className={`card${highlight === "students" ? " sofia-highlight" : ""}`}>
+              {pcdMomento && (
+                <div
+                  role="status"
+                  style={{
+                    margin: "-2px 0 14px",
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    background: "linear-gradient(135deg,#EDE9FE,#F5F3FF)",
+                    border: "1px solid #DDD6FE",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>🧒</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: "#5B21B6" }}>
+                      {pcdMomentoMeta[pcdMomento].titulo}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: "#6D28D9", marginTop: 3, lineHeight: 1.4 }}>
+                      {pcdMomentoMeta[pcdMomento].sub}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => navigate({ to: "/planejamento", search: { m: pcdMomento } })}
+                        style={{
+                          padding: "6px 12px", borderRadius: 8, border: "none",
+                          background: "#7C3AED", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer",
+                        }}
+                      >
+                        {pcdMomentoMeta[pcdMomento].cta}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPcdMomento(null)}
+                        style={{
+                          padding: "6px 10px", borderRadius: 8, border: "1px solid #DDD6FE",
+                          background: "#fff", color: "#6D28D9", fontWeight: 700, fontSize: 12, cursor: "pointer",
+                        }}
+                      >
+                        Dispensar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="card-head">
                 <h3 className="card-title">Seus alunos<span className="card-title-count">{totalStudents}</span></h3>
                 <div className="filter-pills">
@@ -1447,6 +1528,31 @@ export function Dashboard() {
                     ) : <span style={{ color: "var(--text-soft)" }}>Não é PCD</span>}
                   </div>
                 </div>
+
+                {isPcd && pcdMomento && (
+                  <div
+                    style={{
+                      padding: "10px 12px", borderRadius: 9,
+                      background: "#F5F3FF", border: "1px solid #DDD6FE",
+                      fontSize: 12.5, color: "#5B21B6", lineHeight: 1.45,
+                      display: "flex", flexDirection: "column", gap: 6,
+                    }}
+                  >
+                    <strong>Contexto Sofia · {pcdMomento.toUpperCase()}</strong>
+                    <span>{pcdMomentoMeta[pcdMomento].sub}</span>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: "/planejamento", search: { m: pcdMomento } })}
+                      style={{
+                        alignSelf: "flex-start",
+                        padding: "5px 10px", borderRadius: 7, border: "none",
+                        background: "#7C3AED", color: "#fff", fontWeight: 700, fontSize: 11.5, cursor: "pointer",
+                      }}
+                    >
+                      {pcdMomentoMeta[pcdMomento].cta}
+                    </button>
+                  </div>
+                )}
 
                 <div className="school-field">
                   <label>Anotações pedagógicas</label>
