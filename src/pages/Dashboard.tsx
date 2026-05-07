@@ -346,19 +346,24 @@ export function Dashboard() {
   // Lê ?open=schools|classes|students|agenda&target=<nome>, rola até a seção
   // correspondente, destaca-a e abre o modal certo. O target é casado por
   // nome (case-insensitive) com a turma ou aluno cadastrado pelo usuário.
-  const search = useSearch({ from: "/" }) as { open?: string; target?: string };
+  const search = useSearch({ from: "/" }) as { open?: string; target?: string; m?: "m1" | "m3" | "m5" };
   const schoolsRef = useRef<HTMLElement | null>(null);
   const classesRef = useRef<HTMLElement | null>(null);
   const studentsRef = useRef<HTMLElement | null>(null);
   const agendaRef = useRef<HTMLElement | null>(null);
   const [highlight, setHighlight] = useState<null | "schools" | "classes" | "students" | "agenda">(null);
+  // Contexto PCD vindo do parâmetro ?m=m1|m3|m5. Persiste em estado para
+  // sobreviver ao cleanup que remove os search params da URL.
+  const [pcdMomento, setPcdMomento] = useState<null | "m1" | "m3" | "m5">(null);
   const lastDeepLink = useRef<string>("");
   useEffect(() => {
     const open = search.open;
-    if (!open) return;
-    const key = `${open}|${search.target ?? ""}`;
+    const m = search.m;
+    if (!open && !m) return;
+    const key = `${open ?? ""}|${search.target ?? ""}|${m ?? ""}`;
     if (key === lastDeepLink.current) return;
     lastDeepLink.current = key;
+    if (m) setPcdMomento(m);
     const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const scrollTo = (el: HTMLElement | null) => {
       if (!el) return;
@@ -391,6 +396,9 @@ export function Dashboard() {
       }
     } else if (open === "agenda") {
       scrollTo(agendaRef.current); setHighlight("agenda");
+    } else if (m && !open) {
+      // Só recebeu ?m=... — rola até a lista de alunos para evidenciar PCDs.
+      scrollTo(studentsRef.current); setHighlight("students");
     }
     // Limpa o destaque após 2.5s.
     const t = setTimeout(() => setHighlight(null), 2500);
@@ -400,7 +408,7 @@ export function Dashboard() {
     }, 600);
     return () => { clearTimeout(t); clearTimeout(cleanup); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.open, search.target]);
+  }, [search.open, search.target, search.m]);
 
   // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
   const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
