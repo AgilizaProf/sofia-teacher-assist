@@ -1434,10 +1434,54 @@ export function Planejamento() {
   // ── Filtros do diário (M6) vindos de search params ─────────────────────
   // Sofia (resumo semanal e ações de notificação) usa esses params para
   // abrir o M6 já filtrado por tag, turma ou aluno PCD citado.
+  // Persistência: URL é a fonte de verdade durante a sessão; o último
+  // estado é espelhado em localStorage para que, ao voltar ao M6 sem
+  // params, os filtros sejam restaurados automaticamente.
+  const [m6FilterSaved, setM6FilterSaved] = usePersistentState<{
+    tag?: string;
+    turma?: string;
+    aluno?: string;
+  }>("plan_m6_filters", {});
   const m6FilterTag = search.tag?.trim() ?? "";
   const m6FilterTurma = search.turma?.trim() ?? "";
   const m6FilterAluno = search.aluno?.trim() ?? "";
   const m6HasFilter = !!(m6FilterTag || m6FilterTurma || m6FilterAluno);
+  // Restaura filtros salvos quando o usuário volta ao M6 sem search params.
+  // Só dispara se: aba atual = m6, URL sem filtros, e há algo salvo.
+  const m6FilterRestored = useRef(false);
+  useEffect(() => {
+    if (m6FilterRestored.current) return;
+    if (search.m !== "m6") return;
+    if (m6HasFilter) { m6FilterRestored.current = true; return; }
+    const saved = m6FilterSaved;
+    if (!saved || (!saved.tag && !saved.turma && !saved.aluno)) {
+      m6FilterRestored.current = true;
+      return;
+    }
+    m6FilterRestored.current = true;
+    navigate({
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        tag: saved.tag,
+        turma: saved.turma,
+        aluno: saved.aluno,
+      }),
+      replace: true,
+    });
+  }, [search.m, m6HasFilter, m6FilterSaved, navigate]);
+  // Espelha filtros da URL em localStorage para futura restauração.
+  useEffect(() => {
+    if (search.m !== "m6") return;
+    const next = {
+      tag: m6FilterTag || undefined,
+      turma: m6FilterTurma || undefined,
+      aluno: m6FilterAluno || undefined,
+    };
+    setM6FilterSaved((prev) => {
+      if (prev?.tag === next.tag && prev?.turma === next.turma && prev?.aluno === next.aluno) return prev;
+      return next;
+    });
+  }, [search.m, m6FilterTag, m6FilterTurma, m6FilterAluno, setM6FilterSaved]);
   const m6FilteredEntries = useMemo(() => {
     if (!m6HasFilter) return m6Entries;
     return m6Entries.filter((e) => {
@@ -1449,6 +1493,10 @@ export function Planejamento() {
     });
   }, [m6Entries, m6HasFilter, m6FilterTag, m6FilterTurma, m6FilterAluno]);
   const m6ClearFilters = () => {
+    // Limpa também o espelho em localStorage para que a próxima visita
+    // venha realmente sem filtros.
+    setM6FilterSaved({});
+    m6FilterRestored.current = true;
     navigate({
       search: (prev: Record<string, unknown>) => ({
         ...prev,
