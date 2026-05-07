@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
+import { sanitizeFilter, sanitizeM6Filters, type M6FilterState } from "@/lib/sofia/m6Filters";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
@@ -1437,14 +1438,12 @@ export function Planejamento() {
   // Persistência: URL é a fonte de verdade durante a sessão; o último
   // estado é espelhado em localStorage para que, ao voltar ao M6 sem
   // params, os filtros sejam restaurados automaticamente.
-  const [m6FilterSaved, setM6FilterSaved] = usePersistentState<{
-    tag?: string;
-    turma?: string;
-    aluno?: string;
-  }>("plan_m6_filters", {});
-  const m6FilterTag = search.tag?.trim() ?? "";
-  const m6FilterTurma = search.turma?.trim() ?? "";
-  const m6FilterAluno = search.aluno?.trim() ?? "";
+  const [m6FilterSaved, setM6FilterSaved] = usePersistentState<M6FilterState>("plan_m6_filters", {});
+  // Defense-in-depth: o validateSearch já sanitiza, mas reaplicamos aqui
+  // para garantir que nenhum chamador interno injete valor inválido.
+  const m6FilterTag = sanitizeFilter(search.tag) ?? "";
+  const m6FilterTurma = sanitizeFilter(search.turma) ?? "";
+  const m6FilterAluno = sanitizeFilter(search.aluno) ?? "";
   const m6HasFilter = !!(m6FilterTag || m6FilterTurma || m6FilterAluno);
   // Restaura filtros salvos quando o usuário volta ao M6 sem search params.
   // Só dispara se: aba atual = m6, URL sem filtros, e há algo salvo.
@@ -1453,8 +1452,10 @@ export function Planejamento() {
     if (m6FilterRestored.current) return;
     if (search.m !== "m6") return;
     if (m6HasFilter) { m6FilterRestored.current = true; return; }
-    const saved = m6FilterSaved;
-    if (!saved || (!saved.tag && !saved.turma && !saved.aluno)) {
+    // localStorage também é entrada não-confiável (usuário pode editar) —
+    // sanitiza antes de restaurar.
+    const saved = sanitizeM6Filters(m6FilterSaved);
+    if (!saved.tag && !saved.turma && !saved.aluno) {
       m6FilterRestored.current = true;
       return;
     }

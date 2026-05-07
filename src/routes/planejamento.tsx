@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Planejamento } from "@/pages/Planejamento";
+import { sanitizeFilter } from "@/lib/sofia/m6Filters";
+
+// Sanitização compartilhada vive em @/lib/sofia/m6Filters — também é
+// reaproveitada pela página ao restaurar o estado persistido em localStorage.
 
 type MKey = "m1" | "m2" | "m3" | "m4" | "m5" | "m6";
 type Search = {
@@ -15,15 +19,11 @@ type Search = {
 export const Route = createFileRoute("/planejamento")({
   validateSearch: (s: Record<string, unknown>): Search => {
     const ms: MKey[] = ["m1", "m2", "m3", "m4", "m5", "m6"];
-    const str = (k: string): string | undefined => {
-      const v = s[k];
-      return typeof v === "string" && v.trim().length > 0 ? v : undefined;
-    };
     return {
       m: ms.includes(s.m as MKey) ? (s.m as MKey) : "m5",
-      tag: str("tag"),
-      turma: str("turma"),
-      aluno: str("aluno"),
+      tag: sanitizeFilter(s.tag),
+      turma: sanitizeFilter(s.turma),
+      aluno: sanitizeFilter(s.aluno),
     };
   },
   head: () => ({
