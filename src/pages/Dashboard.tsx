@@ -677,7 +677,7 @@ export function Dashboard() {
                 </button>
               </div>
 
-              <div className="card">
+              <div ref={agendaRef as unknown as React.Ref<HTMLDivElement>} className={`card${highlight === "agenda" ? " sofia-highlight" : ""}`}>
                 <div className="card-head">
                   <h3 className="card-title">🗓️ Agenda</h3>
                   <button
