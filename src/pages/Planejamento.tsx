@@ -846,6 +846,18 @@ export function Planejamento() {
   const [m5ReplicaOpen, setM5ReplicaOpen] = useState(false);
   const [m5ReplicaPicks, setM5ReplicaPicks] = useState<Record<string, boolean>>({});
   const [m5HistoryOpen, setM5HistoryOpen] = useState(false);
+  const [m5InlineDay, setM5InlineDay] = useState<DayKey | null>(null);
+  const [m5InlineNome, setM5InlineNome] = useState("");
+  const [m5InlineMin, setM5InlineMin] = useState("45");
+  const m5AddInline = (day: DayKey) => {
+    const nome = m5InlineNome.trim();
+    if (!nome) { showToast("Dê um nome à atividade."); return; }
+    const min = parseInt(m5InlineMin, 10) || 45;
+    const card: Card = { id: `c_${Date.now()}`, v: "port", tag: "ATIV", title: nome, meta: `${min} min` };
+    setWeek((w) => ({ ...w, [day]: [...w[day], card] }));
+    m5LogHistory(`Adicionou "${nome}" em ${day.toUpperCase()}`, () => setWeek((w) => ({ ...w, [day]: w[day].filter((c) => c.id !== card.id) })));
+    setM5InlineNome(""); setM5InlineMin("45"); setM5InlineDay(null);
+  };
   type M5HistoryEntry = { id: string; ts: number; label: string; undo?: () => void };
   const [m5History, setM5History] = useState<M5HistoryEntry[]>([]);
   const [m5UndoMove, setM5UndoMove] = useState<null | { card: Card; from: DayKey; to: DayKey }>(null);
