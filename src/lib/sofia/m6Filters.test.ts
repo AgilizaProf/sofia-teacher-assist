@@ -33,7 +33,7 @@ describe("sanitizeFilter", () => {
 
   it("remove caracteres de controle", () => {
     expect(sanitizeFilter("ana\u0000beatriz")).toBe("anabeatriz");
-    expect(sanitizeFilter("a\nb")).toBe("a b");
+    expect(sanitizeFilter("a\nb")).toBe("ab");
   });
 
   it("aplica tamanho máximo", () => {
