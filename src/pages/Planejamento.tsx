@@ -1725,6 +1725,9 @@ export function Planejamento() {
                   <div className="right">
                     <button className="pl-btn"><BookOpen size={14} /> Habilidades</button>
                     <button className="pl-btn" onClick={reordenarSequencia} title="Reorganiza as etapas existentes na ordem Introdução → Síntese, preservando todos os blocos."><ArrowDownUp size={14} /> Reordenar na ordem completa</button>
+                    {m2ReorderBackup && (
+                      <button className="pl-btn" onClick={desfazerReordenacao} title="Restaura a sequência anterior à última reordenação."><RefreshCw size={14} /> Desfazer reordenação</button>
+                    )}
                     <button className="pl-btn primary" onClick={sugerirProxima}><Link2 size={14} /> Conectar próxima aula</button>
                   </div>
                 </div>
