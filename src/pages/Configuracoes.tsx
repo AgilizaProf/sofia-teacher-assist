@@ -67,6 +67,46 @@ export function Configuracoes() {
             <ProfileEditor />
           </section>
 
+          <section aria-labelledby="acessibilidade-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+              <h2 id="acessibilidade-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
+                ♿ Acessibilidade
+              </h2>
+            </div>
+            <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 14px" }}>
+              Ajuste como o app se comporta para tornar a navegação mais confortável.
+            </p>
+            <div role="radiogroup" aria-label="Reduzir movimento" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Reduzir movimento</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
+                {RM_OPTS.map((opt) => {
+                  const on = rmMode === opt.v;
+                  return (
+                    <button
+                      key={opt.v}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => setRmMode(opt.v)}
+                      style={{
+                        textAlign: "left",
+                        padding: "12px 14px",
+                        borderRadius: 10,
+                        border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0",
+                        background: on ? "#FFF1E8" : "#fff",
+                        color: "#1B2A4E",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
+                      <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
           <section aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <Shield size={20} color="#FF7A45" />
