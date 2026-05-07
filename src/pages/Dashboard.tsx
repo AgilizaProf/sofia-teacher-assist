@@ -527,7 +527,7 @@ export function Dashboard() {
           </div>
 
           <div className="grid-2">
-            <div className="card">
+            <div ref={studentsRef as unknown as React.Ref<HTMLDivElement>} className={`card${highlight === "students" ? " sofia-highlight" : ""}`}>
               <div className="card-head">
                 <h3 className="card-title">Seus alunos<span className="card-title-count">{totalStudents}</span></h3>
                 <div className="filter-pills">
