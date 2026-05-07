@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
@@ -337,6 +337,66 @@ export function Dashboard() {
   const [streak, setStreak] = useState<number>(0);
   const sofia = useSofia();
   const navigate = useNavigate();
+
+  // ── Deep-link vindo das notificações da Sofia ─────────────────────────────
+  // Lê ?open=schools|classes|students|agenda&target=<nome>, rola até a seção
+  // correspondente, destaca-a e abre o modal certo. O target é casado por
+  // nome (case-insensitive) com a turma ou aluno cadastrado pelo usuário.
+  const search = useSearch({ from: "/" }) as { open?: string; target?: string };
+  const schoolsRef = useRef<HTMLDivElement | null>(null);
+  const classesRef = useRef<HTMLDivElement | null>(null);
+  const studentsRef = useRef<HTMLDivElement | null>(null);
+  const agendaRef = useRef<HTMLDivElement | null>(null);
+  const [highlight, setHighlight] = useState<null | "schools" | "classes" | "students" | "agenda">(null);
+  const lastDeepLink = useRef<string>("");
+  useEffect(() => {
+    const open = search.open;
+    if (!open) return;
+    const key = `${open}|${search.target ?? ""}`;
+    if (key === lastDeepLink.current) return;
+    lastDeepLink.current = key;
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const scrollTo = (el: HTMLElement | null) => {
+      if (!el) return;
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }));
+    };
+    if (open === "schools") {
+      scrollTo(schoolsRef.current); setHighlight("schools");
+      setSchoolOpen(true);
+    } else if (open === "classes") {
+      scrollTo(classesRef.current); setHighlight("classes");
+      // Se o target casa com uma turma existente, abre o modal de edição;
+      // caso contrário, abre o modal de criar nova turma.
+      const t = (search.target ?? "").trim().toLowerCase();
+      if (t) {
+        const idx = classes.findIndex((c) => c.name.toLowerCase() === t);
+        if (idx >= 0) setEditingClassIdx(idx);
+        else setClassOpen(true);
+      } else {
+        setClassOpen(true);
+      }
+    } else if (open === "students") {
+      scrollTo(studentsRef.current); setHighlight("students");
+      const t = (search.target ?? "").trim().toLowerCase();
+      if (t) {
+        const idx = students.findIndex((s) => s.name.toLowerCase() === t);
+        if (idx >= 0) setStudentDetail({ index: idx, student: students[idx] });
+        else setStudentOpen(true);
+      } else {
+        setStudentOpen(true);
+      }
+    } else if (open === "agenda") {
+      scrollTo(agendaRef.current); setHighlight("agenda");
+    }
+    // Limpa o destaque após 2.5s.
+    const t = setTimeout(() => setHighlight(null), 2500);
+    // Remove os search params para não reabrir ao voltar.
+    const cleanup = setTimeout(() => {
+      navigate({ to: "/", search: {}, replace: true });
+    }, 600);
+    return () => { clearTimeout(t); clearTimeout(cleanup); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.open, search.target]);
 
   // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
   const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
