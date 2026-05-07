@@ -17,7 +17,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const FILTER_MAX_LEN = 80;
-export const FILTER_ALLOWED_RE = /^[\p{L}\p{N}\s\-.,'·]+$/u;
+// Inclui `+` para permitir as tags reais do M6 ("+ funcionou", "+ inclusão",
+// "+ família") e `_` para tokens snake_case eventualmente usados em turmas.
+export const FILTER_ALLOWED_RE = /^[\p{L}\p{N}\s\-+_.,'·]+$/u;
 
 export function sanitizeFilter(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
