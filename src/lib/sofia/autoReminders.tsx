@@ -4,6 +4,7 @@ import { useSofiaNotifications } from "./notifications";
 import {
   actionOpenAgenda,
   actionOpenAluno,
+  actionOpenAlunoNoMomento,
   actionOpenPlanejamento,
 } from "./dashboardLinks";
 
@@ -176,7 +177,9 @@ export function SofiaAutoReminders() {
               category: "pcd",
               text: `Há anotações de PCD para **${primeiro.primeiro_nome}** (${turma}). Quer revisar antes de planejar?`,
               dedupKey: `pcd:detalhe:${turma}:${primeiro.id}:${wk}`,
-              action: actionOpenAluno(primeiro.nome, "Ver aluno"),
+              // Deep-link com momento: filtra PCD, destaca o aluno na lista
+              // e abre o modal de detalhe com o bloco "Contexto Sofia".
+              action: actionOpenAlunoNoMomento("m1", primeiro.nome, "Ver aluno (M1)"),
             });
           }
         }
