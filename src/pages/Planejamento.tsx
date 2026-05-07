@@ -2596,6 +2596,24 @@ export function Planejamento() {
         </div>
       )}
 
+      {m5ConfirmDelete && (
+        <div role="dialog" aria-modal="true" onClick={() => setM5ConfirmDelete(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(420px,100%)", boxShadow: "0 24px 60px rgba(15,23,42,.35)", overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)" }}>
+              <div style={{ fontSize: 11, color: "#b91c1c", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>⚠ Confirmar exclusão</div>
+              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Excluir {m5Selected.size} cartões?</h3>
+            </div>
+            <div style={{ padding: 20, fontSize: 13.5, color: "var(--muted)" }}>
+              Esta ação removerá os cartões selecionados da semana. Você poderá desfazer pelo histórico.
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button onClick={() => setM5ConfirmDelete(false)} style={{ background: "#fff", color: "var(--ink, #0F172A)", border: "1px solid var(--line)", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Cancelar</button>
+              <button onClick={m5ConfirmBulkDelete} style={{ background: "#dc2626", color: "#fff", border: "none", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {m5ReplicaOpen && (
         <div role="dialog" aria-modal="true" onClick={() => setM5ReplicaOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(560px,100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}>
