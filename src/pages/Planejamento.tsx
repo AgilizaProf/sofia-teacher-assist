@@ -2566,7 +2566,94 @@ export function Planejamento() {
         <div key={toast.key} className="pl-toast show">
           <Move size={14} className="ic" />
           <span>{toast.msg}</span>
-          <button onClick={() => setToast(null)}>Desfazer</button>
+          <button onClick={() => {
+            if (m5UndoMove) {
+              const { card, from, to } = m5UndoMove;
+              setWeek((w) => ({ ...w, [to]: w[to].filter((c) => c.id !== card.id), [from]: [...w[from], card] }));
+              setM5UndoMove(null);
+            }
+            setToast(null);
+          }}>Desfazer</button>
+        </div>
+      )}
+
+      {m5Selected.size >= 2 && (
+        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "var(--navy, #0F172A)", color: "#fff", padding: "10px 14px", borderRadius: 12, boxShadow: "0 16px 40px rgba(15,23,42,.35)", zIndex: 70, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <strong style={{ fontSize: 13 }}>{m5Selected.size} selecionados</strong>
+          <select onChange={(e) => { if (e.target.value) { m5BulkMove(e.target.value as DayKey); e.target.value = ""; } }} defaultValue="" style={{ padding: "6px 8px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600 }}>
+            <option value="" disabled>Mover para…</option>
+            {DAYS.map((d) => <option key={d.k} value={d.k}>{d.n}</option>)}
+          </select>
+          <button onClick={m5BulkDelete} style={{ background: "rgba(239,68,68,.85)", color: "#fff", border: "none", padding: "6px 10px", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600 }}><X size={12} /> Excluir selecionados</button>
+          <button onClick={m5ClearSelection} style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,.3)", padding: "6px 10px", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>Cancelar</button>
+        </div>
+      )}
+
+      {m5ReplicaOpen && (
+        <div role="dialog" aria-modal="true" onClick={() => setM5ReplicaOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(560px,100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📋 Replicar semana</div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Escolha as turmas</h3>
+              </div>
+              <button onClick={() => setM5ReplicaOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 6 }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+              {TURMAS.map((t) => {
+                const on = !!m5ReplicaPicks[t.id];
+                return (
+                  <button key={t.id} onClick={() => setM5ReplicaPicks((p) => ({ ...p, [t.id]: !p[t.id] }))} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: on ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)", borderRadius: 10, background: on ? "rgba(249,115,22,.06)" : "#fff", cursor: "pointer", textAlign: "left" }}>
+                    <span style={{ width: 18, height: 18, borderRadius: 4, border: "1px solid var(--line)", background: on ? "var(--orange, #F97316)" : "#fff", display: "grid", placeItems: "center", color: "#fff" }}>{on && <Check size={12} />}</span>
+                    <span style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{t.name}
+                        {t.warn && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(239,68,68,.12)", color: "#b91c1c" }}>{t.warn}</span>}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{t.sub}{t.pcd && ` · ${t.pcd}`}</div>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
+                <strong style={{ color: "var(--ink, #0F172A)" }}>{m5ReplicaCount}</strong> turma(s) selecionada(s) · Economia: <strong style={{ color: "#16a34a" }}>~{m5ReplicaCount * 25} min</strong> (25 min/turma)
+              </span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="pl-btn" onClick={() => setM5ReplicaOpen(false)}>Cancelar</button>
+                <button className="pl-btn primary" onClick={m5ConfirmarReplicar} disabled={m5ReplicaCount === 0}><Check size={14} /> Replicar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {m5HistoryOpen && (
+        <div role="dialog" aria-modal="true" onClick={() => setM5HistoryOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", zIndex: 80 }}>
+          <aside onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(420px,100%)", background: "#fff", boxShadow: "-12px 0 40px rgba(15,23,42,.25)", display: "flex", flexDirection: "column", animation: "fade-in .25s ease-out" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, margin: 0 }}>🕘 Histórico</h3>
+              <button onClick={() => setM5HistoryOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 6 }}><X size={18} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+              {m5History.length === 0 ? (
+                <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhuma ação registrada ainda.</p>
+              ) : m5History.map((h) => (
+                <div key={h.id} style={{ padding: 10, border: "1px solid var(--line)", borderRadius: 10, background: "#FAFBFD", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600 }}>{h.label}</div>
+                    <div style={{ fontSize: 11, color: "var(--muted)" }}>{new Date(h.ts).toLocaleTimeString()}</div>
+                  </div>
+                  {h.undo && <button className="pl-btn ghost" onClick={() => m5UndoLast(h)} style={{ padding: "4px 8px", fontSize: 11.5 }}>Desfazer</button>}
+                </div>
+              ))}
+            </div>
+            {m5History.length > 0 && (
+              <div style={{ padding: 12, borderTop: "1px solid var(--line)" }}>
+                <button className="pl-btn" onClick={() => { setM5History([]); showToast("Histórico limpo."); }} style={{ width: "100%" }}>Limpar histórico</button>
+              </div>
+            )}
+          </aside>
         </div>
       )}
 
