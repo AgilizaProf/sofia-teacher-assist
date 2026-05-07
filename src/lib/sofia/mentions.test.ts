@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mentionsName, norm } from "./mentions";
+import { diaryEntryFixtures } from "./__fixtures__/diaryEntries";
 
 describe("norm", () => {
   it("lower-cases and strips diacritics", () => {
@@ -85,4 +86,21 @@ describe("mentionsName — edge cases", () => {
     expect(mentionsName("Ana-Lucia chegou", "Ana-Lucia")).toBe(true);
     expect(mentionsName("falei com Ana Lucia", "Ana-Lucia")).toBe(false);
   });
+});
+
+describe("mentionsName — fixtures de entradas reais do diário", () => {
+  for (const entry of diaryEntryFixtures) {
+    describe(`entrada ${entry.id}: "${entry.text.slice(0, 48)}${entry.text.length > 48 ? "…" : ""}"`, () => {
+      for (const name of entry.expectedMatches) {
+        it(`detecta "${name}"`, () => {
+          expect(mentionsName(entry.text, name)).toBe(true);
+        });
+      }
+      for (const name of entry.expectedNonMatches) {
+        it(`NÃO detecta "${name}"`, () => {
+          expect(mentionsName(entry.text, name)).toBe(false);
+        });
+      }
+    });
+  }
 });
