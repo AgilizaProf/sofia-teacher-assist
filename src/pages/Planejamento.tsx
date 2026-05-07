@@ -1094,6 +1094,58 @@ export function Planejamento() {
     aulas: true, aval: true, eventos: true, feriados: true, bncc: false, sofia: true,
   });
   const toggleLayer = (k: string) => setLayers((s) => ({ ...s, [k]: !s[k] }));
+  // M4 — Calendário mensal por camadas
+  type M4Cat = "aulas" | "aval" | "eventos" | "feriados" | "bncc" | "sofia";
+  type M4Evt = { cat: M4Cat; title: string; meta?: string };
+  // Eventos mockados pinados em datas absolutas (mês/dia) — independente do mês
+  // exibido, são reaplicados em datas equivalentes via lookup por dia.
+  const M4_EVENTS_BY_DAY: Record<number, M4Evt[]> = {
+    3: [{ cat: "aulas", title: "PORT · Leitura compartilhada", meta: "07:30 · 3ºA" }],
+    7: [{ cat: "aulas", title: "MAT · Adição com material concreto", meta: "08:20 · 3ºA" }, { cat: "bncc", title: "EF03MA03", meta: "Operações" }],
+    9: [{ cat: "sofia", title: "Sugestão: revisão lúdica", meta: "Sofia propõe" }],
+    11: [{ cat: "aulas", title: "PORT · Produção textual", meta: "07:30 · 3ºA" }, { cat: "bncc", title: "EF03LP25", meta: "Escrita" }],
+    14: [{ cat: "eventos", title: "Conselho de classe", meta: "14h · sala dos profs" }],
+    15: [{ cat: "feriados", title: "Tiradentes", meta: "Feriado nacional" }],
+    18: [{ cat: "aulas", title: "CIE · Ciclo da água", meta: "08:20 · 3ºA" }],
+    22: [{ cat: "aval", title: "Avaliação de Matemática", meta: "08:20 · 3ºA" }],
+    23: [{ cat: "eventos", title: "Reunião de pais", meta: "19h · auditório" }],
+    25: [{ cat: "sofia", title: "Sugestão: projeto interdisciplinar", meta: "Sofia propõe" }],
+    28: [{ cat: "aulas", title: "HIS · Brasil colônia", meta: "09:10 · 3ºA" }, { cat: "aval", title: "Quiz de História", meta: "rápido · 15 min" }],
+    30: [{ cat: "aulas", title: "ART · Releitura de obras", meta: "13:30 · 3ºA" }],
+  };
+  const M4_CAT_META: Record<M4Cat, { color: string; label: string }> = {
+    aulas: { color: "#3B82F6", label: "Aula" },
+    aval: { color: "#F59E0B", label: "Avaliação" },
+    eventos: { color: "#10B981", label: "Evento" },
+    feriados: { color: "#EF4444", label: "Feriado" },
+    bncc: { color: "#06B6D4", label: "BNCC" },
+    sofia: { color: "#FF7A45", label: "Sofia" },
+  };
+  const [m4Month, setM4Month] = useState<{ y: number; m: number }>({ y: 2026, m: 3 }); // abril 2026 (0-index)
+  const [m4SelectedDay, setM4SelectedDay] = useState<number | null>(null);
+  const m4Label = useMemo(() => {
+    const d = new Date(m4Month.y, m4Month.m, 1);
+    const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }, [m4Month]);
+  const m4Grid = useMemo(() => {
+    const first = new Date(m4Month.y, m4Month.m, 1).getDay(); // 0=Dom
+    const days = new Date(m4Month.y, m4Month.m + 1, 0).getDate();
+    const cells: Array<{ day: number | null }> = [];
+    for (let i = 0; i < first; i++) cells.push({ day: null });
+    for (let d = 1; d <= days; d++) cells.push({ day: d });
+    while (cells.length % 7 !== 0) cells.push({ day: null });
+    return cells;
+  }, [m4Month]);
+  const m4ChangeMonth = (delta: number) => {
+    setM4SelectedDay(null);
+    setM4Month((s) => {
+      const nm = s.m + delta;
+      if (nm < 0) return { y: s.y - 1, m: 11 };
+      if (nm > 11) return { y: s.y + 1, m: 0 };
+      return { y: s.y, m: nm };
+    });
+  };
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
 
   // M2 — Sequência didática
@@ -2199,10 +2251,10 @@ export function Planejamento() {
             {m === "m4" && (
               <>
                 <div className="pl-tools">
-                  <div><h2>Semana 11–15 abr <small>· {Object.values(layers).filter(Boolean).length} camada(s) ativa(s)</small></h2></div>
+                  <div><h2>{m4Label} <small>· {Object.values(layers).filter(Boolean).length} camada(s) ativa(s)</small></h2></div>
                   <div className="right">
-                    <button className="pl-btn ghost"><ChevronLeft size={14} /> Anterior</button>
-                    <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
+                    <button className="pl-btn ghost" onClick={() => m4ChangeMonth(-1)}><ChevronLeft size={14} /> Anterior</button>
+                    <button className="pl-btn ghost" onClick={() => m4ChangeMonth(1)}>Próximo <ChevronRight size={14} /></button>
                   </div>
                 </div>
                 <div className="pl-layers-bar">
@@ -2219,39 +2271,69 @@ export function Planejamento() {
                     </button>
                   ))}
                 </div>
-                <div className="pl-week">
-                  {DAYS.map((d) => {
-                    type Item = { id: string; cat: "aulas" | "aval" | "eventos" | "feriados" | "bncc" | "sofia"; v: Variant; tag: string; title: string; meta: string };
-                    const items: Item[] = [];
-                    (week[d.k] || []).forEach((c) => {
-                      if (c.v === "aval") items.push({ id: c.id, cat: "aval", v: "aval", tag: "AVALIAÇÃO", title: c.title, meta: c.meta });
-                      else if (c.v === "esc") items.push({ id: c.id, cat: "eventos", v: "esc", tag: "EVENTO ESCOLA", title: c.title, meta: c.meta });
-                      else items.push({ id: c.id, cat: "aulas", v: c.v, tag: c.tag, title: c.title, meta: c.meta });
-                    });
-                    const extras: Item[] = {
-                      seg: [], ter: [], qua: [], qui: [], sex: [],
-                    }[d.k] as Item[];
-                    const visible = [...items, ...extras].filter((it) => layers[it.cat]);
+                <div style={{ marginTop: 12, padding: 12, background: "#fff", border: "1px solid var(--line)", borderRadius: 12 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+                    {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
+                      <div key={d} style={{ fontSize: 11, fontWeight: 700, letterSpacing: .4, textTransform: "uppercase", color: "var(--muted)", textAlign: "center", padding: "6px 0" }}>{d}</div>
+                    ))}
+                    {m4Grid.map((cell, i) => {
+                      const evts = cell.day ? (M4_EVENTS_BY_DAY[cell.day] ?? []).filter((e) => layers[e.cat]) : [];
+                      const isSel = cell.day != null && cell.day === m4SelectedDay;
+                      const isEmpty = cell.day == null;
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          disabled={isEmpty || evts.length === 0}
+                          onClick={() => cell.day && evts.length > 0 && setM4SelectedDay(m4SelectedDay === cell.day ? null : cell.day)}
+                          style={{
+                            position: "relative",
+                            minHeight: 78,
+                            padding: 6,
+                            border: isSel ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)",
+                            borderRadius: 8,
+                            background: isEmpty ? "#FAFBFD" : "#fff",
+                            textAlign: "left",
+                            cursor: !isEmpty && evts.length > 0 ? "pointer" : "default",
+                            opacity: isEmpty ? .4 : 1,
+                            display: "flex", flexDirection: "column", gap: 4,
+                          }}
+                        >
+                          {cell.day && (
+                            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "'JetBrains Mono',monospace" }}>{cell.day}</span>
+                          )}
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                            {evts.slice(0, 4).map((e, j) => (
+                              <span key={j} title={`${M4_CAT_META[e.cat].label}: ${e.title}`} style={{ width: 8, height: 8, borderRadius: 99, background: M4_CAT_META[e.cat].color }} />
+                            ))}
+                            {evts.length > 4 && (
+                              <span style={{ fontSize: 9, color: "var(--muted)" }}>+{evts.length - 4}</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {m4SelectedDay && (() => {
+                    const evts = (M4_EVENTS_BY_DAY[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
                     return (
-                      <div key={d.k} className="pl-day">
-                        <div className="pl-day-head">
-                          <div><div className="dn">{d.n}</div><div className="dd">{d.d}</div></div>
+                      <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line)", borderRadius: 10, background: "#FAFBFD" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          <strong style={{ fontSize: 13 }}>📍 Dia {m4SelectedDay} de {m4Label} · {evts.length} {evts.length === 1 ? "evento" : "eventos"}</strong>
+                          <button onClick={() => setM4SelectedDay(null)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 4 }}><X size={14} /></button>
                         </div>
-                        {visible.map((it) => (
-                          <div key={it.id} className={"pl-card " + it.v + (it.cat === "sofia" ? " suggest-card" : "")}>
-                            <div className="top"><span className="tag">{it.tag}</span></div>
-                            <div className="ttl">{it.title}</div>
-                            <div className="meta"><span>{it.meta}</span></div>
-                          </div>
-                        ))}
-                        {visible.length === 0 && (
-                          <div className="pl-empty-slot" style={{ minHeight: 80 }}>
-                            <div>Nenhuma camada<br />ativa neste dia</div>
-                          </div>
-                        )}
+                        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                          {evts.map((e, j) => (
+                            <li key={j} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
+                              <span style={{ width: 10, height: 10, borderRadius: 99, background: M4_CAT_META[e.cat].color, flexShrink: 0 }} />
+                              <strong>{e.title}</strong>
+                              {e.meta && <span style={{ color: "var(--muted)" }}>· {e.meta}</span>}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     );
-                  })}
+                  })()}
                 </div>
                 <div className="pl-legend">
                   <span className="it"><span className="sw" style={{ background: "#3B82F6" }} /> Aulas</span>
