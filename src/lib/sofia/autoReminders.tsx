@@ -7,6 +7,7 @@ import {
   actionOpenAlunoNoMomento,
   actionOpenPlanejamento,
 } from "./dashboardLinks";
+import { mentionsName } from "./mentions";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sofia — Lembretes automáticos (Fase 3)
@@ -45,22 +46,6 @@ function describePcd(nome: string, codigo: string | null): string {
   return `**${nome}** (${codigo.toUpperCase()})`;
 }
 
-// Normaliza para comparação (sem acento, lower-case).
-function norm(s: string): string {
-  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
-
-// Procura menções a um nome dentro de um texto, com fronteira de palavra.
-function mentionsName(text: string, fullName: string): boolean {
-  const t = norm(text);
-  // Tenta nome completo primeiro, depois cada parte (>= 3 chars).
-  const candidates = [fullName, ...fullName.split(/\s+/)].filter((n) => n.length >= 3);
-  for (const c of candidates) {
-    const re = new RegExp(`(^|[^a-z0-9])${norm(c).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^a-z0-9]|$)`);
-    if (re.test(t)) return true;
-  }
-  return false;
-}
 
 export function SofiaAutoReminders() {
   const data = useSofiaUserData();
