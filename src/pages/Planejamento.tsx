@@ -2705,8 +2705,10 @@ export function Planejamento() {
                 </div>
                 <div className="pl-d6">
                   <div className="pl-d6-card">
-                    <h3 style={{ fontSize: 15, marginBottom: 4 }}>Como foi a aula?</h3>
-                    <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>Selecione um humor, anote algo e marque tags.</p>
+                    <h3 style={{ fontSize: 15, marginBottom: 4 }}>{m6EditingId ? "Editando registro" : "Como foi a aula?"}</h3>
+                    <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>
+                      {m6EditingId ? "Ajuste os campos e salve as alterações." : "Selecione um humor, anote algo e marque tags."}
+                    </p>
                     <div className="pl-d6-emojis">
                       {M6_EMOJIS.map((e) => (
                         <button key={e} className={m6Emoji === e ? "on" : ""} onClick={() => setM6Emoji(e)} aria-label={`Humor ${e}`}>{e}</button>
@@ -2723,8 +2725,13 @@ export function Planejamento() {
                         <button key={t} className={m6Tags.includes(t) ? "on" : ""} onClick={() => m6ToggleTag(t)}>{t}</button>
                       ))}
                     </div>
-                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                      <button className="pl-btn primary" onClick={m6Save}><Check size={14} /> Salvar diário</button>
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                      {m6EditingId && (
+                        <button className="pl-btn ghost" onClick={m6ResetForm}>Cancelar</button>
+                      )}
+                      <button className="pl-btn primary" onClick={m6Save}>
+                        <Check size={14} /> {m6EditingId ? "Salvar alterações" : "Salvar diário"}
+                      </button>
                     </div>
 
                     <h3 style={{ fontSize: 15, margin: "20px 0 10px" }}>Histórico de registros</h3>
@@ -2744,8 +2751,14 @@ export function Planejamento() {
                       <EmptyState icon="📓" title="Nenhum registro ainda." description="Salve seu primeiro diário acima." />
                     ) : (
                       m6Entries.map((e) => (
-                        <div key={e.id} className="pl-d6-entry">
-                          <div className="head"><span>{e.date}</span></div>
+                        <div key={e.id} className="pl-d6-entry" style={m6EditingId === e.id ? { borderColor: "var(--orange)", background: "var(--orange-soft)" } : undefined}>
+                          <div className="head" style={{ justifyContent: "space-between" }}>
+                            <span>{e.date}</span>
+                            <span style={{ display: "flex", gap: 6 }}>
+                              <button onClick={() => m6StartEdit(e)} title="Editar" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 8px", fontSize: 11, fontWeight: 600, color: "var(--ink)", cursor: "pointer" }}>Editar</button>
+                              <button onClick={() => m6DeleteEntry(e.id)} title="Excluir" aria-label="Excluir" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 6px", color: "#b91c1c", cursor: "pointer", display: "inline-flex", alignItems: "center" }}><X size={12} /></button>
+                            </span>
+                          </div>
                           <div className="ttl"><span style={{ fontSize: 18 }}>{e.emoji}</span> {e.title}</div>
                           {e.text && <div className="body">{e.text}</div>}
                           {e.tags.length > 0 && (
