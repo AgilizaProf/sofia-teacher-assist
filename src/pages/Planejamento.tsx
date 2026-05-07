@@ -959,6 +959,50 @@ export function Planejamento() {
     setM5ConfirmDelete(false);
   };
   const m5OpenReplicar = () => { setM5ReplicaPicks({}); setM5ReplicaOpen(true); };
+  const m5ExportPdf = async () => {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 40;
+    let y = margin;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+    doc.text("Planejamento da Semana", margin, y); y += 22;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(90);
+    doc.text(`Turma: ${m5Turma}`, margin, y); y += 14;
+    doc.text(`Exportado em: ${new Date().toLocaleString("pt-BR")}`, margin, y); y += 18;
+    doc.setDrawColor(220); doc.line(margin, y, pageW - margin, y); y += 16;
+    DAYS.forEach((day) => {
+      const cards = week[day.k] || [];
+      const blockHeight = 28 + Math.max(cards.length, 1) * 32;
+      if (y + blockHeight > pageH - margin) { doc.addPage(); y = margin; }
+      doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "bold"); doc.setFontSize(13);
+      doc.text(`${day.n} · ${day.d}  (${cards.length} ${cards.length === 1 ? "atividade" : "atividades"})`, margin, y);
+      y += 16;
+      if (cards.length === 0) {
+        doc.setFont("helvetica", "italic"); doc.setFontSize(10); doc.setTextColor(150);
+        doc.text("Sem atividades.", margin + 12, y); y += 18;
+      } else {
+        cards.forEach((c) => {
+          if (y + 30 > pageH - margin) { doc.addPage(); y = margin; }
+          doc.setDrawColor(230); doc.setFillColor(248, 250, 252);
+          doc.roundedRect(margin, y - 10, pageW - margin * 2, 28, 4, 4, "FD");
+          doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(249, 115, 22);
+          doc.text(c.tag, margin + 8, y + 2);
+          doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(15, 23, 42);
+          const title = doc.splitTextToSize(c.title, pageW - margin * 2 - 120)[0] || "";
+          doc.text(title, margin + 70, y + 2);
+          doc.setFontSize(9); doc.setTextColor(110);
+          doc.text(c.meta, margin + 8, y + 13);
+          y += 32;
+        });
+      }
+      y += 6;
+    });
+    const safeTurma = m5Turma.replace(/[^\w-]+/g, "_");
+    doc.save(`planejamento-semana-${safeTurma}.pdf`);
+    showToast("📄 PDF exportado.");
+  };
   const m5ConfirmarReplicar = () => {
     const sel = Object.entries(m5ReplicaPicks).filter(([, v]) => v).map(([k]) => k);
     if (sel.length === 0) { showToast("Selecione ao menos uma turma."); return; }
