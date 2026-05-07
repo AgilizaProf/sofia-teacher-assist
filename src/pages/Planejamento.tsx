@@ -942,6 +942,11 @@ export function Planejamento() {
   const m5BulkDelete = () => {
     const ids = Array.from(m5Selected);
     if (ids.length === 0) return;
+    setM5ConfirmDelete(true);
+  };
+  const m5ConfirmBulkDelete = () => {
+    const ids = Array.from(m5Selected);
+    if (ids.length === 0) { setM5ConfirmDelete(false); return; }
     const before = week;
     setWeek((w) => {
       const next: Week = { seg: [...w.seg], ter: [...w.ter], qua: [...w.qua], qui: [...w.qui], sex: [...w.sex] };
@@ -951,6 +956,7 @@ export function Planejamento() {
     m5LogHistory(`Excluiu ${ids.length} cartões`, () => setWeek(before));
     showToast(`${ids.length} cartões excluídos.`);
     m5ClearSelection();
+    setM5ConfirmDelete(false);
   };
   const m5OpenReplicar = () => { setM5ReplicaPicks({}); setM5ReplicaOpen(true); };
   const m5ConfirmarReplicar = () => {
@@ -962,6 +968,7 @@ export function Planejamento() {
   };
 
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
+  const [m5ConfirmDelete, setM5ConfirmDelete] = useState(false);
   const [pillsFoco, setPillsFoco] = useState<Record<string, boolean>>({ Letramento: true, Numeramento: true, Socioemocional: false });
   const FOCO_OPTS = [
     "Letramento",
@@ -2586,6 +2593,24 @@ export function Planejamento() {
           </select>
           <button onClick={m5BulkDelete} style={{ background: "rgba(239,68,68,.85)", color: "#fff", border: "none", padding: "6px 10px", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600 }}><X size={12} /> Excluir selecionados</button>
           <button onClick={m5ClearSelection} style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,.3)", padding: "6px 10px", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>Cancelar</button>
+        </div>
+      )}
+
+      {m5ConfirmDelete && (
+        <div role="dialog" aria-modal="true" onClick={() => setM5ConfirmDelete(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(420px,100%)", boxShadow: "0 24px 60px rgba(15,23,42,.35)", overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)" }}>
+              <div style={{ fontSize: 11, color: "#b91c1c", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>⚠ Confirmar exclusão</div>
+              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Excluir {m5Selected.size} cartões?</h3>
+            </div>
+            <div style={{ padding: 20, fontSize: 13.5, color: "var(--muted)" }}>
+              Esta ação removerá os cartões selecionados da semana. Você poderá desfazer pelo histórico.
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button onClick={() => setM5ConfirmDelete(false)} style={{ background: "#fff", color: "var(--ink, #0F172A)", border: "1px solid var(--line)", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Cancelar</button>
+              <button onClick={m5ConfirmBulkDelete} style={{ background: "#dc2626", color: "#fff", border: "none", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}>Excluir</button>
+            </div>
+          </div>
         </div>
       )}
 
