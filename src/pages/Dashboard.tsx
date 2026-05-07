@@ -622,6 +622,108 @@ export function Dashboard() {
 
           <div className="grid-2">
             <div ref={studentsRef as unknown as React.Ref<HTMLDivElement>} className={`card${highlight === "students" ? " sofia-highlight" : ""}`}>
+              {missingTarget && (() => {
+                const term = missingTarget.term.trim();
+                const termLow = term.toLowerCase();
+                // Sugestões: alunos cujo nome contém qualquer parte do termo.
+                const tokens = termLow.split(/[\s-]+/).filter(Boolean);
+                const sugeridos = students
+                  .map((s, i) => ({ s, i, score: tokens.reduce((acc, t) => acc + (s.name.toLowerCase().includes(t) ? 1 : 0), 0) }))
+                  .filter((x) => x.score > 0)
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, 5);
+                return (
+                  <div
+                    role="status"
+                    style={{
+                      margin: "-2px 0 14px",
+                      padding: "14px 16px",
+                      borderRadius: 12,
+                      background: "linear-gradient(135deg,#FEF3C7,#FFFBEB)",
+                      border: "1px solid #FDE68A",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                      <span style={{ fontSize: 22, lineHeight: 1 }}>🔍</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: 13.5, color: "#92400E" }}>
+                          Não encontrei {term ? <>um aluno chamado <em>“{term}”</em></> : "esse aluno"} no seu cadastro.
+                        </div>
+                        <div style={{ fontSize: 12.5, color: "#92400E", marginTop: 4, lineHeight: 1.45 }}>
+                          A Sofia só fala sobre alunos que você já cadastrou. Selecione o aluno correto abaixo
+                          {missingTarget.momento ? <> para continuar o contexto de <strong>{missingTarget.momento.toUpperCase()}</strong></> : null}, ou cadastre um novo.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Dispensar aviso"
+                        onClick={() => setMissingTarget(null)}
+                        style={{
+                          background: "transparent", border: "none", color: "#92400E",
+                          fontSize: 18, lineHeight: 1, cursor: "pointer", padding: 4,
+                        }}
+                      >×</button>
+                    </div>
+
+                    {sugeridos.length > 0 ? (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {sugeridos.map(({ s, i }) => (
+                          <button
+                            key={`sug-${i}`}
+                            type="button"
+                            onClick={() => {
+                              const turmaKey = s.classRef || "Sem turma";
+                              setCollapsedClasses((p) => ({ ...p, [turmaKey]: false }));
+                              setHighlightedStudentIdx(i);
+                              setStudentDetail({ index: i, student: s });
+                              setMissingTarget(null);
+                            }}
+                            style={{
+                              padding: "5px 10px", borderRadius: 999,
+                              border: "1px solid #FDE68A", background: "#fff",
+                              fontSize: 12, fontWeight: 700, color: "#92400E", cursor: "pointer",
+                              display: "inline-flex", alignItems: "center", gap: 6,
+                            }}
+                          >
+                            {s.name}
+                            {s.classRef && <span style={{ fontWeight: 500, color: "#B45309" }}>· {s.classRef}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    ) : students.length > 0 ? (
+                      <div style={{ fontSize: 12, color: "#92400E", fontStyle: "italic" }}>
+                        Nenhum nome parecido entre os {students.length} alunos cadastrados. Use o filtro acima ou cadastre um novo.
+                      </div>
+                    ) : null}
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => { setStudentOpen(true); setMissingTarget(null); }}
+                        style={{
+                          padding: "7px 12px", borderRadius: 8, border: "none",
+                          background: "#D97706", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer",
+                        }}
+                      >
+                        + Cadastrar novo aluno
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMissingTarget(null)}
+                        style={{
+                          padding: "7px 10px", borderRadius: 8, border: "1px solid #FDE68A",
+                          background: "#fff", color: "#92400E", fontWeight: 700, fontSize: 12, cursor: "pointer",
+                        }}
+                      >
+                        Agora não
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
               {pcdMomento && (
                 <div
                   role="status"
