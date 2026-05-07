@@ -2919,6 +2919,28 @@ export function Planejamento() {
         </div>
       )}
 
+      {m6ReportOpen && (
+        <div role="dialog" aria-modal="true" onClick={() => setM6ReportOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(620px,100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📊 Relatório bimestral</div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Bimestre 2 · Prévia</h3>
+              </div>
+              <button onClick={() => setM6ReportOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6 }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12, fontSize: 13.5, lineHeight: 1.55, color: "var(--ink)" }}>
+              <p style={{ margin: 0 }}><strong>Status:</strong> 42% pronto · {m6Registradas} registros consolidados.</p>
+              <p style={{ margin: 0 }}>Lorem ipsum dolor sit amet, consectetur adipiscing elit. A Sofia consolidará automaticamente os destaques de cada semana, padrões observados (humor da turma, atividades que funcionaram, alertas socioemocionais) e sugestões de continuidade pedagógica.</p>
+              <p style={{ margin: 0 }}>Esta visualização é um placeholder — o relatório final inclui gráficos de evolução, comparações com o bimestre anterior e exportação em PDF.</p>
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="pl-btn" onClick={() => setM6ReportOpen(false)}>Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {m1DayModal && (
         <div
           role="dialog"
