@@ -19,6 +19,7 @@ export type SofiaNotifCategory =
 export type SofiaNotifAction = {
   label: string;
   to?: string;            // rota
+  search?: Record<string, string | number | undefined>; // search params (deep-link)
   prompt?: string;        // pergunta para a Sofia
   intent?: string;        // identificador customizado
 };
