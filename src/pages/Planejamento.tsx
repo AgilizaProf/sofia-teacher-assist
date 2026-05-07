@@ -1084,11 +1084,44 @@ export function Planejamento() {
     const last = m2Steps[m2Steps.length - 1];
     const idx = M2_DAY_OPTS.indexOf(last.d as typeof M2_DAY_OPTS[number]);
     const nextDay = M2_DAY_OPTS[Math.min(idx + 1, M2_DAY_OPTS.length - 1)];
+    // Escada didática: a próxima aula avança para o próximo estágio da
+    // sequência, completando introdução → desenvolvimento → aprofundamento →
+    // prática guiada → prática autônoma → avaliação → revisão → síntese.
+    const SEQ = [
+      "Introdução",
+      "Desenvolvimento",
+      "Aprofundamento",
+      "Prática guiada",
+      "Prática autônoma",
+      "Avaliação",
+      "Revisão",
+      "Síntese",
+    ] as const;
+    const usadas = new Set(m2Steps.map((s) => s.tag));
+    const lastIdx = SEQ.indexOf(last.tag as typeof SEQ[number]);
+    let nextTag: string =
+      lastIdx >= 0 && lastIdx < SEQ.length - 1
+        ? SEQ[lastIdx + 1]
+        : SEQ.find((t) => !usadas.has(t)) ?? "Síntese";
+    // Se a próxima etapa já existe na cadeia, pula para a próxima ainda livre.
+    if (usadas.has(nextTag)) {
+      nextTag = SEQ.slice(SEQ.indexOf(nextTag as typeof SEQ[number]) + 1).find((t) => !usadas.has(t)) ?? nextTag;
+    }
+    const titulosPorTag: Record<string, string> = {
+      "Introdução": `Introdução: ${last.t}`,
+      "Desenvolvimento": `Desenvolvimento: ${last.t}`,
+      "Aprofundamento": `Aprofundamento: ${last.t}`,
+      "Prática guiada": `Prática guiada: ${last.t}`,
+      "Prática autônoma": `Prática autônoma: ${last.t}`,
+      "Avaliação": `Avaliação: ${last.t}`,
+      "Revisão": `Revisão: ${last.t}`,
+      "Síntese": `Síntese: ${last.t}`,
+    };
     const sugest: M2Step = {
       id: `s_${Date.now()}`,
       d: nextDay,
-      tag: "Aprofundamento",
-      t: `Continuação: ${last.t}`,
+      tag: nextTag,
+      t: titulosPorTag[nextTag] ?? `Continuação: ${last.t}`,
       p: last.p,
       suggest: true,
     };
