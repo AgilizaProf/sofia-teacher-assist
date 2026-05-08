@@ -138,7 +138,25 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     [turmasPerfil, turma],
   );
   const [anoFallback, setAnoFallback] = useState<string>(ANOS_FALLBACK[3]);
-  const anoEscolar = turmaInfo?.ano || anoFallback;
+  // c.grade vem como "1".."9" do cadastro de turmas — formata para "Nº ano EF".
+  const formatAno = (raw: string): string => {
+    const t = (raw || "").trim();
+    if (!t) return "";
+    if (/^\d+$/.test(t)) {
+      const n = parseInt(t, 10);
+      if (n >= 1 && n <= 9) return `${n}º ano EF`;
+    }
+    return t;
+  };
+  const anoTurma = formatAno(turmaInfo?.ano || "");
+  const anoEscolar = anoTurma || anoFallback;
+
+  // Quando a turma muda, sincroniza o fallback com o ano da turma —
+  // assim, ao desmarcar a turma, o ano permanece coerente.
+  useEffect(() => {
+    if (anoTurma) setAnoFallback(anoTurma);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anoTurma]);
 
   const alunosPCDDaTurma = useMemo(() => {
     if (!turma) return sofia.alunosPCD;
@@ -494,9 +512,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
           <div className="atv-field">
             <label>Ano escolar</label>
-            {turmaInfo?.ano ? (
+            {anoTurma ? (
               <div className="atv-badge-ano" title="Vindo do cadastro da turma">
-                {turmaInfo.ano}
+                {anoTurma}
               </div>
             ) : (
               <select value={anoFallback} onChange={(e) => setAnoFallback(e.target.value)}>
