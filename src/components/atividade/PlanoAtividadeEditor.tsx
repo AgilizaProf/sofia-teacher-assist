@@ -1240,24 +1240,25 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                 <X size={14} />
               </button>
             </div>
-            <p className="atv-muted" style={{ margin: "0 0 10px" }}>
-              A atividade vai aparecer no calendário M4 nesta data e, se for dia
-              útil, também na semana M1.
+            <p className="atv-muted" style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.4 }}>
+              Aparece no calendário M4 nesta data e, se for dia útil, também na semana M1.
             </p>
-            <div className="atv-field">
-              <label>Data da aula</label>
-              <input
-                type="date"
-                value={agendaDate}
-                onChange={(e) => setAgendaDate(e.target.value)}
-              />
-            </div>
-            <div className="atv-field" style={{ marginTop: 8 }}>
-              <label>Camada do calendário</label>
-              <select value={agendaCat} onChange={(e) => setAgendaCat(e.target.value as "aulas" | "aval")}>
-                <option value="aulas">📚 Aula</option>
-                <option value="aval">📝 Avaliação</option>
-              </select>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div className="atv-field">
+                <label>Data da aula</label>
+                <input
+                  type="date"
+                  value={agendaDate}
+                  onChange={(e) => setAgendaDate(e.target.value)}
+                />
+              </div>
+              <div className="atv-field">
+                <label>Camada</label>
+                <select value={agendaCat} onChange={(e) => setAgendaCat(e.target.value as "aulas" | "aval")}>
+                  <option value="aulas">📚 Aula</option>
+                  <option value="aval">📝 Avaliação</option>
+                </select>
+              </div>
             </div>
             <div className="atv-modal-foot">
               <button className="atv-btn ghost" onClick={() => setAgendaOpen(false)}>
