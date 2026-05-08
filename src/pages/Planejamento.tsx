@@ -3185,6 +3185,11 @@ export function Planejamento() {
                             </span>
                           </div>
                           <div className="ttl"><span style={{ fontSize: 18 }}>{e.emoji}</span> {e.title}</div>
+                          {e.atividadeTitulo && (
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--orange)", fontWeight: 600, background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 99, padding: "2px 8px", marginTop: 4 }}>
+                              <Sparkles size={10} /> Atividade: {e.atividadeTitulo}
+                            </div>
+                          )}
                           {e.text && <div className="body">{e.text}</div>}
                           {e.tags.length > 0 && (
                             <div className="chips">{e.tags.map((t) => <span key={t}>{t}</span>)}</div>
