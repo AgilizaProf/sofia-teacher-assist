@@ -1403,7 +1403,17 @@ export function Planejamento() {
     bncc: { color: "#06B6D4", label: "BNCC" },
     sofia: { color: "#FF7A45", label: "Sofia" },
   };
-  const [m4Month, setM4Month] = usePersistentState<{ y: number; m: number }>("plan_m4_month", { y: 2026, m: 3 }); // abril 2026 (0-index)
+  const [m4Month, setM4Month] = usePersistentState<{ y: number; m: number }>(
+    "plan_m4_month",
+    { y: new Date().getFullYear(), m: new Date().getMonth() },
+  );
+  // Garante que o calendário sempre abra no mês vigente, mesmo que o valor
+  // persistido esteja desatualizado de sessões anteriores.
+  useEffect(() => {
+    const now = new Date();
+    setM4Month((s) => (s.y === now.getFullYear() && s.m === now.getMonth() ? s : { y: now.getFullYear(), m: now.getMonth() }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [m4SelectedDay, setM4SelectedDay] = usePersistentState<number | null>("plan_m4_selected_day", null);
 
   // Eventos agendados pela professora a partir das abas Atividades / Atividades PCD.
