@@ -11,6 +11,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { SofiaAdaptacaoCard } from "@/components/sofia/SofiaAdaptacaoCard";
+import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { Header as AppHeader } from "@/components/Header";
@@ -664,12 +665,16 @@ export function Dashboard() {
 
           {!onboardingDone && (
             <div style={{ marginBottom: 18 }}>
-              <SofiaFocoCard showEmptyFallback />
+              <SofiaErrorBoundary area="o foco do dia">
+                <SofiaFocoCard showEmptyFallback />
+              </SofiaErrorBoundary>
             </div>
           )}
 
           <div style={{ marginBottom: 18 }}>
-            <SofiaAdaptacaoCard showEmptyFallback />
+            <SofiaErrorBoundary area="as adaptações da Sofia">
+              <SofiaAdaptacaoCard showEmptyFallback />
+            </SofiaErrorBoundary>
           </div>
 
           <div
