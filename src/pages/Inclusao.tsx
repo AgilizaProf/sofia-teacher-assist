@@ -415,8 +415,6 @@ const INITIAL_STUDENTS: Student[] = [];
 
 const PEI_EIXOS: Array<{ ic: string; cls: string; h: string; status: string; tone: "ok" | "warn"; meta: string; body: ReactNode }> = [];
 
-const ADAPTACOES: Array<{ n: number; title: string; desc: string; meta: string }> = [];
-
 const TUTORIAL_STEPS = [
   { t: "Selecione o aluno", d: "Na lista de Inclusão, clique no card do aluno para abrir KPIs, eixos do PEI e timeline pedagógica." },
   { t: "Confira a Visão de hoje", d: "A Sofia destaca a aula do dia que precisa de adaptação e propõe estratégias visual, pacing e mediação." },
@@ -425,8 +423,6 @@ const TUTORIAL_STEPS = [
   { t: "Faça Registros frequentes", d: "Cada registro alimenta o relatório anual. Use observações rápidas para ganhar velocidade." },
   { t: "Gere o Relatório IA", d: "Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar." },
 ];
-
-const PLAN_WEEK: { when: string; date: string; disc: string; title: string; bncc: string; adapted: boolean }[] = [];
 
 const REG_ITEMS: Array<{ when: string; who: string; cat: "ped" | "fam" | "sen" | "com"; catLabel: string; body: string; att: string[] }> = [];
 
