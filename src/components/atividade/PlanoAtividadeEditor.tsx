@@ -552,6 +552,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     plano.habilidades.forEach((h) => para(`• ${h.codigo} — ${h.descricao}`));
     if (plano.habilidades.length === 0) para("—");
 
+    if ((plano.contribuicoesInter ?? []).length > 0) {
+      h2("Contribuição por disciplina (interdisciplinar)");
+      plano.contribuicoesInter!.forEach((c) =>
+        para(`• ${c.disciplina}: ${c.contribuicao}`),
+      );
+    }
+
     if (plano.adaptacoes.length > 0) {
       h2("④ Adaptações PCD");
       plano.adaptacoes.forEach((a) => para(`[${a.categoria}] ${a.texto}`));
