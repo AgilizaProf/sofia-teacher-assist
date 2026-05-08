@@ -928,6 +928,18 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                 Sofia vai gerar uma atividade específica para este aluno,
                 respeitando suas especificidades. Troque para gerar para outro.
               </span>
+              <button
+                type="button"
+                className="atv-btn primary atv-foco-all"
+                onClick={gerarParaTodos}
+                disabled={gerandoLote || generating}
+                title="Gerar uma atividade individual para cada aluno PCD da turma"
+              >
+                <Sparkles size={12} />
+                {gerandoLote
+                  ? `Gerando ${loteProg.atual}/${loteProg.total} · ${loteProg.nome}…`
+                  : `Gerar para todos (${alunosPCDDaTurma.length})`}
+              </button>
             </div>
             <div className="atv-foco-chips">
               {alunosPCDDaTurma.map((a, i) => {
