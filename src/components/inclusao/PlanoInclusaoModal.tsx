@@ -105,7 +105,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
   const [avaliacao, setAvaliacao] = useState("");
   const [metodologia, setMetodologia] = useState("");
   const [loading, setLoading] = useState(false);
-  const [plano, setPlano] = useState<Omit<PlanoInclusao, "id" | "data" | "alunoId" | "observacoes" | "avaliacao" | "metodologia"> | null>(null);
+  const [plano, setPlano] = useState<Omit<PlanoInclusao, "id" | "data" | "alunoId" | "observacoes" | "avaliacao" | "metodologia" | "disciplina" | "tema" | "duracao" | "tipoAtividade"> | null>(null);
 
   useEffect(() => {
     if (open) {
