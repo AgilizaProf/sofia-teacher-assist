@@ -735,7 +735,7 @@ export function Relatorios() {
           </div>
 
           {/* Filters */}
-          <div className="rel-filters">
+          <div className="rel-filters" id="rel-filters-anchor">
             <div className="rel-tabs" role="tablist">
               {TABS.map((t) => (
                 <button key={t.key} role="tab" aria-selected={tab === t.key}
