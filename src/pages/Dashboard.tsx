@@ -299,7 +299,38 @@ const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGEleme
 
 export function Dashboard() {
   const user = useUser();
-  const heroGreeting = greeting(user.name);
+  const sofiaCtx = useSofiaContext();
+  const hydrated = useHydrated();
+  // Nome real do usuário logado (perfil) com fallback seguro pra SSR.
+  const realName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || user.name || "").trim();
+  // Tick a cada 30s pra manter o relógio em dia.
+  const [, setClockTick] = useState(0);
+  useEffect(() => {
+    if (!hydrated) return;
+    const id = setInterval(() => setClockTick((n) => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, [hydrated]);
+  // Saudação Bom dia/Boa tarde/Boa noite usando hora real do dispositivo.
+  // Durante SSR usa um fallback estável pra evitar hydration mismatch.
+  const heroGreeting = useMemo(() => {
+    if (!hydrated) return realName ? `Olá, ${realName}` : "Olá";
+    const h = new Date().getHours();
+    const slot = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+    return realName ? `${slot}, ${realName}` : slot;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, realName]);
+  // Data formatada em pt-BR: "Quinta-feira · 1º de maio · 08:12".
+  const heroDateLine = useMemo(() => {
+    if (!hydrated) return "";
+    const now = new Date();
+    const weekday = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, weekday: "long" }).format(now);
+    const dayNum = Number(new Intl.DateTimeFormat("en-CA", { timeZone: BR_TIMEZONE, day: "numeric" }).format(now));
+    const month = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, month: "long" }).format(now);
+    const time = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
+    const wd = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+    const dayLabel = dayNum === 1 ? "1º" : String(dayNum);
+    return `${wd} · ${dayLabel} de ${month} · ${time}`;
+  }, [hydrated]);
   const [cmdk, setCmdk] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [schools, setSchools] = usePersistentState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>("dash_schools", []);
