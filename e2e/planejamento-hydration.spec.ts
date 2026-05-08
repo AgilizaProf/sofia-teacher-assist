@@ -42,20 +42,19 @@ test.beforeAll(async () => {
 });
 
 test.describe("Planejamento — SSR + hydration", () => {
-  test("HTML SSR contém a grade da semana sem depender do relógio do cliente", async ({ request, baseURL }) => {
+  test("SSR renderiza o skeleton (sem grade dependente do relógio)", async ({ request, baseURL }) => {
     const res = await request.get(`${baseURL}${URL_M1}`);
     expect(res.status()).toBe(200);
     const html = await res.text();
 
-    // Grade da semana renderizada no servidor: 5 colunas (SEG..SEX).
-    for (const dn of ["SEG", "TER", "QUA", "QUI", "SEX"]) {
-      expect(html, `dia ${dn} ausente do SSR`).toContain(`>${dn}<`);
-    }
-
-    // SSR nunca deve marcar "hoje" — isso só é decidido após hidratar
-    // (caso contrário o servidor em UTC pode discordar do cliente local).
+    // Para evitar mismatch, o SSR mostra apenas o skeleton — a grade real
+    // só renderiza após useHydrated(). Garantimos que:
+    //   1) o skeleton está presente,
+    //   2) NENHUM marcador "hoje"/dia da semana vaza no HTML SSR.
+    expect(html).toContain('data-testid="planejamento-skeleton"');
     expect(html).not.toMatch(/data-is-today="true"/);
     expect(html).not.toContain('class="pl-cd-pill"');
+    expect(html).not.toMatch(/>SEG</);
   });
 
   test("nenhum warning de hydration aparece no console", async ({}, testInfo) => {
