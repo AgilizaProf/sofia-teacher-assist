@@ -15,6 +15,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { useHydrated } from "@/hooks/useHydrated";
 import { PlanoAtividadeEditor } from "@/components/atividade/PlanoAtividadeEditor";
+import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 
 const css = `
 .pl-root{
@@ -379,13 +380,6 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
   { k: "m4", num: "M4", label: "Calendário com camadas" },
   { k: "m5", num: "M5", label: "Drag & drop · multi-turma" },
   { k: "m6", num: "M6", label: "Diário de bordo" },
-];
-
-const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [
-  { id: "t1", name: "3º Ano B", sub: "28 alunos · manhã", pcd: "1 PCD", gain: "~25 min" },
-  { id: "t2", name: "3º Ano C", sub: "30 alunos · manhã", gain: "~25 min" },
-  { id: "t3", name: "3º Ano A", sub: "26 alunos · tarde", pcd: "2 PCD", warn: "⚠ adapt.", gain: "~25 min" },
-  { id: "t4", name: "4º Ano A", sub: "27 alunos · manhã", warn: "⚠ ano diferente", gain: "~20 min" },
 ];
 
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
@@ -879,8 +873,34 @@ export function Planejamento() {
   const dragCard = useRef<{ from: DayKey; id: string } | null>(null);
   const [picks, setPicks] = useState<Record<string, boolean>>({});
   const [tipOpen, setTipOpen] = useState(true);
+  // ===== Turmas e alunos PCD vindos do cadastro da Página inicial =====
+  // Lê das mesmas chaves persistentes (`dash_classes`/`dash_students`) via
+  // SofiaUserContext, para que toda aba do Planejamento use as turmas reais.
+  const sofiaUser = useSofiaUserData();
+  const TURMAS = useMemo(() => {
+    return sofiaUser.turmas.map((t) => {
+      const pcdCount = sofiaUser.alunosPCDPorTurma[t.nome]?.length ?? 0;
+      const turno = t.turno ? t.turno.toLowerCase() : "";
+      const subParts: string[] = [];
+      if (t.total_alunos > 0) subParts.push(`${t.total_alunos} alunos`);
+      if (turno) subParts.push(turno);
+      return {
+        id: t.id || t.nome,
+        name: t.nome,
+        sub: subParts.join(" · "),
+        pcd: pcdCount > 0 ? `${pcdCount} PCD` : undefined,
+        gain: "~25 min",
+        warn: undefined as string | undefined,
+      };
+    });
+  }, [sofiaUser.turmas, sofiaUser.alunosPCDPorTurma]);
+  const M5_TURMAS = useMemo(() => {
+    const list = sofiaUser.turmas.map((t) =>
+      t.turno ? `${t.nome} · ${t.turno.toLowerCase()}` : t.nome,
+    );
+    return list.length > 0 ? list : [""];
+  }, [sofiaUser.turmas]);
   // ===== M5 — Kanban semanal =====
-  const M5_TURMAS = ["3º Ano B · manhã", "3º Ano C · manhã", "3º Ano A · tarde", "4º Ano A · manhã"];
   const [m5Turma, setM5Turma] = usePersistentState<string>("plan_m5_turma", M5_TURMAS[0]);
   const [m5Selected, setM5Selected] = useState<Set<string>>(new Set());
   const [m5Generating, setM5Generating] = useState(false);
