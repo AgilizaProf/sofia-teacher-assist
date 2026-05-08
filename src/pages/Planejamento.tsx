@@ -382,13 +382,6 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
   { k: "m6", num: "M6", label: "Diário de bordo" },
 ];
 
-const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [
-  { id: "t1", name: "3º Ano B", sub: "28 alunos · manhã", pcd: "1 PCD", gain: "~25 min" },
-  { id: "t2", name: "3º Ano C", sub: "30 alunos · manhã", gain: "~25 min" },
-  { id: "t3", name: "3º Ano A", sub: "26 alunos · tarde", pcd: "2 PCD", warn: "⚠ adapt.", gain: "~25 min" },
-  { id: "t4", name: "4º Ano A", sub: "27 alunos · manhã", warn: "⚠ ano diferente", gain: "~20 min" },
-];
-
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
 const M6_AULAS: Array<{ id: string; t: string; s: string }> = [];
 
