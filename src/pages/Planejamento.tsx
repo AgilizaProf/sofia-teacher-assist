@@ -1483,6 +1483,28 @@ export function Planejamento() {
   const m6FormRef = useRef<HTMLDivElement | null>(null);
   const m6Registradas = m6Entries.length;
   const m6Pct = Math.min(100, Math.round((m6Registradas / m6Total) * 100));
+  // Relatório adaptado: filtra registros pela turma escolhida (se houver)
+  // e gera uma leitura simples a partir das tags / humores observados.
+  const m6RelEntries = useMemo(() => {
+    if (!m6RelTurma) return m6Entries;
+    return m6Entries.filter((e) => (e.turma || "").toLowerCase() === m6RelTurma.toLowerCase());
+  }, [m6Entries, m6RelTurma]);
+  const m6RelPct = Math.min(100, Math.round((m6RelEntries.length / m6Total) * 100));
+  const m6RelLeitura = useMemo(() => {
+    const total = m6RelEntries.length;
+    if (total === 0) return null;
+    const tagCount: Record<string, number> = {};
+    const humorCount: Record<string, number> = {};
+    m6RelEntries.forEach((e) => {
+      e.tags.forEach((t) => { tagCount[t] = (tagCount[t] || 0) + 1; });
+      if (e.emoji) humorCount[e.emoji] = (humorCount[e.emoji] || 0) + 1;
+    });
+    const topTags = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const topHumor = Object.entries(humorCount).sort((a, b) => b[1] - a[1])[0];
+    const positivos = m6RelEntries.filter((e) => e.tags.some((t) => t.startsWith("+"))).length;
+    const reforco = m6RelEntries.filter((e) => e.tags.some((t) => t.includes("reforço"))).length;
+    return { total, topTags, topHumor, positivos, reforco };
+  }, [m6RelEntries]);
   // ── Filtros do diário (M6) vindos de search params ─────────────────────
   // Sofia (resumo semanal e ações de notificação) usa esses params para
   // abrir o M6 já filtrado por tag, turma ou aluno PCD citado.
