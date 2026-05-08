@@ -1317,23 +1317,31 @@ export function Inclusao() {
                       </div>
                     ) : (
                       <div className="plan-list">
-                        {PLAN_WEEK.length === 0 ? (
+                        {studentPlans.length === 0 ? (
                           <div style={{ background: "#fff", border: "1px dashed var(--border)", borderRadius: 11, padding: 22, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
                             Nenhum plano de aula registrado para <b>{selected?.name || "este aluno"}</b> ainda.<br />
                             Use <b>Gerar novo plano adaptado</b> para começar.
                           </div>
-                        ) : PLAN_WEEK.map((p) => (
-                          <div className="plan-item" key={p.title}>
-                            <div className="when">{p.when}<b>{p.date}</b></div>
+                        ) : studentPlans.map((p) => (
+                          <div className="plan-item" key={p.id}>
+                            <div className="when">{p.disciplina || "Aula"}<b>{p.data.split("-").reverse().slice(0,2).join("/")}</b></div>
                             <div>
-                              <h5>{p.title}</h5>
+                              <h5>{p.titulo}</h5>
                               <div className="meta-row">
-                                <span>{p.disc}</span>
-                                <span className="bncc">{p.bncc}</span>
-                                {p.adapted && <span className="adapted">Adaptado pela Sofia</span>}
+                                <span>{p.tema || p.tipoAtividade}</span>
+                                {p.habilidades?.[0]?.codigo && <span className="bncc">{p.habilidades[0].codigo}</span>}
+                                <span className="adapted">Adaptado pela Sofia</span>
                               </div>
                             </div>
-                            <button className="inc-btn-ghost"><FileText size={12} /> Abrir</button>
+                            <button
+                              className="inc-btn-ghost"
+                              onClick={() => {
+                                if (!selectedId) return;
+                                if (!confirm(`Excluir o plano "${p.titulo}"?`)) return;
+                                setPlansByStudent((all) => ({ ...all, [selectedId]: (all[selectedId] || []).filter((x) => x.id !== p.id) }));
+                                toast.success("Plano excluído");
+                              }}
+                            ><X size={12} /> Excluir</button>
                           </div>
                         ))}
                       </div>
