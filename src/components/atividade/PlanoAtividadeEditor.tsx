@@ -970,6 +970,57 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                 <strong>Anotações:</strong> {alunoFoco.pcd_anotacoes}
               </p>
             )}
+
+            {(gerandoLote || lote.length > 0) && (
+              <div className="atv-lote">
+                <div className="atv-lote-head">
+                  <span className="atv-foco-label">Atividades por aluno</span>
+                  {gerandoLote ? (
+                    <span className="atv-foco-hint">
+                      Gerando {loteProg.atual} de {loteProg.total} — {loteProg.nome}…
+                    </span>
+                  ) : (
+                    <span className="atv-foco-hint">
+                      {lote.filter((l) => l.plano).length}/{lote.length} geradas e
+                      salvas no histórico abaixo.
+                    </span>
+                  )}
+                  {!gerandoLote && lote.length > 0 && (
+                    <button
+                      type="button"
+                      className="atv-inter-clear"
+                      onClick={() => setLote([])}
+                    >
+                      Limpar lista
+                    </button>
+                  )}
+                </div>
+                <ul className="atv-lote-list">
+                  {lote.map((item, i) => (
+                    <li key={`${item.aluno}-${i}`} className={`atv-lote-item${item.erro ? " err" : ""}`}>
+                      <div className="atv-lote-info">
+                        <span className="atv-lote-aluno">
+                          {item.aluno}
+                          {item.codigo && <span className="atv-foco-tag">{item.codigo}</span>}
+                        </span>
+                        <span className="atv-lote-titulo">
+                          {item.erro ? `Erro: ${item.erro}` : item.plano?.titulo || "—"}
+                        </span>
+                      </div>
+                      {item.plano && (
+                        <button
+                          type="button"
+                          className="atv-btn ghost"
+                          onClick={() => carregarDoLote(item)}
+                        >
+                          <Pencil size={12} /> Abrir
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
