@@ -1487,38 +1487,15 @@ export function Inclusao() {
       </div>
 
       {/* Adaptar aula */}
-      <div className={"inc-modal-overlay" + (adaptOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setAdaptOpen(false); }}>
-        <div className="inc-modal" style={{ maxWidth: 760 }}>
-          <div className="inc-modal-bar" />
-          <div className="inc-modal-head">
-            <h2>Adaptar aula{selected ? ` · ${selected.name.split(" ")[0]}` : ""}</h2>
-            <span className="meta">
-              {sofiaCtx.dataState.proxima_aula
-                ? <>{sofiaCtx.dataState.proxima_aula.disciplina} · {new Date(sofiaCtx.dataState.proxima_aula.horario).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}<br />BNCC {sofiaCtx.dataState.proxima_aula.bncc_codigo || "—"}</>
-                : <>—<br />Sem próxima aula cadastrada</>}
-            </span>
-            <button className="inc-modal-close" onClick={() => setAdaptOpen(false)} aria-label="Fechar"><X size={16} /></button>
-          </div>
-          <div className="inc-modal-body plain">
-            {ADAPTACOES.map((a) => (
-              <div className="inc-adapt-item" key={a.n}>
-                <div className="inc-adapt-num">{a.n}</div>
-                <div>
-                  <h4>{a.title}</h4>
-                  <p>{a.desc}</p>
-                  <div className="meta">{a.meta}</div>
-                </div>
-                <input type="checkbox" defaultChecked style={{ width: 18, height: 18, accentColor: "var(--accent)" }} />
-              </div>
-            ))}
-          </div>
-          <div className="inc-modal-foot">
-            <span className="legal">As adaptações serão registradas no histórico {selected ? `de ${selected.name.split(" ")[0]}` : "do(a) aluno(a)"} automaticamente.</span>
-            <button className="inc-btn-ghost" onClick={() => setAdaptOpen(false)}>Cancelar</button>
-            <button className="btn btn-primary" onClick={() => setAdaptOpen(false)}><CheckCircle2 size={14} /> Aplicar 3 adaptações</button>
-          </div>
-        </div>
-      </div>
+      <PlanoInclusaoModal
+        open={adaptOpen}
+        onClose={() => setAdaptOpen(false)}
+        aluno={selected ? { id: selected.id, name: selected.name, diag: selected.diag, cid: selected.cid, anoEscolar: selected.anoEscolar, turma: selected.turma } : null}
+        anamneseResumo={anamneseResumo}
+        onSaved={(novo) => {
+          setPlansByStudent((all) => ({ ...all, [novo.alunoId]: [novo, ...(all[novo.alunoId] || [])] }));
+        }}
+      />
 
       {/* PEI completo */}
       <div className={"inc-modal-overlay" + (peiOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setPeiOpen(false); }}>
