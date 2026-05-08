@@ -654,29 +654,76 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   /* ─────────── Adicionar ao M1 ─────────── */
 
-  const adicionarAoM1 = () => {
+  // Picker de data para escolher EM QUE DIA a atividade será dada.
+  // O resultado é gravado tanto na semana M1 (mapeando o dia da semana) quanto
+  // no calendário M4 (data exata, com camada "Aulas"/"Avaliações").
+  const todayIso = () => {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${m}-${dd}`;
+  };
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const [agendaDate, setAgendaDate] = useState<string>(todayIso());
+  const [agendaCat, setAgendaCat] = useState<"aulas" | "aval">("aulas");
+
+  const abrirAgenda = () => {
     const f = validar();
     setMissing(f);
     if (f.length > 0) return;
-    // Próximo dia útil sem cards (ou seg se todos cheios)
-    const ordem: DayKey[] = ["seg", "ter", "qua", "qui", "sex"];
-    const alvo = ordem.find((d) => (m1Plan[d] || []).length === 0) ?? "seg";
-    const card: M1Card = {
-      id: `m1_${Date.now()}`,
-      v: VARIANT_BY_DISC[disciplina] ?? "port",
-      tag: TAG_BY_DISC[disciplina] ?? "ATV",
-      title: plano.titulo,
-      bncc: plano.habilidades[0]?.codigo ?? "—",
-      minutos: DUR_TO_MIN[duracao] ?? 45,
-      foco: plano.objetivo.slice(0, 80),
-      motivo: `Adicionado da aba ${modo === "pcd" ? "Atividades PCD" : "Atividades"}.`,
+    setAgendaDate(todayIso());
+    setAgendaCat(tipo === "Avaliação" ? "aval" : "aulas");
+    setAgendaOpen(true);
+  };
+
+  const confirmarAgenda = () => {
+    if (!agendaDate) return;
+    const dt = new Date(`${agendaDate}T00:00:00`);
+    const wd = dt.getDay(); // 0=Dom..6=Sáb
+    const map: Record<number, DayKey | null> = {
+      0: null, 1: "seg", 2: "ter", 3: "qua", 4: "qui", 5: "sex", 6: null,
     };
-    setM1Plan({ ...m1Plan, [alvo]: [...(m1Plan[alvo] || []), card] });
+    const alvo = map[wd];
+
+    // 1) Empilha na grade semanal M1 (se cair em dia útil).
+    if (alvo) {
+      const card: M1Card = {
+        id: `m1_${Date.now()}`,
+        v: VARIANT_BY_DISC[disciplina] ?? "port",
+        tag: TAG_BY_DISC[disciplina] ?? "ATV",
+        title: plano.titulo,
+        bncc: plano.habilidades[0]?.codigo ?? "—",
+        minutos: DUR_TO_MIN[duracao] ?? 45,
+        foco: plano.objetivo.slice(0, 80),
+        motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (${modo === "pcd" ? "PCD" : "regular"}).`,
+      };
+      setM1Plan({ ...m1Plan, [alvo]: [...(m1Plan[alvo] || []), card] });
+    }
+
+    // 2) Adiciona ao calendário M4 (camadas) na data exata escolhida.
+    const evt: M4UserEvt = {
+      id: `m4u_${Date.now()}`,
+      cat: agendaCat,
+      title: `${TAG_BY_DISC[disciplina] ?? "ATV"} · ${plano.titulo}`,
+      meta: `${(DUR_TO_MIN[duracao] ?? 45)} min${turma ? ` · ${turma}` : ""}${modo === "pcd" ? " · PCD" : ""}`,
+      source: modo,
+      turma: turma || undefined,
+      disciplina,
+      minutos: DUR_TO_MIN[duracao] ?? 45,
+    };
+    setM4UserEvents({
+      ...m4UserEvents,
+      [agendaDate]: [...(m4UserEvents[agendaDate] ?? []), evt],
+    });
+
     logActivity({
       type: "planejamento",
-      description: `Plano enviado ao M1 (${alvo.toUpperCase()}): ${plano.titulo}`,
+      description: `Atividade agendada em ${dt.toLocaleDateString("pt-BR")}: ${plano.titulo}`,
     });
-    showToast(`Adicionado a M1 · ${alvo.toUpperCase()}`);
+    showToast(
+      `Agendada em ${dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} · vai aparecer no M4`,
+    );
+    setAgendaOpen(false);
   };
 
   /* ─────────── PDF ─────────── */
