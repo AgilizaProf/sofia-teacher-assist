@@ -31,7 +31,7 @@ serve(async (req) => {
       opcoesSelecionadas = [] as Array<{ titulo?: string; resumo?: string; abordagem?: string }>,
       disciplinasInter = [] as string[],
       alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string } | null,
-      diarioBordo = [] as Array<{ emoji?: string; titulo?: string; texto?: string; tags?: string[]; data?: string; turma?: string }>,
+      diarioBordo = [] as Array<{ emoji?: string; titulo?: string; texto?: string; tags?: string[]; data?: string; turma?: string; atividadeTitulo?: string }>,
     } = body || {};
 
     const KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -66,7 +66,8 @@ serve(async (req) => {
             .map((d) => {
               const tags = Array.isArray(d.tags) && d.tags.length ? ` [${d.tags.join(", ")}]` : "";
               const obs = (d.texto || "").trim();
-              return `- ${d.emoji || "•"} ${d.data || ""} — ${d.titulo || "registro"}${tags}${obs ? `: ${obs}` : ""}`;
+              const atv = d.atividadeTitulo ? ` (sobre a atividade "${d.atividadeTitulo}")` : "";
+              return `- ${d.emoji || "•"} ${d.data || ""} — ${d.titulo || "registro"}${atv}${tags}${obs ? `: ${obs}` : ""}`;
             })
             .join("\n")
         : "Sem registros recentes no diário.";
