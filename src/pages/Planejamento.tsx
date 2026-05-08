@@ -1415,11 +1415,11 @@ export function Planejamento() {
     meta?: string;
     source: "atv" | "pcd";
   };
-  const [m4UserEvents] = usePersistentState<Record<string, M4UserEvt[]>>(
+  const [m4UserEvents, setM4UserEvents] = usePersistentState<Record<string, M4UserEvt[]>>(
     "plan_m4_user_events", {},
   );
   const m4UserByDay = useMemo(() => {
-    const out: Record<number, M4Evt[]> = {};
+    const out: Record<number, Array<M4Evt & { id: string; iso: string }>> = {};
     const mm = String(m4Month.m + 1).padStart(2, "0");
     const prefix = `${m4Month.y}-${mm}-`;
     Object.entries(m4UserEvents).forEach(([iso, list]) => {
@@ -1427,7 +1427,7 @@ export function Planejamento() {
       const day = parseInt(iso.slice(8, 10), 10);
       if (!day) return;
       (out[day] ??= []).push(
-        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta })),
+        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta, id: e.id, iso })),
       );
     });
     return out;
