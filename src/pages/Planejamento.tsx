@@ -3050,6 +3050,25 @@ export function Planejamento() {
                         <button key={e} className={m6Emoji === e ? "on" : ""} onClick={() => setM6Emoji(e)} aria-label={`Humor ${e}`}>{e}</button>
                       ))}
                     </div>
+                    <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 8 }}>
+                      <span><Sparkles size={12} style={{ verticalAlign: "-2px", color: "var(--orange)" }} /> Sobre qual atividade da Sofia? <span style={{ fontWeight: 400 }}>(opcional)</span></span>
+                      <select
+                        value={m6AtividadeId}
+                        onChange={(e) => setM6AtividadeId(e.target.value)}
+                        style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontSize: 13, color: "var(--ink)" }}
+                      >
+                        <option value="">— Registro geral da aula —</option>
+                        {m6AtividadesDaTurma.length === 0 ? (
+                          <option disabled>Nenhuma atividade gerada ainda{m5Turma ? ` para ${m5Turma}` : ""}</option>
+                        ) : (
+                          m6AtividadesDaTurma.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.modo === "pcd" ? "PCD · " : ""}{a.titulo}{a.turma ? ` · ${a.turma}` : ""}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </label>
                     <textarea
                       className="pl-d6-textarea"
                       placeholder="O que funcionou? O que travou? Algo a destacar…"
