@@ -1620,12 +1620,48 @@ export function Planejamento() {
     });
   };
   const m6ToggleTag = (t: string) => setM6Tags((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
-  const m6ResetForm = () => { setM6Emoji(""); setM6Text(""); setM6Tags([]); setM6EditingId(null); };
+  // Atividade da Sofia que este registro avalia (opcional).
+  const [m6AtividadeId, setM6AtividadeId] = useState<string>("");
+  // Lê histórico de atividades geradas pela Sofia (regular + PCD) do
+  // localStorage para a professora atrelar o diário a uma atividade
+  // específica e medir desempenho por atividade.
+  type SofiaAtividadeRef = { id: string; titulo: string; turma?: string; modo: "regular" | "pcd"; salvoEm?: string };
+  const m6SofiaAtividades = useMemo<SofiaAtividadeRef[]>(() => {
+    if (typeof window === "undefined") return [];
+    const lerLista = (key: string, modo: "regular" | "pcd"): SofiaAtividadeRef[] => {
+      try {
+        const raw = window.localStorage.getItem(key);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return [];
+        return arr.map((p: { id?: string; titulo?: string; turma?: string; salvoEm?: string; plano?: { titulo?: string } }) => ({
+          id: String(p.id || ""),
+          titulo: p.titulo || p.plano?.titulo || "Atividade sem título",
+          turma: p.turma,
+          modo,
+          salvoEm: p.salvoEm,
+        })).filter((x) => x.id);
+      } catch { return []; }
+    };
+    return [
+      ...lerLista("aprof:plan_atividade_regular_hist_v1", "regular"),
+      ...lerLista("aprof:plan_atividade_pcd_hist_v1", "pcd"),
+    ].sort((a, b) => (b.salvoEm || "").localeCompare(a.salvoEm || ""));
+    // Recalcula quando entradas mudam (proxy: m6Entries).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [m6Entries.length, m5Turma]);
+  const m6AtividadesDaTurma = useMemo(() => {
+    const t = (m5Turma || "").toLowerCase();
+    if (!t) return m6SofiaAtividades;
+    return m6SofiaAtividades.filter((a) => !a.turma || a.turma.toLowerCase() === t);
+  }, [m6SofiaAtividades, m5Turma]);
+  const m6ResetForm = () => { setM6Emoji(""); setM6Text(""); setM6Tags([]); setM6EditingId(null); setM6AtividadeId(""); };
   const m6StartEdit = (e: M6Entry) => {
     setM6EditingId(e.id);
     setM6Emoji(e.emoji);
     setM6Text(e.text);
     setM6Tags([...e.tags]);
+    setM6AtividadeId(e.atividadeId || "");
     if (typeof window !== "undefined") {
       const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
       requestAnimationFrame(() => {
