@@ -18,6 +18,7 @@ export type Adaptacao = {
 };
 export type Sugestao = { titulo: string; descricao: string };
 export type OpcaoAula = { titulo: string; resumo: string; abordagem: string };
+export type ContribuicaoInter = { disciplina: string; contribuicao: string };
 
 export type PlanoAtividade = {
   titulo: string;
@@ -30,6 +31,7 @@ export type PlanoAtividade = {
   sugestoes: Sugestao[];
   materiais: string[];
   materiaisCheck?: Record<number, boolean>;
+  contribuicoesInter?: ContribuicaoInter[];
   meta?: {
     ano: string; turma: string; disciplina: string; tema: string;
     duracao: string; tipo: string; incluirPCD: boolean;
@@ -52,6 +54,7 @@ type PlanoSalvo = {
 const EMPTY: PlanoAtividade = {
   titulo: "", objetivo: "", abertura: "", desenvolvimento: "", fechamento: "",
   habilidades: [], adaptacoes: [], sugestoes: [], materiais: [], materiaisCheck: {},
+  contribuicoesInter: [],
 };
 
 const ANOS_FALLBACK = [
