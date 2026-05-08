@@ -1418,6 +1418,33 @@ export function Planejamento() {
   };
   const [m4Month, setM4Month] = usePersistentState<{ y: number; m: number }>("plan_m4_month", { y: 2026, m: 3 }); // abril 2026 (0-index)
   const [m4SelectedDay, setM4SelectedDay] = usePersistentState<number | null>("plan_m4_selected_day", null);
+
+  // Eventos agendados pela professora a partir das abas Atividades / Atividades PCD.
+  // Mesma chave gravada em src/components/atividade/PlanoAtividadeEditor.tsx.
+  type M4UserEvt = {
+    id: string;
+    cat: M4Cat;
+    title: string;
+    meta?: string;
+    source: "atv" | "pcd";
+  };
+  const [m4UserEvents] = usePersistentState<Record<string, M4UserEvt[]>>(
+    "plan_m4_user_events", {},
+  );
+  const m4UserByDay = useMemo(() => {
+    const out: Record<number, M4Evt[]> = {};
+    const mm = String(m4Month.m + 1).padStart(2, "0");
+    const prefix = `${m4Month.y}-${mm}-`;
+    Object.entries(m4UserEvents).forEach(([iso, list]) => {
+      if (!iso.startsWith(prefix)) return;
+      const day = parseInt(iso.slice(8, 10), 10);
+      if (!day) return;
+      (out[day] ??= []).push(
+        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta })),
+      );
+    });
+    return out;
+  }, [m4UserEvents, m4Month]);
   const m4Label = useMemo(() => {
     const d = new Date(m4Month.y, m4Month.m, 1);
     const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
