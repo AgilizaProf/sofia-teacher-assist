@@ -408,7 +408,12 @@ export function Relatorios() {
   const ctx = useSofiaContext();
   const sofia = useSofia();
   const navigate = useNavigate();
-  const routeSearch = useSearch({ from: "/relatorios" }) as { tab?: "all" | "todo" | "draft" | "review" | "done" };
+  const routeSearch = useSearch({ from: "/relatorios" }) as {
+    tab?: "all" | "todo" | "draft" | "review" | "done";
+    turma?: string;
+    pcd?: "todos" | "apenas";
+    focus?: "turmas" | "alunos" | "pareceres" | "horas";
+  };
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>(routeSearch.tab ?? "all");
   // Sincroniza com mudanças no search param (ex.: deep-link).
   useEffect(() => {
