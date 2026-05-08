@@ -17,6 +17,7 @@ export type Adaptacao = {
   texto: string;
 };
 export type Sugestao = { titulo: string; descricao: string };
+export type OpcaoAula = { titulo: string; resumo: string; abordagem: string };
 
 export type PlanoAtividade = {
   titulo: string;
@@ -132,6 +133,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [busca, setBusca] = useState("");
   const [confirmDel, setConfirmDel] = useState<string>("");
 
+  // Opções de aula (etapa antes de gerar o plano completo)
+  const [opcoes, setOpcoes] = useState<OpcaoAula[]>([]);
+  const [opcoesSel, setOpcoesSel] = useState<number[]>([]);
+  const [loadingOpcoes, setLoadingOpcoes] = useState(false);
+
   // Ano escolar derivado da turma (badge não-editável quando há turma)
   const turmaInfo = useMemo(
     () => turmasPerfil.find((t) => t.nome === turma),
@@ -185,6 +191,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       incluirPCD: modo === "pcd" ? true : incluirPCD,
       regenField: field ?? "",
       planoAtual: field ? plano : null,
+      opcoesSelecionadas: !field
+        ? opcoesSel.map((i) => opcoes[i]).filter(Boolean)
+        : [],
       alunosPCD: alunosPCDDaTurma.map((a) => ({
         nome: a.primeiro_nome,
         tipo: a.pcd_codigo || "PCD",
@@ -206,6 +215,45 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     return novo;
   };
 
+  const sugerirOpcoes = async () => {
+    setErro("");
+    setLoadingOpcoes(true);
+    const payload = {
+      modo, anoEscolar, disciplina, turma,
+      tema: tema.trim(),
+      duracao, tipoAtividade: tipo,
+      incluirPCD: modo === "pcd" ? true : incluirPCD,
+      etapa: "opcoes",
+      alunosPCD: alunosPCDDaTurma.map((a) => ({
+        nome: a.primeiro_nome,
+        tipo: a.pcd_codigo || "PCD",
+      })),
+    };
+    const { data, error } = await supabase.functions.invoke("gerar-atividade", {
+      body: payload,
+    });
+    setLoadingOpcoes(false);
+    if (error) {
+      const msg = (error as { context?: { error?: string } })?.context?.error
+        || (error as Error)?.message || "Falha ao sugerir opções.";
+      setErro(msg);
+      return;
+    }
+    const lista = (data?.opcoes as OpcaoAula[] | undefined) ?? [];
+    if (lista.length === 0) {
+      setErro("Sofia não retornou opções. Tente reformular o tema.");
+      return;
+    }
+    setOpcoes(lista);
+    setOpcoesSel([]);
+    setPlano(EMPTY);
+  };
+
+  const toggleOpcao = (i: number) =>
+    setOpcoesSel((sel) =>
+      sel.includes(i) ? sel.filter((x) => x !== i) : [...sel, i],
+    );
+
   const gerar = async () => {
     setGenerating(true);
     const novo = await callSofia();
@@ -221,6 +269,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     };
     setPlano(enriched);
     setMissing([]);
+    setOpcoes([]);
+    setOpcoesSel([]);
     logActivity({
       type: "planejamento",
       description: modo === "pcd"
@@ -242,6 +292,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const limpar = () => {
     setPlano(EMPTY);
     setMissing([]); setErro(""); setSalvo(false);
+    setOpcoes([]); setOpcoesSel([]);
   };
 
   const setField = <K extends keyof PlanoAtividade>(k: K, v: PlanoAtividade[K]) =>
@@ -571,17 +622,41 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           )}
 
           <div className="atv-actions">
-            {temPlano && (
+            {(temPlano || opcoes.length > 0) && (
               <button className="atv-btn ghost" onClick={limpar}>
                 <X size={14} /> Limpar
               </button>
             )}
-            <button className="atv-btn primary" onClick={gerar} disabled={generating}>
-              {temPlano ? <RefreshCw size={14} /> : <Sparkles size={14} />}
-              {generating
-                ? "Sofia está preparando sua atividade…"
-                : temPlano ? "Regenerar tudo" : "Gerar com Sofia"}
-            </button>
+            {temPlano ? (
+              <button className="atv-btn primary" onClick={sugerirOpcoes} disabled={loadingOpcoes}>
+                <RefreshCw size={14} />
+                {loadingOpcoes ? "Sofia está pensando…" : "Sugerir novas opções"}
+              </button>
+            ) : opcoes.length === 0 ? (
+              <button className="atv-btn primary" onClick={sugerirOpcoes} disabled={loadingOpcoes}>
+                <Sparkles size={14} />
+                {loadingOpcoes ? "Sofia está pensando…" : "Sugerir opções de aula"}
+              </button>
+            ) : (
+              <>
+                <button className="atv-btn ghost" onClick={sugerirOpcoes} disabled={loadingOpcoes}>
+                  <RefreshCw size={14} />
+                  {loadingOpcoes ? "Sofia…" : "Outras opções"}
+                </button>
+                <button
+                  className="atv-btn primary"
+                  onClick={gerar}
+                  disabled={generating || opcoesSel.length === 0}
+                >
+                  <Sparkles size={14} />
+                  {generating
+                    ? "Sofia está montando o plano…"
+                    : opcoesSel.length === 0
+                      ? "Selecione 1 ou mais opções"
+                      : `Gerar plano com ${opcoesSel.length} opção${opcoesSel.length > 1 ? "ões" : ""}`}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -615,14 +690,48 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       </div>
 
       {!temPlano && !generating && (
+        opcoes.length === 0 ? (
         <div className="atv-empty">
           <Sparkles size={28} />
           <h3>{modo === "pcd" ? "Plano de atividade para aluno PCD" : "Plano de atividade"}</h3>
           <p>
-            Defina ano escolar, disciplina e tema (turma é opcional). Sofia gera título,
-            objetivo, descrição, habilidades BNCC, adaptações, sugestões e lista de materiais.
+            Defina ano escolar, disciplina e tema (turma é opcional). Sofia sugere
+            4 a 5 opções de aula com abordagens diferentes — você escolhe uma ou
+            combina várias antes de gerar o plano completo.
           </p>
         </div>
+        ) : (
+          <div className="atv-opcoes">
+            <div className="atv-opcoes-head">
+              <h3><Sparkles size={14} /> Opções de aula sugeridas pela Sofia</h3>
+              <p className="atv-muted">
+                Marque uma ou mais opções para combinar em um único plano integrado.
+              </p>
+            </div>
+            <div className="atv-opcoes-grid">
+              {opcoes.map((o, i) => {
+                const sel = opcoesSel.includes(i);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`atv-opcao${sel ? " sel" : ""}`}
+                    onClick={() => toggleOpcao(i)}
+                  >
+                    <div className="atv-opcao-check">
+                      {sel ? <Check size={14} /> : <Plus size={14} />}
+                    </div>
+                    <div className="atv-opcao-body">
+                      <div className="atv-opcao-tag">{o.abordagem}</div>
+                      <div className="atv-opcao-title">{o.titulo}</div>
+                      <p>{o.resumo}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )
       )}
 
       {temPlano && (
@@ -1110,4 +1219,18 @@ textarea.atv-inline-input{min-height:80px;resize:vertical;}
 .atv-hist-meta{font-size:11px;color:var(--muted,#64748B);font-family:'JetBrains Mono',monospace;}
 .atv-hist-actions{display:flex;gap:6px;flex-wrap:wrap;}
 .atv-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.2);}
+.atv-opcoes{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);}
+.atv-opcoes-head{margin-bottom:12px;}
+.atv-opcoes-head h3{font-size:14px;font-weight:700;color:var(--ink,#0F172A);margin:0 0 4px;display:flex;align-items:center;gap:6px;}
+.atv-opcoes-head h3 svg{color:var(--orange,#FF7A45);}
+.atv-opcoes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+.atv-opcao{display:flex;gap:10px;text-align:left;background:#fff;border:1.5px solid var(--line,#E2E8F0);border-radius:10px;padding:12px;cursor:pointer;font-family:inherit;color:inherit;transition:all .15s;align-items:flex-start;}
+.atv-opcao:hover{border-color:var(--orange,#FF7A45);background:#FFF7F2;}
+.atv-opcao.sel{border-color:var(--orange,#FF7A45);background:#FFF1E8;box-shadow:0 0 0 3px rgba(255,122,69,.15);}
+.atv-opcao-check{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;background:#F1F5F9;color:var(--muted,#64748B);flex-shrink:0;}
+.atv-opcao.sel .atv-opcao-check{background:var(--orange,#FF7A45);color:#fff;}
+.atv-opcao-body{flex:1;min-width:0;}
+.atv-opcao-tag{font-size:10px;font-weight:700;color:var(--orange,#FF7A45);text-transform:uppercase;letter-spacing:.06em;font-family:'JetBrains Mono',monospace;margin-bottom:4px;}
+.atv-opcao-title{font-weight:700;font-size:13.5px;color:var(--ink,#0F172A);margin-bottom:4px;line-height:1.3;}
+.atv-opcao p{font-size:12.5px;color:var(--muted,#64748B);margin:0;line-height:1.45;}
 `;
