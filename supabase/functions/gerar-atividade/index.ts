@@ -31,6 +31,7 @@ serve(async (req) => {
       opcoesSelecionadas = [] as Array<{ titulo?: string; resumo?: string; abordagem?: string }>,
       disciplinasInter = [] as string[],
       alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string } | null,
+      diarioBordo = [] as Array<{ emoji?: string; titulo?: string; texto?: string; tags?: string[]; data?: string; turma?: string }>,
     } = body || {};
 
     const KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -57,6 +58,18 @@ serve(async (req) => {
       Array.isArray(historico) && historico.length
         ? historico.slice(0, 6).map((h) => `- ${h}`).join("\n")
         : "Sem histórico recente.";
+
+    const diarioResumo =
+      Array.isArray(diarioBordo) && diarioBordo.length
+        ? diarioBordo
+            .slice(0, 8)
+            .map((d) => {
+              const tags = Array.isArray(d.tags) && d.tags.length ? ` [${d.tags.join(", ")}]` : "";
+              const obs = (d.texto || "").trim();
+              return `- ${d.emoji || "•"} ${d.data || ""} — ${d.titulo || "registro"}${tags}${obs ? `: ${obs}` : ""}`;
+            })
+            .join("\n")
+        : "Sem registros recentes no diário.";
 
     const systemPrompt =
       "Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade " +
@@ -111,6 +124,15 @@ serve(async (req) => {
       ``,
       `Histórico recente da professora:`,
       histResumo,
+      ``,
+      `DIÁRIO DE BORDO recente da turma (humor + observações + tags). `
+        + `Use estes sinais para calibrar a atividade: se houve agitação ou `
+        + `desregulação, prefira aberturas calmas e ritmadas; se algo "funcionou", `
+        + `replique a estratégia; se há "precisa reforço", retome o conteúdo com `
+        + `outra abordagem; se há registros de "+ inclusão" ou "+ família", `
+        + `mantenha esses elementos. Cite explicitamente em "sugestoes" como o `
+        + `plano responde aos padrões observados no diário.`,
+      diarioResumo,
     ].join("\n");
 
     // Regeneração por campo: se regenField vier preenchido, pedimos APENAS
