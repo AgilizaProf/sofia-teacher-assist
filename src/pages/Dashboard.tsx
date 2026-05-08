@@ -12,6 +12,7 @@ import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { SofiaAdaptacaoCard } from "@/components/sofia/SofiaAdaptacaoCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
+import { AtividadeFeed } from "@/components/dashboard/AtividadeFeed";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { Header as AppHeader } from "@/components/Header";
@@ -1023,22 +1024,18 @@ export function Dashboard() {
               <div className="card">
                 <div className="card-head">
                   <h3 className="card-title">📈 Esta semana</h3>
-                  <a href="#" className="card-link">Ver tudo<Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} /></a>
+                  <button
+                    type="button"
+                    className="card-link"
+                    onClick={() => navigate({ to: "/relatorios", search: { range: "week", tab: "all" } })}
+                    style={{ background: "transparent", border: 0, padding: 0, font: "inherit", cursor: "pointer", color: "inherit", display: "inline-flex", alignItems: "center", gap: 4 }}
+                  >
+                    Ver tudo<Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                  </button>
                 </div>
-                <EmptyState
-                  icon="📈"
-                  title="Suas atividades aparecerão aqui conforme você usar a Sofia."
-                />
-                <button
-                  type="button"
-                  className="sofia-week-ask"
-                  onClick={() => sofia.openSofia({
-                    prompt: "Me dê um panorama desta semana: o que aconteceu, o que falta e onde devo focar amanhã?",
-                    context: "Tela: Página inicial · card Esta semana",
-                  })}
-                >
-                  💬 Pergunte à Sofia sobre esta semana
-                </button>
+                <SofiaErrorBoundary area="o feed desta semana">
+                  <AtividadeFeed />
+                </SofiaErrorBoundary>
               </div>
 
               <div ref={agendaRef as unknown as React.Ref<HTMLDivElement>} className={`card${highlight === "agenda" ? " sofia-highlight" : ""}`}>
