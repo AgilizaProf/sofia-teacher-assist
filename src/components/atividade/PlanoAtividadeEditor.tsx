@@ -174,7 +174,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     setPlano({ ...plano, habilidades: plano.habilidades.filter((_, j) => j !== i) });
 
   const addHab = (codigo: string, descricao: string) => {
-    if (!codigo.trim()) return;
+    if (!codigo.trim() || !descricao.trim()) return;
     setPlano({
       ...plano,
       habilidades: [...plano.habilidades, { codigo: codigo.trim(), descricao: descricao.trim() }],
@@ -213,6 +213,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       faltam.push("descricao");
     }
     if (plano.habilidades.length === 0) faltam.push("habilidades");
+    else if (plano.habilidades.some((h) => !h.codigo.trim() || !h.descricao.trim())) {
+      faltam.push("habilidades_incompletas");
+    }
     return faltam;
   };
 
