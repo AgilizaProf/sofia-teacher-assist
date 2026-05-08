@@ -1258,6 +1258,58 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         )
       )}
 
+      {temPlano && planosMulti.length > 1 && (
+        <section className="atv-card" style={{ padding: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: "var(--muted,#64748B)", marginRight: 4 }}>
+              {planosMulti.length} planos gerados — revise cada um:
+            </span>
+            {planosMulti.map((p, i) => (
+              <button
+                key={i}
+                className={`atv-btn${i === planoIdx ? " primary" : " ghost"}`}
+                style={{ padding: "6px 10px", fontSize: 12 }}
+                onClick={() => {
+                  if (i === planoIdx) return;
+                  setPlanosMulti((prev) => {
+                    const updated = prev.map((x, k) => (k === planoIdx ? plano : x));
+                    setPlano(updated[i]);
+                    setPlanoIdx(i);
+                    return updated;
+                  });
+                }}
+                title={p.titulo || `Plano ${i + 1}`}
+              >
+                {i + 1}. {(p.titulo || "Sem título").slice(0, 28)}
+                {(p.titulo || "").length > 28 ? "…" : ""}
+              </button>
+            ))}
+            <span style={{ flex: 1 }} />
+            <button
+              className="atv-btn ghost"
+              style={{ padding: "6px 10px", fontSize: 12 }}
+              title="Remover esta versão da lista"
+              onClick={() => {
+                setPlanosMulti((prev) => {
+                  const updated = prev.filter((_, k) => k !== planoIdx);
+                  if (updated.length === 0) {
+                    setPlano(EMPTY);
+                    setPlanoIdx(0);
+                    return [];
+                  }
+                  const newIdx = Math.min(planoIdx, updated.length - 1);
+                  setPlano(updated[newIdx]);
+                  setPlanoIdx(newIdx);
+                  return updated;
+                });
+              }}
+            >
+              <X size={12} /> Descartar esta versão
+            </button>
+          </div>
+        </section>
+      )}
+
       {temPlano && (
         <PlanoBody
           plano={plano}
