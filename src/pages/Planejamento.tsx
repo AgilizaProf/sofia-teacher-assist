@@ -2484,8 +2484,9 @@ export function Planejamento() {
                                     className={"pl-ai " + c.v}
                                     draggable
                                     onDragStart={() => onM1DragStart(day.k, c.id)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ cursor: "grab" }}
+                                    onClick={(e) => { e.stopPropagation(); m1OpenEdit(day.k, c.id); }}
+                                    title="Clique para abrir e editar a atividade"
+                                    style={{ cursor: "pointer" }}
                                   >
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
                                       <div style={{ minWidth: 0 }}>
