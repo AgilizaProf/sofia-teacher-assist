@@ -30,9 +30,8 @@ const HYDRATION_PATTERNS = [
 // falta de libs de sistema (glib/udev). Os testes que dependem do browser
 // são marcados como skip nesse caso, mas o teste de SSR puro (via request)
 // continua rodando — é o que valida a correção do hydration mismatch.
-let browserAvailable: boolean | null = null;
-async function ensureBrowser() {
-  if (browserAvailable !== null) return browserAvailable;
+let browserAvailable = false;
+test.beforeAll(async () => {
   try {
     const b = await chromium.launch();
     await b.close();
@@ -40,8 +39,7 @@ async function ensureBrowser() {
   } catch {
     browserAvailable = false;
   }
-  return browserAvailable;
-}
+});
 
 test.describe("Planejamento — SSR + hydration", () => {
   test("HTML SSR contém a grade da semana sem depender do relógio do cliente", async ({ request, baseURL }) => {
@@ -61,7 +59,7 @@ test.describe("Planejamento — SSR + hydration", () => {
   });
 
   test("nenhum warning de hydration aparece no console", async ({ page }) => {
-    test.skip(!(await ensureBrowser()), "chromium indisponível neste ambiente");
+    test.skip(!browserAvailable, "chromium indisponível neste ambiente");
     const offences: string[] = [];
     const onMsg = (msg: ConsoleMessage) => {
       if (msg.type() !== "error" && msg.type() !== "warning") return;
@@ -85,7 +83,7 @@ test.describe("Planejamento — SSR + hydration", () => {
   });
 
   test("dia marcado como 'hoje' bate com a data local do navegador", async ({ page }) => {
-    test.skip(!(await ensureBrowser()), "chromium indisponível neste ambiente");
+    test.skip(!browserAvailable, "chromium indisponível neste ambiente");
     await page.goto(URL_M1);
     const days = page.getByTestId("m1-day");
     await expect(days.first()).toBeVisible();
