@@ -1417,6 +1417,22 @@ export function Planejamento() {
   const removerCardM1 = (dia: DayKey, id: string) => {
     setM1Plan((p) => ({ ...p, [dia]: p[dia].filter((c) => c.id !== id) }));
   };
+  // Editor da atividade sugerida pela Sofia (M1) — abre ao clicar no card.
+  const [m1EditCard, setM1EditCard] = useState<{ dia: DayKey; id: string } | null>(null);
+  const m1UpdateCard = (dia: DayKey, id: string, patch: Partial<M1Card>) => {
+    setM1Plan((p) => ({
+      ...p,
+      [dia]: p[dia].map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  };
+  const m1OpenEdit = (dia: DayKey, id: string) => {
+    // Garante que a atividade tenha campos ricos antes de abrir o editor.
+    setM1Plan((p) => ({
+      ...p,
+      [dia]: p[dia].map((c) => (c.id === id ? enrichM1Card(c, m1Tema) : c)),
+    }));
+    setM1EditCard({ dia, id });
+  };
   // M3 — Editor conversacional
   type M3Etapa = { id: string; titulo: string; min: number; novo?: boolean };
   type M3Adapt = { id: string; aluno: string; texto: string; novo?: boolean };
