@@ -42,12 +42,6 @@ type Props = {
   onSaved: (plano: PlanoInclusao) => void;
 };
 
-const TEMA_SUGESTOES = [
-  "Leitura compartilhada", "Frações", "Sistema solar", "Verbos",
-  "Tabuada do 2 ao 5", "Ciclo da água", "História do bairro",
-  "Produção de texto narrativo", "Geometria - formas",
-];
-
 const METODOLOGIA_SUGESTOES = [
   "Ensino estruturado (TEACCH) com apoio visual passo a passo",
   "Aprendizagem cooperativa em duplas com mediação",
@@ -75,7 +69,96 @@ const OBSERVACOES_SUGESTOES = [
 
 const TIPOS = ["Aula expositiva dialogada", "Atividade prática", "Jogo pedagógico", "Leitura mediada", "Produção textual", "Roda de conversa"];
 
+const DISCIPLINAS_EF = [
+  "Língua Portuguesa", "Matemática", "Ciências", "História", "Geografia",
+  "Arte", "Educação Física", "Inglês", "Ensino Religioso",
+];
+
+const CAMPOS_EI = [
+  "O eu, o outro e o nós",
+  "Corpo, gestos e movimentos",
+  "Traços, sons, cores e formas",
+  "Escuta, fala, pensamento e imaginação",
+  "Espaços, tempos, quantidades, relações e transformações",
+];
+
+function isEducacaoInfantil(ano?: string) {
+  return !!ano && /infantil|creche|pr[eé]/i.test(ano);
+}
+
+function anoNumerico(ano?: string): number {
+  const m = (ano || "").match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+/** Sugestões rápidas de tema, calibradas por disciplina/campo + ano escolar. */
+function getTemaSugestoes(disciplinas: string[], ano?: string): string[] {
+  const ei = isEducacaoInfantil(ano);
+  const n = anoNumerico(ano);
+  const d0 = disciplinas[0] || "";
+
+  if (ei) {
+    const map: Record<string, string[]> = {
+      "O eu, o outro e o nós": ["Quem sou eu", "Minha família", "Sentimentos", "Combinados da turma", "Brincadeiras de roda"],
+      "Corpo, gestos e movimentos": ["Circuito motor", "Dança das partes do corpo", "Equilíbrio com cordas", "Imitar animais", "Massinha e modelagem"],
+      "Traços, sons, cores e formas": ["Cores primárias", "Pintura com guache", "Carimbos com folhas", "Música com sucata", "Colagem de formas"],
+      "Escuta, fala, pensamento e imaginação": ["Leitura de história", "Reconto com fantoches", "Roda de poesia", "Trava-língua", "Inventando finais"],
+      "Espaços, tempos, quantidades, relações e transformações": ["Contagem até 10 com objetos", "Grande e pequeno", "Calendário da semana", "Hortinha", "Misturas de cores"],
+    };
+    if (d0 && map[d0]) return map[d0];
+    return ["Quem sou eu", "Cores primárias", "Contagem com objetos", "Leitura de história", "Circuito motor"];
+  }
+
+  // Fundamental — calibrar por disciplina + ano
+  const ciclo: "I" | "II" = n >= 6 ? "II" : "I";
+  const por: Record<string, Record<"I" | "II", string[]>> = {
+    "Língua Portuguesa": {
+      I: ["Sílabas simples", "Leitura compartilhada", "Lista de palavras", "Bilhete", "Reconto de história"],
+      II: ["Crônica", "Notícia", "Verbos", "Concordância verbal", "Interpretação de poema"],
+    },
+    "Matemática": {
+      I: ["Adição até 20", "Tabuada do 2 ao 5", "Sequência numérica", "Formas geométricas", "Sistema monetário"],
+      II: ["Frações equivalentes", "Equações de 1º grau", "Razão e proporção", "Área e perímetro", "Estatística básica"],
+    },
+    "Ciências": {
+      I: ["Os 5 sentidos", "Ciclo da água", "Animais vertebrados", "Higiene e saúde", "Plantas"],
+      II: ["Sistema solar", "Células", "Cadeia alimentar", "Estados físicos da matéria", "Energia e calor"],
+    },
+    "História": {
+      I: ["Minha família", "Brincadeiras de antigamente", "História do bairro", "Linha do tempo pessoal", "Profissões"],
+      II: ["Brasil colônia", "Independência do Brasil", "Idade Média", "Revolução Industrial", "Era Vargas"],
+    },
+    "Geografia": {
+      I: ["Pontos de referência", "Tipos de moradia", "Paisagens natural e cultural", "Mapa da escola", "Meios de transporte"],
+      II: ["Cartografia", "Clima e relevo do Brasil", "Urbanização", "Globalização", "Hidrografia"],
+    },
+    "Arte": {
+      I: ["Cores primárias e secundárias", "Cantigas populares", "Releitura de obra", "Modelagem com argila", "Brincadeiras cantadas"],
+      II: ["Movimento modernista", "Música brasileira", "Fotografia", "Teatro de sombras", "Grafite e arte urbana"],
+    },
+    "Educação Física": {
+      I: ["Brincadeiras de roda", "Circuito motor", "Pega-pega cooperativo", "Amarelinha", "Queimada"],
+      II: ["Voleibol — fundamentos", "Basquete — passe e drible", "Ginástica artística", "Esportes de combate", "Dança contemporânea"],
+    },
+    "Inglês": {
+      I: ["Greetings", "Colors and numbers", "My family", "Animals", "Food"],
+      II: ["Simple present", "Past tense", "Daily routine", "Job interview", "Reading short stories"],
+    },
+    "Ensino Religioso": {
+      I: ["Respeito ao outro", "Diversidade cultural", "Símbolos religiosos", "Histórias e tradições", "Convivência"],
+      II: ["Ética e cidadania", "Religiões afro-brasileiras", "Direitos humanos", "Cultura indígena", "Tolerância"],
+    },
+  };
+  if (d0 && por[d0]) return por[d0][ciclo];
+
+  // Sem disciplina escolhida — sugestões gerais por ciclo
+  return ciclo === "I"
+    ? ["Leitura compartilhada", "Adição até 20", "Ciclo da água", "Minha família", "Cores primárias"]
+    : ["Frações", "Sistema solar", "Verbos", "Independência do Brasil", "Cartografia"];
+}
+
 function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: string[]; onPick: (t: string) => void; label?: string }) {
+  if (!items.length) return null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8, padding: "8px 10px", background: "var(--bg)", borderRadius: 8, border: "1px dashed var(--border)" }}>
       <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
@@ -106,7 +189,7 @@ function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: stri
 }
 
 export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSaved }: Props) {
-  const [disciplina, setDisciplina] = useState("");
+  const [disciplinas, setDisciplinas] = useState<string[]>([]);
   const [tema, setTema] = useState("");
   const [duracao, setDuracao] = useState("45 min");
   const [tipoAtividade, setTipoAtividade] = useState(TIPOS[0]);
@@ -119,7 +202,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
   useEffect(() => {
     if (open) {
       setPlano(null);
-      setDisciplina("");
+      setDisciplinas([]);
       setTema("");
       setObservacoes("");
       setAvaliacao("");
@@ -132,6 +215,18 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
     const parts = [aluno.diag, aluno.cid].filter(Boolean);
     return parts.join(" · ");
   }, [aluno]);
+
+  const isEI = isEducacaoInfantil(aluno?.anoEscolar);
+  const opcoesDisciplinas = isEI ? CAMPOS_EI : DISCIPLINAS_EF;
+  const labelDisciplina = isEI ? "Campos de experiência" : "Disciplinas";
+  const temaSugestoes = useMemo(
+    () => getTemaSugestoes(disciplinas, aluno?.anoEscolar),
+    [disciplinas, aluno?.anoEscolar],
+  );
+
+  function toggleDisciplina(d: string) {
+    setDisciplinas((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]);
+  }
 
   async function gerar() {
     if (!aluno) return;
@@ -147,7 +242,8 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
           modo: "pcd",
           anoEscolar: aluno.anoEscolar || "",
           turma: aluno.turma || "",
-          disciplina,
+          disciplina: disciplinas[0] || "",
+          disciplinasInter: disciplinas.length > 1 ? disciplinas : [],
           tema,
           duracao,
           tipoAtividade,
@@ -179,7 +275,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
       data: new Date().toISOString().slice(0, 10),
       alunoId: aluno.id,
       ...plano,
-      disciplina,
+      disciplina: disciplinas.join(" + "),
       tema,
       duracao,
       tipoAtividade,
@@ -210,25 +306,50 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
         <div className="inc-modal-body plain" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {!plano && (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                  Disciplina
-                  <input value={disciplina} onChange={(e) => setDisciplina(e.target.value)} placeholder="Ex.: Matemática"
-                    style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: "var(--text)", textTransform: "none", letterSpacing: 0 }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                  Duração
-                  <select value={duracao} onChange={(e) => setDuracao(e.target.value)}
-                    style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: "var(--text)", textTransform: "none", letterSpacing: 0, background: "#fff" }}>
-                    {["30 min", "45 min", "60 min", "90 min"].map((d) => <option key={d}>{d}</option>)}
-                  </select>
-                </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                  {labelDisciplina} {disciplinas.length > 1 && <span style={{ color: "var(--accent)", marginLeft: 6 }}>· interdisciplinar ({disciplinas.length})</span>}
+                </span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {opcoesDisciplinas.map((d) => {
+                    const ativo = disciplinas.includes(d);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => toggleDisciplina(d)}
+                        style={{
+                          fontSize: 12, padding: "6px 12px", borderRadius: 999, cursor: "pointer", fontWeight: 600,
+                          border: ativo ? "1px solid var(--accent)" : "1px solid var(--border)",
+                          background: ativo ? "var(--accent)" : "#fff",
+                          color: ativo ? "#fff" : "var(--text)",
+                        }}
+                      >
+                        {ativo ? "✓ " : ""}{d}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                  Selecione uma para aula simples, ou várias para uma aula <b>interdisciplinar</b>.
+                </span>
               </div>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", maxWidth: 220 }}>
+                Duração
+                <select value={duracao} onChange={(e) => setDuracao(e.target.value)}
+                  style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: "var(--text)", textTransform: "none", letterSpacing: 0, background: "#fff" }}>
+                  {["30 min", "45 min", "60 min", "90 min"].map((d) => <option key={d}>{d}</option>)}
+                </select>
+              </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 Tema
                 <input value={tema} onChange={(e) => setTema(e.target.value)} placeholder="Ex.: Frações"
                   style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: "var(--text)", textTransform: "none", letterSpacing: 0 }} />
-                <ChipRow items={TEMA_SUGESTOES} onPick={(t) => setTema(t)} />
+                <ChipRow
+                  items={temaSugestoes}
+                  onPick={(t) => setTema(t)}
+                  label={`Sugestões para ${aluno.anoEscolar || "este aluno"}${disciplinas[0] ? ` · ${disciplinas[0]}` : ""}`}
+                />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 Tipo de atividade
