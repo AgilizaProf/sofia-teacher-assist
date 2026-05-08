@@ -1473,6 +1473,109 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         </div>
       )}
 
+      {salvarTodosOpen && (
+        <div
+          className="atv-modal-back"
+          onClick={(e) => { if (e.target === e.currentTarget) setSalvarTodosOpen(false); }}
+        >
+          <div className="atv-modal" style={{ maxWidth: 560 }}>
+            <div className="atv-modal-head">
+              <Save size={16} />
+              <h3>Salvar {planosParaSalvar.length} planos</h3>
+              <button className="atv-modal-x" onClick={() => setSalvarTodosOpen(false)} aria-label="Fechar">
+                <X size={14} />
+              </button>
+            </div>
+            <p className="atv-muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.4 }}>
+              Cada plano vai para o histórico e, se houver data, também para o calendário (M4 + M1 em dias úteis).
+            </p>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+              <input
+                type="checkbox"
+                checked={bulkSameDay}
+                onChange={(e) => setBulkSameDay(e.target.checked)}
+              />
+              Agendar todos no mesmo dia
+            </label>
+            {bulkSameDay ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div className="atv-field">
+                  <label>Data</label>
+                  <input
+                    type="date"
+                    value={bulkCommonDate}
+                    onChange={(e) => setBulkCommonDate(e.target.value)}
+                  />
+                </div>
+                <div className="atv-field">
+                  <label>Camada</label>
+                  <select
+                    value={bulkCommonCat}
+                    onChange={(e) => setBulkCommonCat(e.target.value as "aulas" | "aval")}
+                  >
+                    <option value="aulas">📚 Aula</option>
+                    <option value="aval">📝 Avaliação</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflow: "auto" }}>
+                {planosParaSalvar.map((p, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 140px 120px",
+                      gap: 8,
+                      alignItems: "center",
+                      padding: 8,
+                      border: "1px solid var(--line,#E2E8F0)",
+                      borderRadius: 8,
+                    }}
+                  >
+                    <div style={{ fontSize: 12, color: "#0F172A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <strong>{i + 1}.</strong> {p.titulo || "Sem título"}
+                    </div>
+                    <input
+                      type="date"
+                      value={bulkRows[i]?.data ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setBulkRows((prev) => prev.map((r, k) => (k === i ? { ...r, data: v } : r)));
+                      }}
+                      style={{ fontSize: 12 }}
+                    />
+                    <select
+                      value={bulkRows[i]?.cat ?? "aulas"}
+                      onChange={(e) => {
+                        const v = e.target.value as "aulas" | "aval";
+                        setBulkRows((prev) => prev.map((r, k) => (k === i ? { ...r, cat: v } : r)));
+                      }}
+                      style={{ fontSize: 12 }}
+                    >
+                      <option value="aulas">📚 Aula</option>
+                      <option value="aval">📝 Avaliação</option>
+                    </select>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="atv-modal-foot">
+              <button className="atv-btn ghost" onClick={() => setSalvarTodosOpen(false)} disabled={bulkSaving}>
+                Cancelar
+              </button>
+              <button
+                className="atv-btn primary"
+                onClick={confirmarSalvarTodos}
+                disabled={bulkSaving || (bulkSameDay ? !bulkCommonDate : bulkRows.some((r) => !r.data))}
+              >
+                <Check size={14} /> {bulkSaving ? "Salvando…" : `Salvar ${planosParaSalvar.length}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {agendaOpen && (
         <div
           className="atv-modal-back"
