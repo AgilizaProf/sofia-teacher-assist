@@ -593,21 +593,33 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                   Metodologia
                   <textarea value={atual.metodologia} onChange={(e) => patchAtual({ metodologia: e.target.value })} rows={3} placeholder="Como você vai conduzir a aula com este aluno"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
-                  <ChipRow items={METODOLOGIA_SUGESTOES} onPick={(t) => patchAtual({ metodologia: atual.metodologia ? atual.metodologia + " " + t : t })} />
+                  <ChipRow
+                    items={getMetodologiaSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    onPick={(t) => patchAtual({ metodologia: atual.metodologia ? atual.metodologia + " " + t : t })}
+                    label={`Metodologia · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
+                  />
                 </label>
 
                 <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                   Avaliação
                   <textarea value={atual.avaliacao} onChange={(e) => patchAtual({ avaliacao: e.target.value })} rows={3} placeholder="Como você vai avaliar este aluno"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
-                  <ChipRow items={AVALIACAO_SUGESTOES} onPick={(t) => patchAtual({ avaliacao: atual.avaliacao ? atual.avaliacao + " " + t : t })} />
+                  <ChipRow
+                    items={getAvaliacaoSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    onPick={(t) => patchAtual({ avaliacao: atual.avaliacao ? atual.avaliacao + " " + t : t })}
+                    label={`Avaliação · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
+                  />
                 </label>
 
                 <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                   Observações
                   <textarea value={atual.observacoes} onChange={(e) => patchAtual({ observacoes: e.target.value })} rows={3} placeholder="Anote o que aconteceu, ajustes, próximos passos"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
-                  <ChipRow items={OBSERVACOES_SUGESTOES} onPick={(t) => patchAtual({ observacoes: atual.observacoes ? atual.observacoes + " " + t : t })} />
+                  <ChipRow
+                    items={getObservacoesSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    onPick={(t) => patchAtual({ observacoes: atual.observacoes ? atual.observacoes + " " + t : t })}
+                    label={`Observações · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
+                  />
                 </label>
               </div>
             );
