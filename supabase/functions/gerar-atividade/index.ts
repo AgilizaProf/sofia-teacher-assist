@@ -30,6 +30,7 @@ serve(async (req) => {
       etapa = "" as string, // "opcoes" para sugerir 4-5 opções de aula
       opcoesSelecionadas = [] as Array<{ titulo?: string; resumo?: string; abordagem?: string }>,
       disciplinasInter = [] as string[],
+      alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string } | null,
     } = body || {};
 
     const KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -72,6 +73,26 @@ serve(async (req) => {
       `Ano escolar: ${anoEscolar || "não informado"}`,
       `Turma: ${turma || "não informada"}`,
       `Disciplina: ${disciplina || "livre escolha do(a) docente"}`,
+      modo === "pcd" && alunoFoco
+        ? `\nALUNO FOCO (a atividade INTEIRA deve ser desenhada PARA este aluno, `
+          + `respeitando suas especificidades — não é uma adaptação geral, é uma `
+          + `atividade individual):\n`
+          + `- Nome: ${alunoFoco.nome || "Aluno"}\n`
+          + `- Condição/CID: ${alunoFoco.codigo || "PCD (não especificada)"}\n`
+          + `- Anotações da professora: ${alunoFoco.anotacoes || "—"}\n`
+          + `Regras obrigatórias:\n`
+          + `1) Título, objetivo, abertura, desenvolvimento, fechamento, materiais e `
+          + `sugestões devem citar o aluno pelo primeiro nome e ser pensados para `
+          + `as peculiaridades descritas (sensoriais, comunicação, motoras, atenção, `
+          + `cognitivas — o que se aplicar à condição informada).\n`
+          + `2) Em "adaptacoes", traga 3 a 5 adaptações ESPECÍFICAS para este aluno `
+          + `(não genéricas para a categoria). Use a categoria que melhor representa `
+          + `a condição informada.\n`
+          + `3) Materiais devem ser viáveis em sala regular e considerar limitações `
+          + `sensoriais/motoras quando aplicável.\n`
+          + `4) Sugestões de variação devem oferecer caminhos alternativos quando o `
+          + `aluno se desregular ou perder o interesse.`
+        : ``,
       Array.isArray(disciplinasInter) && disciplinasInter.length > 0
         ? `Disciplinas a integrar (atividade INTERDISCIPLINAR): ${disciplinasInter.join(", ")}. `
           + `Articule essas áreas em UMA atividade coesa, deixando explícita a contribuição de cada disciplina. `

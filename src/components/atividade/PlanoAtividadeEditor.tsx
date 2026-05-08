@@ -213,6 +213,19 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     setIncluirPCD(alunosPCDDaTurma.length > 0);
   }, [turma, alunosPCDDaTurma.length]);
 
+  // Em modo PCD, a professora foca a atividade em UM aluno PCD por vez,
+  // para que Sofia respeite as especificidades dele(a). Quando a turma muda,
+  // voltamos para o primeiro aluno disponível.
+  const [alunoFocoIdx, setAlunoFocoIdx] = useState<number>(0);
+  useEffect(() => {
+    setAlunoFocoIdx(0);
+    setOpcoes([]);
+    setOpcoesSel([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turma, alunosPCDDaTurma.length]);
+  const alunoFoco =
+    modo === "pcd" ? alunosPCDDaTurma[alunoFocoIdx] ?? null : null;
+
   const showToast = (msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(""), 2200);
@@ -239,6 +252,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         codigo: a.pcd_codigo || undefined,
         anotacoes: a.pcd_anotacoes || undefined,
       })),
+      alunoFoco: alunoFoco
+        ? {
+            nome: alunoFoco.primeiro_nome,
+            codigo: alunoFoco.pcd_codigo || undefined,
+            anotacoes: alunoFoco.pcd_anotacoes || undefined,
+          }
+        : null,
     };
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: payload,
@@ -268,6 +288,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         nome: a.primeiro_nome,
         tipo: a.pcd_codigo || "PCD",
       })),
+      alunoFoco: alunoFoco
+        ? {
+            nome: alunoFoco.primeiro_nome,
+            codigo: alunoFoco.pcd_codigo || undefined,
+            anotacoes: alunoFoco.pcd_anotacoes || undefined,
+          }
+        : null,
     };
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: payload,
@@ -757,6 +784,47 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             <AlertTriangle size={14} />
             Nenhum aluno PCD encontrado{turma ? ` em ${turma}` : ""}. Sofia gerará
             uma atividade PCD genérica baseada no ano escolar.
+          </div>
+        )}
+
+        {modo === "pcd" && alunosPCDDaTurma.length > 0 && (
+          <div className="atv-foco">
+            <div className="atv-foco-head">
+              <span className="atv-foco-label">Aluno foco</span>
+              <span className="atv-foco-hint">
+                Sofia vai gerar uma atividade específica para este aluno,
+                respeitando suas especificidades. Troque para gerar para outro.
+              </span>
+            </div>
+            <div className="atv-foco-chips">
+              {alunosPCDDaTurma.map((a, i) => {
+                const sel = i === alunoFocoIdx;
+                return (
+                  <button
+                    key={`${a.primeiro_nome}-${i}`}
+                    type="button"
+                    className={`atv-foco-chip${sel ? " sel" : ""}`}
+                    onClick={() => {
+                      setAlunoFocoIdx(i);
+                      setOpcoes([]);
+                      setOpcoesSel([]);
+                    }}
+                    title={a.pcd_anotacoes || ""}
+                  >
+                    {sel ? <Check size={11} /> : <Plus size={11} />}
+                    <span className="atv-foco-name">{a.primeiro_nome}</span>
+                    {a.pcd_codigo && (
+                      <span className="atv-foco-tag">{a.pcd_codigo}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {alunoFoco?.pcd_anotacoes && (
+              <p className="atv-foco-notes">
+                <strong>Anotações:</strong> {alunoFoco.pcd_anotacoes}
+              </p>
+            )}
           </div>
         )}
 
@@ -1439,4 +1507,15 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-contrib-grid > *{align-self:start;height:auto;min-height:0;}
 .atv-contrib-card{background:#fff;border:1px solid #BFDBFE;border-radius:8px;padding:10px;}
 .atv-contrib-disc{font-size:10.5px;font-weight:700;color:#1E40AF;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
+.atv-foco{margin-top:10px;padding:10px 12px;border-radius:10px;background:linear-gradient(180deg,#FAF5FF,#FFFFFF);border:1px dashed #C4B5FD;}
+.atv-foco-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.atv-foco-label{font-size:11px;font-weight:700;color:#5B21B6;text-transform:uppercase;letter-spacing:.06em;font-family:'JetBrains Mono',monospace;}
+.atv-foco-hint{font-size:11.5px;color:var(--muted,#64748B);}
+.atv-foco-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.atv-foco-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:14px;font-size:12px;font-weight:600;border:1.5px solid #DDD6FE;background:#fff;color:#5B21B6;cursor:pointer;font-family:inherit;}
+.atv-foco-chip:hover{border-color:#8B5CF6;}
+.atv-foco-chip.sel{background:#8B5CF6;border-color:#8B5CF6;color:#fff;}
+.atv-foco-tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(139,92,246,.15);color:#5B21B6;font-family:'JetBrains Mono',monospace;}
+.atv-foco-chip.sel .atv-foco-tag{background:rgba(255,255,255,.25);color:#fff;}
+.atv-foco-notes{margin:8px 0 0;font-size:11.5px;color:#4C1D95;}
 `;
