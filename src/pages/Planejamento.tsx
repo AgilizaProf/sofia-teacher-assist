@@ -1873,6 +1873,46 @@ export function Planejamento() {
   const pickCount = useMemo(() => Object.values(picks).filter(Boolean).length, [picks]);
 
   return (
+    !hydrated ? (
+      <div className="pl-root" data-testid="planejamento-skeleton">
+        <style>{sidebarCss}</style>
+        <style>{css}</style>
+        <style>{emptyStateCss}</style>
+        <style>{`
+          @keyframes plSkPulse { 0%,100%{opacity:.55} 50%{opacity:1} }
+          .pl-sk { background: linear-gradient(90deg, #eef1f5 0%, #f6f8fb 50%, #eef1f5 100%); border-radius: 10px; animation: plSkPulse 1.4s ease-in-out infinite; }
+          .pl-sk-row { display:flex; gap:12px; flex-wrap:wrap; }
+        `}</style>
+        <div className="pl-app">
+          <AppSidebar active="planning" />
+          <div className="pl-main">
+            <AppHeader breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }]} />
+            <div className="pl-hero" aria-busy="true" aria-live="polite">
+              <div className="pl-sk" style={{ width: 110, height: 22, marginBottom: 14 }} />
+              <div className="pl-sk" style={{ width: "70%", height: 36, marginBottom: 10 }} />
+              <div className="pl-sk" style={{ width: "50%", height: 18, marginBottom: 18 }} />
+              <div className="pl-sk-row">
+                <div className="pl-sk" style={{ width: 140, height: 34 }} />
+                <div className="pl-sk" style={{ width: 160, height: 34 }} />
+                <div className="pl-sk" style={{ width: 120, height: 34 }} />
+              </div>
+            </div>
+            <div className="pl-workspace" style={{ padding: 16 }}>
+              <div className="pl-sk" style={{ width: "100%", height: 44, marginBottom: 16 }} />
+              <div className="pl-sk-row" style={{ marginBottom: 14 }}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="pl-sk" style={{ flex: "1 1 160px", height: 180 }} />
+                ))}
+              </div>
+              <div className="pl-sk" style={{ width: "100%", height: 220 }} />
+            </div>
+            <span className="sr-only" style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0,0,0,0)", border: 0 }}>
+              Carregando planejamento…
+            </span>
+          </div>
+        </div>
+      </div>
+    ) : (
     <div className="pl-root">
       <style>{sidebarCss}</style>
       <style>{css}</style>
