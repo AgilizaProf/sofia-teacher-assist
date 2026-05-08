@@ -14,6 +14,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { useHydrated } from "@/hooks/useHydrated";
+import { PlanoAtividadeEditor } from "@/components/atividade/PlanoAtividadeEditor";
 
 const css = `
 .pl-root{
@@ -330,7 +331,7 @@ const css = `
 @media(max-width:880px){.pl-app{grid-template-columns:1fr;}}
 `;
 
-type MKey = "m1" | "m2" | "m3" | "m4" | "m5" | "m6";
+type MKey = "m1" | "m2" | "m3" | "m4" | "m5" | "m6" | "atv" | "pcd";
 type Variant = "port" | "mat" | "aval" | "esc" | "ci";
 type Card = { id: string; v: Variant; tag: string; title: string; meta: string; locked?: boolean };
 type DayKey = "seg" | "ter" | "qua" | "qui" | "sex";
@@ -345,6 +346,12 @@ const DAYS: Array<{ k: DayKey; n: string; d: string }> = [
 const INITIAL_WEEK: Week = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
 const M_CONFIG: Record<MKey, { badge: string; title: string; sub: string; lead: React.ReactNode; chips: Array<{ label: string; solid?: boolean }>; crumb: string }> = {
+  atv: { badge: "★ ATIVIDADES · TODA A TURMA", title: "Planejamento de atividades.", sub: "Sofia gera o plano completo a partir do ano escolar.",
+    lead: <>Defina turma, ano e tema. Sofia entrega <strong>título, objetivo, descrição em 3 blocos, habilidades BNCC, adaptações PCD, sugestões e materiais</strong> — tudo editável.</>,
+    chips: [{ label: "✨ Gerar com Sofia", solid: true }, { label: "🎯 BNCC por ano" }, { label: "📋 Material" }], crumb: "Atividades" },
+  pcd: { badge: "★ ATIVIDADES · ALUNOS PCD", title: "Planejamento para alunos com PCD.", sub: "Adaptações por necessidade, baseadas no cadastro.",
+    lead: <>Sofia usa os <strong>laudos cadastrados</strong> da turma e gera adaptações por categoria (TEA, TDAH, DI, Deficiência física). Edite tudo inline.</>,
+    chips: [{ label: "♿ Adaptar PCD", solid: true }, { label: "👥 Por aluno" }, { label: "🧩 Por necessidade" }], crumb: "Atividades PCD" },
   m1: { badge: "★ MUDANÇA #1 · IA QUE OBSERVA", title: "Sofia preenche a semana por você.", sub: "Você revisa em 6 minutos. Não em 60.",
     lead: <>A IA esboça <strong>5 dias com 11 atividades</strong> baseadas no tema do mês, na BNCC e no histórico da turma. Você ajusta o que quiser e aprova com 1 clique.</>,
     chips: [{ label: "✨ Aceitar tudo", solid: true }, { label: "🔄 Regenerar" }, { label: "✏️ Ajustar parâmetros" }], crumb: "Sofia preenche a semana" },
@@ -366,12 +373,11 @@ const M_CONFIG: Record<MKey, { badge: string; title: string; sub: string; lead: 
 };
 
 const TABS: Array<{ k: MKey; num: string; label: string }> = [
-  { k: "m1", num: "M1", label: "Sofia preenche a semana" },
-  { k: "m2", num: "M2", label: "Sequência didática" },
-  { k: "m3", num: "M3", label: "Editor conversacional" },
-  { k: "m4", num: "M4", label: "Calendário com camadas" },
-  { k: "m5", num: "M5", label: "Drag & drop · multi-turma" },
-  { k: "m6", num: "M6", label: "Diário de bordo" },
+  { k: "atv", num: "M1", label: "Atividades" },
+  { k: "pcd", num: "M2", label: "Atividades PCD" },
+  { k: "m4", num: "M3", label: "Calendário com camadas" },
+  { k: "m5", num: "M4", label: "Drag & drop · multi-turma" },
+  { k: "m6", num: "M5", label: "Diário de bordo" },
 ];
 
 const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [
