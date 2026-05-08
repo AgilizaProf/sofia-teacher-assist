@@ -415,6 +415,14 @@ type M1Card = {
   foco: string;
   motivo?: string;
   auditoria?: M1AuditToken[];
+  // Detalhes ricos da atividade (opcionais; preenchidos pela Sofia ao gerar
+  // ou pelo professor ao editar). Permitem "abrir" a atividade e revisar
+  // objetivo, materiais, passos, avaliação e diferenciações.
+  objetivo?: string;
+  materiais?: string[];
+  passos?: string[];
+  avaliacao?: string;
+  diferenciacao?: string;
 };
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
