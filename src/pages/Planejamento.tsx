@@ -602,12 +602,14 @@ function enrichM1Card(card: M1Card, tema: string): M1Card {
     mat: ["Material dourado ou tampinhas (contagem)", "Folha quadriculada", "Régua e lápis colorido", "Cartões com problemas sobre " + t],
     ci: ["Lupa, recipientes ou objetos do cotidiano", "Caderno de campo", "Imagens/vídeo curto sobre " + t, "Roteiro de observação impresso"],
     esc: ["Roda de cadeiras / espaço aberto", "Música ou imagens sobre " + t, "Cartolinas e canetinhas", "Combinados visuais"],
+    aval: ["Folha de avaliação impressa", "Lápis e borracha", "Cronômetro", "Rubrica de critérios sobre " + t],
   };
   const objetivos: Record<Variant, string> = {
     port: `Ampliar a leitura, escrita e oralidade dos estudantes a partir de "${t}", trabalhando ${tag || "linguagem"} de forma significativa.`,
     mat: `Desenvolver o raciocínio lógico-matemático aplicado a "${t}", consolidando ${tag || "operações e estratégias"} com situações reais.`,
     ci: `Estimular a investigação científica e o pensamento crítico sobre "${t}", articulando observação, hipótese e registro.`,
     esc: `Fortalecer competências socioemocionais e culturais a partir de "${t}", promovendo ${tag || "convivência, escuta e identidade"}.`,
+    aval: `Verificar de forma processual o que foi aprendido sobre "${t}", articulando autoavaliação e registro coerente com ${card.bncc}.`,
   };
   const passosBase: string[] = [
     `1) Acolhida (5 min) — apresente "${t}" com uma pergunta provocadora ou imagem disparadora; registre as primeiras ideias da turma.`,
