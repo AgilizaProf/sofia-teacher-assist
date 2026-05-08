@@ -1429,4 +1429,8 @@ textarea.atv-inline-input{min-height:80px;resize:vertical;}
 .atv-inter-chip:hover{border-color:#3B82F6;}
 .atv-inter-chip.sel{background:#3B82F6;border-color:#3B82F6;color:#fff;}
 .atv-inter-warn{margin:8px 0 0;font-size:11.5px;color:#92400E;}
+.atv-card.atv-contrib{background:linear-gradient(180deg,#EEF6FF,#FFFFFF);border-color:#BFDBFE;grid-column:1/-1;}
+.atv-contrib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+.atv-contrib-card{background:#fff;border:1px solid #BFDBFE;border-radius:8px;padding:10px;}
+.atv-contrib-disc{font-size:10.5px;font-weight:700;color:#1E40AF;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
 `;
