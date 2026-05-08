@@ -13,6 +13,7 @@ import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
+import { useHydrated } from "@/hooks/useHydrated";
 
 const css = `
 .pl-root{
@@ -1239,8 +1240,12 @@ export function Planejamento() {
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
   const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  // SSR roda em UTC; o cliente roda no fuso local. Calcular `new Date()` em
+  // ambos pode produzir HTML diferente (mês/dia trocado em torno da meia-noite
+  // UTC) e quebrar a hydration. Só renderizamos a semana real após hidratar.
+  const hydrated = useHydrated();
   const m1Week = useMemo(() => {
-    const today = new Date();
+    const today = hydrated ? new Date() : new Date(Date.UTC(2026, 0, 5)); // segunda fixa pré-hidratação
     today.setHours(0, 0, 0, 0);
     const dow = today.getDay(); // 0=dom .. 6=sab
     const diffToMon = dow === 0 ? -6 : 1 - dow;
@@ -1264,7 +1269,7 @@ export function Planejamento() {
       : `${first.getDate()} de ${MONTHS_PT[first.getMonth()]} – ${last.getDate()} de ${MONTHS_PT[last.getMonth()]} de ${last.getFullYear()}`;
     const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
     return { days, range, label };
-  }, [weekOffset]);
+  }, [weekOffset, hydrated]);
 
   const focosSelecionados = useMemo(
     () => Object.keys(pillsFoco).filter((k) => pillsFoco[k]),
@@ -2115,8 +2120,8 @@ export function Planejamento() {
                     </div>
                     <div className="pl-cal-grid">
                       {m1Week.days.map((day) => {
-                        const todayIso = new Date().toISOString().slice(0, 10);
-                        const isToday = day.iso === todayIso;
+                        const todayIso = hydrated ? new Date().toISOString().slice(0, 10) : "";
+                        const isToday = hydrated && day.iso === todayIso;
                         const cards = m1Plan[day.k] || [];
                         return (
                           <div
