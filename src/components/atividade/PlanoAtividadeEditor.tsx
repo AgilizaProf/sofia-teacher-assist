@@ -441,8 +441,7 @@ function PlanoBody(props: {
       </section>
 
       {/* 4. Habilidades BNCC */}
-      <section className={`atv-card${has("habilidades") ? " atv-invalid" : ""}`}>
-      </section>
+      <section className={`atv-card${has("habilidades") || has("habilidades_incompletas") ? " atv-invalid" : ""}`}>
         <h3>③ Habilidades BNCC</h3>
         <div className="atv-chips">
           {plano.habilidades.map((h, i) => (
