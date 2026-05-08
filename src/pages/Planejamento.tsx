@@ -1679,6 +1679,9 @@ export function Planejamento() {
     const trimmed = m6Text.trim();
     const words = trimmed.split(/\s+/).slice(0, 6).join(" ");
     const now = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const atividadeRef = m6AtividadeId
+      ? m6SofiaAtividades.find((a) => a.id === m6AtividadeId)
+      : undefined;
     if (m6EditingId) {
       setM6Entries((prev) => prev.map((x) => {
         if (x.id !== m6EditingId) return x;
@@ -1691,6 +1694,8 @@ export function Planejamento() {
           text: trimmed,
           tags: [...m6Tags],
           date: `${dayLabel} · ${now} (editado)`,
+          atividadeId: m6AtividadeId || undefined,
+          atividadeTitulo: atividadeRef?.titulo,
         };
       }));
       m6ResetForm();
@@ -1698,7 +1703,17 @@ export function Planejamento() {
       return;
     }
     const turmaAtual = m5Turma || M5_TURMAS[0] || "";
-    const entry: M6Entry = { id: `e-${Date.now()}`, emoji: m6Emoji || "🙂", title: words || "Registro rápido", text: trimmed, tags: [...m6Tags], date: `Hoje · ${now}`, turma: turmaAtual };
+    const entry: M6Entry = {
+      id: `e-${Date.now()}`,
+      emoji: m6Emoji || "🙂",
+      title: words || atividadeRef?.titulo || "Registro rápido",
+      text: trimmed,
+      tags: [...m6Tags],
+      date: `Hoje · ${now}`,
+      turma: turmaAtual,
+      atividadeId: m6AtividadeId || undefined,
+      atividadeTitulo: atividadeRef?.titulo,
+    };
     setM6Entries((prev) => [entry, ...prev]);
     m6ResetForm();
     showToast("✓ Diário salvo.");
