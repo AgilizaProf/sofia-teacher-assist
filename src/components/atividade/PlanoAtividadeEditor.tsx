@@ -1070,10 +1070,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                 >
                   <Sparkles size={14} />
                   {generating
-                    ? "Sofia está montando o plano…"
+                    ? (progresso.total > 1
+                        ? `Sofia montando ${progresso.feitos}/${progresso.total}…`
+                        : "Sofia está montando o plano…")
                     : opcoesSel.length === 0
                       ? "Selecione 1 ou mais opções"
-                      : `Gerar plano com ${opcoesSel.length} opção${opcoesSel.length > 1 ? "ões" : ""}`}
+                      : opcoesSel.length === 1
+                        ? "Gerar plano com 1 opção"
+                        : `Gerar ${opcoesSel.length} planos (1 por opção)`}
                 </button>
               </>
             )}
