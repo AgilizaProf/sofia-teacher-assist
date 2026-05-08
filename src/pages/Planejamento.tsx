@@ -2945,7 +2945,7 @@ export function Planejamento() {
                       <Clock size={14} /> {m6Reminder ? "Lembrete ativo" : "Ativar lembrete"}
                     </button>
                     <button className="pl-btn primary" onClick={() => setM6ReportOpen(true)}>
-                      <Sparkles size={14} /> Ver relatório bimestral
+                      <Sparkles size={14} /> Ver relatório {M6_PERIODO_META[m6Periodo].label.toLowerCase()}
                     </button>
                   </div>
                 </div>
