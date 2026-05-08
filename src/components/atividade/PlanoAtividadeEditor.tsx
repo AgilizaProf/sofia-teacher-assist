@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
   Check, Pencil, Lightbulb, AlertTriangle, Save, FileDown, CalendarPlus,
-  Search, Trash2, FileText,
+  Search, Trash2, FileText, Star,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -115,6 +115,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     `plan_atividade_${modo}_hist_v1`, [],
   );
 
+  // Sugestões favoritas, agrupadas por tema (chave normalizada).
+  const [favoritas, setFavoritas] = usePersistentState<Record<string, Sugestao[]>>(
+    `plan_atividade_${modo}_favoritas_v1`, {},
+  );
+
   // M1 plan (mesma chave usada em Planejamento.tsx)
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1);
 
@@ -137,6 +142,34 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [opcoes, setOpcoes] = useState<OpcaoAula[]>([]);
   const [opcoesSel, setOpcoesSel] = useState<number[]>([]);
   const [loadingOpcoes, setLoadingOpcoes] = useState(false);
+
+  // Chave de tema normalizada para indexar favoritas.
+  const temaKey = useMemo(
+    () => `${disciplina} · ${tema.trim().toLowerCase()}`,
+    [disciplina, tema],
+  );
+  const favoritasTema = favoritas[temaKey] ?? [];
+
+  const isFavorita = (s: Sugestao) =>
+    favoritasTema.some((f) => f.titulo === s.titulo);
+
+  const toggleFavorita = (s: Sugestao) => {
+    const atuais = favoritas[temaKey] ?? [];
+    const existe = atuais.some((f) => f.titulo === s.titulo);
+    const next = existe
+      ? atuais.filter((f) => f.titulo !== s.titulo)
+      : [...atuais, s].slice(0, 12);
+    setFavoritas({ ...favoritas, [temaKey]: next });
+    showToast(existe ? "Removida das favoritas" : "⭐ Salva nas favoritas");
+  };
+
+  const removerFavorita = (titulo: string) => {
+    const atuais = favoritas[temaKey] ?? [];
+    setFavoritas({
+      ...favoritas,
+      [temaKey]: atuais.filter((f) => f.titulo !== titulo),
+    });
+  };
 
   // Ano escolar derivado da turma (badge não-editável quando há turma)
   const turmaInfo = useMemo(
