@@ -770,6 +770,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [agendaDate, setAgendaDate] = useState<string>(todayIso());
   const [agendaCat, setAgendaCat] = useState<"aulas" | "aval">("aulas");
 
+  // Salvar todos os planos gerados em lote (multi-tabs).
+  const [salvarTodosOpen, setSalvarTodosOpen] = useState(false);
+  const [bulkSameDay, setBulkSameDay] = useState(true);
+  const [bulkCommonDate, setBulkCommonDate] = useState<string>(todayIso());
+  const [bulkCommonCat, setBulkCommonCat] = useState<"aulas" | "aval">("aulas");
+  const [bulkRows, setBulkRows] = useState<{ data: string; cat: "aulas" | "aval" }[]>([]);
+  const [bulkSaving, setBulkSaving] = useState(false);
+
   const abrirAgenda = () => {
     const f = validar();
     setMissing(f);
@@ -827,6 +835,112 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       `Agendada em ${dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} · vai aparecer no M4`,
     );
     setAgendaOpen(false);
+  };
+
+  /* ─────────── Salvar todos (lote multi-planos) ─────────── */
+
+  const planosParaSalvar = useMemo<PlanoAtividade[]>(() => {
+    if (planosMulti.length <= 1) return [];
+    // Garante que a edição em curso esteja refletida no índice ativo.
+    return planosMulti.map((p, i) => (i === planoIdx ? plano : p));
+  }, [planosMulti, planoIdx, plano]);
+
+  const abrirSalvarTodos = () => {
+    if (planosParaSalvar.length === 0) return;
+    const base = todayIso();
+    setBulkSameDay(true);
+    setBulkCommonDate(base);
+    setBulkCommonCat(tipo === "Avaliação" ? "aval" : "aulas");
+    setBulkRows(
+      planosParaSalvar.map(() => ({
+        data: base,
+        cat: (tipo === "Avaliação" ? "aval" : "aulas") as "aulas" | "aval",
+      })),
+    );
+    setSalvarTodosOpen(true);
+  };
+
+  const confirmarSalvarTodos = async () => {
+    if (planosParaSalvar.length === 0) return;
+    setBulkSaving(true);
+    let okSave = 0;
+    let okSched = 0;
+    const m1Acc: M1Plan = { ...m1Plan };
+    const m4Acc: M4UserStore = { ...m4UserEvents };
+    for (let i = 0; i < planosParaSalvar.length; i++) {
+      const p = planosParaSalvar[i];
+      const data = bulkSameDay ? bulkCommonDate : (bulkRows[i]?.data || bulkCommonDate);
+      const cat = bulkSameDay ? bulkCommonCat : (bulkRows[i]?.cat || bulkCommonCat);
+      // Validação mínima — pula planos sem título/objetivo.
+      if (!p.titulo.trim() || !p.objetivo.trim()) continue;
+
+      // 1) Histórico
+      const id = `p_${Date.now()}_${i}`;
+      const registro: PlanoSalvo = {
+        id, titulo: p.titulo, turma, disciplina, ano: anoEscolar, modo,
+        salvoEm: new Date().toISOString(),
+        plano: { ...p },
+      };
+      setHistorico((h) => [registro, ...h].slice(0, 100));
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = auth.user?.id;
+        if (uid) {
+          await supabase.from("planos_aula").insert({
+            user_id: uid,
+            client_id: id,
+            titulo: p.titulo,
+            data: { ...registro, plano: p },
+          });
+        }
+      } catch { /* offline */ }
+      okSave++;
+
+      // 2) Agendar (M1 + M4)
+      if (data) {
+        const dt = new Date(`${data}T00:00:00`);
+        const wd = dt.getDay();
+        const map: Record<number, DayKey | null> = {
+          0: null, 1: "seg", 2: "ter", 3: "qua", 4: "qui", 5: "sex", 6: null,
+        };
+        const alvo = map[wd];
+        if (alvo) {
+          const card: M1Card = {
+            id: `m1_${Date.now()}_${i}`,
+            v: VARIANT_BY_DISC[disciplina] ?? "port",
+            tag: TAG_BY_DISC[disciplina] ?? "ATV",
+            title: p.titulo,
+            bncc: p.habilidades[0]?.codigo ?? "—",
+            minutos: DUR_TO_MIN[duracao] ?? 45,
+            foco: p.objetivo.slice(0, 80),
+            motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (lote · ${modo === "pcd" ? "PCD" : "regular"}).`,
+          };
+          m1Acc[alvo] = [...(m1Acc[alvo] || []), card];
+        }
+        const evt: M4UserEvt = {
+          id: `m4u_${Date.now()}_${i}`,
+          cat,
+          title: `${TAG_BY_DISC[disciplina] ?? "ATV"} · ${p.titulo}`,
+          meta: `${(DUR_TO_MIN[duracao] ?? 45)} min${turma ? ` · ${turma}` : ""}${modo === "pcd" ? " · PCD" : ""}`,
+          source: modo === "pcd" ? "pcd" : "atv",
+          turma: turma || undefined,
+          disciplina,
+          minutos: DUR_TO_MIN[duracao] ?? 45,
+        };
+        m4Acc[data] = [...(m4Acc[data] ?? []), evt];
+        okSched++;
+      }
+    }
+    setM1Plan(m1Acc);
+    setM4UserEvents(m4Acc);
+    logActivity({
+      type: "planejamento",
+      description: `${okSave} planos salvos em lote (${okSched} agendados)`,
+      detail: `${anoEscolar} · ${disciplina}`,
+    });
+    setBulkSaving(false);
+    setSalvarTodosOpen(false);
+    showToast(`${okSave} planos salvos · ${okSched} agendados no calendário ✓`);
   };
 
   /* ─────────── PDF ─────────── */
@@ -1290,6 +1404,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             ))}
             <span style={{ flex: 1 }} />
             <button
+              className="atv-btn primary"
+              style={{ padding: "6px 10px", fontSize: 12 }}
+              onClick={abrirSalvarTodos}
+              title="Salvar todos os planos no histórico e agendar no calendário"
+            >
+              <Save size={12} /> Salvar todos ({planosMulti.length})
+            </button>
+            <button
               className="atv-btn ghost"
               style={{ padding: "6px 10px", fontSize: 12 }}
               title="Remover esta versão da lista"
@@ -1348,6 +1470,109 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           <button className="atv-btn" onClick={abrirAgenda}>
             <CalendarPlus size={14} /> Agendar no calendário
           </button>
+        </div>
+      )}
+
+      {salvarTodosOpen && (
+        <div
+          className="atv-modal-back"
+          onClick={(e) => { if (e.target === e.currentTarget) setSalvarTodosOpen(false); }}
+        >
+          <div className="atv-modal" style={{ maxWidth: 560 }}>
+            <div className="atv-modal-head">
+              <Save size={16} />
+              <h3>Salvar {planosParaSalvar.length} planos</h3>
+              <button className="atv-modal-x" onClick={() => setSalvarTodosOpen(false)} aria-label="Fechar">
+                <X size={14} />
+              </button>
+            </div>
+            <p className="atv-muted" style={{ margin: 0, fontSize: 12, lineHeight: 1.4 }}>
+              Cada plano vai para o histórico e, se houver data, também para o calendário (M4 + M1 em dias úteis).
+            </p>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+              <input
+                type="checkbox"
+                checked={bulkSameDay}
+                onChange={(e) => setBulkSameDay(e.target.checked)}
+              />
+              Agendar todos no mesmo dia
+            </label>
+            {bulkSameDay ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div className="atv-field">
+                  <label>Data</label>
+                  <input
+                    type="date"
+                    value={bulkCommonDate}
+                    onChange={(e) => setBulkCommonDate(e.target.value)}
+                  />
+                </div>
+                <div className="atv-field">
+                  <label>Camada</label>
+                  <select
+                    value={bulkCommonCat}
+                    onChange={(e) => setBulkCommonCat(e.target.value as "aulas" | "aval")}
+                  >
+                    <option value="aulas">📚 Aula</option>
+                    <option value="aval">📝 Avaliação</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflow: "auto" }}>
+                {planosParaSalvar.map((p, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 140px 120px",
+                      gap: 8,
+                      alignItems: "center",
+                      padding: 8,
+                      border: "1px solid var(--line,#E2E8F0)",
+                      borderRadius: 8,
+                    }}
+                  >
+                    <div style={{ fontSize: 12, color: "#0F172A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <strong>{i + 1}.</strong> {p.titulo || "Sem título"}
+                    </div>
+                    <input
+                      type="date"
+                      value={bulkRows[i]?.data ?? ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setBulkRows((prev) => prev.map((r, k) => (k === i ? { ...r, data: v } : r)));
+                      }}
+                      style={{ fontSize: 12 }}
+                    />
+                    <select
+                      value={bulkRows[i]?.cat ?? "aulas"}
+                      onChange={(e) => {
+                        const v = e.target.value as "aulas" | "aval";
+                        setBulkRows((prev) => prev.map((r, k) => (k === i ? { ...r, cat: v } : r)));
+                      }}
+                      style={{ fontSize: 12 }}
+                    >
+                      <option value="aulas">📚 Aula</option>
+                      <option value="aval">📝 Avaliação</option>
+                    </select>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="atv-modal-foot">
+              <button className="atv-btn ghost" onClick={() => setSalvarTodosOpen(false)} disabled={bulkSaving}>
+                Cancelar
+              </button>
+              <button
+                className="atv-btn primary"
+                onClick={confirmarSalvarTodos}
+                disabled={bulkSaving || (bulkSameDay ? !bulkCommonDate : bulkRows.some((r) => !r.data))}
+              >
+                <Check size={14} /> {bulkSaving ? "Salvando…" : `Salvar ${planosParaSalvar.length}`}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
