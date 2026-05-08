@@ -1418,6 +1418,33 @@ export function Planejamento() {
   };
   const [m4Month, setM4Month] = usePersistentState<{ y: number; m: number }>("plan_m4_month", { y: 2026, m: 3 }); // abril 2026 (0-index)
   const [m4SelectedDay, setM4SelectedDay] = usePersistentState<number | null>("plan_m4_selected_day", null);
+
+  // Eventos agendados pela professora a partir das abas Atividades / Atividades PCD.
+  // Mesma chave gravada em src/components/atividade/PlanoAtividadeEditor.tsx.
+  type M4UserEvt = {
+    id: string;
+    cat: M4Cat;
+    title: string;
+    meta?: string;
+    source: "atv" | "pcd";
+  };
+  const [m4UserEvents] = usePersistentState<Record<string, M4UserEvt[]>>(
+    "plan_m4_user_events", {},
+  );
+  const m4UserByDay = useMemo(() => {
+    const out: Record<number, M4Evt[]> = {};
+    const mm = String(m4Month.m + 1).padStart(2, "0");
+    const prefix = `${m4Month.y}-${mm}-`;
+    Object.entries(m4UserEvents).forEach(([iso, list]) => {
+      if (!iso.startsWith(prefix)) return;
+      const day = parseInt(iso.slice(8, 10), 10);
+      if (!day) return;
+      (out[day] ??= []).push(
+        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta })),
+      );
+    });
+    return out;
+  }, [m4UserEvents, m4Month]);
   const m4Label = useMemo(() => {
     const d = new Date(m4Month.y, m4Month.m, 1);
     const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
@@ -2807,7 +2834,12 @@ export function Planejamento() {
                       <div key={d} style={{ fontSize: 11, fontWeight: 700, letterSpacing: .4, textTransform: "uppercase", color: "var(--muted)", textAlign: "center", padding: "6px 0" }}>{d}</div>
                     ))}
                     {m4Grid.map((cell, i) => {
-                      const evts = cell.day ? (M4_EVENTS_BY_DAY[cell.day] ?? []).filter((e) => layers[e.cat]) : [];
+                      const evts = cell.day
+                        ? [
+                            ...(M4_EVENTS_BY_DAY[cell.day] ?? []),
+                            ...(m4UserByDay[cell.day] ?? []),
+                          ].filter((e) => layers[e.cat])
+                        : [];
                       const isSel = cell.day != null && cell.day === m4SelectedDay;
                       const isEmpty = cell.day == null;
                       return (
@@ -2845,7 +2877,10 @@ export function Planejamento() {
                     })}
                   </div>
                   {m4SelectedDay && (() => {
-                    const evts = (M4_EVENTS_BY_DAY[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
+                    const evts = [
+                      ...(M4_EVENTS_BY_DAY[m4SelectedDay] ?? []),
+                      ...(m4UserByDay[m4SelectedDay] ?? []),
+                    ].filter((e) => layers[e.cat]);
                     return (
                       <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line)", borderRadius: 10, background: "#FAFBFD" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>

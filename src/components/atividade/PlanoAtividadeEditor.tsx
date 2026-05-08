@@ -126,6 +126,24 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   // M1 plan (mesma chave usada em Planejamento.tsx)
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1);
 
+  // Eventos do usuário no calendário M4 (camadas). Mesma chave lida em
+  // src/pages/Planejamento.tsx no módulo M4 para integrar visualmente as
+  // atividades agendadas pela professora.
+  type M4UserEvt = {
+    id: string;
+    cat: "aulas" | "aval";
+    title: string;
+    meta?: string;
+    source: "atv" | "pcd";
+    turma?: string;
+    disciplina?: string;
+    minutos?: number;
+  };
+  type M4UserStore = Record<string, M4UserEvt[]>;
+  const [m4UserEvents, setM4UserEvents] = usePersistentState<M4UserStore>(
+    "plan_m4_user_events", {},
+  );
+
   const turmasPerfil = sofia.turmas;
   const [turma, setTurma] = useState<string>(turmasPerfil[0]?.nome ?? "");
   const [disciplina, setDisciplina] = useState<string>(DISCIPLINAS[0]);
@@ -636,29 +654,76 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   /* ─────────── Adicionar ao M1 ─────────── */
 
-  const adicionarAoM1 = () => {
+  // Picker de data para escolher EM QUE DIA a atividade será dada.
+  // O resultado é gravado tanto na semana M1 (mapeando o dia da semana) quanto
+  // no calendário M4 (data exata, com camada "Aulas"/"Avaliações").
+  const todayIso = () => {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${m}-${dd}`;
+  };
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const [agendaDate, setAgendaDate] = useState<string>(todayIso());
+  const [agendaCat, setAgendaCat] = useState<"aulas" | "aval">("aulas");
+
+  const abrirAgenda = () => {
     const f = validar();
     setMissing(f);
     if (f.length > 0) return;
-    // Próximo dia útil sem cards (ou seg se todos cheios)
-    const ordem: DayKey[] = ["seg", "ter", "qua", "qui", "sex"];
-    const alvo = ordem.find((d) => (m1Plan[d] || []).length === 0) ?? "seg";
-    const card: M1Card = {
-      id: `m1_${Date.now()}`,
-      v: VARIANT_BY_DISC[disciplina] ?? "port",
-      tag: TAG_BY_DISC[disciplina] ?? "ATV",
-      title: plano.titulo,
-      bncc: plano.habilidades[0]?.codigo ?? "—",
-      minutos: DUR_TO_MIN[duracao] ?? 45,
-      foco: plano.objetivo.slice(0, 80),
-      motivo: `Adicionado da aba ${modo === "pcd" ? "Atividades PCD" : "Atividades"}.`,
+    setAgendaDate(todayIso());
+    setAgendaCat(tipo === "Avaliação" ? "aval" : "aulas");
+    setAgendaOpen(true);
+  };
+
+  const confirmarAgenda = () => {
+    if (!agendaDate) return;
+    const dt = new Date(`${agendaDate}T00:00:00`);
+    const wd = dt.getDay(); // 0=Dom..6=Sáb
+    const map: Record<number, DayKey | null> = {
+      0: null, 1: "seg", 2: "ter", 3: "qua", 4: "qui", 5: "sex", 6: null,
     };
-    setM1Plan({ ...m1Plan, [alvo]: [...(m1Plan[alvo] || []), card] });
+    const alvo = map[wd];
+
+    // 1) Empilha na grade semanal M1 (se cair em dia útil).
+    if (alvo) {
+      const card: M1Card = {
+        id: `m1_${Date.now()}`,
+        v: VARIANT_BY_DISC[disciplina] ?? "port",
+        tag: TAG_BY_DISC[disciplina] ?? "ATV",
+        title: plano.titulo,
+        bncc: plano.habilidades[0]?.codigo ?? "—",
+        minutos: DUR_TO_MIN[duracao] ?? 45,
+        foco: plano.objetivo.slice(0, 80),
+        motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (${modo === "pcd" ? "PCD" : "regular"}).`,
+      };
+      setM1Plan({ ...m1Plan, [alvo]: [...(m1Plan[alvo] || []), card] });
+    }
+
+    // 2) Adiciona ao calendário M4 (camadas) na data exata escolhida.
+    const evt: M4UserEvt = {
+      id: `m4u_${Date.now()}`,
+      cat: agendaCat,
+      title: `${TAG_BY_DISC[disciplina] ?? "ATV"} · ${plano.titulo}`,
+      meta: `${(DUR_TO_MIN[duracao] ?? 45)} min${turma ? ` · ${turma}` : ""}${modo === "pcd" ? " · PCD" : ""}`,
+      source: modo === "pcd" ? "pcd" : "atv",
+      turma: turma || undefined,
+      disciplina,
+      minutos: DUR_TO_MIN[duracao] ?? 45,
+    };
+    setM4UserEvents({
+      ...m4UserEvents,
+      [agendaDate]: [...(m4UserEvents[agendaDate] ?? []), evt],
+    });
+
     logActivity({
       type: "planejamento",
-      description: `Plano enviado ao M1 (${alvo.toUpperCase()}): ${plano.titulo}`,
+      description: `Atividade agendada em ${dt.toLocaleDateString("pt-BR")}: ${plano.titulo}`,
     });
-    showToast(`Adicionado a M1 · ${alvo.toUpperCase()}`);
+    showToast(
+      `Agendada em ${dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} · vai aparecer no M4`,
+    );
+    setAgendaOpen(false);
   };
 
   /* ─────────── PDF ─────────── */
@@ -1121,9 +1186,53 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           <button className="atv-btn" onClick={exportarPDF}>
             <FileDown size={14} /> Exportar PDF
           </button>
-          <button className="atv-btn" onClick={adicionarAoM1}>
-            <CalendarPlus size={14} /> Adicionar ao M1
+          <button className="atv-btn" onClick={abrirAgenda}>
+            <CalendarPlus size={14} /> Agendar no calendário
           </button>
+        </div>
+      )}
+
+      {agendaOpen && (
+        <div
+          className="atv-modal-back"
+          onClick={(e) => { if (e.target === e.currentTarget) setAgendaOpen(false); }}
+        >
+          <div className="atv-modal">
+            <div className="atv-modal-head">
+              <CalendarPlus size={16} />
+              <h3>Em qual dia será esta aula?</h3>
+              <button className="atv-modal-x" onClick={() => setAgendaOpen(false)} aria-label="Fechar">
+                <X size={14} />
+              </button>
+            </div>
+            <p className="atv-muted" style={{ margin: "0 0 10px" }}>
+              A atividade vai aparecer no calendário M4 nesta data e, se for dia
+              útil, também na semana M1.
+            </p>
+            <div className="atv-field">
+              <label>Data da aula</label>
+              <input
+                type="date"
+                value={agendaDate}
+                onChange={(e) => setAgendaDate(e.target.value)}
+              />
+            </div>
+            <div className="atv-field" style={{ marginTop: 8 }}>
+              <label>Camada do calendário</label>
+              <select value={agendaCat} onChange={(e) => setAgendaCat(e.target.value as "aulas" | "aval")}>
+                <option value="aulas">📚 Aula</option>
+                <option value="aval">📝 Avaliação</option>
+              </select>
+            </div>
+            <div className="atv-modal-foot">
+              <button className="atv-btn ghost" onClick={() => setAgendaOpen(false)}>
+                Cancelar
+              </button>
+              <button className="atv-btn primary" onClick={confirmarAgenda} disabled={!agendaDate}>
+                <Check size={14} /> Agendar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1724,4 +1833,11 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-lote-aluno{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#5B21B6;}
 .atv-lote-titulo{font-size:11.5px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .atv-lote-item.err .atv-lote-titulo{color:#991B1B;}
+.atv-modal-back{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px;}
+.atv-modal{background:#fff;border-radius:14px;border:1px solid var(--line,#E2E8F0);padding:16px;width:100%;max-width:380px;box-shadow:0 24px 48px -12px rgba(15,23,42,.25);}
+.atv-modal-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.atv-modal-head h3{margin:0;font-size:14px;color:#0F172A;flex:1;}
+.atv-modal-x{background:transparent;border:none;cursor:pointer;color:var(--muted,#64748B);padding:4px;border-radius:6px;}
+.atv-modal-x:hover{background:#F1F5F9;}
+.atv-modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
 `;
