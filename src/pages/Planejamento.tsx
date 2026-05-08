@@ -15,6 +15,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { useHydrated } from "@/hooks/useHydrated";
 import { PlanoAtividadeEditor } from "@/components/atividade/PlanoAtividadeEditor";
+import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 
 const css = `
 .pl-root{
