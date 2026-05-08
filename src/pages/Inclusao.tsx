@@ -10,6 +10,7 @@ import { CID_OPTIONS } from "@/lib/cidsBR";
 import { toast } from "sonner";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
+import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
@@ -1754,7 +1755,9 @@ function InclusaoSuggestions({ entityId }: { entityId: string }) {
   const { suggestions } = useSofiaSuggestions("inclusao", entityId);
   return (
     <div className="sofia-card" style={{ padding: 0, background: "transparent", border: "none", boxShadow: "none" }}>
-      <SofiaSuggestionList suggestions={suggestions} variant="inline" />
+      <SofiaErrorBoundary area="as sugestões da Sofia" silent>
+        <SofiaSuggestionList suggestions={suggestions} variant="inline" />
+      </SofiaErrorBoundary>
     </div>
   );
 }
