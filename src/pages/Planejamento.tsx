@@ -1456,25 +1456,30 @@ export function Planejamento() {
   };
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
-  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean };
+  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string };
   const M6_TAGS = ["+ funcionou", "- precisa reforço", "+ inclusão", "+ família"] as const;
   const M6_EMOJIS = ["😣", "😐", "🙂", "😄", "🌟"] as const;
-  const M6_INITIAL: M6Entry[] = [
-    { id: "seed-1", emoji: "🙂", title: "Leitura compartilhada — capítulo 3", text: "Turma engajada, mas houve agitação após o recreio.", tags: ["+ funcionou"], date: "Hoje · 10:42" },
-    { id: "seed-2", emoji: "😐", title: "Frações — exercícios em duplas", text: "Alguns alunos travaram na divisão; preciso reforçar amanhã. Agitação após recreio novamente.", tags: ["- precisa reforço"], date: "Ontem · 14:10" },
-    { id: "seed-3", emoji: "😄", title: "Ciências — experimento da água", text: "Adoraram! Reunião com família da Maria deu resultado.", tags: ["+ funcionou", "+ família"], date: "Seg · 09:30" },
-    { id: "seed-4", emoji: "😣", title: "Matemática — prova surpresa", text: "Agitação após recreio prejudicou o foco. Vários alunos pediram para ir ao banheiro.", tags: ["- precisa reforço"], date: "Sex · 15:20" },
-    { id: "seed-5", emoji: "🙂", title: "Roda de conversa", text: "Momento bom de escuta, agitação após recreio mais branda.", tags: ["+ inclusão"], date: "Qui · 11:00" },
-  ];
+  // Diário começa vazio — apenas o que a professora registrar aparece aqui.
+  const M6_INITIAL: M6Entry[] = [];
   const [m6Entries, setM6Entries] = usePersistentState<M6Entry[]>("plan_m6_entries", M6_INITIAL);
   const [m6Emoji, setM6Emoji] = useState<string>("");
   const [m6Text, setM6Text] = useState<string>("");
   const [m6Tags, setM6Tags] = useState<string[]>([]);
-  const [m6Total] = useState<number>(22);
   const [m6Reminder, setM6Reminder] = usePersistentState<boolean>("plan_m6_reminder", false);
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
   const [m6PatternDismissed, setM6PatternDismissed] = usePersistentState<boolean>("plan_m6_pattern_dismissed", false);
   const [m6EditingId, setM6EditingId] = useState<string | null>(null);
+  // Período do relatório e turma selecionada para a leitura adaptativa.
+  type M6Periodo = "bimestral" | "trimestral" | "semestral" | "anual";
+  const M6_PERIODO_META: Record<M6Periodo, { label: string; meta: number; semanas: number }> = {
+    bimestral: { label: "Bimestral", meta: 22, semanas: 8 },
+    trimestral: { label: "Trimestral", meta: 33, semanas: 12 },
+    semestral: { label: "Semestral", meta: 66, semanas: 24 },
+    anual: { label: "Anual", meta: 132, semanas: 40 },
+  };
+  const [m6Periodo, setM6Periodo] = usePersistentState<M6Periodo>("plan_m6_periodo", "bimestral");
+  const [m6RelTurma, setM6RelTurma] = usePersistentState<string>("plan_m6_rel_turma", "");
+  const m6Total = M6_PERIODO_META[m6Periodo].meta;
   const m6FormRef = useRef<HTMLDivElement | null>(null);
   const m6Registradas = m6Entries.length;
   const m6Pct = Math.min(100, Math.round((m6Registradas / m6Total) * 100));
