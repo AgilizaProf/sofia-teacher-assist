@@ -740,6 +740,27 @@ export function Inclusao() {
     [anamData]
   );
 
+  // Planos adaptados gerados pela Sofia, persistidos por aluno
+  const [plansByStudent, setPlansByStudent] = usePersistentState<Record<string, PlanoInclusao[]>>("inc_plans", {});
+  const studentPlans = (selectedId && plansByStudent[selectedId]) || [];
+  const anamneseResumo = useMemo(() => {
+    if (!selectedId) return "";
+    const data = anamByStudent[selectedId];
+    if (!data) return "";
+    return data
+      .map((e) => {
+        const itens = e.items
+          .filter((i) => i.s !== "naoObservado")
+          .map((i) => `${i.d} (${ANAM_STATUS_LABEL[i.s]})`)
+          .join("; ");
+        const obs = (e.obs || "").trim();
+        if (!itens && !obs) return "";
+        return `• ${e.l}: ${itens}${obs ? ` — Obs.: ${obs}` : ""}`;
+      })
+      .filter(Boolean)
+      .join("\n");
+  }, [selectedId, anamByStudent]);
+
   const goView = (v: ViewKey) => {
     const safe: ViewKey = v === "detail" && students.length === 0 ? "list" : v;
     setView(safe);
