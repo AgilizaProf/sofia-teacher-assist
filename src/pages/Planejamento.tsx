@@ -1600,7 +1600,8 @@ export function Planejamento() {
       showToast("✓ Registro atualizado.");
       return;
     }
-    const entry: M6Entry = { id: `e-${Date.now()}`, emoji: m6Emoji || "🙂", title: words || "Registro rápido", text: trimmed, tags: [...m6Tags], date: `Hoje · ${now}` };
+    const turmaAtual = m5Turma || M5_TURMAS[0] || "";
+    const entry: M6Entry = { id: `e-${Date.now()}`, emoji: m6Emoji || "🙂", title: words || "Registro rápido", text: trimmed, tags: [...m6Tags], date: `Hoje · ${now}`, turma: turmaAtual };
     setM6Entries((prev) => [entry, ...prev]);
     m6ResetForm();
     showToast("✓ Diário salvo.");
