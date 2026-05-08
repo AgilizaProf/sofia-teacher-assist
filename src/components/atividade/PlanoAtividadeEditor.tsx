@@ -783,6 +783,10 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           onAddHab={addHab}
           onUsarSugestao={usarSugestao}
           onRegenField={regenerarCampo}
+          favoritas={favoritasTema}
+          isFavorita={isFavorita}
+          onToggleFavorita={toggleFavorita}
+          onRemoverFavorita={removerFavorita}
         />
       )}
 
@@ -889,6 +893,10 @@ function PlanoBody(props: {
   onAddHab: (codigo: string, descricao: string) => void;
   onUsarSugestao: (s: Sugestao) => void;
   onRegenField: (field: keyof PlanoAtividade) => void;
+  favoritas: Sugestao[];
+  isFavorita: (s: Sugestao) => boolean;
+  onToggleFavorita: (s: Sugestao) => void;
+  onRemoverFavorita: (titulo: string) => void;
 }) {
   const { plano, modo, alunosPCDCount, missing, regenField, onRegenField } = props;
   const [adaptOpen, setAdaptOpen] = useState(modo === "pcd");
@@ -1048,12 +1056,56 @@ function PlanoBody(props: {
           <h3><Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑤ Sugestões da Sofia</h3>
           <RegenBtn field="sugestoes" label="sugestões" />
         </div>
+
+        {props.favoritas.length > 0 && (
+          <div className="atv-fav-block">
+            <div className="atv-fav-head">
+              <Star size={12} fill="#F59E0B" color="#F59E0B" />
+              <span>Suas favoritas para este tema</span>
+              <span className="atv-fav-count">{props.favoritas.length}</span>
+            </div>
+            <div className="atv-fav-grid">
+              {props.favoritas.map((s, i) => (
+                <div className="atv-fav" key={`fav-${i}`}>
+                  <div className="atv-fav-title">{s.titulo}</div>
+                  <p>{s.descricao}</p>
+                  <div className="atv-fav-actions">
+                    <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
+                      <Check size={12} /> Usar esta
+                    </button>
+                    <button
+                      className="atv-fav-x"
+                      onClick={() => props.onRemoverFavorita(s.titulo)}
+                      title="Remover das favoritas"
+                      aria-label="Remover dos favoritos"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {plano.sugestoes.length === 0 ? (
           <p className="atv-muted">Sem sugestões.</p>
         ) : (
           <div className="atv-sug-grid">
             {plano.sugestoes.map((s, i) => (
               <div className="atv-sug" key={i}>
+                <button
+                  className={`atv-sug-fav${props.isFavorita(s) ? " on" : ""}`}
+                  onClick={() => props.onToggleFavorita(s)}
+                  aria-label={props.isFavorita(s) ? "Remover dos favoritos" : "Salvar como favorita"}
+                  title={props.isFavorita(s) ? "Favorita — clique para remover" : "Salvar como favorita"}
+                >
+                  <Star
+                    size={14}
+                    fill={props.isFavorita(s) ? "#F59E0B" : "none"}
+                    color={props.isFavorita(s) ? "#F59E0B" : "#92400E"}
+                  />
+                </button>
                 <div className="atv-sug-title">{s.titulo}</div>
                 <p>{s.descricao}</p>
                 <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
