@@ -1924,5 +1924,9 @@ export function Dashboard() {
 
 function DashboardCmdkSuggestions() {
   const { suggestions } = useSofiaSuggestions("cmdk");
-  return <SofiaSuggestionList suggestions={suggestions} variant="compact" />;
+  return (
+    <SofiaErrorBoundary area="as sugestões da Sofia" silent>
+      <SofiaSuggestionList suggestions={suggestions} variant="compact" />
+    </SofiaErrorBoundary>
+  );
 }
