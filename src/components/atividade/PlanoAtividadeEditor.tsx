@@ -197,6 +197,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [opcoesSel, setOpcoesSel] = useState<number[]>([]);
   const [loadingOpcoes, setLoadingOpcoes] = useState(false);
 
+  // Quando a professora seleciona MAIS DE UMA opção e clica em "Gerar plano",
+  // a Sofia gera um plano completo para CADA opção. Cada plano fica
+  // disponível em uma aba editável separada — `plano` é sempre o ativo.
+  const [planosMulti, setPlanosMulti] = useState<PlanoAtividade[]>([]);
+  const [planoIdx, setPlanoIdx] = useState(0);
+  const [progresso, setProgresso] = useState<{ feitos: number; total: number }>({ feitos: 0, total: 0 });
+
   // Chave de tema normalizada para indexar favoritas.
   const temaKey = useMemo(
     () => `${disciplina} · ${tema.trim().toLowerCase()}`,
@@ -293,9 +300,27 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     window.setTimeout(() => setToast(""), 2200);
   };
 
+  // Mantém o array de planos múltiplos sincronizado com a edição atual.
+  // Sempre que `plano` mudar (edição inline, regenerar campo, materiais…)
+  // espelhamos no índice ativo de `planosMulti`.
+  useEffect(() => {
+    if (planosMulti.length <= 1) return;
+    setPlanosMulti((prev) => {
+      if (planoIdx >= prev.length) return prev;
+      if (prev[planoIdx] === plano) return prev;
+      const next = prev.slice();
+      next[planoIdx] = plano;
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plano]);
+
   /* ─────────── Geração (full ou por campo) ─────────── */
 
-  const callSofia = async (field?: string): Promise<PlanoAtividade | null> => {
+  const callSofia = async (
+    field?: string,
+    overrideOpcoes?: OpcaoAula[],
+  ): Promise<PlanoAtividade | null> => {
     setErro("");
     const diarioBordo = lerDiarioBordo(turma);
     const payload = {
@@ -307,7 +332,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       planoAtual: field ? plano : null,
       disciplinasInter: disciplina === "Interdisciplinar" ? disciplinasInter : [],
       opcoesSelecionadas: !field
-        ? opcoesSel.map((i) => opcoes[i]).filter(Boolean)
+        ? (overrideOpcoes ?? opcoesSel.map((i) => opcoes[i]).filter(Boolean))
         : [],
       alunosPCD: alunosPCDDaTurma.map((a) => ({
         nome: a.primeiro_nome,
@@ -389,6 +414,43 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const gerar = async () => {
     setGenerating(true);
+    // Quando há mais de uma opção selecionada → gera UM plano por opção,
+    // mantendo cada um editável em sua própria aba.
+    if (opcoesSel.length > 1) {
+      const selecionadas = opcoesSel.map((i) => opcoes[i]).filter(Boolean) as OpcaoAula[];
+      setProgresso({ feitos: 0, total: selecionadas.length });
+      const enrichedAll: PlanoAtividade[] = [];
+      for (const opt of selecionadas) {
+        const novo = await callSofia(undefined, [opt]);
+        if (novo) {
+          enrichedAll.push({
+            ...EMPTY, ...novo, materiaisCheck: {},
+            meta: {
+              ano: anoEscolar, turma, disciplina, tema,
+              duracao, tipo, incluirPCD: modo === "pcd" ? true : incluirPCD,
+              modo, geradoEm: new Date().toISOString(),
+            },
+          });
+        }
+        setProgresso((p) => ({ ...p, feitos: p.feitos + 1 }));
+      }
+      setGenerating(false);
+      setProgresso({ feitos: 0, total: 0 });
+      if (enrichedAll.length === 0) return;
+      setPlanosMulti(enrichedAll);
+      setPlanoIdx(0);
+      setPlano(enrichedAll[0]);
+      setMissing([]);
+      setOpcoes([]);
+      setOpcoesSel([]);
+      logActivity({
+        type: "planejamento",
+        description: `${enrichedAll.length} atividades geradas em paralelo`,
+        detail: `${anoEscolar} · ${disciplina} · ${tema}`,
+      });
+      showToast(`${enrichedAll.length} planos prontos. Use as abas para revisar cada um.`);
+      return;
+    }
     const novo = await callSofia();
     setGenerating(false);
     if (!novo) return;
@@ -401,6 +463,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       },
     };
     setPlano(enriched);
+    setPlanosMulti([]);
+    setPlanoIdx(0);
     setMissing([]);
     setOpcoes([]);
     setOpcoesSel([]);
@@ -537,6 +601,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const carregarDoLote = (item: LoteItem) => {
     if (!item.plano) return;
     setPlano(item.plano);
+    setPlanosMulti([]); setPlanoIdx(0);
     setOpcoes([]); setOpcoesSel([]); setMissing([]);
     showToast(`Plano de ${item.aluno} carregado`);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -544,6 +609,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const limpar = () => {
     setPlano(EMPTY);
+    setPlanosMulti([]); setPlanoIdx(0);
     setMissing([]); setErro(""); setSalvo(false);
     setOpcoes([]); setOpcoesSel([]);
   };
@@ -656,6 +722,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const carregarPlano = (p: PlanoSalvo) => {
     setPlano(p.plano);
+    setPlanosMulti([]); setPlanoIdx(0);
     if (p.turma) setTurma(p.turma);
     if (p.disciplina) setDisciplina(p.disciplina);
     setAnoFallback(p.ano);
@@ -666,6 +733,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const duplicarPlano = (p: PlanoSalvo) => {
     const copia: PlanoAtividade = { ...p.plano, titulo: `${p.plano.titulo} (cópia)` };
     setPlano(copia);
+    setPlanosMulti([]); setPlanoIdx(0);
     showToast("Cópia editável criada");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -1002,10 +1070,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                 >
                   <Sparkles size={14} />
                   {generating
-                    ? "Sofia está montando o plano…"
+                    ? (progresso.total > 1
+                        ? `Sofia montando ${progresso.feitos}/${progresso.total}…`
+                        : "Sofia está montando o plano…")
                     : opcoesSel.length === 0
                       ? "Selecione 1 ou mais opções"
-                      : `Gerar plano com ${opcoesSel.length} opção${opcoesSel.length > 1 ? "ões" : ""}`}
+                      : opcoesSel.length === 1
+                        ? "Gerar plano com 1 opção"
+                        : `Gerar ${opcoesSel.length} planos (1 por opção)`}
                 </button>
               </>
             )}
@@ -1188,6 +1260,58 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             </div>
           </div>
         )
+      )}
+
+      {temPlano && planosMulti.length > 1 && (
+        <section className="atv-card" style={{ padding: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: "var(--muted,#64748B)", marginRight: 4 }}>
+              {planosMulti.length} planos gerados — revise cada um:
+            </span>
+            {planosMulti.map((p, i) => (
+              <button
+                key={i}
+                className={`atv-btn${i === planoIdx ? " primary" : " ghost"}`}
+                style={{ padding: "6px 10px", fontSize: 12 }}
+                onClick={() => {
+                  if (i === planoIdx) return;
+                  setPlanosMulti((prev) => {
+                    const updated = prev.map((x, k) => (k === planoIdx ? plano : x));
+                    setPlano(updated[i]);
+                    setPlanoIdx(i);
+                    return updated;
+                  });
+                }}
+                title={p.titulo || `Plano ${i + 1}`}
+              >
+                {i + 1}. {(p.titulo || "Sem título").slice(0, 28)}
+                {(p.titulo || "").length > 28 ? "…" : ""}
+              </button>
+            ))}
+            <span style={{ flex: 1 }} />
+            <button
+              className="atv-btn ghost"
+              style={{ padding: "6px 10px", fontSize: 12 }}
+              title="Remover esta versão da lista"
+              onClick={() => {
+                setPlanosMulti((prev) => {
+                  const updated = prev.filter((_, k) => k !== planoIdx);
+                  if (updated.length === 0) {
+                    setPlano(EMPTY);
+                    setPlanoIdx(0);
+                    return [];
+                  }
+                  const newIdx = Math.min(planoIdx, updated.length - 1);
+                  setPlano(updated[newIdx]);
+                  setPlanoIdx(newIdx);
+                  return updated;
+                });
+              }}
+            >
+              <X size={12} /> Descartar esta versão
+            </button>
+          </div>
+        </section>
       )}
 
       {temPlano && (
