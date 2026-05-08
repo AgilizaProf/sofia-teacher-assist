@@ -10,6 +10,7 @@ import { CID_OPTIONS } from "@/lib/cidsBR";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
+import { SofiaAdaptacaoCard } from "@/components/sofia/SofiaAdaptacaoCard";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { Header as AppHeader } from "@/components/Header";
@@ -666,6 +667,10 @@ export function Dashboard() {
               <SofiaFocoCard showEmptyFallback />
             </div>
           )}
+
+          <div style={{ marginBottom: 18 }}>
+            <SofiaAdaptacaoCard showEmptyFallback />
+          </div>
 
           <div
             className="stats"
