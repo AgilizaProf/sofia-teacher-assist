@@ -27,6 +27,8 @@ serve(async (req) => {
       incluirPCD = true,
       regenField = "" as string,
       planoAtual = null as Record<string, unknown> | null,
+      etapa = "" as string, // "opcoes" para sugerir 4-5 opções de aula
+      opcoesSelecionadas = [] as Array<{ titulo?: string; resumo?: string; abordagem?: string }>,
     } = body || {};
 
     const KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -106,9 +108,33 @@ serve(async (req) => {
             + `Devolva o plano completo, mas só esse campo deve mudar; `
             + `os demais campos devem voltar IDÊNTICOS ao plano atual.`,
         ].join("\n")
+      : etapa === "opcoes"
+      ? [
+          baseContext,
+          ``,
+          `Sugira 5 OPÇÕES DE AULA distintas para este contexto. `
+            + `Cada opção deve ter abordagem pedagógica diferente `
+            + `(ex.: prática experimental, jogo, leitura colaborativa, `
+            + `produção criativa, investigação, debate). `
+            + `Não gere o plano completo — apenas título curto, resumo `
+            + `(1-2 frases) e abordagem (1 palavra/expressão).`,
+        ].join("\n")
       : [
       baseContext,
       ``,
+      Array.isArray(opcoesSelecionadas) && opcoesSelecionadas.length > 0
+        ? `A professora escolheu ${opcoesSelecionadas.length} opção(ões) de aula `
+          + `para combinar em um único plano integrado:\n`
+          + opcoesSelecionadas
+              .map((o, i) =>
+                `${i + 1}. ${o?.titulo || "Opção"} — ${o?.resumo || ""}`
+                + (o?.abordagem ? ` (abordagem: ${o.abordagem})` : ""),
+              )
+              .join("\n")
+          + `\nIntegre as abordagens selecionadas em UM plano coeso, `
+          + `respeitando a duração total. Se houver mais de uma, `
+          + `articule-as como momentos da mesma aula.\n`
+        : ``,
       `Gere uma atividade completa. Materiais devem refletir a descrição. ` +
         `Sugira 4 a 5 variações alinhadas ao mesmo objetivo. ` +
         (incluirPCD
@@ -116,7 +142,7 @@ serve(async (req) => {
           : `NÃO inclua adaptações PCD (devolva array vazio em "adaptacoes").`),
     ].join("\n");
 
-    const tool = {
+    const toolPlano = {
       type: "function",
       function: {
         name: "criar_plano_atividade",
@@ -186,6 +212,38 @@ serve(async (req) => {
       },
     };
 
+    const toolOpcoes = {
+      type: "function",
+      function: {
+        name: "sugerir_opcoes_aula",
+        description: "Retorna 4 a 5 opções distintas de aula para o tema.",
+        parameters: {
+          type: "object",
+          properties: {
+            opcoes: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  titulo: { type: "string" },
+                  resumo: { type: "string" },
+                  abordagem: { type: "string" },
+                },
+                required: ["titulo", "resumo", "abordagem"],
+                additionalProperties: false,
+              },
+            },
+          },
+          required: ["opcoes"],
+          additionalProperties: false,
+        },
+      },
+    };
+
+    const useOpcoes = etapa === "opcoes";
+    const tool = useOpcoes ? toolOpcoes : toolPlano;
+    const toolName = useOpcoes ? "sugerir_opcoes_aula" : "criar_plano_atividade";
+
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -199,7 +257,7 @@ serve(async (req) => {
           { role: "user", content: userPrompt },
         ],
         tools: [tool],
-        tool_choice: { type: "function", function: { name: "criar_plano_atividade" } },
+        tool_choice: { type: "function", function: { name: toolName } },
       }),
     });
 
@@ -233,17 +291,23 @@ serve(async (req) => {
     const data = await resp.json();
     const call = data?.choices?.[0]?.message?.tool_calls?.[0];
     const rawArgs = call?.function?.arguments;
-    const plano =
+    const parsed =
       typeof rawArgs === "string" ? JSON.parse(rawArgs) : rawArgs ?? null;
 
-    if (!plano) {
+    if (!parsed) {
       return new Response(
         JSON.stringify({ error: "Sofia não conseguiu estruturar a resposta." }),
         { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
-    return new Response(JSON.stringify({ plano }), {
+    if (useOpcoes) {
+      return new Response(JSON.stringify({ opcoes: parsed.opcoes ?? [] }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ plano: parsed }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
