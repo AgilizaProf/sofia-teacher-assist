@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
-  Check, Pencil, Lightbulb, AlertTriangle,
+  Check, Pencil, Lightbulb, AlertTriangle, Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -75,6 +75,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [tema, setTema] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [erro, setErro] = useState<string>("");
+  const [missing, setMissing] = useState<string[]>([]);
+  const [salvo, setSalvo] = useState(false);
 
   // Quando troca de turma, sincroniza ano escolar.
   useEffect(() => {
@@ -146,6 +148,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const limpar = () => {
     setPlano(EMPTY);
     setErro("");
+    setMissing([]);
+    setSalvo(false);
   };
 
   const setField = <K extends keyof PlanoAtividade>(k: K, v: PlanoAtividade[K]) =>
@@ -197,6 +201,50 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const temPlano = !!plano.titulo;
 
+  const validar = (): string[] => {
+    const faltam: string[] = [];
+    if (!plano.titulo.trim()) faltam.push("titulo");
+    if (!plano.objetivo.trim()) faltam.push("objetivo");
+    if (
+      !plano.abertura.trim() &&
+      !plano.desenvolvimento.trim() &&
+      !plano.fechamento.trim()
+    ) {
+      faltam.push("descricao");
+    }
+    if (plano.habilidades.length === 0) faltam.push("habilidades");
+    return faltam;
+  };
+
+  const salvar = () => {
+    const faltam = validar();
+    setMissing(faltam);
+    if (faltam.length > 0) {
+      setSalvo(false);
+      return;
+    }
+    logActivity({
+      type: "planejamento",
+      description:
+        modo === "pcd"
+          ? `Planejamento PCD salvo: ${plano.titulo}`
+          : `Planejamento salvo: ${plano.titulo}`,
+      detail: plano.meta
+        ? `${plano.meta.ano} · ${plano.meta.disciplina}`
+        : undefined,
+    });
+    setSalvo(true);
+    setTimeout(() => setSalvo(false), 2000);
+  };
+
+  // Limpa marcadores de erro automaticamente quando o usuário corrige.
+  useEffect(() => {
+    if (missing.length === 0) return;
+    const ainda = validar();
+    if (ainda.length !== missing.length) setMissing(ainda);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plano.titulo, plano.objetivo, plano.abertura, plano.desenvolvimento, plano.fechamento, plano.habilidades.length]);
+
   return (
     <div className="atv-root">
       <style>{css}</style>
@@ -245,6 +293,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                 <X size={14} /> Limpar
               </button>
             )}
+            {temPlano && (
+              <button className="atv-btn" onClick={salvar}>
+                <Save size={14} /> {salvo ? "Salvo!" : "Salvar planejamento"}
+              </button>
+            )}
             <button className="atv-btn primary" onClick={gerar} disabled={generating}>
               {temPlano ? <RefreshCw size={14} /> : <Sparkles size={14} />}
               {generating ? "Sofia gerando…" : temPlano ? "Regenerar" : "Gerar com Sofia"}
@@ -265,6 +318,22 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             <AlertTriangle size={14} /> {erro}
           </div>
         )}
+
+        {missing.length > 0 && (
+          <div className="atv-error">
+            <AlertTriangle size={14} />
+            <span>
+              Antes de salvar, preencha:{" "}
+              {missing.map((m, i) => (
+                <span key={m}>
+                  <strong>{LABELS[m]}</strong>
+                  {i < missing.length - 1 ? ", " : ""}
+                </span>
+              ))}
+              .
+            </span>
+          </div>
+        )}
       </div>
 
       {!temPlano && !generating && (
@@ -283,6 +352,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           plano={plano}
           modo={modo}
           alunosPCDCount={alunosPCDDaTurma.length}
+          missing={missing}
           onChange={setField}
           onToggleMat={toggleMat}
           onRemoveMat={removeMat}
@@ -297,12 +367,20 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   );
 }
 
+const LABELS: Record<string, string> = {
+  titulo: "título",
+  objetivo: "objetivo",
+  descricao: "descrição (abertura, desenvolvimento ou fechamento)",
+  habilidades: "ao menos uma habilidade BNCC",
+};
+
 /* ─────────────────────────── Body ─────────────────────────── */
 
 function PlanoBody(props: {
   plano: PlanoAtividade;
   modo: "regular" | "pcd";
   alunosPCDCount: number;
+  missing: string[];
   onChange: <K extends keyof PlanoAtividade>(k: K, v: PlanoAtividade[K]) => void;
   onToggleMat: (i: number) => void;
   onRemoveMat: (i: number) => void;
@@ -312,7 +390,8 @@ function PlanoBody(props: {
   onAddHab: (codigo: string, descricao: string) => void;
   onUsarSugestao: (s: Sugestao) => void;
 }) {
-  const { plano, modo, alunosPCDCount } = props;
+  const { plano, modo, alunosPCDCount, missing } = props;
+  const has = (k: string) => missing.includes(k);
   const [adaptOpen, setAdaptOpen] = useState(modo === "pcd");
   const [novoMat, setNovoMat] = useState("");
   const [novaHabCod, setNovaHabCod] = useState("");
@@ -322,7 +401,7 @@ function PlanoBody(props: {
   return (
     <div className="atv-grid">
       {/* 1. Título */}
-      <section className="atv-card title">
+      <section className={`atv-card title${has("titulo") ? " atv-invalid" : ""}`}>
         <InlineText
           value={plano.titulo}
           onChange={(v) => props.onChange("titulo", v)}
@@ -338,7 +417,7 @@ function PlanoBody(props: {
       </section>
 
       {/* 2. Objetivo */}
-      <section className="atv-card">
+      <section className={`atv-card${has("objetivo") ? " atv-invalid" : ""}`}>
         <h3>① Objetivo</h3>
         <InlineText
           value={plano.objetivo}
@@ -350,7 +429,7 @@ function PlanoBody(props: {
       </section>
 
       {/* 3. Descrição */}
-      <section className="atv-card">
+      <section className={`atv-card${has("descricao") ? " atv-invalid" : ""}`}>
         <h3>② Descrição da atividade</h3>
         <Block label="Abertura" value={plano.abertura} onChange={(v) => props.onChange("abertura", v)} />
         <Block label="Desenvolvimento" value={plano.desenvolvimento} onChange={(v) => props.onChange("desenvolvimento", v)} />
@@ -358,7 +437,7 @@ function PlanoBody(props: {
       </section>
 
       {/* 4. Habilidades BNCC */}
-      <section className="atv-card">
+      <section className={`atv-card${has("habilidades") ? " atv-invalid" : ""}`}>
         <h3>③ Habilidades BNCC</h3>
         <div className="atv-chips">
           {plano.habilidades.map((h, i) => (
@@ -594,6 +673,7 @@ const css = `
 .atv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 @media(max-width:980px){.atv-grid{grid-template-columns:1fr;}}
 .atv-card{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);}
+.atv-card.atv-invalid{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.12);}
 .atv-card.title{grid-column:1/-1;}
 .atv-card.adapt{background:linear-gradient(180deg,#FAF5FF,#FFFFFF);border-color:#E9D5FF;grid-column:1/-1;}
 .atv-card h3{font-size:13.5px;font-weight:700;color:var(--ink,#0F172A);margin:0 0 10px;display:flex;align-items:center;gap:6px;}
