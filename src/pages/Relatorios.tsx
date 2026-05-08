@@ -408,7 +408,12 @@ export function Relatorios() {
   const ctx = useSofiaContext();
   const sofia = useSofia();
   const navigate = useNavigate();
-  const routeSearch = useSearch({ from: "/relatorios" }) as { tab?: "all" | "todo" | "draft" | "review" | "done" };
+  const routeSearch = useSearch({ from: "/relatorios" }) as {
+    tab?: "all" | "todo" | "draft" | "review" | "done";
+    turma?: string;
+    pcd?: "todos" | "apenas";
+    focus?: "turmas" | "alunos" | "pareceres" | "horas";
+  };
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>(routeSearch.tab ?? "all");
   // Sincroniza com mudanças no search param (ex.: deep-link).
   useEffect(() => {
@@ -419,9 +424,28 @@ export function Relatorios() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [preview, setPreview] = useState<Parecer | null>(null);
 
-  const [filterTurma, setFilterTurma] = useState("Todas");
+  const [filterTurma, setFilterTurma] = useState(routeSearch.turma ?? "Todas");
   const [filterBimestre, setFilterBimestre] = useState("1º");
-  const [filterPcd, setFilterPcd] = useState("Todos");
+  const [filterPcd, setFilterPcd] = useState(routeSearch.pcd === "apenas" ? "Apenas PCD" : "Todos");
+
+  // Sincroniza filtros com mudanças nos search params (deep-link vindo do Dashboard).
+  useEffect(() => {
+    if (routeSearch.turma && routeSearch.turma !== filterTurma) setFilterTurma(routeSearch.turma);
+    if (routeSearch.pcd === "apenas" && filterPcd !== "Apenas PCD") setFilterPcd("Apenas PCD");
+    if (routeSearch.pcd === "todos" && filterPcd !== "Todos") setFilterPcd("Todos");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeSearch.turma, routeSearch.pcd]);
+
+  // Rolagem suave para a seção apropriada quando focus= é informado.
+  useEffect(() => {
+    if (!routeSearch.focus) return;
+    const targetId =
+      routeSearch.focus === "horas" ? "rel-kpi-horas" :
+      routeSearch.focus === "pareceres" ? "rel-kpi-pareceres" :
+      "rel-filters-anchor";
+    const el = document.getElementById(targetId);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [routeSearch.focus]);
 
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
@@ -656,12 +680,13 @@ export function Relatorios() {
               <div className="rel-kpi-num">{rascunhos}<small> pareceres</small></div>
               <div className="rel-kpi-foot">{rascunhos > 0 ? "aguardando revisão" : "—"}</div>
             </div>
-            <div className="rel-kpi">
+            <div className="rel-kpi" id="rel-kpi-pareceres">
               <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
             <div
+              id="rel-kpi-horas"
               className={"rel-kpi rel-kpi-dark kpi-tip-host" + (bump ? " is-bump" : "")}
               tabIndex={0}
               aria-label="Como calculamos o tempo economizado"
@@ -710,7 +735,7 @@ export function Relatorios() {
           </div>
 
           {/* Filters */}
-          <div className="rel-filters">
+          <div className="rel-filters" id="rel-filters-anchor">
             <div className="rel-tabs" role="tablist">
               {TABS.map((t) => (
                 <button key={t.key} role="tab" aria-selected={tab === t.key}

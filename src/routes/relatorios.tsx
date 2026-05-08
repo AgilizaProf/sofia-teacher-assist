@@ -7,7 +7,14 @@ export const Route = createFileRoute("/relatorios")({
     const tab = tabIn && ["all", "todo", "draft", "review", "done"].includes(tabIn)
       ? (tabIn as "all" | "todo" | "draft" | "review" | "done")
       : undefined;
-    return { tab };
+    const turma = typeof s.turma === "string" && s.turma.length > 0 ? s.turma : undefined;
+    const pcdIn = typeof s.pcd === "string" ? s.pcd : undefined;
+    const pcd = pcdIn === "todos" || pcdIn === "apenas" ? pcdIn : undefined;
+    const focusIn = typeof s.focus === "string" ? s.focus : undefined;
+    const focus = focusIn === "turmas" || focusIn === "alunos" || focusIn === "pareceres" || focusIn === "horas"
+      ? focusIn
+      : undefined;
+    return { tab, turma, pcd, focus };
   },
   head: () => ({
     meta: [
