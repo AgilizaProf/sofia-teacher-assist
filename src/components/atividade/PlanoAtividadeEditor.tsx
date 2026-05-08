@@ -1404,6 +1404,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             ))}
             <span style={{ flex: 1 }} />
             <button
+              className="atv-btn primary"
+              style={{ padding: "6px 10px", fontSize: 12 }}
+              onClick={abrirSalvarTodos}
+              title="Salvar todos os planos no histórico e agendar no calendário"
+            >
+              <Save size={12} /> Salvar todos ({planosMulti.length})
+            </button>
+            <button
               className="atv-btn ghost"
               style={{ padding: "6px 10px", fontSize: 12 }}
               title="Remover esta versão da lista"
