@@ -872,7 +872,7 @@ export function Planejamento() {
     aluno?: string;
   };
   const navigate = useNavigate({ from: "/planejamento" });
-  const [m, setM] = useState<MKey>(search.m || "m5");
+  const [m, setM] = useState<MKey>(search.m || "atv");
   const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
   const [dropDay, setDropDay] = useState<DayKey | null>(null);
   const dragCard = useRef<{ from: DayKey; id: string } | null>(null);
@@ -2853,6 +2853,14 @@ export function Planejamento() {
                   <span className="it"><span className="sw" style={{ background: "#FF7A45" }} /> Sugestões Sofia</span>
                 </div>
               </>
+            )}
+
+            {m === "atv" && (
+              <PlanoAtividadeEditor modo="regular" />
+            )}
+
+            {m === "pcd" && (
+              <PlanoAtividadeEditor modo="pcd" />
             )}
 
             {m === "m6" && (
