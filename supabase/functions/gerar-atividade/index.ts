@@ -29,6 +29,7 @@ serve(async (req) => {
       planoAtual = null as Record<string, unknown> | null,
       etapa = "" as string, // "opcoes" para sugerir 4-5 opções de aula
       opcoesSelecionadas = [] as Array<{ titulo?: string; resumo?: string; abordagem?: string }>,
+      disciplinasInter = [] as string[],
     } = body || {};
 
     const KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -71,6 +72,11 @@ serve(async (req) => {
       `Ano escolar: ${anoEscolar || "não informado"}`,
       `Turma: ${turma || "não informada"}`,
       `Disciplina: ${disciplina || "livre escolha do(a) docente"}`,
+      Array.isArray(disciplinasInter) && disciplinasInter.length > 0
+        ? `Disciplinas a integrar (atividade INTERDISCIPLINAR): ${disciplinasInter.join(", ")}. `
+          + `Articule essas áreas em UMA atividade coesa, deixando explícita a contribuição de cada disciplina. `
+          + `Inclua habilidades BNCC de TODAS as disciplinas listadas (pelo menos uma por disciplina).`
+        : ``,
       `Tema: ${tema || "livre"}`,
       `Duração: ${duracao || "45 min"}`,
       `Tipo de atividade: ${tipoAtividade || "Livre"}`,
