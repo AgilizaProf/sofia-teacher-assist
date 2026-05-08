@@ -671,15 +671,41 @@ export function Dashboard() {
             className="stats"
             data-sofia-section="stats"
           >
-            <button ref={classesRef as unknown as React.Ref<HTMLButtonElement>} className={`stat school-clickable${highlight === "classes" ? " sofia-highlight" : ""}`} type="button" onClick={() => setClassOpen(true)} aria-label="Adicionar turma" style={{ textAlign: "left" }}>
+            <button
+              ref={classesRef as unknown as React.Ref<HTMLButtonElement>}
+              className={`stat school-clickable${highlight === "classes" ? " sofia-highlight" : ""}`}
+              type="button"
+              onClick={() => {
+                if (totalClasses === 0) { setClassOpen(true); return; }
+                const turma = classes[0]?.name;
+                navigate({ to: "/relatorios", search: { tab: "all", focus: "turmas", ...(turma ? { turma } : {}) } });
+              }}
+              aria-label="Ver pareceres por turma"
+              style={{ textAlign: "left" }}
+            >
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
               <div className="stat-body"><div className="stat-value">{totalClasses} {classes.length > 0 && <span className="stat-value-trend">+{classes.length}</span>}</div><div className="stat-label">Turmas ativas</div></div>
             </button>
-            <button className="stat school-clickable" type="button" onClick={() => setStudentOpen(true)} aria-label="Adicionar aluno" style={{ textAlign: "left" }}>
+            <button
+              className="stat school-clickable"
+              type="button"
+              onClick={() => {
+                if (totalStudents === 0) { setStudentOpen(true); return; }
+                navigate({ to: "/relatorios", search: { tab: "all", focus: "alunos", pcd: "todos" } });
+              }}
+              aria-label="Ver todos os alunos em Relatórios"
+              style={{ textAlign: "left" }}
+            >
               <div className="stat-icon s3"><Svg c={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} /></div>
               <div className="stat-body"><div className="stat-value">{totalStudents} {students.length > 0 && <span className="stat-value-trend">+{students.length}</span>}</div><div className="stat-label">Alunos</div></div>
             </button>
-            <button className="stat school-clickable" type="button" onClick={() => navigate({ to: "/relatorios", search: { tab: "todo" } })} aria-label="Ver pareceres pendentes" style={{ textAlign: "left" }}>
+            <button
+              className="stat school-clickable"
+              type="button"
+              onClick={() => navigate({ to: "/relatorios", search: { tab: "todo", focus: "pareceres" } })}
+              aria-label="Ver pareceres pendentes"
+              style={{ textAlign: "left" }}
+            >
               <div className="stat-icon s1"><Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} /></div>
               <div className="stat-body">
                 <div className="stat-value">
@@ -689,13 +715,19 @@ export function Dashboard() {
                 <div className="stat-label">Pareceres do bimestre</div>
               </div>
             </button>
-            <div className="stat">
+            <button
+              className="stat school-clickable"
+              type="button"
+              onClick={() => navigate({ to: "/relatorios", search: { tab: "done", focus: "horas" } })}
+              aria-label="Ver tempo economizado em Relatórios"
+              style={{ textAlign: "left" }}
+            >
               <div className="stat-icon s4"><Svg c={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} /></div>
               <div className="stat-body">
                 <div className="stat-value">{h}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>h</span>{m > 0 && <>{m}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>min</span></>}</div>
                 <div className="stat-label">Horas economizadas</div>
               </div>
-            </div>
+            </button>
           </div>
 
           <div className="grid-2">
