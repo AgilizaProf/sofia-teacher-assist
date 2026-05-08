@@ -596,45 +596,204 @@ const BNCC_BY_ETAPA: Record<Etapa, { label: string; anos: AnoBNCC[] }> = {
 // Usado pela Sofia ao gerar a semana e pelo "+ Atividade" para que toda
 // atividade nasça já elaborada e revisável pelo professor.
 function enrichM1Card(card: M1Card, tema: string): M1Card {
-  if (card.objetivo && card.passos && card.materiais) return card;
+  if (
+    card.objetivo && card.passos && card.materiais &&
+    card.perguntasChave && card.conceitos && card.extensoes && card.licaoCasa
+  ) return card;
   const t = (tema || "tema do dia").trim() || "tema do dia";
   const v = card.v;
   const tag = (card.tag || "").toLowerCase();
   const foco = (card.foco || "").toLowerCase();
+  const total = Math.max(20, card.minutos);
+  const tAcolhida = Math.max(5, Math.round(total * 0.1));
+  const tMobiliz = Math.max(5, Math.round(total * 0.12));
+  const tExplor = Math.max(10, Math.round(total * 0.32));
+  const tSistem = Math.max(8, Math.round(total * 0.22));
+  const tProd   = Math.max(8, Math.round(total * 0.18));
+  const tFech   = Math.max(5, total - (tAcolhida + tMobiliz + tExplor + tSistem + tProd));
   // Banco de materiais por variante
   const matsBase: Record<Variant, string[]> = {
-    port: ["Quadro e giz/canetão", "Cadernos e lápis", "Texto impresso ou livro relacionado a " + t, "Cartolinas para registro coletivo"],
-    mat: ["Material dourado ou tampinhas (contagem)", "Folha quadriculada", "Régua e lápis colorido", "Cartões com problemas sobre " + t],
-    ci: ["Lupa, recipientes ou objetos do cotidiano", "Caderno de campo", "Imagens/vídeo curto sobre " + t, "Roteiro de observação impresso"],
-    esc: ["Roda de cadeiras / espaço aberto", "Música ou imagens sobre " + t, "Cartolinas e canetinhas", "Combinados visuais"],
-    aval: ["Folha de avaliação impressa", "Lápis e borracha", "Cronômetro", "Rubrica de critérios sobre " + t],
+    port: [
+      "Quadro branco / lousa e canetões coloridos",
+      "Cadernos, lápis e borracha (1 por estudante)",
+      `Texto impresso ou livro paradidático relacionado a "${t}" (1 cópia para cada dupla)`,
+      `Tarjetas com palavras-chave sobre "${t}"`,
+      "Cartolinas A3 e canetinhas para o registro coletivo",
+      "Cronômetro ou relógio visível para a turma",
+    ],
+    mat: [
+      "Material dourado, tampinhas ou contadores (10 por dupla)",
+      "Folha quadriculada (2 por estudante)",
+      "Régua, lápis preto e lápis de cor",
+      `Cartões com 6 problemas contextualizados sobre "${t}" (níveis crescentes)`,
+      "Quadro branco para registro coletivo das estratégias",
+      "Calculadora (apenas para conferência ao final)",
+    ],
+    ci: [
+      "Lupa, recipientes plásticos e objetos do cotidiano",
+      "Caderno de campo / folha de observação impressa",
+      `Imagens, infográfico ou vídeo curto (até 3 min) sobre "${t}"`,
+      "Roteiro de investigação com 4 perguntas-guia",
+      "Cartolinas para registro de hipóteses e descobertas",
+      "Etiquetas adesivas para classificação",
+    ],
+    esc: [
+      "Cadeiras dispostas em roda / espaço aberto",
+      `Música, fotografias ou objetos disparadores sobre "${t}"`,
+      "Cartolinas, canetinhas e revistas para colagem",
+      "Tarjetas de sentimentos / valores",
+      "Combinados visuais já fixados na sala",
+      "Caixinha ou painel para registro coletivo",
+    ],
+    aval: [
+      "Folha de avaliação impressa (1 por estudante)",
+      "Lápis preto, borracha e caneta azul",
+      "Cronômetro ou relógio visível",
+      `Rubrica de critérios sobre "${t}" exposta no quadro`,
+      "Folha de autoavaliação com 3 perguntas",
+      "Envelopes para entrega individual",
+    ],
   };
   const objetivos: Record<Variant, string> = {
-    port: `Ampliar a leitura, escrita e oralidade dos estudantes a partir de "${t}", trabalhando ${tag || "linguagem"} de forma significativa.`,
-    mat: `Desenvolver o raciocínio lógico-matemático aplicado a "${t}", consolidando ${tag || "operações e estratégias"} com situações reais.`,
-    ci: `Estimular a investigação científica e o pensamento crítico sobre "${t}", articulando observação, hipótese e registro.`,
-    esc: `Fortalecer competências socioemocionais e culturais a partir de "${t}", promovendo ${tag || "convivência, escuta e identidade"}.`,
-    aval: `Verificar de forma processual o que foi aprendido sobre "${t}", articulando autoavaliação e registro coerente com ${card.bncc}.`,
+    port: `Ampliar a leitura, a escrita e a oralidade dos estudantes a partir de "${t}", desenvolvendo ${tag || "linguagem"} com sentido. Espera-se que, ao final, cada estudante consiga (a) ler/interpretar um texto sobre o tema, (b) registrar uma produção escrita coerente e (c) socializar suas ideias com a turma.`,
+    mat: `Desenvolver o raciocínio lógico-matemático aplicado a "${t}", consolidando ${tag || "operações e estratégias"} em situações reais. Espera-se que, ao final, cada estudante consiga (a) representar o problema com material concreto/desenho, (b) explicar pelo menos uma estratégia de resolução e (c) verificar se o resultado faz sentido.`,
+    ci: `Estimular a investigação científica e o pensamento crítico sobre "${t}", articulando observação, hipótese, registro e comunicação. Espera-se que, ao final, cada estudante consiga (a) formular ao menos uma hipótese, (b) registrar dados de forma organizada e (c) discutir conclusões com base em evidências.`,
+    esc: `Fortalecer competências socioemocionais e culturais a partir de "${t}", promovendo ${tag || "convivência, escuta e identidade"}. Espera-se que, ao final, cada estudante consiga (a) reconhecer o próprio sentir, (b) escutar o colega com empatia e (c) propor uma ação coletiva relacionada ao tema.`,
+    aval: `Verificar, de forma processual e formativa, o que foi aprendido sobre "${t}", articulando autoavaliação, registro e devolutiva coerentes com ${card.bncc}. Espera-se que cada estudante consiga (a) demonstrar o aprendido, (b) identificar uma dificuldade e (c) propor um próximo passo.`,
   };
-  const passosBase: string[] = [
-    `1) Acolhida (5 min) — apresente "${t}" com uma pergunta provocadora ou imagem disparadora; registre as primeiras ideias da turma.`,
-    `2) Exploração (${Math.max(10, Math.round(card.minutos * 0.4))} min) — proponha a atividade central de ${tag || foco || "investigação"}: ${card.title}. Trabalhe em duplas ou pequenos grupos.`,
-    `3) Sistematização (${Math.max(8, Math.round(card.minutos * 0.3))} min) — registre as descobertas no caderno/quadro; conecte com a BNCC ${card.bncc}.`,
-    `4) Fechamento (5 min) — peça que cada estudante diga uma palavra que resume o que aprendeu sobre "${t}".`,
-  ];
+  // Passos detalhados (6 etapas) por variante.
+  const passosByV: Record<Variant, string[]> = {
+    port: [
+      `1) Acolhida e aquecimento (${tAcolhida} min) — receba a turma com uma pergunta sobre "${t}". Registre 3 a 5 palavras que aparecerem na conversa em uma "nuvem de palavras" no quadro.`,
+      `2) Mobilização (${tMobiliz} min) — apresente uma imagem, áudio ou trecho curto de texto sobre "${t}". Pergunte: "O que vocês perceberam? Que palavras chamam atenção?"`,
+      `3) Leitura e exploração (${tExplor} min) — distribua o texto/livro sobre "${t}" para duplas. Peça que sublinhem palavras desconhecidas e marquem 1 trecho que mais gostaram. Circule, escutando.`,
+      `4) Sistematização (${tSistem} min) — em roda, retome as palavras sublinhadas. Construa coletivamente um mapa de ideias no quadro conectando "${t}" às descobertas. Articule explicitamente com ${card.bncc}.`,
+      `5) Produção (${tProd} min) — proponha que cada estudante (ou dupla) produza uma frase ou pequeno parágrafo sobre "${t}", reutilizando ao menos 2 palavras do mapa coletivo.`,
+      `6) Fechamento e devolutiva (${tFech} min) — 3 a 4 estudantes leem suas produções. Reforce o que aprenderam e antecipe a próxima aula.`,
+    ],
+    mat: [
+      `1) Acolhida (${tAcolhida} min) — apresente um problema-disparador real envolvendo "${t}" (ex.: situação da escola, do bairro). Pergunte: "O que esse problema está pedindo?"`,
+      `2) Mobilização (${tMobiliz} min) — registre no quadro o que se sabe e o que falta descobrir. Estime uma resposta antes de calcular.`,
+      `3) Exploração com material concreto (${tExplor} min) — em duplas, os estudantes resolvem com material dourado/tampinhas. Cada dupla representa o problema de duas formas diferentes.`,
+      `4) Sistematização (${tSistem} min) — duas duplas socializam estratégias no quadro. Compare semelhanças e diferenças. Formalize o registro matemático coerente com ${card.bncc}.`,
+      `5) Prática orientada (${tProd} min) — distribua 2 problemas similares em níveis diferentes. Quem terminar mais rápido apoia um colega.`,
+      `6) Fechamento (${tFech} min) — autoavaliação rápida: "🟢 entendi / 🟡 tenho dúvida / 🔴 preciso revisar".`,
+    ],
+    ci: [
+      `1) Acolhida (${tAcolhida} min) — exiba imagem/vídeo curto sobre "${t}". Pergunte: "O que vocês observam? O que isso te lembra?"`,
+      `2) Levantamento de hipóteses (${tMobiliz} min) — registre no quadro 3 a 5 hipóteses da turma sobre "${t}". Numere cada uma para retomar depois.`,
+      `3) Investigação prática (${tExplor} min) — em pequenos grupos, distribua o roteiro com 4 perguntas-guia e os materiais. Os estudantes observam, manipulam e registram no caderno de campo.`,
+      `4) Socialização (${tSistem} min) — cada grupo apresenta 1 descoberta. Verifique quais hipóteses iniciais se confirmaram. Conecte com ${card.bncc}.`,
+      `5) Síntese coletiva (${tProd} min) — construa coletivamente um esquema/cartaz com a explicação do fenômeno e o vocabulário científico aprendido.`,
+      `6) Fechamento (${tFech} min) — peça que cada estudante escreva uma frase respondendo: "Hoje eu descobri que...".`,
+    ],
+    esc: [
+      `1) Acolhida em roda (${tAcolhida} min) — saudação combinada e check-in com tarjetas de humor sobre o que sentem em relação a "${t}".`,
+      `2) Mobilização (${tMobiliz} min) — disparador (música, foto, história curta) ligado a "${t}". Pergunte: "Onde isso aparece na sua vida?"`,
+      `3) Vivência central (${tExplor} min) — proponha a dinâmica/jogo cooperativo descrito em "${card.title}". Combine regras de escuta e respeito antes de começar.`,
+      `4) Roda de partilha (${tSistem} min) — cada estudante diz como se sentiu. Registre coletivamente padrões e aprendizados, articulando com ${card.bncc}.`,
+      `5) Compromisso coletivo (${tProd} min) — turma constrói 1 combinado ou ação prática que leva o aprendizado para fora da sala.`,
+      `6) Fechamento (${tFech} min) — gesto coletivo de encerramento (palmas, abraço de grupo, frase combinada).`,
+    ],
+    aval: [
+      `1) Acolhida (${tAcolhida} min) — relembre os critérios de avaliação expostos no quadro. Esclareça dúvidas antes de iniciar.`,
+      `2) Orientações (${tMobiliz} min) — leia coletivamente o enunciado da avaliação sobre "${t}" e responda perguntas iniciais.`,
+      `3) Realização individual (${tExplor} min) — estudantes resolvem em silêncio. Circule observando estratégias.`,
+      `4) Conferência guiada (${tSistem} min) — após o tempo, retome a primeira questão coletivamente para reduzir ansiedade.`,
+      `5) Autoavaliação (${tProd} min) — cada estudante preenche a folha de autoavaliação (3 perguntas).`,
+      `6) Devolutiva imediata (${tFech} min) — combine o retorno individual e antecipe o próximo passo da turma.`,
+    ],
+  };
+  const perguntasByV: Record<Variant, string[]> = {
+    port: [
+      `O que "${t}" significa para você?`,
+      `Que palavras novas aprendemos hoje sobre "${t}"?`,
+      `Como você explicaria "${t}" para alguém de outra turma?`,
+    ],
+    mat: [
+      `Que informações esse problema sobre "${t}" nos dá?`,
+      `Como podemos representar isso com material concreto?`,
+      `Existe outra forma de chegar ao mesmo resultado?`,
+    ],
+    ci: [
+      `O que já sabemos sobre "${t}"?`,
+      `Que hipóteses podemos testar?`,
+      `O que as observações nos mostraram?`,
+    ],
+    esc: [
+      `Como você se sente em relação a "${t}"?`,
+      `O que mudaria na convivência da turma se aplicássemos isso?`,
+      `Que ação concreta podemos combinar a partir disso?`,
+    ],
+    aval: [
+      `O que ficou mais claro sobre "${t}"?`,
+      `O que ainda preciso revisar?`,
+      `Qual é meu próximo passo de estudo?`,
+    ],
+  };
+  const conceitosByV: Record<Variant, string[]> = {
+    port: [`Vocabulário de "${t}"`, "Leitura compartilhada", "Produção escrita autoral", "Argumentação oral"],
+    mat: [`Modelagem de "${t}"`, "Estratégias múltiplas", "Estimativa", "Verificação do resultado"],
+    ci: [`Observação científica de "${t}"`, "Hipótese e evidência", "Registro estruturado", "Argumentação com dados"],
+    esc: [`Identidade ligada a "${t}"`, "Empatia ativa", "Escuta sensível", "Ação coletiva"],
+    aval: [`Critérios sobre "${t}"`, "Autoavaliação", "Devolutiva formativa", "Plano de retomada"],
+  };
+  const extensoesByV: Record<Variant, string[]> = {
+    port: [
+      `Criar um pequeno livro coletivo da turma sobre "${t}".`,
+      `Gravar áudio/vídeo de um aluno explicando "${t}" para a família.`,
+      `Pesquisar uma notícia ou poema relacionado a "${t}".`,
+    ],
+    mat: [
+      `Propor que cada estudante invente um problema sobre "${t}" para um colega resolver.`,
+      `Levar a investigação para casa: medir/contar algo da rotina relacionado a "${t}".`,
+      `Criar um cartaz com as estratégias usadas em sala.`,
+    ],
+    ci: [
+      `Realizar uma segunda observação em outro contexto (casa, pátio).`,
+      `Construir um pequeno experimento com material reciclado sobre "${t}".`,
+      `Convidar alguém da comunidade para falar sobre "${t}".`,
+    ],
+    esc: [
+      `Levar o combinado coletivo para a casa e contar para a família.`,
+      `Criar um mural de fotos/desenhos sobre "${t}" durante a semana.`,
+      `Reaplicar a dinâmica em outra turma (apadrinhamento).`,
+    ],
+    aval: [
+      `Plano individual de estudos a partir das dificuldades identificadas.`,
+      `Roda de devolutiva entre pares na próxima aula.`,
+      `Reaplicação de 1 questão-chave após uma semana.`,
+    ],
+  };
+  const licaoByV: Record<Variant, string> = {
+    port: `Ler com a família um pequeno trecho sobre "${t}" e registrar no caderno 3 palavras novas com seus significados.`,
+    mat: `Resolver 2 problemas de "${t}" no caderno, mostrando duas estratégias diferentes para um deles.`,
+    ci: `Observar em casa ou no caminho da escola algo relacionado a "${t}" e registrar com desenho + frase.`,
+    esc: `Conversar em casa sobre "${t}" e trazer 1 ideia/sentimento para compartilhar na próxima roda.`,
+    aval: `Revisar no caderno os pontos marcados como "preciso revisar" e formular 1 dúvida para a próxima aula.`,
+  };
   const avaliacao =
-    `Observação contínua durante a atividade + registro no caderno. Indicadores: participação na ${tag || "atividade"}, clareza ao explicar suas ideias sobre "${t}" e produção final (oral, escrita ou prática) coerente com ${card.bncc}.`;
+    `Avaliação processual e formativa, com 3 frentes:\n` +
+    `• Observação durante a vivência: participação, escuta dos pares e uso do vocabulário ligado a "${t}".\n` +
+    `• Produção registrada no caderno/quadro coletivo, articulada com ${card.bncc}.\n` +
+    `• Autoavaliação rápida (🟢 entendi / 🟡 tenho dúvida / 🔴 preciso revisar) com devolutiva individual nos próximos dias.\n` +
+    `Critérios sugeridos: clareza, coerência com o tema, escuta dos colegas e mobilização do conceito-chave.`;
   const diferenciacao =
-    `Para estudantes com mais facilidade: propor desafio extra ligado a "${t}" (por exemplo, criar uma nova versão ou explicar para um colega). ` +
-    `Para estudantes que precisam de apoio: oferecer pares colaborativos, materiais visuais e roteiro passo a passo. ` +
-    `Para estudantes PCD: reduzir o número de etapas, ampliar o tempo e oferecer modelo concreto antes da produção autoral.`;
+    `↗ Para estudantes que avançam mais rápido: propor papel de "monitor" da dupla, criar uma nova versão da atividade sobre "${t}" ou aprofundar com uma fonte extra.\n` +
+    `→ Para a maior parte da turma: manter o roteiro padrão com pares heterogêneos.\n` +
+    `↘ Para estudantes que precisam de apoio: reduzir o número de etapas, oferecer modelo pronto, trabalhar em dupla com um colega-monitor e usar suporte visual.\n` +
+    `♿ Para estudantes PCD: ampliar o tempo, garantir material concreto/visual, simplificar enunciados, oferecer roteiro passo a passo impresso e validar a compreensão a cada etapa.`;
   return {
     ...card,
     objetivo: card.objetivo ?? objetivos[v],
     materiais: card.materiais ?? matsBase[v],
-    passos: card.passos ?? passosBase,
+    passos: card.passos ?? passosByV[v],
     avaliacao: card.avaliacao ?? avaliacao,
     diferenciacao: card.diferenciacao ?? diferenciacao,
+    perguntasChave: card.perguntasChave ?? perguntasByV[v],
+    conceitos: card.conceitos ?? conceitosByV[v],
+    extensoes: card.extensoes ?? extensoesByV[v],
+    licaoCasa: card.licaoCasa ?? licaoByV[v],
   };
 }
 
