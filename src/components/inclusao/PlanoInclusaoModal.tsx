@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, Sparkles, CheckCircle2, Loader2, Lightbulb, RefreshCw } from "lucide-react";
+import { X, Sparkles, CheckCircle2, Loader2, Lightbulb, RefreshCw, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -188,25 +188,34 @@ function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: stri
   );
 }
 
+type PlanoCore = Omit<PlanoInclusao, "id" | "data" | "alunoId" | "observacoes" | "avaliacao" | "metodologia" | "disciplina" | "tema" | "duracao" | "tipoAtividade">;
+
+type PlanoItem = {
+  disciplina: string;     // disciplina/campo de origem (ou "Interdisciplinar")
+  plano: PlanoCore;
+  metodologia: string;
+  avaliacao: string;
+  observacoes: string;
+  incluir: boolean;
+};
+
 export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSaved }: Props) {
   const [disciplinas, setDisciplinas] = useState<string[]>([]);
   const [tema, setTema] = useState("");
   const [duracao, setDuracao] = useState("45 min");
   const [tipoAtividade, setTipoAtividade] = useState(TIPOS[0]);
-  const [observacoes, setObservacoes] = useState("");
-  const [avaliacao, setAvaliacao] = useState("");
-  const [metodologia, setMetodologia] = useState("");
+  const [modoGeracao, setModoGeracao] = useState<"separado" | "integrado">("separado");
   const [loading, setLoading] = useState(false);
-  const [plano, setPlano] = useState<Omit<PlanoInclusao, "id" | "data" | "alunoId" | "observacoes" | "avaliacao" | "metodologia" | "disciplina" | "tema" | "duracao" | "tipoAtividade"> | null>(null);
+  const [planos, setPlanos] = useState<PlanoItem[]>([]);
+  const [abaAtiva, setAbaAtiva] = useState(0);
 
   useEffect(() => {
     if (open) {
-      setPlano(null);
+      setPlanos([]);
+      setAbaAtiva(0);
       setDisciplinas([]);
       setTema("");
-      setObservacoes("");
-      setAvaliacao("");
-      setMetodologia("");
+      setModoGeracao("separado");
     }
   }, [open, aluno?.id]);
 
@@ -228,38 +237,56 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
     setDisciplinas((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]);
   }
 
+  async function gerarUm(disciplina: string, interdisciplinar = false): Promise<PlanoCore | null> {
+    if (!aluno) return null;
+    const anotacoesCombinadas = [
+      condicaoLabel ? `Condição: ${condicaoLabel}` : "",
+      anamneseResumo ? `Anamnese (resumo):\n${anamneseResumo}` : "Anamnese ainda não preenchida — gere assim mesmo, considerando práticas inclusivas gerais para a condição informada.",
+    ].filter(Boolean).join("\n\n");
+    const { data, error } = await supabase.functions.invoke("gerar-atividade", {
+      body: {
+        modo: "pcd",
+        anoEscolar: aluno.anoEscolar || "",
+        turma: aluno.turma || "",
+        disciplina: interdisciplinar ? "" : disciplina,
+        disciplinasInter: interdisciplinar ? disciplinas : [],
+        tema,
+        duracao,
+        tipoAtividade,
+        incluirPCD: true,
+        alunoFoco: { nome: aluno.name, codigo: condicaoLabel || "PCD", anotacoes: anotacoesCombinadas },
+      },
+    });
+    if (error) throw error;
+    return (data as { plano?: PlanoCore })?.plano ?? null;
+  }
+
   async function gerar() {
-    if (!aluno) return;
+    if (!aluno || disciplinas.length === 0) {
+      toast.error("Selecione ao menos uma disciplina ou campo de experiência.");
+      return;
+    }
     setLoading(true);
     try {
-      const anotacoesCombinadas = [
-        condicaoLabel ? `Condição: ${condicaoLabel}` : "",
-        anamneseResumo ? `Anamnese (resumo):\n${anamneseResumo}` : "Anamnese ainda não preenchida — gere assim mesmo, considerando práticas inclusivas gerais para a condição informada.",
-      ].filter(Boolean).join("\n\n");
-
-      const { data, error } = await supabase.functions.invoke("gerar-atividade", {
-        body: {
-          modo: "pcd",
-          anoEscolar: aluno.anoEscolar || "",
-          turma: aluno.turma || "",
-          disciplina: disciplinas[0] || "",
-          disciplinasInter: disciplinas.length > 1 ? disciplinas : [],
-          tema,
-          duracao,
-          tipoAtividade,
-          incluirPCD: true,
-          alunoFoco: {
-            nome: aluno.name,
-            codigo: condicaoLabel || "PCD",
-            anotacoes: anotacoesCombinadas,
-          },
-        },
-      });
-      if (error) throw error;
-      const p = (data as { plano?: typeof plano })?.plano;
-      if (!p) throw new Error("Sofia não conseguiu estruturar o plano.");
-      setPlano(p);
-      toast.success("Plano gerado pela Sofia");
+      if (modoGeracao === "integrado" && disciplinas.length > 1) {
+        const p = await gerarUm("", true);
+        if (!p) throw new Error("Sofia não conseguiu estruturar o plano.");
+        setPlanos([{ disciplina: disciplinas.join(" + "), plano: p, metodologia: "", avaliacao: "", observacoes: "", incluir: true }]);
+        setAbaAtiva(0);
+        toast.success("Plano interdisciplinar gerado");
+      } else {
+        const results = await Promise.all(disciplinas.map((d) => gerarUm(d).then((p) => ({ d, p })).catch((e) => ({ d, p: null, e }))));
+        const okItens: PlanoItem[] = [];
+        let falhou = 0;
+        for (const r of results) {
+          if (r.p) okItens.push({ disciplina: r.d, plano: r.p, metodologia: "", avaliacao: "", observacoes: "", incluir: true });
+          else falhou++;
+        }
+        if (okItens.length === 0) throw new Error("Nenhum plano foi gerado.");
+        setPlanos(okItens);
+        setAbaAtiva(0);
+        toast.success(`${okItens.length} plano(s) gerado(s)${falhou ? ` · ${falhou} falhou` : ""}`);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Erro ao gerar plano", { description: e instanceof Error ? e.message : "Tente novamente." });
@@ -268,23 +295,52 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
     }
   }
 
+  function patchAtual(patch: Partial<PlanoItem>) {
+    setPlanos((prev) => prev.map((it, i) => i === abaAtiva ? { ...it, ...patch } : it));
+  }
+
+  async function regerarAtual() {
+    const atual = planos[abaAtiva];
+    if (!atual) return;
+    setLoading(true);
+    try {
+      const interd = atual.disciplina.includes(" + ");
+      const p = await gerarUm(atual.disciplina, interd);
+      if (!p) throw new Error("Falha ao regerar.");
+      patchAtual({ plano: p });
+      toast.success("Plano regerado");
+    } catch (e) {
+      toast.error("Erro ao regerar", { description: e instanceof Error ? e.message : "" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function salvar() {
-    if (!aluno || !plano) return;
-    const novo: PlanoInclusao = {
-      id: crypto.randomUUID(),
-      data: new Date().toISOString().slice(0, 10),
-      alunoId: aluno.id,
-      ...plano,
-      disciplina: disciplinas.join(" + "),
-      tema,
-      duracao,
-      tipoAtividade,
-      observacoes,
-      avaliacao,
-      metodologia,
-    };
-    onSaved(novo);
-    toast.success("Plano adaptado salvo");
+    if (!aluno) return;
+    const escolhidos = planos.filter((p) => p.incluir);
+    if (escolhidos.length === 0) {
+      toast.error("Marque ao menos um plano para salvar.");
+      return;
+    }
+    const hoje = new Date().toISOString().slice(0, 10);
+    for (const it of escolhidos) {
+      const novo: PlanoInclusao = {
+        id: crypto.randomUUID(),
+        data: hoje,
+        alunoId: aluno.id,
+        ...it.plano,
+        disciplina: it.disciplina,
+        tema,
+        duracao,
+        tipoAtividade,
+        observacoes: it.observacoes,
+        avaliacao: it.avaliacao,
+        metodologia: it.metodologia,
+      };
+      onSaved(novo);
+    }
+    toast.success(`${escolhidos.length} plano(s) salvo(s)`);
     onClose();
   }
 
