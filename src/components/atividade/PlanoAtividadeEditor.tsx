@@ -479,9 +479,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       <div className="atv-toolbar">
         <div className="atv-toolbar-row">
           <div className="atv-field">
-            <label>Turma</label>
+            <label>Turma <span className="atv-opt">(opcional)</span></label>
             <select value={turma} onChange={(e) => setTurma(e.target.value)}>
-              <option value="">Sem turma cadastrada</option>
+              <option value="">
+                {turmasPerfil.length === 0
+                  ? "Sem turma — gerar mesmo assim"
+                  : "Sem turma específica"}
+              </option>
               {turmasPerfil.map((t) => (
                 <option key={t.id} value={t.nome}>{t.nome}</option>
               ))}
@@ -597,8 +601,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           <Sparkles size={28} />
           <h3>{modo === "pcd" ? "Plano de atividade para aluno PCD" : "Plano de atividade"}</h3>
           <p>
-            Defina turma, ano escolar e tema. Sofia gera título, objetivo, descrição,
-            habilidades BNCC, adaptações, sugestões e lista de materiais.
+            Defina ano escolar, disciplina e tema (turma é opcional). Sofia gera título,
+            objetivo, descrição, habilidades BNCC, adaptações, sugestões e lista de materiais.
           </p>
         </div>
       )}
