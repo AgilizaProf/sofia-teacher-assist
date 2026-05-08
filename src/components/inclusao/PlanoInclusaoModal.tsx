@@ -195,7 +195,7 @@ function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: stri
 }
 
 export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSaved }: Props) {
-  const [disciplina, setDisciplina] = useState("");
+  const [disciplinas, setDisciplinas] = useState<string[]>([]);
   const [tema, setTema] = useState("");
   const [duracao, setDuracao] = useState("45 min");
   const [tipoAtividade, setTipoAtividade] = useState(TIPOS[0]);
@@ -208,7 +208,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
   useEffect(() => {
     if (open) {
       setPlano(null);
-      setDisciplina("");
+      setDisciplinas([]);
       setTema("");
       setObservacoes("");
       setAvaliacao("");
@@ -221,6 +221,18 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
     const parts = [aluno.diag, aluno.cid].filter(Boolean);
     return parts.join(" · ");
   }, [aluno]);
+
+  const isEI = isEducacaoInfantil(aluno?.anoEscolar);
+  const opcoesDisciplinas = isEI ? CAMPOS_EI : DISCIPLINAS_EF;
+  const labelDisciplina = isEI ? "Campos de experiência" : "Disciplinas";
+  const temaSugestoes = useMemo(
+    () => getTemaSugestoes(disciplinas, aluno?.anoEscolar),
+    [disciplinas, aluno?.anoEscolar],
+  );
+
+  function toggleDisciplina(d: string) {
+    setDisciplinas((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]);
+  }
 
   async function gerar() {
     if (!aluno) return;
@@ -236,7 +248,8 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
           modo: "pcd",
           anoEscolar: aluno.anoEscolar || "",
           turma: aluno.turma || "",
-          disciplina,
+          disciplina: disciplinas[0] || "",
+          disciplinasInter: disciplinas.length > 1 ? disciplinas : [],
           tema,
           duracao,
           tipoAtividade,
@@ -268,7 +281,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
       data: new Date().toISOString().slice(0, 10),
       alunoId: aluno.id,
       ...plano,
-      disciplina,
+      disciplina: disciplinas.join(" + "),
       tema,
       duracao,
       tipoAtividade,
