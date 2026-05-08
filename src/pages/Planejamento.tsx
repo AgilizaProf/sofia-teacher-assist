@@ -3050,25 +3050,63 @@ export function Planejamento() {
                     })}
                   </div>
                   {m4SelectedDay && (() => {
-                    const evts = [
-                      ...(M4_EVENTS_BY_DAY[m4SelectedDay] ?? []),
-                      ...(m4UserByDay[m4SelectedDay] ?? []),
-                    ].filter((e) => layers[e.cat]);
+                    const baseEvts = (M4_EVENTS_BY_DAY[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
+                    const userEvts = (m4UserByDay[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
+                    const total = baseEvts.length + userEvts.length;
                     return (
                       <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line)", borderRadius: 10, background: "#FAFBFD" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                          <strong style={{ fontSize: 13 }}>📍 Dia {m4SelectedDay} de {m4Label} · {evts.length} {evts.length === 1 ? "evento" : "eventos"}</strong>
-                          <button onClick={() => setM4SelectedDay(null)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 4 }}><X size={14} /></button>
+                          <strong style={{ fontSize: 13 }}>📍 Dia {m4SelectedDay} de {m4Label} · {total} {total === 1 ? "evento" : "eventos"}</strong>
+                          <button onClick={() => { setM4SelectedDay(null); setM4Editing(null); }} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 4 }}><X size={14} /></button>
                         </div>
-                        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                          {evts.map((e, j) => (
-                            <li key={j} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
+                        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                          {baseEvts.map((e, j) => (
+                            <li key={`b${j}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
                               <span style={{ width: 10, height: 10, borderRadius: 99, background: M4_CAT_META[e.cat].color, flexShrink: 0 }} />
                               <strong>{e.title}</strong>
                               {e.meta && <span style={{ color: "var(--muted)" }}>· {e.meta}</span>}
                             </li>
                           ))}
+                          {userEvts.map((e) => {
+                            const editing = m4Editing?.id === e.id && m4Editing?.iso === e.iso;
+                            return (
+                              <li key={e.id} style={{ display: "flex", flexDirection: "column", gap: 6, padding: 8, background: "#fff", border: "1px solid var(--line)", borderRadius: 8 }}>
+                                {editing ? (
+                                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                      <select value={e.cat} onChange={(ev) => m4UpdateEvent(e.iso, e.id, { cat: ev.target.value as M4Cat })} style={{ fontSize: 12, padding: "4px 6px", border: "1px solid var(--line)", borderRadius: 6 }}>
+                                        {(Object.keys(M4_CAT_META) as M4Cat[]).map((c) => (
+                                          <option key={c} value={c}>{M4_CAT_META[c].label}</option>
+                                        ))}
+                                      </select>
+                                      <input type="date" value={e.iso} onChange={(ev) => { if (ev.target.value && ev.target.value !== e.iso) m4MoveEvent(e.iso, e.id, ev.target.value); }} style={{ fontSize: 12, padding: "4px 6px", border: "1px solid var(--line)", borderRadius: 6 }} />
+                                    </div>
+                                    <input value={e.title} onChange={(ev) => m4UpdateEvent(e.iso, e.id, { title: ev.target.value })} placeholder="Título" style={{ fontSize: 12.5, padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 6, fontWeight: 600 }} />
+                                    <input value={e.meta ?? ""} onChange={(ev) => m4UpdateEvent(e.iso, e.id, { meta: ev.target.value })} placeholder="Detalhes (turma, horário…)" style={{ fontSize: 12, padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 6 }} />
+                                    <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                                      <button onClick={() => { if (confirm("Excluir este evento?")) { m4DeleteEvent(e.iso, e.id); setM4Editing(null); } }} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid #FCA5A5", color: "#B91C1C", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Excluir</button>
+                                      <button onClick={() => setM4Editing(null)} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Concluir</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
+                                    <span style={{ width: 10, height: 10, borderRadius: 99, background: M4_CAT_META[e.cat].color, flexShrink: 0 }} />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <strong>{e.title}</strong>
+                                      {e.meta && <span style={{ color: "var(--muted)" }}> · {e.meta}</span>}
+                                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 2 }}>{M4_CAT_META[e.cat].label}</div>
+                                    </div>
+                                    <button onClick={() => setM4Editing({ iso: e.iso, id: e.id })} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Editar</button>
+                                  </div>
+                                )}
+                              </li>
+                            );
+                          })}
+                          {total === 0 && (
+                            <li style={{ fontSize: 12, color: "var(--muted)" }}>Nenhum evento neste dia.</li>
+                          )}
                         </ul>
+                        <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 8 }}>💡 Arraste qualquer evento entre os dias para reagendá-lo.</p>
                       </div>
                     );
                   })()}
