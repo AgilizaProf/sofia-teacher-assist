@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Relatorios } from "@/pages/Relatorios";
 
+export const Route = createFileRoute("/relatorios")({
   // Sanitiza search params: qualquer valor inválido/ausente cai pro padrão
   // (tab=all, sem turma/pcd/focus) sem lançar erro — a página renderiza normalmente.
   validateSearch: (s: Record<string, unknown>) => {
