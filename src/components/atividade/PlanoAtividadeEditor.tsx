@@ -266,6 +266,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const callSofia = async (field?: string): Promise<PlanoAtividade | null> => {
     setErro("");
+    const diarioBordo = lerDiarioBordo(turma);
     const payload = {
       modo, anoEscolar, disciplina, turma,
       tema: tema.trim(),
@@ -290,6 +291,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             anotacoes: alunoFoco.pcd_anotacoes || undefined,
           }
         : null,
+      diarioBordo,
     };
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: payload,
@@ -308,6 +310,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const sugerirOpcoes = async () => {
     setErro("");
     setLoadingOpcoes(true);
+    const diarioBordo = lerDiarioBordo(turma);
     const payload = {
       modo, anoEscolar, disciplina, turma,
       tema: tema.trim(),
@@ -326,6 +329,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             anotacoes: alunoFoco.pcd_anotacoes || undefined,
           }
         : null,
+      diarioBordo,
     };
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: payload,
