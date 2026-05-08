@@ -787,6 +787,47 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           </div>
         )}
 
+        {modo === "pcd" && alunosPCDDaTurma.length > 0 && (
+          <div className="atv-foco">
+            <div className="atv-foco-head">
+              <span className="atv-foco-label">Aluno foco</span>
+              <span className="atv-foco-hint">
+                Sofia vai gerar uma atividade específica para este aluno,
+                respeitando suas especificidades. Troque para gerar para outro.
+              </span>
+            </div>
+            <div className="atv-foco-chips">
+              {alunosPCDDaTurma.map((a, i) => {
+                const sel = i === alunoFocoIdx;
+                return (
+                  <button
+                    key={`${a.primeiro_nome}-${i}`}
+                    type="button"
+                    className={`atv-foco-chip${sel ? " sel" : ""}`}
+                    onClick={() => {
+                      setAlunoFocoIdx(i);
+                      setOpcoes([]);
+                      setOpcoesSel([]);
+                    }}
+                    title={a.pcd_anotacoes || ""}
+                  >
+                    {sel ? <Check size={11} /> : <Plus size={11} />}
+                    <span className="atv-foco-name">{a.primeiro_nome}</span>
+                    {a.pcd_codigo && (
+                      <span className="atv-foco-tag">{a.pcd_codigo}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {alunoFoco?.pcd_anotacoes && (
+              <p className="atv-foco-notes">
+                <strong>Anotações:</strong> {alunoFoco.pcd_anotacoes}
+              </p>
+            )}
+          </div>
+        )}
+
         {erro && (
           <div className="atv-error">
             <AlertTriangle size={14} /> {erro}
