@@ -300,6 +300,21 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     window.setTimeout(() => setToast(""), 2200);
   };
 
+  // Mantém o array de planos múltiplos sincronizado com a edição atual.
+  // Sempre que `plano` mudar (edição inline, regenerar campo, materiais…)
+  // espelhamos no índice ativo de `planosMulti`.
+  useEffect(() => {
+    if (planosMulti.length <= 1) return;
+    setPlanosMulti((prev) => {
+      if (planoIdx >= prev.length) return prev;
+      if (prev[planoIdx] === plano) return prev;
+      const next = prev.slice();
+      next[planoIdx] = plano;
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plano]);
+
   /* ─────────── Geração (full ou por campo) ─────────── */
 
   const callSofia = async (
