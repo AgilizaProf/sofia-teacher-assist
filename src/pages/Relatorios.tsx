@@ -680,12 +680,13 @@ export function Relatorios() {
               <div className="rel-kpi-num">{rascunhos}<small> pareceres</small></div>
               <div className="rel-kpi-foot">{rascunhos > 0 ? "aguardando revisão" : "—"}</div>
             </div>
-            <div className="rel-kpi">
+            <div className="rel-kpi" id="rel-kpi-pareceres">
               <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
             </div>
             <div
+              id="rel-kpi-horas"
               className={"rel-kpi rel-kpi-dark kpi-tip-host" + (bump ? " is-bump" : "")}
               tabIndex={0}
               aria-label="Como calculamos o tempo economizado"
