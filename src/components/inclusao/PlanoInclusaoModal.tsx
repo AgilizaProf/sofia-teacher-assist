@@ -360,7 +360,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
         </div>
 
         <div className="inc-modal-body plain" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {!plano && (
+          {planos.length === 0 && (
             <>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
@@ -387,9 +387,39 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                   })}
                 </div>
                 <span style={{ fontSize: 11.5, color: "var(--muted)" }}>
-                  Selecione uma para aula simples, ou várias para uma aula <b>interdisciplinar</b>.
+                  Selecione uma ou mais. A Sofia gera <b>um plano por disciplina</b> e você escolhe quais salvar.
                 </span>
               </div>
+              {disciplinas.length > 1 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>Modo de geração</span>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {([
+                      { v: "separado", l: `Um plano por disciplina (${disciplinas.length})`, d: "Cada disciplina/campo gera um plano independente." },
+                      { v: "integrado", l: "Um plano interdisciplinar único", d: "A Sofia combina todas em uma única aula coesa." },
+                    ] as const).map((opt) => {
+                      const ativo = modoGeracao === opt.v;
+                      return (
+                        <button
+                          key={opt.v}
+                          type="button"
+                          onClick={() => setModoGeracao(opt.v)}
+                          title={opt.d}
+                          style={{
+                            flex: 1, padding: "8px 12px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, textAlign: "left",
+                            border: ativo ? "1px solid var(--accent)" : "1px solid var(--border)",
+                            background: ativo ? "var(--accent-soft)" : "#fff",
+                            color: ativo ? "#B8410E" : "var(--text)",
+                          }}
+                        >
+                          {ativo ? "● " : "○ "}{opt.l}
+                          <div style={{ fontWeight: 400, fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{opt.d}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", maxWidth: 220 }}>
                 Duração
                 <select value={duracao} onChange={(e) => setDuracao(e.target.value)}
@@ -424,76 +454,122 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
             </>
           )}
 
-          {plano && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 10, padding: 14 }}>
-                <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 17, marginBottom: 6 }}>{plano.titulo}</h4>
-                <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>{plano.objetivo}</p>
-                {plano.habilidades?.length > 0 && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-                    {plano.habilidades.map((h) => (
-                      <span key={h.codigo} title={h.descricao} style={{ fontFamily: "'JetBrains Mono',monospace", background: "var(--bg)", padding: "3px 8px", borderRadius: 5, fontSize: 11, fontWeight: 700 }}>{h.codigo}</span>
+          {planos.length > 0 && (() => {
+            const atual = planos[abaAtiva];
+            if (!atual) return null;
+            const plano = atual.plano;
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {planos.length > 1 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4, borderBottom: "1px solid var(--border)", paddingBottom: 6 }}>
+                    {planos.map((it, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setAbaAtiva(i)}
+                        style={{
+                          padding: "6px 10px", borderRadius: "8px 8px 0 0", cursor: "pointer", fontSize: 12, fontWeight: 600,
+                          border: "1px solid var(--border)", borderBottom: i === abaAtiva ? "1px solid #fff" : "1px solid var(--border)",
+                          marginBottom: -7,
+                          background: i === abaAtiva ? "#fff" : "var(--bg)",
+                          color: it.incluir ? "var(--text)" : "var(--muted)",
+                          opacity: it.incluir ? 1 : 0.6,
+                          display: "flex", alignItems: "center", gap: 6,
+                        }}
+                      >
+                        {it.incluir && <Check size={12} color="var(--success)" />}
+                        {it.disciplina}
+                      </button>
                     ))}
                   </div>
                 )}
-                <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
-                  <div><b>Abertura.</b> {plano.abertura}</div>
-                  <div><b>Desenvolvimento.</b> {plano.desenvolvimento}</div>
-                  <div><b>Fechamento.</b> {plano.fechamento}</div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={atual.incluir}
+                      onChange={(e) => patchAtual({ incluir: e.target.checked })}
+                      style={{ width: 16, height: 16, accentColor: "var(--accent)" }}
+                    />
+                    Incluir <b>{atual.disciplina}</b> ao salvar
+                  </label>
+                  <span style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                    {planos.filter(p => p.incluir).length} de {planos.length} marcado(s)
+                  </span>
                 </div>
-                {plano.materiais?.length > 0 && (
-                  <div style={{ marginTop: 10, fontSize: 12.5 }}>
-                    <b>Materiais:</b> {plano.materiais.join(", ")}
+
+                <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 10, padding: 14 }}>
+                  <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 17, marginBottom: 6 }}>{plano.titulo}</h4>
+                  <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>{plano.objetivo}</p>
+                  {plano.habilidades?.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                      {plano.habilidades.map((h) => (
+                        <span key={h.codigo} title={h.descricao} style={{ fontFamily: "'JetBrains Mono',monospace", background: "var(--bg)", padding: "3px 8px", borderRadius: 5, fontSize: 11, fontWeight: 700 }}>{h.codigo}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
+                    <div><b>Abertura.</b> {plano.abertura}</div>
+                    <div><b>Desenvolvimento.</b> {plano.desenvolvimento}</div>
+                    <div><b>Fechamento.</b> {plano.fechamento}</div>
                   </div>
-                )}
-                {plano.adaptacoes?.length > 0 && (
-                  <div style={{ marginTop: 10, padding: 10, background: "var(--accent-soft)", borderRadius: 8 }}>
-                    <b style={{ fontSize: 12, color: "#B8410E", textTransform: "uppercase", letterSpacing: ".06em" }}>Adaptações específicas</b>
-                    <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12.5 }}>
-                      {plano.adaptacoes.map((a, i) => <li key={i}><b>{a.categoria}:</b> {a.texto}</li>)}
-                    </ul>
-                  </div>
-                )}
+                  {plano.materiais?.length > 0 && (
+                    <div style={{ marginTop: 10, fontSize: 12.5 }}>
+                      <b>Materiais:</b> {plano.materiais.join(", ")}
+                    </div>
+                  )}
+                  {plano.adaptacoes?.length > 0 && (
+                    <div style={{ marginTop: 10, padding: 10, background: "var(--accent-soft)", borderRadius: 8 }}>
+                      <b style={{ fontSize: 12, color: "#B8410E", textTransform: "uppercase", letterSpacing: ".06em" }}>Adaptações específicas</b>
+                      <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12.5 }}>
+                        {plano.adaptacoes.map((a, i) => <li key={i}><b>{a.categoria}:</b> {a.texto}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                  Metodologia
+                  <textarea value={atual.metodologia} onChange={(e) => patchAtual({ metodologia: e.target.value })} rows={3} placeholder="Como você vai conduzir a aula com este aluno"
+                    style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
+                  <ChipRow items={METODOLOGIA_SUGESTOES} onPick={(t) => patchAtual({ metodologia: atual.metodologia ? atual.metodologia + " " + t : t })} />
+                </label>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                  Avaliação
+                  <textarea value={atual.avaliacao} onChange={(e) => patchAtual({ avaliacao: e.target.value })} rows={3} placeholder="Como você vai avaliar este aluno"
+                    style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
+                  <ChipRow items={AVALIACAO_SUGESTOES} onPick={(t) => patchAtual({ avaliacao: atual.avaliacao ? atual.avaliacao + " " + t : t })} />
+                </label>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                  Observações
+                  <textarea value={atual.observacoes} onChange={(e) => patchAtual({ observacoes: e.target.value })} rows={3} placeholder="Anote o que aconteceu, ajustes, próximos passos"
+                    style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
+                  <ChipRow items={OBSERVACOES_SUGESTOES} onPick={(t) => patchAtual({ observacoes: atual.observacoes ? atual.observacoes + " " + t : t })} />
+                </label>
               </div>
-
-              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                Metodologia
-                <textarea value={metodologia} onChange={(e) => setMetodologia(e.target.value)} rows={3} placeholder="Como você vai conduzir a aula com este aluno"
-                  style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
-                <ChipRow items={METODOLOGIA_SUGESTOES} onPick={(t) => setMetodologia((p) => p ? p + " " + t : t)} />
-              </label>
-
-              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                Avaliação
-                <textarea value={avaliacao} onChange={(e) => setAvaliacao(e.target.value)} rows={3} placeholder="Como você vai avaliar este aluno"
-                  style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
-                <ChipRow items={AVALIACAO_SUGESTOES} onPick={(t) => setAvaliacao((p) => p ? p + " " + t : t)} />
-              </label>
-
-              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                Observações
-                <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={3} placeholder="Anote o que aconteceu, ajustes, próximos passos"
-                  style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
-                <ChipRow items={OBSERVACOES_SUGESTOES} onPick={(t) => setObservacoes((p) => p ? p + " " + t : t)} />
-              </label>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         <div className="inc-modal-foot">
           <span className="legal">O plano será salvo no histórico de {aluno.name.split(" ")[0]}.</span>
           <button className="inc-btn-ghost" onClick={onClose}>Cancelar</button>
-          {!plano ? (
+          {planos.length === 0 ? (
             <button className="btn btn-primary" onClick={gerar} disabled={loading}>
-              {loading ? <><Loader2 size={14} className="animate-spin" /> Gerando…</> : <><Sparkles size={14} /> Gerar com a Sofia</>}
+              {loading
+                ? <><Loader2 size={14} className="animate-spin" /> Gerando {disciplinas.length > 1 && modoGeracao === "separado" ? `${disciplinas.length} planos` : "plano"}…</>
+                : <><Sparkles size={14} /> Gerar {disciplinas.length > 1 && modoGeracao === "separado" ? `${disciplinas.length} planos` : "plano"} com a Sofia</>}
             </button>
           ) : (
             <>
-              <button className="inc-btn-ghost" onClick={gerar} disabled={loading}>
-                {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Regerar
+              <button className="inc-btn-ghost" onClick={regerarAtual} disabled={loading} title="Regerar apenas a aba atual">
+                {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Regerar este
               </button>
               <button className="btn btn-primary" onClick={salvar}>
-                <CheckCircle2 size={14} /> Salvar plano
+                <CheckCircle2 size={14} /> Salvar selecionados ({planos.filter(p => p.incluir).length})
               </button>
             </>
           )}
