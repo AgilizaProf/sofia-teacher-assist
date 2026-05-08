@@ -462,7 +462,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     const safe = (plano.titulo || "plano").replace(/[^\w-]+/g, "_").slice(0, 60);
     doc.save(`${safe}.pdf`);
     logActivity({
-      type: "documento",
+      type: "exportacao",
       description: `PDF exportado: ${plano.titulo}`,
       detail: `${anoEscolar} · ${disciplina}`,
     });
