@@ -252,6 +252,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         codigo: a.pcd_codigo || undefined,
         anotacoes: a.pcd_anotacoes || undefined,
       })),
+      alunoFoco: alunoFoco
+        ? {
+            nome: alunoFoco.primeiro_nome,
+            codigo: alunoFoco.pcd_codigo || undefined,
+            anotacoes: alunoFoco.pcd_anotacoes || undefined,
+          }
+        : null,
     };
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: payload,
@@ -281,6 +288,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         nome: a.primeiro_nome,
         tipo: a.pcd_codigo || "PCD",
       })),
+      alunoFoco: alunoFoco
+        ? {
+            nome: alunoFoco.primeiro_nome,
+            codigo: alunoFoco.pcd_codigo || undefined,
+            anotacoes: alunoFoco.pcd_anotacoes || undefined,
+          }
+        : null,
     };
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: payload,
