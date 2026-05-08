@@ -706,7 +706,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       cat: agendaCat,
       title: `${TAG_BY_DISC[disciplina] ?? "ATV"} · ${plano.titulo}`,
       meta: `${(DUR_TO_MIN[duracao] ?? 45)} min${turma ? ` · ${turma}` : ""}${modo === "pcd" ? " · PCD" : ""}`,
-      source: modo,
+      source: modo === "pcd" ? "pcd" : "atv",
       turma: turma || undefined,
       disciplina,
       minutos: DUR_TO_MIN[duracao] ?? 45,
