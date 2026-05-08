@@ -226,6 +226,19 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const alunoFoco =
     modo === "pcd" ? alunosPCDDaTurma[alunoFocoIdx] ?? null : null;
 
+  // Geração em lote: uma atividade PCD por aluno da turma.
+  type LoteItem = {
+    aluno: string;
+    codigo?: string;
+    plano?: PlanoAtividade;
+    erro?: string;
+  };
+  const [gerandoLote, setGerandoLote] = useState(false);
+  const [loteProg, setLoteProg] = useState<{ atual: number; total: number; nome: string }>({
+    atual: 0, total: 0, nome: "",
+  });
+  const [lote, setLote] = useState<LoteItem[]>([]);
+
   const showToast = (msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(""), 2200);
@@ -354,6 +367,126 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     if (!novo) return;
     setPlano({ ...plano, [field]: novo[field] as PlanoAtividade[typeof field] });
     showToast(`Sofia regenerou: ${field}`);
+  };
+
+  /* ─────────── Geração em lote (1 atividade por aluno PCD) ─────────── */
+
+  const gerarParaTodos = async () => {
+    if (modo !== "pcd" || alunosPCDDaTurma.length === 0 || gerandoLote) return;
+    setErro("");
+    setGerandoLote(true);
+    setLote([]);
+    const total = alunosPCDDaTurma.length;
+    setLoteProg({ atual: 0, total, nome: "" });
+
+    const resultados: LoteItem[] = [];
+    for (let i = 0; i < alunosPCDDaTurma.length; i++) {
+      const a = alunosPCDDaTurma[i];
+      setLoteProg({ atual: i + 1, total, nome: a.primeiro_nome });
+
+      const payload = {
+        modo, anoEscolar, disciplina, turma,
+        tema: tema.trim(),
+        duracao, tipoAtividade: tipo,
+        incluirPCD: true,
+        disciplinasInter: disciplina === "Interdisciplinar" ? disciplinasInter : [],
+        opcoesSelecionadas: [],
+        alunosPCD: alunosPCDDaTurma.map((x) => ({
+          nome: x.primeiro_nome,
+          tipo: x.pcd_codigo || "PCD",
+          codigo: x.pcd_codigo || undefined,
+          anotacoes: x.pcd_anotacoes || undefined,
+        })),
+        alunoFoco: {
+          nome: a.primeiro_nome,
+          codigo: a.pcd_codigo || undefined,
+          anotacoes: a.pcd_anotacoes || undefined,
+        },
+      };
+
+      try {
+        const { data, error } = await supabase.functions.invoke("gerar-atividade", {
+          body: payload,
+        });
+        if (error) {
+          const msg = (error as { context?: { error?: string } })?.context?.error
+            || (error as Error)?.message || "Falha ao gerar.";
+          resultados.push({ aluno: a.primeiro_nome, codigo: a.pcd_codigo || undefined, erro: msg });
+        } else {
+          const novo = data?.plano as PlanoAtividade | undefined;
+          if (!novo) {
+            resultados.push({ aluno: a.primeiro_nome, codigo: a.pcd_codigo || undefined, erro: "Plano vazio" });
+          } else {
+            const enriched: PlanoAtividade = {
+              ...EMPTY, ...novo, materiaisCheck: {},
+              meta: {
+                ano: anoEscolar, turma, disciplina, tema,
+                duracao, tipo, incluirPCD: true,
+                modo, geradoEm: new Date().toISOString(),
+              },
+            };
+            resultados.push({
+              aluno: a.primeiro_nome,
+              codigo: a.pcd_codigo || undefined,
+              plano: enriched,
+            });
+
+            // Salva automaticamente no histórico, com o nome do aluno no título.
+            const id = `p_${Date.now()}_${i}`;
+            const tituloComAluno = `[${a.primeiro_nome}] ${enriched.titulo}`;
+            const registro: PlanoSalvo = {
+              id,
+              titulo: tituloComAluno,
+              turma, disciplina, ano: anoEscolar, modo,
+              salvoEm: new Date().toISOString(),
+              plano: { ...enriched, titulo: tituloComAluno },
+            };
+            setHistorico((h) => [registro, ...h].slice(0, 100));
+
+            // Best-effort remoto.
+            try {
+              const { data: auth } = await supabase.auth.getUser();
+              const uid = auth.user?.id;
+              if (uid) {
+                await supabase.from("planos_aula").insert({
+                  user_id: uid,
+                  client_id: id,
+                  titulo: tituloComAluno,
+                  data: { ...registro, plano: registro.plano },
+                });
+              }
+            } catch { /* offline ok */ }
+
+            logActivity({
+              type: "planejamento",
+              description: `Atividade PCD gerada para ${a.primeiro_nome}: ${enriched.titulo}`,
+              detail: `${anoEscolar} · ${disciplina}`,
+            });
+          }
+        }
+      } catch (e) {
+        resultados.push({
+          aluno: a.primeiro_nome,
+          codigo: a.pcd_codigo || undefined,
+          erro: e instanceof Error ? e.message : "Falha",
+        });
+      }
+
+      // Atualiza progressivamente para o usuário ver chegando.
+      setLote([...resultados]);
+    }
+
+    setGerandoLote(false);
+    const ok = resultados.filter((r) => r.plano).length;
+    showToast(`${ok}/${total} atividades geradas e salvas no histórico`);
+  };
+
+  const carregarDoLote = (item: LoteItem) => {
+    if (!item.plano) return;
+    setPlano(item.plano);
+    setOpcoes([]); setOpcoesSel([]); setMissing([]);
+    showToast(`Plano de ${item.aluno} carregado`);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const limpar = () => {
@@ -795,6 +928,18 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                 Sofia vai gerar uma atividade específica para este aluno,
                 respeitando suas especificidades. Troque para gerar para outro.
               </span>
+              <button
+                type="button"
+                className="atv-btn primary atv-foco-all"
+                onClick={gerarParaTodos}
+                disabled={gerandoLote || generating}
+                title="Gerar uma atividade individual para cada aluno PCD da turma"
+              >
+                <Sparkles size={12} />
+                {gerandoLote
+                  ? `Gerando ${loteProg.atual}/${loteProg.total} · ${loteProg.nome}…`
+                  : `Gerar para todos (${alunosPCDDaTurma.length})`}
+              </button>
             </div>
             <div className="atv-foco-chips">
               {alunosPCDDaTurma.map((a, i) => {
@@ -824,6 +969,57 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
               <p className="atv-foco-notes">
                 <strong>Anotações:</strong> {alunoFoco.pcd_anotacoes}
               </p>
+            )}
+
+            {(gerandoLote || lote.length > 0) && (
+              <div className="atv-lote">
+                <div className="atv-lote-head">
+                  <span className="atv-foco-label">Atividades por aluno</span>
+                  {gerandoLote ? (
+                    <span className="atv-foco-hint">
+                      Gerando {loteProg.atual} de {loteProg.total} — {loteProg.nome}…
+                    </span>
+                  ) : (
+                    <span className="atv-foco-hint">
+                      {lote.filter((l) => l.plano).length}/{lote.length} geradas e
+                      salvas no histórico abaixo.
+                    </span>
+                  )}
+                  {!gerandoLote && lote.length > 0 && (
+                    <button
+                      type="button"
+                      className="atv-inter-clear"
+                      onClick={() => setLote([])}
+                    >
+                      Limpar lista
+                    </button>
+                  )}
+                </div>
+                <ul className="atv-lote-list">
+                  {lote.map((item, i) => (
+                    <li key={`${item.aluno}-${i}`} className={`atv-lote-item${item.erro ? " err" : ""}`}>
+                      <div className="atv-lote-info">
+                        <span className="atv-lote-aluno">
+                          {item.aluno}
+                          {item.codigo && <span className="atv-foco-tag">{item.codigo}</span>}
+                        </span>
+                        <span className="atv-lote-titulo">
+                          {item.erro ? `Erro: ${item.erro}` : item.plano?.titulo || "—"}
+                        </span>
+                      </div>
+                      {item.plano && (
+                        <button
+                          type="button"
+                          className="atv-btn ghost"
+                          onClick={() => carregarDoLote(item)}
+                        >
+                          <Pencil size={12} /> Abrir
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         )}
@@ -1518,4 +1714,14 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-foco-tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(139,92,246,.15);color:#5B21B6;font-family:'JetBrains Mono',monospace;}
 .atv-foco-chip.sel .atv-foco-tag{background:rgba(255,255,255,.25);color:#fff;}
 .atv-foco-notes{margin:8px 0 0;font-size:11.5px;color:#4C1D95;}
+.atv-foco-all{margin-left:auto;}
+.atv-lote{margin-top:10px;border-top:1px dashed #C4B5FD;padding-top:10px;}
+.atv-lote-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.atv-lote-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.atv-lote-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #E9D5FF;}
+.atv-lote-item.err{border-color:#FCA5A5;background:#FEF2F2;}
+.atv-lote-info{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+.atv-lote-aluno{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#5B21B6;}
+.atv-lote-titulo{font-size:11.5px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.atv-lote-item.err .atv-lote-titulo{color:#991B1B;}
 `;
