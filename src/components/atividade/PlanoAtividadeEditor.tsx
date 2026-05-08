@@ -586,6 +586,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const carregarDoLote = (item: LoteItem) => {
     if (!item.plano) return;
     setPlano(item.plano);
+    setPlanosMulti([]); setPlanoIdx(0);
     setOpcoes([]); setOpcoesSel([]); setMissing([]);
     showToast(`Plano de ${item.aluno} carregado`);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -593,6 +594,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const limpar = () => {
     setPlano(EMPTY);
+    setPlanosMulti([]); setPlanoIdx(0);
     setMissing([]); setErro(""); setSalvo(false);
     setOpcoes([]); setOpcoesSel([]);
   };
@@ -705,6 +707,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const carregarPlano = (p: PlanoSalvo) => {
     setPlano(p.plano);
+    setPlanosMulti([]); setPlanoIdx(0);
     if (p.turma) setTurma(p.turma);
     if (p.disciplina) setDisciplina(p.disciplina);
     setAnoFallback(p.ano);
@@ -715,6 +718,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const duplicarPlano = (p: PlanoSalvo) => {
     const copia: PlanoAtividade = { ...p.plano, titulo: `${p.plano.titulo} (cópia)` };
     setPlano(copia);
+    setPlanosMulti([]); setPlanoIdx(0);
     showToast("Cópia editável criada");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
