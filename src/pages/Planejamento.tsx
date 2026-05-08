@@ -586,6 +586,51 @@ const BNCC_BY_ETAPA: Record<Etapa, { label: string; anos: AnoBNCC[] }> = {
   },
 };
 
+// Enriquece um M1Card com objetivo, materiais, passos, avaliação e
+// diferenciações pedagógicas — derivados do tema, foco, tag e variante.
+// Usado pela Sofia ao gerar a semana e pelo "+ Atividade" para que toda
+// atividade nasça já elaborada e revisável pelo professor.
+function enrichM1Card(card: M1Card, tema: string): M1Card {
+  if (card.objetivo && card.passos && card.materiais) return card;
+  const t = (tema || "tema do dia").trim() || "tema do dia";
+  const v = card.v;
+  const tag = (card.tag || "").toLowerCase();
+  const foco = (card.foco || "").toLowerCase();
+  // Banco de materiais por variante
+  const matsBase: Record<Variant, string[]> = {
+    port: ["Quadro e giz/canetão", "Cadernos e lápis", "Texto impresso ou livro relacionado a " + t, "Cartolinas para registro coletivo"],
+    mat: ["Material dourado ou tampinhas (contagem)", "Folha quadriculada", "Régua e lápis colorido", "Cartões com problemas sobre " + t],
+    ci: ["Lupa, recipientes ou objetos do cotidiano", "Caderno de campo", "Imagens/vídeo curto sobre " + t, "Roteiro de observação impresso"],
+    esc: ["Roda de cadeiras / espaço aberto", "Música ou imagens sobre " + t, "Cartolinas e canetinhas", "Combinados visuais"],
+  };
+  const objetivos: Record<Variant, string> = {
+    port: `Ampliar a leitura, escrita e oralidade dos estudantes a partir de "${t}", trabalhando ${tag || "linguagem"} de forma significativa.`,
+    mat: `Desenvolver o raciocínio lógico-matemático aplicado a "${t}", consolidando ${tag || "operações e estratégias"} com situações reais.`,
+    ci: `Estimular a investigação científica e o pensamento crítico sobre "${t}", articulando observação, hipótese e registro.`,
+    esc: `Fortalecer competências socioemocionais e culturais a partir de "${t}", promovendo ${tag || "convivência, escuta e identidade"}.`,
+  };
+  const passosBase: string[] = [
+    `1) Acolhida (5 min) — apresente "${t}" com uma pergunta provocadora ou imagem disparadora; registre as primeiras ideias da turma.`,
+    `2) Exploração (${Math.max(10, Math.round(card.minutos * 0.4))} min) — proponha a atividade central de ${tag || foco || "investigação"}: ${card.title}. Trabalhe em duplas ou pequenos grupos.`,
+    `3) Sistematização (${Math.max(8, Math.round(card.minutos * 0.3))} min) — registre as descobertas no caderno/quadro; conecte com a BNCC ${card.bncc}.`,
+    `4) Fechamento (5 min) — peça que cada estudante diga uma palavra que resume o que aprendeu sobre "${t}".`,
+  ];
+  const avaliacao =
+    `Observação contínua durante a atividade + registro no caderno. Indicadores: participação na ${tag || "atividade"}, clareza ao explicar suas ideias sobre "${t}" e produção final (oral, escrita ou prática) coerente com ${card.bncc}.`;
+  const diferenciacao =
+    `Para estudantes com mais facilidade: propor desafio extra ligado a "${t}" (por exemplo, criar uma nova versão ou explicar para um colega). ` +
+    `Para estudantes que precisam de apoio: oferecer pares colaborativos, materiais visuais e roteiro passo a passo. ` +
+    `Para estudantes PCD: reduzir o número de etapas, ampliar o tempo e oferecer modelo concreto antes da produção autoral.`;
+  return {
+    ...card,
+    objetivo: card.objetivo ?? objetivos[v],
+    materiais: card.materiais ?? matsBase[v],
+    passos: card.passos ?? passosBase,
+    avaliacao: card.avaliacao ?? avaliacao,
+    diferenciacao: card.diferenciacao ?? diferenciacao,
+  };
+}
+
 function sofiaGenerateForDay(opts: {
   tema: string;
   competencias: Array<CompetenciaBNCC & { disciplina: string }>;
