@@ -375,6 +375,7 @@ const LABELS: Record<string, string> = {
   objetivo: "objetivo",
   descricao: "descrição (abertura, desenvolvimento ou fechamento)",
   habilidades: "ao menos uma habilidade BNCC",
+  habilidades_incompletas: "código e descrição em todas as habilidades BNCC",
 };
 
 /* ─────────────────────────── Body ─────────────────────────── */
@@ -441,6 +442,7 @@ function PlanoBody(props: {
 
       {/* 4. Habilidades BNCC */}
       <section className={`atv-card${has("habilidades") ? " atv-invalid" : ""}`}>
+      </section>
         <h3>③ Habilidades BNCC</h3>
         <div className="atv-chips">
           {plano.habilidades.map((h, i) => (
