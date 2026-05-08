@@ -75,7 +75,10 @@ serve(async (req) => {
       Array.isArray(disciplinasInter) && disciplinasInter.length > 0
         ? `Disciplinas a integrar (atividade INTERDISCIPLINAR): ${disciplinasInter.join(", ")}. `
           + `Articule essas áreas em UMA atividade coesa, deixando explícita a contribuição de cada disciplina. `
-          + `Inclua habilidades BNCC de TODAS as disciplinas listadas (pelo menos uma por disciplina).`
+          + `Inclua habilidades BNCC de TODAS as disciplinas listadas (pelo menos uma por disciplina). `
+          + `OBRIGATÓRIO: preencha o campo "contribuicoesInter" com UMA entrada por disciplina listada `
+          + `(${disciplinasInter.length} entradas), explicando em 1-2 frases COMO cada disciplina contribui `
+          + `para a aula (conceitos, habilidades, momento da atividade onde aparece).`
         : ``,
       `Tema: ${tema || "livre"}`,
       `Duração: ${duracao || "45 min"}`,
@@ -201,6 +204,20 @@ serve(async (req) => {
               },
             },
             materiais: { type: "array", items: { type: "string" } },
+            contribuicoesInter: {
+              type: "array",
+              description:
+                "Quando a atividade é interdisciplinar, uma entrada por disciplina explicando como ela contribui. Caso contrário, array vazio.",
+              items: {
+                type: "object",
+                properties: {
+                  disciplina: { type: "string" },
+                  contribuicao: { type: "string" },
+                },
+                required: ["disciplina", "contribuicao"],
+                additionalProperties: false,
+              },
+            },
           },
           required: [
             "titulo",
@@ -212,6 +229,7 @@ serve(async (req) => {
             "adaptacoes",
             "sugestoes",
             "materiais",
+            "contribuicoesInter",
           ],
           additionalProperties: false,
         },

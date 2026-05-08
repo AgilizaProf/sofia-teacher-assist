@@ -18,6 +18,7 @@ export type Adaptacao = {
 };
 export type Sugestao = { titulo: string; descricao: string };
 export type OpcaoAula = { titulo: string; resumo: string; abordagem: string };
+export type ContribuicaoInter = { disciplina: string; contribuicao: string };
 
 export type PlanoAtividade = {
   titulo: string;
@@ -30,6 +31,7 @@ export type PlanoAtividade = {
   sugestoes: Sugestao[];
   materiais: string[];
   materiaisCheck?: Record<number, boolean>;
+  contribuicoesInter?: ContribuicaoInter[];
   meta?: {
     ano: string; turma: string; disciplina: string; tema: string;
     duracao: string; tipo: string; incluirPCD: boolean;
@@ -52,6 +54,7 @@ type PlanoSalvo = {
 const EMPTY: PlanoAtividade = {
   titulo: "", objetivo: "", abertura: "", desenvolvimento: "", fechamento: "",
   habilidades: [], adaptacoes: [], sugestoes: [], materiais: [], materiaisCheck: {},
+  contribuicoesInter: [],
 };
 
 const ANOS_FALLBACK = [
@@ -548,6 +551,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     h2("③ Habilidades BNCC");
     plano.habilidades.forEach((h) => para(`• ${h.codigo} — ${h.descricao}`));
     if (plano.habilidades.length === 0) para("—");
+
+    if ((plano.contribuicoesInter ?? []).length > 0) {
+      h2("Contribuição por disciplina (interdisciplinar)");
+      plano.contribuicoesInter!.forEach((c) =>
+        para(`• ${c.disciplina}: ${c.contribuicao}`),
+      );
+    }
 
     if (plano.adaptacoes.length > 0) {
       h2("④ Adaptações PCD");
@@ -1058,6 +1068,34 @@ function PlanoBody(props: {
         </div>
       </section>
 
+      {/* 3b. Contribuições interdisciplinares (apenas quando houver) */}
+      {(plano.contribuicoesInter ?? []).length > 0 && (
+        <section className="atv-card atv-contrib">
+          <div className="atv-card-head">
+            <h3>🔗 Como cada disciplina contribui</h3>
+          </div>
+          <p className="atv-muted" style={{ marginBottom: 10 }}>
+            Resumo da articulação interdisciplinar proposta pela Sofia.
+          </p>
+          <div className="atv-contrib-grid">
+            {plano.contribuicoesInter!.map((c, i) => (
+              <div className="atv-contrib-card" key={`${c.disciplina}-${i}`}>
+                <div className="atv-contrib-disc">{c.disciplina}</div>
+                <InlineText
+                  value={c.contribuicao}
+                  onChange={(v) => {
+                    const next = [...plano.contribuicoesInter!];
+                    next[i] = { ...c, contribuicao: v };
+                    props.onChange("contribuicoesInter", next);
+                  }}
+                  tag="p" multiline
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 5. Adaptações PCD */}
       <section className="atv-card adapt">
         <button
@@ -1391,4 +1429,8 @@ textarea.atv-inline-input{min-height:80px;resize:vertical;}
 .atv-inter-chip:hover{border-color:#3B82F6;}
 .atv-inter-chip.sel{background:#3B82F6;border-color:#3B82F6;color:#fff;}
 .atv-inter-warn{margin:8px 0 0;font-size:11.5px;color:#92400E;}
+.atv-card.atv-contrib{background:linear-gradient(180deg,#EEF6FF,#FFFFFF);border-color:#BFDBFE;grid-column:1/-1;}
+.atv-contrib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+.atv-contrib-card{background:#fff;border:1px solid #BFDBFE;border-radius:8px;padding:10px;}
+.atv-contrib-disc{font-size:10.5px;font-weight:700;color:#1E40AF;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
 `;
