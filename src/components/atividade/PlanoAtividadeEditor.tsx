@@ -197,6 +197,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [opcoesSel, setOpcoesSel] = useState<number[]>([]);
   const [loadingOpcoes, setLoadingOpcoes] = useState(false);
 
+  // Quando a professora seleciona MAIS DE UMA opção e clica em "Gerar plano",
+  // a Sofia gera um plano completo para CADA opção. Cada plano fica
+  // disponível em uma aba editável separada — `plano` é sempre o ativo.
+  const [planosMulti, setPlanosMulti] = useState<PlanoAtividade[]>([]);
+  const [planoIdx, setPlanoIdx] = useState(0);
+  const [progresso, setProgresso] = useState<{ feitos: number; total: number }>({ feitos: 0, total: 0 });
+
   // Chave de tema normalizada para indexar favoritas.
   const temaKey = useMemo(
     () => `${disciplina} · ${tema.trim().toLowerCase()}`,
