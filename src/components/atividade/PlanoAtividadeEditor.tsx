@@ -770,6 +770,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [agendaDate, setAgendaDate] = useState<string>(todayIso());
   const [agendaCat, setAgendaCat] = useState<"aulas" | "aval">("aulas");
 
+  // Salvar todos os planos gerados em lote (multi-tabs).
+  const [salvarTodosOpen, setSalvarTodosOpen] = useState(false);
+  const [bulkSameDay, setBulkSameDay] = useState(true);
+  const [bulkCommonDate, setBulkCommonDate] = useState<string>(todayIso());
+  const [bulkCommonCat, setBulkCommonCat] = useState<"aulas" | "aval">("aulas");
+  const [bulkRows, setBulkRows] = useState<{ data: string; cat: "aulas" | "aval" }[]>([]);
+  const [bulkSaving, setBulkSaving] = useState(false);
+
   const abrirAgenda = () => {
     const f = validar();
     setMissing(f);
