@@ -3868,6 +3868,14 @@ export function Planejamento() {
                   <textarea value={(card.materiais ?? []).join("\n")} onChange={(e) => upd({ materiais: linesToArr(e.target.value) })} rows={4} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
                 </label>
                 <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  💡 Conceitos-chave (um por linha)
+                  <textarea value={(card.conceitos ?? []).join("\n")} onChange={(e) => upd({ conceitos: linesToArr(e.target.value) })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  ❓ Perguntas-chave para a turma (uma por linha)
+                  <textarea value={(card.perguntasChave ?? []).join("\n")} onChange={(e) => upd({ perguntasChave: linesToArr(e.target.value) })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
                   📋 Passo a passo (um por linha)
                   <textarea value={(card.passos ?? []).join("\n")} onChange={(e) => upd({ passos: linesToArr(e.target.value) })} rows={6} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
                 </label>
@@ -3879,11 +3887,19 @@ export function Planejamento() {
                   ♿ Diferenciação / Inclusão
                   <textarea value={card.diferenciacao ?? ""} onChange={(e) => upd({ diferenciacao: e.target.value })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
                 </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  🚀 Extensões / desdobramentos (um por linha)
+                  <textarea value={(card.extensoes ?? []).join("\n")} onChange={(e) => upd({ extensoes: linesToArr(e.target.value) })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  🏠 Lição de casa
+                  <textarea value={card.licaoCasa ?? ""} onChange={(e) => upd({ licaoCasa: e.target.value })} rows={2} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
               </div>
               <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", gap: 8 }}>
                 <button onClick={() => { if (confirm("Excluir esta atividade?")) { removerCardM1(dia, id); close(); } }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #FCA5A5", color: "#B91C1C", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 12.5 }}>Excluir</button>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => upd(enrichM1Card({ ...card, objetivo: undefined, materiais: undefined, passos: undefined, avaliacao: undefined, diferenciacao: undefined }, m1Tema))} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 12.5 }}>Regenerar detalhes</button>
+                  <button onClick={() => upd(enrichM1Card({ ...card, objetivo: undefined, materiais: undefined, passos: undefined, avaliacao: undefined, diferenciacao: undefined, perguntasChave: undefined, conceitos: undefined, extensoes: undefined, licaoCasa: undefined }, m1Tema))} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 12.5 }}>Regenerar detalhes</button>
                   <button onClick={close} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "var(--orange, #F97316)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12.5 }}>Concluir</button>
                 </div>
               </div>
