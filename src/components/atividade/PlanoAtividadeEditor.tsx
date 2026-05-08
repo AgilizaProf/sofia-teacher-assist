@@ -1186,9 +1186,53 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           <button className="atv-btn" onClick={exportarPDF}>
             <FileDown size={14} /> Exportar PDF
           </button>
-          <button className="atv-btn" onClick={adicionarAoM1}>
-            <CalendarPlus size={14} /> Adicionar ao M1
+          <button className="atv-btn" onClick={abrirAgenda}>
+            <CalendarPlus size={14} /> Agendar no calendário
           </button>
+        </div>
+      )}
+
+      {agendaOpen && (
+        <div
+          className="atv-modal-back"
+          onClick={(e) => { if (e.target === e.currentTarget) setAgendaOpen(false); }}
+        >
+          <div className="atv-modal">
+            <div className="atv-modal-head">
+              <CalendarPlus size={16} />
+              <h3>Em qual dia será esta aula?</h3>
+              <button className="atv-modal-x" onClick={() => setAgendaOpen(false)} aria-label="Fechar">
+                <X size={14} />
+              </button>
+            </div>
+            <p className="atv-muted" style={{ margin: "0 0 10px" }}>
+              A atividade vai aparecer no calendário M4 nesta data e, se for dia
+              útil, também na semana M1.
+            </p>
+            <div className="atv-field">
+              <label>Data da aula</label>
+              <input
+                type="date"
+                value={agendaDate}
+                onChange={(e) => setAgendaDate(e.target.value)}
+              />
+            </div>
+            <div className="atv-field" style={{ marginTop: 8 }}>
+              <label>Camada do calendário</label>
+              <select value={agendaCat} onChange={(e) => setAgendaCat(e.target.value as "aulas" | "aval")}>
+                <option value="aulas">📚 Aula</option>
+                <option value="aval">📝 Avaliação</option>
+              </select>
+            </div>
+            <div className="atv-modal-foot">
+              <button className="atv-btn ghost" onClick={() => setAgendaOpen(false)}>
+                Cancelar
+              </button>
+              <button className="atv-btn primary" onClick={confirmarAgenda} disabled={!agendaDate}>
+                <Check size={14} /> Agendar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
