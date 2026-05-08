@@ -12,6 +12,7 @@ export const Route = createFileRoute("/relatorios")({
     let turma: string | undefined;
     let pcd: "todos" | "apenas" | undefined;
     let focus: "turmas" | "alunos" | "pareceres" | "horas" | undefined;
+    let range: "week" | undefined;
     try {
       const tabIn = typeof safe.tab === "string" ? safe.tab.trim().toLowerCase() : "";
       if ((ALLOWED_TABS as readonly string[]).includes(tabIn)) tab = tabIn as Tab;
@@ -23,10 +24,12 @@ export const Route = createFileRoute("/relatorios")({
       if (focusIn === "turmas" || focusIn === "alunos" || focusIn === "pareceres" || focusIn === "horas") {
         focus = focusIn;
       }
+      const rangeIn = typeof safe.range === "string" ? safe.range.trim().toLowerCase() : "";
+      if (rangeIn === "week") range = "week";
     } catch (err) {
       console.warn("[/relatorios] search params inválidos, usando padrão:", err);
     }
-    return { tab, turma, pcd, focus };
+    return { tab, turma, pcd, focus, range };
   },
   head: () => ({
     meta: [
