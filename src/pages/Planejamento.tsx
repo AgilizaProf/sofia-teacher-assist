@@ -3005,6 +3005,23 @@ export function Planejamento() {
                       value={m6Text}
                       onChange={(e) => setM6Text(e.target.value)}
                     />
+                    {m6Emoji && M6_QUICK_BY_EMOJI[m6Emoji] && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, alignItems: "center" }}>
+                        <span style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginRight: 4 }}>
+                          <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Sugestões rápidas:
+                        </span>
+                        {M6_QUICK_BY_EMOJI[m6Emoji].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => m6AddQuickText(s)}
+                            style={{ background: "#FFF7ED", border: "1px solid #FED7AA", color: "#7C2D12", borderRadius: 99, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", fontWeight: 500 }}
+                          >
+                            + {s}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     <div className="pl-d6-tags">
                       {M6_TAGS.map((t) => (
                         <button key={t} className={m6Tags.includes(t) ? "on" : ""} onClick={() => m6ToggleTag(t)}>{t}</button>
