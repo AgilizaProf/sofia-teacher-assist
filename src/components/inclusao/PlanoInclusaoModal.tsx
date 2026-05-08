@@ -42,30 +42,90 @@ type Props = {
   onSaved: (plano: PlanoInclusao) => void;
 };
 
-const METODOLOGIA_SUGESTOES = [
+const METODOLOGIA_BASE = [
   "Ensino estruturado (TEACCH) com apoio visual passo a passo",
   "Aprendizagem cooperativa em duplas com mediação",
   "Rotina com pictogramas e antecipação das etapas",
   "Pareamento de conteúdo abstrato com material concreto",
   "Jogos pedagógicos com tempo controlado e pausas previstas",
-  "Aprendizagem baseada em projeto curto (2-3 aulas)",
 ];
 
-const AVALIACAO_SUGESTOES = [
+const AVALIACAO_BASE = [
   "Observação direta com lista de verificação dos objetivos",
-  "Registro fotográfico do produto + roda de conversa",
   "Avaliação processual: o aluno explica o que fez, com mediação",
   "Portfólio: anexar produção ao caderno do PEI",
   "Rubrica simplificada (consolidado / em desenvolvimento / não alcançado)",
 ];
 
-const OBSERVACOES_SUGESTOES = [
+const OBSERVACOES_BASE = [
   "Respondeu bem a estímulos visuais e apoio individual",
   "Apresentou desregulação no início; melhorou após pausa sensorial",
   "Necessitou de mediação constante para iniciar a tarefa",
   "Trabalhou em dupla com sucesso, comunicando a ideia ao colega",
   "Concluiu parcialmente; reforçar na próxima aula",
 ];
+
+/** Divide "Mat + Port" em disciplinas e devolve a primeira como referência. */
+function disciplinaPrimaria(d: string): string {
+  return (d || "").split("+")[0].trim();
+}
+
+function getMetodologiaSugestoes(disciplina: string, ano?: string): string[] {
+  const d = disciplinaPrimaria(disciplina);
+  const ei = isEducacaoInfantil(ano);
+  const especificas: Record<string, string[]> = {
+    "Língua Portuguesa": ["Leitura compartilhada com apoio do alfabeto móvel", "Produção textual coletiva com escriba", "Caça-palavras temático com pistas visuais"],
+    "Matemática": ["Material dourado e ábaco para representar quantidades", "Resolução de problemas com desenhos e manipuláveis", "Calculadora como apoio quando o foco é o raciocínio"],
+    "Ciências": ["Experimento prático com roteiro ilustrado", "Observação guiada com lupa e registro por desenho", "Vídeo curto + roda de conversa"],
+    "História": ["Linha do tempo visual com imagens", "Dramatização de cenas históricas", "Mapa conceitual coletivo"],
+    "Geografia": ["Mapas táteis e maquetes", "Saída pedagógica curta pelo entorno da escola", "Análise de imagens com legendas simples"],
+    "Arte": ["Releitura com técnica livre", "Produção em estações rotativas", "Música e movimento como suporte"],
+    "Educação Física": ["Circuito com estações e pausas previstas", "Jogos cooperativos com regras adaptadas", "Tempo reduzido e função flexível para o aluno"],
+    "Inglês": ["Flashcards com imagem + palavra", "TPR (resposta física total) com comandos curtos", "Música com gestos para fixação"],
+    "Ensino Religioso": ["Roda de conversa com história ilustrada", "Mural coletivo de valores", "Produção de cartaz em duplas"],
+    "O eu, o outro e o nós": ["Roda de conversa com objeto da vez", "Brincadeiras de turnos com mediação", "Mural dos sentimentos"],
+    "Corpo, gestos e movimentos": ["Circuito sensório-motor", "Imitação de animais com música", "Massinha e materiais de diferentes texturas"],
+    "Traços, sons, cores e formas": ["Pintura livre em diferentes suportes", "Estação de música com instrumentos de sucata", "Carimbos e colagem"],
+    "Escuta, fala, pensamento e imaginação": ["Contação com fantoches", "Reconto coletivo com imagens-pista", "Brincadeira de adivinhação"],
+    "Espaços, tempos, quantidades, relações e transformações": ["Contagem com objetos do cotidiano", "Calendário ilustrado da rotina", "Misturas e transformações observadas"],
+  };
+  const extra = especificas[d] || [];
+  return [...extra, ...(ei ? METODOLOGIA_BASE.slice(0, 3) : METODOLOGIA_BASE)].slice(0, 7);
+}
+
+function getAvaliacaoSugestoes(disciplina: string, ano?: string): string[] {
+  const d = disciplinaPrimaria(disciplina);
+  const ei = isEducacaoInfantil(ano);
+  const especificas: Record<string, string[]> = {
+    "Língua Portuguesa": ["Ditado com banco de palavras visível", "Reconto oral da história lida", "Produção textual avaliada por critérios (ideia / coesão / ortografia)"],
+    "Matemática": ["Resolução de 3 problemas com manipuláveis disponíveis", "Verificação oral do raciocínio com mediação", "Tarefa adaptada com menor número de itens"],
+    "Ciências": ["Registro do experimento por desenho legendado", "Explicação oral do que observou", "Classificação de imagens em categorias"],
+    "História": ["Linha do tempo preenchida com figuras", "Roda de conversa: o que aprendi hoje", "Cartaz coletivo avaliado por participação"],
+    "Geografia": ["Identificação de elementos no mapa com pistas", "Maquete em dupla avaliada por critérios", "Descrição oral da paisagem"],
+    "Arte": ["Avaliação por processo + produto final", "Apresentação da obra com fala curta", "Autoavaliação com carinhas (😀 😐 😟)"],
+    "Educação Física": ["Observação da participação e cooperação", "Lista de verificação dos movimentos solicitados", "Registro de evolução em circuito"],
+    "Inglês": ["Reconhecimento oral de vocabulário com imagens", "Atividade de ligar palavra-imagem", "Pronúncia de 5 palavras-chave"],
+    "Ensino Religioso": ["Participação na roda + cartaz", "Reconto da história com valores destacados", "Autoavaliação guiada"],
+  };
+  const extra = especificas[d] || [];
+  return [...extra, ...(ei ? AVALIACAO_BASE.slice(0, 2) : AVALIACAO_BASE)].slice(0, 7);
+}
+
+function getObservacoesSugestoes(disciplina: string, _ano?: string): string[] {
+  const d = disciplinaPrimaria(disciplina);
+  const especificas: Record<string, string[]> = {
+    "Língua Portuguesa": ["Ainda confunde sons semelhantes; reforçar consciência fonológica", "Avançou na leitura de palavras simples"],
+    "Matemática": ["Ainda depende do material concreto para somar", "Resolveu com autonomia usando o ábaco"],
+    "Ciências": ["Engajou-se no experimento; descreveu com precisão", "Precisou de roteiro visual para acompanhar"],
+    "História": ["Relacionou bem o conteúdo à própria família", "Dificuldade com a noção de tempo cronológico"],
+    "Geografia": ["Localizou pontos com pista visual", "Confundiu direções; retomar com jogo"],
+    "Arte": ["Demonstrou criatividade e autonomia no traço", "Precisou de mediação para iniciar"],
+    "Educação Física": ["Cooperou bem no jogo; aceitou as regras adaptadas", "Apresentou cansaço; reduzir o tempo na próxima"],
+    "Inglês": ["Fixou o vocabulário com apoio das imagens", "Pronúncia ainda travada; reforçar com música"],
+  };
+  const extra = especificas[d] || [];
+  return [...extra, ...OBSERVACOES_BASE].slice(0, 7);
+}
 
 const TIPOS = ["Aula expositiva dialogada", "Atividade prática", "Jogo pedagógico", "Leitura mediada", "Produção textual", "Roda de conversa"];
 
