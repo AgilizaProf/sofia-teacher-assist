@@ -22,6 +22,11 @@ serve(async (req) => {
       turma = "",
       alunosPCD = [] as AlunoPCD[],
       historico = [] as string[],
+      duracao = "",
+      tipoAtividade = "",
+      incluirPCD = true,
+      regenField = "" as string,
+      planoAtual = null as Record<string, unknown> | null,
     } = body || {};
 
     const KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -55,7 +60,7 @@ serve(async (req) => {
       "Sempre adapte ao ano escolar informado. Não invente dados sobre alunos. " +
       "Habilidades devem ter código BNCC compatível com o ano escolar.";
 
-    const userPrompt = [
+    const baseContext = [
       `Tipo de planejamento: ${
         modo === "pcd"
           ? "ATIVIDADE PARA ALUNO PCD (foco em adaptação)"
@@ -65,16 +70,50 @@ serve(async (req) => {
       `Turma: ${turma || "não informada"}`,
       `Disciplina: ${disciplina || "livre escolha do(a) docente"}`,
       `Tema: ${tema || "livre"}`,
+      `Duração: ${duracao || "45 min"}`,
+      `Tipo de atividade: ${tipoAtividade || "Livre"}`,
+      `Incluir adaptações PCD: ${incluirPCD ? "sim" : "não"}`,
       ``,
       `Alunos PCD na turma:`,
-      pcdResumo,
+      incluirPCD ? pcdResumo : "Adaptações PCD desativadas pela professora.",
       ``,
       `Histórico recente da professora:`,
       histResumo,
+    ].join("\n");
+
+    // Regeneração por campo: se regenField vier preenchido, pedimos APENAS
+    // o campo, mantendo o restante do plano atual como contexto.
+    const REGEN_LABELS: Record<string, string> = {
+      titulo: "TÍTULO",
+      objetivo: "OBJETIVO",
+      abertura: "ABERTURA da descrição",
+      desenvolvimento: "DESENVOLVIMENTO da descrição",
+      fechamento: "FECHAMENTO da descrição",
+      habilidades: "HABILIDADES BNCC",
+      adaptacoes: "ADAPTAÇÕES PCD",
+      sugestoes: "SUGESTÕES de variação",
+      materiais: "lista de MATERIAIS",
+    };
+
+    const userPrompt = regenField && REGEN_LABELS[regenField]
+      ? [
+          baseContext,
+          ``,
+          `Plano atual (mantenha tudo, exceto o campo solicitado):`,
+          JSON.stringify(planoAtual ?? {}, null, 2),
+          ``,
+          `Regenere APENAS o campo "${REGEN_LABELS[regenField]}". `
+            + `Devolva o plano completo, mas só esse campo deve mudar; `
+            + `os demais campos devem voltar IDÊNTICOS ao plano atual.`,
+        ].join("\n")
+      : [
+      baseContext,
       ``,
       `Gere uma atividade completa. Materiais devem refletir a descrição. ` +
         `Sugira 4 a 5 variações alinhadas ao mesmo objetivo. ` +
-        `Para adaptações, cubra TEA, TDAH, DI e Deficiência física quando fizer sentido.`,
+        (incluirPCD
+          ? `Para adaptações, cubra TEA, TDAH, DI e Deficiência física quando fizer sentido.`
+          : `NÃO inclua adaptações PCD (devolva array vazio em "adaptacoes").`),
     ].join("\n");
 
     const tool = {
