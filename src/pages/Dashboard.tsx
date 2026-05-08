@@ -671,28 +671,30 @@ export function Dashboard() {
             className="stats"
             data-sofia-section="stats"
           >
-            <button
-              ref={schoolsRef as unknown as React.Ref<HTMLButtonElement>}
-              className={`stat school-clickable${highlight === "schools" ? " sofia-highlight" : ""}`}
-              type="button"
-              onClick={() => setSchoolOpen(true)}
-              aria-label="Adicionar escola"
-              style={{ textAlign: "left" }}
-            >
-              <div className="stat-icon s1"><Svg c={<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>} /></div>
-              <div className="stat-body"><div className="stat-value">{baseSchools + schools.length} {schools.length > 0 && <span className="stat-value-trend">+{schools.length}</span>}</div><div className="stat-label">Escolas</div></div>
-            </button>
             <button ref={classesRef as unknown as React.Ref<HTMLButtonElement>} className={`stat school-clickable${highlight === "classes" ? " sofia-highlight" : ""}`} type="button" onClick={() => setClassOpen(true)} aria-label="Adicionar turma" style={{ textAlign: "left" }}>
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
-              <div className="stat-body"><div className="stat-value">{baseClasses + classes.length} {classes.length > 0 && <span className="stat-value-trend">+{classes.length}</span>}</div><div className="stat-label">Turmas ativas</div></div>
+              <div className="stat-body"><div className="stat-value">{totalClasses} {classes.length > 0 && <span className="stat-value-trend">+{classes.length}</span>}</div><div className="stat-label">Turmas ativas</div></div>
             </button>
-            <button className="stat school-clickable" type="button" onClick={() => setStudentOpen(true)} aria-label="Adicionar aluno" style={{ textAlign: "left" }}>
+            <button ref={studentsRef as unknown as React.Ref<HTMLButtonElement>} className="stat school-clickable" type="button" onClick={() => setStudentOpen(true)} aria-label="Adicionar aluno" style={{ textAlign: "left" }}>
               <div className="stat-icon s3"><Svg c={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} /></div>
-              <div className="stat-body"><div className="stat-value">{baseStudents + students.length} {students.length > 0 && <span className="stat-value-trend">+{students.length}</span>}</div><div className="stat-label">Alunos</div></div>
+              <div className="stat-body"><div className="stat-value">{totalStudents} {students.length > 0 && <span className="stat-value-trend">+{students.length}</span>}</div><div className="stat-label">Alunos</div></div>
+            </button>
+            <button className="stat school-clickable" type="button" onClick={() => navigate({ to: "/relatorios", search: { tab: "todo" } })} aria-label="Ver pareceres pendentes" style={{ textAlign: "left" }}>
+              <div className="stat-icon s1"><Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} /></div>
+              <div className="stat-body">
+                <div className="stat-value">
+                  {documentsGenerated}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>/{totalStudents}</span>
+                  {pareceresPendentes.alunos > 0 && <span className="stat-value-trend" style={{ color: "var(--accent-deep)", background: "var(--accent-soft)" }}>{pareceresPendentes.alunos} pendentes</span>}
+                </div>
+                <div className="stat-label">Pareceres do bimestre</div>
+              </div>
             </button>
             <div className="stat">
-              <div className="stat-icon s4"><Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} /></div>
-              <div className="stat-body"><div className="stat-value">{documentsGenerated}</div><div className="stat-label">Documentos gerados</div></div>
+              <div className="stat-icon s4"><Svg c={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} /></div>
+              <div className="stat-body">
+                <div className="stat-value">{h}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>h</span>{m > 0 && <>{m}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>min</span></>}</div>
+                <div className="stat-label">Horas economizadas</div>
+              </div>
             </div>
           </div>
 
