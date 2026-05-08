@@ -1459,6 +1459,45 @@ export function Planejamento() {
   type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string };
   const M6_TAGS = ["+ funcionou", "- precisa reforço", "+ inclusão", "+ família"] as const;
   const M6_EMOJIS = ["😣", "😐", "🙂", "😄", "🌟"] as const;
+  // Sugestões rápidas de observação por humor — clique adiciona ao textarea.
+  const M6_QUICK_BY_EMOJI: Record<string, string[]> = {
+    "😣": [
+      "Turma muito agitada, difícil manter o foco.",
+      "Vários alunos dispersos após o recreio.",
+      "Conteúdo travou, preciso retomar com outra abordagem.",
+      "Conflitos entre colegas atrapalharam a aula.",
+    ],
+    "😐": [
+      "Aula cumpriu o objetivo, mas sem entusiasmo.",
+      "Alguns alunos avançaram, outros precisam de reforço.",
+      "Faltou tempo para o fechamento.",
+      "Engajamento mediano, tentar abordagem mais lúdica.",
+    ],
+    "🙂": [
+      "Turma engajada na maior parte da aula.",
+      "Boa participação nas atividades em dupla.",
+      "Conteúdo compreendido pela maioria.",
+      "Pequenos ajustes deixariam ainda melhor.",
+    ],
+    "😄": [
+      "Aula fluiu muito bem, alunos participativos.",
+      "Estratégia funcionou — vale repetir.",
+      "Momento de escuta foi rico.",
+      "Avanços visíveis em vários alunos.",
+    ],
+    "🌟": [
+      "Aula excepcional, replicar em outras turmas.",
+      "Todos engajados do início ao fim.",
+      "Resultados superaram a expectativa.",
+      "Família elogiou o trabalho.",
+    ],
+  };
+  const m6AddQuickText = (s: string) => {
+    setM6Text((prev) => {
+      const t = prev.trim();
+      return t ? `${t} ${s}` : s;
+    });
+  };
   // Diário começa vazio — apenas o que a professora registrar aparece aqui.
   const M6_INITIAL: M6Entry[] = [];
   const [m6Entries, setM6Entries] = usePersistentState<M6Entry[]>("plan_m6_entries", M6_INITIAL);
