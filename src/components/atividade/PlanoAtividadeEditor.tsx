@@ -226,6 +226,19 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const alunoFoco =
     modo === "pcd" ? alunosPCDDaTurma[alunoFocoIdx] ?? null : null;
 
+  // Geração em lote: uma atividade PCD por aluno da turma.
+  type LoteItem = {
+    aluno: string;
+    codigo?: string;
+    plano?: PlanoAtividade;
+    erro?: string;
+  };
+  const [gerandoLote, setGerandoLote] = useState(false);
+  const [loteProg, setLoteProg] = useState<{ atual: number; total: number; nome: string }>({
+    atual: 0, total: 0, nome: "",
+  });
+  const [lote, setLote] = useState<LoteItem[]>([]);
+
   const showToast = (msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(""), 2200);
