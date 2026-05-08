@@ -642,6 +642,51 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           </div>
         </div>
 
+        {disciplina === "Interdisciplinar" && (
+          <div className="atv-inter">
+            <div className="atv-inter-head">
+              <span className="atv-inter-label">Disciplinas a integrar</span>
+              <span className="atv-inter-hint">
+                Marque 2 ou mais. Sofia vai articular as áreas em uma única atividade.
+              </span>
+              {disciplinasInter.length > 0 && (
+                <button
+                  className="atv-inter-clear"
+                  onClick={() => setDisciplinasInter([])}
+                  type="button"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+            <div className="atv-inter-chips">
+              {DISCIPLINAS.filter((d) => d !== "Interdisciplinar").map((d) => {
+                const sel = disciplinasInter.includes(d);
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    className={`atv-inter-chip${sel ? " sel" : ""}`}
+                    onClick={() =>
+                      setDisciplinasInter((cur) =>
+                        cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d],
+                      )
+                    }
+                  >
+                    {sel ? <Check size={11} /> : <Plus size={11} />}
+                    {d}
+                  </button>
+                );
+              })}
+            </div>
+            {disciplinasInter.length === 1 && (
+              <p className="atv-inter-warn">
+                Escolha pelo menos mais uma disciplina para gerar uma atividade interdisciplinar.
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="atv-toolbar-row second">
           {modo === "regular" && (
             <label className="atv-toggle">
