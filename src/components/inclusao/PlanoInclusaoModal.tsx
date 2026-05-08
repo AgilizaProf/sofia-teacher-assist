@@ -75,23 +75,32 @@ const OBSERVACOES_SUGESTOES = [
 
 const TIPOS = ["Aula expositiva dialogada", "Atividade prática", "Jogo pedagógico", "Leitura mediada", "Produção textual", "Roda de conversa"];
 
-function ChipRow({ items, onPick }: { items: string[]; onPick: (t: string) => void }) {
+function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: string[]; onPick: (t: string) => void; label?: string }) {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
-      {items.map((t) => (
-        <button
-          key={t}
-          type="button"
-          onClick={() => onPick(t)}
-          style={{
-            fontSize: 11.5, padding: "5px 10px", borderRadius: 999,
-            border: "1px solid var(--border)", background: "var(--accent-soft)",
-            color: "#B8410E", fontWeight: 600, cursor: "pointer",
-          }}
-        >
-          + {t.length > 60 ? t.slice(0, 58) + "…" : t}
-        </button>
-      ))}
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8, padding: "8px 10px", background: "var(--bg)", borderRadius: 8, border: "1px dashed var(--border)" }}>
+      <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+        💡 {label} · clique para inserir
+      </span>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {items.map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => onPick(t)}
+            title={t}
+            style={{
+              fontSize: 11.5, padding: "5px 10px", borderRadius: 999,
+              border: "1px solid #FFD4B8", background: "var(--accent-soft)",
+              color: "#B8410E", fontWeight: 600, cursor: "pointer",
+              transition: "transform .12s, background .12s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#FFE4D2"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent-soft)"; }}
+          >
+            + {t.length > 60 ? t.slice(0, 58) + "…" : t}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
