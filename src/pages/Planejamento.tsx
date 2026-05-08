@@ -2126,6 +2126,9 @@ export function Planejamento() {
                         return (
                           <div
                             key={day.k}
+                            data-testid="m1-day"
+                            data-day-iso={day.iso}
+                            data-is-today={isToday ? "true" : "false"}
                             className={"pl-cal-day" + (calSel === day.k ? " selected" : "") + (cards.length > 0 ? " has-ai" : "") + (m1DropDay === day.k ? " drop" : "")}
                             onClick={() => setCalSel(day.k)}
                             onDragOver={(e) => onM1DragOver(e, day.k)}
