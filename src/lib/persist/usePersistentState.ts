@@ -18,6 +18,7 @@ export function usePersistentState<T>(key: string, initial: T) {
   // because the server has no access to it. We restore the persisted value in
   // a useEffect after mount instead.
   const [state, setState] = useState<T>(initial);
+  const initialRef = useRef<T>(initial);
   const userIdRef = useRef<string | null>(null);
   const hydratedRef = useRef(false);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -33,7 +34,7 @@ export function usePersistentState<T>(key: string, initial: T) {
       raw = window.localStorage.getItem(lsKey);
       if (!raw) return;
       const parsed = JSON.parse(raw) as unknown;
-      const mismatch = detectShapeMismatch(parsed, initial);
+      const mismatch = detectShapeMismatch(parsed, initialRef.current);
       if (mismatch) {
         reportStorageIssue({
           key,
@@ -52,7 +53,7 @@ export function usePersistentState<T>(key: string, initial: T) {
         key,
         source: "localStorage",
         kind: "parse-error",
-        expectedType: typeof initial === "object" && initial !== null ? (Array.isArray(initial) ? "array" : "object") : typeof initial,
+        expectedType: typeof initialRef.current === "object" && initialRef.current !== null ? (Array.isArray(initialRef.current) ? "array" : "object") : typeof initialRef.current,
         receivedType: "string(corrupted)",
         message: `Falha ao parsear localStorage["${lsKey}"]: ${(err as Error)?.message ?? String(err)}`,
         rawPreview: raw ? (raw.length > 160 ? raw.slice(0, 160) + "…" : raw) : undefined,
@@ -78,7 +79,7 @@ export function usePersistentState<T>(key: string, initial: T) {
         .eq("key", key)
         .maybeSingle();
       if (error || !data) { hydratedRef.current = true; return; }
-      const mismatch = detectShapeMismatch(data.data, initial);
+      const mismatch = detectShapeMismatch(data.data, initialRef.current);
       if (mismatch) {
         reportStorageIssue({
           key,
