@@ -1,0 +1,217 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+type AlunoPCD = { nome?: string; tipo?: string; codigo?: string; anotacoes?: string };
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    const {
+      modo = "regular",
+      anoEscolar = "",
+      disciplina = "",
+      tema = "",
+      turma = "",
+      alunosPCD = [] as AlunoPCD[],
+      historico = [] as string[],
+    } = body || {};
+
+    const KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!KEY) {
+      return new Response(
+        JSON.stringify({ error: "LOVABLE_API_KEY ausente no servidor." }),
+        { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    const pcdResumo =
+      Array.isArray(alunosPCD) && alunosPCD.length
+        ? alunosPCD
+            .map(
+              (a) =>
+                `- ${a.nome || "Aluno"} (${a.tipo || a.codigo || "PCD"})${
+                  a.anotacoes ? `: ${a.anotacoes}` : ""
+                }`,
+            )
+            .join("\n")
+        : "Nenhum aluno PCD informado.";
+
+    const histResumo =
+      Array.isArray(historico) && historico.length
+        ? historico.slice(0, 6).map((h) => `- ${h}`).join("\n")
+        : "Sem histórico recente.";
+
+    const systemPrompt =
+      "Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade " +
+      "alinhados à BNCC, em PT-BR, claros e aplicáveis em sala de aula. " +
+      "Sempre adapte ao ano escolar informado. Não invente dados sobre alunos. " +
+      "Habilidades devem ter código BNCC compatível com o ano escolar.";
+
+    const userPrompt = [
+      `Tipo de planejamento: ${
+        modo === "pcd"
+          ? "ATIVIDADE PARA ALUNO PCD (foco em adaptação)"
+          : "Atividade regular para a turma toda"
+      }`,
+      `Ano escolar: ${anoEscolar || "não informado"}`,
+      `Turma: ${turma || "não informada"}`,
+      `Disciplina: ${disciplina || "livre escolha do(a) docente"}`,
+      `Tema: ${tema || "livre"}`,
+      ``,
+      `Alunos PCD na turma:`,
+      pcdResumo,
+      ``,
+      `Histórico recente da professora:`,
+      histResumo,
+      ``,
+      `Gere uma atividade completa. Materiais devem refletir a descrição. ` +
+        `Sugira 4 a 5 variações alinhadas ao mesmo objetivo. ` +
+        `Para adaptações, cubra TEA, TDAH, DI e Deficiência física quando fizer sentido.`,
+    ].join("\n");
+
+    const tool = {
+      type: "function",
+      function: {
+        name: "criar_plano_atividade",
+        description: "Retorna um plano de atividade pedagógico completo.",
+        parameters: {
+          type: "object",
+          properties: {
+            titulo: { type: "string" },
+            objetivo: { type: "string" },
+            abertura: { type: "string", description: "Descrição da abertura da aula." },
+            desenvolvimento: { type: "string" },
+            fechamento: { type: "string" },
+            habilidades: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  codigo: { type: "string", description: "Código BNCC, ex.: EF03MA03" },
+                  descricao: { type: "string" },
+                },
+                required: ["codigo", "descricao"],
+                additionalProperties: false,
+              },
+            },
+            adaptacoes: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  categoria: {
+                    type: "string",
+                    enum: ["TEA", "TDAH", "DI", "Deficiência física", "Outra"],
+                  },
+                  texto: { type: "string" },
+                },
+                required: ["categoria", "texto"],
+                additionalProperties: false,
+              },
+            },
+            sugestoes: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  titulo: { type: "string" },
+                  descricao: { type: "string" },
+                },
+                required: ["titulo", "descricao"],
+                additionalProperties: false,
+              },
+            },
+            materiais: { type: "array", items: { type: "string" } },
+          },
+          required: [
+            "titulo",
+            "objetivo",
+            "abertura",
+            "desenvolvimento",
+            "fechamento",
+            "habilidades",
+            "adaptacoes",
+            "sugestoes",
+            "materiais",
+          ],
+          additionalProperties: false,
+        },
+      },
+    };
+
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        tools: [tool],
+        tool_choice: { type: "function", function: { name: "criar_plano_atividade" } },
+      }),
+    });
+
+    if (!resp.ok) {
+      const t = await resp.text();
+      console.error("AI gateway error", resp.status, t);
+      if (resp.status === 429) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "Sofia está com muitas solicitações agora. Tente de novo em instantes.",
+          }),
+          { status: 429, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+      if (resp.status === 402) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "Créditos da IA esgotados. Adicione créditos em Settings → Workspace → Usage.",
+          }),
+          { status: 402, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: "Erro ao gerar atividade." }),
+        { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    const data = await resp.json();
+    const call = data?.choices?.[0]?.message?.tool_calls?.[0];
+    const rawArgs = call?.function?.arguments;
+    const plano =
+      typeof rawArgs === "string" ? JSON.parse(rawArgs) : rawArgs ?? null;
+
+    if (!plano) {
+      return new Response(
+        JSON.stringify({ error: "Sofia não conseguiu estruturar a resposta." }),
+        { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+
+    return new Response(JSON.stringify({ plano }), {
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("gerar-atividade error", e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }),
+      { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+    );
+  }
+});
