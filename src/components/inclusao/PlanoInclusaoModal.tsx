@@ -75,7 +75,96 @@ const OBSERVACOES_SUGESTOES = [
 
 const TIPOS = ["Aula expositiva dialogada", "Atividade prática", "Jogo pedagógico", "Leitura mediada", "Produção textual", "Roda de conversa"];
 
+const DISCIPLINAS_EF = [
+  "Língua Portuguesa", "Matemática", "Ciências", "História", "Geografia",
+  "Arte", "Educação Física", "Inglês", "Ensino Religioso",
+];
+
+const CAMPOS_EI = [
+  "O eu, o outro e o nós",
+  "Corpo, gestos e movimentos",
+  "Traços, sons, cores e formas",
+  "Escuta, fala, pensamento e imaginação",
+  "Espaços, tempos, quantidades, relações e transformações",
+];
+
+function isEducacaoInfantil(ano?: string) {
+  return !!ano && /infantil|creche|pr[eé]/i.test(ano);
+}
+
+function anoNumerico(ano?: string): number {
+  const m = (ano || "").match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+/** Sugestões rápidas de tema, calibradas por disciplina/campo + ano escolar. */
+function getTemaSugestoes(disciplinas: string[], ano?: string): string[] {
+  const ei = isEducacaoInfantil(ano);
+  const n = anoNumerico(ano);
+  const d0 = disciplinas[0] || "";
+
+  if (ei) {
+    const map: Record<string, string[]> = {
+      "O eu, o outro e o nós": ["Quem sou eu", "Minha família", "Sentimentos", "Combinados da turma", "Brincadeiras de roda"],
+      "Corpo, gestos e movimentos": ["Circuito motor", "Dança das partes do corpo", "Equilíbrio com cordas", "Imitar animais", "Massinha e modelagem"],
+      "Traços, sons, cores e formas": ["Cores primárias", "Pintura com guache", "Carimbos com folhas", "Música com sucata", "Colagem de formas"],
+      "Escuta, fala, pensamento e imaginação": ["Leitura de história", "Reconto com fantoches", "Roda de poesia", "Trava-língua", "Inventando finais"],
+      "Espaços, tempos, quantidades, relações e transformações": ["Contagem até 10 com objetos", "Grande e pequeno", "Calendário da semana", "Hortinha", "Misturas de cores"],
+    };
+    if (d0 && map[d0]) return map[d0];
+    return ["Quem sou eu", "Cores primárias", "Contagem com objetos", "Leitura de história", "Circuito motor"];
+  }
+
+  // Fundamental — calibrar por disciplina + ano
+  const ciclo: "I" | "II" = n >= 6 ? "II" : "I";
+  const por: Record<string, Record<"I" | "II", string[]>> = {
+    "Língua Portuguesa": {
+      I: ["Sílabas simples", "Leitura compartilhada", "Lista de palavras", "Bilhete", "Reconto de história"],
+      II: ["Crônica", "Notícia", "Verbos", "Concordância verbal", "Interpretação de poema"],
+    },
+    "Matemática": {
+      I: ["Adição até 20", "Tabuada do 2 ao 5", "Sequência numérica", "Formas geométricas", "Sistema monetário"],
+      II: ["Frações equivalentes", "Equações de 1º grau", "Razão e proporção", "Área e perímetro", "Estatística básica"],
+    },
+    "Ciências": {
+      I: ["Os 5 sentidos", "Ciclo da água", "Animais vertebrados", "Higiene e saúde", "Plantas"],
+      II: ["Sistema solar", "Células", "Cadeia alimentar", "Estados físicos da matéria", "Energia e calor"],
+    },
+    "História": {
+      I: ["Minha família", "Brincadeiras de antigamente", "História do bairro", "Linha do tempo pessoal", "Profissões"],
+      II: ["Brasil colônia", "Independência do Brasil", "Idade Média", "Revolução Industrial", "Era Vargas"],
+    },
+    "Geografia": {
+      I: ["Pontos de referência", "Tipos de moradia", "Paisagens natural e cultural", "Mapa da escola", "Meios de transporte"],
+      II: ["Cartografia", "Clima e relevo do Brasil", "Urbanização", "Globalização", "Hidrografia"],
+    },
+    "Arte": {
+      I: ["Cores primárias e secundárias", "Cantigas populares", "Releitura de obra", "Modelagem com argila", "Brincadeiras cantadas"],
+      II: ["Movimento modernista", "Música brasileira", "Fotografia", "Teatro de sombras", "Grafite e arte urbana"],
+    },
+    "Educação Física": {
+      I: ["Brincadeiras de roda", "Circuito motor", "Pega-pega cooperativo", "Amarelinha", "Queimada"],
+      II: ["Voleibol — fundamentos", "Basquete — passe e drible", "Ginástica artística", "Esportes de combate", "Dança contemporânea"],
+    },
+    "Inglês": {
+      I: ["Greetings", "Colors and numbers", "My family", "Animals", "Food"],
+      II: ["Simple present", "Past tense", "Daily routine", "Job interview", "Reading short stories"],
+    },
+    "Ensino Religioso": {
+      I: ["Respeito ao outro", "Diversidade cultural", "Símbolos religiosos", "Histórias e tradições", "Convivência"],
+      II: ["Ética e cidadania", "Religiões afro-brasileiras", "Direitos humanos", "Cultura indígena", "Tolerância"],
+    },
+  };
+  if (d0 && por[d0]) return por[d0][ciclo];
+
+  // Sem disciplina escolhida — sugestões gerais por ciclo
+  return ciclo === "I"
+    ? ["Leitura compartilhada", "Adição até 20", "Ciclo da água", "Minha família", "Cores primárias"]
+    : ["Frações", "Sistema solar", "Verbos", "Independência do Brasil", "Cartografia"];
+}
+
 function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: string[]; onPick: (t: string) => void; label?: string }) {
+  if (!items.length) return null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8, padding: "8px 10px", background: "var(--bg)", borderRadius: 8, border: "1px dashed var(--border)" }}>
       <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
