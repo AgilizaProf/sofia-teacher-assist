@@ -2980,27 +2980,34 @@ export function Planejamento() {
                       <div key={d} style={{ fontSize: 11, fontWeight: 700, letterSpacing: .4, textTransform: "uppercase", color: "var(--muted)", textAlign: "center", padding: "6px 0" }}>{d}</div>
                     ))}
                     {m4Grid.map((cell, i) => {
-                      const evts = cell.day
-                        ? [
-                            ...(M4_EVENTS_BY_DAY[cell.day] ?? []),
-                            ...(m4UserByDay[cell.day] ?? []),
-                          ].filter((e) => layers[e.cat])
-                        : [];
+                      const userEvts = cell.day ? (m4UserByDay[cell.day] ?? []).filter((e) => layers[e.cat]) : [];
+                      const baseEvts = cell.day ? (M4_EVENTS_BY_DAY[cell.day] ?? []).filter((e) => layers[e.cat]) : [];
+                      const evts = [...baseEvts, ...userEvts];
                       const isSel = cell.day != null && cell.day === m4SelectedDay;
                       const isEmpty = cell.day == null;
+                      const isDropTarget = !isEmpty && m4DragOver === cell.day;
                       return (
                         <button
                           key={i}
                           type="button"
-                          disabled={isEmpty || evts.length === 0}
+                          disabled={isEmpty}
                           onClick={() => cell.day && evts.length > 0 && setM4SelectedDay(m4SelectedDay === cell.day ? null : cell.day)}
+                          onDragOver={(e) => { if (!isEmpty && m4DragSrc) { e.preventDefault(); if (m4DragOver !== cell.day) setM4DragOver(cell.day!); } }}
+                          onDragLeave={() => { if (m4DragOver === cell.day) setM4DragOver(null); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setM4DragOver(null);
+                            if (!cell.day || !m4DragSrc) return;
+                            m4MoveEvent(m4DragSrc.iso, m4DragSrc.id, m4IsoFor(cell.day));
+                            setM4DragSrc(null);
+                          }}
                           style={{
                             position: "relative",
                             minHeight: 78,
                             padding: 6,
-                            border: isSel ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)",
+                            border: isDropTarget ? "2px dashed #F97316" : isSel ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)",
                             borderRadius: 8,
-                            background: isEmpty ? "#FAFBFD" : "#fff",
+                            background: isEmpty ? "#FAFBFD" : isDropTarget ? "#FFF7ED" : "#fff",
                             textAlign: "left",
                             cursor: !isEmpty && evts.length > 0 ? "pointer" : "default",
                             opacity: isEmpty ? .4 : 1,
@@ -3010,12 +3017,32 @@ export function Planejamento() {
                           {cell.day && (
                             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "'JetBrains Mono',monospace" }}>{cell.day}</span>
                           )}
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                            {evts.slice(0, 4).map((e, j) => (
-                              <span key={j} title={`${M4_CAT_META[e.cat].label}: ${e.title}`} style={{ width: 8, height: 8, borderRadius: 99, background: M4_CAT_META[e.cat].color }} />
+                          <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
+                            {userEvts.slice(0, 3).map((e) => (
+                              <span
+                                key={e.id}
+                                draggable
+                                onDragStart={(ev) => { ev.stopPropagation(); setM4DragSrc({ iso: e.iso, id: e.id }); }}
+                                onDragEnd={() => { setM4DragSrc(null); setM4DragOver(null); }}
+                                onClick={(ev) => { ev.stopPropagation(); setM4SelectedDay(cell.day!); setM4Editing({ iso: e.iso, id: e.id }); }}
+                                title={`${M4_CAT_META[e.cat].label}: ${e.title} — arraste para mover`}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 4,
+                                  padding: "2px 4px", borderRadius: 4,
+                                  background: M4_CAT_META[e.cat].color + "22",
+                                  borderLeft: `3px solid ${M4_CAT_META[e.cat].color}`,
+                                  fontSize: 10, color: "#1f2937", lineHeight: 1.2,
+                                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                  cursor: "grab",
+                                }}
+                              >
+                                {e.title}
+                              </span>
                             ))}
-                            {evts.length > 4 && (
-                              <span style={{ fontSize: 9, color: "var(--muted)" }}>+{evts.length - 4}</span>
+                            {(userEvts.length > 3 || baseEvts.length > 0) && (
+                              <span style={{ fontSize: 9, color: "var(--muted)" }}>
+                                {userEvts.length > 3 ? `+${userEvts.length - 3}` : ""}{baseEvts.length > 0 ? ` ${baseEvts.length} sistema` : ""}
+                              </span>
                             )}
                           </div>
                         </button>
