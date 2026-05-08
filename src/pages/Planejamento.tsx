@@ -415,6 +415,14 @@ type M1Card = {
   foco: string;
   motivo?: string;
   auditoria?: M1AuditToken[];
+  // Detalhes ricos da atividade (opcionais; preenchidos pela Sofia ao gerar
+  // ou pelo professor ao editar). Permitem "abrir" a atividade e revisar
+  // objetivo, materiais, passos, avaliação e diferenciações.
+  objetivo?: string;
+  materiais?: string[];
+  passos?: string[];
+  avaliacao?: string;
+  diferenciacao?: string;
 };
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
@@ -578,6 +586,53 @@ const BNCC_BY_ETAPA: Record<Etapa, { label: string; anos: AnoBNCC[] }> = {
   },
 };
 
+// Enriquece um M1Card com objetivo, materiais, passos, avaliação e
+// diferenciações pedagógicas — derivados do tema, foco, tag e variante.
+// Usado pela Sofia ao gerar a semana e pelo "+ Atividade" para que toda
+// atividade nasça já elaborada e revisável pelo professor.
+function enrichM1Card(card: M1Card, tema: string): M1Card {
+  if (card.objetivo && card.passos && card.materiais) return card;
+  const t = (tema || "tema do dia").trim() || "tema do dia";
+  const v = card.v;
+  const tag = (card.tag || "").toLowerCase();
+  const foco = (card.foco || "").toLowerCase();
+  // Banco de materiais por variante
+  const matsBase: Record<Variant, string[]> = {
+    port: ["Quadro e giz/canetão", "Cadernos e lápis", "Texto impresso ou livro relacionado a " + t, "Cartolinas para registro coletivo"],
+    mat: ["Material dourado ou tampinhas (contagem)", "Folha quadriculada", "Régua e lápis colorido", "Cartões com problemas sobre " + t],
+    ci: ["Lupa, recipientes ou objetos do cotidiano", "Caderno de campo", "Imagens/vídeo curto sobre " + t, "Roteiro de observação impresso"],
+    esc: ["Roda de cadeiras / espaço aberto", "Música ou imagens sobre " + t, "Cartolinas e canetinhas", "Combinados visuais"],
+    aval: ["Folha de avaliação impressa", "Lápis e borracha", "Cronômetro", "Rubrica de critérios sobre " + t],
+  };
+  const objetivos: Record<Variant, string> = {
+    port: `Ampliar a leitura, escrita e oralidade dos estudantes a partir de "${t}", trabalhando ${tag || "linguagem"} de forma significativa.`,
+    mat: `Desenvolver o raciocínio lógico-matemático aplicado a "${t}", consolidando ${tag || "operações e estratégias"} com situações reais.`,
+    ci: `Estimular a investigação científica e o pensamento crítico sobre "${t}", articulando observação, hipótese e registro.`,
+    esc: `Fortalecer competências socioemocionais e culturais a partir de "${t}", promovendo ${tag || "convivência, escuta e identidade"}.`,
+    aval: `Verificar de forma processual o que foi aprendido sobre "${t}", articulando autoavaliação e registro coerente com ${card.bncc}.`,
+  };
+  const passosBase: string[] = [
+    `1) Acolhida (5 min) — apresente "${t}" com uma pergunta provocadora ou imagem disparadora; registre as primeiras ideias da turma.`,
+    `2) Exploração (${Math.max(10, Math.round(card.minutos * 0.4))} min) — proponha a atividade central de ${tag || foco || "investigação"}: ${card.title}. Trabalhe em duplas ou pequenos grupos.`,
+    `3) Sistematização (${Math.max(8, Math.round(card.minutos * 0.3))} min) — registre as descobertas no caderno/quadro; conecte com a BNCC ${card.bncc}.`,
+    `4) Fechamento (5 min) — peça que cada estudante diga uma palavra que resume o que aprendeu sobre "${t}".`,
+  ];
+  const avaliacao =
+    `Observação contínua durante a atividade + registro no caderno. Indicadores: participação na ${tag || "atividade"}, clareza ao explicar suas ideias sobre "${t}" e produção final (oral, escrita ou prática) coerente com ${card.bncc}.`;
+  const diferenciacao =
+    `Para estudantes com mais facilidade: propor desafio extra ligado a "${t}" (por exemplo, criar uma nova versão ou explicar para um colega). ` +
+    `Para estudantes que precisam de apoio: oferecer pares colaborativos, materiais visuais e roteiro passo a passo. ` +
+    `Para estudantes PCD: reduzir o número de etapas, ampliar o tempo e oferecer modelo concreto antes da produção autoral.`;
+  return {
+    ...card,
+    objetivo: card.objetivo ?? objetivos[v],
+    materiais: card.materiais ?? matsBase[v],
+    passos: card.passos ?? passosBase,
+    avaliacao: card.avaliacao ?? avaliacao,
+    diferenciacao: card.diferenciacao ?? diferenciacao,
+  };
+}
+
 function sofiaGenerateForDay(opts: {
   tema: string;
   competencias: Array<CompetenciaBNCC & { disciplina: string }>;
@@ -735,7 +790,7 @@ function sofiaGenerateForDay(opts: {
       codes.forEach((c) => vistos.add(c));
       limpos.push(card);
     }
-    return scaleToTarget(limpos, opts.minutosAlvo);
+    return scaleToTarget(limpos, opts.minutosAlvo).map((c) => enrichM1Card(c, tema));
   } else {
     // Sem interdisciplinar: também evita repetir a mesma competência.
     const total = Math.min(perDay, opts.competencias.length);
@@ -752,7 +807,7 @@ function sofiaGenerateForDay(opts: {
       });
     }
   }
-  return scaleToTarget(out, opts.minutosAlvo);
+  return scaleToTarget(out, opts.minutosAlvo).map((c) => enrichM1Card(c, tema));
 }
 
 // Ajusta os minutos das atividades para somarem aproximadamente o tempo total desejado.
@@ -854,7 +909,7 @@ function sofiaGenerateWeek(opts: {
         id: `m1_${opts.diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}`,
       });
     }
-    plan[dayKeys[d]] = scaleToTarget(cardsDoDia, opts.minutosPorDia);
+    plan[dayKeys[d]] = scaleToTarget(cardsDoDia, opts.minutosPorDia).map((c) => enrichM1Card(c, tema));
   }
   return plan;
 }
@@ -1361,6 +1416,22 @@ export function Planejamento() {
   };
   const removerCardM1 = (dia: DayKey, id: string) => {
     setM1Plan((p) => ({ ...p, [dia]: p[dia].filter((c) => c.id !== id) }));
+  };
+  // Editor da atividade sugerida pela Sofia (M1) — abre ao clicar no card.
+  const [m1EditCard, setM1EditCard] = useState<{ dia: DayKey; id: string } | null>(null);
+  const m1UpdateCard = (dia: DayKey, id: string, patch: Partial<M1Card>) => {
+    setM1Plan((p) => ({
+      ...p,
+      [dia]: p[dia].map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  };
+  const m1OpenEdit = (dia: DayKey, id: string) => {
+    // Garante que a atividade tenha campos ricos antes de abrir o editor.
+    setM1Plan((p) => ({
+      ...p,
+      [dia]: p[dia].map((c) => (c.id === id ? enrichM1Card(c, m1Tema) : c)),
+    }));
+    setM1EditCard({ dia, id });
   };
   // M3 — Editor conversacional
   type M3Etapa = { id: string; titulo: string; min: number; novo?: boolean };
@@ -2413,8 +2484,9 @@ export function Planejamento() {
                                     className={"pl-ai " + c.v}
                                     draggable
                                     onDragStart={() => onM1DragStart(day.k, c.id)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ cursor: "grab" }}
+                                    onClick={(e) => { e.stopPropagation(); m1OpenEdit(day.k, c.id); }}
+                                    title="Clique para abrir e editar a atividade"
+                                    style={{ cursor: "pointer" }}
                                   >
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 6 }}>
                                       <div style={{ minWidth: 0 }}>
@@ -3568,6 +3640,93 @@ export function Planejamento() {
           </div>
         </div>
       )}
+
+      {m1EditCard && (() => {
+        const card = (m1Plan[m1EditCard.dia] || []).find((c) => c.id === m1EditCard.id);
+        if (!card) return null;
+        const dia = m1EditCard.dia;
+        const id = m1EditCard.id;
+        const close = () => setM1EditCard(null);
+        const upd = (patch: Partial<M1Card>) => m1UpdateCard(dia, id, patch);
+        const linesToArr = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+        return (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Editar atividade"
+            onClick={close}
+            style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ background: "#fff", borderRadius: 14, width: "min(780px, 100%)", maxHeight: "92vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+            >
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                    ✨ Atividade da Sofia · {card.tag}
+                  </div>
+                  <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4, lineHeight: 1.25 }}>{card.title}</h3>
+                </div>
+                <button onClick={close} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6, flexShrink: 0 }}><X size={18} /></button>
+              </div>
+              <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14, fontSize: 13 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 140px", gap: 10 }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                    Título
+                    <input value={card.title} onChange={(e) => upd({ title: e.target.value })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, fontWeight: 600 }} />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                    Minutos
+                    <input type="number" min={5} step={5} value={card.minutos} onChange={(e) => upd({ minutos: Math.max(5, parseInt(e.target.value || "0", 10) || 0) })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13 }} />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                    BNCC
+                    <input value={card.bncc} onChange={(e) => upd({ bncc: e.target.value })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 12, fontFamily: "'JetBrains Mono',monospace" }} />
+                  </label>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                    Tag
+                    <input value={card.tag} onChange={(e) => upd({ tag: e.target.value })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13 }} />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                    Foco
+                    <input value={card.foco} onChange={(e) => upd({ foco: e.target.value })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13 }} />
+                  </label>
+                </div>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  🎯 Objetivo de aprendizagem
+                  <textarea value={card.objetivo ?? ""} onChange={(e) => upd({ objetivo: e.target.value })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  🧰 Materiais (um por linha)
+                  <textarea value={(card.materiais ?? []).join("\n")} onChange={(e) => upd({ materiais: linesToArr(e.target.value) })} rows={4} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  📋 Passo a passo (um por linha)
+                  <textarea value={(card.passos ?? []).join("\n")} onChange={(e) => upd({ passos: linesToArr(e.target.value) })} rows={6} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  ✅ Avaliação
+                  <textarea value={card.avaliacao ?? ""} onChange={(e) => upd({ avaliacao: e.target.value })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  ♿ Diferenciação / Inclusão
+                  <textarea value={card.diferenciacao ?? ""} onChange={(e) => upd({ diferenciacao: e.target.value })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
+                </label>
+              </div>
+              <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <button onClick={() => { if (confirm("Excluir esta atividade?")) { removerCardM1(dia, id); close(); } }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #FCA5A5", color: "#B91C1C", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 12.5 }}>Excluir</button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => upd(enrichM1Card({ ...card, objetivo: undefined, materiais: undefined, passos: undefined, avaliacao: undefined, diferenciacao: undefined }, m1Tema))} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 12.5 }}>Regenerar detalhes</button>
+                  <button onClick={close} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "var(--orange, #F97316)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12.5 }}>Concluir</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {m1DayModal && (
         <div
