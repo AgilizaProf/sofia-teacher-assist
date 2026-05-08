@@ -126,6 +126,24 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   // M1 plan (mesma chave usada em Planejamento.tsx)
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1);
 
+  // Eventos do usuário no calendário M4 (camadas). Mesma chave lida em
+  // src/pages/Planejamento.tsx no módulo M4 para integrar visualmente as
+  // atividades agendadas pela professora.
+  type M4UserEvt = {
+    id: string;
+    cat: "aulas" | "aval";
+    title: string;
+    meta?: string;
+    source: "atv" | "pcd";
+    turma?: string;
+    disciplina?: string;
+    minutos?: number;
+  };
+  type M4UserStore = Record<string, M4UserEvt[]>;
+  const [m4UserEvents, setM4UserEvents] = usePersistentState<M4UserStore>(
+    "plan_m4_user_events", {},
+  );
+
   const turmasPerfil = sofia.turmas;
   const [turma, setTurma] = useState<string>(turmasPerfil[0]?.nome ?? "");
   const [disciplina, setDisciplina] = useState<string>(DISCIPLINAS[0]);
