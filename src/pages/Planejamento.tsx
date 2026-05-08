@@ -3072,12 +3072,12 @@ export function Planejamento() {
                       <h3><BookOpen size={14} /> Aulas registradas</h3>
                       <p className="lead" style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "4px 0" }}>{m6Registradas}/{m6Total}</p>
                       <div className="pl-d6-progress"><div style={{ width: `${m6Pct}%` }} /></div>
-                      <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 6 }}>{m6Pct}% concluído nesta quinzena</p>
+                      <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 6 }}>{m6Pct}% concluído ({M6_PERIODO_META[m6Periodo].label.toLowerCase()})</p>
                     </div>
                     <div className="pl-panel">
-                      <h3><Sparkles size={14} /> Relatório bimestral</h3>
-                      <p className="lead" style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "4px 0" }}>42% pronto</p>
-                      <div className="pl-d6-progress"><div style={{ width: "42%" }} /></div>
+                      <h3><Sparkles size={14} /> Relatório {M6_PERIODO_META[m6Periodo].label.toLowerCase()}</h3>
+                      <p className="lead" style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "4px 0" }}>{m6RelPct}% pronto</p>
+                      <div className="pl-d6-progress"><div style={{ width: `${m6RelPct}%` }} /></div>
                       <button className="pl-btn" style={{ marginTop: 10, width: "100%" }} onClick={() => setM6ReportOpen(true)}>Ver relatório</button>
                     </div>
                     <div className="pl-panel accent">
