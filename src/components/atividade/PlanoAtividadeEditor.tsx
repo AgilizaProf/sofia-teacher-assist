@@ -399,6 +399,43 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const gerar = async () => {
     setGenerating(true);
+    // Quando há mais de uma opção selecionada → gera UM plano por opção,
+    // mantendo cada um editável em sua própria aba.
+    if (opcoesSel.length > 1) {
+      const selecionadas = opcoesSel.map((i) => opcoes[i]).filter(Boolean) as OpcaoAula[];
+      setProgresso({ feitos: 0, total: selecionadas.length });
+      const enrichedAll: PlanoAtividade[] = [];
+      for (const opt of selecionadas) {
+        const novo = await callSofia(undefined, [opt]);
+        if (novo) {
+          enrichedAll.push({
+            ...EMPTY, ...novo, materiaisCheck: {},
+            meta: {
+              ano: anoEscolar, turma, disciplina, tema,
+              duracao, tipo, incluirPCD: modo === "pcd" ? true : incluirPCD,
+              modo, geradoEm: new Date().toISOString(),
+            },
+          });
+        }
+        setProgresso((p) => ({ ...p, feitos: p.feitos + 1 }));
+      }
+      setGenerating(false);
+      setProgresso({ feitos: 0, total: 0 });
+      if (enrichedAll.length === 0) return;
+      setPlanosMulti(enrichedAll);
+      setPlanoIdx(0);
+      setPlano(enrichedAll[0]);
+      setMissing([]);
+      setOpcoes([]);
+      setOpcoesSel([]);
+      logActivity({
+        type: "planejamento",
+        description: `${enrichedAll.length} atividades geradas em paralelo`,
+        detail: `${anoEscolar} · ${disciplina} · ${tema}`,
+      });
+      showToast(`${enrichedAll.length} planos prontos. Use as abas para revisar cada um.`);
+      return;
+    }
     const novo = await callSofia();
     setGenerating(false);
     if (!novo) return;
@@ -411,6 +448,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       },
     };
     setPlano(enriched);
+    setPlanosMulti([]);
+    setPlanoIdx(0);
     setMissing([]);
     setOpcoes([]);
     setOpcoesSel([]);
