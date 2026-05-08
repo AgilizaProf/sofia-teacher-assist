@@ -1456,7 +1456,7 @@ export function Planejamento() {
   };
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
-  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string };
+  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string };
   const M6_TAGS = ["+ funcionou", "- precisa reforço", "+ inclusão", "+ família"] as const;
   const M6_EMOJIS = ["😣", "😐", "🙂", "😄", "🌟"] as const;
   // Sugestões rápidas de observação por humor — clique adiciona ao textarea.
