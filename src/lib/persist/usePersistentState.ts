@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { detectShapeMismatch, reportStorageIssue } from "./storageDiagnostics";
+import { detectShapeMismatch, reportStorageIssue, previewOf, shapeOf } from "./storageDiagnostics";
 
 /**
  * Local-first persistent state with optional cloud sync (Supabase).
@@ -36,6 +36,7 @@ export function usePersistentState<T>(key: string, initial: T) {
       const parsed = JSON.parse(raw) as unknown;
       const mismatch = detectShapeMismatch(parsed, initialRef.current);
       if (mismatch) {
+        const prev = previewOf(parsed);
         reportStorageIssue({
           key,
           source: "localStorage",
@@ -43,12 +44,16 @@ export function usePersistentState<T>(key: string, initial: T) {
           expectedType: mismatch.expectedType,
           receivedType: mismatch.receivedType,
           message: `Valor incompatível em "${key}" — esperava ${mismatch.expectedType}, recebeu ${mismatch.receivedType}. Mantendo valor inicial.`,
-          rawPreview: raw.length > 160 ? raw.slice(0, 160) + "…" : raw,
+          rawPreview: prev.text,
+          rawSize: prev.size,
+          expectedShape: shapeOf(initialRef.current),
+          receivedShape: shapeOf(parsed),
         });
         return;
       }
       setState(parsed as T);
     } catch (err) {
+      const prev = raw ? previewOf(raw) : undefined;
       reportStorageIssue({
         key,
         source: "localStorage",
@@ -56,7 +61,10 @@ export function usePersistentState<T>(key: string, initial: T) {
         expectedType: typeof initialRef.current === "object" && initialRef.current !== null ? (Array.isArray(initialRef.current) ? "array" : "object") : typeof initialRef.current,
         receivedType: "string(corrupted)",
         message: `Falha ao parsear localStorage["${lsKey}"]: ${(err as Error)?.message ?? String(err)}`,
-        rawPreview: raw ? (raw.length > 160 ? raw.slice(0, 160) + "…" : raw) : undefined,
+        rawPreview: prev?.text,
+        rawSize: prev?.size,
+        expectedShape: shapeOf(initialRef.current),
+        receivedShape: "string(corrupted)",
       });
     }
   }, [lsKey]);
@@ -81,6 +89,7 @@ export function usePersistentState<T>(key: string, initial: T) {
       if (error || !data) { hydratedRef.current = true; return; }
       const mismatch = detectShapeMismatch(data.data, initialRef.current);
       if (mismatch) {
+        const prev = previewOf(data.data);
         reportStorageIssue({
           key,
           source: "remote-snapshot",
@@ -88,7 +97,10 @@ export function usePersistentState<T>(key: string, initial: T) {
           expectedType: mismatch.expectedType,
           receivedType: mismatch.receivedType,
           message: `Snapshot remoto incompatível em "${key}" — esperava ${mismatch.expectedType}, recebeu ${mismatch.receivedType}. Mantendo valor local.`,
-          rawPreview: (() => { try { return JSON.stringify(data.data).slice(0, 160); } catch { return undefined; } })(),
+          rawPreview: prev.text,
+          rawSize: prev.size,
+          expectedShape: shapeOf(initialRef.current),
+          receivedShape: shapeOf(data.data),
         });
         hydratedRef.current = true;
         return;
