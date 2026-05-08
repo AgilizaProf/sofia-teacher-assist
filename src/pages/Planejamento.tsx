@@ -909,7 +909,7 @@ function sofiaGenerateWeek(opts: {
         id: `m1_${opts.diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}`,
       });
     }
-    plan[dayKeys[d]] = scaleToTarget(cardsDoDia, opts.minutosPorDia);
+    plan[dayKeys[d]] = scaleToTarget(cardsDoDia, opts.minutosPorDia).map((c) => enrichM1Card(c, tema));
   }
   return plan;
 }
