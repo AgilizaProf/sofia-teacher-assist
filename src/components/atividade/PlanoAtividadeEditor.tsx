@@ -213,6 +213,19 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     setIncluirPCD(alunosPCDDaTurma.length > 0);
   }, [turma, alunosPCDDaTurma.length]);
 
+  // Em modo PCD, a professora foca a atividade em UM aluno PCD por vez,
+  // para que Sofia respeite as especificidades dele(a). Quando a turma muda,
+  // voltamos para o primeiro aluno disponível.
+  const [alunoFocoIdx, setAlunoFocoIdx] = useState<number>(0);
+  useEffect(() => {
+    setAlunoFocoIdx(0);
+    setOpcoes([]);
+    setOpcoesSel([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turma, alunosPCDDaTurma.length]);
+  const alunoFoco =
+    modo === "pcd" ? alunosPCDDaTurma[alunoFocoIdx] ?? null : null;
+
   const showToast = (msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(""), 2200);
