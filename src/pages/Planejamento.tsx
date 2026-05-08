@@ -1454,6 +1454,47 @@ export function Planejamento() {
       return { y: s.y, m: nm };
     });
   };
+  // ISO yyyy-mm-dd para um dia do mês corrente
+  const m4IsoFor = (day: number) => {
+    const mm = String(m4Month.m + 1).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    return `${m4Month.y}-${mm}-${dd}`;
+  };
+  // Move um evento de uma data ISO para outra
+  const m4MoveEvent = (fromIso: string, id: string, toIso: string) => {
+    if (fromIso === toIso) return;
+    setM4UserEvents((s) => {
+      const src = s[fromIso] ?? [];
+      const item = src.find((e) => e.id === id);
+      if (!item) return s;
+      const next: Record<string, M4UserEvt[]> = { ...s };
+      const remaining = src.filter((e) => e.id !== id);
+      if (remaining.length) next[fromIso] = remaining; else delete next[fromIso];
+      next[toIso] = [...(next[toIso] ?? []), item];
+      return next;
+    });
+  };
+  // Atualiza campos de um evento
+  const m4UpdateEvent = (iso: string, id: string, patch: Partial<M4UserEvt>) => {
+    setM4UserEvents((s) => {
+      const list = s[iso] ?? [];
+      const next = list.map((e) => (e.id === id ? { ...e, ...patch } : e));
+      return { ...s, [iso]: next };
+    });
+  };
+  // Remove um evento
+  const m4DeleteEvent = (iso: string, id: string) => {
+    setM4UserEvents((s) => {
+      const list = (s[iso] ?? []).filter((e) => e.id !== id);
+      const next = { ...s };
+      if (list.length) next[iso] = list; else delete next[iso];
+      return next;
+    });
+  };
+  // Estado do editor inline (qual evento está sendo editado e drag origem)
+  const [m4Editing, setM4Editing] = useState<{ iso: string; id: string } | null>(null);
+  const [m4DragSrc, setM4DragSrc] = useState<{ iso: string; id: string } | null>(null);
+  const [m4DragOver, setM4DragOver] = useState<number | null>(null);
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
   type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string };
