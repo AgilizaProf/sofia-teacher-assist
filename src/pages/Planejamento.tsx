@@ -790,7 +790,7 @@ function sofiaGenerateForDay(opts: {
       codes.forEach((c) => vistos.add(c));
       limpos.push(card);
     }
-    return scaleToTarget(limpos, opts.minutosAlvo);
+    return scaleToTarget(limpos, opts.minutosAlvo).map((c) => enrichM1Card(c, tema));
   } else {
     // Sem interdisciplinar: também evita repetir a mesma competência.
     const total = Math.min(perDay, opts.competencias.length);
@@ -807,7 +807,7 @@ function sofiaGenerateForDay(opts: {
       });
     }
   }
-  return scaleToTarget(out, opts.minutosAlvo);
+  return scaleToTarget(out, opts.minutosAlvo).map((c) => enrichM1Card(c, tema));
 }
 
 // Ajusta os minutos das atividades para somarem aproximadamente o tempo total desejado.
