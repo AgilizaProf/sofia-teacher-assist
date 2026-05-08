@@ -302,7 +302,10 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   /* ─────────── Geração (full ou por campo) ─────────── */
 
-  const callSofia = async (field?: string): Promise<PlanoAtividade | null> => {
+  const callSofia = async (
+    field?: string,
+    overrideOpcoes?: OpcaoAula[],
+  ): Promise<PlanoAtividade | null> => {
     setErro("");
     const diarioBordo = lerDiarioBordo(turma);
     const payload = {
@@ -314,7 +317,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       planoAtual: field ? plano : null,
       disciplinasInter: disciplina === "Interdisciplinar" ? disciplinasInter : [],
       opcoesSelecionadas: !field
-        ? opcoesSel.map((i) => opcoes[i]).filter(Boolean)
+        ? (overrideOpcoes ?? opcoesSel.map((i) => opcoes[i]).filter(Boolean))
         : [],
       alunosPCD: alunosPCDDaTurma.map((a) => ({
         nome: a.primeiro_nome,
