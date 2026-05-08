@@ -3,7 +3,9 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
-import { updateLoginStreak } from "@/lib/datetime";
+import { updateLoginStreak, BR_LOCALE, BR_TIMEZONE } from "@/lib/datetime";
+import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { useHydrated } from "@/hooks/useHydrated";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
@@ -297,7 +299,38 @@ const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGEleme
 
 export function Dashboard() {
   const user = useUser();
-  const heroGreeting = greeting(user.name);
+  const sofiaCtx = useSofiaContext();
+  const hydrated = useHydrated();
+  // Nome real do usuário logado (perfil) com fallback seguro pra SSR.
+  const realName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || user.name || "").trim();
+  // Tick a cada 30s pra manter o relógio em dia.
+  const [, setClockTick] = useState(0);
+  useEffect(() => {
+    if (!hydrated) return;
+    const id = setInterval(() => setClockTick((n) => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, [hydrated]);
+  // Saudação Bom dia/Boa tarde/Boa noite usando hora real do dispositivo.
+  // Durante SSR usa um fallback estável pra evitar hydration mismatch.
+  const heroGreeting = useMemo(() => {
+    if (!hydrated) return realName ? `Olá, ${realName}` : "Olá";
+    const h = new Date().getHours();
+    const slot = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+    return realName ? `${slot}, ${realName}` : slot;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, realName]);
+  // Data formatada em pt-BR: "Quinta-feira · 1º de maio · 08:12".
+  const heroDateLine = useMemo(() => {
+    if (!hydrated) return "";
+    const now = new Date();
+    const weekday = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, weekday: "long" }).format(now);
+    const dayNum = Number(new Intl.DateTimeFormat("en-CA", { timeZone: BR_TIMEZONE, day: "numeric" }).format(now));
+    const month = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, month: "long" }).format(now);
+    const time = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
+    const wd = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+    const dayLabel = dayNum === 1 ? "1º" : String(dayNum);
+    return `${wd} · ${dayLabel} de ${month} · ${time}`;
+  }, [hydrated]);
   const [cmdk, setCmdk] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [schools, setSchools] = usePersistentState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>("dash_schools", []);
@@ -337,6 +370,31 @@ export function Dashboard() {
   const goalPct = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100));
   const goalReached = totalMinutes >= goalMinutes;
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
+
+  // Cálculo: alunos sem parecer no bimestre.
+  // Mesma regra usada em Relatórios: os primeiros `documentsGenerated` alunos
+  // contam como já entregues; os demais estão pendentes.
+  const pareceresPendentes = useMemo(() => {
+    const pendentes = Math.max(0, totalStudents - documentsGenerated);
+    const turmasComPendencia = new Set<string>();
+    if (pendentes > 0) {
+      students.slice(documentsGenerated).forEach((s) => {
+        if (s?.classRef) turmasComPendencia.add(s.classRef);
+      });
+    }
+    return { alunos: pendentes, turmas: turmasComPendencia.size };
+  }, [students, documentsGenerated, totalStudents]);
+  const heroSubText = useMemo(() => {
+    if (totalStudents === 0) {
+      return "Cadastre suas turmas e alunos para que a Sofia possa te ajudar a gerar pareceres, planos de aula e adaptações em minutos.";
+    }
+    if (pareceresPendentes.alunos === 0) {
+      return "Todos os pareceres do bimestre estão em dia 🎉";
+    }
+    const a = pareceresPendentes.alunos;
+    const t = Math.max(1, pareceresPendentes.turmas);
+    return `Você tem ${a} ${a === 1 ? "aluno" : "alunos"} em ${t} ${t === 1 ? "turma" : "turmas"} aguardando o relatório descritivo do bimestre.`;
+  }, [pareceresPendentes, totalStudents]);
 
   const [streak, setStreak] = useState<number>(0);
   const sofia = useSofia();
@@ -557,14 +615,32 @@ export function Dashboard() {
 
           <section className="hero">
             <div className="hero-left">
-              <div className="hero-greet"><span className="live-dot" />Bem-vinda à Sofia</div>
-              <h1 className="hero-title">{heroGreeting}.<br />Comece configurando <span className="accent">sua primeira turma.</span></h1>
-              <p className="hero-sub">Cadastre suas turmas e alunos para que a Sofia possa te ajudar a gerar pareceres, planos de aula e adaptações em minutos.</p>
+              <div className="hero-greet">
+                <span className="live-dot" />
+                <span suppressHydrationWarning>{hydrated ? heroDateLine : "Bem-vinda à Sofia"}</span>
+              </div>
+              <h1 className="hero-title" suppressHydrationWarning>
+                {heroGreeting}.
+                {totalStudents === 0 ? (
+                  <><br />Comece configurando <span className="accent">sua primeira turma.</span></>
+                ) : null}
+              </h1>
+              <p className="hero-sub" suppressHydrationWarning>{heroSubText}</p>
               <div className="hero-cta-row">
-                <button className="hero-cta" onClick={() => setClassOpen(true)}>
-                  Criar primeira turma
-                  <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
-                </button>
+                {totalStudents === 0 ? (
+                  <button className="hero-cta" onClick={() => setClassOpen(true)}>
+                    Criar primeira turma
+                    <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                  </button>
+                ) : (
+                  <button
+                    className="hero-cta"
+                    onClick={() => navigate({ to: "/relatorios", search: { tab: "todo" } })}
+                  >
+                    Começar pelos pareceres
+                    <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                  </button>
+                )}
                 <button className="hero-cta-ghost">
                   <Svg strokeWidth={2.5} c={<polygon points="5 3 19 12 5 21 5 3"/>} />
                   Tutorial · 90s
