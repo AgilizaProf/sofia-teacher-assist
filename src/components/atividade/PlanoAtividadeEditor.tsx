@@ -1833,4 +1833,11 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-lote-aluno{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#5B21B6;}
 .atv-lote-titulo{font-size:11.5px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .atv-lote-item.err .atv-lote-titulo{color:#991B1B;}
+.atv-modal-back{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px;}
+.atv-modal{background:#fff;border-radius:14px;border:1px solid var(--line,#E2E8F0);padding:16px;width:100%;max-width:380px;box-shadow:0 24px 48px -12px rgba(15,23,42,.25);}
+.atv-modal-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.atv-modal-head h3{margin:0;font-size:14px;color:#0F172A;flex:1;}
+.atv-modal-x{background:transparent;border:none;cursor:pointer;color:var(--muted,#64748B);padding:4px;border-radius:6px;}
+.atv-modal-x:hover{background:#F1F5F9;}
+.atv-modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
 `;
