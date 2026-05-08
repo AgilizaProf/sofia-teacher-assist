@@ -42,12 +42,6 @@ type Props = {
   onSaved: (plano: PlanoInclusao) => void;
 };
 
-const TEMA_SUGESTOES = [
-  "Leitura compartilhada", "Frações", "Sistema solar", "Verbos",
-  "Tabuada do 2 ao 5", "Ciclo da água", "História do bairro",
-  "Produção de texto narrativo", "Geometria - formas",
-];
-
 const METODOLOGIA_SUGESTOES = [
   "Ensino estruturado (TEACCH) com apoio visual passo a passo",
   "Aprendizagem cooperativa em duplas com mediação",
