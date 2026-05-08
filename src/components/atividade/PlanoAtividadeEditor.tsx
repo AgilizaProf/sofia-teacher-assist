@@ -1714,4 +1714,14 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-foco-tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(139,92,246,.15);color:#5B21B6;font-family:'JetBrains Mono',monospace;}
 .atv-foco-chip.sel .atv-foco-tag{background:rgba(255,255,255,.25);color:#fff;}
 .atv-foco-notes{margin:8px 0 0;font-size:11.5px;color:#4C1D95;}
+.atv-foco-all{margin-left:auto;}
+.atv-lote{margin-top:10px;border-top:1px dashed #C4B5FD;padding-top:10px;}
+.atv-lote-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.atv-lote-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.atv-lote-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #E9D5FF;}
+.atv-lote-item.err{border-color:#FCA5A5;background:#FEF2F2;}
+.atv-lote-info{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1;}
+.atv-lote-aluno{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#5B21B6;}
+.atv-lote-titulo{font-size:11.5px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.atv-lote-item.err .atv-lote-titulo{color:#991B1B;}
 `;
