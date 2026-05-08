@@ -1068,6 +1068,34 @@ function PlanoBody(props: {
         </div>
       </section>
 
+      {/* 3b. Contribuições interdisciplinares (apenas quando houver) */}
+      {(plano.contribuicoesInter ?? []).length > 0 && (
+        <section className="atv-card atv-contrib">
+          <div className="atv-card-head">
+            <h3>🔗 Como cada disciplina contribui</h3>
+          </div>
+          <p className="atv-muted" style={{ marginBottom: 10 }}>
+            Resumo da articulação interdisciplinar proposta pela Sofia.
+          </p>
+          <div className="atv-contrib-grid">
+            {plano.contribuicoesInter!.map((c, i) => (
+              <div className="atv-contrib-card" key={`${c.disciplina}-${i}`}>
+                <div className="atv-contrib-disc">{c.disciplina}</div>
+                <InlineText
+                  value={c.contribuicao}
+                  onChange={(v) => {
+                    const next = [...plano.contribuicoesInter!];
+                    next[i] = { ...c, contribuicao: v };
+                    props.onChange("contribuicoesInter", next);
+                  }}
+                  tag="p" multiline
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 5. Adaptações PCD */}
       <section className="atv-card adapt">
         <button
