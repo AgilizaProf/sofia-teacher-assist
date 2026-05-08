@@ -312,25 +312,50 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
         <div className="inc-modal-body plain" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {!plano && (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                  Disciplina
-                  <input value={disciplina} onChange={(e) => setDisciplina(e.target.value)} placeholder="Ex.: Matemática"
-                    style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: "var(--text)", textTransform: "none", letterSpacing: 0 }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                  Duração
-                  <select value={duracao} onChange={(e) => setDuracao(e.target.value)}
-                    style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: "var(--text)", textTransform: "none", letterSpacing: 0, background: "#fff" }}>
-                    {["30 min", "45 min", "60 min", "90 min"].map((d) => <option key={d}>{d}</option>)}
-                  </select>
-                </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                  {labelDisciplina} {disciplinas.length > 1 && <span style={{ color: "var(--accent)", marginLeft: 6 }}>· interdisciplinar ({disciplinas.length})</span>}
+                </span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {opcoesDisciplinas.map((d) => {
+                    const ativo = disciplinas.includes(d);
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => toggleDisciplina(d)}
+                        style={{
+                          fontSize: 12, padding: "6px 12px", borderRadius: 999, cursor: "pointer", fontWeight: 600,
+                          border: ativo ? "1px solid var(--accent)" : "1px solid var(--border)",
+                          background: ativo ? "var(--accent)" : "#fff",
+                          color: ativo ? "#fff" : "var(--text)",
+                        }}
+                      >
+                        {ativo ? "✓ " : ""}{d}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                  Selecione uma para aula simples, ou várias para uma aula <b>interdisciplinar</b>.
+                </span>
               </div>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", maxWidth: 220 }}>
+                Duração
+                <select value={duracao} onChange={(e) => setDuracao(e.target.value)}
+                  style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: "var(--text)", textTransform: "none", letterSpacing: 0, background: "#fff" }}>
+                  {["30 min", "45 min", "60 min", "90 min"].map((d) => <option key={d}>{d}</option>)}
+                </select>
+              </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 Tema
                 <input value={tema} onChange={(e) => setTema(e.target.value)} placeholder="Ex.: Frações"
                   style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, fontWeight: 500, color: "var(--text)", textTransform: "none", letterSpacing: 0 }} />
-                <ChipRow items={TEMA_SUGESTOES} onPick={(t) => setTema(t)} />
+                <ChipRow
+                  items={temaSugestoes}
+                  onPick={(t) => setTema(t)}
+                  label={`Sugestões para ${aluno.anoEscolar || "este aluno"}${disciplinas[0] ? ` · ${disciplinas[0]}` : ""}`}
+                />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 Tipo de atividade
