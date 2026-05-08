@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
   Check, Pencil, Lightbulb, AlertTriangle, Save, FileDown, CalendarPlus,
-  Search, Trash2, FileText,
+  Search, Trash2, FileText, Star,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -115,6 +115,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     `plan_atividade_${modo}_hist_v1`, [],
   );
 
+  // Sugestões favoritas, agrupadas por tema (chave normalizada).
+  const [favoritas, setFavoritas] = usePersistentState<Record<string, Sugestao[]>>(
+    `plan_atividade_${modo}_favoritas_v1`, {},
+  );
+
   // M1 plan (mesma chave usada em Planejamento.tsx)
   const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1);
 
@@ -137,6 +142,34 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [opcoes, setOpcoes] = useState<OpcaoAula[]>([]);
   const [opcoesSel, setOpcoesSel] = useState<number[]>([]);
   const [loadingOpcoes, setLoadingOpcoes] = useState(false);
+
+  // Chave de tema normalizada para indexar favoritas.
+  const temaKey = useMemo(
+    () => `${disciplina} · ${tema.trim().toLowerCase()}`,
+    [disciplina, tema],
+  );
+  const favoritasTema = favoritas[temaKey] ?? [];
+
+  const isFavorita = (s: Sugestao) =>
+    favoritasTema.some((f) => f.titulo === s.titulo);
+
+  const toggleFavorita = (s: Sugestao) => {
+    const atuais = favoritas[temaKey] ?? [];
+    const existe = atuais.some((f) => f.titulo === s.titulo);
+    const next = existe
+      ? atuais.filter((f) => f.titulo !== s.titulo)
+      : [...atuais, s].slice(0, 12);
+    setFavoritas({ ...favoritas, [temaKey]: next });
+    showToast(existe ? "Removida das favoritas" : "⭐ Salva nas favoritas");
+  };
+
+  const removerFavorita = (titulo: string) => {
+    const atuais = favoritas[temaKey] ?? [];
+    setFavoritas({
+      ...favoritas,
+      [temaKey]: atuais.filter((f) => f.titulo !== titulo),
+    });
+  };
 
   // Ano escolar derivado da turma (badge não-editável quando há turma)
   const turmaInfo = useMemo(
@@ -750,6 +783,10 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           onAddHab={addHab}
           onUsarSugestao={usarSugestao}
           onRegenField={regenerarCampo}
+          favoritas={favoritasTema}
+          isFavorita={isFavorita}
+          onToggleFavorita={toggleFavorita}
+          onRemoverFavorita={removerFavorita}
         />
       )}
 
@@ -856,6 +893,10 @@ function PlanoBody(props: {
   onAddHab: (codigo: string, descricao: string) => void;
   onUsarSugestao: (s: Sugestao) => void;
   onRegenField: (field: keyof PlanoAtividade) => void;
+  favoritas: Sugestao[];
+  isFavorita: (s: Sugestao) => boolean;
+  onToggleFavorita: (s: Sugestao) => void;
+  onRemoverFavorita: (titulo: string) => void;
 }) {
   const { plano, modo, alunosPCDCount, missing, regenField, onRegenField } = props;
   const [adaptOpen, setAdaptOpen] = useState(modo === "pcd");
@@ -1015,12 +1056,56 @@ function PlanoBody(props: {
           <h3><Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑤ Sugestões da Sofia</h3>
           <RegenBtn field="sugestoes" label="sugestões" />
         </div>
+
+        {props.favoritas.length > 0 && (
+          <div className="atv-fav-block">
+            <div className="atv-fav-head">
+              <Star size={12} fill="#F59E0B" color="#F59E0B" />
+              <span>Suas favoritas para este tema</span>
+              <span className="atv-fav-count">{props.favoritas.length}</span>
+            </div>
+            <div className="atv-fav-grid">
+              {props.favoritas.map((s, i) => (
+                <div className="atv-fav" key={`fav-${i}`}>
+                  <div className="atv-fav-title">{s.titulo}</div>
+                  <p>{s.descricao}</p>
+                  <div className="atv-fav-actions">
+                    <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
+                      <Check size={12} /> Usar esta
+                    </button>
+                    <button
+                      className="atv-fav-x"
+                      onClick={() => props.onRemoverFavorita(s.titulo)}
+                      title="Remover das favoritas"
+                      aria-label="Remover dos favoritos"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {plano.sugestoes.length === 0 ? (
           <p className="atv-muted">Sem sugestões.</p>
         ) : (
           <div className="atv-sug-grid">
             {plano.sugestoes.map((s, i) => (
               <div className="atv-sug" key={i}>
+                <button
+                  className={`atv-sug-fav${props.isFavorita(s) ? " on" : ""}`}
+                  onClick={() => props.onToggleFavorita(s)}
+                  aria-label={props.isFavorita(s) ? "Remover dos favoritos" : "Salvar como favorita"}
+                  title={props.isFavorita(s) ? "Favorita — clique para remover" : "Salvar como favorita"}
+                >
+                  <Star
+                    size={14}
+                    fill={props.isFavorita(s) ? "#F59E0B" : "none"}
+                    color={props.isFavorita(s) ? "#F59E0B" : "#92400E"}
+                  />
+                </button>
                 <div className="atv-sug-title">{s.titulo}</div>
                 <p>{s.descricao}</p>
                 <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
@@ -1192,10 +1277,24 @@ textarea.atv-inline-input{min-height:80px;resize:vertical;}
 .atv-adapt-card{background:#fff;border:1px solid #E9D5FF;border-radius:8px;padding:10px;}
 .atv-adapt-cat{font-size:10.5px;font-weight:700;color:#7C3AED;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-family:'JetBrains Mono',monospace;}
 .atv-sug-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
-.atv-sug{background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;}
+.atv-sug{position:relative;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 10px 10px 10px;display:flex;flex-direction:column;gap:6px;}
+.atv-sug-fav{position:absolute;top:6px;right:6px;background:transparent;border:none;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;cursor:pointer;color:#92400E;}
+.atv-sug-fav:hover{background:rgba(245,158,11,.15);}
+.atv-sug-fav.on{background:rgba(245,158,11,.18);}
 .atv-sug-title{font-weight:700;font-size:13px;color:#92400E;}
 .atv-sug p{font-size:12.5px;color:var(--ink-2,#334155);margin:0;line-height:1.45;}
 .atv-sug button{align-self:flex-start;}
+.atv-sug button.atv-sug-fav{align-self:auto;}
+.atv-fav-block{background:linear-gradient(180deg,#FFFBEB,#FFFFFF);border:1px dashed #F59E0B;border-radius:10px;padding:10px;margin-bottom:10px;}
+.atv-fav-head{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em;font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
+.atv-fav-count{margin-left:auto;background:#F59E0B;color:#fff;padding:1px 7px;border-radius:10px;font-size:11px;}
+.atv-fav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;}
+.atv-fav{background:#fff;border:1px solid #FDE68A;border-radius:8px;padding:9px;display:flex;flex-direction:column;gap:5px;}
+.atv-fav-title{font-weight:700;font-size:12.5px;color:#92400E;line-height:1.3;}
+.atv-fav p{font-size:12px;color:var(--ink-2,#334155);margin:0;line-height:1.4;}
+.atv-fav-actions{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:2px;}
+.atv-fav-x{background:transparent;border:none;width:22px;height:22px;border-radius:5px;cursor:pointer;color:var(--muted,#64748B);display:grid;place-items:center;}
+.atv-fav-x:hover{background:rgba(239,68,68,.12);color:#EF4444;}
 .atv-mat{list-style:none;padding:0;margin:0 0 10px;display:flex;flex-direction:column;gap:4px;}
 .atv-mat li{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:6px;font-size:13px;}
 .atv-mat li:hover{background:#F8FAFC;}
