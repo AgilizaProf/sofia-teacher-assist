@@ -3642,9 +3642,6 @@ export function Planejamento() {
       )}
 
       {m1DayModal && (
-        // placeholder anchor — insertion follows below
-        // (this wrapper unchanged)
-        // eslint-disable-next-line
         <div
           role="dialog"
           aria-modal="true"
