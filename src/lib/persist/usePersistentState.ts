@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { detectShapeMismatch, reportStorageIssue } from "./storageDiagnostics";
 
 /**
  * Local-first persistent state with optional cloud sync (Supabase).
@@ -27,10 +28,36 @@ export function usePersistentState<T>(key: string, initial: T) {
     if (restoredRef.current) return;
     restoredRef.current = true;
     if (typeof window === "undefined") return;
+    let raw: string | null = null;
     try {
-      const raw = window.localStorage.getItem(lsKey);
-      if (raw) setState(JSON.parse(raw) as T);
-    } catch { /* ignore */ }
+      raw = window.localStorage.getItem(lsKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      const mismatch = detectShapeMismatch(parsed, initial);
+      if (mismatch) {
+        reportStorageIssue({
+          key,
+          source: "localStorage",
+          kind: mismatch.kind,
+          expectedType: mismatch.expectedType,
+          receivedType: mismatch.receivedType,
+          message: `Valor incompatível em "${key}" — esperava ${mismatch.expectedType}, recebeu ${mismatch.receivedType}. Mantendo valor inicial.`,
+          rawPreview: raw.length > 160 ? raw.slice(0, 160) + "…" : raw,
+        });
+        return;
+      }
+      setState(parsed as T);
+    } catch (err) {
+      reportStorageIssue({
+        key,
+        source: "localStorage",
+        kind: "parse-error",
+        expectedType: typeof initial === "object" && initial !== null ? (Array.isArray(initial) ? "array" : "object") : typeof initial,
+        receivedType: "string(corrupted)",
+        message: `Falha ao parsear localStorage["${lsKey}"]: ${(err as Error)?.message ?? String(err)}`,
+        rawPreview: raw ? (raw.length > 160 ? raw.slice(0, 160) + "…" : raw) : undefined,
+      });
+    }
   }, [lsKey]);
 
   // Persist to localStorage on every change
@@ -51,6 +78,20 @@ export function usePersistentState<T>(key: string, initial: T) {
         .eq("key", key)
         .maybeSingle();
       if (error || !data) { hydratedRef.current = true; return; }
+      const mismatch = detectShapeMismatch(data.data, initial);
+      if (mismatch) {
+        reportStorageIssue({
+          key,
+          source: "remote-snapshot",
+          kind: mismatch.kind,
+          expectedType: mismatch.expectedType,
+          receivedType: mismatch.receivedType,
+          message: `Snapshot remoto incompatível em "${key}" — esperava ${mismatch.expectedType}, recebeu ${mismatch.receivedType}. Mantendo valor local.`,
+          rawPreview: (() => { try { return JSON.stringify(data.data).slice(0, 160); } catch { return undefined; } })(),
+        });
+        hydratedRef.current = true;
+        return;
+      }
       const remoteTs = new Date(data.updated_at).getTime();
       const localTs = Number(window.localStorage.getItem(lsKey + ":ts") || 0);
       // Remote wins if it's newer OR local is empty.
