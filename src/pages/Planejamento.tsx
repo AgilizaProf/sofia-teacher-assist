@@ -1415,11 +1415,11 @@ export function Planejamento() {
     meta?: string;
     source: "atv" | "pcd";
   };
-  const [m4UserEvents] = usePersistentState<Record<string, M4UserEvt[]>>(
+  const [m4UserEvents, setM4UserEvents] = usePersistentState<Record<string, M4UserEvt[]>>(
     "plan_m4_user_events", {},
   );
   const m4UserByDay = useMemo(() => {
-    const out: Record<number, M4Evt[]> = {};
+    const out: Record<number, Array<M4Evt & { id: string; iso: string }>> = {};
     const mm = String(m4Month.m + 1).padStart(2, "0");
     const prefix = `${m4Month.y}-${mm}-`;
     Object.entries(m4UserEvents).forEach(([iso, list]) => {
@@ -1427,7 +1427,7 @@ export function Planejamento() {
       const day = parseInt(iso.slice(8, 10), 10);
       if (!day) return;
       (out[day] ??= []).push(
-        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta })),
+        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta, id: e.id, iso })),
       );
     });
     return out;
@@ -1454,6 +1454,47 @@ export function Planejamento() {
       return { y: s.y, m: nm };
     });
   };
+  // ISO yyyy-mm-dd para um dia do mês corrente
+  const m4IsoFor = (day: number) => {
+    const mm = String(m4Month.m + 1).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    return `${m4Month.y}-${mm}-${dd}`;
+  };
+  // Move um evento de uma data ISO para outra
+  const m4MoveEvent = (fromIso: string, id: string, toIso: string) => {
+    if (fromIso === toIso) return;
+    setM4UserEvents((s) => {
+      const src = s[fromIso] ?? [];
+      const item = src.find((e) => e.id === id);
+      if (!item) return s;
+      const next: Record<string, M4UserEvt[]> = { ...s };
+      const remaining = src.filter((e) => e.id !== id);
+      if (remaining.length) next[fromIso] = remaining; else delete next[fromIso];
+      next[toIso] = [...(next[toIso] ?? []), item];
+      return next;
+    });
+  };
+  // Atualiza campos de um evento
+  const m4UpdateEvent = (iso: string, id: string, patch: Partial<M4UserEvt>) => {
+    setM4UserEvents((s) => {
+      const list = s[iso] ?? [];
+      const next = list.map((e) => (e.id === id ? { ...e, ...patch } : e));
+      return { ...s, [iso]: next };
+    });
+  };
+  // Remove um evento
+  const m4DeleteEvent = (iso: string, id: string) => {
+    setM4UserEvents((s) => {
+      const list = (s[iso] ?? []).filter((e) => e.id !== id);
+      const next = { ...s };
+      if (list.length) next[iso] = list; else delete next[iso];
+      return next;
+    });
+  };
+  // Estado do editor inline (qual evento está sendo editado e drag origem)
+  const [m4Editing, setM4Editing] = useState<{ iso: string; id: string } | null>(null);
+  const [m4DragSrc, setM4DragSrc] = useState<{ iso: string; id: string } | null>(null);
+  const [m4DragOver, setM4DragOver] = useState<number | null>(null);
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
   type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string };
@@ -2939,27 +2980,34 @@ export function Planejamento() {
                       <div key={d} style={{ fontSize: 11, fontWeight: 700, letterSpacing: .4, textTransform: "uppercase", color: "var(--muted)", textAlign: "center", padding: "6px 0" }}>{d}</div>
                     ))}
                     {m4Grid.map((cell, i) => {
-                      const evts = cell.day
-                        ? [
-                            ...(M4_EVENTS_BY_DAY[cell.day] ?? []),
-                            ...(m4UserByDay[cell.day] ?? []),
-                          ].filter((e) => layers[e.cat])
-                        : [];
+                      const userEvts = cell.day ? (m4UserByDay[cell.day] ?? []).filter((e) => layers[e.cat]) : [];
+                      const baseEvts = cell.day ? (M4_EVENTS_BY_DAY[cell.day] ?? []).filter((e) => layers[e.cat]) : [];
+                      const evts = [...baseEvts, ...userEvts];
                       const isSel = cell.day != null && cell.day === m4SelectedDay;
                       const isEmpty = cell.day == null;
+                      const isDropTarget = !isEmpty && m4DragOver === cell.day;
                       return (
                         <button
                           key={i}
                           type="button"
-                          disabled={isEmpty || evts.length === 0}
+                          disabled={isEmpty}
                           onClick={() => cell.day && evts.length > 0 && setM4SelectedDay(m4SelectedDay === cell.day ? null : cell.day)}
+                          onDragOver={(e) => { if (!isEmpty && m4DragSrc) { e.preventDefault(); if (m4DragOver !== cell.day) setM4DragOver(cell.day!); } }}
+                          onDragLeave={() => { if (m4DragOver === cell.day) setM4DragOver(null); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setM4DragOver(null);
+                            if (!cell.day || !m4DragSrc) return;
+                            m4MoveEvent(m4DragSrc.iso, m4DragSrc.id, m4IsoFor(cell.day));
+                            setM4DragSrc(null);
+                          }}
                           style={{
                             position: "relative",
                             minHeight: 78,
                             padding: 6,
-                            border: isSel ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)",
+                            border: isDropTarget ? "2px dashed #F97316" : isSel ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)",
                             borderRadius: 8,
-                            background: isEmpty ? "#FAFBFD" : "#fff",
+                            background: isEmpty ? "#FAFBFD" : isDropTarget ? "#FFF7ED" : "#fff",
                             textAlign: "left",
                             cursor: !isEmpty && evts.length > 0 ? "pointer" : "default",
                             opacity: isEmpty ? .4 : 1,
@@ -2969,12 +3017,32 @@ export function Planejamento() {
                           {cell.day && (
                             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", fontFamily: "'JetBrains Mono',monospace" }}>{cell.day}</span>
                           )}
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                            {evts.slice(0, 4).map((e, j) => (
-                              <span key={j} title={`${M4_CAT_META[e.cat].label}: ${e.title}`} style={{ width: 8, height: 8, borderRadius: 99, background: M4_CAT_META[e.cat].color }} />
+                          <div style={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}>
+                            {userEvts.slice(0, 3).map((e) => (
+                              <span
+                                key={e.id}
+                                draggable
+                                onDragStart={(ev) => { ev.stopPropagation(); setM4DragSrc({ iso: e.iso, id: e.id }); }}
+                                onDragEnd={() => { setM4DragSrc(null); setM4DragOver(null); }}
+                                onClick={(ev) => { ev.stopPropagation(); setM4SelectedDay(cell.day!); setM4Editing({ iso: e.iso, id: e.id }); }}
+                                title={`${M4_CAT_META[e.cat].label}: ${e.title} — arraste para mover`}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 4,
+                                  padding: "2px 4px", borderRadius: 4,
+                                  background: M4_CAT_META[e.cat].color + "22",
+                                  borderLeft: `3px solid ${M4_CAT_META[e.cat].color}`,
+                                  fontSize: 10, color: "#1f2937", lineHeight: 1.2,
+                                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                  cursor: "grab",
+                                }}
+                              >
+                                {e.title}
+                              </span>
                             ))}
-                            {evts.length > 4 && (
-                              <span style={{ fontSize: 9, color: "var(--muted)" }}>+{evts.length - 4}</span>
+                            {(userEvts.length > 3 || baseEvts.length > 0) && (
+                              <span style={{ fontSize: 9, color: "var(--muted)" }}>
+                                {userEvts.length > 3 ? `+${userEvts.length - 3}` : ""}{baseEvts.length > 0 ? ` ${baseEvts.length} sistema` : ""}
+                              </span>
                             )}
                           </div>
                         </button>
@@ -2982,25 +3050,63 @@ export function Planejamento() {
                     })}
                   </div>
                   {m4SelectedDay && (() => {
-                    const evts = [
-                      ...(M4_EVENTS_BY_DAY[m4SelectedDay] ?? []),
-                      ...(m4UserByDay[m4SelectedDay] ?? []),
-                    ].filter((e) => layers[e.cat]);
+                    const baseEvts = (M4_EVENTS_BY_DAY[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
+                    const userEvts = (m4UserByDay[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
+                    const total = baseEvts.length + userEvts.length;
                     return (
                       <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line)", borderRadius: 10, background: "#FAFBFD" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                          <strong style={{ fontSize: 13 }}>📍 Dia {m4SelectedDay} de {m4Label} · {evts.length} {evts.length === 1 ? "evento" : "eventos"}</strong>
-                          <button onClick={() => setM4SelectedDay(null)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 4 }}><X size={14} /></button>
+                          <strong style={{ fontSize: 13 }}>📍 Dia {m4SelectedDay} de {m4Label} · {total} {total === 1 ? "evento" : "eventos"}</strong>
+                          <button onClick={() => { setM4SelectedDay(null); setM4Editing(null); }} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 4 }}><X size={14} /></button>
                         </div>
-                        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                          {evts.map((e, j) => (
-                            <li key={j} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
+                        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                          {baseEvts.map((e, j) => (
+                            <li key={`b${j}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
                               <span style={{ width: 10, height: 10, borderRadius: 99, background: M4_CAT_META[e.cat].color, flexShrink: 0 }} />
                               <strong>{e.title}</strong>
                               {e.meta && <span style={{ color: "var(--muted)" }}>· {e.meta}</span>}
                             </li>
                           ))}
+                          {userEvts.map((e) => {
+                            const editing = m4Editing?.id === e.id && m4Editing?.iso === e.iso;
+                            return (
+                              <li key={e.id} style={{ display: "flex", flexDirection: "column", gap: 6, padding: 8, background: "#fff", border: "1px solid var(--line)", borderRadius: 8 }}>
+                                {editing ? (
+                                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                      <select value={e.cat} onChange={(ev) => m4UpdateEvent(e.iso, e.id, { cat: ev.target.value as M4Cat })} style={{ fontSize: 12, padding: "4px 6px", border: "1px solid var(--line)", borderRadius: 6 }}>
+                                        {(Object.keys(M4_CAT_META) as M4Cat[]).map((c) => (
+                                          <option key={c} value={c}>{M4_CAT_META[c].label}</option>
+                                        ))}
+                                      </select>
+                                      <input type="date" value={e.iso} onChange={(ev) => { if (ev.target.value && ev.target.value !== e.iso) m4MoveEvent(e.iso, e.id, ev.target.value); }} style={{ fontSize: 12, padding: "4px 6px", border: "1px solid var(--line)", borderRadius: 6 }} />
+                                    </div>
+                                    <input value={e.title} onChange={(ev) => m4UpdateEvent(e.iso, e.id, { title: ev.target.value })} placeholder="Título" style={{ fontSize: 12.5, padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 6, fontWeight: 600 }} />
+                                    <input value={e.meta ?? ""} onChange={(ev) => m4UpdateEvent(e.iso, e.id, { meta: ev.target.value })} placeholder="Detalhes (turma, horário…)" style={{ fontSize: 12, padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 6 }} />
+                                    <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                                      <button onClick={() => { if (confirm("Excluir este evento?")) { m4DeleteEvent(e.iso, e.id); setM4Editing(null); } }} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid #FCA5A5", color: "#B91C1C", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Excluir</button>
+                                      <button onClick={() => setM4Editing(null)} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Concluir</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
+                                    <span style={{ width: 10, height: 10, borderRadius: 99, background: M4_CAT_META[e.cat].color, flexShrink: 0 }} />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <strong>{e.title}</strong>
+                                      {e.meta && <span style={{ color: "var(--muted)" }}> · {e.meta}</span>}
+                                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 2 }}>{M4_CAT_META[e.cat].label}</div>
+                                    </div>
+                                    <button onClick={() => setM4Editing({ iso: e.iso, id: e.id })} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Editar</button>
+                                  </div>
+                                )}
+                              </li>
+                            );
+                          })}
+                          {total === 0 && (
+                            <li style={{ fontSize: 12, color: "var(--muted)" }}>Nenhum evento neste dia.</li>
+                          )}
                         </ul>
+                        <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 8 }}>💡 Arraste qualquer evento entre os dias para reagendá-lo.</p>
                       </div>
                     );
                   })()}
