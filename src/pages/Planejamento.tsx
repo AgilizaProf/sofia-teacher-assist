@@ -1456,28 +1456,55 @@ export function Planejamento() {
   };
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
-  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean };
+  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string };
   const M6_TAGS = ["+ funcionou", "- precisa reforço", "+ inclusão", "+ família"] as const;
   const M6_EMOJIS = ["😣", "😐", "🙂", "😄", "🌟"] as const;
-  const M6_INITIAL: M6Entry[] = [
-    { id: "seed-1", emoji: "🙂", title: "Leitura compartilhada — capítulo 3", text: "Turma engajada, mas houve agitação após o recreio.", tags: ["+ funcionou"], date: "Hoje · 10:42" },
-    { id: "seed-2", emoji: "😐", title: "Frações — exercícios em duplas", text: "Alguns alunos travaram na divisão; preciso reforçar amanhã. Agitação após recreio novamente.", tags: ["- precisa reforço"], date: "Ontem · 14:10" },
-    { id: "seed-3", emoji: "😄", title: "Ciências — experimento da água", text: "Adoraram! Reunião com família da Maria deu resultado.", tags: ["+ funcionou", "+ família"], date: "Seg · 09:30" },
-    { id: "seed-4", emoji: "😣", title: "Matemática — prova surpresa", text: "Agitação após recreio prejudicou o foco. Vários alunos pediram para ir ao banheiro.", tags: ["- precisa reforço"], date: "Sex · 15:20" },
-    { id: "seed-5", emoji: "🙂", title: "Roda de conversa", text: "Momento bom de escuta, agitação após recreio mais branda.", tags: ["+ inclusão"], date: "Qui · 11:00" },
-  ];
+  // Diário começa vazio — apenas o que a professora registrar aparece aqui.
+  const M6_INITIAL: M6Entry[] = [];
   const [m6Entries, setM6Entries] = usePersistentState<M6Entry[]>("plan_m6_entries", M6_INITIAL);
   const [m6Emoji, setM6Emoji] = useState<string>("");
   const [m6Text, setM6Text] = useState<string>("");
   const [m6Tags, setM6Tags] = useState<string[]>([]);
-  const [m6Total] = useState<number>(22);
   const [m6Reminder, setM6Reminder] = usePersistentState<boolean>("plan_m6_reminder", false);
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
   const [m6PatternDismissed, setM6PatternDismissed] = usePersistentState<boolean>("plan_m6_pattern_dismissed", false);
   const [m6EditingId, setM6EditingId] = useState<string | null>(null);
+  // Período do relatório e turma selecionada para a leitura adaptativa.
+  type M6Periodo = "bimestral" | "trimestral" | "semestral" | "anual";
+  const M6_PERIODO_META: Record<M6Periodo, { label: string; meta: number; semanas: number }> = {
+    bimestral: { label: "Bimestral", meta: 22, semanas: 8 },
+    trimestral: { label: "Trimestral", meta: 33, semanas: 12 },
+    semestral: { label: "Semestral", meta: 66, semanas: 24 },
+    anual: { label: "Anual", meta: 132, semanas: 40 },
+  };
+  const [m6Periodo, setM6Periodo] = usePersistentState<M6Periodo>("plan_m6_periodo", "bimestral");
+  const [m6RelTurma, setM6RelTurma] = usePersistentState<string>("plan_m6_rel_turma", "");
+  const m6Total = M6_PERIODO_META[m6Periodo].meta;
   const m6FormRef = useRef<HTMLDivElement | null>(null);
   const m6Registradas = m6Entries.length;
   const m6Pct = Math.min(100, Math.round((m6Registradas / m6Total) * 100));
+  // Relatório adaptado: filtra registros pela turma escolhida (se houver)
+  // e gera uma leitura simples a partir das tags / humores observados.
+  const m6RelEntries = useMemo(() => {
+    if (!m6RelTurma) return m6Entries;
+    return m6Entries.filter((e) => (e.turma || "").toLowerCase() === m6RelTurma.toLowerCase());
+  }, [m6Entries, m6RelTurma]);
+  const m6RelPct = Math.min(100, Math.round((m6RelEntries.length / m6Total) * 100));
+  const m6RelLeitura = useMemo(() => {
+    const total = m6RelEntries.length;
+    if (total === 0) return null;
+    const tagCount: Record<string, number> = {};
+    const humorCount: Record<string, number> = {};
+    m6RelEntries.forEach((e) => {
+      e.tags.forEach((t) => { tagCount[t] = (tagCount[t] || 0) + 1; });
+      if (e.emoji) humorCount[e.emoji] = (humorCount[e.emoji] || 0) + 1;
+    });
+    const topTags = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const topHumor = Object.entries(humorCount).sort((a, b) => b[1] - a[1])[0];
+    const positivos = m6RelEntries.filter((e) => e.tags.some((t) => t.startsWith("+"))).length;
+    const reforco = m6RelEntries.filter((e) => e.tags.some((t) => t.includes("reforço"))).length;
+    return { total, topTags, topHumor, positivos, reforco };
+  }, [m6RelEntries]);
   // ── Filtros do diário (M6) vindos de search params ─────────────────────
   // Sofia (resumo semanal e ações de notificação) usa esses params para
   // abrir o M6 já filtrado por tag, turma ou aluno PCD citado.
@@ -1595,7 +1622,8 @@ export function Planejamento() {
       showToast("✓ Registro atualizado.");
       return;
     }
-    const entry: M6Entry = { id: `e-${Date.now()}`, emoji: m6Emoji || "🙂", title: words || "Registro rápido", text: trimmed, tags: [...m6Tags], date: `Hoje · ${now}` };
+    const turmaAtual = m5Turma || M5_TURMAS[0] || "";
+    const entry: M6Entry = { id: `e-${Date.now()}`, emoji: m6Emoji || "🙂", title: words || "Registro rápido", text: trimmed, tags: [...m6Tags], date: `Hoje · ${now}`, turma: turmaAtual };
     setM6Entries((prev) => [entry, ...prev]);
     m6ResetForm();
     showToast("✓ Diário salvo.");
@@ -2917,7 +2945,7 @@ export function Planejamento() {
                       <Clock size={14} /> {m6Reminder ? "Lembrete ativo" : "Ativar lembrete"}
                     </button>
                     <button className="pl-btn primary" onClick={() => setM6ReportOpen(true)}>
-                      <Sparkles size={14} /> Ver relatório bimestral
+                      <Sparkles size={14} /> Ver relatório {M6_PERIODO_META[m6Periodo].label.toLowerCase()}
                     </button>
                   </div>
                 </div>
@@ -3044,12 +3072,12 @@ export function Planejamento() {
                       <h3><BookOpen size={14} /> Aulas registradas</h3>
                       <p className="lead" style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "4px 0" }}>{m6Registradas}/{m6Total}</p>
                       <div className="pl-d6-progress"><div style={{ width: `${m6Pct}%` }} /></div>
-                      <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 6 }}>{m6Pct}% concluído nesta quinzena</p>
+                      <p style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 6 }}>{m6Pct}% concluído ({M6_PERIODO_META[m6Periodo].label.toLowerCase()})</p>
                     </div>
                     <div className="pl-panel">
-                      <h3><Sparkles size={14} /> Relatório bimestral</h3>
-                      <p className="lead" style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "4px 0" }}>42% pronto</p>
-                      <div className="pl-d6-progress"><div style={{ width: "42%" }} /></div>
+                      <h3><Sparkles size={14} /> Relatório {M6_PERIODO_META[m6Periodo].label.toLowerCase()}</h3>
+                      <p className="lead" style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", margin: "4px 0" }}>{m6RelPct}% pronto</p>
+                      <div className="pl-d6-progress"><div style={{ width: `${m6RelPct}%` }} /></div>
                       <button className="pl-btn" style={{ marginTop: 10, width: "100%" }} onClick={() => setM6ReportOpen(true)}>Ver relatório</button>
                     </div>
                     <div className="pl-panel accent">
@@ -3228,15 +3256,63 @@ export function Planejamento() {
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(620px,100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📊 Relatório bimestral</div>
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Bimestre 2 · Prévia</h3>
+                <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📊 Relatório {M6_PERIODO_META[m6Periodo].label.toLowerCase()}</div>
+                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>{M6_PERIODO_META[m6Periodo].label} · {m6RelTurma || "Todas as turmas"}</h3>
               </div>
               <button onClick={() => setM6ReportOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6 }}><X size={18} /></button>
             </div>
             <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12, fontSize: 13.5, lineHeight: 1.55, color: "var(--ink)" }}>
-              <p style={{ margin: 0 }}><strong>Status:</strong> 42% pronto · {m6Registradas} registros consolidados.</p>
-              <p style={{ margin: 0 }}>Lorem ipsum dolor sit amet, consectetur adipiscing elit. A Sofia consolidará automaticamente os destaques de cada semana, padrões observados (humor da turma, atividades que funcionaram, alertas socioemocionais) e sugestões de continuidade pedagógica.</p>
-              <p style={{ margin: 0 }}>Esta visualização é um placeholder — o relatório final inclui gráficos de evolução, comparações com o bimestre anterior e exportação em PDF.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  Período
+                  <select value={m6Periodo} onChange={(e) => setM6Periodo(e.target.value as M6Periodo)} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontSize: 13 }}>
+                    {(Object.keys(M6_PERIODO_META) as M6Periodo[]).map((p) => (
+                      <option key={p} value={p}>{M6_PERIODO_META[p].label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
+                  Turma
+                  <select value={m6RelTurma} onChange={(e) => setM6RelTurma(e.target.value)} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontSize: 13 }}>
+                    <option value="">Todas as turmas</option>
+                    {M5_TURMAS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </label>
+              </div>
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>
+                  <span>Progresso ({M6_PERIODO_META[m6Periodo].label.toLowerCase()})</span>
+                  <strong style={{ color: "var(--ink)" }}>{m6RelEntries.length}/{m6Total} · {m6RelPct}%</strong>
+                </div>
+                <div className="pl-d6-progress"><div style={{ width: `${m6RelPct}%` }} /></div>
+              </div>
+              {m6RelLeitura ? (
+                <>
+                  <p style={{ margin: 0 }}>
+                    <strong>Leitura da turma:</strong> {m6RelLeitura.total} {m6RelLeitura.total === 1 ? "registro" : "registros"} no período
+                    {m6RelTurma ? <> em <strong>{m6RelTurma}</strong></> : null}.
+                    {m6RelLeitura.topHumor && <> Humor predominante: <strong>{m6RelLeitura.topHumor[0]}</strong>.</>}
+                  </p>
+                  {m6RelLeitura.topTags.length > 0 && (
+                    <p style={{ margin: 0 }}>
+                      <strong>Padrões observados:</strong>{" "}
+                      {m6RelLeitura.topTags.map(([t, n], i) => (
+                        <span key={t}>{i > 0 ? " · " : ""}{t} ({n})</span>
+                      ))}
+                    </p>
+                  )}
+                  <p style={{ margin: 0 }}>
+                    <strong>Balanço:</strong> {m6RelLeitura.positivos} momentos positivos · {m6RelLeitura.reforco} pontos de reforço.
+                  </p>
+                  <div style={{ marginTop: 4, padding: 12, background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 10, fontSize: 12.5, color: "#7C2D12" }}>
+                    <strong>Sofia sugere:</strong> revisar os tópicos com reforço pendente e replicar as estratégias marcadas como “funcionou” na próxima quinzena.
+                  </div>
+                </>
+              ) : (
+                <p style={{ margin: 0, color: "var(--muted)" }}>
+                  Ainda não há registros{m6RelTurma ? <> para <strong>{m6RelTurma}</strong></> : null} neste período. A barra acima crescerá conforme você salvar diários no M6.
+                </p>
+              )}
             </div>
             <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
               <button className="pl-btn" onClick={() => setM6ReportOpen(false)}>Fechar</button>
