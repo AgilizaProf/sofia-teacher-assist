@@ -615,14 +615,32 @@ export function Dashboard() {
 
           <section className="hero">
             <div className="hero-left">
-              <div className="hero-greet"><span className="live-dot" />Bem-vinda à Sofia</div>
-              <h1 className="hero-title">{heroGreeting}.<br />Comece configurando <span className="accent">sua primeira turma.</span></h1>
-              <p className="hero-sub">Cadastre suas turmas e alunos para que a Sofia possa te ajudar a gerar pareceres, planos de aula e adaptações em minutos.</p>
+              <div className="hero-greet">
+                <span className="live-dot" />
+                <span suppressHydrationWarning>{hydrated ? heroDateLine : "Bem-vinda à Sofia"}</span>
+              </div>
+              <h1 className="hero-title" suppressHydrationWarning>
+                {heroGreeting}.
+                {totalStudents === 0 ? (
+                  <><br />Comece configurando <span className="accent">sua primeira turma.</span></>
+                ) : null}
+              </h1>
+              <p className="hero-sub" suppressHydrationWarning>{heroSubText}</p>
               <div className="hero-cta-row">
-                <button className="hero-cta" onClick={() => setClassOpen(true)}>
-                  Criar primeira turma
-                  <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
-                </button>
+                {totalStudents === 0 ? (
+                  <button className="hero-cta" onClick={() => setClassOpen(true)}>
+                    Criar primeira turma
+                    <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                  </button>
+                ) : (
+                  <button
+                    className="hero-cta"
+                    onClick={() => navigate({ to: "/relatorios", search: { tab: "todo" } })}
+                  >
+                    Começar pelos pareceres
+                    <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                  </button>
+                )}
                 <button className="hero-cta-ghost">
                   <Svg strokeWidth={2.5} c={<polygon points="5 3 19 12 5 21 5 3"/>} />
                   Tutorial · 90s
