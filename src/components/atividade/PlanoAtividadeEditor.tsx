@@ -1003,6 +1003,7 @@ const css = `
 .atv-field{display:flex;flex-direction:column;gap:4px;min-width:0;}
 .atv-field.grow{min-width:0;}
 .atv-field label{font-size:11px;font-weight:600;color:var(--muted,#64748B);text-transform:uppercase;letter-spacing:.05em;}
+.atv-field label .atv-opt{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted,#94A3B8);margin-left:4px;}
 .atv-field select,.atv-field input{height:36px;border:1px solid var(--line,#E2E8F0);border-radius:8px;padding:0 10px;font-size:13px;background:#fff;color:var(--ink,#0F172A);font-family:inherit;}
 .atv-field select:focus,.atv-field input:focus{outline:none;border-color:var(--orange,#FF7A45);box-shadow:0 0 0 3px rgba(255,122,69,.15);}
 .atv-badge-ano{height:36px;display:inline-flex;align-items:center;padding:0 12px;border-radius:8px;background:rgba(59,130,246,.10);color:#1E40AF;font-weight:700;font-size:12.5px;font-family:'JetBrains Mono',monospace;border:1px solid rgba(59,130,246,.2);}
