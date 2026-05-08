@@ -423,6 +423,11 @@ type M1Card = {
   passos?: string[];
   avaliacao?: string;
   diferenciacao?: string;
+  // Detalhes adicionais para um plano de aula mais elaborado.
+  perguntasChave?: string[];
+  conceitos?: string[];
+  extensoes?: string[];
+  licaoCasa?: string;
 };
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
