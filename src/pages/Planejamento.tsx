@@ -2834,7 +2834,12 @@ export function Planejamento() {
                       <div key={d} style={{ fontSize: 11, fontWeight: 700, letterSpacing: .4, textTransform: "uppercase", color: "var(--muted)", textAlign: "center", padding: "6px 0" }}>{d}</div>
                     ))}
                     {m4Grid.map((cell, i) => {
-                      const evts = cell.day ? (M4_EVENTS_BY_DAY[cell.day] ?? []).filter((e) => layers[e.cat]) : [];
+                      const evts = cell.day
+                        ? [
+                            ...(M4_EVENTS_BY_DAY[cell.day] ?? []),
+                            ...(m4UserByDay[cell.day] ?? []),
+                          ].filter((e) => layers[e.cat])
+                        : [];
                       const isSel = cell.day != null && cell.day === m4SelectedDay;
                       const isEmpty = cell.day == null;
                       return (
@@ -2872,7 +2877,10 @@ export function Planejamento() {
                     })}
                   </div>
                   {m4SelectedDay && (() => {
-                    const evts = (M4_EVENTS_BY_DAY[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
+                    const evts = [
+                      ...(M4_EVENTS_BY_DAY[m4SelectedDay] ?? []),
+                      ...(m4UserByDay[m4SelectedDay] ?? []),
+                    ].filter((e) => layers[e.cat]);
                     return (
                       <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line)", borderRadius: 10, background: "#FAFBFD" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
