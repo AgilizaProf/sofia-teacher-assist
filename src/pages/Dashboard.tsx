@@ -675,7 +675,7 @@ export function Dashboard() {
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
               <div className="stat-body"><div className="stat-value">{totalClasses} {classes.length > 0 && <span className="stat-value-trend">+{classes.length}</span>}</div><div className="stat-label">Turmas ativas</div></div>
             </button>
-            <button ref={studentsRef as unknown as React.Ref<HTMLButtonElement>} className="stat school-clickable" type="button" onClick={() => setStudentOpen(true)} aria-label="Adicionar aluno" style={{ textAlign: "left" }}>
+            <button className="stat school-clickable" type="button" onClick={() => setStudentOpen(true)} aria-label="Adicionar aluno" style={{ textAlign: "left" }}>
               <div className="stat-icon s3"><Svg c={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} /></div>
               <div className="stat-body"><div className="stat-value">{totalStudents} {students.length > 0 && <span className="stat-value-trend">+{students.length}</span>}</div><div className="stat-label">Alunos</div></div>
             </button>
