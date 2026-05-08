@@ -673,6 +673,7 @@ const css = `
 .atv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 @media(max-width:980px){.atv-grid{grid-template-columns:1fr;}}
 .atv-card{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);}
+.atv-card.atv-invalid{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.12);}
 .atv-card.title{grid-column:1/-1;}
 .atv-card.adapt{background:linear-gradient(180deg,#FAF5FF,#FFFFFF);border-color:#E9D5FF;grid-column:1/-1;}
 .atv-card h3{font-size:13.5px;font-weight:700;color:var(--ink,#0F172A);margin:0 0 10px;display:flex;align-items:center;gap:6px;}
