@@ -2967,6 +2967,7 @@ export function Planejamento() {
                   <div><h2>{m4Label} <small>· {Object.values(layers).filter(Boolean).length} camada(s) ativa(s)</small></h2></div>
                   <div className="right">
                     <button className="pl-btn ghost" onClick={() => m4ChangeMonth(-1)}><ChevronLeft size={14} /> Anterior</button>
+                    <button className="pl-btn ghost" onClick={() => { const n = new Date(); setM4Month({ y: n.getFullYear(), m: n.getMonth() }); setM4SelectedDay(n.getDate()); }}>Hoje</button>
                     <button className="pl-btn ghost" onClick={() => m4ChangeMonth(1)}>Próximo <ChevronRight size={14} /></button>
                   </div>
                 </div>
