@@ -1392,22 +1392,9 @@ export function Planejamento() {
   // M4 — Calendário mensal por camadas
   type M4Cat = "aulas" | "aval" | "eventos" | "feriados" | "bncc" | "sofia";
   type M4Evt = { cat: M4Cat; title: string; meta?: string };
-  // Eventos mockados pinados em datas absolutas (mês/dia) — independente do mês
-  // exibido, são reaplicados em datas equivalentes via lookup por dia.
-  const M4_EVENTS_BY_DAY: Record<number, M4Evt[]> = {
-    3: [{ cat: "aulas", title: "PORT · Leitura compartilhada", meta: "07:30 · 3ºA" }],
-    7: [{ cat: "aulas", title: "MAT · Adição com material concreto", meta: "08:20 · 3ºA" }, { cat: "bncc", title: "EF03MA03", meta: "Operações" }],
-    9: [{ cat: "sofia", title: "Sugestão: revisão lúdica", meta: "Sofia propõe" }],
-    11: [{ cat: "aulas", title: "PORT · Produção textual", meta: "07:30 · 3ºA" }, { cat: "bncc", title: "EF03LP25", meta: "Escrita" }],
-    14: [{ cat: "eventos", title: "Conselho de classe", meta: "14h · sala dos profs" }],
-    15: [{ cat: "feriados", title: "Tiradentes", meta: "Feriado nacional" }],
-    18: [{ cat: "aulas", title: "CIE · Ciclo da água", meta: "08:20 · 3ºA" }],
-    22: [{ cat: "aval", title: "Avaliação de Matemática", meta: "08:20 · 3ºA" }],
-    23: [{ cat: "eventos", title: "Reunião de pais", meta: "19h · auditório" }],
-    25: [{ cat: "sofia", title: "Sugestão: projeto interdisciplinar", meta: "Sofia propõe" }],
-    28: [{ cat: "aulas", title: "HIS · Brasil colônia", meta: "09:10 · 3ºA" }, { cat: "aval", title: "Quiz de História", meta: "rápido · 15 min" }],
-    30: [{ cat: "aulas", title: "ART · Releitura de obras", meta: "13:30 · 3ºA" }],
-  };
+  // Calendário começa vazio — apenas eventos criados pela professora (via abas
+  // Atividades / Atividades PCD) aparecem aqui.
+  const M4_EVENTS_BY_DAY: Record<number, M4Evt[]> = {};
   const M4_CAT_META: Record<M4Cat, { color: string; label: string }> = {
     aulas: { color: "#3B82F6", label: "Aula" },
     aval: { color: "#F59E0B", label: "Avaliação" },
