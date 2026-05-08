@@ -375,9 +375,10 @@ const M_CONFIG: Record<MKey, { badge: string; title: string; sub: string; lead: 
 const TABS: Array<{ k: MKey; num: string; label: string }> = [
   { k: "atv", num: "M1", label: "Atividades" },
   { k: "pcd", num: "M2", label: "Atividades PCD" },
-  { k: "m4", num: "M3", label: "Calendário com camadas" },
-  { k: "m5", num: "M4", label: "Drag & drop · multi-turma" },
-  { k: "m6", num: "M5", label: "Diário de bordo" },
+  { k: "m1",  num: "M3", label: "Sofia preenche a semana" },
+  { k: "m4", num: "M4", label: "Calendário com camadas" },
+  { k: "m5", num: "M5", label: "Drag & drop · multi-turma" },
+  { k: "m6", num: "M6", label: "Diário de bordo" },
 ];
 
 const TURMAS: Array<{ id: string; name: string; sub: string; pcd?: string; gain?: string; warn?: string }> = [
