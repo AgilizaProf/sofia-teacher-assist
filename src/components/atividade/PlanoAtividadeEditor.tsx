@@ -174,7 +174,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     setPlano({ ...plano, habilidades: plano.habilidades.filter((_, j) => j !== i) });
 
   const addHab = (codigo: string, descricao: string) => {
-    if (!codigo.trim()) return;
+    if (!codigo.trim() || !descricao.trim()) return;
     setPlano({
       ...plano,
       habilidades: [...plano.habilidades, { codigo: codigo.trim(), descricao: descricao.trim() }],
@@ -213,6 +213,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       faltam.push("descricao");
     }
     if (plano.habilidades.length === 0) faltam.push("habilidades");
+    else if (plano.habilidades.some((h) => !h.codigo.trim() || !h.descricao.trim())) {
+      faltam.push("habilidades_incompletas");
+    }
     return faltam;
   };
 
@@ -372,6 +375,7 @@ const LABELS: Record<string, string> = {
   objetivo: "objetivo",
   descricao: "descrição (abertura, desenvolvimento ou fechamento)",
   habilidades: "ao menos uma habilidade BNCC",
+  habilidades_incompletas: "código e descrição em todas as habilidades BNCC",
 };
 
 /* ─────────────────────────── Body ─────────────────────────── */
@@ -437,7 +441,7 @@ function PlanoBody(props: {
       </section>
 
       {/* 4. Habilidades BNCC */}
-      <section className={`atv-card${has("habilidades") ? " atv-invalid" : ""}`}>
+      <section className={`atv-card${has("habilidades") || has("habilidades_incompletas") ? " atv-invalid" : ""}`}>
         <h3>③ Habilidades BNCC</h3>
         <div className="atv-chips">
           {plano.habilidades.map((h, i) => (
