@@ -106,6 +106,36 @@ const DUR_TO_MIN: Record<string, number> = {
   "30 min": 30, "45 min": 45, "1h": 60, "1h30": 90,
 };
 
+/* ───────────── Diário de bordo (M6) ─────────────
+ * Lê os registros do diário em localStorage e devolve um resumo recente
+ * para que a Sofia considere humores, observações e tags ao gerar
+ * atividades. Filtra pela turma quando informada.
+ */
+type DiarioBordoItem = { emoji: string; titulo: string; texto: string; tags: string[]; data: string; turma?: string };
+function lerDiarioBordo(turma: string): DiarioBordoItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem("aprof:plan_m6_entries");
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    const tnorm = (turma || "").toLowerCase().trim();
+    const filtered = tnorm
+      ? arr.filter((e: { turma?: string }) => !e.turma || e.turma.toLowerCase() === tnorm)
+      : arr;
+    return filtered.slice(0, 8).map((e: { emoji?: string; title?: string; text?: string; tags?: string[]; date?: string; turma?: string }) => ({
+      emoji: e.emoji || "",
+      titulo: e.title || "",
+      texto: e.text || "",
+      tags: Array.isArray(e.tags) ? e.tags : [],
+      data: e.date || "",
+      turma: e.turma,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /* ─────────────────────────── Component ─────────────────────────── */
 
 export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
