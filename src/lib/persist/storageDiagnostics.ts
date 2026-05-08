@@ -142,6 +142,39 @@ export function clearStorageIssues(): void {
 }
 
 /**
+ * Gera um arquivo JSON com o buffer atual e dispara o download no navegador.
+ * Retorna o nome do arquivo gerado (ou `null` em SSR / erro).
+ */
+export function downloadStorageIssues(): string | null {
+  if (typeof window === "undefined" || typeof document === "undefined") return null;
+  const issues = getStorageIssues();
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+    url: typeof location !== "undefined" ? location.href : "",
+    count: issues.length,
+    issues,
+  };
+  try {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const filename = `storage-diagnostics-${stamp}.json`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return filename;
+  } catch (err) {
+    console.warn("[storageDiagnostics] falha ao exportar:", err);
+    return null;
+  }
+}
+
+/**
  * Verifica se `value` é estruturalmente compatível com `initial`.
  * Retorna `null` se OK, ou uma descrição do problema.
  */
@@ -182,7 +215,11 @@ export function detectShapeMismatch(
 // Expor helpers globais no client para inspeção rápida via DevTools.
 if (typeof window !== "undefined") {
   const w = window as unknown as Record<string, unknown>;
-  const fn = (() => getStorageIssues()) as ((() => StorageIssue[]) & { clear?: () => void });
+  const fn = (() => getStorageIssues()) as ((() => StorageIssue[]) & {
+    clear?: () => void;
+    download?: () => string | null;
+  });
   fn.clear = () => clearStorageIssues();
+  fn.download = () => downloadStorageIssues();
   w.__storageDiagnostics = fn;
 }
