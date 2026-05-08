@@ -58,8 +58,10 @@ test.describe("Planejamento — SSR + hydration", () => {
     expect(html).not.toContain('class="pl-cd-pill"');
   });
 
-  test("nenhum warning de hydration aparece no console", async ({ page }) => {
+  test("nenhum warning de hydration aparece no console", async ({}, testInfo) => {
     test.skip(!browserAvailable, "chromium indisponível neste ambiente");
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ baseURL: testInfo.project.use.baseURL });
     const offences: string[] = [];
     const onMsg = (msg: ConsoleMessage) => {
       if (msg.type() !== "error" && msg.type() !== "warning") return;
@@ -79,11 +81,14 @@ test.describe("Planejamento — SSR + hydration", () => {
     await page.waitForTimeout(500);
 
     page.off("console", onMsg);
+    await browser.close();
     expect(offences, `Hydration warnings:\n${offences.join("\n")}`).toEqual([]);
   });
 
-  test("dia marcado como 'hoje' bate com a data local do navegador", async ({ page }) => {
+  test("dia marcado como 'hoje' bate com a data local do navegador", async ({}, testInfo) => {
     test.skip(!browserAvailable, "chromium indisponível neste ambiente");
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ baseURL: testInfo.project.use.baseURL });
     await page.goto(URL_M1);
     const days = page.getByTestId("m1-day");
     await expect(days.first()).toBeVisible();
@@ -110,5 +115,6 @@ test.describe("Planejamento — SSR + hydration", () => {
       });
       expect(iso).toBe(localISO);
     }
+    await browser.close();
   });
 });
