@@ -408,7 +408,13 @@ export function Relatorios() {
   const ctx = useSofiaContext();
   const sofia = useSofia();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
+  const routeSearch = useSearch({ from: "/relatorios" }) as { tab?: "all" | "todo" | "draft" | "review" | "done" };
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>(routeSearch.tab ?? "all");
+  // Sincroniza com mudanças no search param (ex.: deep-link).
+  useEffect(() => {
+    if (routeSearch.tab && routeSearch.tab !== tab) setTab(routeSearch.tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeSearch.tab]);
   const [search, setSearch] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [preview, setPreview] = useState<Parecer | null>(null);
