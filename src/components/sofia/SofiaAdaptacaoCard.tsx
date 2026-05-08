@@ -93,15 +93,18 @@ export function SofiaAdaptacaoCard({ showEmptyFallback = false }: { showEmptyFal
 
   const result = useMemo(() => {
     if (!hydrated) return { pendentes: [] as Array<{ id: string; nome: string; necessidade: string; disciplina: string; turma: string }> };
+    const safeWeek: Week = (week && typeof week === "object") ? { ...EMPTY_WEEK, ...week } : EMPTY_WEEK;
+    const safeDash: DashStudent[] = Array.isArray(dashStudents) ? dashStudents : [];
+    const safeAdapt: Record<string, string[]> = (adaptDone && typeof adaptDone === "object") ? adaptDone : {};
     const dayKey = tomorrowKey();
-    const cards = week[dayKey] || [];
+    const cards = Array.isArray(safeWeek[dayKey]) ? safeWeek[dayKey] : [];
     if (cards.length === 0) return { pendentes: [] };
     const tomorrow = tomorrowISO();
     const disciplinasAmanha = Array.from(new Set(cards.map((c) => DISCIPLINA_BY_V[c.v] || c.tag).filter(Boolean)));
     const primeiraDisciplina = disciplinasAmanha[0] || "aula";
-    const pcdStudents = dashStudents.filter((s) => s.pcd && s.pcd !== "nao" && s.pcd !== "nao_informado");
+    const pcdStudents = safeDash.filter((s) => s && s.pcd && s.pcd !== "nao" && s.pcd !== "nao_informado");
     const pendentes = pcdStudents
-      .filter((s) => !(adaptDone[studentId(s)] || []).includes(`${tomorrow}-any`))
+      .filter((s) => !(safeAdapt[studentId(s)] || []).includes(`${tomorrow}-any`))
       .map((s) => ({
         id: studentId(s),
         nome: s.name,
