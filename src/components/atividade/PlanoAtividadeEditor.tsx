@@ -126,6 +126,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const turmasPerfil = sofia.turmas;
   const [turma, setTurma] = useState<string>(turmasPerfil[0]?.nome ?? "");
   const [disciplina, setDisciplina] = useState<string>(DISCIPLINAS[0]);
+  // Disciplinas integradas quando o usuário escolhe "Interdisciplinar".
+  const [disciplinasInter, setDisciplinasInter] = useState<string[]>([]);
   const [tema, setTema] = useState<string>("");
   const [duracao, setDuracao] = useState<string>("45 min");
   const [tipo, setTipo] = useState<string>("Livre");
@@ -224,6 +226,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       incluirPCD: modo === "pcd" ? true : incluirPCD,
       regenField: field ?? "",
       planoAtual: field ? plano : null,
+      disciplinasInter: disciplina === "Interdisciplinar" ? disciplinasInter : [],
       opcoesSelecionadas: !field
         ? opcoesSel.map((i) => opcoes[i]).filter(Boolean)
         : [],
@@ -257,6 +260,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       duracao, tipoAtividade: tipo,
       incluirPCD: modo === "pcd" ? true : incluirPCD,
       etapa: "opcoes",
+      disciplinasInter: disciplina === "Interdisciplinar" ? disciplinasInter : [],
       alunosPCD: alunosPCDDaTurma.map((a) => ({
         nome: a.primeiro_nome,
         tipo: a.pcd_codigo || "PCD",
