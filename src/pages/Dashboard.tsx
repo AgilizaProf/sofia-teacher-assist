@@ -371,6 +371,31 @@ export function Dashboard() {
   const goalReached = totalMinutes >= goalMinutes;
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
+  // Cálculo: alunos sem parecer no bimestre.
+  // Mesma regra usada em Relatórios: os primeiros `documentsGenerated` alunos
+  // contam como já entregues; os demais estão pendentes.
+  const pareceresPendentes = useMemo(() => {
+    const pendentes = Math.max(0, totalStudents - documentsGenerated);
+    const turmasComPendencia = new Set<string>();
+    if (pendentes > 0) {
+      students.slice(documentsGenerated).forEach((s) => {
+        if (s?.classRef) turmasComPendencia.add(s.classRef);
+      });
+    }
+    return { alunos: pendentes, turmas: turmasComPendencia.size };
+  }, [students, documentsGenerated, totalStudents]);
+  const heroSubText = useMemo(() => {
+    if (totalStudents === 0) {
+      return "Cadastre suas turmas e alunos para que a Sofia possa te ajudar a gerar pareceres, planos de aula e adaptações em minutos.";
+    }
+    if (pareceresPendentes.alunos === 0) {
+      return "Todos os pareceres do bimestre estão em dia 🎉";
+    }
+    const a = pareceresPendentes.alunos;
+    const t = Math.max(1, pareceresPendentes.turmas);
+    return `Você tem ${a} ${a === 1 ? "aluno" : "alunos"} em ${t} ${t === 1 ? "turma" : "turmas"} aguardando o relatório descritivo do bimestre.`;
+  }, [pareceresPendentes, totalStudents]);
+
   const [streak, setStreak] = useState<number>(0);
   const sofia = useSofia();
   const navigate = useNavigate();
