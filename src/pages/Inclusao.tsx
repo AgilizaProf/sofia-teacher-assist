@@ -16,6 +16,7 @@ import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 
 const css = `
 .inc-root{
@@ -414,8 +415,6 @@ const INITIAL_STUDENTS: Student[] = [];
 
 const PEI_EIXOS: Array<{ ic: string; cls: string; h: string; status: string; tone: "ok" | "warn"; meta: string; body: ReactNode }> = [];
 
-const ADAPTACOES: Array<{ n: number; title: string; desc: string; meta: string }> = [];
-
 const TUTORIAL_STEPS = [
   { t: "Selecione o aluno", d: "Na lista de Inclusão, clique no card do aluno para abrir KPIs, eixos do PEI e timeline pedagógica." },
   { t: "Confira a Visão de hoje", d: "A Sofia destaca a aula do dia que precisa de adaptação e propõe estratégias visual, pacing e mediação." },
@@ -424,8 +423,6 @@ const TUTORIAL_STEPS = [
   { t: "Faça Registros frequentes", d: "Cada registro alimenta o relatório anual. Use observações rápidas para ganhar velocidade." },
   { t: "Gere o Relatório IA", d: "Selecione o período e a Sofia consolida registros + PEI + anamnese em um parecer pronto para exportar." },
 ];
-
-const PLAN_WEEK: { when: string; date: string; disc: string; title: string; bncc: string; adapted: boolean }[] = [];
 
 const REG_ITEMS: Array<{ when: string; who: string; cat: "ped" | "fam" | "sen" | "com"; catLabel: string; body: string; att: string[] }> = [];
 
@@ -738,6 +735,27 @@ export function Inclusao() {
     () => anamData.filter((e) => e.items.some((i) => i.s !== "naoObservado") || (e.obs && e.obs.trim())).length,
     [anamData]
   );
+
+  // Planos adaptados gerados pela Sofia, persistidos por aluno
+  const [plansByStudent, setPlansByStudent] = usePersistentState<Record<string, PlanoInclusao[]>>("inc_plans", {});
+  const studentPlans = (selectedId && plansByStudent[selectedId]) || [];
+  const anamneseResumo = useMemo(() => {
+    if (!selectedId) return "";
+    const data = anamByStudent[selectedId];
+    if (!data) return "";
+    return data
+      .map((e) => {
+        const itens = e.items
+          .filter((i) => i.s !== "naoObservado")
+          .map((i) => `${i.d} (${ANAM_STATUS_LABEL[i.s]})`)
+          .join("; ");
+        const obs = (e.obs || "").trim();
+        if (!itens && !obs) return "";
+        return `• ${e.l}: ${itens}${obs ? ` — Obs.: ${obs}` : ""}`;
+      })
+      .filter(Boolean)
+      .join("\n");
+  }, [selectedId, anamByStudent]);
 
   const goView = (v: ViewKey) => {
     const safe: ViewKey = v === "detail" && students.length === 0 ? "list" : v;
@@ -1295,23 +1313,31 @@ export function Inclusao() {
                       </div>
                     ) : (
                       <div className="plan-list">
-                        {PLAN_WEEK.length === 0 ? (
+                        {studentPlans.length === 0 ? (
                           <div style={{ background: "#fff", border: "1px dashed var(--border)", borderRadius: 11, padding: 22, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
                             Nenhum plano de aula registrado para <b>{selected?.name || "este aluno"}</b> ainda.<br />
                             Use <b>Gerar novo plano adaptado</b> para começar.
                           </div>
-                        ) : PLAN_WEEK.map((p) => (
-                          <div className="plan-item" key={p.title}>
-                            <div className="when">{p.when}<b>{p.date}</b></div>
+                        ) : studentPlans.map((p) => (
+                          <div className="plan-item" key={p.id}>
+                            <div className="when">{p.disciplina || "Aula"}<b>{p.data.split("-").reverse().slice(0,2).join("/")}</b></div>
                             <div>
-                              <h5>{p.title}</h5>
+                              <h5>{p.titulo}</h5>
                               <div className="meta-row">
-                                <span>{p.disc}</span>
-                                <span className="bncc">{p.bncc}</span>
-                                {p.adapted && <span className="adapted">Adaptado pela Sofia</span>}
+                                <span>{p.tema || p.tipoAtividade}</span>
+                                {p.habilidades?.[0]?.codigo && <span className="bncc">{p.habilidades[0].codigo}</span>}
+                                <span className="adapted">Adaptado pela Sofia</span>
                               </div>
                             </div>
-                            <button className="inc-btn-ghost"><FileText size={12} /> Abrir</button>
+                            <button
+                              className="inc-btn-ghost"
+                              onClick={() => {
+                                if (!selectedId) return;
+                                if (!confirm(`Excluir o plano "${p.titulo}"?`)) return;
+                                setPlansByStudent((all) => ({ ...all, [selectedId]: (all[selectedId] || []).filter((x) => x.id !== p.id) }));
+                                toast.success("Plano excluído");
+                              }}
+                            ><X size={12} /> Excluir</button>
                           </div>
                         ))}
                       </div>
@@ -1457,38 +1483,15 @@ export function Inclusao() {
       </div>
 
       {/* Adaptar aula */}
-      <div className={"inc-modal-overlay" + (adaptOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setAdaptOpen(false); }}>
-        <div className="inc-modal" style={{ maxWidth: 760 }}>
-          <div className="inc-modal-bar" />
-          <div className="inc-modal-head">
-            <h2>Adaptar aula{selected ? ` · ${selected.name.split(" ")[0]}` : ""}</h2>
-            <span className="meta">
-              {sofiaCtx.dataState.proxima_aula
-                ? <>{sofiaCtx.dataState.proxima_aula.disciplina} · {new Date(sofiaCtx.dataState.proxima_aula.horario).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}<br />BNCC {sofiaCtx.dataState.proxima_aula.bncc_codigo || "—"}</>
-                : <>—<br />Sem próxima aula cadastrada</>}
-            </span>
-            <button className="inc-modal-close" onClick={() => setAdaptOpen(false)} aria-label="Fechar"><X size={16} /></button>
-          </div>
-          <div className="inc-modal-body plain">
-            {ADAPTACOES.map((a) => (
-              <div className="inc-adapt-item" key={a.n}>
-                <div className="inc-adapt-num">{a.n}</div>
-                <div>
-                  <h4>{a.title}</h4>
-                  <p>{a.desc}</p>
-                  <div className="meta">{a.meta}</div>
-                </div>
-                <input type="checkbox" defaultChecked style={{ width: 18, height: 18, accentColor: "var(--accent)" }} />
-              </div>
-            ))}
-          </div>
-          <div className="inc-modal-foot">
-            <span className="legal">As adaptações serão registradas no histórico {selected ? `de ${selected.name.split(" ")[0]}` : "do(a) aluno(a)"} automaticamente.</span>
-            <button className="inc-btn-ghost" onClick={() => setAdaptOpen(false)}>Cancelar</button>
-            <button className="btn btn-primary" onClick={() => setAdaptOpen(false)}><CheckCircle2 size={14} /> Aplicar 3 adaptações</button>
-          </div>
-        </div>
-      </div>
+      <PlanoInclusaoModal
+        open={adaptOpen}
+        onClose={() => setAdaptOpen(false)}
+        aluno={selected ? { id: selected.id, name: selected.name, diag: selected.diag, cid: selected.cid, anoEscolar: selected.anoEscolar, turma: selected.turma } : null}
+        anamneseResumo={anamneseResumo}
+        onSaved={(novo) => {
+          setPlansByStudent((all) => ({ ...all, [novo.alunoId]: [novo, ...(all[novo.alunoId] || [])] }));
+        }}
+      />
 
       {/* PEI completo */}
       <div className={"inc-modal-overlay" + (peiOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setPeiOpen(false); }}>
