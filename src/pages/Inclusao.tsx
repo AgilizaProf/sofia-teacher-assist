@@ -1716,13 +1716,26 @@ export function Inclusao() {
               <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Tipo de registro</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {(["ped","com","sen","fam"] as RegCat[]).map(k => (
-                  <button type="button" key={k} onClick={() => setNrCat(k)} className={"reg-filter" + (nrCat === k ? " active" : "")}>{REG_CAT_LABEL[k]}</button>
+                  <button
+                    type="button"
+                    key={k}
+                    onClick={() => {
+                      if (k === nrCat) return;
+                      // Se a descrição atual é composta apenas por opções rápidas do tipo anterior, limpa.
+                      const prevQuick = REG_QUICK[nrCat];
+                      const onlyPrev = nrBody.trim() && prevQuick.some(s => nrBody.includes(s)) &&
+                        nrBody.split(/\.\s*/).every(part => !part.trim() || prevQuick.some(s => s.includes(part.trim())));
+                      if (onlyPrev) setNrBody("");
+                      setNrCat(k);
+                    }}
+                    className={"reg-filter" + (nrCat === k ? " active" : "")}
+                  >{REG_CAT_LABEL[k]}</button>
                 ))}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Opções rápidas</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Opções rápidas · {REG_CAT_LABEL[nrCat]}</div>
+              <div key={nrCat} style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {REG_QUICK[nrCat].map(s => (
                   <button
                     type="button"
