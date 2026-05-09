@@ -397,6 +397,15 @@ export function Agenda() {
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [events, setEvents] = usePersistentState<Event[]>("agenda_events", []);
   const [openDate, setOpenDate] = useState<string | null>(null);
+  const ALL_TYPES: EventType[] = ["meeting", "eval", "report", "plan", "pcd", "personal"];
+  const [typeFilter, setTypeFilter] = useState<EventType[]>(ALL_TYPES);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filteredEvents = useMemo(
+    () => events.filter((e) => typeFilter.includes(e.type)),
+    [events, typeFilter]
+  );
+  const toggleType = (t: EventType) =>
+    setTypeFilter((arr) => (arr.includes(t) ? arr.filter((x) => x !== t) : [...arr, t]));
   const [editing, setEditing] = useState<Event | null>(null);
   const [draft, setDraft] = useState<{ title: string; time: string; type: EventType; notes: string }>({
     title: "", time: "", type: "meeting", notes: "",
