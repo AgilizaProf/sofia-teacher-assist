@@ -86,15 +86,23 @@ export const askSofia = createServerFn({ method: "POST" })
 export const listSofiaConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { data, error } = await supabase
-      .from("sofia_conversations")
-      .select("id,title,origin_route,updated_at,created_at")
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
-      .limit(50);
-    if (error) throw new Error(error.message);
-    return { conversations: data || [] };
+    try {
+      const { supabase, userId } = context;
+      const { data, error } = await supabase
+        .from("sofia_conversations")
+        .select("id,title,origin_route,updated_at,created_at")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(50);
+      if (error) {
+        console.error("[Sofia] Erro ao listar conversas:", error);
+        return { conversations: [] as Array<{ id: string; title: string; origin_route: string | null; updated_at: string }> };
+      }
+      return { conversations: data ?? [] };
+    } catch (err) {
+      console.error("[Sofia] Exceção em listSofiaConversations:", err);
+      return { conversations: [] as Array<{ id: string; title: string; origin_route: string | null; updated_at: string }> };
+    }
   });
 
 export const getSofiaConversation = createServerFn({ method: "POST" })
