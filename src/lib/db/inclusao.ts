@@ -16,6 +16,10 @@ export type StudentUI = {
   registros: string;
   trend: string;
   trendTone: "ok" | "warn" | "muted";
+  // Campos vindos do widget de cadastro do Dashboard (preservados no jsonb `data`).
+  birth?: string;
+  notes?: string;
+  pcd?: string;
 };
 
 export type StudentInput = Omit<StudentUI, "id">;
@@ -76,6 +80,9 @@ function rowToUI(r: StudentRow): StudentUI {
     registros: (extra.registros as string) ?? "0",
     trend: (extra.trend as string) ?? "—",
     trendTone: ((extra.trendTone as StudentUI["trendTone"]) ?? "muted"),
+    birth: (extra.birth as string) ?? undefined,
+    notes: ((extra.notes as string) ?? r.observacoes) ?? undefined,
+    pcd: (extra.pcd as string) ?? undefined,
   };
 }
 
@@ -87,6 +94,7 @@ function uiToPayload(input: StudentInput) {
     condicao: input.diag || null,
     cid: input.cid || null,
     aee: input.aee || null,
+    observacoes: input.notes ?? null,
     data: {
       initials: input.initials,
       age: input.age,
@@ -96,6 +104,9 @@ function uiToPayload(input: StudentInput) {
       registros: input.registros,
       trend: input.trend,
       trendTone: input.trendTone,
+      birth: input.birth ?? null,
+      notes: input.notes ?? null,
+      pcd: input.pcd ?? null,
     },
   };
 }
@@ -115,12 +126,20 @@ export async function createInclusaoStudent(
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) throw new Error("Usuário não autenticado");
+  // eslint-disable-next-line no-console
+  console.log("[inclusao.db] insert nova aluna", { userId, nome: input.name });
   const { data, error } = await supabase
     .from("alunos_inclusao")
     .insert({ ...uiToPayload(input), user_id: userId })
     .select()
     .single();
-  if (error) throw error;
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error("[inclusao.db] erro no insert", error);
+    throw error;
+  }
+  // eslint-disable-next-line no-console
+  console.log("[inclusao.db] insert OK", { id: (data as StudentRow).id });
   return rowToUI(data as StudentRow);
 }
 
