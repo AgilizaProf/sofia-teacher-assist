@@ -5,7 +5,7 @@ import { sanitizeFilter } from "@/lib/sofia/m6Filters";
 // Sanitização compartilhada vive em @/lib/sofia/m6Filters — também é
 // reaproveitada pela página ao restaurar o estado persistido em localStorage.
 
-type MKey = "atv" | "pcd" | "m1" | "m4" | "m5" | "m6";
+type MKey = "atv" | "pcd" | "m1" | "m4" | "m5" | "m6" | "trilhas";
 type Search = {
   m?: MKey;
   /** Filtro por tag do diário (M6). */
@@ -18,7 +18,7 @@ type Search = {
 
 export const Route = createFileRoute("/planejamento")({
   validateSearch: (s: Record<string, unknown>): Search => {
-    const ms: MKey[] = ["atv", "pcd", "m1", "m4", "m5", "m6"];
+    const ms: MKey[] = ["atv", "pcd", "m1", "m4", "m5", "m6", "trilhas"];
     return {
       m: ms.includes(s.m as MKey) ? (s.m as MKey) : "atv",
       tag: sanitizeFilter(s.tag),
