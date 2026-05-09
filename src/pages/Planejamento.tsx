@@ -1658,7 +1658,9 @@ export function Planejamento() {
     cat: M4Cat;
     title: string;
     meta?: string;
-    source: "atv" | "pcd";
+    source: "atv" | "pcd" | "m3";
+    m3Dia?: DayKey;
+    m3CardId?: string;
   };
   const [m4UserEvents, setM4UserEvents] = usePersistentState<Record<string, M4UserEvt[]>>(
     "plan_m4_user_events", {},
