@@ -1728,6 +1728,45 @@ function PlanoBody(props: {
   const has = (k: string) => missing.includes(k);
   const isRegen = (f: string) => regenField === f;
 
+  /* ───── Validação de inclusão / DUA (modo PCD = M2) ───── */
+  const DUA_TERMS = [
+    "dua", "desenho universal", "inclus", "acessib",
+    "sensorial", "comunicação alternativa", "caa", "libras", "braille",
+    "apoio visual", "pictograma", "rotina visual",
+    "múltiplas formas", "múltiplas representaç", "múltiplos meios",
+    "autorregulaç", "regulaç emocional", "antecipaç",
+    "participaç", "protagonismo", "junto com a turma", "par mais experiente",
+    "escolha", "tempo adicional", "ritmo próprio",
+  ];
+  const detectDUA = (text?: string): string[] => {
+    if (!text) return [];
+    const low = text.toLowerCase();
+    return DUA_TERMS.filter((t) => low.includes(t));
+  };
+  const InclBadge = ({ hits }: { hits: string[] }) =>
+    modo === "pcd" && hits.length > 0 ? (
+      <span className="atv-incl-badge" title={`Sinais detectados: ${hits.slice(0, 4).join(", ")}`}>
+        ✦ DUA · Inclusão
+      </span>
+    ) : null;
+
+  const inclSecoes = modo === "pcd"
+    ? {
+        Objetivo: detectDUA(plano.objetivo),
+        Abertura: detectDUA(plano.abertura),
+        Desenvolvimento: detectDUA(plano.desenvolvimento),
+        Fechamento: detectDUA(plano.fechamento),
+        Sugestões: detectDUA(plano.sugestoes.map((s) => `${s.titulo} ${s.descricao}`).join(" ")),
+      }
+    : null;
+  const inclVazias = inclSecoes
+    ? Object.entries(inclSecoes).filter(([, v]) => v.length === 0).map(([k]) => k)
+    : [];
+  const inclOk = inclSecoes
+    ? Object.values(inclSecoes).filter((v) => v.length > 0).length
+    : 0;
+  const adaptOk = modo === "pcd" && plano.adaptacoes.length >= 3;
+
   const RegenBtn = ({ field, label }: { field: keyof PlanoAtividade; label: string }) => (
     <button
       className="atv-regen"
@@ -1742,6 +1781,31 @@ function PlanoBody(props: {
 
   return (
     <div className="atv-grid">
+      {modo === "pcd" && inclSecoes && (
+        <section className={`atv-card atv-incl-banner${inclVazias.length > 2 || !adaptOk ? " warn" : " ok"}`}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span className="atv-incl-pill">M2 · Inclusão obrigatória</span>
+            <strong style={{ fontSize: 13 }}>
+              {inclOk}/5 seções com sinais de DUA · {plano.adaptacoes.length} adaptação(ões) específica(s)
+            </strong>
+            <span style={{ flex: 1 }} />
+            {(inclVazias.length > 2 || !adaptOk) ? (
+              <span className="atv-incl-msg">
+                Reforce a inclusão: {inclVazias.length > 0 && (
+                  <>seções sem DUA — <em>{inclVazias.join(", ")}</em>. </>
+                )}
+                {!adaptOk && <>Mínimo de 3 adaptações específicas para o aluno foco.</>}
+                {" "}Use “Regenerar” em cada bloco.
+              </span>
+            ) : (
+              <span className="atv-incl-msg ok">
+                Plano coerente com DUA — participação do aluno PCD presente em todas as etapas.
+              </span>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* 1. Título */}
       <section className={`atv-card title${has("titulo") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
@@ -1764,7 +1828,7 @@ function PlanoBody(props: {
       {/* 2. Objetivo */}
       <section className={`atv-card${has("objetivo") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>① Objetivo</h3>
+          <h3>① Objetivo {inclSecoes && <InclBadge hits={inclSecoes.Objetivo} />}</h3>
           <RegenBtn field="objetivo" label="objetivo" />
         </div>
         <InlineText
@@ -1844,16 +1908,19 @@ function PlanoBody(props: {
           label="Abertura" value={plano.abertura}
           onChange={(v) => props.onChange("abertura", v)}
           regen={<RegenBtn field="abertura" label="abertura" />}
+          badge={inclSecoes && <InclBadge hits={inclSecoes.Abertura} />}
         />
         <BlockWithRegen
           label="Desenvolvimento" value={plano.desenvolvimento}
           onChange={(v) => props.onChange("desenvolvimento", v)}
           regen={<RegenBtn field="desenvolvimento" label="desenvolvimento" />}
+          badge={inclSecoes && <InclBadge hits={inclSecoes.Desenvolvimento} />}
         />
         <BlockWithRegen
           label="Fechamento" value={plano.fechamento}
           onChange={(v) => props.onChange("fechamento", v)}
           regen={<RegenBtn field="fechamento" label="fechamento" />}
+          badge={inclSecoes && <InclBadge hits={inclSecoes.Fechamento} />}
         />
       </section>
 
@@ -1901,7 +1968,10 @@ function PlanoBody(props: {
       {/* 6. Sugestões */}
       <section className="atv-card">
         <div className="atv-card-head">
-          <h3><Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑥ Sugestões da Sofia</h3>
+          <h3>
+            <Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑥ Sugestões da Sofia
+            {inclSecoes && <InclBadge hits={inclSecoes.Sugestões} />}
+          </h3>
           <RegenBtn field="sugestoes" label="sugestões" />
         </div>
 
@@ -2056,12 +2126,15 @@ function InlineText({
 }
 
 function BlockWithRegen({
-  label, value, onChange, regen,
-}: { label: string; value: string; onChange: (v: string) => void; regen: React.ReactNode }) {
+  label, value, onChange, regen, badge,
+}: { label: string; value: string; onChange: (v: string) => void; regen: React.ReactNode; badge?: React.ReactNode }) {
   return (
     <div className="atv-block">
       <div className="atv-block-head">
-        <div className="atv-block-label">{label}</div>
+        <div className="atv-block-label" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          {label}
+          {badge}
+        </div>
         {regen}
       </div>
       <InlineText value={value} onChange={onChange} tag="p" multiline placeholder={`Descreva o ${label.toLowerCase()}…`} />
@@ -2108,6 +2181,13 @@ const css = `
 .atv-card{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);height:auto;align-self:start;}
 .atv-card.atv-invalid{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.12);}
 .atv-card.title{grid-column:1/-1;}
+.atv-incl-banner{grid-column:1/-1;padding:12px 14px;border-radius:12px;border:1px solid;}
+.atv-incl-banner.warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.45);color:#92400E;}
+.atv-incl-banner.ok{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.4);color:#065F46;}
+.atv-incl-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;background:#0F172A;color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.atv-incl-msg{font-size:12.5px;flex:1;min-width:240px;}
+.atv-incl-msg.ok{color:#065F46;}
+.atv-incl-badge{display:inline-flex;align-items:center;padding:2px 8px;margin-left:8px;border-radius:999px;background:linear-gradient(90deg,rgba(99,102,241,.15),rgba(16,185,129,.15));border:1px solid rgba(99,102,241,.35);color:#4338CA;font-size:10.5px;font-weight:700;letter-spacing:.02em;vertical-align:1px;}
 .atv-card.adapt{background:linear-gradient(180deg,#FAF5FF,#FFFFFF);border-color:#E9D5FF;grid-column:1/-1;}
 .atv-card h3{font-size:13.5px;font-weight:700;color:var(--ink,#0F172A);margin:0 0 10px;display:flex;align-items:center;gap:6px;}
 .atv-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
