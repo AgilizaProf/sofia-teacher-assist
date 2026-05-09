@@ -3632,7 +3632,7 @@ export function Planejamento() {
               <>
                 <div className="pl-tools">
                   <div>
-                    <h2>Diário de bordo <small>· registro de 30 segundos</small></h2>
+                    <h2>{isEi ? "Diário de observação" : "Diário de bordo"} <small>· registro de 30 segundos</small></h2>
                   </div>
                   <div className="right">
                     <button className="pl-btn" onClick={() => { setM6Reminder(true); showToast("✓ Você será lembrada todo dia às 18h."); }}>
