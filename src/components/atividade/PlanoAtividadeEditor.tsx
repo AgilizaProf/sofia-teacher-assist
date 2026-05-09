@@ -2181,6 +2181,13 @@ const css = `
 .atv-card{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);height:auto;align-self:start;}
 .atv-card.atv-invalid{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.12);}
 .atv-card.title{grid-column:1/-1;}
+.atv-incl-banner{grid-column:1/-1;padding:12px 14px;border-radius:12px;border:1px solid;}
+.atv-incl-banner.warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.45);color:#92400E;}
+.atv-incl-banner.ok{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.4);color:#065F46;}
+.atv-incl-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;background:#0F172A;color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.atv-incl-msg{font-size:12.5px;flex:1;min-width:240px;}
+.atv-incl-msg.ok{color:#065F46;}
+.atv-incl-badge{display:inline-flex;align-items:center;padding:2px 8px;margin-left:8px;border-radius:999px;background:linear-gradient(90deg,rgba(99,102,241,.15),rgba(16,185,129,.15));border:1px solid rgba(99,102,241,.35);color:#4338CA;font-size:10.5px;font-weight:700;letter-spacing:.02em;vertical-align:1px;}
 .atv-card.adapt{background:linear-gradient(180deg,#FAF5FF,#FFFFFF);border-color:#E9D5FF;grid-column:1/-1;}
 .atv-card h3{font-size:13.5px;font-weight:700;color:var(--ink,#0F172A);margin:0 0 10px;display:flex;align-items:center;gap:6px;}
 .atv-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
