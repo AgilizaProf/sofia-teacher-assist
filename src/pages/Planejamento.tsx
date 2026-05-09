@@ -1666,7 +1666,7 @@ export function Planejamento() {
     "plan_m4_user_events", {},
   );
   const m4UserByDay = useMemo(() => {
-    const out: Record<number, Array<M4Evt & { id: string; iso: string }>> = {};
+    const out: Record<number, Array<M4Evt & { id: string; iso: string; source: M4UserEvt["source"]; m3Dia?: DayKey; m3CardId?: string }>> = {};
     const mm = String(m4Month.m + 1).padStart(2, "0");
     const prefix = `${m4Month.y}-${mm}-`;
     Object.entries(m4UserEvents).forEach(([iso, list]) => {
@@ -1674,7 +1674,7 @@ export function Planejamento() {
       const day = parseInt(iso.slice(8, 10), 10);
       if (!day) return;
       (out[day] ??= []).push(
-        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta, id: e.id, iso })),
+        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta, id: e.id, iso, source: e.source, m3Dia: e.m3Dia, m3CardId: e.m3CardId })),
       );
     });
     return out;
