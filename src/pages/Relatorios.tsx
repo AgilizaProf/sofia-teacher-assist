@@ -656,7 +656,7 @@ export function Relatorios() {
                 )}
                 <div className="rel-hero-cta">
                   <button className="rel-btn-primary" onClick={goLote} aria-label="Gerar com a Sofia">
-                    <Sparkles size={14} strokeWidth={2.4} /> {totalBim === 0 ? "Gerar primeiro parecer" : restantes > 0 ? `Gerar ${restantes} restantes` : "Exportar tudo (PDF)"} <ArrowRight size={14} strokeWidth={2.4} />
+                    <Sparkles size={14} strokeWidth={2.4} /> {totalBim === 0 ? (isEi ? "Gerar primeiro relatório" : "Gerar primeiro parecer") : restantes > 0 ? `Gerar ${restantes} restantes` : "Exportar tudo (PDF)"} <ArrowRight size={14} strokeWidth={2.4} />
                   </button>
                   <button className="rel-btn-ghost" aria-label="Ver vídeo de como funciona">
                     <PlayCircle size={14} /> Como funciona · 60s
