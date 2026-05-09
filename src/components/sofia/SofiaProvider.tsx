@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { askSofia, listSofiaConversations, getSofiaConversation } from "@/server/sofia.functions";
+import { askSofia, listSofiaConversations, getSofiaConversation } from "@/lib/sofia.functions";
 
 export type SofiaMessage = {
   role: "user" | "assistant";
@@ -21,6 +21,21 @@ export type SofiaProactive = {
   message: string;
   action?: { label: string; prompt?: string; to?: string };
 };
+
+async function safeListSofiaConversations(): Promise<SofiaConversationSummary[]> {
+  try {
+    const res = await listSofiaConversations();
+    if (res && typeof res === "object" && "conversations" in res) {
+      const list = (res as { conversations: unknown }).conversations;
+      if (Array.isArray(list)) return list as SofiaConversationSummary[];
+    }
+    console.warn("[Sofia] Resposta inesperada de listSofiaConversations:", res);
+    return [];
+  } catch (err) {
+    console.warn("[Sofia] listSofiaConversations falhou:", err);
+    return [];
+  }
+}
 
 type OpenOptions = {
   prompt?: string;       // pre-fills composer
@@ -124,15 +139,12 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     if (authedNow) {
-      try {
-        const res = await listSofiaConversations();
-        const list = (res && Array.isArray((res as { conversations?: unknown }).conversations))
-          ? (res as { conversations: SofiaConversationSummary[] }).conversations
-          : [];
-        setConversations(list);
-      } catch (err) {
-        console.warn("[Sofia] listSofiaConversations falhou:", err);
-        setBootError(err instanceof Error ? err.message : "Não foi possível carregar suas conversas.");
+      const list = await safeListSofiaConversations();
+      setConversations(list);
+      if (list.length === 0) {
+        // Não trato como erro fatal — apenas seguimos com lista vazia.
+        // Se quiser sinalizar problema de carregamento, descomente:
+        // setBootError("Não foi possível carregar suas conversas agora.");
       }
     }
   }, []);
@@ -175,16 +187,8 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
 
   const refreshConversations = useCallback(async () => {
     if (!isAuthed) return;
-    try {
-      const res = await listSofiaConversations();
-      const list = (res && Array.isArray((res as { conversations?: unknown }).conversations))
-        ? (res as { conversations: SofiaConversationSummary[] }).conversations
-        : [];
-      setConversations(list);
-    } catch (err) {
-      // Não trava a UI: apenas mantém a lista vazia e loga o erro.
-      console.warn("[Sofia] listSofiaConversations falhou:", err);
-    }
+    const list = await safeListSofiaConversations();
+    setConversations(list);
   }, [isAuthed]);
 
   // Refs para uso dentro do listener de auth (que roda apenas uma vez).

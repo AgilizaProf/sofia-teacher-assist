@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useSofiaNotifications, type SofiaNotifAction, type SofiaNotifCategory, type SofiaNotification } from "@/lib/sofia/notifications";
 import { useSofia } from "./SofiaProvider";
-import { askSofia } from "@/server/sofia.functions";
+import { askSofia } from "@/lib/sofia.functions";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
