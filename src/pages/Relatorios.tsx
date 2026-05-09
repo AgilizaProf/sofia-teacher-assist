@@ -459,6 +459,8 @@ export function Relatorios() {
   // Override de ano de referência por aluno (sobretudo PCD)
   const [yearOverride, setYearOverride] = usePersistentState<Record<string, string>>("rel_bncc_year", {});
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
+  const [verTodosHist, setVerTodosHist] = useState(false);
+  const HIST_LIMIT = 5;
 
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
