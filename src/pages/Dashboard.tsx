@@ -307,6 +307,7 @@ export function Dashboard() {
   const user = useUser();
   const sofiaCtx = useSofiaContext();
   const hydrated = useHydrated();
+  const isEi = useEiMode();
   // Nome real do usuário logado (perfil) com fallback seguro pra SSR.
   const realName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || user.name || "").trim();
   // Tick a cada 30s pra manter o relógio em dia.
