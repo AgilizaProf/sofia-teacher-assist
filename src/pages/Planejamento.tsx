@@ -1873,6 +1873,19 @@ export function Planejamento() {
     sinais: string[];
   };
   const [m6JustSaved, setM6JustSaved] = useState<M6NextSuggestion | null>(null);
+  // Relatório gerado pela Sofia (IA) a partir dos registros do diário.
+  type M6AIRelatorio = {
+    titulo?: string;
+    resumo?: string;
+    destaques?: string[];
+    alertas?: string[];
+    padroes?: string[];
+    recomendacoes?: string[];
+    comunicacao_familias?: string;
+  };
+  const [m6AIRel, setM6AIRel] = useState<M6AIRelatorio | null>(null);
+  const [m6AILoading, setM6AILoading] = useState(false);
+  const [m6AIErro, setM6AIErro] = useState<string | null>(null);
   // Período do relatório e turma selecionada para a leitura adaptativa.
   type M6Periodo = "bimestral" | "trimestral" | "semestral" | "anual";
   const M6_PERIODO_META: Record<M6Periodo, { label: string; meta: number; semanas: number }> = {
@@ -2120,6 +2133,45 @@ export function Planejamento() {
     requestAnimationFrame(() => m1OpenEdit(proxima.dia, carta.id));
     setM6JustSaved(null);
     showToast("✓ Sofia aplicou o ajuste na próxima aula.");
+  };
+  // Gera relatório com a Sofia (Lovable AI) a partir dos registros do diário.
+  const m6GerarRelatorioSofia = async () => {
+    setM6AILoading(true);
+    setM6AIErro(null);
+    try {
+      const stats = m6RelLeitura
+        ? {
+            total: m6RelLeitura.total,
+            humor_predominante: m6RelLeitura.topHumor?.[0] || null,
+            top_tags: m6RelLeitura.topTags,
+            positivos: m6RelLeitura.positivos,
+            reforco: m6RelLeitura.reforco,
+          }
+        : { total: 0 };
+      const payload = {
+        periodo: M6_PERIODO_META[m6Periodo].label.toLowerCase(),
+        turma: m6RelTurma || "",
+        stats,
+        entries: m6RelEntries.map((e) => ({
+          emoji: e.emoji,
+          title: e.title,
+          text: e.text,
+          tags: e.tags,
+          date: e.date,
+          turma: e.turma,
+          atividadeTitulo: e.atividadeTitulo,
+        })),
+      };
+      const { data, error } = await supabase.functions.invoke("gerar-relatorio", { body: payload });
+      if (error) throw error;
+      const rel = (data as { relatorio?: M6AIRelatorio })?.relatorio;
+      if (!rel) throw new Error("Resposta vazia da Sofia.");
+      setM6AIRel(rel);
+    } catch (e) {
+      setM6AIErro((e as Error)?.message || "Falha ao gerar relatório.");
+    } finally {
+      setM6AILoading(false);
+    }
   };
   const m6Save = () => {
     if (!m6Emoji && !m6Text.trim() && m6Tags.length === 0) { showToast("Selecione um emoji ou escreva uma anotação."); return; }
@@ -4017,9 +4069,69 @@ export function Planejamento() {
                   Ainda não há registros{m6RelTurma ? <> para <strong>{m6RelTurma}</strong></> : null} neste período. A barra acima crescerá conforme você salvar diários no M6.
                 </p>
               )}
+              {m6AIErro && (
+                <div style={{ padding: 10, borderRadius: 8, background: "#FEF2F2", border: "1px solid #FECACA", color: "#991B1B", fontSize: 12.5 }}>
+                  ⚠ {m6AIErro}
+                </div>
+              )}
+              {m6AIRel && (
+                <div style={{ marginTop: 8, padding: 14, borderRadius: 12, background: "linear-gradient(180deg,#FFF7ED 0%,#FFFBF5 100%)", border: "1px solid #FED7AA", display: "grid", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                    <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Relatório gerado pela Sofia
+                  </div>
+                  {m6AIRel.titulo && <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, margin: 0, color: "var(--ink)" }}>{m6AIRel.titulo}</h4>}
+                  {m6AIRel.resumo && <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.55 }}>{m6AIRel.resumo}</p>}
+                  {Array.isArray(m6AIRel.destaques) && m6AIRel.destaques.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Destaques</div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                        {m6AIRel.destaques.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {Array.isArray(m6AIRel.alertas) && m6AIRel.alertas.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Pontos de atenção</div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                        {m6AIRel.alertas.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {Array.isArray(m6AIRel.padroes) && m6AIRel.padroes.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Padrões</div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                        {m6AIRel.padroes.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {Array.isArray(m6AIRel.recomendacoes) && m6AIRel.recomendacoes.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Recomendações da Sofia</div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                        {m6AIRel.recomendacoes.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {m6AIRel.comunicacao_familias && (
+                    <div style={{ padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #FED7AA" }}>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Comunicação para as famílias</div>
+                      <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{m6AIRel.comunicacao_familias}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
-              <button className="pl-btn" onClick={() => setM6ReportOpen(false)}>Fechar</button>
+              <button className="pl-btn" onClick={() => { setM6ReportOpen(false); setM6AIRel(null); setM6AIErro(null); }}>Fechar</button>
+              <button
+                className="pl-btn primary"
+                onClick={m6GerarRelatorioSofia}
+                disabled={m6AILoading || m6RelEntries.length === 0}
+                title={m6RelEntries.length === 0 ? "Salve pelo menos 1 registro para gerar." : "Sofia escreve um relatório completo"}
+              >
+                <Sparkles size={14} /> {m6AILoading ? "Sofia escrevendo…" : (m6AIRel ? "Gerar novamente" : "Gerar com a Sofia")}
+              </button>
             </div>
           </div>
         </div>
