@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import type React from "react";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { supabase } from "@/integrations/supabase/client";
+import { CommandPalette } from "@/components/CommandPalette";
 
 export const sidebarCss = `
 .ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
@@ -55,17 +57,34 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const cls = (k: SidebarKey) => "sb-item" + (active === k ? " active" : "");
   useSofiaContext();
   const navigate = useNavigate();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const usingInternal = !onCmdK;
+  const handleCmdK = onCmdK || (() => setPaletteOpen(true));
+
+  useEffect(() => {
+    if (!usingInternal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [usingInternal]);
+
   const handleLogout = async () => {
     try { await supabase.auth.signOut(); } catch { /* ignore */ }
     navigate({ to: "/auth" });
   };
   return (
+    <>
     <aside className="ap-sidebar">
       <div className="sb-head">
         <div className="sb-logo-icon">A</div>
         <div className="sb-logo-text">Agiliza<span>Prof</span></div>
       </div>
-      <button className="sb-cmdk" onClick={onCmdK} aria-label="Buscar ou navegar">
+      <button className="sb-cmdk" onClick={handleCmdK} aria-label="Buscar ou navegar">
         <Svg c={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />
         <span>Buscar ou ir para...</span>
         <span className="sb-cmdk-shortcut">⌘K</span>
@@ -121,5 +140,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
         </div>
       </div>
     </aside>
+    {usingInternal && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />}
+    </>
   );
 }
