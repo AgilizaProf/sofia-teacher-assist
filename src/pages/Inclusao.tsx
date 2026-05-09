@@ -1348,7 +1348,7 @@ export function Inclusao() {
                                     Faltam ainda <b>{eixosFaltantes}</b> eixo{eixosFaltantes === 1 ? "" : "s"} da Anamnese para uma linha de base completa.
                                   </p>
                                 )}
-                                <button className="btn btn-secondary" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => { setActiveTab("regs"); setRegModalOpen(true); }}>
+                                <button className="btn btn-secondary" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => { setActiveTab("reg"); setRegModalOpen(true); }}>
                                   Novo registro
                                 </button>
                               </div>
