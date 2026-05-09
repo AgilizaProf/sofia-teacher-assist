@@ -3411,9 +3411,23 @@ export function Planejamento() {
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                       <strong>{e.title}</strong>
                                       {e.meta && <span style={{ color: "var(--muted)" }}> · {e.meta}</span>}
-                                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 2 }}>{M4_CAT_META[e.cat].label}</div>
+                                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 2 }}>
+                                        {M4_CAT_META[e.cat].label}
+                                        {e.source === "m3" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(255,122,69,.15)", color: "#9A3412", fontWeight: 700, letterSpacing: ".04em" }}>M3 · Sofia</span>}
+                                        {e.source === "atv" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(59,130,246,.15)", color: "#1d4ed8", fontWeight: 700, letterSpacing: ".04em" }}>M1 · Atividade</span>}
+                                        {e.source === "pcd" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(16,185,129,.15)", color: "#047857", fontWeight: 700, letterSpacing: ".04em" }}>M2 · PCD</span>}
+                                      </div>
                                     </div>
-                                    <button onClick={() => setM4Editing({ iso: e.iso, id: e.id })} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Editar</button>
+                                    {e.source === "m3" && e.m3Dia && e.m3CardId ? (
+                                      <button
+                                        onClick={() => { setM("m1"); m1OpenEdit(e.m3Dia!, e.m3CardId!); }}
+                                        style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--orange, #F97316)", background: "var(--orange, #F97316)", color: "#fff", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}
+                                      >
+                                        Abrir no M3
+                                      </button>
+                                    ) : (
+                                      <button onClick={() => setM4Editing({ iso: e.iso, id: e.id })} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Editar</button>
+                                    )}
                                   </div>
                                 )}
                               </li>
