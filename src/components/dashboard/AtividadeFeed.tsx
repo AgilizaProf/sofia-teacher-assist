@@ -1,8 +1,14 @@
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { FileText, CalendarCheck2, Sparkles, UserPlus, Download, ArrowRight } from "lucide-react";
-import { useActivityFeed, relativeTime, type ActivityType } from "@/lib/activity/activityLog";
+import { useActivityFeed, relativeTime, type ActivityType, type ActivityEntry } from "@/lib/activity/activityLog";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useSofia } from "@/components/sofia/SofiaProvider";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+
+const VISIBLE_LIMIT = 6;
 
 const ICON_BY_TYPE: Record<ActivityType, { Icon: typeof FileText; color: string; label: string }> = {
   parecer: { Icon: FileText, color: "#8B5CF6", label: "Parecer" },
@@ -28,13 +34,20 @@ const css = `
 .afeed-cta{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
   border-radius:9px;background:#8B5CF6;color:#fff;border:0;font-weight:700;font-size:12.5px;cursor:pointer;}
 .afeed-cta:hover{background:#7C3AED;}
+.afeed-more{margin-top:10px;width:100%;padding:9px 14px;border-radius:10px;
+  background:#fff;color:#1f1d2a;border:1px solid #e7e3da;font-weight:700;font-size:12.5px;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.afeed-more:hover{background:#faf8f3;border-color:#d8d2c5;}
+.afeed-modal-section{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:#8a8475;margin:14px 0 6px;}
 `;
 
 export function AtividadeFeed() {
   const hydrated = useHydrated();
   const navigate = useNavigate();
   const sofia = useSofia();
-  const { week } = useActivityFeed();
+  const { week, all } = useActivityFeed();
+  const [openAll, setOpenAll] = useState(false);
 
   if (!hydrated) {
     return (
@@ -62,31 +75,40 @@ export function AtividadeFeed() {
     );
   }
 
-  const visible = week.slice(0, 8);
+  const visible = week.slice(0, VISIBLE_LIMIT);
+  const hasMore = week.length > VISIBLE_LIMIT || all.length > week.length;
+  const lastTen = all.slice(0, 10);
+
+  const renderItem = (item: ActivityEntry) => {
+    const meta = ICON_BY_TYPE[item.type];
+    const Icon = meta.Icon;
+    return (
+      <li key={item.id} className="afeed-item">
+        <div className="afeed-icn" style={{ background: meta.color }}>
+          <Icon size={16} strokeWidth={2.4} />
+        </div>
+        <div className="afeed-body">
+          <div className="afeed-desc">{item.description}</div>
+          <div className="afeed-meta">
+            <span>{relativeTime(item.ts)}</span>
+            {item.detail && <><span>·</span><b>{item.detail}</b></>}
+          </div>
+        </div>
+      </li>
+    );
+  };
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <ul className="afeed-list" aria-label="Atividades desta semana">
-        {visible.map((item) => {
-          const meta = ICON_BY_TYPE[item.type];
-          const Icon = meta.Icon;
-          return (
-            <li key={item.id} className="afeed-item">
-              <div className="afeed-icn" style={{ background: meta.color }}>
-                <Icon size={16} strokeWidth={2.4} />
-              </div>
-              <div className="afeed-body">
-                <div className="afeed-desc">{item.description}</div>
-                <div className="afeed-meta">
-                  <span>{relativeTime(item.ts)}</span>
-                  {item.detail && <><span>·</span><b>{item.detail}</b></>}
-                </div>
-              </div>
-            </li>
-          );
-        })}
+        {visible.map(renderItem)}
       </ul>
+      {hasMore && (
+        <button type="button" className="afeed-more" onClick={() => setOpenAll(true)}>
+          Ver tudo ({week.length}) <ArrowRight size={13} />
+        </button>
+      )}
       {/* CTA "Pergunte à Sofia" segue logo abaixo no Dashboard */}
       <button
         type="button"
@@ -102,6 +124,30 @@ export function AtividadeFeed() {
       >
         💬 Pergunte à Sofia sobre esta semana
       </button>
+      <Dialog open={openAll} onOpenChange={setOpenAll}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Histórico de atividades</DialogTitle>
+            <DialogDescription>
+              Tudo que aconteceu na última semana e seus 10 arquivos mais recentes.
+            </DialogDescription>
+          </DialogHeader>
+          <div style={{ maxHeight: "60vh", overflowY: "auto", paddingRight: 4 }}>
+            <div className="afeed-modal-section">Última semana ({week.length})</div>
+            {week.length === 0 ? (
+              <div style={{ fontSize: 13, color: "#736e63" }}>Sem atividades nos últimos 7 dias.</div>
+            ) : (
+              <ul className="afeed-list">{week.map(renderItem)}</ul>
+            )}
+            <div className="afeed-modal-section">10 arquivos mais recentes</div>
+            {lastTen.length === 0 ? (
+              <div style={{ fontSize: 13, color: "#736e63" }}>Nenhum arquivo registrado ainda.</div>
+            ) : (
+              <ul className="afeed-list">{lastTen.map(renderItem)}</ul>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
