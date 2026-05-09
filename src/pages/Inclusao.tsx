@@ -1164,37 +1164,99 @@ export function Inclusao() {
 
                       <div className="context-card">
                         <h4>Contexto rápido</h4>
-                        {([
-                          { l: "Ano escolar", v: selected.anoEscolar || "Não informado", t: "" },
-                          { l: "Turma", v: selected.turma, t: "" },
-                          { l: "Diagnóstico", v: selected.diag, t: "" },
-                          { l: "CID", v: selected.cid, t: "" },
-                          { l: "AEE / Mediação", v: selected.aee, t: "" },
-                          { l: "Leitura", v: "Sem dados", t: "" },
-                          { l: "Escrita", v: "Sem dados", t: "" },
-                          { l: "Matemática", v: "Sem dados", t: "" },
-                        ] as Array<{ l: string; v: string; t: "" | "warn" | "ok" }>).map((r) => (
-                          <div className="ctx-row" key={r.l}>
-                            <span className="lbl">{r.l}</span>
-                            <span className={"ctx-pill" + (r.t ? " " + r.t : "")}>{r.v}</span>
-                          </div>
-                        ))}
+                        {(() => {
+                          const findEixo = (label: string) => anamData.find((e) => e.l === label);
+                          const pillFor = (label: string): { v: string; t: "" | "warn" | "ok" } => {
+                            const e = findEixo(label);
+                            if (!e) return { v: "Sem dados", t: "" };
+                            const obs = e.items.filter((i) => i.s !== "naoObservado");
+                            if (obs.length === 0) return { v: "Sem dados", t: "" };
+                            const p = eixoPct(e.items);
+                            return { v: `${p}%`, t: p >= 80 ? "ok" : p >= 40 ? "warn" : "warn" };
+                          };
+                          const linhas: Array<{ l: string; v: string; t: "" | "warn" | "ok" }> = [
+                            { l: "Ano escolar", v: selected.anoEscolar || "Não informado", t: "" },
+                            { l: "Turma", v: selected.turma, t: "" },
+                            { l: "Diagnóstico", v: selected.diag, t: "" },
+                            { l: "CID", v: selected.cid, t: "" },
+                            { l: "AEE / Mediação", v: selected.aee, t: "" },
+                            { l: "Anamnese", v: `${eixosPreenchidos}/${anamData.length} eixos`, t: eixosPreenchidos === 0 ? "warn" : eixosPreenchidos >= anamData.length / 2 ? "ok" : "warn" },
+                            { l: "Desempenho acadêmico", ...pillFor("Desempenho Acadêmico") },
+                            { l: "Aspectos pedagógicos", ...pillFor("Aspectos Pedagógicos") },
+                            { l: "Interações sociais", ...pillFor("Interações Sociais") },
+                            { l: "Autonomia", ...pillFor("Autonomia") },
+                            { l: "Emoção / Autorregulação", ...pillFor("Emoção") },
+                          ];
+                          return linhas.map((r) => (
+                            <div className="ctx-row" key={r.l}>
+                              <span className="lbl">{r.l}</span>
+                              <span className={"ctx-pill" + (r.t ? " " + r.t : "")}>{r.v}</span>
+                            </div>
+                          ));
+                        })()}
+                        {(() => {
+                          const consolidados: string[] = [];
+                          const naoAlcancados: string[] = [];
+                          anamData.forEach((e) => {
+                            e.items.forEach((i) => {
+                              if (i.s === "consolidado") consolidados.push(i.d);
+                              else if (i.s === "naoAlcancado") naoAlcancados.push(i.d);
+                            });
+                          });
+                          if (consolidados.length === 0 && naoAlcancados.length === 0) {
+                            return (
+                              <p style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>
+                                Preencha a Anamnese para ver destaques e pontos de atenção do(a) aluno(a) aqui.
+                              </p>
+                            );
+                          }
+                          return (
+                            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                              {consolidados.length > 0 && (
+                                <div>
+                                  <b style={{ fontSize: 11, color: "var(--success)" }}>Destaques</b>
+                                  <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: 12 }}>
+                                    {consolidados.slice(0, 3).map((c) => <li key={c}>{c}</li>)}
+                                  </ul>
+                                </div>
+                              )}
+                              {naoAlcancados.length > 0 && (
+                                <div>
+                                  <b style={{ fontSize: 11, color: "var(--warn)" }}>Pontos de atenção</b>
+                                  <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: 12 }}>
+                                    {naoAlcancados.slice(0, 3).map((c) => <li key={c}>{c}</li>)}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="skills-card">
                         <h4>Habilidades · evolução</h4>
-                        {([
-                          { l: "Atenção sustentada", p: 0, c: "" },
-                          { l: "Leitura silábica", p: 0, c: "" },
-                          { l: "Cálculo concreto", p: 0, c: "" },
-                          { l: "Interação em dupla", p: 0, c: "" },
-                          { l: "Autorregulação", p: 0, c: "" },
-                        ] as Array<{ l: string; p: number; c: "" | "warn" | "green" }>).map((s) => (
-                          <div className="skill" key={s.l}>
-                            <div className="skill-head"><b>{s.l}</b><span>{s.p}%</span></div>
-                            <div className="skill-bar"><div className={"skill-fill" + (s.c ? " " + s.c : "")} style={{ width: s.p + "%" }} /></div>
-                          </div>
-                        ))}
+                        {(() => {
+                          const skillFromEixo = (label: string, eixoLabel: string) => {
+                            const e = anamData.find((x) => x.l === eixoLabel);
+                            const observed = e ? e.items.some((i) => i.s !== "naoObservado") : false;
+                            const p = e && observed ? eixoPct(e.items) : 0;
+                            const c: "" | "warn" | "green" = !observed ? "" : p >= 80 ? "green" : p >= 40 ? "" : "warn";
+                            return { l: label, p, c, observed };
+                          };
+                          const skills = [
+                            skillFromEixo("Atenção sustentada", "Aspectos Pedagógicos"),
+                            skillFromEixo("Leitura / Escrita / Cálculo", "Desempenho Acadêmico"),
+                            skillFromEixo("Interação em dupla", "Interações Sociais"),
+                            skillFromEixo("Autonomia", "Autonomia"),
+                            skillFromEixo("Autorregulação", "Emoção"),
+                          ];
+                          return skills.map((s) => (
+                            <div className="skill" key={s.l}>
+                              <div className="skill-head"><b>{s.l}</b><span>{s.observed ? `${s.p}%` : "—"}</span></div>
+                              <div className="skill-bar"><div className={"skill-fill" + (s.c ? " " + s.c : "")} style={{ width: s.p + "%" }} /></div>
+                            </div>
+                          ));
+                        })()}
                       </div>
 
                       <div className="trust-card">
