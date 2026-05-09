@@ -1007,6 +1007,45 @@ export type Database = {
         }
         Relationships: []
       }
+      turmas: {
+        Row: {
+          ano: string | null
+          created_at: string
+          data: Json
+          escola: string | null
+          id: string
+          nome: string
+          qtd_alunos: string | null
+          turno: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ano?: string | null
+          created_at?: string
+          data?: Json
+          escola?: string | null
+          id?: string
+          nome: string
+          qtd_alunos?: string | null
+          turno?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ano?: string | null
+          created_at?: string
+          data?: Json
+          escola?: string | null
+          id?: string
+          nome?: string
+          qtd_alunos?: string | null
+          turno?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

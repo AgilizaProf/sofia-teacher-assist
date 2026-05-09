@@ -18,6 +18,9 @@ import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { useTurmas } from "@/hooks/useTurmas";
+import { useAgenda } from "@/hooks/useAgenda";
+import { toast } from "sonner";
 
 type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
 type AgendaEvent = {
@@ -334,7 +337,7 @@ export function Dashboard() {
   const [schools, setSchools] = usePersistentState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>("dash_schools", []);
   const baseSchools = 0;
   const [classOpen, setClassOpen] = useState(false);
-  const [classes, setClasses] = usePersistentState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>("dash_classes", []);
+  const { turmas: classes, create: createTurmaDb, update: updateTurmaDb, remove: removeTurmaDb } = useTurmas();
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
@@ -567,8 +570,9 @@ export function Dashboard() {
     },
   };
 
-  // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
-  const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
+  // Lê os eventos diretamente do banco (tabela agenda_eventos), mesma fonte da tela /agenda.
+  const { events: agendaEventsRaw } = useAgenda();
+  const agendaEvents = agendaEventsRaw as unknown as AgendaEvent[];
   const upcomingAgenda = useMemo(() => {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -1265,20 +1269,26 @@ export function Dashboard() {
               <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
             </button>
           </div>
-          <form className="school-modal-body" onSubmit={(e) => {
+          <form className="school-modal-body" onSubmit={async (e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
             const name = String(fd.get("name") || "").trim();
             if (!name) return;
-            setClasses((arr) => [...arr, {
-              name,
-              school: String(fd.get("school") || ""),
-              grade: String(fd.get("grade") || ""),
-              shift: String(fd.get("shift") || ""),
-              students: String(fd.get("students") || ""),
-            }]);
-            (e.currentTarget as HTMLFormElement).reset();
-            setClassOpen(false);
+            const form = e.currentTarget as HTMLFormElement;
+            try {
+              await createTurmaDb({
+                name,
+                school: String(fd.get("school") || ""),
+                grade: String(fd.get("grade") || ""),
+                shift: String(fd.get("shift") || ""),
+                students: String(fd.get("students") || ""),
+              });
+              form.reset();
+              setClassOpen(false);
+            } catch (err) {
+              console.error("[Dashboard] erro ao criar turma:", err);
+              toast.error("Não foi possível salvar a turma. Tente novamente.");
+            }
           }}>
             <div className="school-field">
               <label htmlFor="class-name">Nome da turma</label>
@@ -1353,12 +1363,13 @@ export function Dashboard() {
                 <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
               </button>
             </div>
-            <form className="school-modal-body" onSubmit={(e) => {
+            <form className="school-modal-body" onSubmit={async (e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
               const name = String(fd.get("name") || "").trim();
               if (!name) return;
               const oldName = classes[editingClassIdx!].name;
+              const turmaId = classes[editingClassIdx!].id;
               const updated = {
                 name,
                 school: String(fd.get("school") || ""),
@@ -1366,11 +1377,16 @@ export function Dashboard() {
                 shift: String(fd.get("shift") || ""),
                 students: String(fd.get("students") || ""),
               };
-              setClasses((arr) => arr.map((c, i) => i === editingClassIdx ? updated : c));
-              if (oldName !== name) {
-                setStudents((arr) => arr.map((s) => s.classRef === oldName ? { ...s, classRef: name } : s));
+              try {
+                await updateTurmaDb(turmaId, updated);
+                if (oldName !== name) {
+                  setStudents((arr) => arr.map((s) => s.classRef === oldName ? { ...s, classRef: name } : s));
+                }
+                setEditingClassIdx(null);
+              } catch (err) {
+                console.error("[Dashboard] erro ao atualizar turma:", err);
+                toast.error("Não foi possível atualizar a turma. Tente novamente.");
               }
-              setEditingClassIdx(null);
             }}>
               <div className="school-field">
                 <label htmlFor="edit-class-name">Nome da turma</label>
@@ -1415,12 +1431,18 @@ export function Dashboard() {
                   type="button"
                   className="school-cancel"
                   style={{ color: "#DC2626" }}
-                  onClick={() => {
+                  onClick={async () => {
                     if (!confirm("Excluir esta turma? Os alunos vinculados ficarão sem turma.")) return;
                     const oldName = classes[editingClassIdx!].name;
-                    setClasses((arr) => arr.filter((_, i) => i !== editingClassIdx));
-                    setStudents((arr) => arr.map((s) => s.classRef === oldName ? { ...s, classRef: "" } : s));
-                    setEditingClassIdx(null);
+                    const turmaId = classes[editingClassIdx!].id;
+                    try {
+                      await removeTurmaDb(turmaId);
+                      setStudents((arr) => arr.map((s) => s.classRef === oldName ? { ...s, classRef: "" } : s));
+                      setEditingClassIdx(null);
+                    } catch (err) {
+                      console.error("[Dashboard] erro ao excluir turma:", err);
+                      toast.error("Não foi possível excluir a turma. Tente novamente.");
+                    }
                   }}
                 >Excluir</button>
                 <div style={{ display: "flex", gap: 8 }}>

@@ -13,14 +13,14 @@ import { detectShapeMismatch, reportStorageIssue, previewOf, shapeOf } from "./s
  */
 export function usePersistentState<T>(key: string, initial: T) {
   const lsKey = `aprof:${key}`;
-  // Always start with `initial` so SSR HTML matches the first client render.
-  // Reading from localStorage during useState init causes a hydration mismatch
-  // because the server has no access to it. We restore the persisted value in
-  // a useEffect after mount instead.
   const [state, setState] = useState<T>(initial);
   const initialRef = useRef<T>(initial);
   const userIdRef = useRef<string | null>(null);
   const hydratedRef = useRef(false);
+  // Marca true assim que o usuário (ou app) muda o estado depois do mount.
+  // Garante que pullRemote não sobrescreva uma edição local ainda não enviada,
+  // e que pushRemote sempre rode após hidratação independente da ordem.
+  const userTouchedRef = useRef(false);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Restore from localStorage after hydration (client-only).
@@ -80,6 +80,9 @@ export function usePersistentState<T>(key: string, initial: T) {
 
   const pullRemote = useCallback(async (uid: string) => {
     try {
+      // Se o usuário já mexeu no estado local antes do remote responder,
+      // NÃO sobrescreva. Apenas marca como hidratado para liberar o push.
+      if (userTouchedRef.current) { hydratedRef.current = true; return; }
       const { data, error } = await supabase
         .from("app_snapshots")
         .select("data, updated_at")
@@ -152,9 +155,19 @@ export function usePersistentState<T>(key: string, initial: T) {
   // Push on state change (only after hydration to avoid clobbering remote).
   useEffect(() => {
     const uid = userIdRef.current;
-    if (!uid || !hydratedRef.current) return;
+    if (!uid) return;
+    // Só envia mudanças feitas pelo usuário/app — nunca o valor inicial
+    // sintético do useState. Antes da hidratação remota, igualmente envia
+    // (se já houve toque), evitando perda quando o usuário salva rápido.
+    if (!userTouchedRef.current) return;
     pushRemote(uid, state);
   }, [state, pushRemote]);
 
-  return [state, setState] as const;
+  // Wrapper de setState que marca userTouchedRef. Mesma assinatura de useState.
+  const setStateTouch: typeof setState = useCallback((value) => {
+    userTouchedRef.current = true;
+    setState(value);
+  }, []);
+
+  return [state, setStateTouch] as const;
 }
