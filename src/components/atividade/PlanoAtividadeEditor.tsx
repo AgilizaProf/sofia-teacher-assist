@@ -2056,12 +2056,15 @@ function InlineText({
 }
 
 function BlockWithRegen({
-  label, value, onChange, regen,
-}: { label: string; value: string; onChange: (v: string) => void; regen: React.ReactNode }) {
+  label, value, onChange, regen, badge,
+}: { label: string; value: string; onChange: (v: string) => void; regen: React.ReactNode; badge?: React.ReactNode }) {
   return (
     <div className="atv-block">
       <div className="atv-block-head">
-        <div className="atv-block-label">{label}</div>
+        <div className="atv-block-label" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          {label}
+          {badge}
+        </div>
         {regen}
       </div>
       <InlineText value={value} onChange={onChange} tag="p" multiline placeholder={`Descreva o ${label.toLowerCase()}…`} />
