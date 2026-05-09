@@ -4069,6 +4069,58 @@ export function Planejamento() {
                   Ainda não há registros{m6RelTurma ? <> para <strong>{m6RelTurma}</strong></> : null} neste período. A barra acima crescerá conforme você salvar diários no M6.
                 </p>
               )}
+              {m6AIErro && (
+                <div style={{ padding: 10, borderRadius: 8, background: "#FEF2F2", border: "1px solid #FECACA", color: "#991B1B", fontSize: 12.5 }}>
+                  ⚠ {m6AIErro}
+                </div>
+              )}
+              {m6AIRel && (
+                <div style={{ marginTop: 8, padding: 14, borderRadius: 12, background: "linear-gradient(180deg,#FFF7ED 0%,#FFFBF5 100%)", border: "1px solid #FED7AA", display: "grid", gap: 10 }}>
+                  <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                    <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Relatório gerado pela Sofia
+                  </div>
+                  {m6AIRel.titulo && <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, margin: 0, color: "var(--ink)" }}>{m6AIRel.titulo}</h4>}
+                  {m6AIRel.resumo && <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.55 }}>{m6AIRel.resumo}</p>}
+                  {Array.isArray(m6AIRel.destaques) && m6AIRel.destaques.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Destaques</div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                        {m6AIRel.destaques.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {Array.isArray(m6AIRel.alertas) && m6AIRel.alertas.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Pontos de atenção</div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                        {m6AIRel.alertas.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {Array.isArray(m6AIRel.padroes) && m6AIRel.padroes.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Padrões</div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                        {m6AIRel.padroes.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {Array.isArray(m6AIRel.recomendacoes) && m6AIRel.recomendacoes.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Recomendações da Sofia</div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                        {m6AIRel.recomendacoes.map((d, i) => <li key={i}>{d}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {m6AIRel.comunicacao_familias && (
+                    <div style={{ padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #FED7AA" }}>
+                      <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Comunicação para as famílias</div>
+                      <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{m6AIRel.comunicacao_familias}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
               <button className="pl-btn" onClick={() => { setM6ReportOpen(false); setM6AIRel(null); setM6AIErro(null); }}>Fechar</button>
