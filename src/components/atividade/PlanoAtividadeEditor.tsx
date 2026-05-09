@@ -1771,32 +1771,10 @@ function PlanoBody(props: {
         />
       </section>
 
-      {/* 3. Descrição */}
-      <section className={`atv-card${has("descricao") ? " atv-invalid" : ""}`}>
-        <div className="atv-card-head">
-          <h3>② Descrição da atividade</h3>
-        </div>
-        <BlockWithRegen
-          label="Abertura" value={plano.abertura}
-          onChange={(v) => props.onChange("abertura", v)}
-          regen={<RegenBtn field="abertura" label="abertura" />}
-        />
-        <BlockWithRegen
-          label="Desenvolvimento" value={plano.desenvolvimento}
-          onChange={(v) => props.onChange("desenvolvimento", v)}
-          regen={<RegenBtn field="desenvolvimento" label="desenvolvimento" />}
-        />
-        <BlockWithRegen
-          label="Fechamento" value={plano.fechamento}
-          onChange={(v) => props.onChange("fechamento", v)}
-          regen={<RegenBtn field="fechamento" label="fechamento" />}
-        />
-      </section>
-
-      {/* 4. Habilidades BNCC */}
+      {/* 2. Habilidades BNCC — logo abaixo do objetivo pra evitar espaços vazios */}
       <section className={`atv-card${has("habilidades") || has("habilidades_incompletas") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>③ Habilidades BNCC</h3>
+          <h3>② Habilidades BNCC</h3>
           <RegenBtn field="habilidades" label="habilidades" />
         </div>
         <div className="atv-chips">
@@ -1826,11 +1804,11 @@ function PlanoBody(props: {
         </div>
       </section>
 
-      {/* 3b. Contribuições interdisciplinares (apenas quando houver) */}
+      {/* 3. Contribuições interdisciplinares — logo após as habilidades BNCC */}
       {(plano.contribuicoesInter ?? []).length > 0 && (
         <section className="atv-card atv-contrib">
           <div className="atv-card-head">
-            <h3>🔗 Como cada disciplina contribui</h3>
+            <h3>③ 🔗 Como cada disciplina contribui</h3>
           </div>
           <p className="atv-muted" style={{ marginBottom: 10 }}>
             Resumo da articulação interdisciplinar proposta pela Sofia.
@@ -1853,6 +1831,28 @@ function PlanoBody(props: {
           </div>
         </section>
       )}
+
+      {/* 4. Descrição */}
+      <section className={`atv-card${has("descricao") ? " atv-invalid" : ""}`}>
+        <div className="atv-card-head">
+          <h3>④ Descrição da atividade</h3>
+        </div>
+        <BlockWithRegen
+          label="Abertura" value={plano.abertura}
+          onChange={(v) => props.onChange("abertura", v)}
+          regen={<RegenBtn field="abertura" label="abertura" />}
+        />
+        <BlockWithRegen
+          label="Desenvolvimento" value={plano.desenvolvimento}
+          onChange={(v) => props.onChange("desenvolvimento", v)}
+          regen={<RegenBtn field="desenvolvimento" label="desenvolvimento" />}
+        />
+        <BlockWithRegen
+          label="Fechamento" value={plano.fechamento}
+          onChange={(v) => props.onChange("fechamento", v)}
+          regen={<RegenBtn field="fechamento" label="fechamento" />}
+        />
+      </section>
 
       {/* 5. Adaptações PCD */}
       <section className="atv-card adapt">
