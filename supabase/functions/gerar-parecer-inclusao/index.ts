@@ -1,11 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
 
 type Registro = { when?: string; cat?: string; body?: string };
 
@@ -22,14 +16,6 @@ serve(async (req) => {
       peiResumo = "",
       registros = [] as Registro[],
     } = body || {};
-
-    const KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!KEY) {
-      return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY ausente no servidor." }),
-        { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
-      );
-    }
 
     const linhas = (registros as Registro[])
       .slice(0, 80)
@@ -65,40 +51,12 @@ Responda APENAS com JSON válido neste formato:
   "comunicacao_familias": "1 parágrafo curto pronto para enviar à família"
 }`;
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${KEY}` },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: sys },
-          { role: "user", content: user },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!resp.ok) {
-      if (resp.status === 429) {
-        return new Response(JSON.stringify({ error: "Limite de uso atingido. Tente novamente em instantes." }), {
-          status: 429, headers: { ...cors, "Content-Type": "application/json" },
-        });
-      }
-      if (resp.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos no workspace." }), {
-          status: 402, headers: { ...cors, "Content-Type": "application/json" },
-        });
-      }
-      const txt = await resp.text();
-      return new Response(JSON.stringify({ error: `Gateway ${resp.status}: ${txt}` }), {
-        status: 502, headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
-    const data = await resp.json();
-    const raw = data?.choices?.[0]?.message?.content || "{}";
+    const r = await callAI({ tipo: "parecer", system: sys, user, json: true, maxTokens: 3000 });
+    if (!r.ok) return aiErrorResponse(r);
+    const raw = r.text || "{}";
     let parecer: Record<string, unknown> = {};
     try { parecer = JSON.parse(raw); } catch { parecer = { resumo: raw }; }
-    return new Response(JSON.stringify({ parecer }), {
+    return new Response(JSON.stringify({ parecer, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
