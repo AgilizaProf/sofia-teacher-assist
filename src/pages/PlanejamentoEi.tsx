@@ -151,7 +151,7 @@ export function PlanejamentoEi() {
       tema: tema || null,
       tipo_experiencia: tipo,
       duracao,
-      conteudo: roteiro as unknown as never,
+      conteudo: JSON.parse(JSON.stringify(roteiro)),
       status: "salvo",
       modelo: "claude-haiku-4-5-20251001",
     };
