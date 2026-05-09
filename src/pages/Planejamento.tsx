@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
 import { sanitizeFilter, sanitizeM6Filters, type M6FilterState } from "@/lib/sofia/m6Filters";
+import { useEiMode } from "@/lib/ei/useEiMode";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
