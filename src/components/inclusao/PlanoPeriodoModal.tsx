@@ -52,6 +52,7 @@ type GeradoItem = {
   plano: Omit<PlanoInclusao, "id" | "alunoId">;
   expandido: boolean;
   incluir: boolean;
+  recolhidas?: Record<string, boolean>;
 };
 
 function isoFromOffset(weeks: number): string {
@@ -64,7 +65,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
   const [periodo, setPeriodo] = useState<PeriodoKey>("bim");
   const [disciplinas, setDisciplinas] = useState<string[]>([]);
   const [porDisciplina, setPorDisciplina] = useState<number>(4);
-  const [vista, setVista] = useState<"topicos" | "completo">("topicos");
+  const [vista, setVista] = useState<"topicos" | "completo">("completo");
   const [loading, setLoading] = useState(false);
   const [progresso, setProgresso] = useState<{ feito: number; total: number }>({ feito: 0, total: 0 });
   const [itens, setItens] = useState<GeradoItem[]>([]);
@@ -75,7 +76,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
       setDisciplinas([]);
       setPeriodo("bim");
       setPorDisciplina(4);
-      setVista("topicos");
+      setVista("completo");
       setProgresso({ feito: 0, total: 0 });
     }
   }, [open, aluno?.id]);
@@ -150,6 +151,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
               plano: p,
               expandido: false,
               incluir: true,
+              recolhidas: {},
             };
             return item;
           } catch (e) {
@@ -311,15 +313,40 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
 
                     {expandir && (
                       <div className="pim-completo">
-                        {it.plano.abertura && (<section><b>Abertura</b><p>{it.plano.abertura}</p></section>)}
-                        {it.plano.desenvolvimento && (<section><b>Desenvolvimento</b><p>{it.plano.desenvolvimento}</p></section>)}
-                        {it.plano.fechamento && (<section><b>Fechamento</b><p>{it.plano.fechamento}</p></section>)}
-                        {it.plano.adaptacoes?.length > 0 && (
-                          <section>
-                            <b>Adaptações para {aluno.name.split(" ")[0]}</b>
-                            <ul>{it.plano.adaptacoes.map((a, i) => <li key={i}><i>{a.categoria}:</i> {a.texto}</li>)}</ul>
-                          </section>
-                        )}
+                        {(() => {
+                          const toggle = (key: string) =>
+                            setItens((arr) => arr.map((x, i) => i === idx
+                              ? { ...x, recolhidas: { ...(x.recolhidas || {}), [key]: !(x.recolhidas || {})[key] } }
+                              : x));
+                          const isOpen = (key: string) => !(it.recolhidas || {})[key];
+                          const Section = ({ k, title, children }: { k: string; title: string; children: React.ReactNode }) => (
+                            <section className="pim-sec">
+                              <button type="button" className="pim-sec-head" onClick={() => toggle(k)} aria-expanded={isOpen(k)}>
+                                {isOpen(k) ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                                <b>{title}</b>
+                              </button>
+                              {isOpen(k) && <div className="pim-sec-body">{children}</div>}
+                            </section>
+                          );
+                          return (
+                            <>
+                              {it.plano.abertura && (
+                                <Section k="abertura" title="Abertura"><p>{it.plano.abertura}</p></Section>
+                              )}
+                              {it.plano.desenvolvimento && (
+                                <Section k="desenvolvimento" title="Desenvolvimento"><p>{it.plano.desenvolvimento}</p></Section>
+                              )}
+                              {it.plano.fechamento && (
+                                <Section k="fechamento" title="Fechamento"><p>{it.plano.fechamento}</p></Section>
+                              )}
+                              {it.plano.adaptacoes?.length > 0 && (
+                                <Section k="adaptacoes" title={`Adaptações para ${aluno.name.split(" ")[0]}`}>
+                                  <ul>{it.plano.adaptacoes.map((a, i) => <li key={i}><i>{a.categoria}:</i> {a.texto}</li>)}</ul>
+                                </Section>
+                              )}
+                            </>
+                          );
+                        })()}
                         {it.plano.materiais?.length > 0 && (
                           <section><b>Materiais</b><p>{it.plano.materiais.join(", ")}</p></section>
                         )}
@@ -384,6 +411,13 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
           .pim-completo{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:10px;}
           .pim-completo section b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:3px;}
           .pim-completo p{font-size:12.5px;line-height:1.5;margin:0;}
+          .pim-sec{border:1px solid var(--border);border-radius:8px;background:#fff;}
+          .pim-sec-head{width:100%;display:flex;align-items:center;gap:6px;background:var(--bg);border:none;border-radius:8px 8px 0 0;padding:7px 10px;cursor:pointer;font-family:inherit;text-align:left;color:var(--accent);}
+          .pim-sec-head[aria-expanded="false"]{border-radius:8px;}
+          .pim-sec-head b{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;}
+          .pim-sec-body{padding:8px 12px 10px;}
+          .pim-sec-body p{font-size:12.5px;line-height:1.5;margin:0;}
+          .pim-sec-body ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;}
           .pim-completo ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;}
           .pim-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--border);background:var(--bg);}
         `}</style>
