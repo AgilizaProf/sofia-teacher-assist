@@ -1308,11 +1308,55 @@ export function Inclusao() {
                             base Anamnese + {studentRegs.length} registro{studentRegs.length === 1 ? "" : "s"}
                           </span>
                         </h4>
-                        {eixosPreenchidos === 0 ? (
-                          <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
-                            As barras de evolução aparecerão aqui quando a Anamnese for preenchida.
-                          </p>
-                        ) : (
+                        {(() => {
+                          const MIN_REGS = 3;
+                          const totalRegs = studentRegs.length;
+                          const catsPresentes = new Set(studentRegs.map((r) => r.cat));
+                          const catsFaltantes = (["ped","com","sen","fam"] as RegCat[]).filter((c) => !catsPresentes.has(c));
+                          const eixosFaltantes = anamData.length - eixosPreenchidos;
+                          if (eixosPreenchidos === 0) {
+                            return (
+                              <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: "color-mix(in oklab, var(--warn) 12%, transparent)", border: "1px solid color-mix(in oklab, var(--warn) 35%, transparent)" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--warn)" }}>
+                                  <Lightbulb size={14} /> Sem dados para calcular evolução
+                                </div>
+                                <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 8px" }}>
+                                  Preencha a <b>Anamnese</b> do aluno para definir a linha de base das habilidades.
+                                </p>
+                                <button className="btn btn-secondary" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => setActiveTab("anam")}>
+                                  Preencher Anamnese
+                                </button>
+                              </div>
+                            );
+                          }
+                          if (totalRegs < MIN_REGS) {
+                            return (
+                              <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: "color-mix(in oklab, var(--warn) 12%, transparent)", border: "1px solid color-mix(in oklab, var(--warn) 35%, transparent)" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--warn)" }}>
+                                  <Lightbulb size={14} /> Poucos registros para calcular evolução
+                                </div>
+                                <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 6px" }}>
+                                  Você tem <b>{totalRegs}</b> de <b>{MIN_REGS}</b> registros mínimos. Adicione novos registros do aluno para que a Sofia possa identificar tendências.
+                                </p>
+                                {catsFaltantes.length > 0 && (
+                                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 6px" }}>
+                                    Sugestão: registrar nas áreas {catsFaltantes.map((c) => <b key={c} style={{ color: "var(--text)" }}>{REG_CAT_LABEL[c]}</b>).reduce<React.ReactNode[]>((acc, el, i) => acc.length ? [...acc, ", ", el] : [el], [])}.
+                                  </p>
+                                )}
+                                {eixosFaltantes > 0 && (
+                                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 8px" }}>
+                                    Faltam ainda <b>{eixosFaltantes}</b> eixo{eixosFaltantes === 1 ? "" : "s"} da Anamnese para uma linha de base completa.
+                                  </p>
+                                )}
+                                <button className="btn btn-secondary" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => { setActiveTab("reg"); setRegModalOpen(true); }}>
+                                  Novo registro
+                                </button>
+                              </div>
+                            );
+                          }
+                          return (
+                            <>
+                            {
                           skillsEvolucao.map((s) => {
                             const arrow = s.trend === "up" ? "↑" : s.trend === "down" ? "↓" : "→";
                             const arrowColor = s.trend === "up" ? "var(--success)" : s.trend === "down" ? "var(--danger)" : "var(--muted)";
@@ -1334,7 +1378,10 @@ export function Inclusao() {
                               </div>
                             );
                           })
-                        )}
+                            }
+                            </>
+                          );
+                        })()}
                       </div>
 
                       <div className="trust-card">
