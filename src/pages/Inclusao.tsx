@@ -758,6 +758,51 @@ export function Inclusao() {
       .join("\n");
   }, [selectedId, anamByStudent]);
 
+  // Parecer descritivo gerado pela Sofia (por aluno)
+  type Parecer = {
+    titulo?: string; resumo?: string;
+    pedagogico?: string; comportamental?: string; sensorial?: string; familia?: string;
+    avancos?: string[]; desafios?: string[]; encaminhamentos?: string[];
+    comunicacao_familias?: string;
+    geradoEm?: string;
+  };
+  const [parecerByStudent, setParecerByStudent] = usePersistentState<Record<string, Parecer>>("inc_parecer", {});
+  const [gerandoParecer, setGerandoParecer] = useState(false);
+  const parecerAtual = (selectedId && parecerByStudent[selectedId]) || null;
+
+  const handleGerarParecer = async () => {
+    if (!selected) return;
+    setGerandoParecer(true);
+    try {
+      const regs = (regByStudent[selected.id] || []).map((r) => ({
+        when: r.when, cat: r.cat, body: r.body,
+      }));
+      const peiResumo = (plansByStudent[selected.id] || [])
+        .slice(0, 3)
+        .map((p) => `• ${p.titulo || p.disciplina || "Plano"}: ${(p.objetivos || []).slice(0, 3).join("; ")}`)
+        .join("\n");
+      const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
+        body: {
+          aluno: selected.name,
+          diagnostico: selected.diag || "",
+          periodo: "Bimestral",
+          anamneseResumo,
+          peiResumo,
+          registros: regs,
+        },
+      });
+      if (error) throw error;
+      const parecer: Parecer = { ...(data?.parecer || {}), geradoEm: new Date().toLocaleString("pt-BR") };
+      setParecerByStudent((all) => ({ ...all, [selected.id]: parecer }));
+      toast.success("Parecer gerado pela Sofia.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Não foi possível gerar o parecer. ${msg}`);
+    } finally {
+      setGerandoParecer(false);
+    }
+  };
+
   const goView = (v: ViewKey) => {
     const safe: ViewKey = v === "detail" && students.length === 0 ? "list" : v;
     setView(safe);
