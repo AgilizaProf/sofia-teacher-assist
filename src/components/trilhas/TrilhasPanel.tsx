@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, Calendar, BookOpen, Trash2 } from "lucide-react";
+import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2 } from "lucide-react";
 
 type Trilha = {
   id: string;
@@ -20,6 +20,7 @@ type Semana = {
   titulo: string | null;
   habilidades_bncc: unknown;
   status: string;
+  plano_gerado?: unknown;
 };
 
 export function TrilhasPanel() {
@@ -29,6 +30,8 @@ export function TrilhasPanel() {
   const [form, setForm] = useState({ turma: "", ano: "", disciplina: "", semestre: "1º semestre", contexto: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [gerandoSemana, setGerandoSemana] = useState<string | null>(null);
+  const [planoAberto, setPlanoAberto] = useState<string | null>(null);
 
   const carregar = async () => {
     const { data } = await supabase.from("trilhas").select("*").order("created_at", { ascending: false });
@@ -105,6 +108,48 @@ export function TrilhasPanel() {
     carregar();
   };
 
+  const gerarPlanoSemana = async (trilha: Trilha, s: Semana) => {
+    setGerandoSemana(s.id);
+    try {
+      const habilidades = Array.isArray(s.habilidades_bncc)
+        ? (s.habilidades_bncc as unknown[]).map((h) => (typeof h === "string" ? { codigo: h } : h))
+        : [];
+      const idx = semanas.findIndex((x) => x.id === s.id);
+      const anterior = idx > 0 ? semanas[idx - 1] : null;
+      const proxima = idx >= 0 && idx < semanas.length - 1 ? semanas[idx + 1] : null;
+      const { data, error: fnErr } = await supabase.functions.invoke("gerar-plano-semanal-trilha", {
+        body: {
+          semana: s.semana,
+          tema_central: trilha.tema_central || "",
+          habilidades_semana: habilidades,
+          resumo_anterior: anterior?.titulo || "",
+          titulo_proxima: proxima?.titulo || "",
+          turma: trilha.turma || "",
+          ano: trilha.ano_escolar || "",
+          disciplina: trilha.disciplina || "",
+        },
+      });
+      if (fnErr) throw fnErr;
+      const plano = (data as { plano?: unknown })?.plano || {};
+      await supabase.from("trilha_semanas")
+        .update({ plano_gerado: plano as never, status: s.status === "futura" ? "em_andamento" : s.status })
+        .eq("id", s.id);
+      const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilha.id).order("semana");
+      setSemanas((novas as Semana[]) || []);
+      setPlanoAberto(s.id);
+    } catch (e) {
+      alert((e as Error).message || "Não consegui gerar o plano agora.");
+    } finally {
+      setGerandoSemana(null);
+    }
+  };
+
+  const concluirSemana = async (s: Semana, trilhaId: string) => {
+    await supabase.from("trilha_semanas").update({ status: "concluida", concluida_em: new Date().toISOString() }).eq("id", s.id);
+    const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilhaId).order("semana");
+    setSemanas((novas as Semana[]) || []);
+  };
+
   return (
     <div style={{ display: "grid", gap: 18 }}>
       <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: 20 }}>
@@ -146,10 +191,32 @@ export function TrilhasPanel() {
                   <h3 style={{ fontSize: 14, marginBottom: 8 }}><Calendar size={14} style={{ display: "inline", marginRight: 6 }} />20 semanas</h3>
                   <div style={{ display: "grid", gap: 6 }}>
                     {semanas.map((s) => (
-                      <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, padding: "6px 10px", background: "#F8FAFC", borderRadius: 6 }}>
-                        <span style={{ minWidth: 28, fontWeight: 600, color: "var(--orange)" }}>S{s.semana}</span>
-                        <span style={{ flex: 1 }}>{s.titulo}</span>
-                        <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: s.status === "concluida" ? "#D1FAE5" : s.status === "em_andamento" ? "#DBEAFE" : "#F1F5F9", color: s.status === "concluida" ? "#065F46" : s.status === "em_andamento" ? "#1E40AF" : "#64748B" }}>{s.status}</span>
+                      <div key={s.id} style={{ background: "#F8FAFC", borderRadius: 6, padding: "8px 10px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                          <span style={{ minWidth: 28, fontWeight: 600, color: "var(--orange)" }}>S{s.semana}</span>
+                          <span style={{ flex: 1 }}>{s.titulo}</span>
+                          <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: s.status === "concluida" ? "#D1FAE5" : s.status === "em_andamento" ? "#DBEAFE" : "#F1F5F9", color: s.status === "concluida" ? "#065F46" : s.status === "em_andamento" ? "#1E40AF" : "#64748B" }}>{s.status}</span>
+                          {s.plano_gerado ? (
+                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); setPlanoAberto(planoAberto === s.id ? null : s.id); }} style={{ fontSize: 11 }}>
+                              {planoAberto === s.id ? "Ocultar" : "Ver plano"}
+                            </button>
+                          ) : (
+                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); gerarPlanoSemana(t, s); }} disabled={gerandoSemana === s.id} style={{ fontSize: 11 }}>
+                              {gerandoSemana === s.id ? <Loader2 size={11} className="animate-spin" /> : <Wand2 size={11} />}
+                              {gerandoSemana === s.id ? "Gerando…" : "Gerar plano"}
+                            </button>
+                          )}
+                          {s.status !== "concluida" && s.plano_gerado && (
+                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); concluirSemana(s, t.id); }} title="Marcar como concluída" style={{ fontSize: 11 }}>
+                              <CheckCircle2 size={11} />
+                            </button>
+                          )}
+                        </div>
+                        {planoAberto === s.id && s.plano_gerado != null && (
+                          <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8, padding: 10, background: "#fff", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12.5, color: "var(--ink-2)" }}>
+                            <PlanoSemanal plano={s.plano_gerado} />
+                          </div>
+                        )}
                       </div>
                     ))}
                     {semanas.length === 0 && <p style={{ color: "var(--muted)", fontSize: 12.5 }}>Nenhuma semana gerada ainda.</p>}
@@ -160,6 +227,34 @@ export function TrilhasPanel() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function PlanoSemanal({ plano }: { plano: unknown }) {
+  const p = (plano || {}) as {
+    objetivo_geral?: string;
+    dias?: Array<{ dia?: string; titulo?: string; objetivo?: string; abertura?: string; desenvolvimento?: string; fechamento?: string; materiais?: string[]; habilidade_bncc?: string; adaptacao_pcd?: string }>;
+    avaliacao_formativa?: string;
+    ponte_proxima_semana?: string;
+  };
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      {p.objetivo_geral && <div><strong>Objetivo geral:</strong> {p.objetivo_geral}</div>}
+      {(p.dias || []).map((d, i) => (
+        <div key={i} style={{ borderLeft: "3px solid var(--orange)", paddingLeft: 8 }}>
+          <div style={{ fontWeight: 600 }}>{d.dia} — {d.titulo}</div>
+          {d.objetivo && <div><em>Objetivo:</em> {d.objetivo}</div>}
+          {d.abertura && <div><em>Abertura:</em> {d.abertura}</div>}
+          {d.desenvolvimento && <div><em>Desenvolvimento:</em> {d.desenvolvimento}</div>}
+          {d.fechamento && <div><em>Fechamento:</em> {d.fechamento}</div>}
+          {d.materiais && d.materiais.length > 0 && <div><em>Materiais:</em> {d.materiais.join(", ")}</div>}
+          {d.habilidade_bncc && <div><em>BNCC:</em> {d.habilidade_bncc}</div>}
+          {d.adaptacao_pcd && <div><em>Adaptação PCD:</em> {d.adaptacao_pcd}</div>}
+        </div>
+      ))}
+      {p.avaliacao_formativa && <div><strong>Avaliação formativa:</strong> {p.avaliacao_formativa}</div>}
+      {p.ponte_proxima_semana && <div><strong>Ponte p/ próxima semana:</strong> {p.ponte_proxima_semana}</div>}
     </div>
   );
 }
