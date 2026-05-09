@@ -56,6 +56,16 @@ export function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        try {
+          if (remember) {
+            localStorage.removeItem("sofia_no_persist");
+          } else {
+            localStorage.setItem("sofia_no_persist", "1");
+          }
+          sessionStorage.setItem("sofia_tab_alive", "1");
+        } catch {
+          /* ignore */
+        }
         navigate({ to: "/" });
       }
     } catch (err) {
