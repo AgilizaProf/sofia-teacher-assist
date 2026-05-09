@@ -6,7 +6,8 @@ import { brNow } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { Header as AppHeader } from "@/components/Header";
-import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { useAgenda } from "@/hooks/useAgenda";
+import { toast } from "sonner";
 
 const css = `
 .ag-root{
@@ -395,7 +396,7 @@ export function Agenda() {
   }, [nowTick]);
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
-  const [events, setEvents] = usePersistentState<Event[]>("agenda_events", []);
+  const { events, create, update, remove } = useAgenda();
   const [openDate, setOpenDate] = useState<string | null>(null);
   const ALL_TYPES: EventType[] = ["meeting", "eval", "report", "plan", "pcd", "personal"];
   const [typeFilter, setTypeFilter] = useState<EventType[]>(ALL_TYPES);
@@ -436,17 +437,39 @@ export function Agenda() {
     setEditing(null);
     setDraft({ title: "", time: "", type: "meeting", notes: "" });
   };
-  const saveDraft = () => {
+  const saveDraft = async () => {
     if (!openDate || !draft.title.trim()) return;
-    if (editing) {
-      setEvents((arr) => arr.map((e) => e.id === editing.id ? { ...e, ...draft, title: draft.title.trim() } : e));
-    } else {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      setEvents((arr) => [...arr, { id, date: openDate, ...draft, title: draft.title.trim() }]);
+    try {
+      if (editing) {
+        await update(editing.id, {
+          title: draft.title.trim(),
+          time: draft.time,
+          type: draft.type,
+          notes: draft.notes,
+        });
+      } else {
+        await create({
+          date: openDate,
+          title: draft.title.trim(),
+          time: draft.time,
+          type: draft.type,
+          notes: draft.notes,
+        });
+      }
+      cancelEdit();
+    } catch (e) {
+      console.error("[Agenda] falha ao salvar evento:", e);
+      toast.error("Não foi possível salvar o evento. Tente novamente.");
     }
-    cancelEdit();
   };
-  const deleteEvent = (id: string) => setEvents((arr) => arr.filter((e) => e.id !== id));
+  const deleteEvent = async (id: string) => {
+    try {
+      await remove(id);
+    } catch (e) {
+      console.error("[Agenda] falha ao excluir evento:", e);
+      toast.error("Não foi possível excluir o evento.");
+    }
+  };
 
   // Drag and drop: arrastar evento para outro dia
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -459,11 +482,17 @@ export function Agenda() {
   const onDragOverDay = (e: React.DragEvent) => {
     if (draggedId) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }
   };
-  const onDropDay = (e: React.DragEvent, targetDate: string) => {
+  const onDropDay = async (e: React.DragEvent, targetDate: string) => {
     if (!draggedId) return;
     e.preventDefault();
-    setEvents((arr) => arr.map((ev) => ev.id === draggedId ? { ...ev, date: targetDate } : ev));
+    const id = draggedId;
     setDraggedId(null);
+    try {
+      await update(id, { date: targetDate });
+    } catch (err) {
+      console.error("[Agenda] falha ao mover evento:", err);
+      toast.error("Não foi possível mover o evento.");
+    }
   };
 
   const tomorrowKey = useMemo(() => {
