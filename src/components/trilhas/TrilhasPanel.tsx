@@ -248,7 +248,7 @@ function PlanoSemanal({ plano }: { plano: unknown }) {
           {d.abertura && <div><em>Abertura:</em> {d.abertura}</div>}
           {d.desenvolvimento && <div><em>Desenvolvimento:</em> {d.desenvolvimento}</div>}
           {d.fechamento && <div><em>Fechamento:</em> {d.fechamento}</div>}
-          {d.materiais && d.materiais.length > 0 && <div><em>Materiais:</em> {d.materiais.join(", ")}</div>}
+          {Array.isArray(d.materiais) && d.materiais.length > 0 && <div><em>Materiais:</em> {d.materiais.join(", ")}</div>}
           {d.habilidade_bncc && <div><em>BNCC:</em> {d.habilidade_bncc}</div>}
           {d.adaptacao_pcd && <div><em>Adaptação PCD:</em> {d.adaptacao_pcd}</div>}
         </div>
