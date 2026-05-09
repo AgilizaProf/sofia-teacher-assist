@@ -413,14 +413,14 @@ export function Agenda() {
 
   const eventsByDate = useMemo(() => {
     const m = new Map<string, Event[]>();
-    for (const e of events) {
+    for (const e of filteredEvents) {
       const arr = m.get(e.date) || [];
       arr.push(e);
       m.set(e.date, arr);
     }
     for (const arr of m.values()) arr.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
     return m;
-  }, [events]);
+  }, [filteredEvents]);
 
   const openDayPanel = (key: string) => {
     setOpenDate(key);
@@ -478,21 +478,21 @@ export function Agenda() {
   }, [today]);
 
   const counts = useMemo(() => {
-    const todayCount = events.filter((e) => e.date === todayKey).length;
-    const tomorrowCount = events.filter((e) => e.date === tomorrowKey).length;
-    const weekCount = events.filter((e) => e.date >= weekRange.start && e.date <= weekRange.end).length;
-    const deadlinesCount = events.filter(
+    const todayCount = filteredEvents.filter((e) => e.date === todayKey).length;
+    const tomorrowCount = filteredEvents.filter((e) => e.date === tomorrowKey).length;
+    const weekCount = filteredEvents.filter((e) => e.date >= weekRange.start && e.date <= weekRange.end).length;
+    const deadlinesCount = filteredEvents.filter(
       (e) => e.date >= todayKey && (e.type === "report" || e.type === "eval")
     ).length;
-    const nextDeadline = events
+    const nextDeadline = filteredEvents
       .filter((e) => e.date >= todayKey && (e.type === "report" || e.type === "eval"))
       .sort((a, b) => a.date.localeCompare(b.date))[0];
     return { todayCount, tomorrowCount, weekCount, deadlinesCount, nextDeadline };
-  }, [events, todayKey, tomorrowKey, weekRange]);
+  }, [filteredEvents, todayKey, tomorrowKey, weekRange]);
 
   // Próximos compromissos: ordenados por data+hora, removendo os que já passaram.
   const upcoming = useMemo(() => {
-    return events
+    return filteredEvents
       .filter((e) => {
         if (e.date > todayKey) return true;
         if (e.date < todayKey) return false;
@@ -503,7 +503,7 @@ export function Agenda() {
         if (a.date !== b.date) return a.date.localeCompare(b.date);
         return (a.time || "99:99").localeCompare(b.time || "99:99");
       });
-  }, [events, todayKey, nowHHMM]);
+  }, [filteredEvents, todayKey, nowHHMM]);
 
   const formatShortBR = (key: string) => {
     const [, m, d] = key.split("-");
