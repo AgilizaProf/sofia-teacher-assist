@@ -2134,6 +2134,45 @@ export function Planejamento() {
     setM6JustSaved(null);
     showToast("✓ Sofia aplicou o ajuste na próxima aula.");
   };
+  // Gera relatório com a Sofia (Lovable AI) a partir dos registros do diário.
+  const m6GerarRelatorioSofia = async () => {
+    setM6AILoading(true);
+    setM6AIErro(null);
+    try {
+      const stats = m6RelLeitura
+        ? {
+            total: m6RelLeitura.total,
+            humor_predominante: m6RelLeitura.topHumor?.[0] || null,
+            top_tags: m6RelLeitura.topTags,
+            positivos: m6RelLeitura.positivos,
+            reforco: m6RelLeitura.reforco,
+          }
+        : { total: 0 };
+      const payload = {
+        periodo: M6_PERIODO_META[m6Periodo].label.toLowerCase(),
+        turma: m6RelTurma || "",
+        stats,
+        entries: m6RelEntries.map((e) => ({
+          emoji: e.emoji,
+          title: e.title,
+          text: e.text,
+          tags: e.tags,
+          date: e.date,
+          turma: e.turma,
+          atividadeTitulo: e.atividadeTitulo,
+        })),
+      };
+      const { data, error } = await supabase.functions.invoke("gerar-relatorio", { body: payload });
+      if (error) throw error;
+      const rel = (data as { relatorio?: M6AIRelatorio })?.relatorio;
+      if (!rel) throw new Error("Resposta vazia da Sofia.");
+      setM6AIRel(rel);
+    } catch (e) {
+      setM6AIErro((e as Error)?.message || "Falha ao gerar relatório.");
+    } finally {
+      setM6AILoading(false);
+    }
+  };
   const m6Save = () => {
     if (!m6Emoji && !m6Text.trim() && m6Tags.length === 0) { showToast("Selecione um emoji ou escreva uma anotação."); return; }
     const trimmed = m6Text.trim();
