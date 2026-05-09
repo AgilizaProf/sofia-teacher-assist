@@ -628,7 +628,7 @@ export function Relatorios() {
 
       <main className="rel-main">
         <AppHeader
-          breadcrumb={[{ label: "Sua sala" }, { label: "Relatórios" }, { label: "Pareceres descritivos" }]}
+          breadcrumb={[{ label: "Sua sala" }, { label: "Relatórios" }, { label: isEi ? "Relatórios de desenvolvimento" : "Pareceres descritivos" }]}
           actions={
             <>
               <button className="ah-icon" aria-label="Buscar"><Search size={16} /></button>
@@ -642,16 +642,16 @@ export function Relatorios() {
           <section className="rel-hero">
             <div className="rel-hero-grid">
               <div>
-                <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> {totalBim > 0 ? `BIMESTRE ${bimestreNum}º · EM ANDAMENTO` : "COMECE PELOS PARECERES"}</span>
+              <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> {totalBim > 0 ? `BIMESTRE ${bimestreNum}º · EM ANDAMENTO` : (isEi ? "COMECE PELOS RELATÓRIOS DE DESENVOLVIMENTO" : "COMECE PELOS PARECERES")}</span>
                 {totalBim === 0 ? (
                   <>
-                    <h1>Nenhum parecer<br />gerado ainda.</h1>
-                    <p>Cadastre seus alunos e gere o primeiro parecer descritivo com a Sofia em poucos minutos.</p>
+                    <h1>{isEi ? <>Nenhum relatório<br />gerado ainda.</> : <>Nenhum parecer<br />gerado ainda.</>}</h1>
+                    <p>{isEi ? "Cadastre as crianças e gere o primeiro relatório de desenvolvimento com a Sofia em poucos minutos." : "Cadastre seus alunos e gere o primeiro parecer descritivo com a Sofia em poucos minutos."}</p>
                   </>
                 ) : (
                   <>
-                    <h1>Pareceres do {bimestreNum}º bimestre<br /><em>{finalizados}/{alunosCount}</em> prontos.</h1>
-                    <p>{restantes > 0 ? `Faltam ${restantes} pra fechar o bimestre. A Sofia gera em rascunho e você só revisa.` : `Todos os pareceres do bimestre estão fechados. Bora exportar pra coordenação?`}</p>
+                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>{finalizados}/{alunosCount}</em> prontos.</h1>
+                    <p>{restantes > 0 ? `Faltam ${restantes} pra fechar o bimestre. A Sofia gera em rascunho e você só revisa.` : `Todos os ${isEi ? "relatórios" : "pareceres"} do bimestre estão fechados. Bora exportar pra coordenação?`}</p>
                   </>
                 )}
                 <div className="rel-hero-cta">
