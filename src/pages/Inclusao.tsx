@@ -16,6 +16,7 @@ import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -590,49 +591,14 @@ const ANAM_SUGESTOES: Record<string, string[]> = {
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const [students, setStudents] = usePersistentState<Student[]>("inc_students", INITIAL_STUDENTS);
-  // Sincroniza alunos PCD cadastrados na página inicial (Dashboard) com a aba de Inclusão.
-  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
-  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
-  useEffect(() => {
-    const pcdList = dashStudents.filter((s) => s.pcd && s.pcd !== "nao");
-    if (pcdList.length === 0) return;
-    const calcAge = (birth: string) => {
-      if (!birth) return "";
-      try {
-        const d = new Date(birth + "T00:00:00");
-        const diff = Date.now() - d.getTime();
-        const age = Math.floor(diff / (365.25 * 24 * 3600 * 1000));
-        return age > 0 ? `${age} anos` : "";
-      } catch { return ""; }
-    };
-    setStudents((prev) => {
-      const existingIds = new Set(prev.map((s) => s.id));
-      const additions: Student[] = [];
-      pcdList.forEach((s) => {
-        const id = `dash-${(s.createdAt || s.name).replace(/\s+/g, "-")}-${s.name.toLowerCase().replace(/\s+/g, "-")}`;
-        if (existingIds.has(id)) return;
-        const cidInfo = CID_OPTIONS.find((o) => o.value === s.pcd);
-        const initials = s.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
-        additions.push({
-          id,
-          name: s.name,
-          initials,
-          age: calcAge(s.birth),
-          turma: s.classRef || "Sem turma",
-          diag: cidInfo?.label || "PCD — Não informado",
-          cid: cidInfo?.cid && cidInfo.cid !== "—" ? cidInfo.cid : "",
-          aee: "",
-          anamnese: "Pendente",
-          registros: "0 registros",
-          trend: "Recém-cadastrado",
-          trendTone: "muted",
-        });
-      });
-      if (additions.length === 0) return prev;
-      return [...additions, ...prev];
-    });
-  }, [dashStudents, setStudents]);
+  const {
+    students,
+    loading: studentsLoading,
+    create: createStudent,
+  } = useInclusaoStudents();
+  // Observação: o "espelho" dash_students no Dashboard NÃO é sincronizado
+  // automaticamente para o banco — para evitar criar alunos sem ação
+  // explícita do(a) professor(a). O cadastro em Inclusão é a fonte oficial.
   const [view, setView] = useState<ViewKey>(students.length === 0 ? "list" : (search.view || "list"));
   const [selectedId, setSelectedId] = useState<string | null>(search.aluno || null);
   const [nsName, setNsName] = useState("");
@@ -917,7 +883,7 @@ export function Inclusao() {
     return s.name.toLowerCase().includes(q) || s.turma.toLowerCase().includes(q) || s.diag.toLowerCase().includes(q);
   });
 
-  const handleSaveStudent = (e: React.FormEvent) => {
+  const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = nsName.trim();
     if (!name) return;
@@ -929,8 +895,7 @@ export function Inclusao() {
       ? `AEE ${nsAeeDays}x/sem`
       : "AEE a definir";
     const mediadora = nsMediadora.trim();
-    const newStudent: Student = {
-      id: `s_${Date.now()}`,
+    const newStudent: Omit<Student, "id"> = {
       name,
       initials: initials || "AL",
       age: "—",
@@ -944,10 +909,18 @@ export function Inclusao() {
       trend: "—",
       trendTone: "muted",
     };
-    setStudents((prev) => [newStudent, ...prev]);
-    setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCid("nao_informado");
-    setNsAeeDays(""); setNsMediadora("");
-    setNewStudentOpen(false);
+    try {
+      await createStudent(newStudent);
+      setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCid("nao_informado");
+      setNsAeeDays(""); setNsMediadora("");
+      setNewStudentOpen(false);
+      toast.success("Aluno(a) cadastrado(a)", { description: name });
+    } catch (err) {
+      console.error("[Inclusao] erro ao salvar aluno:", err);
+      toast.error("Não foi possível salvar o(a) aluno(a)", {
+        description: (err as Error)?.message ?? "Tente novamente em alguns instantes.",
+      });
+    }
   };
 
   const saveTab = (label: string) => {
