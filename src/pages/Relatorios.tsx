@@ -409,6 +409,7 @@ export function Relatorios() {
   const ctx = useSofiaContext();
   const sofia = useSofia();
   const navigate = useNavigate();
+  const isEi = useEiMode();
   const routeSearch = useSearch({ from: "/relatorios" }) as {
     tab?: "all" | "todo" | "draft" | "review" | "done";
     turma?: string;
