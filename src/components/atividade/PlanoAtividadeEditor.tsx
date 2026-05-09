@@ -1908,16 +1908,19 @@ function PlanoBody(props: {
           label="Abertura" value={plano.abertura}
           onChange={(v) => props.onChange("abertura", v)}
           regen={<RegenBtn field="abertura" label="abertura" />}
+          badge={inclSecoes && <InclBadge hits={inclSecoes.Abertura} />}
         />
         <BlockWithRegen
           label="Desenvolvimento" value={plano.desenvolvimento}
           onChange={(v) => props.onChange("desenvolvimento", v)}
           regen={<RegenBtn field="desenvolvimento" label="desenvolvimento" />}
+          badge={inclSecoes && <InclBadge hits={inclSecoes.Desenvolvimento} />}
         />
         <BlockWithRegen
           label="Fechamento" value={plano.fechamento}
           onChange={(v) => props.onChange("fechamento", v)}
           regen={<RegenBtn field="fechamento" label="fechamento" />}
+          badge={inclSecoes && <InclBadge hits={inclSecoes.Fechamento} />}
         />
       </section>
 
@@ -1965,7 +1968,10 @@ function PlanoBody(props: {
       {/* 6. Sugestões */}
       <section className="atv-card">
         <div className="atv-card-head">
-          <h3><Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑥ Sugestões da Sofia</h3>
+          <h3>
+            <Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑥ Sugestões da Sofia
+            {inclSecoes && <InclBadge hits={inclSecoes.Sugestões} />}
+          </h3>
           <RegenBtn field="sugestoes" label="sugestões" />
         </div>
 
