@@ -3637,6 +3637,48 @@ export function Planejamento() {
                       </button>
                     </div>
 
+                    {m6JustSaved && (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        style={{
+                          marginTop: 12,
+                          padding: 14,
+                          borderRadius: 12,
+                          background: "linear-gradient(180deg, #FFF7ED 0%, #FFFBF5 100%)",
+                          border: "1px solid #FED7AA",
+                          display: "grid",
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                            <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Sofia entendeu
+                          </span>
+                          {m6JustSaved.sinais.map((s) => (
+                            <span key={s} style={{ background: "#fff", border: "1px solid #FDBA74", color: "#9A3412", borderRadius: 99, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                        <p style={{ fontSize: 13, color: "#7A2E0A", margin: 0, lineHeight: 1.5 }}>
+                          {m6JustSaved.resumo}
+                        </p>
+                        <div style={{ display: "grid", gap: 6, padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #FED7AA" }}>
+                          <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>Ajuste sugerido para a próxima aula</div>
+                          <div style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>{m6JustSaved.ajuste}</div>
+                          <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginTop: 4 }}>Abertura</div>
+                          <div style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>{m6JustSaved.abertura}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                          <button className="pl-btn ghost" onClick={() => setM6JustSaved(null)}>Agora não</button>
+                          <button className="pl-btn primary" onClick={m6IrParaProxima}>
+                            <ArrowRight size={14} /> Aplicar na próxima aula
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <h3 style={{ fontSize: 15, margin: "20px 0 10px" }}>Histórico de registros</h3>
                     {m6HasFilter && (
                       <div
