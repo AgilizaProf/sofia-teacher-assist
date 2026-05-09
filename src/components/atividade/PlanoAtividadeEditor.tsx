@@ -1716,7 +1716,10 @@ function PlanoBody(props: {
   onRemoverFavorita: (titulo: string) => void;
 }) {
   const { plano, modo, alunosPCDCount, missing, regenField, onRegenField } = props;
-  const [adaptOpen, setAdaptOpen] = useState(modo === "pcd");
+  const [adaptOpen, setAdaptOpen] = useState(modo === "pcd" || alunosPCDCount > 0);
+  useEffect(() => {
+    if (modo === "regular" && alunosPCDCount > 0) setAdaptOpen(true);
+  }, [modo, alunosPCDCount]);
   const [novoMat, setNovoMat] = useState("");
   const [novaHabCod, setNovaHabCod] = useState("");
   const [novaHabDesc, setNovaHabDesc] = useState("");
