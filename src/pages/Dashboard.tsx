@@ -347,7 +347,26 @@ export function Dashboard() {
   const totalSchools = baseSchools + schools.length;
   const totalClasses = baseClasses + classes.length;
   const totalStudents = baseStudents + students.length;
-  const documentsGenerated = user.documentsGenerated;
+  // Conta documentos realmente produzidos pela professora (planos de
+  // atividade regular/PCD, planos de inclusão por aluno e registros M6).
+  // Assim a barra de "Tempo devolvido" cresce em tempo real conforme ela
+  // gera materiais, sem depender de mocks.
+  const [atvHistRegular] = usePersistentState<unknown[]>("plan_atividade_regular_hist_v1", []);
+  const [atvHistPcd] = usePersistentState<unknown[]>("plan_atividade_pcd_hist_v1", []);
+  const [incPlans] = usePersistentState<Record<string, unknown[]>>("inc_plans", {});
+  const [m6Entries] = usePersistentState<unknown[]>("plan_m6_entries", []);
+  const generatedDocsCount = useMemo(() => {
+    const incTotal = Object.values(incPlans || {}).reduce(
+      (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0,
+    );
+    return (
+      (Array.isArray(atvHistRegular) ? atvHistRegular.length : 0) +
+      (Array.isArray(atvHistPcd) ? atvHistPcd.length : 0) +
+      (Array.isArray(m6Entries) ? m6Entries.length : 0) +
+      incTotal
+    );
+  }, [atvHistRegular, atvHistPcd, incPlans, m6Entries]);
+  const documentsGenerated = Math.max(user.documentsGenerated, generatedDocsCount);
   // Tempo devolvido cresce conforme o usuário cadastra/usa funcionalidades
   const earnedMinutes =
     totalSchools * 10 +
