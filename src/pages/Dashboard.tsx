@@ -3,7 +3,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
-import { updateLoginStreak, BR_LOCALE, BR_TIMEZONE } from "@/lib/datetime";
+import { updateLoginStreak } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useHydrated } from "@/hooks/useHydrated";
 import { CID_OPTIONS } from "@/lib/cidsBR";
