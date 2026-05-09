@@ -642,9 +642,20 @@ export function Dashboard() {
               <div className="hero-metric-value">
                 <span>{h}</span>h<span className="hero-metric-unit"><span>{m}</span>min</span>
               </div>
-              <div className="hero-metric-label">comece a usar a Sofia pra economizar tempo</div>
-              <div className="hero-metric-bar"><div className="hero-metric-fill" /></div>
-              <div className="hero-metric-foot"><span>Meta: {user.weeklyGoalHours}h</span><span>0%</span></div>
+              <div className="hero-metric-label">
+                {totalMinutes === 0
+                  ? "comece a usar a Sofia pra economizar tempo"
+                  : goalReached
+                    ? "meta semanal alcançada 🎉"
+                    : "continue usando a Sofia pra economizar mais tempo"}
+              </div>
+              <div className="hero-metric-bar">
+                <div
+                  className="hero-metric-fill"
+                  style={{ width: `${goalPct}%` }}
+                />
+              </div>
+              <div className="hero-metric-foot"><span>Meta: {user.weeklyGoalHours}h</span><span>{goalPct}%</span></div>
             </div>
           </section>
 
