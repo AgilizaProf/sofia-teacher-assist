@@ -58,7 +58,7 @@ export function TrilhasPanel() {
       const tema = (t.tema_central as { titulo?: string; justificativa?: string }) || {};
       const semanasArr = ((t.semanas as unknown[]) || []) as Array<{ semana: number; titulo: string; habilidades_foco?: string[]; tipo_atividade?: string; conecta_anterior?: string; prepara_proxima?: string }>;
 
-      const { data: trilhaRow, error: insErr } = await supabase.from("trilhas").insert({
+      const { data: trilhaRow, error: insErr } = await supabase.from("trilhas").insert([{
         user_id: userId,
         client_id: `tr_${Date.now()}`,
         turma: form.turma,
@@ -71,7 +71,7 @@ export function TrilhasPanel() {
         contexto_adicional: form.contexto,
         status: "ativa",
         data: t,
-      }).select().single();
+      }]).select().single();
       if (insErr) throw insErr;
 
       if (semanasArr.length > 0) {
