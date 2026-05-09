@@ -396,7 +396,8 @@ export function Agenda() {
   }, [nowTick]);
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
-  const { events, create, update, remove } = useAgenda();
+  const { events: rawEvents, create, update, remove } = useAgenda();
+  const events = rawEvents as unknown as Event[];
   const [openDate, setOpenDate] = useState<string | null>(null);
   const ALL_TYPES: EventType[] = ["meeting", "eval", "report", "plan", "pcd", "personal"];
   const [typeFilter, setTypeFilter] = useState<EventType[]>(ALL_TYPES);
