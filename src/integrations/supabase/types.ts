@@ -277,6 +277,166 @@ export type Database = {
         }
         Relationships: []
       }
+      pei_evidencias: {
+        Row: {
+          aluno_client_id: string
+          created_at: string
+          data_evidencia: string
+          descricao: string
+          id: string
+          objetivo_id: string | null
+          pei_id: string
+          registro_diario_id: string | null
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          aluno_client_id: string
+          created_at?: string
+          data_evidencia?: string
+          descricao: string
+          id?: string
+          objetivo_id?: string | null
+          pei_id: string
+          registro_diario_id?: string | null
+          tipo?: string
+          user_id: string
+        }
+        Update: {
+          aluno_client_id?: string
+          created_at?: string
+          data_evidencia?: string
+          descricao?: string
+          id?: string
+          objetivo_id?: string | null
+          pei_id?: string
+          registro_diario_id?: string | null
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pei_evidencias_pei_id_fkey"
+            columns: ["pei_id"]
+            isOneToOne: false
+            referencedRelation: "pei_pdi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pei_pdi: {
+        Row: {
+          aluno_client_id: string
+          aluno_nome: string
+          avaliacao: Json
+          bimestre: string
+          contexto_adicional: string | null
+          created_at: string
+          estrategias: Json
+          gerado_em: string
+          id: string
+          modelo: string | null
+          objetivos_curto: Json
+          objetivos_longo: Json
+          perfil_aluno: Json
+          responsaveis: Json
+          revisado_em: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          versao: number
+          versao_familia: string | null
+        }
+        Insert: {
+          aluno_client_id: string
+          aluno_nome: string
+          avaliacao?: Json
+          bimestre: string
+          contexto_adicional?: string | null
+          created_at?: string
+          estrategias?: Json
+          gerado_em?: string
+          id?: string
+          modelo?: string | null
+          objetivos_curto?: Json
+          objetivos_longo?: Json
+          perfil_aluno?: Json
+          responsaveis?: Json
+          revisado_em?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          versao?: number
+          versao_familia?: string | null
+        }
+        Update: {
+          aluno_client_id?: string
+          aluno_nome?: string
+          avaliacao?: Json
+          bimestre?: string
+          contexto_adicional?: string | null
+          created_at?: string
+          estrategias?: Json
+          gerado_em?: string
+          id?: string
+          modelo?: string | null
+          objetivos_curto?: Json
+          objetivos_longo?: Json
+          perfil_aluno?: Json
+          responsaveis?: Json
+          revisado_em?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          versao?: number
+          versao_familia?: string | null
+        }
+        Relationships: []
+      }
+      pei_progresso: {
+        Row: {
+          avaliado_em: string
+          created_at: string
+          evidencia: string | null
+          id: string
+          objetivo: string
+          pei_id: string
+          recomendacao: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          avaliado_em?: string
+          created_at?: string
+          evidencia?: string | null
+          id?: string
+          objetivo: string
+          pei_id: string
+          recomendacao?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          avaliado_em?: string
+          created_at?: string
+          evidencia?: string | null
+          id?: string
+          objetivo?: string
+          pei_id?: string
+          recomendacao?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pei_progresso_pei_id_fkey"
+            columns: ["pei_id"]
+            isOneToOne: false
+            referencedRelation: "pei_pdi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       planos_aula: {
         Row: {
           client_id: string | null
