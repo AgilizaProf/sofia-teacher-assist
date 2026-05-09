@@ -293,7 +293,8 @@ export function Assistente() {
     const w: typeof sofia.conversations = [];
     const o: typeof sofia.conversations = [];
     const filter = search.trim().toLowerCase();
-    for (const c of sofia.conversations) {
+    const list = Array.isArray(sofia.conversations) ? sofia.conversations : [];
+    for (const c of list) {
       if (filter && !(c.title || "").toLowerCase().includes(filter)) continue;
       const updated = new Date(c.updated_at);
       const updatedKey = brDateKey(updated);
