@@ -318,10 +318,13 @@ export function Dashboard() {
   // Saudação Bom dia/Boa tarde/Boa noite usando hora real do dispositivo.
   // Durante SSR usa um fallback estável pra evitar hydration mismatch.
   const heroGreeting = useMemo(() => {
-    if (!hydrated) return realName ? `Olá, ${realName}` : "Olá";
+    const nameNode = realName ? <span className="accent">{realName}</span> : null;
+    if (!hydrated) {
+      return nameNode ? <>Olá, {nameNode}</> : <>Olá</>;
+    }
     const h = new Date().getHours();
     const slot = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
-    return realName ? `${slot}, ${realName}` : slot;
+    return nameNode ? <>{slot}, {nameNode}</> : <>{slot}</>;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, realName]);
   const [cmdk, setCmdk] = useState(false);
