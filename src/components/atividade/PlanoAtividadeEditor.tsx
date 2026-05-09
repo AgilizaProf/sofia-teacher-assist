@@ -1728,6 +1728,45 @@ function PlanoBody(props: {
   const has = (k: string) => missing.includes(k);
   const isRegen = (f: string) => regenField === f;
 
+  /* ───── Validação de inclusão / DUA (modo PCD = M2) ───── */
+  const DUA_TERMS = [
+    "dua", "desenho universal", "inclus", "acessib",
+    "sensorial", "comunicação alternativa", "caa", "libras", "braille",
+    "apoio visual", "pictograma", "rotina visual",
+    "múltiplas formas", "múltiplas representaç", "múltiplos meios",
+    "autorregulaç", "regulaç emocional", "antecipaç",
+    "participaç", "protagonismo", "junto com a turma", "par mais experiente",
+    "escolha", "tempo adicional", "ritmo próprio",
+  ];
+  const detectDUA = (text?: string): string[] => {
+    if (!text) return [];
+    const low = text.toLowerCase();
+    return DUA_TERMS.filter((t) => low.includes(t));
+  };
+  const InclBadge = ({ hits }: { hits: string[] }) =>
+    modo === "pcd" && hits.length > 0 ? (
+      <span className="atv-incl-badge" title={`Sinais detectados: ${hits.slice(0, 4).join(", ")}`}>
+        ✦ DUA · Inclusão
+      </span>
+    ) : null;
+
+  const inclSecoes = modo === "pcd"
+    ? {
+        Objetivo: detectDUA(plano.objetivo),
+        Abertura: detectDUA(plano.abertura),
+        Desenvolvimento: detectDUA(plano.desenvolvimento),
+        Fechamento: detectDUA(plano.fechamento),
+        Sugestões: detectDUA(plano.sugestoes.map((s) => `${s.titulo} ${s.descricao}`).join(" ")),
+      }
+    : null;
+  const inclVazias = inclSecoes
+    ? Object.entries(inclSecoes).filter(([, v]) => v.length === 0).map(([k]) => k)
+    : [];
+  const inclOk = inclSecoes
+    ? Object.values(inclSecoes).filter((v) => v.length > 0).length
+    : 0;
+  const adaptOk = modo === "pcd" && plano.adaptacoes.length >= 3;
+
   const RegenBtn = ({ field, label }: { field: keyof PlanoAtividade; label: string }) => (
     <button
       className="atv-regen"
@@ -1742,6 +1781,31 @@ function PlanoBody(props: {
 
   return (
     <div className="atv-grid">
+      {modo === "pcd" && inclSecoes && (
+        <section className={`atv-card atv-incl-banner${inclVazias.length > 2 || !adaptOk ? " warn" : " ok"}`}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span className="atv-incl-pill">M2 · Inclusão obrigatória</span>
+            <strong style={{ fontSize: 13 }}>
+              {inclOk}/5 seções com sinais de DUA · {plano.adaptacoes.length} adaptação(ões) específica(s)
+            </strong>
+            <span style={{ flex: 1 }} />
+            {(inclVazias.length > 2 || !adaptOk) ? (
+              <span className="atv-incl-msg">
+                Reforce a inclusão: {inclVazias.length > 0 && (
+                  <>seções sem DUA — <em>{inclVazias.join(", ")}</em>. </>
+                )}
+                {!adaptOk && <>Mínimo de 3 adaptações específicas para o aluno foco.</>}
+                {" "}Use “Regenerar” em cada bloco.
+              </span>
+            ) : (
+              <span className="atv-incl-msg ok">
+                Plano coerente com DUA — participação do aluno PCD presente em todas as etapas.
+              </span>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* 1. Título */}
       <section className={`atv-card title${has("titulo") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
@@ -1764,7 +1828,7 @@ function PlanoBody(props: {
       {/* 2. Objetivo */}
       <section className={`atv-card${has("objetivo") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>① Objetivo</h3>
+          <h3>① Objetivo {inclSecoes && <InclBadge hits={inclSecoes.Objetivo} />}</h3>
           <RegenBtn field="objetivo" label="objetivo" />
         </div>
         <InlineText
