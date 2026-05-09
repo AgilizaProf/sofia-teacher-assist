@@ -398,7 +398,7 @@ export function Assistente() {
                 </h1>
               ) : (
                 <h1 className="greet">
-                  Olá 👋<br />
+                  Olá, <em>{ctx.user.primeiro_nome}</em> 👋<br />
                   Por onde <em><u>a gente começa hoje?</u></em>
                 </h1>
               )}
