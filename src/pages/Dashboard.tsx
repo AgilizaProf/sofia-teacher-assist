@@ -8,6 +8,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useHydrated } from "@/hooks/useHydrated";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { useSofia } from "@/components/sofia/SofiaProvider";
+import { useEiMode } from "@/lib/ei/useEiMode";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { SofiaAdaptacaoCard } from "@/components/sofia/SofiaAdaptacaoCard";
@@ -306,6 +307,7 @@ export function Dashboard() {
   const user = useUser();
   const sofiaCtx = useSofiaContext();
   const hydrated = useHydrated();
+  const isEi = useEiMode();
   // Nome real do usuário logado (perfil) com fallback seguro pra SSR.
   const realName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || user.name || "").trim();
   // Tick a cada 30s pra manter o relógio em dia.
@@ -719,7 +721,7 @@ export function Dashboard() {
               className="stat school-clickable"
               type="button"
               onClick={() => navigate({ to: "/relatorios", search: { tab: "todo", focus: "pareceres" } })}
-              aria-label="Ver pareceres pendentes"
+              aria-label={isEi ? "Ver relatórios pendentes" : "Ver pareceres pendentes"}
               style={{ textAlign: "left" }}
             >
               <div className="stat-icon s1"><Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} /></div>
@@ -728,7 +730,7 @@ export function Dashboard() {
                   {documentsGenerated}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>/{totalStudents}</span>
                   {pareceresPendentes.alunos > 0 && <span className="stat-value-trend" style={{ color: "var(--accent-deep)", background: "var(--accent-soft)" }}>{pareceresPendentes.alunos} pendentes</span>}
                 </div>
-                <div className="stat-label">Pareceres do bimestre</div>
+                <div className="stat-label">{isEi ? "Relatórios do bimestre" : "Pareceres do bimestre"}</div>
               </div>
             </button>
             <button

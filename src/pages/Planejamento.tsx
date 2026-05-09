@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
 import { sanitizeFilter, sanitizeM6Filters, type M6FilterState } from "@/lib/sofia/m6Filters";
+import { useEiMode } from "@/lib/ei/useEiMode";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
@@ -1091,6 +1092,7 @@ export function Planejamento() {
     aluno?: string;
   };
   const navigate = useNavigate({ from: "/planejamento" });
+  const isEi = useEiMode();
   const [m, setM] = useState<MKey>(search.m || "atv");
   const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
   const [dropDay, setDropDay] = useState<DayKey | null>(null);
@@ -2595,8 +2597,18 @@ export function Planejamento() {
         <AppSidebar active="planning" />
         <div className="pl-main">
           <AppHeader
-            breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }, { label: cfg.crumb }]}
+            breadcrumb={[
+              { label: "Sua sala" },
+              { label: isEi ? "Roteiros de experiência" : "Planejamento" },
+              { label: isEi && cfg.crumb === "Diário de bordo" ? "Diário de observação" : cfg.crumb },
+            ]}
           />
+          {isEi && (
+            <div style={{ background: "#ECFDF5", borderBottom: "1px solid #A7F3D0", color: "#065F46", padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+              🌱 <strong>Modo Educação Infantil ativo.</strong> Para roteiros de experiência com Campos de Experiência, abra o
+              <a href="/planejamento/ei" style={{ color: "#047857", fontWeight: 600, marginLeft: 4 }}>Roteiro EI →</a>
+            </div>
+          )}
 
           {/* HERO */}
           <div className="pl-hero">
@@ -3620,7 +3632,7 @@ export function Planejamento() {
               <>
                 <div className="pl-tools">
                   <div>
-                    <h2>Diário de bordo <small>· registro de 30 segundos</small></h2>
+                    <h2>{isEi ? "Diário de observação" : "Diário de bordo"} <small>· registro de 30 segundos</small></h2>
                   </div>
                   <div className="right">
                     <button className="pl-btn" onClick={() => { setM6Reminder(true); showToast("✓ Você será lembrada todo dia às 18h."); }}>

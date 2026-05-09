@@ -157,6 +157,10 @@ export function ProfileEditor() {
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("sofia:profile-updated"));
       }
+      try {
+        const { refreshEiMode } = await import("@/lib/ei/useEiMode");
+        refreshEiMode();
+      } catch { /* noop */ }
     }
   };
 
