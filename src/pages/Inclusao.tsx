@@ -1014,7 +1014,7 @@ export function Inclusao() {
                   </div>
                   <div className="hero-r">
                     <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> Ver PEI completo</button>
-                     <button className="btn btn-primary" onClick={() => sofia.openSofia({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> Adaptar aula de hoje</button>
+                     <button className="btn btn-primary bg-orange-400" onClick={() => sofia.openSofia({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> Adaptar aula de hoje</button>
                   </div>
                 </div>
 
@@ -1061,7 +1061,7 @@ export function Inclusao() {
                   <div className="section-head" style={{ marginBottom: 10 }}>
                     <h3>Visão de hoje · {selected.name}</h3>
                     <span className="legal">{selected.anoEscolar || "Ano escolar não informado"}</span>
-                    <button className="btn btn-primary" onClick={() => saveTab("Visão de hoje")}><CheckCircle2 size={14} /> Salvar</button>
+                    <button className="btn btn-primary bg-orange-400" onClick={() => saveTab("Visão de hoje")}><CheckCircle2 size={14} /> Salvar</button>
                   </div>
                   <div className="hoje-grid">
                     <div className="col-l">
@@ -1077,7 +1077,7 @@ export function Inclusao() {
                     <h2 className="ac-title">Vamos começar pela <em>Anamnese</em> de {selected.name.split(" ")[0]}</h2>
                     <p className="ac-body">Sem registros ainda. Preencha os eixos da Anamnese e cadastre o PEI para que a Sofia possa sugerir adaptações de aula alinhadas ao perfil e à BNCC.</p>
                     <div className="ac-cta">
-                      <button className="btn btn-primary" onClick={() => setActiveTab("anam")}>Preencher Anamnese <ChevronRight size={14} /></button>
+                      <button className="btn btn-primary bg-orange-400" onClick={() => setActiveTab("anam")}>Preencher Anamnese <ChevronRight size={14} /></button>
                       <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Abrir PEI</button>
                     </div>
                   </div>
@@ -1167,8 +1167,8 @@ export function Inclusao() {
                       <h3>Anamnese · {eixosPreenchidos} de {anamData.length} eixos preenchidos</h3>
                       <span className="legal">{selected?.anoEscolar ? selected.anoEscolar + " · " : ""}{selected?.turma || ""} · {selected?.diag || ""}</span>
                       <button className="btn btn-secondary" onClick={() => { setAnamPrintMode("completo"); setAnamPrintOpen(true); }}><Printer size={14} /> Imprimir Anamnese</button>
-                      <button className="btn btn-primary"><Sparkles size={14} /> Sugerir com a Sofia</button>
-                      <button className="btn btn-primary" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-orange-400"><Sparkles size={14} /> Sugerir com a Sofia</button>
+                      <button className="btn btn-primary bg-orange-400" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
                     <div className="anam-list">
@@ -1263,8 +1263,8 @@ export function Inclusao() {
                     <div className="section-head">
                       <h3>Planejamento adaptado · {selected?.name || ""}</h3>
                       <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
-                      <button className="btn btn-primary" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
-                      <button className="btn btn-primary" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-orange-400" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
+                      <button className="btn btn-primary bg-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>Ano de referência</label>
@@ -1349,8 +1349,8 @@ export function Inclusao() {
                   <div className="section">
                     <div className="section-head">
                       <h3>Registros pedagógicos · {studentRegs.length}</h3>
-                      <button className="btn btn-primary" onClick={() => setRegModalOpen(true)}><Plus size={14} /> Novo registro</button>
-                      <button className="btn btn-primary" onClick={() => saveTab("Registros")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-orange-400" onClick={() => setRegModalOpen(true)}><Plus size={14} /> Novo registro</button>
+                      <button className="btn btn-primary bg-orange-400" onClick={() => saveTab("Registros")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="reg-filters">
                       {([
@@ -1390,12 +1390,12 @@ export function Inclusao() {
                     <div className="section-head">
                       <h3>Relatórios · Pareceres descritivos</h3>
                       <span className="legal">Lei 14.254/2021</span>
-                      <button className="btn btn-primary" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-orange-400" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="rel-feature">
                       <h4>Parecer descritivo bimestral · 1º bim 2026</h4>
                       <p>A Sofia consolida 23 registros + PEI v3.2 + anamnese em um parecer pronto para exportar (Word/PDF) e assinar.</p>
-                      <button className="btn btn-primary"><Sparkles size={14} /> Gerar com a Sofia (~3 min)</button>
+                      <button className="btn btn-primary bg-orange-400"><Sparkles size={14} /> Gerar com a Sofia (~3 min)</button>
                     </div>
                     <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, margin: "16px 0 10px" }}>Pareceres anteriores · 2025</h4>
                     <div className="rel-list">
@@ -1429,8 +1429,8 @@ export function Inclusao() {
                   <div className="section">
                     <div className="section-head">
                       <h3>Documentos · {selected?.name || ""}</h3>
-                      <button className="btn btn-primary"><Plus size={14} /> Adicionar documento</button>
-                      <button className="btn btn-primary" onClick={() => saveTab("Documentos")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-orange-400"><Plus size={14} /> Adicionar documento</button>
+                      <button className="btn btn-primary bg-orange-400" onClick={() => saveTab("Documentos")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="doc-grid">
                       {DOCS.map((d) => (
@@ -1477,7 +1477,7 @@ export function Inclusao() {
           </div>
           <div className="inc-modal-foot">
             <span className="legal">Pode chamar a Sofia a qualquer momento clicando em "Assistente IA"</span>
-            <button className="btn btn-primary" onClick={() => setTutorialOpen(false)}>Entendi, começar</button>
+            <button className="btn btn-primary bg-orange-400" onClick={() => setTutorialOpen(false)}>Entendi, começar</button>
           </div>
         </div>
       </div>
@@ -1536,7 +1536,7 @@ export function Inclusao() {
           <div className="inc-modal-foot">
             <span className="legal">Conforme Lei 14.254/2021 · BNCC Inclusão</span>
             <button className="inc-btn-ghost"><FileText size={14} /> Word</button>
-            <button className="btn btn-primary"><Printer size={14} /> Imprimir / PDF</button>
+            <button className="btn btn-primary bg-orange-400"><Printer size={14} /> Imprimir / PDF</button>
           </div>
         </div>
       </div>
@@ -1617,7 +1617,7 @@ export function Inclusao() {
           <div className="inc-modal-foot">
             <span className="legal">{anamPrintMode === "completo" ? "Mostrando todos os eixos (inclusive não preenchidos)." : "Mostrando apenas o que foi preenchido."}</span>
             <button className="inc-btn-ghost" onClick={() => setAnamPrintOpen(false)}>Fechar</button>
-            <button className="btn btn-primary" onClick={() => window.print()}><Printer size={14} /> Imprimir / PDF</button>
+            <button className="btn btn-primary bg-orange-400" onClick={() => window.print()}><Printer size={14} /> Imprimir / PDF</button>
           </div>
         </div>
       </div>
@@ -1697,7 +1697,7 @@ export function Inclusao() {
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary">Salvar aluno</button>
+              <button type="submit" className="btn btn-primary bg-orange-400">Salvar aluno</button>
             </div>
           </form>
         </div>
@@ -1745,7 +1745,7 @@ export function Inclusao() {
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setRegModalOpen(false)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary"><Plus size={14} /> Salvar registro</button>
+              <button type="submit" className="btn btn-primary bg-orange-400"><Plus size={14} /> Salvar registro</button>
             </div>
           </form>
         </div>
