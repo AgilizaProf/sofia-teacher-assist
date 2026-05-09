@@ -403,7 +403,7 @@ const printCss = `
 }
 `;
 
-type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel" | "doc";
+type TabKey = "hoje" | "anam" | "plan" | "reg" | "rel";
 type ViewKey = "list" | "detail";
 
 type Student = {
@@ -1094,7 +1094,6 @@ export function Inclusao() {
                     { k: "plan", label: "Planejamento" },
                     { k: "reg", label: "Registros" },
                     { k: "rel", label: "Relatório IA" },
-                    { k: "doc", label: "Documentos" },
                   ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
                     <button key={t.k} className={"tab" + (tab === t.k ? " active" : "")} onClick={() => setActiveTab(t.k)} role="tab" aria-selected={tab === t.k}>
                       {t.label}{t.count && <span className="tab-count">{t.count}</span>}
@@ -1516,33 +1515,6 @@ export function Inclusao() {
                   </div>
                 </div>
 
-                <div className={"panel" + (tab === "doc" ? " active" : "")}>
-                  <div className="section">
-                    <div className="section-head">
-                      <h3>Documentos · {selected?.name || ""}</h3>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400"><Plus size={14} /> Adicionar documento</button>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Documentos")}><CheckCircle2 size={14} /> Salvar</button>
-                    </div>
-                    <div className="doc-grid">
-                      {DOCS.map((d) => (
-                        <div className="doc-card" key={d.t}>
-                          <div className="doc-head">
-                            <div className="doc-ic">{d.ic}</div>
-                            <div>
-                              <b>{d.t}</b>
-                              <div className="doc-meta">{d.who}</div>
-                            </div>
-                          </div>
-                          <div className="doc-meta">{d.date} · {d.size}</div>
-                          <div className="doc-acts">
-                            <button>Visualizar</button>
-                            <button className="primary"><Download size={12} /> Baixar</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
               </>
             )}
           </div>
