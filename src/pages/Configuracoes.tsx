@@ -4,6 +4,7 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
+import { ReferralCard } from "@/components/settings/ReferralCard";
 import { useReducedMotion, type ReducedMotionMode } from "@/hooks/useReducedMotion";
 
 const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: string }> = [
@@ -65,6 +66,11 @@ export function Configuracoes() {
               Seus dados ficam privados. Só você consegue ver e editar.
             </p>
             <ProfileEditor />
+          </section>
+
+          <section aria-labelledby="indique-title" style={{ marginBottom: 18 }}>
+            <h2 id="indique-title" style={{ position: "absolute", left: -9999 }}>Programa de indicação</h2>
+            <ReferralCard />
           </section>
 
           <section aria-labelledby="acessibilidade-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
