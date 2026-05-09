@@ -1267,20 +1267,26 @@ export function Dashboard() {
               <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
             </button>
           </div>
-          <form className="school-modal-body" onSubmit={(e) => {
+          <form className="school-modal-body" onSubmit={async (e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
             const name = String(fd.get("name") || "").trim();
             if (!name) return;
-            setClasses((arr) => [...arr, {
-              name,
-              school: String(fd.get("school") || ""),
-              grade: String(fd.get("grade") || ""),
-              shift: String(fd.get("shift") || ""),
-              students: String(fd.get("students") || ""),
-            }]);
-            (e.currentTarget as HTMLFormElement).reset();
-            setClassOpen(false);
+            const form = e.currentTarget as HTMLFormElement;
+            try {
+              await createTurmaDb({
+                name,
+                school: String(fd.get("school") || ""),
+                grade: String(fd.get("grade") || ""),
+                shift: String(fd.get("shift") || ""),
+                students: String(fd.get("students") || ""),
+              });
+              form.reset();
+              setClassOpen(false);
+            } catch (err) {
+              console.error("[Dashboard] erro ao criar turma:", err);
+              toast.error("Não foi possível salvar a turma. Tente novamente.");
+            }
           }}>
             <div className="school-field">
               <label htmlFor="class-name">Nome da turma</label>
