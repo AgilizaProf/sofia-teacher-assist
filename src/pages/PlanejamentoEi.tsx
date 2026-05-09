@@ -151,7 +151,7 @@ export function PlanejamentoEi() {
       tema: tema || null,
       tipo_experiencia: tipo,
       duracao,
-      conteudo: roteiro as unknown as Record<string, unknown>,
+      conteudo: roteiro as unknown as never,
       status: "salvo",
       modelo: "claude-haiku-4-5-20251001",
     };
