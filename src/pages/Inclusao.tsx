@@ -93,7 +93,7 @@ const css = `
 .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
 .hero-r{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end;}
 .inc-root .btn{padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap;border:none;cursor:pointer;}
-.inc-root .btn-primary{background:#fff!important;color:var(--text)!important;border:1px solid var(--border);box-shadow:none;}
+ .inc-root .btn-primary{border:1px solid var(--border);box-shadow:none;}
 .inc-root .btn-primary:hover{border-color:var(--accent);color:var(--accent)!important;}
 .inc-root .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text);}
 .inc-root .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
