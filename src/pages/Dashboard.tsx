@@ -570,8 +570,9 @@ export function Dashboard() {
     },
   };
 
-  // Lê os mesmos eventos da Agenda (mesma chave do usePersistentState).
-  const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
+  // Lê os eventos diretamente do banco (tabela agenda_eventos), mesma fonte da tela /agenda.
+  const { events: agendaEventsRaw } = useAgenda();
+  const agendaEvents = agendaEventsRaw as unknown as AgendaEvent[];
   const upcomingAgenda = useMemo(() => {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
