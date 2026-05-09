@@ -1115,8 +1115,30 @@ export function Inclusao() {
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Evolução pedagógica</div>
-                    <div className="kpi-value" style={{ color: "var(--muted)" }}>Sem dados</div>
-                    <div className="kpi-sub">aguardando primeiros registros</div>
+                    {(() => {
+                      const totalRegs = (regByStudent[studentKey] || []).length;
+                      const hasData = eixosPreenchidos > 0 || totalRegs > 0;
+                      if (!hasData) {
+                        return (
+                          <>
+                            <div className="kpi-value" style={{ color: "var(--muted)" }}>Sem dados</div>
+                            <div className="kpi-sub">aguardando primeiros registros</div>
+                          </>
+                        );
+                      }
+                      const avg = skillsEvolucao.reduce((acc, s) => acc + s.p, 0) / skillsEvolucao.length;
+                      let label = "Em desenvolvimento";
+                      let color = "var(--warn, #b8860b)";
+                      if (avg >= 70) { label = "Progredindo"; color = "var(--success, #16a34a)"; }
+                      else if (avg < 40) { label = "Necessita apoio"; color = "var(--danger, #dc2626)"; }
+                      else { color = "var(--accent, #d97706)"; }
+                      return (
+                        <>
+                          <div className="kpi-value" style={{ color }}>{label}</div>
+                          <div className="kpi-sub">média {Math.round(avg)}% · {totalRegs} registro{totalRegs === 1 ? "" : "s"}</div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
