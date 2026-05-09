@@ -20,6 +20,8 @@ import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useTurmas } from "@/hooks/useTurmas";
 import { useAgenda } from "@/hooks/useAgenda";
+import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
+import type { StudentInput } from "@/lib/db/inclusao";
 import { toast } from "sonner";
 
 type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
@@ -342,7 +344,67 @@ export function Dashboard() {
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
-  const [students, setStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const {
+    students: dbStudents,
+    create: createDbStudent,
+    update: updateDbStudent,
+    remove: removeDbStudent,
+  } = useInclusaoStudents();
+  const students = useMemo<DashStudent[]>(
+    () =>
+      dbStudents.map((s) => ({
+        name: s.name,
+        classRef: s.turma && s.turma !== "Sem turma" ? s.turma : "",
+        birth: s.birth ?? "",
+        pcd: s.pcd ?? "nao",
+        notes: s.notes ?? "",
+        createdAt: s.createdAt,
+      })),
+    [dbStudents],
+  );
+  const buildStudentInput = (d: DashStudent): StudentInput => ({
+    name: d.name,
+    initials:
+      d.name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p) => p[0] ?? "")
+        .join("")
+        .toUpperCase() || "AL",
+    age: "—",
+    turma: d.classRef || "Sem turma",
+    diag: "",
+    cid: "",
+    aee: "",
+    anamnese: "0/14",
+    registros: "0",
+    trend: "—",
+    trendTone: "muted",
+    birth: d.birth,
+    notes: d.notes,
+    pcd: d.pcd,
+  });
+  const renameClassRefRipple = async (oldName: string, newName: string) => {
+    const affected = dbStudents.filter((s) => (s.turma ?? "") === oldName);
+    for (const s of affected) {
+      try {
+        await updateDbStudent(s.id, { turma: newName });
+      } catch (err) {
+        console.error("[Dashboard] erro ao atualizar turma da aluna:", err);
+      }
+    }
+  };
+  const clearClassRefRipple = async (oldName: string) => {
+    const affected = dbStudents.filter((s) => (s.turma ?? "") === oldName);
+    for (const s of affected) {
+      try {
+        await updateDbStudent(s.id, { turma: "Sem turma" });
+      } catch (err) {
+        console.error("[Dashboard] erro ao limpar turma da aluna:", err);
+      }
+    }
+  };
   const [studentDetail, setStudentDetail] = useState<{ index: number; student: DashStudent } | null>(null);
   const [editingStudent, setEditingStudent] = useState(false);
   const [editForm, setEditForm] = useState<DashStudent | null>(null);
