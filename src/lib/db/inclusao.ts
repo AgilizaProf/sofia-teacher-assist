@@ -20,6 +20,7 @@ export type StudentUI = {
   birth?: string;
   notes?: string;
   pcd?: string;
+  createdAt?: string;
 };
 
 export type StudentInput = Omit<StudentUI, "id">;
@@ -83,6 +84,7 @@ function rowToUI(r: StudentRow): StudentUI {
     birth: (extra.birth as string) ?? undefined,
     notes: ((extra.notes as string) ?? r.observacoes) ?? undefined,
     pcd: (extra.pcd as string) ?? undefined,
+    createdAt: r.created_at,
   };
 }
 
