@@ -1442,7 +1442,7 @@ export function Dashboard() {
               try {
                 await updateTurmaDb(turmaId, updated);
                 if (oldName !== name) {
-                  setStudents((arr) => arr.map((s) => s.classRef === oldName ? { ...s, classRef: name } : s));
+                  await renameClassRefRipple(oldName, name);
                 }
                 setEditingClassIdx(null);
               } catch (err) {
@@ -1499,7 +1499,7 @@ export function Dashboard() {
                     const turmaId = classes[editingClassIdx!].id;
                     try {
                       await removeTurmaDb(turmaId);
-                      setStudents((arr) => arr.map((s) => s.classRef === oldName ? { ...s, classRef: "" } : s));
+                      await clearClassRefRipple(oldName);
                       setEditingClassIdx(null);
                     } catch (err) {
                       console.error("[Dashboard] erro ao excluir turma:", err);
@@ -1534,7 +1534,7 @@ export function Dashboard() {
               <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
             </button>
           </div>
-          <form className="school-modal-body" onSubmit={(e) => {
+          <form className="school-modal-body" onSubmit={async (e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
             const className = studentClassSel || String(fd.get("classRefManual") || "").trim();
@@ -1543,6 +1543,7 @@ export function Dashboard() {
               ? (schoolName ? `${className} · ${schoolName}` : className)
               : (schoolName || "");
             const pcd = String(fd.get("pcd") || "nao");
+            const formEl = e.currentTarget as HTMLFormElement;
             if (bulkMode) {
               const raw = String(fd.get("names") || "");
               const names = raw
@@ -1550,23 +1551,37 @@ export function Dashboard() {
                 .map((s) => s.trim())
                 .filter((s) => s.length > 0 && s.length <= 120);
               if (names.length === 0) return;
-              setStudents((arr) => [
-                ...arr,
-                ...names.map((name) => ({ name, classRef, birth: "", pcd, notes: "", createdAt: new Date().toISOString() })),
-              ]);
+              try {
+                for (const name of names) {
+                  await createDbStudent(buildStudentInput({ name, classRef, birth: "", pcd, notes: "" }));
+                }
+                toast.success(`${names.length} aluno(s) cadastrado(s)`);
+              } catch (err) {
+                console.error("[Dashboard] erro no cadastro em massa:", err);
+                toast.error("Não foi possível cadastrar todos os alunos. Tente novamente.");
+                return;
+              }
             } else {
               const name = String(fd.get("name") || "").trim();
               if (!name) return;
-              setStudents((arr) => [...arr, {
-                name,
-                classRef,
-                birth: String(fd.get("birth") || ""),
-                pcd,
-                notes: String(fd.get("notes") || ""),
-                createdAt: new Date().toISOString(),
-              }]);
+              try {
+                await createDbStudent(
+                  buildStudentInput({
+                    name,
+                    classRef,
+                    birth: String(fd.get("birth") || ""),
+                    pcd,
+                    notes: String(fd.get("notes") || ""),
+                  }),
+                );
+                toast.success("Aluno(a) cadastrado(a)", { description: name });
+              } catch (err) {
+                console.error("[Dashboard] erro ao cadastrar aluno:", err);
+                toast.error("Não foi possível cadastrar. Tente novamente.");
+                return;
+              }
             }
-            (e.currentTarget as HTMLFormElement).reset();
+            formEl.reset();
             setStudentClassSel(""); setStudentSchoolSel("");
             setStudentOpen(false);
           }}>
@@ -1962,14 +1977,22 @@ export function Dashboard() {
                     <button
                       type="button"
                       className="school-save"
-                      onClick={() => {
+                      onClick={async () => {
                         if (!editForm) { setEditingStudent(false); return; }
                         const trimmed = { ...editForm, name: editForm.name.trim() };
                         if (!trimmed.name) return;
-                        setStudents((arr) => arr.map((x, idx) => idx === studentDetail.index ? trimmed : x));
-                        setStudentDetail({ index: studentDetail.index, student: trimmed });
-                        setEditingStudent(false);
-                        setEditForm(null);
+                        const target = dbStudents[studentDetail.index];
+                        if (!target) { setEditingStudent(false); setEditForm(null); return; }
+                        try {
+                          await updateDbStudent(target.id, buildStudentInput(trimmed));
+                          setStudentDetail({ index: studentDetail.index, student: trimmed });
+                          setEditingStudent(false);
+                          setEditForm(null);
+                          toast.success("Alterações salvas");
+                        } catch (err) {
+                          console.error("[Dashboard] erro ao salvar aluno:", err);
+                          toast.error("Não foi possível salvar. Tente novamente.");
+                        }
                       }}
                     >
                       Salvar alterações
@@ -1982,10 +2005,18 @@ export function Dashboard() {
                       type="button"
                       className="school-cancel"
                       style={{ marginLeft: 0, color: "#B91C1C", borderColor: "#FCA5A5" }}
-                      onClick={() => {
+                      onClick={async () => {
                         if (!confirm(`Remover ${s.name}?`)) return;
-                        setStudents((arr) => arr.filter((_, idx) => idx !== studentDetail.index));
-                        closeAll();
+                        const target = dbStudents[studentDetail.index];
+                        if (!target) { closeAll(); return; }
+                        try {
+                          await removeDbStudent(target.id);
+                          closeAll();
+                          toast.success("Aluno(a) removido(a)");
+                        } catch (err) {
+                          console.error("[Dashboard] erro ao remover aluno:", err);
+                          toast.error("Não foi possível remover. Tente novamente.");
+                        }
                       }}
                     >
                       <Svg width={13} height={13} c={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></>} />
