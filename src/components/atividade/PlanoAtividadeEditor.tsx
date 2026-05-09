@@ -1861,7 +1861,7 @@ function PlanoBody(props: {
           onClick={() => modo === "regular" && setAdaptOpen((v) => !v)}
           disabled={modo === "pcd"}
         >
-          <h3>④ Adaptações PCD</h3>
+          <h3>⑤ Adaptações PCD</h3>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <RegenBtn field="adaptacoes" label="adaptações" />
             {modo === "regular" && (adaptOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
@@ -1898,7 +1898,7 @@ function PlanoBody(props: {
       {/* 6. Sugestões */}
       <section className="atv-card">
         <div className="atv-card-head">
-          <h3><Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑤ Sugestões da Sofia</h3>
+          <h3><Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑥ Sugestões da Sofia</h3>
           <RegenBtn field="sugestoes" label="sugestões" />
         </div>
 
@@ -1965,7 +1965,7 @@ function PlanoBody(props: {
       {/* 7. Materiais */}
       <section className="atv-card">
         <div className="atv-card-head">
-          <h3>⑥ Material necessário</h3>
+          <h3>⑦ Material necessário</h3>
           <div style={{ display: "flex", gap: 6 }}>
             <RegenBtn field="materiais" label="materiais" />
             <button
