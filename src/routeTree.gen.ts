@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
 import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
 import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
@@ -67,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanejamentoEiRoute = PlanejamentoEiRouteImport.update({
+  id: '/ei',
+  path: '/ei',
+  getParentRoute: () => PlanejamentoRoute,
+} as any)
 const PlanejamentoAtividadeRoute = PlanejamentoAtividadeRouteImport.update({
   id: '/atividade',
   path: '/atividade',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
+  '/planejamento/ei': typeof PlanejamentoEiRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
+  '/planejamento/ei': typeof PlanejamentoEiRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
+  '/planejamento/ei': typeof PlanejamentoEiRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/inclusao/pei'
     | '/planejamento/atividade'
+    | '/planejamento/ei'
     | '/api/sofia/suggestions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/inclusao/pei'
     | '/planejamento/atividade'
+    | '/planejamento/ei'
     | '/api/sofia/suggestions'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/inclusao/pei'
     | '/planejamento/atividade'
+    | '/planejamento/ei'
     | '/api/sofia/suggestions'
   fileRoutesById: FileRoutesById
 }
@@ -249,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/planejamento/ei': {
+      id: '/planejamento/ei'
+      path: '/ei'
+      fullPath: '/planejamento/ei'
+      preLoaderRoute: typeof PlanejamentoEiRouteImport
+      parentRoute: typeof PlanejamentoRoute
+    }
     '/planejamento/atividade': {
       id: '/planejamento/atividade'
       path: '/atividade'
@@ -287,10 +306,12 @@ const InclusaoRouteWithChildren = InclusaoRoute._addFileChildren(
 
 interface PlanejamentoRouteChildren {
   PlanejamentoAtividadeRoute: typeof PlanejamentoAtividadeRoute
+  PlanejamentoEiRoute: typeof PlanejamentoEiRoute
 }
 
 const PlanejamentoRouteChildren: PlanejamentoRouteChildren = {
   PlanejamentoAtividadeRoute: PlanejamentoAtividadeRoute,
+  PlanejamentoEiRoute: PlanejamentoEiRoute,
 }
 
 const PlanejamentoRouteWithChildren = PlanejamentoRoute._addFileChildren(

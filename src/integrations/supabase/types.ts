@@ -91,8 +91,10 @@ export type Database = {
           condicao: string | null
           created_at: string
           data: Json
+          faixa_etaria: string | null
           id: string
           idade: number | null
+          nivel: string | null
           nivel_suporte: string | null
           nome: string
           observacoes: string | null
@@ -107,8 +109,10 @@ export type Database = {
           condicao?: string | null
           created_at?: string
           data?: Json
+          faixa_etaria?: string | null
           id?: string
           idade?: number | null
+          nivel?: string | null
           nivel_suporte?: string | null
           nome: string
           observacoes?: string | null
@@ -123,8 +127,10 @@ export type Database = {
           condicao?: string | null
           created_at?: string
           data?: Json
+          faixa_etaria?: string | null
           id?: string
           idade?: number | null
+          nivel?: string | null
           nivel_suporte?: string | null
           nome?: string
           observacoes?: string | null
@@ -237,6 +243,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marcos_desenvolvimento: {
+        Row: {
+          campo_experiencia: string
+          created_at: string
+          crianca_client_id: string
+          crianca_nome: string | null
+          descricao: string
+          evidencia: string | null
+          id: string
+          observado_em: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          campo_experiencia: string
+          created_at?: string
+          crianca_client_id: string
+          crianca_nome?: string | null
+          descricao: string
+          evidencia?: string | null
+          id?: string
+          observado_em?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          campo_experiencia?: string
+          created_at?: string
+          crianca_client_id?: string
+          crianca_nome?: string | null
+          descricao?: string
+          evidencia?: string | null
+          id?: string
+          observado_em?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      observacoes_ei: {
+        Row: {
+          analise_sofia: Json | null
+          campos: Json
+          created_at: string
+          crianca_client_id: string | null
+          crianca_nome: string | null
+          direitos: Json
+          foto_url: string | null
+          id: string
+          registrado_em: string
+          texto: string
+          turma: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analise_sofia?: Json | null
+          campos?: Json
+          created_at?: string
+          crianca_client_id?: string | null
+          crianca_nome?: string | null
+          direitos?: Json
+          foto_url?: string | null
+          id?: string
+          registrado_em?: string
+          texto: string
+          turma?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analise_sofia?: Json | null
+          campos?: Json
+          created_at?: string
+          crianca_client_id?: string | null
+          crianca_nome?: string | null
+          direitos?: Json
+          foto_url?: string | null
+          id?: string
+          registrado_em?: string
+          texto?: string
+          turma?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       pareceres: {
         Row: {
@@ -484,7 +577,9 @@ export type Database = {
           email: string | null
           escola: string | null
           etapa_ensino: string | null
+          faixa_etaria: string | null
           id: string
+          nivel_ensino: string | null
           preferencias: Json
           referral_code: string | null
           referred_by_code: string | null
@@ -506,7 +601,9 @@ export type Database = {
           email?: string | null
           escola?: string | null
           etapa_ensino?: string | null
+          faixa_etaria?: string | null
           id?: string
+          nivel_ensino?: string | null
           preferencias?: Json
           referral_code?: string | null
           referred_by_code?: string | null
@@ -528,7 +625,9 @@ export type Database = {
           email?: string | null
           escola?: string | null
           etapa_ensino?: string | null
+          faixa_etaria?: string | null
           id?: string
+          nivel_ensino?: string | null
           preferencias?: Json
           referral_code?: string | null
           referred_by_code?: string | null
@@ -631,6 +730,99 @@ export type Database = {
           referred_user_id?: string
           referrer_bonus_days?: number
           referrer_user_id?: string
+        }
+        Relationships: []
+      }
+      relatorios_ei: {
+        Row: {
+          bimestre: string
+          conteudo_texto: string | null
+          created_at: string
+          crianca_client_id: string
+          crianca_nome: string | null
+          gerado_em: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+          versao_familia: string | null
+        }
+        Insert: {
+          bimestre: string
+          conteudo_texto?: string | null
+          created_at?: string
+          crianca_client_id: string
+          crianca_nome?: string | null
+          gerado_em?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          versao_familia?: string | null
+        }
+        Update: {
+          bimestre?: string
+          conteudo_texto?: string | null
+          created_at?: string
+          crianca_client_id?: string
+          crianca_nome?: string | null
+          gerado_em?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          versao_familia?: string | null
+        }
+        Relationships: []
+      }
+      roteiros_ei: {
+        Row: {
+          campos_experiencia: Json
+          conteudo: Json
+          created_at: string
+          duracao: number | null
+          faixa_etaria: string | null
+          gerado_em: string
+          id: string
+          modelo: string | null
+          status: string
+          tema: string | null
+          tipo_experiencia: string | null
+          turma: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campos_experiencia?: Json
+          conteudo?: Json
+          created_at?: string
+          duracao?: number | null
+          faixa_etaria?: string | null
+          gerado_em?: string
+          id?: string
+          modelo?: string | null
+          status?: string
+          tema?: string | null
+          tipo_experiencia?: string | null
+          turma?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campos_experiencia?: Json
+          conteudo?: Json
+          created_at?: string
+          duracao?: number | null
+          faixa_etaria?: string | null
+          gerado_em?: string
+          id?: string
+          modelo?: string | null
+          status?: string
+          tema?: string | null
+          tipo_experiencia?: string | null
+          turma?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
