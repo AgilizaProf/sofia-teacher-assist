@@ -3813,99 +3813,19 @@ export function Planejamento() {
         const close = () => setM1EditCard(null);
         const upd = (patch: Partial<M1Card>) => m1UpdateCard(dia, id, patch);
         const linesToArr = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
-        return (
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Editar atividade"
-            onClick={close}
-            style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{ background: "#fff", borderRadius: 14, width: "min(780px, 100%)", maxHeight: "92vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
-            >
-              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
-                    ✨ Atividade da Sofia · {card.tag}
-                  </div>
-                  <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4, lineHeight: 1.25 }}>{card.title}</h3>
-                </div>
-                <button onClick={close} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6, flexShrink: 0 }}><X size={18} /></button>
-              </div>
-              <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14, fontSize: 13 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 140px", gap: 10 }}>
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                    Título
-                    <input value={card.title} onChange={(e) => upd({ title: e.target.value })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, fontWeight: 600 }} />
-                  </label>
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                    Minutos
-                    <input type="number" min={5} step={5} value={card.minutos} onChange={(e) => upd({ minutos: Math.max(5, parseInt(e.target.value || "0", 10) || 0) })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13 }} />
-                  </label>
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                    BNCC
-                    <input value={card.bncc} onChange={(e) => upd({ bncc: e.target.value })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 12, fontFamily: "'JetBrains Mono',monospace" }} />
-                  </label>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                    Tag
-                    <input value={card.tag} onChange={(e) => upd({ tag: e.target.value })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13 }} />
-                  </label>
-                  <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                    Foco
-                    <input value={card.foco} onChange={(e) => upd({ foco: e.target.value })} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13 }} />
-                  </label>
-                </div>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  🎯 Objetivo de aprendizagem
-                  <textarea value={card.objetivo ?? ""} onChange={(e) => upd({ objetivo: e.target.value })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  🧰 Materiais (um por linha)
-                  <textarea value={(card.materiais ?? []).join("\n")} onChange={(e) => upd({ materiais: linesToArr(e.target.value) })} rows={4} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  💡 Conceitos-chave (um por linha)
-                  <textarea value={(card.conceitos ?? []).join("\n")} onChange={(e) => upd({ conceitos: linesToArr(e.target.value) })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  ❓ Perguntas-chave para a turma (uma por linha)
-                  <textarea value={(card.perguntasChave ?? []).join("\n")} onChange={(e) => upd({ perguntasChave: linesToArr(e.target.value) })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  📋 Passo a passo (um por linha)
-                  <textarea value={(card.passos ?? []).join("\n")} onChange={(e) => upd({ passos: linesToArr(e.target.value) })} rows={6} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  ✅ Avaliação
-                  <textarea value={card.avaliacao ?? ""} onChange={(e) => upd({ avaliacao: e.target.value })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  ♿ Diferenciação / Inclusão
-                  <textarea value={card.diferenciacao ?? ""} onChange={(e) => upd({ diferenciacao: e.target.value })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  🚀 Extensões / desdobramentos (um por linha)
-                  <textarea value={(card.extensoes ?? []).join("\n")} onChange={(e) => upd({ extensoes: linesToArr(e.target.value) })} rows={3} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>
-                  🏠 Lição de casa
-                  <textarea value={card.licaoCasa ?? ""} onChange={(e) => upd({ licaoCasa: e.target.value })} rows={2} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13, lineHeight: 1.5, resize: "vertical" }} />
-                </label>
-              </div>
-              <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", gap: 8 }}>
-                <button onClick={() => { if (confirm("Excluir esta atividade?")) { removerCardM1(dia, id); close(); } }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #FCA5A5", color: "#B91C1C", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 12.5 }}>Excluir</button>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => upd(enrichM1Card({ ...card, objetivo: undefined, materiais: undefined, passos: undefined, avaliacao: undefined, diferenciacao: undefined, perguntasChave: undefined, conceitos: undefined, extensoes: undefined, licaoCasa: undefined }, m1Tema))} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--line)", background: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 12.5 }}>Regenerar detalhes</button>
-                  <button onClick={close} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "var(--orange, #F97316)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12.5 }}>Concluir</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
+        const diaInfo = DAYS.find((d) => d.k === dia);
+        const diaLabel = diaInfo ? `${diaInfo.n} ${diaInfo.d}` : dia.toUpperCase();
+        return <M1EditCardModal
+          card={card}
+          dia={dia}
+          diaLabel={diaLabel}
+          tema={m1Tema}
+          onClose={close}
+          onUpdate={upd}
+          onRegen={() => upd(enrichM1Card({ ...card, objetivo: undefined, materiais: undefined, passos: undefined, avaliacao: undefined, diferenciacao: undefined, perguntasChave: undefined, conceitos: undefined, extensoes: undefined, licaoCasa: undefined }, m1Tema))}
+          onDelete={() => { if (confirm("Excluir esta atividade?")) { removerCardM1(dia, id); close(); } }}
+          linesToArr={linesToArr}
+        />;
       })()}
 
       {m1DayModal && (
