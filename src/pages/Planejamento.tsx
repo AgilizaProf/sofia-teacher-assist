@@ -1385,7 +1385,7 @@ export function Planejamento() {
   type TurmaCtx = { turma?: string; etapa?: Etapa; anoIdx?: number };
   const [ctxByTab, setCtxByTab] = usePersistentState<Record<MKey, TurmaCtx>>(
     "plan_ctx_by_tab",
-    { m1: {}, m2: {}, m3: {}, m4: {}, m5: {}, m6: {}, atv: {}, pcd: {} },
+    { m1: {}, m2: {}, m3: {}, m4: {}, m5: {}, m6: {}, atv: {}, pcd: {}, trilhas: {} },
   );
   const ctxAtual: TurmaCtx = ctxByTab[m] ?? {};
   const setCtxAtual = (next: TurmaCtx) =>
