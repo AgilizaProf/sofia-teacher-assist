@@ -336,7 +336,7 @@ export function Dashboard() {
   const [schools, setSchools] = usePersistentState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>("dash_schools", []);
   const baseSchools = 0;
   const [classOpen, setClassOpen] = useState(false);
-  const [classes, setClasses] = usePersistentState<Array<{ name: string; school: string; grade: string; shift: string; students: string }>>("dash_classes", []);
+  const { turmas: classes, create: createTurmaDb, update: updateTurmaDb, remove: removeTurmaDb } = useTurmas();
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
