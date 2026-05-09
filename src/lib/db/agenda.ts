@@ -72,13 +72,19 @@ export async function updateAgendaEvent(
   id: string,
   input: Partial<AgendaEventInput>,
 ): Promise<AgendaEventUI> {
-  const payload: Record<string, unknown> = {};
+  const payload: {
+    titulo?: string;
+    data_evento?: string;
+    hora?: string | null;
+    tipo?: string | null;
+    notas?: string | null;
+    updated_at: string;
+  } = { updated_at: new Date().toISOString() };
   if (input.title !== undefined) payload.titulo = input.title;
   if (input.date !== undefined) payload.data_evento = input.date;
   if (input.time !== undefined) payload.hora = input.time ?? null;
   if (input.type !== undefined) payload.tipo = input.type ?? null;
   if (input.notes !== undefined) payload.notas = input.notes ?? null;
-  payload.updated_at = new Date().toISOString();
   const { data, error } = await supabase
     .from("agenda_eventos")
     .update(payload)
