@@ -13,6 +13,7 @@ import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { StorageDiagnosticsButton } from "@/components/dev/StorageDiagnosticsButton";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 
 import appCss from "../styles.css?url";
 
@@ -91,24 +92,30 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useEffect(() => { installHydrationTelemetry(); }, []);
   useReducedMotion();
+  const { ready, authed, isPublicRoute } = useAuthGuard();
+  const showSofia = ready && authed && !isPublicRoute;
   return (
     <SofiaProvider>
       <SofiaContextProvider>
         <SofiaUserDataProvider>
           <SofiaNotificationsProvider>
             <Outlet />
-            <SofiaErrorBoundary area="o assistente Sofia" silent>
-              <SofiaWidget />
-            </SofiaErrorBoundary>
-            <SofiaErrorBoundary area="as notificações da Sofia" silent>
-              <SofiaNotificationsWidget />
-            </SofiaErrorBoundary>
-            <SofiaErrorBoundary area="os lembretes da Sofia" silent>
-              <SofiaAutoReminders />
-            </SofiaErrorBoundary>
-            <SofiaErrorBoundary area="o balão da Sofia" silent>
-              <SofiaSpeechBubble />
-            </SofiaErrorBoundary>
+            {showSofia && (
+              <>
+                <SofiaErrorBoundary area="o assistente Sofia" silent>
+                  <SofiaWidget />
+                </SofiaErrorBoundary>
+                <SofiaErrorBoundary area="as notificações da Sofia" silent>
+                  <SofiaNotificationsWidget />
+                </SofiaErrorBoundary>
+                <SofiaErrorBoundary area="os lembretes da Sofia" silent>
+                  <SofiaAutoReminders />
+                </SofiaErrorBoundary>
+                <SofiaErrorBoundary area="o balão da Sofia" silent>
+                  <SofiaSpeechBubble />
+                </SofiaErrorBoundary>
+              </>
+            )}
             <Toaster position="top-right" richColors />
             <StorageDiagnosticsButton />
           </SofiaNotificationsProvider>
