@@ -3,7 +3,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
-import { updateLoginStreak, BR_LOCALE, BR_TIMEZONE } from "@/lib/datetime";
+import { updateLoginStreak } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useHydrated } from "@/hooks/useHydrated";
 import { CID_OPTIONS } from "@/lib/cidsBR";
@@ -322,18 +322,6 @@ export function Dashboard() {
     return realName ? `${slot}, ${realName}` : slot;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, realName]);
-  // Data formatada em pt-BR: "Quinta-feira · 1º de maio · 08:12".
-  const heroDateLine = useMemo(() => {
-    if (!hydrated) return "";
-    const now = new Date();
-    const weekday = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, weekday: "long" }).format(now);
-    const dayNum = Number(new Intl.DateTimeFormat("en-CA", { timeZone: BR_TIMEZONE, day: "numeric" }).format(now));
-    const month = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, month: "long" }).format(now);
-    const time = new Intl.DateTimeFormat(BR_LOCALE, { timeZone: BR_TIMEZONE, hour: "2-digit", minute: "2-digit", hour12: false }).format(now);
-    const wd = weekday.charAt(0).toUpperCase() + weekday.slice(1);
-    const dayLabel = dayNum === 1 ? "1º" : String(dayNum);
-    return `${wd} · ${dayLabel} de ${month} · ${time}`;
-  }, [hydrated]);
   const [cmdk, setCmdk] = useState(false);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [schools, setSchools] = usePersistentState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>("dash_schools", []);
@@ -618,10 +606,6 @@ export function Dashboard() {
 
           <section className="hero">
             <div className="hero-left">
-              <div className="hero-greet">
-                <span className="live-dot" />
-                <span suppressHydrationWarning>{hydrated ? heroDateLine : "Bem-vinda à Sofia"}</span>
-              </div>
               <h1 className="hero-title" suppressHydrationWarning>
                 {heroGreeting}.
                 {totalStudents === 0 ? (
