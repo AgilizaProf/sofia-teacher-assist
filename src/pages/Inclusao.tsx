@@ -1164,7 +1164,41 @@ export function Inclusao() {
 
                       <div className="context-card">
                         <h4>Contexto rápido</h4>
-                        {(() => {
+                        {eixosPreenchidos === 0 ? (
+                          <>
+                            {([
+                              { l: "Ano escolar", v: selected.anoEscolar || "Não informado" },
+                              { l: "Turma", v: selected.turma },
+                              { l: "Diagnóstico", v: selected.diag },
+                              { l: "CID", v: selected.cid },
+                              { l: "AEE / Mediação", v: selected.aee },
+                            ] as Array<{ l: string; v: string }>).map((r) => (
+                              <div className="ctx-row" key={r.l}>
+                                <span className="lbl">{r.l}</span>
+                                <span className="ctx-pill">{r.v || "—"}</span>
+                              </div>
+                            ))}
+                            <div style={{
+                              marginTop: 12, padding: 12, borderRadius: 10,
+                              background: "var(--accent-soft)", border: "1px dashed var(--accent)",
+                              display: "flex", flexDirection: "column", gap: 8,
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "var(--accent)" }}>
+                                <Lightbulb size={14} /> Anamnese ainda não preenchida
+                              </div>
+                              <p style={{ margin: 0, fontSize: 12, color: "var(--text)" }}>
+                                Sem a Anamnese, o contexto rápido fica limitado. Preencha os eixos para que a Sofia traga aqui o desempenho, destaques e pontos de atenção de {selected.name.split(" ")[0]}.
+                              </p>
+                              <button
+                                className="btn btn-primary bg-orange-400 text-orange-400"
+                                style={{ alignSelf: "flex-start" }}
+                                onClick={() => setActiveTab("anam")}
+                              >
+                                <Plus size={14} /> Preencher Anamnese
+                              </button>
+                            </div>
+                          </>
+                        ) : (() => {
                           const findEixo = (label: string) => anamData.find((e) => e.l === label);
                           const pillFor = (label: string): { v: string; t: "" | "warn" | "ok" } => {
                             const e = findEixo(label);
@@ -1194,7 +1228,7 @@ export function Inclusao() {
                             </div>
                           ));
                         })()}
-                        {(() => {
+                        {eixosPreenchidos > 0 && (() => {
                           const consolidados: string[] = [];
                           const naoAlcancados: string[] = [];
                           anamData.forEach((e) => {
@@ -1235,7 +1269,11 @@ export function Inclusao() {
 
                       <div className="skills-card">
                         <h4>Habilidades · evolução</h4>
-                        {(() => {
+                        {eixosPreenchidos === 0 ? (
+                          <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
+                            As barras de evolução aparecerão aqui quando a Anamnese for preenchida.
+                          </p>
+                        ) : (() => {
                           const skillFromEixo = (label: string, eixoLabel: string) => {
                             const e = anamData.find((x) => x.l === eixoLabel);
                             const observed = e ? e.items.some((i) => i.s !== "naoObservado") : false;
