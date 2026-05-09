@@ -411,6 +411,13 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
           .pim-completo{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:10px;}
           .pim-completo section b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:3px;}
           .pim-completo p{font-size:12.5px;line-height:1.5;margin:0;}
+          .pim-sec{border:1px solid var(--border);border-radius:8px;background:#fff;}
+          .pim-sec-head{width:100%;display:flex;align-items:center;gap:6px;background:var(--bg);border:none;border-radius:8px 8px 0 0;padding:7px 10px;cursor:pointer;font-family:inherit;text-align:left;color:var(--accent);}
+          .pim-sec-head[aria-expanded="false"]{border-radius:8px;}
+          .pim-sec-head b{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;}
+          .pim-sec-body{padding:8px 12px 10px;}
+          .pim-sec-body p{font-size:12.5px;line-height:1.5;margin:0;}
+          .pim-sec-body ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;}
           .pim-completo ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;}
           .pim-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--border);background:var(--bg);}
         `}</style>
