@@ -957,7 +957,7 @@ export function Inclusao() {
                   <button className="list-filter">Turma: Todas</button>
                   <button className="list-filter">Diagnóstico: Todos</button>
                   <div className="list-actions">
-                    <button className="btn btn-primary btn-cadastrar" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
+                    <button className="btn btn-primary bg-orange-400 btn-cadastrar" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
                   </div>
                 </div>
                 <div className="list-grid">
