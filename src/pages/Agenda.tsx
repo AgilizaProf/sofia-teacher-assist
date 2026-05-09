@@ -589,7 +589,71 @@ export function Agenda() {
             breadcrumb={[{ label: "Sua sala" }, { label: "Agenda" }, { label: headerLabel }]}
             actions={
               <>
-                <button className="ag-btn"><Filter size={14} /> Filtrar</button>
+                <div style={{ position: "relative" }}>
+                  <button
+                    className="ag-btn"
+                    onClick={() => setFilterOpen((v) => !v)}
+                    aria-expanded={filterOpen}
+                  >
+                    <Filter size={14} /> Filtrar
+                    {typeFilter.length < ALL_TYPES.length && (
+                      <span style={{
+                        marginLeft: 6, background: "var(--primary, #2563eb)", color: "#fff",
+                        borderRadius: 999, padding: "0 6px", fontSize: 11, lineHeight: "16px",
+                      }}>{typeFilter.length}</span>
+                    )}
+                  </button>
+                  {filterOpen && (
+                    <>
+                      <div
+                        onClick={() => setFilterOpen(false)}
+                        style={{ position: "fixed", inset: 0, zIndex: 70 }}
+                      />
+                      <div style={{
+                        position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 71,
+                        background: "#fff", border: "1px solid rgba(15,27,54,.12)",
+                        borderRadius: 10, boxShadow: "0 10px 28px rgba(15,27,54,.14)",
+                        padding: 10, minWidth: 200,
+                      }}>
+                        <div style={{
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          marginBottom: 8, fontSize: 12, color: "#5b6478", fontWeight: 600,
+                        }}>
+                          <span>Tipos de evento</span>
+                          <button
+                            className="ag-btn"
+                            style={{ padding: "2px 8px", fontSize: 11 }}
+                            onClick={() => setTypeFilter(
+                              typeFilter.length === ALL_TYPES.length ? [] : ALL_TYPES
+                            )}
+                          >
+                            {typeFilter.length === ALL_TYPES.length ? "Limpar" : "Todos"}
+                          </button>
+                        </div>
+                        {ALL_TYPES.map((t) => (
+                          <label
+                            key={t}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 8,
+                              padding: "6px 4px", cursor: "pointer", fontSize: 13,
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={typeFilter.includes(t)}
+                              onChange={() => toggleType(t)}
+                            />
+                            <span style={{
+                              width: 10, height: 10, borderRadius: 3,
+                              background: TYPE_COLOR[t], display: "inline-block",
+                            }} />
+                            {TYPE_LABEL[t]}
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
                 <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
               </>
             }
