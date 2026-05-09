@@ -14,8 +14,13 @@ import { StorageDiagnosticsButton } from "@/components/dev/StorageDiagnosticsBut
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch.client";
 
 import appCss from "../styles.css?url";
+
+if (typeof window !== "undefined") {
+  installServerFnAuthFetch();
+}
 
 function NotFoundComponent() {
   return (
