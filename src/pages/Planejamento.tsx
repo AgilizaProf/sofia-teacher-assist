@@ -2081,6 +2081,9 @@ export function Planejamento() {
     };
     setM6Entries((prev) => [entry, ...prev]);
     m6ResetForm();
+    // Sofia interpreta o registro e propõe um ajuste para a próxima aula.
+    const sugestao = gerarSugestaoSofia(entry);
+    setM6JustSaved({ entryId: entry.id, ...sugestao });
     showToast("✓ Diário salvo.");
   };
 
