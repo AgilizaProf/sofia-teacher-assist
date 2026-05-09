@@ -1268,32 +1268,65 @@ export function Inclusao() {
                       </div>
 
                       <div className="skills-card">
-                        <h4>Habilidades · evolução</h4>
+                        <h4 style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <Sparkles size={14} style={{ color: "var(--accent)" }} />
+                          Habilidades · evolução
+                          <span style={{ fontSize: 10, fontWeight: 500, color: "var(--muted)", marginLeft: "auto" }}>
+                            base Anamnese + {studentRegs.length} registro{studentRegs.length === 1 ? "" : "s"}
+                          </span>
+                        </h4>
                         {eixosPreenchidos === 0 ? (
                           <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
                             As barras de evolução aparecerão aqui quando a Anamnese for preenchida.
                           </p>
                         ) : (() => {
-                          const skillFromEixo = (label: string, eixoLabel: string) => {
+                          const POS = ["progresso", "avanço", "avancou", "avançou", "consegui", "conclu", "evolu", "melhor", "interagiu", "participou", "iniciou", "consolidou", "autônom", "autonom", "calmo", "regulou", "respondeu bem", "colabor"];
+                          const NEG = ["dificuldade", "recusou", "não conseguiu", "nao conseguiu", "agitad", "desregul", "não participou", "nao participou", "frustr", "chorou", "isolou", "regrediu", "abandonou"];
+                          const skillFromEixo = (label: string, eixoLabel: string, cats: string[]) => {
                             const e = anamData.find((x) => x.l === eixoLabel);
                             const observed = e ? e.items.some((i) => i.s !== "naoObservado") : false;
-                            const p = e && observed ? eixoPct(e.items) : 0;
-                            const c: "" | "warn" | "green" = !observed ? "" : p >= 80 ? "green" : p >= 40 ? "" : "warn";
-                            return { l: label, p, c, observed };
+                            const baseline = e && observed ? eixoPct(e.items) : 0;
+                            const relevantes = studentRegs.filter((r) => cats.includes(r.cat));
+                            let pos = 0, neg = 0;
+                            for (const r of relevantes) {
+                              const t = (r.body || "").toLowerCase();
+                              if (POS.some((k) => t.includes(k))) pos++;
+                              if (NEG.some((k) => t.includes(k))) neg++;
+                            }
+                            const delta = (pos - neg) * 4; // cada registro líquido = ±4 pp
+                            const p = Math.max(0, Math.min(100, baseline + delta));
+                            const c: "" | "warn" | "green" = !observed && pos + neg === 0 ? "" : p >= 80 ? "green" : p >= 40 ? "" : "warn";
+                            const trend: "up" | "down" | "flat" = delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+                            return { l: label, p, c, observed, baseline, delta, trend, pos, neg };
                           };
                           const skills = [
-                            skillFromEixo("Atenção sustentada", "Aspectos Pedagógicos"),
-                            skillFromEixo("Leitura / Escrita / Cálculo", "Desempenho Acadêmico"),
-                            skillFromEixo("Interação em dupla", "Interações Sociais"),
-                            skillFromEixo("Autonomia", "Autonomia"),
-                            skillFromEixo("Autorregulação", "Emoção"),
+                            skillFromEixo("Atenção sustentada", "Aspectos Pedagógicos", ["ped", "com"]),
+                            skillFromEixo("Leitura / Escrita / Cálculo", "Desempenho Acadêmico", ["ped"]),
+                            skillFromEixo("Interação em dupla", "Interações Sociais", ["com", "ped"]),
+                            skillFromEixo("Autonomia", "Autonomia", ["ped", "com"]),
+                            skillFromEixo("Autorregulação", "Emoção", ["com", "sen"]),
                           ];
-                          return skills.map((s) => (
-                            <div className="skill" key={s.l}>
-                              <div className="skill-head"><b>{s.l}</b><span>{s.observed ? `${s.p}%` : "—"}</span></div>
-                              <div className="skill-bar"><div className={"skill-fill" + (s.c ? " " + s.c : "")} style={{ width: s.p + "%" }} /></div>
-                            </div>
-                          ));
+                          return skills.map((s) => {
+                            const arrow = s.trend === "up" ? "↑" : s.trend === "down" ? "↓" : "→";
+                            const arrowColor = s.trend === "up" ? "var(--success)" : s.trend === "down" ? "var(--danger)" : "var(--muted)";
+                            const visible = s.observed || s.pos + s.neg > 0;
+                            return (
+                              <div className="skill" key={s.l}>
+                                <div className="skill-head">
+                                  <b>{s.l}</b>
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                                    {visible && s.delta !== 0 && (
+                                      <span style={{ color: arrowColor, fontSize: 11, fontWeight: 700 }} title={`Anamnese ${s.baseline}% · ${s.pos > 0 ? `+${s.pos}` : ""}${s.pos > 0 && s.neg > 0 ? " / " : ""}${s.neg > 0 ? `-${s.neg}` : ""} registros`}>
+                                        {arrow} {s.delta > 0 ? `+${s.delta}` : s.delta}
+                                      </span>
+                                    )}
+                                    <span>{visible ? `${s.p}%` : "—"}</span>
+                                  </span>
+                                </div>
+                                <div className="skill-bar"><div className={"skill-fill" + (s.c ? " " + s.c : "")} style={{ width: s.p + "%" }} /></div>
+                              </div>
+                            );
+                          });
                         })()}
                       </div>
 
