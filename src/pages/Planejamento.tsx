@@ -1864,6 +1864,15 @@ export function Planejamento() {
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
   const [m6PatternDismissed, setM6PatternDismissed] = usePersistentState<boolean>("plan_m6_pattern_dismissed", false);
   const [m6EditingId, setM6EditingId] = useState<string | null>(null);
+  // Sugestão "Próxima aula" que a Sofia gera após salvar um diário novo.
+  type M6NextSuggestion = {
+    entryId: string;
+    resumo: string;
+    ajuste: string;
+    abertura: string;
+    sinais: string[];
+  };
+  const [m6JustSaved, setM6JustSaved] = useState<M6NextSuggestion | null>(null);
   // Período do relatório e turma selecionada para a leitura adaptativa.
   type M6Periodo = "bimestral" | "trimestral" | "semestral" | "anual";
   const M6_PERIODO_META: Record<M6Periodo, { label: string; meta: number; semanas: number }> = {
@@ -2030,6 +2039,88 @@ export function Planejamento() {
     if (m6EditingId === id) m6ResetForm();
     showToast("Registro excluído.");
   };
+  // Sofia "lê" o registro e devolve uma sugestão de ajuste para a próxima
+  // aula (heurística local — palavras-chave, tags e humor).
+  const gerarSugestaoSofia = (e: M6Entry): { resumo: string; ajuste: string; abertura: string; sinais: string[] } => {
+    const txt = `${e.text} ${e.tags.join(" ")}`.toLowerCase();
+    const sinais: string[] = [];
+    let ajuste = "";
+    let abertura = "Retomar combinados (2 min) e relembrar o objetivo da aula anterior.";
+    let resumo = "";
+    const inclusao = e.tags.some((t) => t.includes("inclusão")) || /pcd|tea|tdah|inclus/.test(txt);
+    const reforco = e.tags.some((t) => t.includes("reforço")) || /trav|reforço|reforco|não entend|nao entend|dúvida|duvida/.test(txt);
+    const agitacao = /agita|recreio|disper|barulh|conflit|inquiet/.test(txt);
+    const funcionou = e.tags.some((t) => t.includes("funcionou")) || /funcionou|engaj|gostaram|deu certo|🌟|😄/.test(txt + e.emoji);
+    const familia = e.tags.some((t) => t.includes("família"));
+    if (agitacao) {
+      sinais.push("Sinal de agitação");
+      abertura = "Comece com 3 min de respiração guiada (4-7-8) antes de apresentar o objetivo.";
+    }
+    if (reforco) {
+      sinais.push("Conceito-chave precisa de reforço");
+      ajuste = "Reservar os 10 primeiros minutos para retomar o conceito com material concreto/visual antes de avançar.";
+    }
+    if (inclusao) {
+      sinais.push("Inclusão em foco");
+      ajuste = ajuste
+        ? `${ajuste} Garantir adaptação visual, tempo extra e parceria de apoio para o aluno PCD.`
+        : "Adicionar adaptação visual, tempo extra e parceria de apoio para o aluno PCD.";
+    }
+    if (funcionou && !ajuste) {
+      sinais.push("Estratégia que funcionou");
+      ajuste = "Replicar a dinâmica que engajou (mesmo formato, novo conteúdo) e ampliar para produção em duplas.";
+    }
+    if (familia) sinais.push("Comunicar família");
+    if (!ajuste) ajuste = "Ajustar o ritmo: dividir a explicação em 2 blocos curtos com checagem rápida no meio.";
+    if (e.emoji === "😣" || e.emoji === "😐") {
+      resumo = "Aula puxada — Sofia sugere abrir mais leve e revisar o que travou.";
+    } else if (e.emoji === "😄" || e.emoji === "🌟") {
+      resumo = "Aula fluiu — Sofia sugere ampliar a estratégia que funcionou.";
+    } else {
+      resumo = "Sofia leu seu registro e preparou um ajuste para a próxima aula.";
+    }
+    return { resumo, ajuste, abertura, sinais };
+  };
+  // Encontra a próxima aula do M1 a partir de hoje (mesma turma, se houver).
+  const acharProximaAulaM1 = (): { dia: DayKey; card: M1Card } | null => {
+    const ordem: DayKey[] = ["seg", "ter", "qua", "qui", "sex"];
+    const hojeIdx = (() => {
+      const dow = new Date().getDay(); // 1..5
+      if (dow >= 1 && dow <= 5) return dow - 1;
+      return 0;
+    })();
+    for (let i = hojeIdx; i < ordem.length; i++) {
+      const d = ordem[i];
+      const cards = m1Plan[d] || [];
+      if (cards.length > 0) return { dia: d, card: cards[0] };
+    }
+    for (let i = 0; i < hojeIdx; i++) {
+      const d = ordem[i];
+      const cards = m1Plan[d] || [];
+      if (cards.length > 0) return { dia: d, card: cards[0] };
+    }
+    return null;
+  };
+  const m6IrParaProxima = () => {
+    if (!m6JustSaved) return;
+    const proxima = acharProximaAulaM1();
+    if (!proxima) {
+      showToast("Sem próxima aula no M1 — gere a semana primeiro.");
+      setM("m1");
+      return;
+    }
+    // Aplica o ajuste no campo "diferenciação" (ou "abertura") preservando o existente.
+    const carta = proxima.card;
+    const novaDif = [carta.diferenciacao, `Sofia (diário): ${m6JustSaved.ajuste}`]
+      .filter(Boolean)
+      .join(" • ");
+    const novosPassos = [m6JustSaved.abertura, ...(carta.passos || [])];
+    m1UpdateCard(proxima.dia, carta.id, { diferenciacao: novaDif, passos: novosPassos });
+    setM("m1");
+    requestAnimationFrame(() => m1OpenEdit(proxima.dia, carta.id));
+    setM6JustSaved(null);
+    showToast("✓ Sofia aplicou o ajuste na próxima aula.");
+  };
   const m6Save = () => {
     if (!m6Emoji && !m6Text.trim() && m6Tags.length === 0) { showToast("Selecione um emoji ou escreva uma anotação."); return; }
     const trimmed = m6Text.trim();
@@ -2072,6 +2163,9 @@ export function Planejamento() {
     };
     setM6Entries((prev) => [entry, ...prev]);
     m6ResetForm();
+    // Sofia interpreta o registro e propõe um ajuste para a próxima aula.
+    const sugestao = gerarSugestaoSofia(entry);
+    setM6JustSaved({ entryId: entry.id, ...sugestao });
     showToast("✓ Diário salvo.");
   };
 
@@ -3542,6 +3636,48 @@ export function Planejamento() {
                         <Check size={14} /> {m6EditingId ? "Salvar alterações" : "Salvar diário"}
                       </button>
                     </div>
+
+                    {m6JustSaved && (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        style={{
+                          marginTop: 12,
+                          padding: 14,
+                          borderRadius: 12,
+                          background: "linear-gradient(180deg, #FFF7ED 0%, #FFFBF5 100%)",
+                          border: "1px solid #FED7AA",
+                          display: "grid",
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
+                            <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Sofia entendeu
+                          </span>
+                          {m6JustSaved.sinais.map((s) => (
+                            <span key={s} style={{ background: "#fff", border: "1px solid #FDBA74", color: "#9A3412", borderRadius: 99, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                        <p style={{ fontSize: 13, color: "#7A2E0A", margin: 0, lineHeight: 1.5 }}>
+                          {m6JustSaved.resumo}
+                        </p>
+                        <div style={{ display: "grid", gap: 6, padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #FED7AA" }}>
+                          <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>Ajuste sugerido para a próxima aula</div>
+                          <div style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>{m6JustSaved.ajuste}</div>
+                          <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginTop: 4 }}>Abertura</div>
+                          <div style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>{m6JustSaved.abertura}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                          <button className="pl-btn ghost" onClick={() => setM6JustSaved(null)}>Agora não</button>
+                          <button className="pl-btn primary" onClick={m6IrParaProxima}>
+                            <ArrowRight size={14} /> Aplicar na próxima aula
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     <h3 style={{ fontSize: 15, margin: "20px 0 10px" }}>Histórico de registros</h3>
                     {m6HasFilter && (
