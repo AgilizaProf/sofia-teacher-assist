@@ -459,6 +459,8 @@ export function Relatorios() {
   // Override de ano de referência por aluno (sobretudo PCD)
   const [yearOverride, setYearOverride] = usePersistentState<Record<string, string>>("rel_bncc_year", {});
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
+  const [verTodosHist, setVerTodosHist] = useState(false);
+  const HIST_LIMIT = 5;
 
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
@@ -876,7 +878,16 @@ export function Relatorios() {
             </div>
             <div className="rel-sec-actions">
               <button className="rel-pill" aria-label="Exportar tudo em PDF"><Download size={13} /> Exportar tudo (PDF)</button>
-              <button className="rel-pill" aria-label="Ver todos">Ver todos →</button>
+              <button
+                className="rel-pill"
+                aria-label={verTodosHist ? "Recolher lista" : "Ver todos os finalizados"}
+                aria-expanded={verTodosHist}
+                disabled={HISTORY.length === 0}
+                onClick={() => setVerTodosHist((v) => !v)}
+                title={HISTORY.length === 0 ? "Sem finalizados ainda" : undefined}
+              >
+                {verTodosHist ? "Recolher" : `Ver todos (${HISTORY.length}) →`}
+              </button>
             </div>
           </div>
 
@@ -888,7 +899,7 @@ export function Relatorios() {
                 description="Finalize seus primeiros pareceres pra acompanhar o histórico aqui."
               />
             )}
-            {HISTORY.map((h) => (
+            {(verTodosHist ? HISTORY : HISTORY.slice(0, HIST_LIMIT)).map((h) => (
               <div key={h.initials} className="rel-h-row">
                 <div className="rel-h-av" style={{ background: h.bg }}>{h.initials}</div>
                 <div className="rel-h-name"><b>{h.name} · 1º bimestre</b><small>{h.meta}</small></div>
@@ -901,6 +912,13 @@ export function Relatorios() {
                 </div>
               </div>
             ))}
+            {!verTodosHist && HISTORY.length > HIST_LIMIT && (
+              <div style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}>
+                <button className="rel-pill" onClick={() => setVerTodosHist(true)}>
+                  Ver todos os {HISTORY.length} finalizados →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>
