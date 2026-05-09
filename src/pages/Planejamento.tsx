@@ -1658,13 +1658,15 @@ export function Planejamento() {
     cat: M4Cat;
     title: string;
     meta?: string;
-    source: "atv" | "pcd";
+    source: "atv" | "pcd" | "m3";
+    m3Dia?: DayKey;
+    m3CardId?: string;
   };
   const [m4UserEvents, setM4UserEvents] = usePersistentState<Record<string, M4UserEvt[]>>(
     "plan_m4_user_events", {},
   );
   const m4UserByDay = useMemo(() => {
-    const out: Record<number, Array<M4Evt & { id: string; iso: string }>> = {};
+    const out: Record<number, Array<M4Evt & { id: string; iso: string; source: M4UserEvt["source"]; m3Dia?: DayKey; m3CardId?: string }>> = {};
     const mm = String(m4Month.m + 1).padStart(2, "0");
     const prefix = `${m4Month.y}-${mm}-`;
     Object.entries(m4UserEvents).forEach(([iso, list]) => {
@@ -1672,7 +1674,7 @@ export function Planejamento() {
       const day = parseInt(iso.slice(8, 10), 10);
       if (!day) return;
       (out[day] ??= []).push(
-        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta, id: e.id, iso })),
+        ...list.map((e) => ({ cat: e.cat, title: e.title, meta: e.meta, id: e.id, iso, source: e.source, m3Dia: e.m3Dia, m3CardId: e.m3CardId })),
       );
     });
     return out;
@@ -1708,6 +1710,25 @@ export function Planejamento() {
   // Move um evento de uma data ISO para outra
   const m4MoveEvent = (fromIso: string, id: string, toIso: string) => {
     if (fromIso === toIso) return;
+    // Se for um evento espelhado do M3 (m1Plan), mover dentro do m1Plan
+    // re-sincroniza pelo useEffect; bloqueia mover para fora da semana atual.
+    const fromList = m4UserEvents[fromIso] ?? [];
+    const evt = fromList.find((e) => e.id === id);
+    if (evt?.source === "m3" && evt.m3Dia && evt.m3CardId) {
+      const targetDay = m1Week.days.find((d) => d.iso === toIso);
+      if (!targetDay) return; // só permite drop em dias da semana corrente
+      if (targetDay.k === evt.m3Dia) return;
+      setM1Plan((p) => {
+        const card = p[evt.m3Dia!].find((c) => c.id === evt.m3CardId);
+        if (!card) return p;
+        return {
+          ...p,
+          [evt.m3Dia!]: p[evt.m3Dia!].filter((c) => c.id !== evt.m3CardId),
+          [targetDay.k]: [...p[targetDay.k], card],
+        };
+      });
+      return;
+    }
     setM4UserEvents((s) => {
       const src = s[fromIso] ?? [];
       const item = src.find((e) => e.id === id);
@@ -1721,6 +1742,14 @@ export function Planejamento() {
   };
   // Atualiza campos de um evento
   const m4UpdateEvent = (iso: string, id: string, patch: Partial<M4UserEvt>) => {
+    // Para eventos M3, propagamos título/duração de volta ao m1Plan.
+    const evt = (m4UserEvents[iso] ?? []).find((e) => e.id === id);
+    if (evt?.source === "m3" && evt.m3Dia && evt.m3CardId) {
+      if (patch.title !== undefined) {
+        m1UpdateCard(evt.m3Dia, evt.m3CardId, { title: patch.title });
+      }
+      return;
+    }
     setM4UserEvents((s) => {
       const list = s[iso] ?? [];
       const next = list.map((e) => (e.id === id ? { ...e, ...patch } : e));
@@ -1729,6 +1758,11 @@ export function Planejamento() {
   };
   // Remove um evento
   const m4DeleteEvent = (iso: string, id: string) => {
+    const evt = (m4UserEvents[iso] ?? []).find((e) => e.id === id);
+    if (evt?.source === "m3" && evt.m3Dia && evt.m3CardId) {
+      removerCardM1(evt.m3Dia, evt.m3CardId);
+      return;
+    }
     setM4UserEvents((s) => {
       const list = (s[iso] ?? []).filter((e) => e.id !== id);
       const next = { ...s };
@@ -1740,6 +1774,42 @@ export function Planejamento() {
   const [m4Editing, setM4Editing] = useState<{ iso: string; id: string } | null>(null);
   const [m4DragSrc, setM4DragSrc] = useState<{ iso: string; id: string } | null>(null);
   const [m4DragOver, setM4DragOver] = useState<number | null>(null);
+  // Sincroniza atividades do M3 (m1Plan) → calendário M4. Cada card vira um
+  // evento com source="m3" e id determinístico, para permitir abrir/editar
+  // de volta no editor M3.
+  useEffect(() => {
+    if (!hydrated) return;
+    const isoByDia: Partial<Record<DayKey, string>> = {};
+    m1Week.days.forEach((d) => { isoByDia[d.k] = d.iso; });
+    setM4UserEvents((prev) => {
+      const next: Record<string, M4UserEvt[]> = {};
+      // Mantém eventos de outras fontes; descarta m3 antigos da semana corrente.
+      Object.entries(prev).forEach(([iso, list]) => {
+        const isWeekIso = m1Week.days.some((d) => d.iso === iso);
+        const filtered = list.filter((e) => !(e.source === "m3" && isWeekIso));
+        if (filtered.length) next[iso] = filtered;
+      });
+      // Insere os m3 atuais.
+      (Object.keys(m1Plan) as DayKey[]).forEach((dia) => {
+        const iso = isoByDia[dia];
+        if (!iso) return;
+        m1Plan[dia].forEach((c) => {
+          const evt: M4UserEvt = {
+            id: `m3:${dia}:${c.id}`,
+            cat: "aulas",
+            title: c.title,
+            meta: `${c.minutos} min · ${c.bncc || c.tag}`.trim(),
+            source: "m3",
+            m3Dia: dia,
+            m3CardId: c.id,
+          };
+          (next[iso] ??= []).push(evt);
+        });
+      });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [m1Plan, m1Week.days.map((d) => d.iso).join(","), hydrated]);
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
   type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string };
@@ -3341,9 +3411,23 @@ export function Planejamento() {
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                       <strong>{e.title}</strong>
                                       {e.meta && <span style={{ color: "var(--muted)" }}> · {e.meta}</span>}
-                                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 2 }}>{M4_CAT_META[e.cat].label}</div>
+                                      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 2 }}>
+                                        {M4_CAT_META[e.cat].label}
+                                        {e.source === "m3" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(255,122,69,.15)", color: "#9A3412", fontWeight: 700, letterSpacing: ".04em" }}>M3 · Sofia</span>}
+                                        {e.source === "atv" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(59,130,246,.15)", color: "#1d4ed8", fontWeight: 700, letterSpacing: ".04em" }}>M1 · Atividade</span>}
+                                        {e.source === "pcd" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(16,185,129,.15)", color: "#047857", fontWeight: 700, letterSpacing: ".04em" }}>M2 · PCD</span>}
+                                      </div>
                                     </div>
-                                    <button onClick={() => setM4Editing({ iso: e.iso, id: e.id })} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Editar</button>
+                                    {e.source === "m3" && e.m3Dia && e.m3CardId ? (
+                                      <button
+                                        onClick={() => { setM("m1"); m1OpenEdit(e.m3Dia!, e.m3CardId!); }}
+                                        style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--orange, #F97316)", background: "var(--orange, #F97316)", color: "#fff", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}
+                                      >
+                                        Abrir no M3
+                                      </button>
+                                    ) : (
+                                      <button onClick={() => setM4Editing({ iso: e.iso, id: e.id })} style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, cursor: "pointer" }}>Editar</button>
+                                    )}
                                   </div>
                                 )}
                               </li>
