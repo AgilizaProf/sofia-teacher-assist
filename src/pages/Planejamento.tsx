@@ -15,6 +15,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { useHydrated } from "@/hooks/useHydrated";
 import { PlanoAtividadeEditor } from "@/components/atividade/PlanoAtividadeEditor";
+import { TrilhasPanel } from "@/components/trilhas/TrilhasPanel";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 
 const css = `
@@ -332,7 +333,7 @@ const css = `
 @media(max-width:880px){.pl-app{grid-template-columns:1fr;}}
 `;
 
-type MKey = "m1" | "m2" | "m3" | "m4" | "m5" | "m6" | "atv" | "pcd";
+type MKey = "m1" | "m2" | "m3" | "m4" | "m5" | "m6" | "atv" | "pcd" | "trilhas";
 type Variant = "port" | "mat" | "aval" | "esc" | "ci";
 type Card = { id: string; v: Variant; tag: string; title: string; meta: string; locked?: boolean };
 type DayKey = "seg" | "ter" | "qua" | "qui" | "sex";
@@ -371,6 +372,9 @@ const M_CONFIG: Record<MKey, { badge: string; title: string; sub: string; lead: 
   m6: { badge: "★ MUDANÇA #6 · APRENDIZADO CONTÍNUO", title: "Diário de bordo em 3 cliques.", sub: "O que rolou hoje? Sofia aprende.",
     lead: <>Após cada aula, 3 toques: <strong>funcionou / travou / próximo passo</strong>. Esse registro alimenta a Sofia pra ela preencher melhor as semanas seguintes — adaptado ao que <strong>essa</strong> turma responde.</>,
     chips: [{ label: "😊 Funcionou", solid: true }, { label: "😕 Travou" }, { label: "➡ Próximo passo" }], crumb: "Diário de bordo" },
+  trilhas: { badge: "★ TRILHAS · SEMESTRE INTEIRO", title: "Trilhas semestrais com BNCC.", sub: "Sofia distribui ~20 semanas conectadas.",
+    lead: <>Defina turma, ano e disciplina. Sofia entrega <strong>tema central, distribuição mensal e 20 semanas encadeadas</strong> com habilidades BNCC oficiais.</>,
+    chips: [{ label: "✨ Sugerir trilha", solid: true }, { label: "📅 20 semanas" }, { label: "🎯 BNCC oficial" }], crumb: "Trilhas semestrais" },
 };
 
 const TABS: Array<{ k: MKey; num: string; label: string }> = [
@@ -380,6 +384,7 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
   { k: "m4", num: "M4", label: "Calendário com camadas" },
   { k: "m5", num: "M5", label: "Drag & drop · multi-turma" },
   { k: "m6", num: "M6", label: "Diário de bordo" },
+  { k: "trilhas", num: "M7", label: "Trilhas semestrais" },
 ];
 
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
@@ -1380,7 +1385,7 @@ export function Planejamento() {
   type TurmaCtx = { turma?: string; etapa?: Etapa; anoIdx?: number };
   const [ctxByTab, setCtxByTab] = usePersistentState<Record<MKey, TurmaCtx>>(
     "plan_ctx_by_tab",
-    { m1: {}, m2: {}, m3: {}, m4: {}, m5: {}, m6: {}, atv: {}, pcd: {} },
+    { m1: {}, m2: {}, m3: {}, m4: {}, m5: {}, m6: {}, atv: {}, pcd: {}, trilhas: {} },
   );
   const ctxAtual: TurmaCtx = ctxByTab[m] ?? {};
   const setCtxAtual = (next: TurmaCtx) =>
@@ -3605,6 +3610,10 @@ export function Planejamento() {
 
             {m === "pcd" && (
               <PlanoAtividadeEditor modo="pcd" />
+            )}
+
+            {m === "trilhas" && (
+              <TrilhasPanel />
             )}
 
             {m === "m6" && (

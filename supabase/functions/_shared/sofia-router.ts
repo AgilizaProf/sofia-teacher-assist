@@ -18,7 +18,12 @@ export type SofiaTaskType =
   | "parecer"
   | "relatorio_bimestral"
   | "pei"
-  | "pdi";
+  | "pdi"
+  | "trilha_geracao"
+  | "trilha_semana"
+  | "trilha_relatorio"
+  | "trilha_progressao"
+  | "trilha_defasagem";
 
 const GEMINI_TASKS: SofiaTaskType[] = [
   "chat",
@@ -28,12 +33,17 @@ const GEMINI_TASKS: SofiaTaskType[] = [
   "atalhos",
   "diario_analise",
   "padroes",
+  "trilha_progressao",
+  "trilha_defasagem",
 ];
 const HAIKU_TASKS: SofiaTaskType[] = [
   "parecer",
   "relatorio_bimestral",
   "pei",
   "pdi",
+  "trilha_geracao",
+  "trilha_semana",
+  "trilha_relatorio",
 ];
 
 export function rotear(tipo: SofiaTaskType): { provider: "lovable" | "anthropic"; model: string } {
