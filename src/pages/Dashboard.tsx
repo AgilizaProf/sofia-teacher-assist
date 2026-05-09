@@ -8,6 +8,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useHydrated } from "@/hooks/useHydrated";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { useSofia } from "@/components/sofia/SofiaProvider";
+import { useEiMode } from "@/lib/ei/useEiMode";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { SofiaAdaptacaoCard } from "@/components/sofia/SofiaAdaptacaoCard";
