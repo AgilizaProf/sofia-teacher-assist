@@ -14,13 +14,8 @@ import { StorageDiagnosticsButton } from "@/components/dev/StorageDiagnosticsBut
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch.client";
 
 import appCss from "../styles.css?url";
-
-if (typeof window !== "undefined") {
-  installServerFnAuthFetch();
-}
 
 function NotFoundComponent() {
   return (
@@ -96,6 +91,24 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   useEffect(() => { installHydrationTelemetry(); }, []);
+
+  // Carrega o interceptor de fetch com Authorization apenas no browser,
+  // via import dinâmico, para evitar que o módulo .client entre no grafo do servidor.
+  useEffect(() => {
+    let cancelled = false;
+    void import("@/integrations/supabase/server-fn-fetch.client").then((mod) => {
+      if (cancelled) return;
+      try {
+        mod.installServerFnAuthFetch();
+      } catch (err) {
+        console.warn("[server-fn-fetch] falha ao instalar interceptor:", err);
+      }
+    }).catch((err) => {
+      console.warn("[server-fn-fetch] falha ao carregar módulo:", err);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
   useReducedMotion();
   const { ready, authed, isPublicRoute } = useAuthGuard();
   const showSofia = ready && authed && !isPublicRoute;
