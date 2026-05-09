@@ -81,7 +81,13 @@ serve(async (req) => {
     const baseContext = [
       `Tipo de planejamento: ${
         modo === "pcd"
-          ? "ATIVIDADE PARA ALUNO PCD (foco em adaptação)"
+          ? "ATIVIDADE INCLUSIVA PARA ALUNO PCD — TODA a aula deve ser desenhada "
+            + "sob a ótica da INCLUSÃO e da acessibilidade. Objetivo, abertura, "
+            + "desenvolvimento, fechamento, materiais e sugestões precisam partir "
+            + "das possibilidades do(s) aluno(s) PCD, não de uma adaptação posterior. "
+            + "Use linguagem afirmativa, princípios do Desenho Universal para a "
+            + "Aprendizagem (DUA), múltiplas formas de representação, expressão e "
+            + "engajamento, e estratégias inclusivas explícitas."
           : "Atividade regular para a turma toda"
       }`,
       `Ano escolar: ${anoEscolar || "não informado"}`,
@@ -190,7 +196,15 @@ serve(async (req) => {
         : ``,
       `Gere uma atividade completa. Materiais devem refletir a descrição. ` +
         `Sugira 4 a 5 variações alinhadas ao mesmo objetivo. ` +
-        (incluirPCD
+        (modo === "pcd"
+          ? `A atividade INTEIRA é voltada para INCLUSÃO do aluno PCD: cada momento `
+            + `(abertura, desenvolvimento, fechamento) deve indicar COMO o aluno PCD `
+            + `participa ativamente junto com a turma, com apoios visuais, sensoriais, `
+            + `comunicacionais ou motores conforme a condição. Em "adaptacoes" traga `
+            + `3 a 5 itens ESPECÍFICOS para a condição do aluno foco (não genéricos), `
+            + `e em "sugestoes" priorize variações que mantenham o(a) aluno(a) `
+            + `incluído(a) caso ele(a) se desregule ou perca o interesse.`
+          : incluirPCD
           ? `Para adaptações, cubra TEA, TDAH, DI e Deficiência física quando fizer sentido.`
           : `NÃO inclua adaptações PCD (devolva array vazio em "adaptacoes").`),
     ].join("\n");
