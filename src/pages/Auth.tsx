@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
 
 export function AuthPage() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export function AuthPage() {
   const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
+    captureReferralFromUrl();
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/" });
     });
@@ -40,10 +42,14 @@ export function AuthPage() {
     setLoading(true);
     try {
       if (mode === "register") {
+        const ref = getPendingReferral();
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/`, data: { full_name: name } },
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { full_name: name, ref_code: ref || undefined },
+          },
         });
         if (error) throw error;
         toast.success("Conta criada! Verifique seu e-mail para confirmar.");
