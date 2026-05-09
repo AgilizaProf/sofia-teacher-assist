@@ -125,8 +125,11 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     }
     if (authedNow) {
       try {
-        const { conversations: list } = await listSofiaConversations();
-        setConversations(list as SofiaConversationSummary[]);
+        const res = await listSofiaConversations();
+        const list = (res && Array.isArray((res as { conversations?: unknown }).conversations))
+          ? (res as { conversations: SofiaConversationSummary[] }).conversations
+          : [];
+        setConversations(list);
       } catch (err) {
         console.warn("[Sofia] listSofiaConversations falhou:", err);
         setBootError(err instanceof Error ? err.message : "Não foi possível carregar suas conversas.");
@@ -173,8 +176,11 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const refreshConversations = useCallback(async () => {
     if (!isAuthed) return;
     try {
-      const { conversations: list } = await listSofiaConversations();
-      setConversations(list as SofiaConversationSummary[]);
+      const res = await listSofiaConversations();
+      const list = (res && Array.isArray((res as { conversations?: unknown }).conversations))
+        ? (res as { conversations: SofiaConversationSummary[] }).conversations
+        : [];
+      setConversations(list);
     } catch (err) {
       // Não trava a UI: apenas mantém a lista vazia e loga o erro.
       console.warn("[Sofia] listSofiaConversations falhou:", err);
