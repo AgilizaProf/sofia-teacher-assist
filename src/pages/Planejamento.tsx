@@ -2597,8 +2597,18 @@ export function Planejamento() {
         <AppSidebar active="planning" />
         <div className="pl-main">
           <AppHeader
-            breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }, { label: cfg.crumb }]}
+            breadcrumb={[
+              { label: "Sua sala" },
+              { label: isEi ? "Roteiros de experiência" : "Planejamento" },
+              { label: isEi && cfg.crumb === "Diário de bordo" ? "Diário de observação" : cfg.crumb },
+            ]}
           />
+          {isEi && (
+            <div style={{ background: "#ECFDF5", borderBottom: "1px solid #A7F3D0", color: "#065F46", padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+              🌱 <strong>Modo Educação Infantil ativo.</strong> Para roteiros de experiência com Campos de Experiência, abra o
+              <a href="/planejamento/ei" style={{ color: "#047857", fontWeight: 600, marginLeft: 4 }}>Roteiro EI →</a>
+            </div>
+          )}
 
           {/* HERO */}
           <div className="pl-hero">
