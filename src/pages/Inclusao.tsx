@@ -17,6 +17,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
+import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
 import { supabase } from "@/integrations/supabase/client";
 
 const css = `
@@ -643,6 +644,7 @@ export function Inclusao() {
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [adaptOpen, setAdaptOpen] = useState(false);
+  const [periodoOpen, setPeriodoOpen] = useState(false);
   const sofia = useSofia();
   const sofiaCtx = useSofiaContext();
   const [peiOpen, setPeiOpen] = useState(false);
@@ -1541,6 +1543,7 @@ export function Inclusao() {
                       <h3>Planejamento adaptado · {selected?.name || ""}</h3>
                       <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
+                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeriodoOpen(true)}><Sparkles size={14} /> Atividades do período</button>
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
@@ -1785,6 +1788,19 @@ export function Inclusao() {
         anamneseResumo={anamneseResumo}
         onSaved={(novo) => {
           setPlansByStudent((all) => ({ ...all, [novo.alunoId]: [novo, ...(all[novo.alunoId] || [])] }));
+        }}
+      />
+
+      {/* Atividades do período (bimestre/trimestre/semestre) */}
+      <PlanoPeriodoModal
+        open={periodoOpen}
+        onClose={() => setPeriodoOpen(false)}
+        aluno={selected ? { id: selected.id, name: selected.name, diag: selected.diag, cid: selected.cid, anoEscolar: selected.anoEscolar, turma: selected.turma } : null}
+        anamneseResumo={anamneseResumo}
+        onSavedMany={(novos) => {
+          if (!novos.length) return;
+          const aid = novos[0].alunoId;
+          setPlansByStudent((all) => ({ ...all, [aid]: [...novos, ...(all[aid] || [])] }));
         }}
       />
 
