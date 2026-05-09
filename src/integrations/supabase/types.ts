@@ -266,6 +266,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bonus_days_total: number
           cidade: string | null
           created_at: string
           disciplinas: string[] | null
@@ -275,6 +276,8 @@ export type Database = {
           etapa_ensino: string | null
           id: string
           preferencias: Json
+          referral_code: string | null
+          referred_by_code: string | null
           sofia_lembretes: boolean
           sofia_tom: string | null
           telefone: string | null
@@ -285,6 +288,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bonus_days_total?: number
           cidade?: string | null
           created_at?: string
           disciplinas?: string[] | null
@@ -294,6 +298,8 @@ export type Database = {
           etapa_ensino?: string | null
           id?: string
           preferencias?: Json
+          referral_code?: string | null
+          referred_by_code?: string | null
           sofia_lembretes?: boolean
           sofia_tom?: string | null
           telefone?: string | null
@@ -304,6 +310,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bonus_days_total?: number
           cidade?: string | null
           created_at?: string
           disciplinas?: string[] | null
@@ -313,6 +320,8 @@ export type Database = {
           etapa_ensino?: string | null
           id?: string
           preferencias?: Json
+          referral_code?: string | null
+          referred_by_code?: string | null
           sofia_lembretes?: boolean
           sofia_tom?: string | null
           telefone?: string | null
@@ -320,6 +329,51 @@ export type Database = {
           uf?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          credit_at: string
+          credited: boolean
+          credited_at: string | null
+          id: string
+          plan: string
+          purchased_at: string
+          referral_code: string
+          referred_bonus_days: number
+          referred_user_id: string
+          referrer_bonus_days: number
+          referrer_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credit_at: string
+          credited?: boolean
+          credited_at?: string | null
+          id?: string
+          plan: string
+          purchased_at?: string
+          referral_code: string
+          referred_bonus_days: number
+          referred_user_id: string
+          referrer_bonus_days: number
+          referrer_user_id: string
+        }
+        Update: {
+          created_at?: string
+          credit_at?: string
+          credited?: boolean
+          credited_at?: string | null
+          id?: string
+          plan?: string
+          purchased_at?: string
+          referral_code?: string
+          referred_bonus_days?: number
+          referred_user_id?: string
+          referrer_bonus_days?: number
+          referrer_user_id?: string
         }
         Relationships: []
       }
@@ -397,6 +451,8 @@ export type Database = {
     }
     Functions: {
       cleanup_old_sofia_conversations: { Args: never; Returns: undefined }
+      ensure_referral_code: { Args: { _uid: string }; Returns: string }
+      process_due_referrals: { Args: { _uid: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
