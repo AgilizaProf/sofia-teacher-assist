@@ -188,6 +188,56 @@ export type Database = {
         }
         Relationships: []
       }
+      defasagens: {
+        Row: {
+          aluno_id: string | null
+          aluno_nome: string
+          detectada_em: string
+          habilidade_prerequisito: Json
+          habilidade_trilha: Json
+          id: string
+          status: string
+          sugestao_retomada: string | null
+          trilha_id: string
+          urgencia: string
+          user_id: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          aluno_nome: string
+          detectada_em?: string
+          habilidade_prerequisito: Json
+          habilidade_trilha: Json
+          id?: string
+          status?: string
+          sugestao_retomada?: string | null
+          trilha_id: string
+          urgencia?: string
+          user_id: string
+        }
+        Update: {
+          aluno_id?: string | null
+          aluno_nome?: string
+          detectada_em?: string
+          habilidade_prerequisito?: Json
+          habilidade_trilha?: Json
+          id?: string
+          status?: string
+          sugestao_retomada?: string | null
+          trilha_id?: string
+          urgencia?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "defasagens_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pareceres: {
         Row: {
           aluno_client_id: string | null
@@ -332,6 +382,53 @@ export type Database = {
         }
         Relationships: []
       }
+      progressao_alunos: {
+        Row: {
+          aluno_id: string | null
+          aluno_nome: string
+          atualizado_em: string
+          evidencia: string | null
+          habilidade_bncc: string
+          habilidade_descricao: string | null
+          id: string
+          status: string
+          trilha_id: string
+          user_id: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          aluno_nome: string
+          atualizado_em?: string
+          evidencia?: string | null
+          habilidade_bncc: string
+          habilidade_descricao?: string | null
+          id?: string
+          status?: string
+          trilha_id: string
+          user_id: string
+        }
+        Update: {
+          aluno_id?: string | null
+          aluno_nome?: string
+          atualizado_em?: string
+          evidencia?: string | null
+          habilidade_bncc?: string
+          habilidade_descricao?: string | null
+          id?: string
+          status?: string
+          trilha_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progressao_alunos_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           created_at: string
@@ -444,6 +541,119 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      trilha_semanas: {
+        Row: {
+          concluida_em: string | null
+          conecta_anterior: string | null
+          created_at: string
+          habilidades_bncc: Json
+          id: string
+          plano_gerado: Json | null
+          prepara_proxima: string | null
+          semana: number
+          status: string
+          tipo_atividade: string | null
+          titulo: string | null
+          trilha_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concluida_em?: string | null
+          conecta_anterior?: string | null
+          created_at?: string
+          habilidades_bncc?: Json
+          id?: string
+          plano_gerado?: Json | null
+          prepara_proxima?: string | null
+          semana: number
+          status?: string
+          tipo_atividade?: string | null
+          titulo?: string | null
+          trilha_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concluida_em?: string | null
+          conecta_anterior?: string | null
+          created_at?: string
+          habilidades_bncc?: Json
+          id?: string
+          plano_gerado?: Json | null
+          prepara_proxima?: string | null
+          semana?: number
+          status?: string
+          tipo_atividade?: string | null
+          titulo?: string | null
+          trilha_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trilha_semanas_trilha_id_fkey"
+            columns: ["trilha_id"]
+            isOneToOne: false
+            referencedRelation: "trilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trilhas: {
+        Row: {
+          ano_escolar: string | null
+          ano_letivo: number | null
+          client_id: string | null
+          contexto_adicional: string | null
+          created_at: string
+          data: Json
+          disciplina: string | null
+          id: string
+          justificativa: string | null
+          semestre: string | null
+          status: string
+          tema_central: string | null
+          turma: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ano_escolar?: string | null
+          ano_letivo?: number | null
+          client_id?: string | null
+          contexto_adicional?: string | null
+          created_at?: string
+          data?: Json
+          disciplina?: string | null
+          id?: string
+          justificativa?: string | null
+          semestre?: string | null
+          status?: string
+          tema_central?: string | null
+          turma?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ano_escolar?: string | null
+          ano_letivo?: number | null
+          client_id?: string | null
+          contexto_adicional?: string | null
+          created_at?: string
+          data?: Json
+          disciplina?: string | null
+          id?: string
+          justificativa?: string | null
+          semestre?: string | null
+          status?: string
+          tema_central?: string | null
+          turma?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
