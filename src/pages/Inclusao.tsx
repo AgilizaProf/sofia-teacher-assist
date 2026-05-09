@@ -779,7 +779,7 @@ export function Inclusao() {
       }));
       const peiResumo = (plansByStudent[selected.id] || [])
         .slice(0, 3)
-        .map((p) => `• ${p.titulo || p.disciplina || "Plano"}: ${(p.objetivos || []).slice(0, 3).join("; ")}`)
+        .map((p) => `• ${p.titulo || p.disciplina || "Plano"}: ${p.objetivo || ""}`)
         .join("\n");
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
