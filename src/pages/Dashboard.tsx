@@ -618,10 +618,6 @@ export function Dashboard() {
 
           <section className="hero">
             <div className="hero-left">
-              <div className="hero-greet">
-                <span className="live-dot" />
-                <span suppressHydrationWarning>{hydrated ? heroDateLine : "Bem-vinda à Sofia"}</span>
-              </div>
               <h1 className="hero-title" suppressHydrationWarning>
                 {heroGreeting}.
                 {totalStudents === 0 ? (
