@@ -1,3 +1,4 @@
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { supabase } from "./client";
 
 /**
@@ -8,34 +9,38 @@ import { supabase } from "./client";
  */
 let installed = false;
 
-export function installServerFnAuthFetch() {
-  if (installed) return;
-  if (typeof window === "undefined") return;
-  installed = true;
+export const installServerFnAuthFetch = createIsomorphicFn()
+  .client(() => {
+    if (installed) return;
+    if (typeof window === "undefined") return;
+    installed = true;
 
-  const originalFetch = window.fetch.bind(window);
+    const originalFetch = window.fetch.bind(window);
 
-  window.fetch = async (input, init) => {
-    try {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.toString()
-            : (input as Request).url;
+    window.fetch = async (input, init) => {
+      try {
+        const url =
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : (input as Request).url;
 
-      if (url && url.includes("/_serverFn/")) {
-        const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
-        if (!headers.has("authorization")) {
-          const { data } = await supabase.auth.getSession();
-          const token = data.session?.access_token;
-          if (token) headers.set("authorization", `Bearer ${token}`);
+        if (url && url.includes("/_serverFn/")) {
+          const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+          if (!headers.has("authorization")) {
+            const { data } = await supabase.auth.getSession();
+            const token = data.session?.access_token;
+            if (token) headers.set("authorization", `Bearer ${token}`);
+          }
+          return originalFetch(input, { ...init, headers });
         }
-        return originalFetch(input, { ...init, headers });
+      } catch {
+        // se algo falhar na inspeção, segue com o fetch original
       }
-    } catch {
-      // se algo falhar na inspeção, segue com o fetch original
-    }
-    return originalFetch(input, init);
-  };
-}
+      return originalFetch(input, init);
+    };
+  })
+  .server(() => {
+    // No-op no servidor: o interceptor só existe no browser.
+  });
