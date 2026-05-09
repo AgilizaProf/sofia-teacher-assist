@@ -391,7 +391,6 @@ export function Assistente() {
                 </div>
               ) : (
                 <>
-              <div className="stamp"><Clock size={12} /> {ctx.temporal.dia_semana.toUpperCase()} · {ctx.temporal.hora_local}</div>
               {isPro ? (
                 <h1 className="greet">
                   {periodoLabel}, <em>{ctx.user.primeiro_nome}</em>.<br />
