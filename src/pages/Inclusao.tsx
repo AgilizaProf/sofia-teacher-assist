@@ -17,6 +17,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
+import { supabase } from "@/integrations/supabase/client";
 
 const css = `
 .inc-root{
@@ -757,6 +758,51 @@ export function Inclusao() {
       .join("\n");
   }, [selectedId, anamByStudent]);
 
+  // Parecer descritivo gerado pela Sofia (por aluno)
+  type Parecer = {
+    titulo?: string; resumo?: string;
+    pedagogico?: string; comportamental?: string; sensorial?: string; familia?: string;
+    avancos?: string[]; desafios?: string[]; encaminhamentos?: string[];
+    comunicacao_familias?: string;
+    geradoEm?: string;
+  };
+  const [parecerByStudent, setParecerByStudent] = usePersistentState<Record<string, Parecer>>("inc_parecer", {});
+  const [gerandoParecer, setGerandoParecer] = useState(false);
+  const parecerAtual = (selectedId && parecerByStudent[selectedId]) || null;
+
+  const handleGerarParecer = async () => {
+    if (!selected) return;
+    setGerandoParecer(true);
+    try {
+      const regs = (regByStudent[selected.id] || []).map((r) => ({
+        when: r.when, cat: r.cat, body: r.body,
+      }));
+      const peiResumo = (plansByStudent[selected.id] || [])
+        .slice(0, 3)
+        .map((p) => `• ${p.titulo || p.disciplina || "Plano"}: ${p.objetivo || ""}`)
+        .join("\n");
+      const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
+        body: {
+          aluno: selected.name,
+          diagnostico: selected.diag || "",
+          periodo: "Bimestral",
+          anamneseResumo,
+          peiResumo,
+          registros: regs,
+        },
+      });
+      if (error) throw error;
+      const parecer: Parecer = { ...(data?.parecer || {}), geradoEm: new Date().toLocaleString("pt-BR") };
+      setParecerByStudent((all) => ({ ...all, [selected.id]: parecer }));
+      toast.success("Parecer gerado pela Sofia.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Não foi possível gerar o parecer. ${msg}`);
+    } finally {
+      setGerandoParecer(false);
+    }
+  };
+
   const goView = (v: ViewKey) => {
     const safe: ViewKey = v === "detail" && students.length === 0 ? "list" : v;
     setView(safe);
@@ -1394,8 +1440,53 @@ export function Inclusao() {
                     </div>
                     <div className="rel-feature">
                       <h4>Parecer descritivo bimestral · 1º bim 2026</h4>
-                      <p>A Sofia consolida 23 registros + PEI v3.2 + anamnese em um parecer pronto para exportar (Word/PDF) e assinar.</p>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400"><Sparkles size={14} /> Gerar com a Sofia (~3 min)</button>
+                      <p>
+                        A Sofia consolida <b>{(regByStudent[selected.id] || []).length} registro(s)</b>
+                        {studentPlans.length ? `, ${studentPlans.length} plano(s) PEI` : ""}
+                        {anamneseResumo ? " e a anamnese" : ""} de {selected.name.split(" ")[0]} em um parecer pronto para exportar e assinar.
+                      </p>
+                      <button
+                        className="btn btn-primary bg-orange-400 text-orange-400"
+                        onClick={handleGerarParecer}
+                        disabled={gerandoParecer || (regByStudent[selected.id] || []).length === 0}
+                        title={(regByStudent[selected.id] || []).length === 0 ? "Cadastre ao menos um registro para gerar o parecer." : ""}
+                      >
+                        <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
+                      </button>
+                      {parecerAtual && (
+                        <div style={{ marginTop: 14, padding: 14, background: "#fff", border: "1px solid var(--border)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                            <b style={{ fontFamily: "'Fraunces',serif", fontSize: 15 }}>{parecerAtual.titulo || "Parecer descritivo"}</b>
+                            <span style={{ fontSize: 11, color: "var(--muted)" }}>Gerado em {parecerAtual.geradoEm}</span>
+                          </div>
+                          {parecerAtual.resumo && <p style={{ margin: 0, fontSize: 13 }}>{parecerAtual.resumo}</p>}
+                          {parecerAtual.pedagogico && (<div><b style={{ fontSize: 12 }}>Pedagógico</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.pedagogico}</p></div>)}
+                          {parecerAtual.comportamental && (<div><b style={{ fontSize: 12 }}>Comportamental</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.comportamental}</p></div>)}
+                          {parecerAtual.sensorial && (<div><b style={{ fontSize: 12 }}>Sensorial</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.sensorial}</p></div>)}
+                          {parecerAtual.familia && (<div><b style={{ fontSize: 12 }}>Família</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.familia}</p></div>)}
+                          {parecerAtual.avancos && parecerAtual.avancos.length > 0 && (
+                            <div><b style={{ fontSize: 12 }}>Avanços</b>
+                              <ul style={{ margin: "4px 0 0 18px", fontSize: 13 }}>{parecerAtual.avancos.map((a, i) => <li key={i}>{a}</li>)}</ul>
+                            </div>
+                          )}
+                          {parecerAtual.desafios && parecerAtual.desafios.length > 0 && (
+                            <div><b style={{ fontSize: 12 }}>Desafios</b>
+                              <ul style={{ margin: "4px 0 0 18px", fontSize: 13 }}>{parecerAtual.desafios.map((a, i) => <li key={i}>{a}</li>)}</ul>
+                            </div>
+                          )}
+                          {parecerAtual.encaminhamentos && parecerAtual.encaminhamentos.length > 0 && (
+                            <div><b style={{ fontSize: 12 }}>Encaminhamentos</b>
+                              <ul style={{ margin: "4px 0 0 18px", fontSize: 13 }}>{parecerAtual.encaminhamentos.map((a, i) => <li key={i}>{a}</li>)}</ul>
+                            </div>
+                          )}
+                          {parecerAtual.comunicacao_familias && (
+                            <div style={{ background: "var(--accent-soft)", padding: 10, borderRadius: 8 }}>
+                              <b style={{ fontSize: 12 }}>Comunicação à família</b>
+                              <p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.comunicacao_familias}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, margin: "16px 0 10px" }}>Pareceres anteriores · 2025</h4>
                     <div className="rel-list">
