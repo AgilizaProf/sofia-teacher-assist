@@ -4071,7 +4071,15 @@ export function Planejamento() {
               )}
             </div>
             <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
-              <button className="pl-btn" onClick={() => setM6ReportOpen(false)}>Fechar</button>
+              <button className="pl-btn" onClick={() => { setM6ReportOpen(false); setM6AIRel(null); setM6AIErro(null); }}>Fechar</button>
+              <button
+                className="pl-btn primary"
+                onClick={m6GerarRelatorioSofia}
+                disabled={m6AILoading || m6RelEntries.length === 0}
+                title={m6RelEntries.length === 0 ? "Salve pelo menos 1 registro para gerar." : "Sofia escreve um relatório completo"}
+              >
+                <Sparkles size={14} /> {m6AILoading ? "Sofia escrevendo…" : (m6AIRel ? "Gerar novamente" : "Gerar com a Sofia")}
+              </button>
             </div>
           </div>
         </div>
