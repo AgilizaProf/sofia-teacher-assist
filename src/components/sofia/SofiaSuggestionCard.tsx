@@ -61,16 +61,20 @@ export function SofiaSuggestionCard({
   suggestion,
   variant,
   onDismiss,
+  onAction,
 }: {
   suggestion: SofiaSuggestion;
   variant: Variant;
   onDismiss?: () => void;
+  onAction?: (s: SofiaSuggestion) => void;
 }) {
   const sofia = useSofia();
   ensureCss();
 
-  const open = () =>
+  const open = () => {
+    if (onAction) return onAction(suggestion);
     sofia.openSofia({ prompt: suggestion.prompt, context: suggestion.context });
+  };
 
   if (variant === "hero") {
     return (
@@ -122,15 +126,17 @@ export function SofiaSuggestionCard({
 export function SofiaSuggestionList({
   suggestions,
   variant,
+  onAction,
 }: {
   suggestions: SofiaSuggestion[];
   variant: Variant;
+  onAction?: (s: SofiaSuggestion) => void;
 }) {
   if (!suggestions.length) return null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: variant === "compact" ? 2 : 10 }}>
       {suggestions.map((s) => (
-        <SofiaSuggestionCard key={s.id} suggestion={s} variant={variant} />
+        <SofiaSuggestionCard key={s.id} suggestion={s} variant={variant} onAction={onAction} />
       ))}
     </div>
   );

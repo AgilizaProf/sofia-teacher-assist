@@ -1215,7 +1215,30 @@ export function Inclusao() {
                     </div>
 
                     <aside className="col-r">
-                      <InclusaoSuggestions entityId={selected.id ? String(selected.id) : selected.name} />
+                       <InclusaoSuggestions
+                         entityId={selected.id ? String(selected.id) : selected.name}
+                         onAction={(s) => {
+                           if (s.id === "inc-adapt" || s.id.startsWith("rule-adapt-")) {
+                             setActiveTab("plan");
+                             sofia.openSofia({
+                               prompt: s.prompt.replace(/este aluno/gi, selected.name),
+                               context: s.context,
+                             });
+                             return;
+                           }
+                           if (s.id === "inc-parecer") {
+                             setActiveTab("rel");
+                             const temRegs = (regByStudent[selected.id] || []).length > 0;
+                             if (!temRegs) {
+                               toast.info("Cadastre ao menos um registro para gerar o parecer.");
+                               return;
+                             }
+                             handleGerarParecer();
+                             return;
+                           }
+                           sofia.openSofia({ prompt: s.prompt, context: s.context });
+                         }}
+                       />
 
                       <div className="context-card">
                         <h4>Contexto rápido</h4>
@@ -2039,12 +2062,18 @@ export function Inclusao() {
   );
 }
 
-function InclusaoSuggestions({ entityId }: { entityId: string }) {
+function InclusaoSuggestions({
+  entityId,
+  onAction,
+}: {
+  entityId: string;
+  onAction?: (s: import("@/components/sofia/SofiaSuggestionCard").SofiaSuggestion) => void;
+}) {
   const { suggestions } = useSofiaSuggestions("inclusao", entityId);
   return (
     <div className="sofia-card" style={{ padding: 0, background: "transparent", border: "none", boxShadow: "none" }}>
       <SofiaErrorBoundary area="as sugestões da Sofia" silent>
-        <SofiaSuggestionList suggestions={suggestions} variant="inline" />
+        <SofiaSuggestionList suggestions={suggestions} variant="inline" onAction={onAction} />
       </SofiaErrorBoundary>
     </div>
   );
