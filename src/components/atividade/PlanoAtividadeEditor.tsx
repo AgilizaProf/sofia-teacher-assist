@@ -1982,7 +1982,25 @@ function PlanoBody(props: {
             <li key={i}>
               <label>
                 <input type="checkbox" checked={!!plano.materiaisCheck?.[i]} onChange={() => props.onToggleMat(i)} />
-                <span style={{ textDecoration: plano.materiaisCheck?.[i] ? "line-through" : "none" }}>{m}</span>
+                <span style={{
+                  fontWeight: plano.materiaisCheck?.[i] ? 600 : 400,
+                  color: plano.materiaisCheck?.[i] ? "var(--atv-accent, #16a34a)" : undefined,
+                }}>
+                  {m}
+                  {plano.materiaisCheck?.[i] && (
+                    <span style={{
+                      marginLeft: 8,
+                      fontSize: 11,
+                      padding: "2px 6px",
+                      borderRadius: 999,
+                      background: "color-mix(in oklab, var(--atv-accent, #16a34a) 15%, transparent)",
+                      color: "var(--atv-accent, #16a34a)",
+                      fontWeight: 600,
+                    }}>
+                      ✓ para usar
+                    </span>
+                  )}
+                </span>
               </label>
               <button className="atv-x" onClick={() => props.onRemoveMat(i)} aria-label="Remover">
                 <X size={12} />
