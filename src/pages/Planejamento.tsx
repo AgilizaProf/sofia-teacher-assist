@@ -1092,6 +1092,7 @@ export function Planejamento() {
     aluno?: string;
   };
   const navigate = useNavigate({ from: "/planejamento" });
+  const isEi = useEiMode();
   const [m, setM] = useState<MKey>(search.m || "atv");
   const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
   const [dropDay, setDropDay] = useState<DayKey | null>(null);
