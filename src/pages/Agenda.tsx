@@ -397,6 +397,15 @@ export function Agenda() {
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const [events, setEvents] = usePersistentState<Event[]>("agenda_events", []);
   const [openDate, setOpenDate] = useState<string | null>(null);
+  const ALL_TYPES: EventType[] = ["meeting", "eval", "report", "plan", "pcd", "personal"];
+  const [typeFilter, setTypeFilter] = useState<EventType[]>(ALL_TYPES);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filteredEvents = useMemo(
+    () => events.filter((e) => typeFilter.includes(e.type)),
+    [events, typeFilter]
+  );
+  const toggleType = (t: EventType) =>
+    setTypeFilter((arr) => (arr.includes(t) ? arr.filter((x) => x !== t) : [...arr, t]));
   const [editing, setEditing] = useState<Event | null>(null);
   const [draft, setDraft] = useState<{ title: string; time: string; type: EventType; notes: string }>({
     title: "", time: "", type: "meeting", notes: "",
@@ -404,14 +413,14 @@ export function Agenda() {
 
   const eventsByDate = useMemo(() => {
     const m = new Map<string, Event[]>();
-    for (const e of events) {
+    for (const e of filteredEvents) {
       const arr = m.get(e.date) || [];
       arr.push(e);
       m.set(e.date, arr);
     }
     for (const arr of m.values()) arr.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
     return m;
-  }, [events]);
+  }, [filteredEvents]);
 
   const openDayPanel = (key: string) => {
     setOpenDate(key);
@@ -469,21 +478,21 @@ export function Agenda() {
   }, [today]);
 
   const counts = useMemo(() => {
-    const todayCount = events.filter((e) => e.date === todayKey).length;
-    const tomorrowCount = events.filter((e) => e.date === tomorrowKey).length;
-    const weekCount = events.filter((e) => e.date >= weekRange.start && e.date <= weekRange.end).length;
-    const deadlinesCount = events.filter(
+    const todayCount = filteredEvents.filter((e) => e.date === todayKey).length;
+    const tomorrowCount = filteredEvents.filter((e) => e.date === tomorrowKey).length;
+    const weekCount = filteredEvents.filter((e) => e.date >= weekRange.start && e.date <= weekRange.end).length;
+    const deadlinesCount = filteredEvents.filter(
       (e) => e.date >= todayKey && (e.type === "report" || e.type === "eval")
     ).length;
-    const nextDeadline = events
+    const nextDeadline = filteredEvents
       .filter((e) => e.date >= todayKey && (e.type === "report" || e.type === "eval"))
       .sort((a, b) => a.date.localeCompare(b.date))[0];
     return { todayCount, tomorrowCount, weekCount, deadlinesCount, nextDeadline };
-  }, [events, todayKey, tomorrowKey, weekRange]);
+  }, [filteredEvents, todayKey, tomorrowKey, weekRange]);
 
   // Próximos compromissos: ordenados por data+hora, removendo os que já passaram.
   const upcoming = useMemo(() => {
-    return events
+    return filteredEvents
       .filter((e) => {
         if (e.date > todayKey) return true;
         if (e.date < todayKey) return false;
@@ -494,7 +503,7 @@ export function Agenda() {
         if (a.date !== b.date) return a.date.localeCompare(b.date);
         return (a.time || "99:99").localeCompare(b.time || "99:99");
       });
-  }, [events, todayKey, nowHHMM]);
+  }, [filteredEvents, todayKey, nowHHMM]);
 
   const formatShortBR = (key: string) => {
     const [, m, d] = key.split("-");
@@ -580,7 +589,71 @@ export function Agenda() {
             breadcrumb={[{ label: "Sua sala" }, { label: "Agenda" }, { label: headerLabel }]}
             actions={
               <>
-                <button className="ag-btn"><Filter size={14} /> Filtrar</button>
+                <div style={{ position: "relative" }}>
+                  <button
+                    className="ag-btn"
+                    onClick={() => setFilterOpen((v) => !v)}
+                    aria-expanded={filterOpen}
+                  >
+                    <Filter size={14} /> Filtrar
+                    {typeFilter.length < ALL_TYPES.length && (
+                      <span style={{
+                        marginLeft: 6, background: "var(--primary, #2563eb)", color: "#fff",
+                        borderRadius: 999, padding: "0 6px", fontSize: 11, lineHeight: "16px",
+                      }}>{typeFilter.length}</span>
+                    )}
+                  </button>
+                  {filterOpen && (
+                    <>
+                      <div
+                        onClick={() => setFilterOpen(false)}
+                        style={{ position: "fixed", inset: 0, zIndex: 70 }}
+                      />
+                      <div style={{
+                        position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 71,
+                        background: "#fff", border: "1px solid rgba(15,27,54,.12)",
+                        borderRadius: 10, boxShadow: "0 10px 28px rgba(15,27,54,.14)",
+                        padding: 10, minWidth: 200,
+                      }}>
+                        <div style={{
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                          marginBottom: 8, fontSize: 12, color: "#5b6478", fontWeight: 600,
+                        }}>
+                          <span>Tipos de evento</span>
+                          <button
+                            className="ag-btn"
+                            style={{ padding: "2px 8px", fontSize: 11 }}
+                            onClick={() => setTypeFilter(
+                              typeFilter.length === ALL_TYPES.length ? [] : ALL_TYPES
+                            )}
+                          >
+                            {typeFilter.length === ALL_TYPES.length ? "Limpar" : "Todos"}
+                          </button>
+                        </div>
+                        {ALL_TYPES.map((t) => (
+                          <label
+                            key={t}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 8,
+                              padding: "6px 4px", cursor: "pointer", fontSize: 13,
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={typeFilter.includes(t)}
+                              onChange={() => toggleType(t)}
+                            />
+                            <span style={{
+                              width: 10, height: 10, borderRadius: 3,
+                              background: TYPE_COLOR[t], display: "inline-block",
+                            }} />
+                            {TYPE_LABEL[t]}
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
                 <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
               </>
             }
