@@ -52,6 +52,7 @@ type GeradoItem = {
   plano: Omit<PlanoInclusao, "id" | "alunoId">;
   expandido: boolean;
   incluir: boolean;
+  recolhidas?: Record<string, boolean>;
 };
 
 function isoFromOffset(weeks: number): string {
@@ -64,7 +65,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
   const [periodo, setPeriodo] = useState<PeriodoKey>("bim");
   const [disciplinas, setDisciplinas] = useState<string[]>([]);
   const [porDisciplina, setPorDisciplina] = useState<number>(4);
-  const [vista, setVista] = useState<"topicos" | "completo">("topicos");
+  const [vista, setVista] = useState<"topicos" | "completo">("completo");
   const [loading, setLoading] = useState(false);
   const [progresso, setProgresso] = useState<{ feito: number; total: number }>({ feito: 0, total: 0 });
   const [itens, setItens] = useState<GeradoItem[]>([]);
@@ -75,7 +76,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
       setDisciplinas([]);
       setPeriodo("bim");
       setPorDisciplina(4);
-      setVista("topicos");
+      setVista("completo");
       setProgresso({ feito: 0, total: 0 });
     }
   }, [open, aluno?.id]);
@@ -150,6 +151,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
               plano: p,
               expandido: false,
               incluir: true,
+              recolhidas: {},
             };
             return item;
           } catch (e) {
