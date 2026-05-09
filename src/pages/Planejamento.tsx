@@ -1864,6 +1864,15 @@ export function Planejamento() {
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
   const [m6PatternDismissed, setM6PatternDismissed] = usePersistentState<boolean>("plan_m6_pattern_dismissed", false);
   const [m6EditingId, setM6EditingId] = useState<string | null>(null);
+  // Sugestão "Próxima aula" que a Sofia gera após salvar um diário novo.
+  type M6NextSuggestion = {
+    entryId: string;
+    resumo: string;
+    ajuste: string;
+    abertura: string;
+    sinais: string[];
+  };
+  const [m6JustSaved, setM6JustSaved] = useState<M6NextSuggestion | null>(null);
   // Período do relatório e turma selecionada para a leitura adaptativa.
   type M6Periodo = "bimestral" | "trimestral" | "semestral" | "anual";
   const M6_PERIODO_META: Record<M6Periodo, { label: string; meta: number; semanas: number }> = {
