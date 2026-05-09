@@ -1742,6 +1742,42 @@ export function Planejamento() {
   const [m4Editing, setM4Editing] = useState<{ iso: string; id: string } | null>(null);
   const [m4DragSrc, setM4DragSrc] = useState<{ iso: string; id: string } | null>(null);
   const [m4DragOver, setM4DragOver] = useState<number | null>(null);
+  // Sincroniza atividades do M3 (m1Plan) → calendário M4. Cada card vira um
+  // evento com source="m3" e id determinístico, para permitir abrir/editar
+  // de volta no editor M3.
+  useEffect(() => {
+    if (!hydrated) return;
+    const isoByDia: Partial<Record<DayKey, string>> = {};
+    m1Week.days.forEach((d) => { isoByDia[d.k] = d.iso; });
+    setM4UserEvents((prev) => {
+      const next: Record<string, M4UserEvt[]> = {};
+      // Mantém eventos de outras fontes; descarta m3 antigos da semana corrente.
+      Object.entries(prev).forEach(([iso, list]) => {
+        const isWeekIso = m1Week.days.some((d) => d.iso === iso);
+        const filtered = list.filter((e) => !(e.source === "m3" && isWeekIso));
+        if (filtered.length) next[iso] = filtered;
+      });
+      // Insere os m3 atuais.
+      (Object.keys(m1Plan) as DayKey[]).forEach((dia) => {
+        const iso = isoByDia[dia];
+        if (!iso) return;
+        m1Plan[dia].forEach((c) => {
+          const evt: M4UserEvt = {
+            id: `m3:${dia}:${c.id}`,
+            cat: "aulas",
+            title: c.title,
+            meta: `${c.minutos} min · ${c.bncc || c.tag}`.trim(),
+            source: "m3",
+            m3Dia: dia,
+            m3CardId: c.id,
+          };
+          (next[iso] ??= []).push(evt);
+        });
+      });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [m1Plan, m1Week.days.map((d) => d.iso).join(","), hydrated]);
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
   type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string };
