@@ -19,6 +19,7 @@ import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
+import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -71,6 +72,11 @@ const PlanejamentoAtividadeRoute = PlanejamentoAtividadeRouteImport.update({
   path: '/atividade',
   getParentRoute: () => PlanejamentoRoute,
 } as any)
+const InclusaoPeiRoute = InclusaoPeiRouteImport.update({
+  id: '/pei',
+  path: '/pei',
+  getParentRoute: () => InclusaoRoute,
+} as any)
 const ApiSofiaSuggestionsRoute = ApiSofiaSuggestionsRouteImport.update({
   id: '/api/sofia/suggestions',
   path: '/api/sofia/suggestions',
@@ -83,10 +89,11 @@ export interface FileRoutesByFullPath {
   '/assistente': typeof AssistenteRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/inclusao': typeof InclusaoRoute
+  '/inclusao': typeof InclusaoRouteWithChildren
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
@@ -96,10 +103,11 @@ export interface FileRoutesByTo {
   '/assistente': typeof AssistenteRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/inclusao': typeof InclusaoRoute
+  '/inclusao': typeof InclusaoRouteWithChildren
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
@@ -110,10 +118,11 @@ export interface FileRoutesById {
   '/assistente': typeof AssistenteRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/inclusao': typeof InclusaoRoute
+  '/inclusao': typeof InclusaoRouteWithChildren
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/api/sofia/suggestions'
   fileRoutesByTo: FileRoutesByTo
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/api/sofia/suggestions'
   id:
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/api/sofia/suggestions'
   fileRoutesById: FileRoutesById
@@ -165,7 +177,7 @@ export interface RootRouteChildren {
   AssistenteRoute: typeof AssistenteRoute
   AuthRoute: typeof AuthRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
-  InclusaoRoute: typeof InclusaoRoute
+  InclusaoRoute: typeof InclusaoRouteWithChildren
   PlanejamentoRoute: typeof PlanejamentoRouteWithChildren
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -244,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanejamentoAtividadeRouteImport
       parentRoute: typeof PlanejamentoRoute
     }
+    '/inclusao/pei': {
+      id: '/inclusao/pei'
+      path: '/pei'
+      fullPath: '/inclusao/pei'
+      preLoaderRoute: typeof InclusaoPeiRouteImport
+      parentRoute: typeof InclusaoRoute
+    }
     '/api/sofia/suggestions': {
       id: '/api/sofia/suggestions'
       path: '/api/sofia/suggestions'
@@ -253,6 +272,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface InclusaoRouteChildren {
+  InclusaoPeiRoute: typeof InclusaoPeiRoute
+}
+
+const InclusaoRouteChildren: InclusaoRouteChildren = {
+  InclusaoPeiRoute: InclusaoPeiRoute,
+}
+
+const InclusaoRouteWithChildren = InclusaoRoute._addFileChildren(
+  InclusaoRouteChildren,
+)
 
 interface PlanejamentoRouteChildren {
   PlanejamentoAtividadeRoute: typeof PlanejamentoAtividadeRoute
@@ -272,7 +303,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssistenteRoute: AssistenteRoute,
   AuthRoute: AuthRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
-  InclusaoRoute: InclusaoRoute,
+  InclusaoRoute: InclusaoRouteWithChildren,
   PlanejamentoRoute: PlanejamentoRouteWithChildren,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
