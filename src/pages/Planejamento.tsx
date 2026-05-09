@@ -1710,6 +1710,25 @@ export function Planejamento() {
   // Move um evento de uma data ISO para outra
   const m4MoveEvent = (fromIso: string, id: string, toIso: string) => {
     if (fromIso === toIso) return;
+    // Se for um evento espelhado do M3 (m1Plan), mover dentro do m1Plan
+    // re-sincroniza pelo useEffect; bloqueia mover para fora da semana atual.
+    const fromList = m4UserEvents[fromIso] ?? [];
+    const evt = fromList.find((e) => e.id === id);
+    if (evt?.source === "m3" && evt.m3Dia && evt.m3CardId) {
+      const targetDay = m1Week.days.find((d) => d.iso === toIso);
+      if (!targetDay) return; // só permite drop em dias da semana corrente
+      if (targetDay.k === evt.m3Dia) return;
+      setM1Plan((p) => {
+        const card = p[evt.m3Dia!].find((c) => c.id === evt.m3CardId);
+        if (!card) return p;
+        return {
+          ...p,
+          [evt.m3Dia!]: p[evt.m3Dia!].filter((c) => c.id !== evt.m3CardId),
+          [targetDay.k]: [...p[targetDay.k], card],
+        };
+      });
+      return;
+    }
     setM4UserEvents((s) => {
       const src = s[fromIso] ?? [];
       const item = src.find((e) => e.id === id);
@@ -1723,6 +1742,14 @@ export function Planejamento() {
   };
   // Atualiza campos de um evento
   const m4UpdateEvent = (iso: string, id: string, patch: Partial<M4UserEvt>) => {
+    // Para eventos M3, propagamos título/duração de volta ao m1Plan.
+    const evt = (m4UserEvents[iso] ?? []).find((e) => e.id === id);
+    if (evt?.source === "m3" && evt.m3Dia && evt.m3CardId) {
+      if (patch.title !== undefined) {
+        m1UpdateCard(evt.m3Dia, evt.m3CardId, { title: patch.title });
+      }
+      return;
+    }
     setM4UserEvents((s) => {
       const list = s[iso] ?? [];
       const next = list.map((e) => (e.id === id ? { ...e, ...patch } : e));
@@ -1731,6 +1758,11 @@ export function Planejamento() {
   };
   // Remove um evento
   const m4DeleteEvent = (iso: string, id: string) => {
+    const evt = (m4UserEvents[iso] ?? []).find((e) => e.id === id);
+    if (evt?.source === "m3" && evt.m3Dia && evt.m3CardId) {
+      removerCardM1(evt.m3Dia, evt.m3CardId);
+      return;
+    }
     setM4UserEvents((s) => {
       const list = (s[iso] ?? []).filter((e) => e.id !== id);
       const next = { ...s };
