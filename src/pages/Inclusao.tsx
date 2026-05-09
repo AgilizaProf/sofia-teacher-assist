@@ -414,8 +414,6 @@ type Student = {
   anamnese: string; registros: string; trend: string; trendTone: "ok" | "warn" | "muted";
 };
 
-const INITIAL_STUDENTS: Student[] = [];
-
 const PEI_EIXOS: Array<{ ic: string; cls: string; h: string; status: string; tone: "ok" | "warn"; meta: string; body: ReactNode }> = [];
 
 const TUTORIAL_STEPS = [
@@ -591,11 +589,7 @@ const ANAM_SUGESTOES: Record<string, string[]> = {
 export function Inclusao() {
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const {
-    students,
-    loading: studentsLoading,
-    create: createStudent,
-  } = useInclusaoStudents();
+  const { students, create: createStudent } = useInclusaoStudents();
   // Observação: o "espelho" dash_students no Dashboard NÃO é sincronizado
   // automaticamente para o banco — para evitar criar alunos sem ação
   // explícita do(a) professor(a). O cadastro em Inclusão é a fonte oficial.
