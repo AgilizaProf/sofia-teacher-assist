@@ -206,7 +206,7 @@ export function TrilhasPanel() {
                               {gerandoSemana === s.id ? "Gerando…" : "Gerar plano"}
                             </button>
                           )}
-                          {s.status !== "concluida" && s.plano_gerado && (
+                          {s.status !== "concluida" && Boolean(s.plano_gerado) && (
                             <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); concluirSemana(s, t.id); }} title="Marcar como concluída" style={{ fontSize: 11 }}>
                               <CheckCircle2 size={11} />
                             </button>
