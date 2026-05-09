@@ -70,7 +70,7 @@ export function TrilhasPanel() {
         justificativa: tema.justificativa || "",
         contexto_adicional: form.contexto,
         status: "ativa",
-        data: t,
+        data: t as never,
       }]).select().single();
       if (insErr) throw insErr;
 
