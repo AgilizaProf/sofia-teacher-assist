@@ -874,7 +874,11 @@ export function Inclusao() {
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, tab: t }) as never, replace: true });
   };
 
+  const turmasUnicas = Array.from(new Set(students.map((s) => s.turma).filter(Boolean))).sort();
+  const diagsUnicos = Array.from(new Set(students.map((s) => s.diag).filter(Boolean))).sort();
   const filtered = students.filter((s) => {
+    if (turmaFilter.length > 0 && !turmaFilter.includes(s.turma)) return false;
+    if (diagFilter.length > 0 && !diagFilter.includes(s.diag)) return false;
     const q = query.toLowerCase().trim();
     if (!q) return true;
     return s.name.toLowerCase().includes(q) || s.turma.toLowerCase().includes(q) || s.diag.toLowerCase().includes(q);
