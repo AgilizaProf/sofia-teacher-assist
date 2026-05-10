@@ -1562,6 +1562,12 @@
     (window.top || window).location.href = route;
   }
 
+  function goToRealCta(){
+    const cfg = PAIN_CONFIG[painSelected];
+    const route = (cfg && cfg.realCtaRoute) || '/';
+    (window.top || window).location.href = route;
+  }
+
   // foco no nome ao abrir
   setTimeout(()=>{document.getElementById('leadName').focus();}, 400);
   updateUI();
