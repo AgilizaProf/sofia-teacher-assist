@@ -613,6 +613,9 @@ export function Inclusao() {
   const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [turmaFilter, setTurmaFilter] = useState<string[]>([]);
+  const [diagFilter, setDiagFilter] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState<null | "turma" | "diag">(null);
   const [planYearFilter, setPlanYearFilter] = useState<string>("");
   type RegCat = "ped" | "com" | "sen" | "fam";
   type RegItem = { id: string; when: string; who: string; cat: RegCat; body: string };
@@ -871,7 +874,11 @@ export function Inclusao() {
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, tab: t }) as never, replace: true });
   };
 
+  const turmasUnicas = Array.from(new Set(students.map((s) => s.turma).filter(Boolean))).sort();
+  const diagsUnicos = Array.from(new Set(students.map((s) => s.diag).filter(Boolean))).sort();
   const filtered = students.filter((s) => {
+    if (turmaFilter.length > 0 && !turmaFilter.includes(s.turma)) return false;
+    if (diagFilter.length > 0 && !diagFilter.includes(s.diag)) return false;
     const q = query.toLowerCase().trim();
     if (!q) return true;
     return s.name.toLowerCase().includes(q) || s.turma.toLowerCase().includes(q) || s.diag.toLowerCase().includes(q);
@@ -1002,8 +1009,44 @@ export function Inclusao() {
                       onChange={(e) => setQuery(e.target.value)}
                     />
                   </div>
-                  <button className="list-filter">Turma: Todas</button>
-                  <button className="list-filter">Diagnóstico: Todos</button>
+                  <div style={{ position: "relative" }}>
+                    <button
+                      className="list-filter"
+                      onClick={() => setFilterOpen(filterOpen === "turma" ? null : "turma")}
+                      aria-expanded={filterOpen === "turma"}
+                    >
+                      Turma: {turmaFilter.length === 0 ? "Todas" : turmaFilter.length === 1 ? turmaFilter[0] : `${turmaFilter.length} selecionadas`}
+                    </button>
+                    {filterOpen === "turma" && (
+                      <FilterPopover
+                        options={turmasUnicas}
+                        selected={turmaFilter}
+                        onToggle={(v) => setTurmaFilter((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v])}
+                        onClear={() => setTurmaFilter([])}
+                        onClose={() => setFilterOpen(null)}
+                        emptyLabel="Nenhuma turma cadastrada."
+                      />
+                    )}
+                  </div>
+                  <div style={{ position: "relative" }}>
+                    <button
+                      className="list-filter"
+                      onClick={() => setFilterOpen(filterOpen === "diag" ? null : "diag")}
+                      aria-expanded={filterOpen === "diag"}
+                    >
+                      Diagnóstico: {diagFilter.length === 0 ? "Todos" : diagFilter.length === 1 ? diagFilter[0] : `${diagFilter.length} selecionados`}
+                    </button>
+                    {filterOpen === "diag" && (
+                      <FilterPopover
+                        options={diagsUnicos}
+                        selected={diagFilter}
+                        onToggle={(v) => setDiagFilter((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v])}
+                        onClear={() => setDiagFilter([])}
+                        onClose={() => setFilterOpen(null)}
+                        emptyLabel="Nenhum diagnóstico registrado."
+                      />
+                    )}
+                  </div>
                   <div className="list-actions">
                     <button className="btn btn-primary bg-orange-400 text-orange-400 btn-cadastrar" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
                   </div>
@@ -2059,5 +2102,91 @@ function InclusaoSuggestions({
         <SofiaSuggestionList suggestions={suggestions} variant="inline" onAction={onAction} />
       </SofiaErrorBoundary>
     </div>
+  );
+}
+
+function FilterPopover({
+  options,
+  selected,
+  onToggle,
+  onClear,
+  onClose,
+  emptyLabel,
+}: {
+  options: string[];
+  selected: string[];
+  onToggle: (v: string) => void;
+  onClear: () => void;
+  onClose: () => void;
+  emptyLabel: string;
+}) {
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, zIndex: 40 }}
+      />
+      <div
+        role="menu"
+        style={{
+          position: "absolute",
+          top: "calc(100% + 6px)",
+          left: 0,
+          zIndex: 50,
+          minWidth: 240,
+          maxHeight: 320,
+          overflowY: "auto",
+          background: "#fff",
+          border: "1px solid var(--border, #E5E7EB)",
+          borderRadius: 10,
+          boxShadow: "0 12px 30px rgba(15,23,42,.12)",
+          padding: 8,
+        }}
+      >
+        {options.length === 0 ? (
+          <div style={{ padding: "10px 8px", fontSize: 12.5, color: "var(--muted, #64748B)" }}>{emptyLabel}</div>
+        ) : (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 6px 8px", borderBottom: "1px solid #F1F5F9", marginBottom: 4 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--muted, #64748B)", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                {selected.length} selecionado{selected.length === 1 ? "" : "s"}
+              </span>
+              <button
+                type="button"
+                onClick={onClear}
+                style={{ fontSize: 11.5, color: "var(--orange, #F97316)", fontWeight: 600 }}
+              >
+                Limpar
+              </button>
+            </div>
+            {options.map((opt) => {
+              const checked = selected.includes(opt);
+              return (
+                <label
+                  key={opt}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "7px 8px",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    fontSize: 13,
+                    background: checked ? "#FFF7ED" : "transparent",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onToggle(opt)}
+                  />
+                  <span>{opt}</span>
+                </label>
+              );
+            })}
+          </>
+        )}
+      </div>
+    </>
   );
 }
