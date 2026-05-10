@@ -976,17 +976,62 @@ export function Inclusao() {
     pedagogico?: string; comportamental?: string; sensorial?: string; familia?: string;
     avancos?: string[]; desafios?: string[]; encaminhamentos?: string[];
     comunicacao_familias?: string;
+    texto?: string;
+    periodoLabel?: string;
+    formato?: "topicos" | "texto";
     geradoEm?: string;
   };
   const [parecerByStudent, setParecerByStudent] = usePersistentState<Record<string, Parecer>>("inc_parecer", {});
   const [gerandoParecer, setGerandoParecer] = useState(false);
   const parecerAtual = (selectedId && parecerByStudent[selectedId]) || null;
 
+  // Período / formato do relatório IA
+  type RelTipo = "bimestre" | "trimestre" | "semestre" | "anual";
+  const [relTipo, setRelTipo] = useState<RelTipo>("bimestre");
+  const [relNumero, setRelNumero] = useState<number>(1);
+  const [relAno, setRelAno] = useState<number>(new Date().getFullYear());
+  const [relFormato, setRelFormato] = useState<"topicos" | "texto">("topicos");
+
+  const relMaxNumero = relTipo === "bimestre" ? 4 : relTipo === "trimestre" ? 3 : relTipo === "semestre" ? 2 : 1;
+  // Garante que o número não ultrapassa o máximo do tipo
+  useEffect(() => { if (relNumero > relMaxNumero) setRelNumero(1); }, [relTipo, relMaxNumero, relNumero]);
+
+  const relIntervalo = useMemo((): { inicio: Date; fim: Date; label: string } => {
+    const ano = relAno;
+    if (relTipo === "anual") {
+      return { inicio: new Date(ano, 0, 1), fim: new Date(ano, 11, 31, 23, 59, 59), label: `Ano letivo ${ano}` };
+    }
+    const span = relTipo === "bimestre" ? 3 : relTipo === "trimestre" ? 4 : 6;
+    const startMonth = (relNumero - 1) * span;
+    const endMonth = Math.min(startMonth + span - 1, 11);
+    const tipoLbl = relTipo === "bimestre" ? "Bimestre" : relTipo === "trimestre" ? "Trimestre" : "Semestre";
+    return {
+      inicio: new Date(ano, startMonth, 1),
+      fim: new Date(ano, endMonth + 1, 0, 23, 59, 59),
+      label: `${relNumero}º ${tipoLbl} · ${ano}`,
+    };
+  }, [relTipo, relNumero, relAno]);
+
+  // Parse "DD/MM/YYYY · HH:MM" do registro
+  const parseRegDate = (when: string): Date | null => {
+    const m = (when || "").match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (!m) return null;
+    return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+  };
+  const regsDoPeriodo = useMemo(() => {
+    if (!selectedId) return [] as RegItem[];
+    const all = regByStudent[selectedId] || [];
+    return all.filter((r) => {
+      const d = parseRegDate(r.when);
+      return d ? d >= relIntervalo.inicio && d <= relIntervalo.fim : false;
+    });
+  }, [selectedId, regByStudent, relIntervalo]);
+
   const handleGerarParecer = async () => {
     if (!selected) return;
     setGerandoParecer(true);
     try {
-      const regs = (regByStudent[selected.id] || []).map((r) => ({
+      const regs = regsDoPeriodo.map((r) => ({
         when: r.when, cat: r.cat, body: r.body,
       }));
       const peiResumo = (plansByStudent[selected.id] || [])
@@ -997,14 +1042,21 @@ export function Inclusao() {
         body: {
           aluno: selected.name,
           diagnostico: selected.diag || "",
-          periodo: "Bimestral",
+          periodo: relIntervalo.label,
+          intervalo: `${relIntervalo.inicio.toLocaleDateString("pt-BR")} a ${relIntervalo.fim.toLocaleDateString("pt-BR")}`,
+          formato: relFormato,
           anamneseResumo,
           peiResumo,
           registros: regs,
         },
       });
       if (error) throw error;
-      const parecer: Parecer = { ...(data?.parecer || {}), geradoEm: new Date().toLocaleString("pt-BR") };
+      const parecer: Parecer = {
+        ...(data?.parecer || {}),
+        periodoLabel: relIntervalo.label,
+        formato: relFormato,
+        geradoEm: new Date().toLocaleString("pt-BR"),
+      };
       setParecerByStudent((all) => ({ ...all, [selected.id]: parecer }));
       toast.success("Parecer gerado pela Sofia.");
     } catch (e) {
@@ -1013,6 +1065,61 @@ export function Inclusao() {
     } finally {
       setGerandoParecer(false);
     }
+  };
+
+  const imprimirParecer = () => {
+    if (!parecerAtual || !selected) return;
+    const w = window.open("", "_blank");
+    if (!w) return;
+    const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+    const ul = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : "";
+    const corpo = parecerAtual.formato === "texto" && parecerAtual.texto
+      ? `<div class="texto">${esc(parecerAtual.texto).split(/\n+/).map((p) => `<p>${p}</p>`).join("")}</div>`
+      : `
+        ${parecerAtual.resumo ? `<p><b>Resumo:</b> ${esc(parecerAtual.resumo)}</p>` : ""}
+        ${parecerAtual.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAtual.pedagogico)}</p>` : ""}
+        ${parecerAtual.comportamental ? `<h3>Comportamental</h3><p>${esc(parecerAtual.comportamental)}</p>` : ""}
+        ${parecerAtual.sensorial ? `<h3>Sensorial</h3><p>${esc(parecerAtual.sensorial)}</p>` : ""}
+        ${parecerAtual.familia ? `<h3>Família</h3><p>${esc(parecerAtual.familia)}</p>` : ""}
+        ${parecerAtual.avancos?.length ? `<h3>Avanços</h3>${ul(parecerAtual.avancos)}` : ""}
+        ${parecerAtual.desafios?.length ? `<h3>Desafios</h3>${ul(parecerAtual.desafios)}` : ""}
+        ${parecerAtual.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ul(parecerAtual.encaminhamentos)}` : ""}
+        ${parecerAtual.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAtual.comunicacao_familias)}</p>` : ""}
+      `;
+    w.document.write(`
+      <!doctype html><html><head><meta charset="utf-8"/>
+      <title>Parecer · ${esc(selected.name)}</title>
+      <style>
+        @page{size:A4;margin:18mm 16mm;}
+        body{font-family:'Inter',Arial,sans-serif;color:#0F1B36;font-size:11pt;line-height:1.5;}
+        h1{font-size:18pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
+        h3{font-size:12pt;margin:12pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
+        .meta{font-size:9pt;color:#6B7691;margin-bottom:10pt;}
+        ul{margin:4pt 0 0 16pt;}
+        .texto p{text-align:justify;margin:0 0 8pt;}
+        .legal{margin-top:16pt;font-size:8.5pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
+        .sig{margin-top:24pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
+        .sig div{border-top:1px solid #333;padding-top:4pt;font-size:9pt;text-align:center;}
+        .toolbar{position:fixed;top:8px;right:8px;}
+        @media print{.toolbar{display:none;}}
+      </style></head><body>
+      <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
+      <h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
+      <div class="meta">
+        <b>Aluno(a):</b> ${esc(selected.name)} · ${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")}<br/>
+        <b>Diagnóstico:</b> ${esc(selected.diag || "—")} ${selected.cid ? "· " + esc(selected.cid) : ""}<br/>
+        <b>Período:</b> ${esc(parecerAtual.periodoLabel || "")} · <b>Gerado em:</b> ${esc(parecerAtual.geradoEm || "")}
+      </div>
+      ${corpo}
+      <div class="sig">
+        <div>Professor(a) regente</div>
+        <div>Coordenação pedagógica</div>
+      </div>
+      <div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
+      </body></html>
+    `);
+    w.document.close();
+    setTimeout(() => w.focus(), 200);
   };
 
   const goView = (v: ViewKey) => {
@@ -2134,26 +2241,81 @@ export function Inclusao() {
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="rel-feature">
-                      <h4>Parecer descritivo bimestral · 1º bim 2026</h4>
+                      <h4>Parecer descritivo · {relIntervalo.label}</h4>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end", marginBottom: 12, padding: 12, background: "#fff", border: "1px solid var(--border)", borderRadius: 10 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Período</label>
+                          <select value={relTipo} onChange={(e) => setRelTipo(e.target.value as RelTipo)} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                            <option value="bimestre">Bimestral</option>
+                            <option value="trimestre">Trimestral</option>
+                            <option value="semestre">Semestral</option>
+                            <option value="anual">Anual</option>
+                          </select>
+                        </div>
+                        {relTipo !== "anual" && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Qual</label>
+                            <select value={relNumero} onChange={(e) => setRelNumero(parseInt(e.target.value))} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                              {Array.from({ length: relMaxNumero }).map((_, i) => (
+                                <option key={i + 1} value={i + 1}>{i + 1}º</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Ano letivo</label>
+                          <select value={relAno} onChange={(e) => setRelAno(parseInt(e.target.value))} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                            {[0, -1, -2].map((d) => {
+                              const y = new Date().getFullYear() + d;
+                              return <option key={y} value={y}>{y}</option>;
+                            })}
+                          </select>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
+                          <select value={relFormato} onChange={(e) => setRelFormato(e.target.value as "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                            <option value="topicos">Tópicos (estruturado)</option>
+                            <option value="texto">Texto corrido</option>
+                          </select>
+                        </div>
+                        <div style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }}>
+                          {relIntervalo.inicio.toLocaleDateString("pt-BR")} → {relIntervalo.fim.toLocaleDateString("pt-BR")}
+                        </div>
+                      </div>
                       <p>
-                        A Sofia consolida <b>{(regByStudent[selected.id] || []).length} registro(s)</b>
+                        A Sofia consolida <b>{regsDoPeriodo.length} registro(s)</b> do período
                         {studentPlans.length ? `, ${studentPlans.length} plano(s) PEI` : ""}
                         {anamneseResumo ? " e a anamnese" : ""} de {selected.name.split(" ")[0]} em um parecer pronto para exportar e assinar.
                       </p>
-                      <button
-                        className="btn btn-primary bg-orange-400 text-orange-400"
-                        onClick={handleGerarParecer}
-                        disabled={gerandoParecer || (regByStudent[selected.id] || []).length === 0}
-                        title={(regByStudent[selected.id] || []).length === 0 ? "Cadastre ao menos um registro para gerar o parecer." : ""}
-                      >
-                        <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
-                      </button>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button
+                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          onClick={handleGerarParecer}
+                          disabled={gerandoParecer || regsDoPeriodo.length === 0}
+                          title={regsDoPeriodo.length === 0 ? "Não há registros no período selecionado." : ""}
+                        >
+                          <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
+                        </button>
+                        {parecerAtual && (
+                          <button className="inc-btn-ghost" onClick={imprimirParecer}>
+                            <Printer size={14} /> Imprimir / PDF
+                          </button>
+                        )}
+                      </div>
                       {parecerAtual && (
                         <div style={{ marginTop: 14, padding: 14, background: "#fff", border: "1px solid var(--border)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                             <b style={{ fontFamily: "'Fraunces',serif", fontSize: 15 }}>{parecerAtual.titulo || "Parecer descritivo"}</b>
-                            <span style={{ fontSize: 11, color: "var(--muted)" }}>Gerado em {parecerAtual.geradoEm}</span>
+                            <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                              {parecerAtual.periodoLabel ? `${parecerAtual.periodoLabel} · ` : ""}Gerado em {parecerAtual.geradoEm}
+                            </span>
                           </div>
+                          {parecerAtual.formato === "texto" && parecerAtual.texto ? (
+                            <div style={{ fontSize: 13, lineHeight: 1.6, textAlign: "justify" }}>
+                              {parecerAtual.texto.split(/\n+/).map((p, i) => <p key={i} style={{ margin: "0 0 8px" }}>{p}</p>)}
+                            </div>
+                          ) : (
+                            <>
                           {parecerAtual.resumo && <p style={{ margin: 0, fontSize: 13 }}>{parecerAtual.resumo}</p>}
                           {parecerAtual.pedagogico && (<div><b style={{ fontSize: 12 }}>Pedagógico</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.pedagogico}</p></div>)}
                           {parecerAtual.comportamental && (<div><b style={{ fontSize: 12 }}>Comportamental</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.comportamental}</p></div>)}
@@ -2179,6 +2341,8 @@ export function Inclusao() {
                               <b style={{ fontSize: 12 }}>Comunicação à família</b>
                               <p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.comunicacao_familias}</p>
                             </div>
+                          )}
+                            </>
                           )}
                         </div>
                       )}

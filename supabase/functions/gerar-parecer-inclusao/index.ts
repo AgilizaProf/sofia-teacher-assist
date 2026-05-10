@@ -15,6 +15,8 @@ serve(async (req) => {
       anamneseResumo = "",
       peiResumo = "",
       registros = [] as Registro[],
+      formato = "topicos", // "topicos" | "texto"
+      intervalo = "",
     } = body || {};
 
     const linhas = (registros as Registro[])
@@ -22,7 +24,7 @@ serve(async (req) => {
       .map((r) => `- [${r.when || "—"}] (${r.cat || "ped"}) ${r.body || ""}`)
       .join("\n");
 
-    const sys = `Você é a Sofia, assistente pedagógica especializada em educação inclusiva (Lei 14.254/2021 e BNCC). Gere um parecer descritivo individual, narrativo, em tom profissional e empático, baseado APENAS nos dados reais fornecidos (anamnese, PEI e registros). Não invente fatos, datas ou objetivos não citados. Se faltar informação em algum eixo, indique brevemente. Devolva JSON estrito.`;
+    const sys = `Você é a Sofia, assistente pedagógica especializada em educação inclusiva (Lei 14.254/2021 e BNCC). Gere um parecer descritivo individual, narrativo, em tom profissional e empático, baseado APENAS nos dados reais fornecidos (anamnese, PEI e registros do período). Não invente fatos, datas ou objetivos não citados. Se faltar informação em algum eixo, indique brevemente. Devolva JSON estrito.`;
 
     const user = `Aluno(a): ${aluno || "—"}
 Diagnóstico/CID: ${diagnostico || "não informado"}
@@ -34,10 +36,17 @@ ${anamneseResumo || "(sem dados de anamnese)"}
 PEI (resumo):
 ${peiResumo || "(sem PEI cadastrado)"}
 
-Registros do diário (${(registros as Registro[]).length}):
+Intervalo considerado: ${intervalo || periodo}
+Registros do diário no período (${(registros as Registro[]).length}):
 ${linhas || "(nenhum registro)"}
 
-Responda APENAS com JSON válido neste formato:
+Formato de saída solicitado: ${formato === "texto" ? "TEXTO CORRIDO (um único parecer narrativo, em parágrafos)" : "TÓPICOS (estruturado por eixos)"}
+
+${formato === "texto" ? `Responda APENAS com JSON válido neste formato:
+{
+  "titulo": "Parecer descritivo · ${periodo}",
+  "texto": "Parecer descritivo completo em 4 a 6 parágrafos contínuos, citando o período (${intervalo || periodo}), pedagógico, comportamental, sensorial, família, avanços, desafios e encaminhamentos. Sem títulos internos, sem bullets, em texto corrido."
+}` : `Responda APENAS com JSON válido neste formato:
 {
   "titulo": "Parecer descritivo · ${periodo}",
   "resumo": "2-3 frases de contexto do(a) aluno(a) no período",
@@ -49,7 +58,7 @@ Responda APENAS com JSON válido neste formato:
   "desafios": ["2 a 4 pontos de atenção concretos"],
   "encaminhamentos": ["3 a 5 encaminhamentos práticos para o próximo período"],
   "comunicacao_familias": "1 parágrafo curto pronto para enviar à família"
-}`;
+}`}`;
 
     const r = await callAI({ tipo: "parecer", system: sys, user, json: true, maxTokens: 3000 });
     if (!r.ok) return aiErrorResponse(r);
