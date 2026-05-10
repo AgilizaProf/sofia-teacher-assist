@@ -1616,6 +1616,16 @@ export function Inclusao() {
                       <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeriodoOpen(true)}><Sparkles size={14} /> Atividades do período</button>
+                      {studentPlans.length > 0 && (
+                        <button
+                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          onClick={agendarPlanos}
+                          disabled={agendando}
+                          title="A Sofia distribui as atividades selecionadas em dias úteis na sua agenda."
+                        >
+                          <Sparkles size={14} /> {agendando ? "Agendando…" : "Sofia preencher agenda"}
+                        </button>
+                      )}
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
@@ -1672,7 +1682,18 @@ export function Inclusao() {
                           </div>
                         ) : studentPlans.map((p) => (
                           <div className="plan-item" key={p.id}>
-                            <div className="when">{p.disciplina || "Aula"}<b>{p.data.split("-").reverse().slice(0,2).join("/")}</b></div>
+                            <div className="when">
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", textTransform: "none", fontSize: 11 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!agendarSel[p.id]}
+                                  onChange={(e) => setAgendarSel((s) => ({ ...s, [p.id]: e.target.checked }))}
+                                  style={{ cursor: "pointer" }}
+                                />
+                                Agendar
+                              </label>
+                              <b style={{ marginTop: 4 }}>{p.disciplina || "Aula"}</b>
+                            </div>
                             <div>
                               <h5>{p.titulo}</h5>
                               <div className="meta-row">
@@ -1680,16 +1701,31 @@ export function Inclusao() {
                                 {p.habilidades?.[0]?.codigo && <span className="bncc">{p.habilidades[0].codigo}</span>}
                                 <span className="adapted">Adaptado pela Sofia</span>
                               </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>Dia</label>
+                                <input
+                                  type="date"
+                                  value={p.data}
+                                  onChange={(e) => updatePlan(p.id, { data: e.target.value })}
+                                  style={{ padding: "5px 8px", border: "1px solid var(--border)", borderRadius: 7, fontSize: 12, fontFamily: "inherit", background: "#fff" }}
+                                />
+                              </div>
                             </div>
-                            <button
-                              className="inc-btn-ghost"
-                              onClick={() => {
-                                if (!selectedId) return;
-                                if (!confirm(`Excluir o plano "${p.titulo}"?`)) return;
-                                setPlansByStudent((all) => ({ ...all, [selectedId]: (all[selectedId] || []).filter((x) => x.id !== p.id) }));
-                                toast.success("Plano excluído");
-                              }}
-                            ><X size={12} /> Excluir</button>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                              <button
+                                className="inc-btn-ghost"
+                                onClick={() => setViewPlanId(p.id)}
+                              ><BookOpen size={12} /> Abrir / Editar</button>
+                              <button
+                                className="inc-btn-ghost"
+                                onClick={() => {
+                                  if (!selectedId) return;
+                                  if (!confirm(`Excluir o plano "${p.titulo}"?`)) return;
+                                  setPlansByStudent((all) => ({ ...all, [selectedId]: (all[selectedId] || []).filter((x) => x.id !== p.id) }));
+                                  toast.success("Plano excluído");
+                                }}
+                              ><X size={12} /> Excluir</button>
+                            </div>
                           </div>
                         ))}
                       </div>
