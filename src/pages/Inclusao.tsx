@@ -743,7 +743,21 @@ export function Inclusao() {
   const [viewPlanId, setViewPlanId] = useState<string | null>(null);
   const [agendarSel, setAgendarSel] = useState<Record<string, boolean>>({});
   const [agendando, setAgendando] = useState(false);
+  const [agendarPeriodOpen, setAgendarPeriodOpen] = useState(false);
+  type PeriodoAg = "dia" | "semana" | "mes" | "bimestre" | "trimestre" | "semestre";
+  const [periodoAg, setPeriodoAg] = useState<PeriodoAg>("semana");
   const viewingPlan = studentPlans.find((p) => p.id === viewPlanId) || null;
+  const selecionadosCount = Object.values(agendarSel).filter(Boolean).length;
+  const todosSelecionados = studentPlans.length > 0 && studentPlans.every((p) => agendarSel[p.id]);
+  const toggleSelTodos = () => {
+    if (todosSelecionados) {
+      setAgendarSel({});
+    } else {
+      const next: Record<string, boolean> = {};
+      for (const p of studentPlans) next[p.id] = true;
+      setAgendarSel(next);
+    }
+  };
 
   const updatePlan = (planId: string, patch: Partial<PlanoInclusao>) => {
     if (!selectedId) return;
@@ -759,6 +773,56 @@ export function Inclusao() {
     return d;
   };
 
+  // Janela total de dias para cada período (a partir de hoje)
+  const PERIODO_DIAS: Record<PeriodoAg, number> = {
+    dia: 1, semana: 7, mes: 30, bimestre: 60, trimestre: 90, semestre: 180,
+  };
+  const PERIODO_LABEL: Record<PeriodoAg, string> = {
+    dia: "no mesmo dia", semana: "ao longo da semana", mes: "ao longo do mês",
+    bimestre: "ao longo do bimestre", trimestre: "ao longo do trimestre", semestre: "ao longo do semestre",
+  };
+
+  // Gera N datas distribuídas em dias úteis dentro da janela do período.
+  const gerarDatasDistribuidas = (n: number, periodo: PeriodoAg): string[] => {
+    const start = nextWeekday(new Date());
+    if (periodo === "dia") {
+      const iso = start.toISOString().slice(0, 10);
+      return Array(n).fill(iso);
+    }
+    const totalDias = PERIODO_DIAS[periodo];
+    // Lista de dias úteis dentro da janela
+    const uteis: Date[] = [];
+    for (let i = 0; i < totalDias; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      if (d.getDay() !== 0 && d.getDay() !== 6) uteis.push(d);
+    }
+    if (uteis.length === 0) return [];
+    const resultado: string[] = [];
+    if (n <= uteis.length) {
+      // espaça uniformemente
+      const step = uteis.length / n;
+      for (let i = 0; i < n; i++) {
+        const idx = Math.min(uteis.length - 1, Math.floor(i * step));
+        resultado.push(uteis[idx].toISOString().slice(0, 10));
+      }
+    } else {
+      // mais planos do que dias — ciclo
+      for (let i = 0; i < n; i++) resultado.push(uteis[i % uteis.length].toISOString().slice(0, 10));
+    }
+    return resultado;
+  };
+
+  const abrirAgendarPeriodo = () => {
+    if (!selectedId) return;
+    const ids = Object.keys(agendarSel).filter((k) => agendarSel[k]);
+    if (ids.length === 0) {
+      toast.error("Selecione ao menos uma atividade para agendar.");
+      return;
+    }
+    setAgendarPeriodOpen(true);
+  };
+
   const agendarPlanos = async () => {
     if (!selectedId || !selected) return;
     const ids = Object.keys(agendarSel).filter((k) => agendarSel[k]);
@@ -769,20 +833,12 @@ export function Inclusao() {
     }
     setAgendando(true);
     try {
-      let cursor = nextWeekday(new Date());
+      const datas = gerarDatasDistribuidas(escolhidos.length, periodoAg);
       let okCount = 0;
-      for (const p of escolhidos) {
-        let dataEvento = p.data;
-        // Se data não definida ou no passado, distribui em dias úteis a partir de hoje
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-        const dPlano = p.data ? new Date(p.data + "T00:00:00") : null;
-        if (!dPlano || dPlano < hoje) {
-          dataEvento = cursor.toISOString().slice(0, 10);
-          updatePlan(p.id, { data: dataEvento });
-          // avança cursor para próximo dia útil
-          const nxt = new Date(cursor); nxt.setDate(nxt.getDate() + 1);
-          cursor = nextWeekday(nxt);
-        }
+      for (let i = 0; i < escolhidos.length; i++) {
+        const p = escolhidos[i];
+        const dataEvento = datas[i] || datas[datas.length - 1];
+        updatePlan(p.id, { data: dataEvento });
         await createAgendaEvent({
           title: `${p.titulo} · ${selected.name.split(" ")[0]}`,
           date: dataEvento,
@@ -791,8 +847,9 @@ export function Inclusao() {
         });
         okCount++;
       }
-      toast.success(`Sofia agendou ${okCount} atividade(s) na agenda.`);
+      toast.success(`Sofia agendou ${okCount} atividade(s) ${PERIODO_LABEL[periodoAg]}.`);
       setAgendarSel({});
+      setAgendarPeriodOpen(false);
     } catch (e) {
       console.error(e);
       toast.error("Erro ao agendar", { description: e instanceof Error ? e.message : "" });
