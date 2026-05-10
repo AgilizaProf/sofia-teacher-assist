@@ -1617,6 +1617,11 @@
     (window.top || window).location.href = route;
   }
 
+  function goHome(){
+    try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
+    (window.top || window).location.href = '/';
+  }
+
   // foco no nome ao abrir
   setTimeout(()=>{document.getElementById('leadName').focus();}, 400);
   updateUI();
