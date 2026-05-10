@@ -5,6 +5,14 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
 
+function postLoginRoute(): "/" | "/onboarding" {
+  try {
+    return localStorage.getItem("agp_onboarding_completed") === "1" ? "/" : "/onboarding";
+  } catch {
+    return "/";
+  }
+}
+
 export function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
