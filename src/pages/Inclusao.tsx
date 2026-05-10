@@ -2350,6 +2350,11 @@ export function Inclusao() {
                           );
                         })()}
                         {parecerAtual && (
+                          <button className="inc-btn-ghost" onClick={() => setPreviewParecerOpen(true)}>
+                            <FileText size={14} /> Pré-visualizar
+                          </button>
+                        )}
+                        {parecerAtual && (
                           <button className="inc-btn-ghost" onClick={imprimirParecer}>
                             <Printer size={14} /> Imprimir / PDF
                           </button>
