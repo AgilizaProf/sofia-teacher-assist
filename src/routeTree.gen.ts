@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
+import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagamento-confirmado-mensal'
+import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento-confirmado-anual'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
@@ -39,6 +41,18 @@ const PlanejamentoRoute = PlanejamentoRouteImport.update({
   path: '/planejamento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagamentoConfirmadoMensalRoute =
+  PagamentoConfirmadoMensalRouteImport.update({
+    id: '/pagamento-confirmado-mensal',
+    path: '/pagamento-confirmado-mensal',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PagamentoConfirmadoAnualRoute =
+  PagamentoConfirmadoAnualRouteImport.update({
+    id: '/pagamento-confirmado-anual',
+    path: '/pagamento-confirmado-anual',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -103,6 +117,8 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
+  '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -119,6 +135,8 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
+  '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -136,6 +154,8 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
+  '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -154,6 +174,8 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/inclusao'
     | '/onboarding'
+    | '/pagamento-confirmado-anual'
+    | '/pagamento-confirmado-mensal'
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
@@ -170,6 +192,8 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/inclusao'
     | '/onboarding'
+    | '/pagamento-confirmado-anual'
+    | '/pagamento-confirmado-mensal'
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
@@ -186,6 +210,8 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/inclusao'
     | '/onboarding'
+    | '/pagamento-confirmado-anual'
+    | '/pagamento-confirmado-mensal'
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
@@ -203,6 +229,8 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
+  PagamentoConfirmadoAnualRoute: typeof PagamentoConfirmadoAnualRoute
+  PagamentoConfirmadoMensalRoute: typeof PagamentoConfirmadoMensalRoute
   PlanejamentoRoute: typeof PlanejamentoRouteWithChildren
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -230,6 +258,20 @@ declare module '@tanstack/react-router' {
       path: '/planejamento'
       fullPath: '/planejamento'
       preLoaderRoute: typeof PlanejamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento-confirmado-mensal': {
+      id: '/pagamento-confirmado-mensal'
+      path: '/pagamento-confirmado-mensal'
+      fullPath: '/pagamento-confirmado-mensal'
+      preLoaderRoute: typeof PagamentoConfirmadoMensalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento-confirmado-anual': {
+      id: '/pagamento-confirmado-anual'
+      path: '/pagamento-confirmado-anual'
+      fullPath: '/pagamento-confirmado-anual'
+      preLoaderRoute: typeof PagamentoConfirmadoAnualRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -346,6 +388,8 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
+  PagamentoConfirmadoAnualRoute: PagamentoConfirmadoAnualRoute,
+  PagamentoConfirmadoMensalRoute: PagamentoConfirmadoMensalRoute,
   PlanejamentoRoute: PlanejamentoRouteWithChildren,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -354,3 +398,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
