@@ -27,6 +27,7 @@ import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
 import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
 import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
+import { Route as AdminProRouteImport } from './routes/admin.pro'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -121,6 +122,11 @@ const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProRoute = AdminProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiSofiaSuggestionsRoute = ApiSofiaSuggestionsRouteImport.update({
   id: '/api/sofia/suggestions',
   path: '/api/sofia/suggestions',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/admin/pro'
     | '/admin/usuarios'
     | '/inclusao/pei'
     | '/planejamento/atividade'
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/admin/pro'
     | '/admin/usuarios'
     | '/inclusao/pei'
     | '/planejamento/atividade'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/admin/pro'
     | '/admin/usuarios'
     | '/inclusao/pei'
     | '/planejamento/atividade'
@@ -400,6 +412,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsuariosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/pro': {
+      id: '/admin/pro'
+      path: '/pro'
+      fullPath: '/admin/pro'
+      preLoaderRoute: typeof AdminProRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/sofia/suggestions': {
       id: '/api/sofia/suggestions'
       path: '/api/sofia/suggestions'
@@ -411,11 +430,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminProRoute: typeof AdminProRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminProRoute: AdminProRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
