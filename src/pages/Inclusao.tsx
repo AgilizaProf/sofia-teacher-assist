@@ -976,11 +976,56 @@ export function Inclusao() {
     pedagogico?: string; comportamental?: string; sensorial?: string; familia?: string;
     avancos?: string[]; desafios?: string[]; encaminhamentos?: string[];
     comunicacao_familias?: string;
+    texto?: string;
+    periodoLabel?: string;
+    formato?: "topicos" | "texto";
     geradoEm?: string;
   };
   const [parecerByStudent, setParecerByStudent] = usePersistentState<Record<string, Parecer>>("inc_parecer", {});
   const [gerandoParecer, setGerandoParecer] = useState(false);
   const parecerAtual = (selectedId && parecerByStudent[selectedId]) || null;
+
+  // Período / formato do relatório IA
+  type RelTipo = "bimestre" | "trimestre" | "semestre" | "anual";
+  const [relTipo, setRelTipo] = useState<RelTipo>("bimestre");
+  const [relNumero, setRelNumero] = useState<number>(1);
+  const [relAno, setRelAno] = useState<number>(new Date().getFullYear());
+  const [relFormato, setRelFormato] = useState<"topicos" | "texto">("topicos");
+
+  const relMaxNumero = relTipo === "bimestre" ? 4 : relTipo === "trimestre" ? 3 : relTipo === "semestre" ? 2 : 1;
+  // Garante que o número não ultrapassa o máximo do tipo
+  useEffect(() => { if (relNumero > relMaxNumero) setRelNumero(1); }, [relTipo, relMaxNumero, relNumero]);
+
+  const relIntervalo = useMemo((): { inicio: Date; fim: Date; label: string } => {
+    const ano = relAno;
+    if (relTipo === "anual") {
+      return { inicio: new Date(ano, 0, 1), fim: new Date(ano, 11, 31, 23, 59, 59), label: `Ano letivo ${ano}` };
+    }
+    const span = relTipo === "bimestre" ? 3 : relTipo === "trimestre" ? 4 : 6;
+    const startMonth = (relNumero - 1) * span;
+    const endMonth = Math.min(startMonth + span - 1, 11);
+    const tipoLbl = relTipo === "bimestre" ? "Bimestre" : relTipo === "trimestre" ? "Trimestre" : "Semestre";
+    return {
+      inicio: new Date(ano, startMonth, 1),
+      fim: new Date(ano, endMonth + 1, 0, 23, 59, 59),
+      label: `${relNumero}º ${tipoLbl} · ${ano}`,
+    };
+  }, [relTipo, relNumero, relAno]);
+
+  // Parse "DD/MM/YYYY · HH:MM" do registro
+  const parseRegDate = (when: string): Date | null => {
+    const m = (when || "").match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (!m) return null;
+    return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+  };
+  const regsDoPeriodo = useMemo(() => {
+    if (!selected) return [] as RegItem[];
+    const all = regByStudent[selected.id] || [];
+    return all.filter((r) => {
+      const d = parseRegDate(r.when);
+      return d ? d >= relIntervalo.inicio && d <= relIntervalo.fim : false;
+    });
+  }, [selected, regByStudent, relIntervalo]);
 
   const handleGerarParecer = async () => {
     if (!selected) return;
