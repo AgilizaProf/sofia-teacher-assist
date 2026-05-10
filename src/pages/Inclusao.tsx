@@ -675,6 +675,80 @@ export function Inclusao() {
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
   const [objetivosModalOpen, setObjetivosModalOpen] = useState(false);
   const [previewParecerOpen, setPreviewParecerOpen] = useState(false);
+  const [editandoParecer, setEditandoParecer] = useState(false);
+  const [parecerDraft, setParecerDraft] = useState<Parecer | null>(null);
+
+  const startEditParecer = () => {
+    if (!parecerAtual) return;
+    setParecerDraft({ ...parecerAtual });
+    setEditandoParecer(true);
+  };
+  const cancelEditParecer = () => {
+    setParecerDraft(null);
+    setEditandoParecer(false);
+  };
+  const saveEditParecer = () => {
+    if (!selected || !parecerDraft) return;
+    setParecerByStudent((all) => ({ ...all, [selected.id]: { ...parecerDraft } }));
+    setEditandoParecer(false);
+    setParecerDraft(null);
+    toast.success("Parecer salvo.");
+  };
+
+  const exportarParecerWord = () => {
+    if (!parecerAtual || !selected) return;
+    const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+    const ul = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : "";
+    const corpo = parecerAtual.formato === "texto" && parecerAtual.texto
+      ? `<div>${esc(parecerAtual.texto).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 10pt;">${p}</p>`).join("")}</div>`
+      : `
+        ${parecerAtual.resumo ? `<p><b>Resumo:</b> ${esc(parecerAtual.resumo)}</p>` : ""}
+        ${parecerAtual.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAtual.pedagogico)}</p>` : ""}
+        ${parecerAtual.comportamental ? `<h3>Comportamental</h3><p>${esc(parecerAtual.comportamental)}</p>` : ""}
+        ${parecerAtual.sensorial ? `<h3>Sensorial</h3><p>${esc(parecerAtual.sensorial)}</p>` : ""}
+        ${parecerAtual.familia ? `<h3>Família</h3><p>${esc(parecerAtual.familia)}</p>` : ""}
+        ${parecerAtual.avancos?.length ? `<h3>Avanços</h3>${ul(parecerAtual.avancos)}` : ""}
+        ${parecerAtual.desafios?.length ? `<h3>Desafios</h3>${ul(parecerAtual.desafios)}` : ""}
+        ${parecerAtual.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ul(parecerAtual.encaminhamentos)}` : ""}
+        ${parecerAtual.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAtual.comunicacao_familias)}</p>` : ""}
+      `;
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"/><title>Parecer · ${esc(selected.name)}</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+  @page WordSection1 { size: A4; mso-page-orientation: portrait; margin: 18mm 16mm; }
+  div.WordSection1 { page: WordSection1; }
+  body { font-family: 'Calibri','Arial',sans-serif; color:#0F1B36; font-size:11pt; line-height:1.5; }
+  h1 { font-size:18pt; margin:0 0 6pt; border-bottom:2px solid #FF7A45; padding-bottom:4pt; }
+  h3 { font-size:12pt; margin:12pt 0 4pt; color:#FF7A45; text-transform:uppercase; }
+  .meta { font-size:9.5pt; color:#6B7691; margin-bottom:10pt; }
+  ul { margin:4pt 0 0 18pt; }
+  .legal { margin-top:16pt; font-size:8.5pt; color:#6B7691; border-top:1px dashed #ccc; padding-top:6pt; }
+  table.sig { width:100%; margin-top:24pt; }
+  table.sig td { border-top:1px solid #333; padding-top:4pt; font-size:9.5pt; text-align:center; width:50%; }
+</style></head>
+<body><div class="WordSection1">
+<h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
+<div class="meta">
+  <b>Aluno(a):</b> ${esc(selected.name)} · ${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")}<br/>
+  <b>Diagnóstico:</b> ${esc(selected.diag || "—")} ${selected.cid ? "· " + esc(selected.cid) : ""}<br/>
+  <b>Período:</b> ${esc(parecerAtual.periodoLabel || "")} · <b>Gerado em:</b> ${esc(parecerAtual.geradoEm || "")}
+</div>
+${corpo}
+<table class="sig"><tr><td>Professor(a) regente</td><td>Coordenação pedagógica</td></tr></table>
+<div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
+</div></body></html>`;
+    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeName = selected.name.replace(/[^\p{L}\p{N}_-]+/gu, "_");
+    a.href = url;
+    a.download = `Parecer_${safeName}_${(parecerAtual.periodoLabel || "").replace(/\s+/g, "_") || "Inclusao"}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
   const setAnamData = (updater: (prev: ReturnType<typeof buildBlankAnam>) => ReturnType<typeof buildBlankAnam>) => {
     setAnamByStudent((all) => ({ ...all, [studentKey]: updater(all[studentKey] || buildBlankAnam()) }));
   };
