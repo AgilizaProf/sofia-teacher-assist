@@ -234,7 +234,7 @@ export function TrilhasPanel() {
                 ...form,
                 turmaId: id,
                 turma: t?.name ?? "",
-                ano: t?.grade || form.ano,
+                ano: normalizarAno(t?.grade) || form.ano,
               });
             }}
             style={inputStyle}
@@ -248,7 +248,16 @@ export function TrilhasPanel() {
           {form.turmaId === "__manual__" && (
             <input placeholder="Nome da turma" value={form.turma} onChange={(e) => setForm({ ...form, turma: e.target.value })} style={inputStyle} />
           )}
-          <input placeholder="Ano escolar (ex: 2º ano EF)" value={form.ano} onChange={(e) => setForm({ ...form, ano: e.target.value })} style={inputStyle} />
+          <select
+            value={ANOS_ESCOLARES.includes(form.ano) ? form.ano : ""}
+            onChange={(e) => setForm({ ...form, ano: e.target.value })}
+            style={inputStyle}
+          >
+            <option value="">Ano de escolaridade…</option>
+            {ANOS_ESCOLARES.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
           <select value={form.semestre} onChange={(e) => setForm({ ...form, semestre: e.target.value })} style={inputStyle}>
             <option>1º semestre</option><option>2º semestre</option>
           </select>
