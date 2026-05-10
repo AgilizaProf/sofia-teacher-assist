@@ -2648,18 +2648,18 @@ ${corpo}
       {selected && parecerAtual && (
         <div
           className={"inc-modal-overlay" + (previewParecerOpen ? " open" : "")}
-          onClick={(e) => { if (e.target === e.currentTarget) setPreviewParecerOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget && !editandoParecer) setPreviewParecerOpen(false); }}
         >
           <div className="inc-modal" style={{ maxWidth: 860 }}>
             <div className="inc-modal-bar" />
             <div className="inc-modal-head">
               <div>
-                <h2>Pré-visualização do parecer</h2>
+                <h2>{editandoParecer ? "Editando parecer" : "Pré-visualização do parecer"}</h2>
                 <span className="meta" style={{ display: "block", marginTop: 4 }}>
                   {parecerAtual.periodoLabel || ""} · Formato: {parecerAtual.formato === "texto" ? "Texto corrido" : "Tópicos"}
                 </span>
               </div>
-              <button className="inc-modal-close" onClick={() => setPreviewParecerOpen(false)} aria-label="Fechar"><X size={16} /></button>
+              <button className="inc-modal-close" onClick={() => { cancelEditParecer(); setPreviewParecerOpen(false); }} aria-label="Fechar"><X size={16} /></button>
             </div>
             <div className="inc-modal-body" style={{ background: "#E5E7EB", padding: 20 }}>
               <div style={{
@@ -2681,7 +2681,44 @@ ${corpo}
                   <b>Diagnóstico:</b> {selected.diag || "—"} {selected.cid ? `· ${selected.cid}` : ""}<br />
                   <b>Período:</b> {parecerAtual.periodoLabel || ""} · <b>Gerado em:</b> {parecerAtual.geradoEm || ""}
                 </div>
-                {parecerAtual.formato === "texto" && parecerAtual.texto ? (
+                {editandoParecer && parecerDraft ? (
+                  (() => {
+                    const taStyle: React.CSSProperties = { width: "100%", border: "1px solid var(--border)", borderRadius: 6, padding: 8, fontFamily: "inherit", fontSize: 13, lineHeight: 1.5, color: "#0F1B36", resize: "vertical" };
+                    const upd = (patch: Partial<Parecer>) => setParecerDraft((d) => d ? { ...d, ...patch } : d);
+                    const updList = (key: "avancos" | "desafios" | "encaminhamentos") => (v: string) =>
+                      upd({ [key]: v.split("\n").map((s) => s.trim()).filter(Boolean) } as Partial<Parecer>);
+                    const Section = ({ title, value, onChange, rows = 3 }: { title: string; value: string; onChange: (v: string) => void; rows?: number }) => (
+                      <div style={{ marginTop: 12 }}>
+                        <h3 style={{ fontSize: 12.5, margin: "0 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>{title}</h3>
+                        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} style={taStyle} />
+                      </div>
+                    );
+                    if (parecerDraft.formato === "texto") {
+                      return (
+                        <textarea
+                          value={parecerDraft.texto || ""}
+                          onChange={(e) => upd({ texto: e.target.value })}
+                          rows={18}
+                          style={taStyle}
+                          placeholder="Texto corrido do parecer…"
+                        />
+                      );
+                    }
+                    return (
+                      <>
+                        <Section title="Resumo" value={parecerDraft.resumo || ""} onChange={(v) => upd({ resumo: v })} rows={2} />
+                        <Section title="Pedagógico" value={parecerDraft.pedagogico || ""} onChange={(v) => upd({ pedagogico: v })} />
+                        <Section title="Comportamental" value={parecerDraft.comportamental || ""} onChange={(v) => upd({ comportamental: v })} />
+                        <Section title="Sensorial" value={parecerDraft.sensorial || ""} onChange={(v) => upd({ sensorial: v })} />
+                        <Section title="Família" value={parecerDraft.familia || ""} onChange={(v) => upd({ familia: v })} />
+                        <Section title="Avanços (1 por linha)" value={(parecerDraft.avancos || []).join("\n")} onChange={updList("avancos")} rows={4} />
+                        <Section title="Desafios (1 por linha)" value={(parecerDraft.desafios || []).join("\n")} onChange={updList("desafios")} rows={3} />
+                        <Section title="Encaminhamentos (1 por linha)" value={(parecerDraft.encaminhamentos || []).join("\n")} onChange={updList("encaminhamentos")} rows={4} />
+                        <Section title="Comunicação à família" value={parecerDraft.comunicacao_familias || ""} onChange={(v) => upd({ comunicacao_familias: v })} rows={3} />
+                      </>
+                    );
+                  })()
+                ) : parecerAtual.formato === "texto" && parecerAtual.texto ? (
                   <div style={{ textAlign: "justify" }}>
                     {parecerAtual.texto.split(/\n+/).map((p, i) => (
                       <p key={i} style={{ margin: "0 0 10px" }}>{p}</p>
@@ -2730,11 +2767,28 @@ ${corpo}
                 </div>
               </div>
             </div>
-            <div className="inc-modal-foot" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button className="inc-btn-ghost" onClick={() => setPreviewParecerOpen(false)}>Fechar</button>
-              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => { setPreviewParecerOpen(false); imprimirParecer(); }}>
-                <Printer size={14} /> Imprimir / PDF
-              </button>
+            <div className="inc-modal-foot" style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+              {editandoParecer ? (
+                <>
+                  <button className="inc-btn-ghost" onClick={cancelEditParecer}>Cancelar</button>
+                  <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={saveEditParecer}>
+                    <Save size={14} /> Salvar alterações
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="inc-btn-ghost" onClick={() => { cancelEditParecer(); setPreviewParecerOpen(false); }}>Fechar</button>
+                  <button className="inc-btn-ghost" onClick={startEditParecer}>
+                    <Pencil size={14} /> Editar
+                  </button>
+                  <button className="inc-btn-ghost" onClick={exportarParecerWord}>
+                    <FileDown size={14} /> Salvar em Word
+                  </button>
+                  <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => { setPreviewParecerOpen(false); imprimirParecer(); }}>
+                    <Printer size={14} /> Imprimir / PDF
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
