@@ -2288,6 +2288,46 @@ export function Inclusao() {
                         {studentPlans.length ? `, ${studentPlans.length} plano(s) PEI` : ""}
                         {anamneseResumo ? " e a anamnese" : ""} de {selected.name.split(" ")[0]} em um parecer pronto para exportar e assinar.
                       </p>
+                      {(() => {
+                        const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+                        const objsArr = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as unknown[];
+                        const temPEI = Boolean(
+                          objsArr.length || peiSel.caracterizacao || peiSel.habilidadesDesenvolvidas ||
+                          peiSel.adaptacoesCurriculares || peiSel.metodologias
+                        );
+                        const temAnam = Boolean(anamneseResumo);
+                        const temRegs = regsDoPeriodo.length > 0;
+                        const items = [
+                          { ok: temAnam, label: "Anamnese", detail: temAnam ? "eixos preenchidos" : "ainda não preenchida" },
+                          { ok: temRegs, label: "Registros do período", detail: temRegs ? `${regsDoPeriodo.length} registro(s)` : "nenhum no período" },
+                          { ok: temPEI, label: "PEI", detail: temPEI ? `${objsArr.length} objetivo(s)` : "ainda não cadastrado" },
+                        ];
+                        return (
+                          <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 10, padding: 12, margin: "10px 0", display: "flex", flexDirection: "column", gap: 8 }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                              Fontes que serão usadas no parecer
+                            </div>
+                            {items.map((it) => (
+                              <div key={it.label} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
+                                <span aria-hidden style={{
+                                  width: 18, height: 18, borderRadius: 5, display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                  background: it.ok ? "#DCFCE7" : "#F3F4F6",
+                                  color: it.ok ? "#166534" : "#9CA3AF",
+                                  border: `1px solid ${it.ok ? "#86EFAC" : "#E5E7EB"}`,
+                                  fontWeight: 800, fontSize: 12, lineHeight: 1,
+                                }}>{it.ok ? "✓" : "—"}</span>
+                                <b style={{ color: it.ok ? "var(--text)" : "var(--muted)" }}>{it.label}</b>
+                                <span style={{ color: "var(--muted)", fontSize: 12 }}>· {it.detail}</span>
+                              </div>
+                            ))}
+                            {!items.some((i) => i.ok) && (
+                              <p style={{ fontSize: 11.5, color: "#B45309", margin: "4px 0 0" }}>
+                                Preencha pelo menos uma fonte (anamnese, PEI ou registros) para gerar o parecer.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {(() => {
                           const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
