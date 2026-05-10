@@ -19,6 +19,8 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
+import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusaoVisualizarModal";
+import { createAgendaEvent } from "@/lib/db/agenda";
 import { supabase } from "@/integrations/supabase/client";
 
 const css = `
@@ -738,6 +740,66 @@ export function Inclusao() {
   // Planos adaptados gerados pela Sofia, persistidos por aluno
   const [plansByStudent, setPlansByStudent] = usePersistentState<Record<string, PlanoInclusao[]>>("inc_plans", {});
   const studentPlans = (selectedId && plansByStudent[selectedId]) || [];
+  const [viewPlanId, setViewPlanId] = useState<string | null>(null);
+  const [agendarSel, setAgendarSel] = useState<Record<string, boolean>>({});
+  const [agendando, setAgendando] = useState(false);
+  const viewingPlan = studentPlans.find((p) => p.id === viewPlanId) || null;
+
+  const updatePlan = (planId: string, patch: Partial<PlanoInclusao>) => {
+    if (!selectedId) return;
+    setPlansByStudent((all) => ({
+      ...all,
+      [selectedId]: (all[selectedId] || []).map((p) => (p.id === planId ? { ...p, ...patch } : p)),
+    }));
+  };
+
+  const nextWeekday = (from: Date): Date => {
+    const d = new Date(from);
+    while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+    return d;
+  };
+
+  const agendarPlanos = async () => {
+    if (!selectedId || !selected) return;
+    const ids = Object.keys(agendarSel).filter((k) => agendarSel[k]);
+    const escolhidos = studentPlans.filter((p) => ids.includes(p.id));
+    if (escolhidos.length === 0) {
+      toast.error("Selecione ao menos uma atividade para agendar.");
+      return;
+    }
+    setAgendando(true);
+    try {
+      let cursor = nextWeekday(new Date());
+      let okCount = 0;
+      for (const p of escolhidos) {
+        let dataEvento = p.data;
+        // Se data não definida ou no passado, distribui em dias úteis a partir de hoje
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const dPlano = p.data ? new Date(p.data + "T00:00:00") : null;
+        if (!dPlano || dPlano < hoje) {
+          dataEvento = cursor.toISOString().slice(0, 10);
+          updatePlan(p.id, { data: dataEvento });
+          // avança cursor para próximo dia útil
+          const nxt = new Date(cursor); nxt.setDate(nxt.getDate() + 1);
+          cursor = nextWeekday(nxt);
+        }
+        await createAgendaEvent({
+          title: `${p.titulo} · ${selected.name.split(" ")[0]}`,
+          date: dataEvento,
+          type: "aula",
+          notes: `Plano adaptado · ${p.disciplina}${p.tema ? " · " + p.tema : ""}\nObjetivo: ${p.objetivo || "—"}`,
+        });
+        okCount++;
+      }
+      toast.success(`Sofia agendou ${okCount} atividade(s) na agenda.`);
+      setAgendarSel({});
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao agendar", { description: e instanceof Error ? e.message : "" });
+    } finally {
+      setAgendando(false);
+    }
+  };
   const anamneseResumo = useMemo(() => {
     if (!selectedId) return "";
     const data = anamByStudent[selectedId];
@@ -1554,6 +1616,16 @@ export function Inclusao() {
                       <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeriodoOpen(true)}><Sparkles size={14} /> Atividades do período</button>
+                      {studentPlans.length > 0 && (
+                        <button
+                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          onClick={agendarPlanos}
+                          disabled={agendando}
+                          title="A Sofia distribui as atividades selecionadas em dias úteis na sua agenda."
+                        >
+                          <Sparkles size={14} /> {agendando ? "Agendando…" : "Sofia preencher agenda"}
+                        </button>
+                      )}
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
@@ -1610,7 +1682,18 @@ export function Inclusao() {
                           </div>
                         ) : studentPlans.map((p) => (
                           <div className="plan-item" key={p.id}>
-                            <div className="when">{p.disciplina || "Aula"}<b>{p.data.split("-").reverse().slice(0,2).join("/")}</b></div>
+                            <div className="when">
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", textTransform: "none", fontSize: 11 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!!agendarSel[p.id]}
+                                  onChange={(e) => setAgendarSel((s) => ({ ...s, [p.id]: e.target.checked }))}
+                                  style={{ cursor: "pointer" }}
+                                />
+                                Agendar
+                              </label>
+                              <b style={{ marginTop: 4 }}>{p.disciplina || "Aula"}</b>
+                            </div>
                             <div>
                               <h5>{p.titulo}</h5>
                               <div className="meta-row">
@@ -1618,16 +1701,31 @@ export function Inclusao() {
                                 {p.habilidades?.[0]?.codigo && <span className="bncc">{p.habilidades[0].codigo}</span>}
                                 <span className="adapted">Adaptado pela Sofia</span>
                               </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>Dia</label>
+                                <input
+                                  type="date"
+                                  value={p.data}
+                                  onChange={(e) => updatePlan(p.id, { data: e.target.value })}
+                                  style={{ padding: "5px 8px", border: "1px solid var(--border)", borderRadius: 7, fontSize: 12, fontFamily: "inherit", background: "#fff" }}
+                                />
+                              </div>
                             </div>
-                            <button
-                              className="inc-btn-ghost"
-                              onClick={() => {
-                                if (!selectedId) return;
-                                if (!confirm(`Excluir o plano "${p.titulo}"?`)) return;
-                                setPlansByStudent((all) => ({ ...all, [selectedId]: (all[selectedId] || []).filter((x) => x.id !== p.id) }));
-                                toast.success("Plano excluído");
-                              }}
-                            ><X size={12} /> Excluir</button>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                              <button
+                                className="inc-btn-ghost"
+                                onClick={() => setViewPlanId(p.id)}
+                              ><BookOpen size={12} /> Abrir / Editar</button>
+                              <button
+                                className="inc-btn-ghost"
+                                onClick={() => {
+                                  if (!selectedId) return;
+                                  if (!confirm(`Excluir o plano "${p.titulo}"?`)) return;
+                                  setPlansByStudent((all) => ({ ...all, [selectedId]: (all[selectedId] || []).filter((x) => x.id !== p.id) }));
+                                  toast.success("Plano excluído");
+                                }}
+                              ><X size={12} /> Excluir</button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1811,6 +1909,19 @@ export function Inclusao() {
           if (!novos.length) return;
           const aid = novos[0].alunoId;
           setPlansByStudent((all) => ({ ...all, [aid]: [...novos, ...(all[aid] || [])] }));
+        }}
+      />
+
+      {/* Visualizar / editar plano salvo */}
+      <PlanoInclusaoVisualizarModal
+        open={!!viewingPlan}
+        plano={viewingPlan}
+        onClose={() => setViewPlanId(null)}
+        onSave={(patch) => {
+          if (viewPlanId) {
+            updatePlan(viewPlanId, patch);
+            toast.success("Plano atualizado");
+          }
         }}
       />
 
