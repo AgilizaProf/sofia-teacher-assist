@@ -66,7 +66,7 @@ export function AuthPage() {
         } catch {
           /* ignore */
         }
-        navigate({ to: "/" });
+        navigate({ to: postLoginRoute() });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
@@ -83,7 +83,7 @@ export function AuthPage() {
       setPopupBlocked(true);
       return;
     }
-    if (!result.redirected) navigate({ to: "/" });
+    if (!result.redirected) navigate({ to: postLoginRoute() });
   };
 
   const apple = async () => {
@@ -94,7 +94,7 @@ export function AuthPage() {
       toast.error("Não foi possível entrar com a Apple.");
       return;
     }
-    if (!result.redirected) navigate({ to: "/" });
+    if (!result.redirected) navigate({ to: postLoginRoute() });
   };
 
   const sendReset = async (e: React.FormEvent) => {
