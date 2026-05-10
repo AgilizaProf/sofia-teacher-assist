@@ -673,6 +673,7 @@ export function Inclusao() {
   // PEI persistido pelo PEIFormModal — mesmo storage key
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
   const [objetivosModalOpen, setObjetivosModalOpen] = useState(false);
+  const [previewParecerOpen, setPreviewParecerOpen] = useState(false);
   const setAnamData = (updater: (prev: ReturnType<typeof buildBlankAnam>) => ReturnType<typeof buildBlankAnam>) => {
     setAnamByStudent((all) => ({ ...all, [studentKey]: updater(all[studentKey] || buildBlankAnam()) }));
   };
@@ -2349,6 +2350,11 @@ export function Inclusao() {
                           );
                         })()}
                         {parecerAtual && (
+                          <button className="inc-btn-ghost" onClick={() => setPreviewParecerOpen(true)}>
+                            <FileText size={14} /> Pré-visualizar
+                          </button>
+                        )}
+                        {parecerAtual && (
                           <button className="inc-btn-ghost" onClick={imprimirParecer}>
                             <Printer size={14} /> Imprimir / PDF
                           </button>
@@ -2563,6 +2569,102 @@ export function Inclusao() {
       />
 
       {/* Objetivos PEI atingidos */}
+      {/* Pré-visualização do Parecer */}
+      {selected && parecerAtual && (
+        <div
+          className={"inc-modal-overlay" + (previewParecerOpen ? " open" : "")}
+          onClick={(e) => { if (e.target === e.currentTarget) setPreviewParecerOpen(false); }}
+        >
+          <div className="inc-modal" style={{ maxWidth: 860 }}>
+            <div className="inc-modal-bar" />
+            <div className="inc-modal-head">
+              <div>
+                <h2>Pré-visualização do parecer</h2>
+                <span className="meta" style={{ display: "block", marginTop: 4 }}>
+                  {parecerAtual.periodoLabel || ""} · Formato: {parecerAtual.formato === "texto" ? "Texto corrido" : "Tópicos"}
+                </span>
+              </div>
+              <button className="inc-modal-close" onClick={() => setPreviewParecerOpen(false)} aria-label="Fechar"><X size={16} /></button>
+            </div>
+            <div className="inc-modal-body" style={{ background: "#E5E7EB", padding: 20 }}>
+              <div style={{
+                background: "#fff",
+                margin: "0 auto",
+                maxWidth: 720,
+                padding: "32px 36px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                fontFamily: "'Inter',Arial,sans-serif",
+                color: "#0F1B36",
+                fontSize: 13,
+                lineHeight: 1.55,
+              }}>
+                <h1 style={{ fontSize: 22, margin: "0 0 6px", borderBottom: "2px solid #FF7A45", paddingBottom: 6 }}>
+                  {parecerAtual.titulo || "Parecer descritivo"}
+                </h1>
+                <div style={{ fontSize: 11.5, color: "#6B7691", marginBottom: 14 }}>
+                  <b>Aluno(a):</b> {selected.name} · {selected.anoEscolar || ""} · {selected.turma || ""}<br />
+                  <b>Diagnóstico:</b> {selected.diag || "—"} {selected.cid ? `· ${selected.cid}` : ""}<br />
+                  <b>Período:</b> {parecerAtual.periodoLabel || ""} · <b>Gerado em:</b> {parecerAtual.geradoEm || ""}
+                </div>
+                {parecerAtual.formato === "texto" && parecerAtual.texto ? (
+                  <div style={{ textAlign: "justify" }}>
+                    {parecerAtual.texto.split(/\n+/).map((p, i) => (
+                      <p key={i} style={{ margin: "0 0 10px" }}>{p}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    {parecerAtual.resumo && <p><b>Resumo:</b> {parecerAtual.resumo}</p>}
+                    {([
+                      ["Pedagógico", parecerAtual.pedagogico],
+                      ["Comportamental", parecerAtual.comportamental],
+                      ["Sensorial", parecerAtual.sensorial],
+                      ["Família", parecerAtual.familia],
+                    ] as Array<[string, string | undefined]>).map(([t, c]) => c ? (
+                      <div key={t}>
+                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>{t}</h3>
+                        <p style={{ margin: 0 }}>{c}</p>
+                      </div>
+                    ) : null)}
+                    {([
+                      ["Avanços", parecerAtual.avancos],
+                      ["Desafios", parecerAtual.desafios],
+                      ["Encaminhamentos", parecerAtual.encaminhamentos],
+                    ] as Array<[string, string[] | undefined]>).map(([t, arr]) => arr && arr.length ? (
+                      <div key={t}>
+                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>{t}</h3>
+                        <ul style={{ margin: "4px 0 0 18px" }}>
+                          {arr.map((a, i) => <li key={i}>{a}</li>)}
+                        </ul>
+                      </div>
+                    ) : null)}
+                    {parecerAtual.comunicacao_familias && (
+                      <div>
+                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>Comunicação à família</h3>
+                        <p style={{ margin: 0 }}>{parecerAtual.comunicacao_familias}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+                <div style={{ marginTop: 28, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                  <div style={{ borderTop: "1px solid #333", paddingTop: 4, fontSize: 10.5, textAlign: "center" }}>Professor(a) regente</div>
+                  <div style={{ borderTop: "1px solid #333", paddingTop: 4, fontSize: 10.5, textAlign: "center" }}>Coordenação pedagógica</div>
+                </div>
+                <div style={{ marginTop: 18, fontSize: 10, color: "#6B7691", borderTop: "1px dashed #ccc", paddingTop: 6 }}>
+                  Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.
+                </div>
+              </div>
+            </div>
+            <div className="inc-modal-foot" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="inc-btn-ghost" onClick={() => setPreviewParecerOpen(false)}>Fechar</button>
+              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => { setPreviewParecerOpen(false); imprimirParecer(); }}>
+                <Printer size={14} /> Imprimir / PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selected && (() => {
         const STATUS_OPTS: Array<{ v: string; l: string; color: string }> = [
           { v: "nao_iniciado", l: "Não iniciado", color: "#6B7280" },
