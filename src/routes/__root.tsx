@@ -15,6 +15,9 @@ import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
+import { installPlatformTelemetry, trackPageVisit } from "@/lib/admin/track";
+import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
+import { useLocation } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
 
@@ -93,6 +96,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useEffect(() => { installHydrationTelemetry(); }, []);
   useEffect(() => { installServerFnAuthFetch(); }, []);
+  useEffect(() => { installPlatformTelemetry(); }, []);
+  const loc = useLocation();
+  useEffect(() => { trackPageVisit(loc.pathname); }, [loc.pathname]);
 
   useReducedMotion();
   const { ready, authed, isPublicRoute } = useAuthGuard();
@@ -102,6 +108,7 @@ function RootComponent() {
       <SofiaContextProvider>
         <SofiaUserDataProvider>
           <SofiaNotificationsProvider>
+            <MaintenanceBanner />
             <Outlet />
             {showSofia && (
               <>

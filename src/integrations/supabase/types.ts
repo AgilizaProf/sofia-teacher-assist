@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          route: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          route?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          route?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       agenda_eventos: {
         Row: {
           client_id: string | null
@@ -244,6 +271,42 @@ export type Database = {
           },
         ]
       }
+      maintenance_windows: {
+        Row: {
+          block_access: boolean
+          created_at: string
+          created_by: string | null
+          ends_at: string
+          id: string
+          message: string | null
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          block_access?: boolean
+          created_at?: string
+          created_by?: string | null
+          ends_at: string
+          id?: string
+          message?: string | null
+          starts_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          block_access?: boolean
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string
+          id?: string
+          message?: string | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marcos_desenvolvimento: {
         Row: {
           campo_experiencia: string
@@ -328,6 +391,54 @@ export type Database = {
           turma?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      page_visits: {
+        Row: {
+          browser: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          is_login_page: boolean
+          os: string | null
+          referrer: string | null
+          route: string
+          session_id: string
+          user_agent: string | null
+          user_id: string | null
+          viewport_h: number | null
+          viewport_w: number | null
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          is_login_page?: boolean
+          os?: string | null
+          referrer?: string | null
+          route: string
+          session_id: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewport_h?: number | null
+          viewport_w?: number | null
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          is_login_page?: boolean
+          os?: string | null
+          referrer?: string | null
+          route?: string
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewport_h?: number | null
+          viewport_w?: number | null
         }
         Relationships: []
       }
@@ -530,6 +641,33 @@ export type Database = {
           },
         ]
       }
+      pending_pro_grants: {
+        Row: {
+          ciclo: string
+          created_at: string
+          dias: number
+          email: string
+          granted_by: string | null
+          id: string
+        }
+        Insert: {
+          ciclo: string
+          created_at?: string
+          dias?: number
+          email: string
+          granted_by?: string | null
+          id?: string
+        }
+        Update: {
+          ciclo?: string
+          created_at?: string
+          dias?: number
+          email?: string
+          granted_by?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       planos_aula: {
         Row: {
           client_id: string | null
@@ -563,6 +701,84 @@ export type Database = {
           titulo?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      platform_errors: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json
+          resolved_at: string | null
+          route: string | null
+          severity: string
+          stack: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json
+          resolved_at?: string | null
+          route?: string | null
+          severity?: string
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json
+          resolved_at?: string | null
+          route?: string | null
+          severity?: string
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      pro_grants: {
+        Row: {
+          ciclo: string
+          created_at: string
+          dias: number
+          email: string
+          expires_at: string | null
+          granted_by: string | null
+          id: string
+          motivo: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          ciclo: string
+          created_at?: string
+          dias?: number
+          email: string
+          expires_at?: string | null
+          granted_by?: string | null
+          id?: string
+          motivo?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          ciclo?: string
+          created_at?: string
+          dias?: number
+          email?: string
+          expires_at?: string | null
+          granted_by?: string | null
+          id?: string
+          motivo?: string | null
+          status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -894,6 +1110,51 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          ciclo: string | null
+          created_at: string
+          current_period_end: string | null
+          granted_by: string | null
+          id: string
+          metadata: Json
+          plano: string
+          source: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ciclo?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          granted_by?: string | null
+          id?: string
+          metadata?: Json
+          plano?: string
+          source?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ciclo?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          granted_by?: string | null
+          id?: string
+          metadata?: Json
+          plano?: string
+          source?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trilha_semanas: {
         Row: {
           concluida_em: string | null
@@ -1046,17 +1307,55 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_grant_pro: {
+        Args: {
+          _ciclo: string
+          _dias?: number
+          _email: string
+          _motivo?: string
+        }
+        Returns: Json
+      }
+      admin_revoke_pro: { Args: { _user_id: string }; Returns: undefined }
       cleanup_old_sofia_conversations: { Args: never; Returns: undefined }
       ensure_referral_code: { Args: { _uid: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       process_due_referrals: { Args: { _uid: string }; Returns: number }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1183,6 +1482,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
