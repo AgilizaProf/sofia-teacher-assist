@@ -510,6 +510,17 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
     return n;
   }, [draft]);
 
+  const perfil = useMemo(() => detectarPerfil(aluno?.diag, aluno?.cid || draft.cid), [aluno?.diag, aluno?.cid, draft.cid]);
+  const sug = SUG[perfil] || SUG.generico;
+  const pickInto = <K extends keyof PEIData>(k: K) => (s: string) => {
+    setDraft((d) => ({ ...d, [k]: append(String(d[k] || ""), s) as PEIData[K] }));
+    setDirty(true);
+  };
+  const pickAssinatura = (k: keyof PEIData["assinaturas"]) => (s: string) => {
+    setDraft((d) => ({ ...d, assinaturas: { ...d.assinaturas, [k]: append(String(d.assinaturas[k] || ""), s) } }));
+    setDirty(true);
+  };
+
   if (!open) return null;
 
   return (
@@ -593,6 +604,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
               value={draft.caracterizacao}
               onChange={(e) => set("caracterizacao", e.target.value)}
               placeholder="Descreva o histórico escolar, comportamento em sala, intervenções já realizadas, preferências e barreiras observadas." />
+            <SugChips items={sug.caracterizacao} onPick={pickInto("caracterizacao")} />
           </div>
 
           {/* 3. Habilidades */}
@@ -603,6 +615,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
               value={draft.habilidadesDesenvolvidas}
               onChange={(e) => set("habilidadesDesenvolvidas", e.target.value)}
               placeholder="Ex.: Reconhece o alfabeto, lê palavras CV com mediação, conta até 50 com material concreto." />
+            <SugChips items={sug.habilidades} onPick={pickInto("habilidadesDesenvolvidas")} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
                 <label style={labelCss}>Pontos de força / interesses</label>
@@ -610,6 +623,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   value={draft.pontosForca}
                   onChange={(e) => set("pontosForca", e.target.value)}
                   placeholder="Interesses, talentos, recursos pessoais e apoios da família." />
+                <SugChips items={sug.pontosForca} onPick={pickInto("pontosForca")} />
               </div>
               <div>
                 <label style={labelCss}>Necessidades de apoio</label>
@@ -617,6 +631,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   value={draft.necessidadesApoio}
                   onChange={(e) => set("necessidadesApoio", e.target.value)}
                   placeholder="Sensorial, comunicação, motor, atenção, organização." />
+                <SugChips items={sug.necessidadesApoio} onPick={pickInto("necessidadesApoio")} />
               </div>
             </div>
           </div>
@@ -657,9 +672,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <textarea style={{ ...inputCss, minHeight: 50, resize: "vertical", marginBottom: 6 }}
                   value={o.texto} onChange={(e) => updObjetivo(o.id, { texto: e.target.value })}
                   placeholder="Ex.: Ler 20 palavras com encontro consonantal com mediação visual." />
+                <SugChips items={sug.objetivoTexto} onPick={(s) => updObjetivo(o.id, { texto: append(o.texto, s) })} />
                 <label style={labelCss}>Critérios de avaliação</label>
                 <input style={inputCss} value={o.criterios} onChange={(e) => updObjetivo(o.id, { criterios: e.target.value })}
                   placeholder="Ex.: 80% de acerto em 3 sessões consecutivas." />
+                <SugChips items={sug.objetivoCriterios} onPick={(s) => updObjetivo(o.id, { criterios: append(o.criterios, s) })} />
               </div>
             ))}
           </div>
@@ -673,24 +690,28 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical" }}
                   value={draft.adaptacoesCurriculares} onChange={(e) => set("adaptacoesCurriculares", e.target.value)}
                   placeholder="Conteúdos priorizados, ajustes de complexidade, recortes da BNCC." />
+                <SugChips items={sug.adaptCurric} onPick={pickInto("adaptacoesCurriculares")} />
               </div>
               <div>
                 <label style={labelCss}>Adaptações avaliativas</label>
                 <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical" }}
                   value={draft.adaptacoesAvaliativas} onChange={(e) => set("adaptacoesAvaliativas", e.target.value)}
                   placeholder="Ex.: tempo estendido, prova oral, redução de itens, leitura em voz alta." />
+                <SugChips items={sug.adaptAval} onPick={pickInto("adaptacoesAvaliativas")} />
               </div>
               <div>
                 <label style={labelCss}>Metodologias e estratégias</label>
                 <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical" }}
                   value={draft.metodologias} onChange={(e) => set("metodologias", e.target.value)}
                   placeholder="DUA, TEACCH, PECS, rotina visual, ensino estruturado, mediação por pares." />
+                <SugChips items={sug.metodologias} onPick={pickInto("metodologias")} />
               </div>
               <div>
                 <label style={labelCss}>Recursos de apoio</label>
                 <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical" }}
                   value={draft.recursosApoio} onChange={(e) => set("recursosApoio", e.target.value)}
                   placeholder="Pictogramas, fones abafadores, material concreto, tecnologia assistiva, mediadora." />
+                <SugChips items={sug.recursos} onPick={pickInto("recursosApoio")} />
               </div>
             </div>
           </div>
@@ -704,6 +725,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical" }}
                   value={draft.formasAvaliacao} onChange={(e) => set("formasAvaliacao", e.target.value)}
                   placeholder="Observação, portfólio, rubrica, registro de evidências, autoavaliação." />
+                <SugChips items={sug.formasAval} onPick={pickInto("formasAvaliacao")} />
               </div>
               <div>
                 <label style={labelCss}>Periodicidade de revisão</label>
@@ -735,6 +757,12 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <button onClick={() => delEquipe(i)} style={{ background: "transparent", border: "none", color: "#C62B2B", cursor: "pointer" }} aria-label="Remover"><Trash2 size={14} /></button>
               </div>
             ))}
+            {draft.equipe.length > 0 && (
+              <SugChips items={sug.equipeFuncao} onPick={(s) => {
+                const idx = draft.equipe.length - 1;
+                updEquipe(idx, { funcao: s });
+              }} />
+            )}
           </div>
 
           {/* 8. Família */}
@@ -744,10 +772,12 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
             <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical", marginBottom: 10 }}
               value={draft.familiaParticipacao} onChange={(e) => set("familiaParticipacao", e.target.value)}
               placeholder="Reuniões, comunicação semanal, apoio em rotinas, encaminhamentos terapêuticos." />
+            <SugChips items={sug.familiaPart} onPick={pickInto("familiaParticipacao")} />
             <label style={labelCss}>Acordos firmados com a família</label>
             <textarea style={{ ...inputCss, minHeight: 50, resize: "vertical" }}
               value={draft.acordosFamilia} onChange={(e) => set("acordosFamilia", e.target.value)}
               placeholder="Compromissos de ambas as partes, frequência de devolutivas, protocolo de crise." />
+            <SugChips items={sug.acordosFam} onPick={pickInto("acordosFamilia")} />
           </div>
 
           {/* Assinaturas */}
