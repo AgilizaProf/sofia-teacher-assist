@@ -1019,13 +1019,13 @@ export function Inclusao() {
     return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
   };
   const regsDoPeriodo = useMemo(() => {
-    if (!selected) return [] as RegItem[];
-    const all = regByStudent[selected.id] || [];
+    if (!selectedId) return [] as RegItem[];
+    const all = regByStudent[selectedId] || [];
     return all.filter((r) => {
       const d = parseRegDate(r.when);
       return d ? d >= relIntervalo.inicio && d <= relIntervalo.fim : false;
     });
-  }, [selected, regByStudent, relIntervalo]);
+  }, [selectedId, regByStudent, relIntervalo]);
 
   const handleGerarParecer = async () => {
     if (!selected) return;
