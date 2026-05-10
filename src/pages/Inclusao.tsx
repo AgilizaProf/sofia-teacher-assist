@@ -831,6 +831,79 @@ export function Inclusao() {
     setAgendarPeriodOpen(true);
   };
 
+  const imprimirSelecionados = () => {
+    if (!selected) return;
+    const ids = Object.keys(agendarSel).filter((k) => agendarSel[k]);
+    const escolhidos = studentPlans.filter((p) => ids.includes(p.id));
+    if (escolhidos.length === 0) {
+      toast.error("Selecione ao menos uma atividade para imprimir.");
+      return;
+    }
+    const esc = (s: string) =>
+      String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
+    const fmtData = (d: string) => (d ? d.split("-").reverse().join("/") : "—");
+    const blocos = escolhidos.map((p) => {
+      if (planViewMode === "topicos") {
+        return `
+          <article class="topico">
+            <header>
+              <span class="data">${esc(fmtData(p.data))}</span>
+              <span class="disc">${esc(p.disciplina || "")}</span>
+            </header>
+            <h2>${esc(p.titulo || "")}</h2>
+            ${p.tema ? `<p class="tema"><b>Conteúdo:</b> ${esc(p.tema)}</p>` : ""}
+          </article>`;
+      }
+      return `
+        <article class="plano">
+          <header>
+            <span class="data">${esc(fmtData(p.data))}</span>
+            <span class="disc">${esc(p.disciplina || "")} · ${esc(p.duracao || "")}</span>
+          </header>
+          <h2>${esc(p.titulo || "")}</h2>
+          ${p.tema ? `<p><b>Conteúdo:</b> ${esc(p.tema)}</p>` : ""}
+          ${p.objetivo ? `<p><b>Objetivo:</b> ${esc(p.objetivo)}</p>` : ""}
+          ${p.abertura ? `<p><b>Abertura:</b> ${esc(p.abertura)}</p>` : ""}
+          ${p.desenvolvimento ? `<p><b>Desenvolvimento:</b> ${esc(p.desenvolvimento)}</p>` : ""}
+          ${p.fechamento ? `<p><b>Fechamento:</b> ${esc(p.fechamento)}</p>` : ""}
+          ${p.materiais?.length ? `<p><b>Materiais:</b> ${p.materiais.map(esc).join(", ")}</p>` : ""}
+          ${p.metodologia ? `<p><b>Metodologia:</b> ${esc(p.metodologia)}</p>` : ""}
+          ${p.avaliacao ? `<p><b>Avaliação:</b> ${esc(p.avaliacao)}</p>` : ""}
+          ${p.habilidades?.length ? `<p><b>BNCC:</b> ${p.habilidades.map((h) => esc(h.codigo) + " — " + esc(h.descricao)).join("; ")}</p>` : ""}
+          ${p.adaptacoes?.length ? `<p><b>Adaptações:</b> ${p.adaptacoes.map((a) => esc(a.categoria) + ": " + esc(a.texto)).join("; ")}</p>` : ""}
+          ${p.observacoes ? `<p><b>Observações:</b> ${esc(p.observacoes)}</p>` : ""}
+        </article>`;
+    }).join("");
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Atividades · ${esc(selected.name)}</title>
+      <style>
+        @page{size:A4;margin:18mm;}
+        body{font-family:Inter,Arial,sans-serif;color:#1B2A4E;margin:0;font-size:12pt;line-height:1.45;}
+        h1{font-size:16pt;margin:0 0 4mm;}
+        .meta{color:#6B7691;font-size:10pt;margin-bottom:8mm;}
+        article{border:1px solid #E4E8F0;border-radius:6px;padding:6mm;margin-bottom:5mm;page-break-inside:avoid;}
+        article.topico{padding:4mm 5mm;}
+        article header{display:flex;justify-content:space-between;font-size:9.5pt;color:#6B7691;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2mm;}
+        article .disc{font-weight:700;color:#B8410E;}
+        article h2{font-size:13pt;margin:0 0 3mm;}
+        article p{margin:1.5mm 0;}
+        article .tema{font-size:11pt;}
+        @media print{ body{margin:0;} button{display:none;} }
+        .toolbar{position:fixed;top:8px;right:8px;}
+        .toolbar button{padding:8px 14px;background:#FF7A45;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;}
+      </style></head>
+      <body>
+        <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
+        <h1>Atividades · ${esc(selected.name)}</h1>
+        <div class="meta">${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")} · ${escolhidos.length} atividade(s) · modo ${planViewMode === "topicos" ? "tópicos" : "completo"}</div>
+        ${blocos}
+        <script>setTimeout(function(){ window.print(); }, 400);</script>
+      </body></html>`;
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) { toast.error("Bloqueador de pop-up impediu a impressão."); return; }
+    w.document.write(html);
+    w.document.close();
+  };
+
   const agendarPlanos = async () => {
     if (!selectedId || !selected) return;
     const ids = Object.keys(agendarSel).filter((k) => agendarSel[k]);
