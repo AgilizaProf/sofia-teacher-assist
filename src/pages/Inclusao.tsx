@@ -19,6 +19,8 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
+import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusaoVisualizarModal";
+import { createAgendaEvent } from "@/lib/db/agenda";
 import { supabase } from "@/integrations/supabase/client";
 
 const css = `
