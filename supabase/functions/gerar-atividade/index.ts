@@ -346,41 +346,39 @@ serve(async (req) => {
     const tool = useOpcoes ? toolOpcoes : toolPlano;
     const toolName = useOpcoes ? "sugerir_opcoes_aula" : "criar_plano_atividade";
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [tool],
-        tool_choice: { type: "function", function: { name: toolName } },
-      }),
-    });
+    async function callAI(extraUserMsg?: string) {
+      const messages: Array<{ role: string; content: string }> = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ];
+      if (extraUserMsg) messages.push({ role: "user", content: extraUserMsg });
+      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages,
+          tools: [tool],
+          tool_choice: { type: "function", function: { name: toolName } },
+        }),
+      });
+      return r;
+    }
+
+    let resp = await callAI();
 
     if (!resp.ok) {
       const t = await resp.text();
       console.error("AI gateway error", resp.status, t);
       if (resp.status === 429) {
         return new Response(
-          JSON.stringify({
-            error:
-              "Sofia está com muitas solicitações agora. Tente de novo em instantes.",
-          }),
+          JSON.stringify({ error: "Sofia está com muitas solicitações agora. Tente de novo em instantes." }),
           { status: 429, headers: { ...cors, "Content-Type": "application/json" } },
         );
       }
       if (resp.status === 402) {
         return new Response(
-          JSON.stringify({
-            error:
-              "Créditos da IA esgotados. Adicione créditos em Settings → Workspace → Usage.",
-          }),
+          JSON.stringify({ error: "Créditos da IA esgotados. Adicione créditos em Settings → Workspace → Usage." }),
           { status: 402, headers: { ...cors, "Content-Type": "application/json" } },
         );
       }
@@ -390,11 +388,14 @@ serve(async (req) => {
       );
     }
 
-    const data = await resp.json();
-    const call = data?.choices?.[0]?.message?.tool_calls?.[0];
-    const rawArgs = call?.function?.arguments;
-    const parsed =
-      typeof rawArgs === "string" ? JSON.parse(rawArgs) : rawArgs ?? null;
+    const parseResp = async (r: Response) => {
+      const d = await r.json();
+      const c = d?.choices?.[0]?.message?.tool_calls?.[0];
+      const a = c?.function?.arguments;
+      return typeof a === "string" ? JSON.parse(a) : (a ?? null);
+    };
+
+    let parsed = await parseResp(resp);
 
     if (!parsed) {
       return new Response(
@@ -409,6 +410,46 @@ serve(async (req) => {
       });
     }
 
+    // === Validação dos códigos BNCC ===
+    const disciplinasParaValidar: string[] =
+      Array.isArray(disciplinasInter) && disciplinasInter.length > 0
+        ? disciplinasInter
+        : disciplina ? [disciplina] : [];
+    const validation = validarHabilidadesBNCC(parsed.habilidades, anoEscolar, disciplinasParaValidar);
+
+    if (!validation.ok && validation.invalidos.length > 0) {
+      console.warn("BNCC inválidos, tentando regenerar:", validation.invalidos);
+      const feedback =
+        `As seguintes habilidades BNCC NÃO são válidas para o ano "${anoEscolar}" ` +
+        `e disciplina(s) "${disciplinasParaValidar.join(", ") || "—"}": ` +
+        validation.invalidos.map((i) => `${i.codigo} (motivo: ${i.motivo})`).join("; ") +
+        `. Regenere o plano completo SUBSTITUINDO essas habilidades por códigos BNCC ` +
+        `REAIS e compatíveis. Padrão: ${validation.padraoEsperado}. ` +
+        `Devolva APENAS chamada da função criar_plano_atividade.`;
+      const resp2 = await callAI(feedback);
+      if (resp2.ok) {
+        const parsed2 = await parseResp(resp2);
+        if (parsed2) {
+          const v2 = validarHabilidadesBNCC(parsed2.habilidades, anoEscolar, disciplinasParaValidar);
+          if (v2.ok) {
+            parsed = parsed2;
+          } else {
+            // mantém apenas os válidos da segunda tentativa; anexa aviso
+            const validos = (parsed2.habilidades || []).filter((_: unknown, idx: number) =>
+              !v2.invalidos.find((i) => i.indice === idx),
+            );
+            parsed = {
+              ...parsed2,
+              habilidades: validos,
+              bnccAviso: validos.length === 0
+                ? "Não foi possível validar habilidades BNCC para este ano/disciplina. Revise manualmente."
+                : `Algumas habilidades BNCC foram removidas por não serem compatíveis com ${anoEscolar}.`,
+            };
+          }
+        }
+      }
+    }
+
     return new Response(JSON.stringify({ plano: parsed }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
@@ -420,3 +461,109 @@ serve(async (req) => {
     );
   }
 });
+
+// ===========================
+// Validador de códigos BNCC
+// ===========================
+
+const AREA_EF: Record<string, string[]> = {
+  "Língua Portuguesa": ["LP"],
+  "Matemática": ["MA"],
+  "Ciências": ["CI"],
+  "História": ["HI"],
+  "Geografia": ["GE"],
+  "Arte": ["AR"],
+  "Educação Física": ["EF"],
+  "Inglês": ["LI"],
+  "Língua Inglesa": ["LI"],
+  "Ensino Religioso": ["ER"],
+};
+
+const CAMPO_EI: Record<string, string> = {
+  "O eu, o outro e o nós": "EO",
+  "Corpo, gestos e movimentos": "CG",
+  "Traços, sons, cores e formas": "TS",
+  "Escuta, fala, pensamento e imaginação": "EF",
+  "Espaços, tempos, quantidades, relações e transformações": "ET",
+};
+
+function isEducacaoInfantil(ano: string): boolean {
+  const a = (ano || "").toLowerCase();
+  return /infantil|creche|berç|bebê|maternal|pré-?escola/.test(a);
+}
+
+function faixaEI(ano: string): string | null {
+  const a = (ano || "").toLowerCase();
+  if (/(berç|0\s*a\s*1|bebê|0-1)/.test(a)) return "01";
+  if (/(maternal|1\s*a\s*3|creche)/.test(a)) return "02";
+  if (/(pré|pre|4\s*a\s*5|infantil\s*[45])/.test(a)) return "03";
+  return null;
+}
+
+function anoNum(ano: string): number {
+  const m = (ano || "").match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+type ValidationItem = { indice: number; codigo: string; motivo: string };
+
+function validarHabilidadesBNCC(
+  habilidades: Array<{ codigo?: string; descricao?: string }> | undefined,
+  anoEscolar: string,
+  disciplinas: string[],
+): { ok: boolean; invalidos: ValidationItem[]; padraoEsperado: string } {
+  const invalidos: ValidationItem[] = [];
+  const lista = Array.isArray(habilidades) ? habilidades : [];
+
+  let padraoEsperado = "EF<ano 2 dígitos><área 2 letras><nn 2 dígitos> ou EI<faixa><campo 2 letras><nn>";
+
+  if (isEducacaoInfantil(anoEscolar)) {
+    const faixa = faixaEI(anoEscolar);
+    const camposPermitidos = disciplinas
+      .map((d) => CAMPO_EI[d])
+      .filter(Boolean);
+    padraoEsperado = `EI${faixa ?? "<faixa>"}${
+      camposPermitidos.length ? "(" + camposPermitidos.join("|") + ")" : "<campo>"
+    }<nn>`;
+    lista.forEach((h, i) => {
+      const cod = (h?.codigo || "").trim().toUpperCase();
+      const m = cod.match(/^EI(\d{2})([A-Z]{2})(\d{2})$/);
+      if (!m) return invalidos.push({ indice: i, codigo: cod, motivo: "formato EI inválido" });
+      if (faixa && m[1] !== faixa) return invalidos.push({ indice: i, codigo: cod, motivo: `faixa ${m[1]} ≠ ${faixa}` });
+      if (camposPermitidos.length && !camposPermitidos.includes(m[2])) {
+        return invalidos.push({ indice: i, codigo: cod, motivo: `campo ${m[2]} fora dos campos selecionados` });
+      }
+    });
+    return { ok: invalidos.length === 0, invalidos, padraoEsperado };
+  }
+
+  // Ensino Fundamental
+  const n = anoNum(anoEscolar);
+  if (n < 1 || n > 9) {
+    // sem ano confiável → não invalidamos por ano, só por formato
+    lista.forEach((h, i) => {
+      const cod = (h?.codigo || "").trim().toUpperCase();
+      if (!/^EF\d{2}[A-Z]{2}\d{2}$/.test(cod)) {
+        invalidos.push({ indice: i, codigo: cod, motivo: "formato EF inválido" });
+      }
+    });
+    return { ok: invalidos.length === 0, invalidos, padraoEsperado };
+  }
+  const anoStr = n.toString().padStart(2, "0");
+  const areasPermitidas = disciplinas.flatMap((d) => AREA_EF[d] || []);
+  padraoEsperado = `EF${anoStr}${
+    areasPermitidas.length ? "(" + areasPermitidas.join("|") + ")" : "<área>"
+  }<nn>`;
+
+  lista.forEach((h, i) => {
+    const cod = (h?.codigo || "").trim().toUpperCase();
+    const m = cod.match(/^EF(\d{2})([A-Z]{2})(\d{2})$/);
+    if (!m) return invalidos.push({ indice: i, codigo: cod, motivo: "formato EF inválido" });
+    if (m[1] !== anoStr) return invalidos.push({ indice: i, codigo: cod, motivo: `ano ${m[1]} ≠ ${anoStr}` });
+    if (areasPermitidas.length && !areasPermitidas.includes(m[2])) {
+      return invalidos.push({ indice: i, codigo: cod, motivo: `área ${m[2]} fora das disciplinas selecionadas` });
+    }
+  });
+
+  return { ok: invalidos.length === 0, invalidos, padraoEsperado };
+}
