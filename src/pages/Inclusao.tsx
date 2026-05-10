@@ -1912,6 +1912,19 @@ export function Inclusao() {
         }}
       />
 
+      {/* Visualizar / editar plano salvo */}
+      <PlanoInclusaoVisualizarModal
+        open={!!viewingPlan}
+        plano={viewingPlan}
+        onClose={() => setViewPlanId(null)}
+        onSave={(patch) => {
+          if (viewPlanId) {
+            updatePlan(viewPlanId, patch);
+            toast.success("Plano atualizado");
+          }
+        }}
+      />
+
       {/* PEI completo */}
       <div className={"inc-modal-overlay" + (peiOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setPeiOpen(false); }}>
         <div className="inc-modal" style={{ maxWidth: 880 }}>
