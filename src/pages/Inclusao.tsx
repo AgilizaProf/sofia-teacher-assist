@@ -2289,14 +2289,25 @@ export function Inclusao() {
                         {anamneseResumo ? " e a anamnese" : ""} de {selected.name.split(" ")[0]} em um parecer pronto para exportar e assinar.
                       </p>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {(() => {
+                          const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+                          const temPEI = Boolean(
+                            (Array.isArray(peiSel.objetivos) && peiSel.objetivos.length) ||
+                            peiSel.caracterizacao || peiSel.habilidadesDesenvolvidas ||
+                            peiSel.adaptacoesCurriculares || peiSel.metodologias
+                          );
+                          const semDados = regsDoPeriodo.length === 0 && !anamneseResumo && !temPEI;
+                          return (
                         <button
                           className="btn btn-primary bg-orange-400 text-orange-400"
                           onClick={handleGerarParecer}
-                          disabled={gerandoParecer || regsDoPeriodo.length === 0}
-                          title={regsDoPeriodo.length === 0 ? "Não há registros no período selecionado." : ""}
+                          disabled={gerandoParecer || semDados}
+                          title={semDados ? "Preencha a anamnese, o PEI ou adicione registros para gerar o parecer." : ""}
                         >
                           <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
                         </button>
+                          );
+                        })()}
                         {parecerAtual && (
                           <button className="inc-btn-ghost" onClick={imprimirParecer}>
                             <Printer size={14} /> Imprimir / PDF
