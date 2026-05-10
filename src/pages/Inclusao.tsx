@@ -3,6 +3,7 @@ import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
   ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb,
+  Pencil, Save, FileDown,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
@@ -674,6 +675,80 @@ export function Inclusao() {
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
   const [objetivosModalOpen, setObjetivosModalOpen] = useState(false);
   const [previewParecerOpen, setPreviewParecerOpen] = useState(false);
+  const [editandoParecer, setEditandoParecer] = useState(false);
+  const [parecerDraft, setParecerDraft] = useState<Parecer | null>(null);
+
+  const startEditParecer = () => {
+    if (!parecerAtual) return;
+    setParecerDraft({ ...parecerAtual });
+    setEditandoParecer(true);
+  };
+  const cancelEditParecer = () => {
+    setParecerDraft(null);
+    setEditandoParecer(false);
+  };
+  const saveEditParecer = () => {
+    if (!selected || !parecerDraft) return;
+    setParecerByStudent((all) => ({ ...all, [selected.id]: { ...parecerDraft } }));
+    setEditandoParecer(false);
+    setParecerDraft(null);
+    toast.success("Parecer salvo.");
+  };
+
+  const exportarParecerWord = () => {
+    if (!parecerAtual || !selected) return;
+    const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+    const ul = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : "";
+    const corpo = parecerAtual.formato === "texto" && parecerAtual.texto
+      ? `<div>${esc(parecerAtual.texto).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 10pt;">${p}</p>`).join("")}</div>`
+      : `
+        ${parecerAtual.resumo ? `<p><b>Resumo:</b> ${esc(parecerAtual.resumo)}</p>` : ""}
+        ${parecerAtual.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAtual.pedagogico)}</p>` : ""}
+        ${parecerAtual.comportamental ? `<h3>Comportamental</h3><p>${esc(parecerAtual.comportamental)}</p>` : ""}
+        ${parecerAtual.sensorial ? `<h3>Sensorial</h3><p>${esc(parecerAtual.sensorial)}</p>` : ""}
+        ${parecerAtual.familia ? `<h3>Família</h3><p>${esc(parecerAtual.familia)}</p>` : ""}
+        ${parecerAtual.avancos?.length ? `<h3>Avanços</h3>${ul(parecerAtual.avancos)}` : ""}
+        ${parecerAtual.desafios?.length ? `<h3>Desafios</h3>${ul(parecerAtual.desafios)}` : ""}
+        ${parecerAtual.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ul(parecerAtual.encaminhamentos)}` : ""}
+        ${parecerAtual.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAtual.comunicacao_familias)}</p>` : ""}
+      `;
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"/><title>Parecer · ${esc(selected.name)}</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+  @page WordSection1 { size: A4; mso-page-orientation: portrait; margin: 18mm 16mm; }
+  div.WordSection1 { page: WordSection1; }
+  body { font-family: 'Calibri','Arial',sans-serif; color:#0F1B36; font-size:11pt; line-height:1.5; }
+  h1 { font-size:18pt; margin:0 0 6pt; border-bottom:2px solid #FF7A45; padding-bottom:4pt; }
+  h3 { font-size:12pt; margin:12pt 0 4pt; color:#FF7A45; text-transform:uppercase; }
+  .meta { font-size:9.5pt; color:#6B7691; margin-bottom:10pt; }
+  ul { margin:4pt 0 0 18pt; }
+  .legal { margin-top:16pt; font-size:8.5pt; color:#6B7691; border-top:1px dashed #ccc; padding-top:6pt; }
+  table.sig { width:100%; margin-top:24pt; }
+  table.sig td { border-top:1px solid #333; padding-top:4pt; font-size:9.5pt; text-align:center; width:50%; }
+</style></head>
+<body><div class="WordSection1">
+<h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
+<div class="meta">
+  <b>Aluno(a):</b> ${esc(selected.name)} · ${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")}<br/>
+  <b>Diagnóstico:</b> ${esc(selected.diag || "—")} ${selected.cid ? "· " + esc(selected.cid) : ""}<br/>
+  <b>Período:</b> ${esc(parecerAtual.periodoLabel || "")} · <b>Gerado em:</b> ${esc(parecerAtual.geradoEm || "")}
+</div>
+${corpo}
+<table class="sig"><tr><td>Professor(a) regente</td><td>Coordenação pedagógica</td></tr></table>
+<div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
+</div></body></html>`;
+    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeName = selected.name.replace(/[^\p{L}\p{N}_-]+/gu, "_");
+    a.href = url;
+    a.download = `Parecer_${safeName}_${(parecerAtual.periodoLabel || "").replace(/\s+/g, "_") || "Inclusao"}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
   const setAnamData = (updater: (prev: ReturnType<typeof buildBlankAnam>) => ReturnType<typeof buildBlankAnam>) => {
     setAnamByStudent((all) => ({ ...all, [studentKey]: updater(all[studentKey] || buildBlankAnam()) }));
   };
@@ -2355,6 +2430,16 @@ export function Inclusao() {
                           </button>
                         )}
                         {parecerAtual && (
+                          <button className="inc-btn-ghost" onClick={() => { startEditParecer(); setPreviewParecerOpen(true); }}>
+                            <Pencil size={14} /> Editar
+                          </button>
+                        )}
+                        {parecerAtual && (
+                          <button className="inc-btn-ghost" onClick={exportarParecerWord}>
+                            <FileDown size={14} /> Salvar em Word
+                          </button>
+                        )}
+                        {parecerAtual && (
                           <button className="inc-btn-ghost" onClick={imprimirParecer}>
                             <Printer size={14} /> Imprimir / PDF
                           </button>
@@ -2573,18 +2658,18 @@ export function Inclusao() {
       {selected && parecerAtual && (
         <div
           className={"inc-modal-overlay" + (previewParecerOpen ? " open" : "")}
-          onClick={(e) => { if (e.target === e.currentTarget) setPreviewParecerOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget && !editandoParecer) setPreviewParecerOpen(false); }}
         >
           <div className="inc-modal" style={{ maxWidth: 860 }}>
             <div className="inc-modal-bar" />
             <div className="inc-modal-head">
               <div>
-                <h2>Pré-visualização do parecer</h2>
+                <h2>{editandoParecer ? "Editando parecer" : "Pré-visualização do parecer"}</h2>
                 <span className="meta" style={{ display: "block", marginTop: 4 }}>
                   {parecerAtual.periodoLabel || ""} · Formato: {parecerAtual.formato === "texto" ? "Texto corrido" : "Tópicos"}
                 </span>
               </div>
-              <button className="inc-modal-close" onClick={() => setPreviewParecerOpen(false)} aria-label="Fechar"><X size={16} /></button>
+              <button className="inc-modal-close" onClick={() => { cancelEditParecer(); setPreviewParecerOpen(false); }} aria-label="Fechar"><X size={16} /></button>
             </div>
             <div className="inc-modal-body" style={{ background: "#E5E7EB", padding: 20 }}>
               <div style={{
@@ -2606,7 +2691,44 @@ export function Inclusao() {
                   <b>Diagnóstico:</b> {selected.diag || "—"} {selected.cid ? `· ${selected.cid}` : ""}<br />
                   <b>Período:</b> {parecerAtual.periodoLabel || ""} · <b>Gerado em:</b> {parecerAtual.geradoEm || ""}
                 </div>
-                {parecerAtual.formato === "texto" && parecerAtual.texto ? (
+                {editandoParecer && parecerDraft ? (
+                  (() => {
+                    const taStyle: React.CSSProperties = { width: "100%", border: "1px solid var(--border)", borderRadius: 6, padding: 8, fontFamily: "inherit", fontSize: 13, lineHeight: 1.5, color: "#0F1B36", resize: "vertical" };
+                    const upd = (patch: Partial<Parecer>) => setParecerDraft((d) => d ? { ...d, ...patch } : d);
+                    const updList = (key: "avancos" | "desafios" | "encaminhamentos") => (v: string) =>
+                      upd({ [key]: v.split("\n").map((s) => s.trim()).filter(Boolean) } as Partial<Parecer>);
+                    const Section = ({ title, value, onChange, rows = 3 }: { title: string; value: string; onChange: (v: string) => void; rows?: number }) => (
+                      <div style={{ marginTop: 12 }}>
+                        <h3 style={{ fontSize: 12.5, margin: "0 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>{title}</h3>
+                        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} style={taStyle} />
+                      </div>
+                    );
+                    if (parecerDraft.formato === "texto") {
+                      return (
+                        <textarea
+                          value={parecerDraft.texto || ""}
+                          onChange={(e) => upd({ texto: e.target.value })}
+                          rows={18}
+                          style={taStyle}
+                          placeholder="Texto corrido do parecer…"
+                        />
+                      );
+                    }
+                    return (
+                      <>
+                        <Section title="Resumo" value={parecerDraft.resumo || ""} onChange={(v) => upd({ resumo: v })} rows={2} />
+                        <Section title="Pedagógico" value={parecerDraft.pedagogico || ""} onChange={(v) => upd({ pedagogico: v })} />
+                        <Section title="Comportamental" value={parecerDraft.comportamental || ""} onChange={(v) => upd({ comportamental: v })} />
+                        <Section title="Sensorial" value={parecerDraft.sensorial || ""} onChange={(v) => upd({ sensorial: v })} />
+                        <Section title="Família" value={parecerDraft.familia || ""} onChange={(v) => upd({ familia: v })} />
+                        <Section title="Avanços (1 por linha)" value={(parecerDraft.avancos || []).join("\n")} onChange={updList("avancos")} rows={4} />
+                        <Section title="Desafios (1 por linha)" value={(parecerDraft.desafios || []).join("\n")} onChange={updList("desafios")} rows={3} />
+                        <Section title="Encaminhamentos (1 por linha)" value={(parecerDraft.encaminhamentos || []).join("\n")} onChange={updList("encaminhamentos")} rows={4} />
+                        <Section title="Comunicação à família" value={parecerDraft.comunicacao_familias || ""} onChange={(v) => upd({ comunicacao_familias: v })} rows={3} />
+                      </>
+                    );
+                  })()
+                ) : parecerAtual.formato === "texto" && parecerAtual.texto ? (
                   <div style={{ textAlign: "justify" }}>
                     {parecerAtual.texto.split(/\n+/).map((p, i) => (
                       <p key={i} style={{ margin: "0 0 10px" }}>{p}</p>
@@ -2655,11 +2777,28 @@ export function Inclusao() {
                 </div>
               </div>
             </div>
-            <div className="inc-modal-foot" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button className="inc-btn-ghost" onClick={() => setPreviewParecerOpen(false)}>Fechar</button>
-              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => { setPreviewParecerOpen(false); imprimirParecer(); }}>
-                <Printer size={14} /> Imprimir / PDF
-              </button>
+            <div className="inc-modal-foot" style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap" }}>
+              {editandoParecer ? (
+                <>
+                  <button className="inc-btn-ghost" onClick={cancelEditParecer}>Cancelar</button>
+                  <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={saveEditParecer}>
+                    <Save size={14} /> Salvar alterações
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="inc-btn-ghost" onClick={() => { cancelEditParecer(); setPreviewParecerOpen(false); }}>Fechar</button>
+                  <button className="inc-btn-ghost" onClick={startEditParecer}>
+                    <Pencil size={14} /> Editar
+                  </button>
+                  <button className="inc-btn-ghost" onClick={exportarParecerWord}>
+                    <FileDown size={14} /> Salvar em Word
+                  </button>
+                  <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => { setPreviewParecerOpen(false); imprimirParecer(); }}>
+                    <Printer size={14} /> Imprimir / PDF
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
