@@ -1381,20 +1381,142 @@ export function Inclusao() {
                   <div className="hoje-grid">
                     <div className="col-l">
                   <div className="action-card">
-                    <div className="ac-head">
-                      <div className="sofia">S</div>
-                      <div className="ac-head-txt">
-                        <b>Sofia ainda está conhecendo {selected.name.split(" ")[0]}</b>
-                        <span>Preencha a Anamnese e o PEI para receber sugestões personalizadas</span>
-                      </div>
-                      <span className="ac-tag">Novo</span>
-                    </div>
-                    <h2 className="ac-title">Vamos começar pela <em>Anamnese</em> de {selected.name.split(" ")[0]}</h2>
-                    <p className="ac-body">Sem registros ainda. Preencha os eixos da Anamnese e cadastre o PEI para que a Sofia possa sugerir adaptações de aula alinhadas ao perfil e à BNCC.</p>
-                    <div className="ac-cta">
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("anam")}>Preencher Anamnese <ChevronRight size={14} /></button>
-                      <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Abrir PEI</button>
-                    </div>
+                    {(() => {
+                      const firstName = selected.name.split(" ")[0];
+                      const totalEixos = anamData.length;
+                      const totalRegs = (regByStudent[selected.id] || []).length;
+                      const pei = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+                      const peiCheck: string[] = [
+                        "diagnostico", "caracterizacao", "habilidadesDesenvolvidas",
+                        "adaptacoesCurriculares", "formasAvaliacao", "familiaParticipacao",
+                      ];
+                      let peiFilled = 0;
+                      peiCheck.forEach((k) => { if (String(pei[k] || "").trim().length > 5) peiFilled++; });
+                      if (Array.isArray(pei.objetivos) && (pei.objetivos as unknown[]).length > 0) peiFilled++;
+                      if (Array.isArray(pei.equipe) && (pei.equipe as unknown[]).length > 0) peiFilled++;
+                      const peiPct = Math.round((peiFilled / 8) * 100);
+                      const anamPct = Math.round((eixosPreenchidos / Math.max(totalEixos, 1)) * 100);
+                      const ultimoReg = (regByStudent[selected.id] || [])[0];
+
+                      // Estágio 0 — sem nada
+                      if (eixosPreenchidos === 0 && peiFilled === 0 && totalRegs === 0) {
+                        return (
+                          <>
+                            <div className="ac-head">
+                              <div className="sofia">S</div>
+                              <div className="ac-head-txt">
+                                <b>Sofia ainda está conhecendo {firstName}</b>
+                                <span>Preencha a Anamnese e o PEI para receber sugestões personalizadas</span>
+                              </div>
+                              <span className="ac-tag">Novo</span>
+                            </div>
+                            <h2 className="ac-title">Vamos começar pela <em>Anamnese</em> de {firstName}</h2>
+                            <p className="ac-body">Sem registros ainda. Preencha os eixos da Anamnese e cadastre o PEI para que a Sofia possa sugerir adaptações de aula alinhadas ao perfil e à BNCC.</p>
+                            <div className="ac-cta">
+                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("anam")}>Preencher Anamnese <ChevronRight size={14} /></button>
+                              <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Abrir PEI</button>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      // Estágio 1 — Anamnese em andamento (ainda incompleta) e sem PEI
+                      if (eixosPreenchidos < totalEixos && peiFilled < 4) {
+                        const restantes = totalEixos - eixosPreenchidos;
+                        return (
+                          <>
+                            <div className="ac-head">
+                              <div className="sofia">S</div>
+                              <div className="ac-head-txt">
+                                <b>Anamnese em andamento</b>
+                                <span>{eixosPreenchidos} de {totalEixos} eixos preenchidos · {anamPct}%</span>
+                              </div>
+                              <span className="ac-tag" style={{ background: "#FEF3C7", color: "#92400E" }}>Em progresso</span>
+                            </div>
+                            <h2 className="ac-title">Faltam <em>{restantes} eixo{restantes > 1 ? "s" : ""}</em> para liberar adaptações personalizadas</h2>
+                            <p className="ac-body">
+                              Já estou conhecendo {firstName}{ultimoReg ? `. Último registro: "${ultimoReg.body.slice(0, 90)}${ultimoReg.body.length > 90 ? "…" : ""}"` : ""}. Continue preenchendo a Anamnese ou já adiante o PEI.
+                            </p>
+                            <div className="ac-cta">
+                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("anam")}>Continuar Anamnese <ChevronRight size={14} /></button>
+                              <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Abrir PEI ({peiFilled}/8)</button>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      // Estágio 2 — Anamnese ≥50%/completa, PEI ainda fraco (<4)
+                      if (peiFilled < 4) {
+                        return (
+                          <>
+                            <div className="ac-head">
+                              <div className="sofia">S</div>
+                              <div className="ac-head-txt">
+                                <b>Anamnese pronta · agora o PEI</b>
+                                <span>{peiFilled} de 8 eixos do PEI preenchidos</span>
+                              </div>
+                              <span className="ac-tag" style={{ background: "#DBEAFE", color: "#1E40AF" }}>Próximo passo</span>
+                            </div>
+                            <h2 className="ac-title">Hora de cadastrar o <em>PEI</em> de {firstName}</h2>
+                            <p className="ac-body">Já tenho o perfil pedagógico de {firstName}. Vamos formalizar o Plano Educacional Individualizado (Lei 14.254/2021) para alinhar metas, adaptações e equipe responsável.</p>
+                            <div className="ac-cta">
+                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeiOpen(true)}>Preencher PEI <ChevronRight size={14} /></button>
+                              <button className="btn-ghost-dark" onClick={() => setActiveTab("anam")}>Revisar Anamnese</button>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      // Estágio 3 — PEI parcial (4-7/8)
+                      if (peiFilled < 8) {
+                        return (
+                          <>
+                            <div className="ac-head">
+                              <div className="sofia">S</div>
+                              <div className="ac-head-txt">
+                                <b>PEI quase completo · {peiPct}%</b>
+                                <span>{peiFilled} de 8 eixos · {totalRegs} registro{totalRegs !== 1 ? "s" : ""} pedagógico{totalRegs !== 1 ? "s" : ""}</span>
+                              </div>
+                              <span className="ac-tag" style={{ background: "#DBEAFE", color: "#1E40AF" }}>Avançando</span>
+                            </div>
+                            <h2 className="ac-title">Já consigo sugerir <em>adaptações</em> para {firstName}</h2>
+                            <p className="ac-body">
+                              Faltam <b>{8 - peiFilled} eixo{8 - peiFilled > 1 ? "s" : ""}</b> do PEI para um plano completo conforme a Lei 14.254/2021.
+                              {ultimoReg ? ` Último registro: "${ultimoReg.body.slice(0, 80)}${ultimoReg.body.length > 80 ? "…" : ""}"` : ""}
+                            </p>
+                            <div className="ac-cta">
+                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeiOpen(true)}>Concluir PEI <ChevronRight size={14} /></button>
+                              <button className="btn-ghost-dark" onClick={() => setActiveTab("plan")}>Adaptar atividade</button>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      // Estágio 4 — Tudo completo: foco em evolução + adaptações
+                      return (
+                        <>
+                          <div className="ac-head">
+                            <div className="sofia">S</div>
+                            <div className="ac-head-txt">
+                              <b>Perfil completo · acompanhando evolução</b>
+                              <span>Anamnese 100% · PEI 8/8 · {totalRegs} registro{totalRegs !== 1 ? "s" : ""} pedagógico{totalRegs !== 1 ? "s" : ""}</span>
+                            </div>
+                            <span className="ac-tag" style={{ background: "#DCFCE7", color: "#166534" }}>Pronto</span>
+                          </div>
+                          <h2 className="ac-title">Sigo acompanhando a evolução de <em>{firstName}</em></h2>
+                          <p className="ac-body">
+                            {ultimoReg
+                              ? <>Último registro ({ultimoReg.when}): "{ultimoReg.body.slice(0, 110)}{ultimoReg.body.length > 110 ? "…" : ""}". Posso adaptar a próxima aula com base nesse contexto.</>
+                              : <>Cadastre registros pedagógicos para que eu acompanhe a evolução e refine as adaptações automaticamente.</>}
+                          </p>
+                          <div className="ac-cta">
+                            <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("plan")}>Adaptar próxima aula <ChevronRight size={14} /></button>
+                            <button className="btn-ghost-dark" onClick={() => setActiveTab("reg")}>Novo registro</button>
+                            <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Revisar PEI</button>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   <div className="section">
