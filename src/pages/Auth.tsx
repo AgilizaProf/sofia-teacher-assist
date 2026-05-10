@@ -5,6 +5,14 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
 
+function postLoginRoute(): "/" | "/onboarding" {
+  try {
+    return localStorage.getItem("agp_onboarding_completed") === "1" ? "/" : "/onboarding";
+  } catch {
+    return "/";
+  }
+}
+
 export function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -66,7 +74,7 @@ export function AuthPage() {
         } catch {
           /* ignore */
         }
-        navigate({ to: "/" });
+        navigate({ to: postLoginRoute() });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
@@ -83,7 +91,7 @@ export function AuthPage() {
       setPopupBlocked(true);
       return;
     }
-    if (!result.redirected) navigate({ to: "/" });
+    if (!result.redirected) navigate({ to: postLoginRoute() });
   };
 
   const apple = async () => {
@@ -94,7 +102,7 @@ export function AuthPage() {
       toast.error("Não foi possível entrar com a Apple.");
       return;
     }
-    if (!result.redirected) navigate({ to: "/" });
+    if (!result.redirected) navigate({ to: postLoginRoute() });
   };
 
   const sendReset = async (e: React.FormEvent) => {

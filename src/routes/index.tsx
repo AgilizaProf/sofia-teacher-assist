@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { Dashboard } from "@/pages/Dashboard";
 
 export const Route = createFileRoute("/")({
@@ -23,16 +21,5 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const navigate = useNavigate();
-  useEffect(() => {
-    try {
-      const done = localStorage.getItem("agp_onboarding_completed");
-      if (done !== "1") {
-        navigate({ to: "/onboarding" });
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [navigate]);
   return <Dashboard />;
 }
