@@ -76,6 +76,7 @@ export function TrilhasPanel() {
     ano: "",
     disciplinas: [] as string[],
     disciplinaCustom: "",
+    interdisciplinar: true,
     semestre: "1º semestre",
     contexto: "",
   });
@@ -105,10 +106,18 @@ export function TrilhasPanel() {
       setError("Selecione a turma, o ano e ao menos uma disciplina.");
       return;
     }
-    const interdisciplinar = discsAll.length > 1;
-    const disciplinaStr = interdisciplinar
-      ? `Interdisciplinar (${discsAll.join(", ")})`
-      : discsAll[0];
+    const multiplas = discsAll.length > 1;
+    const interdisciplinar = multiplas && form.interdisciplinar;
+    const disciplinaStr = !multiplas
+      ? discsAll[0]
+      : interdisciplinar
+        ? `Interdisciplinar (${discsAll.join(", ")})`
+        : discsAll.join(" + ");
+    const contextoFinal = !multiplas
+      ? form.contexto
+      : interdisciplinar
+        ? `${form.contexto ? form.contexto + "\n\n" : ""}Tratar como TRILHA INTERDISCIPLINAR: integre ${discsAll.join(", ")} em torno de um tema único, com habilidades BNCC de cada componente articuladas semana a semana.`
+        : `${form.contexto ? form.contexto + "\n\n" : ""}NÃO interdisciplinar: gere conteúdo SEPARADO para cada um dos componentes a seguir, mantendo identidade própria de cada disciplina/campo de experiência (${discsAll.join(", ")}). Para cada semana, indique claramente a qual componente pertence e suas habilidades BNCC específicas.`;
     setError(null); setLoading(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -119,7 +128,7 @@ export function TrilhasPanel() {
         ano: form.ano,
         disciplina: disciplinaStr,
         semestre: form.semestre,
-        contexto: form.contexto,
+        contexto: contextoFinal,
       };
       const { data, error: fnErr } = await supabase.functions.invoke("gerar-trilha", { body: payload });
       if (fnErr) throw fnErr;
@@ -159,7 +168,7 @@ export function TrilhasPanel() {
       }
       await carregar();
       setSelected(trilhaRow!.id);
-      setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", semestre: "1º semestre", contexto: "" });
+      setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", interdisciplinar: true, semestre: "1º semestre", contexto: "" });
     } catch (e) {
       setError((e as Error).message || "Não consegui gerar a trilha agora. Tente em instantes.");
     } finally {
