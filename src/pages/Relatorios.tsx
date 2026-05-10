@@ -11,8 +11,9 @@ import { useEiMode } from "@/lib/ei/useEiMode";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
-  MessageSquare, Download, Copy, X, ClipboardList,
+  MessageSquare, Download, Copy, X, ClipboardList, UserPlus,
 } from "lucide-react";
+import { toast } from "sonner";
 
 const css = `
 .rel-root{
