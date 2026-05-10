@@ -231,6 +231,32 @@
     .check-circle svg{width:40px;height:40px;}
     .receipt-card{padding:24px 22px;}
   }
+
+  /* Compact mode for short viewports (e.g., embedded iframe ~640px) */
+  @media(max-height:780px){
+    .top-bar{padding:8px 0;}
+    .hero{padding:18px 22px 14px;}
+    .hero::before,.hero::after{display:none;}
+    .check-circle{width:54px;height:54px;margin:0 auto 10px;box-shadow:0 10px 24px rgba(16,185,129,.28);}
+    .check-circle svg{width:28px;height:28px;}
+    .check-circle::after{display:none;}
+    .hero-eyebrow{padding:4px 12px;font-size:10.5px;margin-bottom:10px;}
+    .hero h1{font-size:24px;margin-bottom:8px;}
+    .hero h1 br{display:none;}
+    .hero .lead{font-size:13px;line-height:1.45;margin:0 auto 14px;max-width:560px;}
+    .btn-primary{padding:11px 20px;font-size:13.5px;border-radius:12px;}
+    .receipt-wrap{margin:-14px auto 18px;padding:0 22px;}
+    .receipt-card{padding:16px 20px 14px;border-radius:16px;}
+    .receipt-card h3{font-size:16px;margin-bottom:8px;}
+    .receipt-card .eyebrow{margin-bottom:4px;font-size:10px;}
+    .receipt-row{padding:6px 0;font-size:12.5px;}
+    .receipt-row .val{font-size:12.5px;}
+    .guarantee-strip{margin-top:10px;padding:9px 12px;border-radius:12px;}
+    .guarantee-strip .ic{width:28px;height:28px;border-radius:8px;}
+    .guarantee-strip .ic svg{width:14px;height:14px;}
+    .guarantee-strip .txt{font-size:11.5px;line-height:1.35;}
+  }
+
 </style>
 </head>
 <body>
