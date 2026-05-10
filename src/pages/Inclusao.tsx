@@ -3,6 +3,7 @@ import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
   ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb,
+  Pencil, Save, FileDown,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
