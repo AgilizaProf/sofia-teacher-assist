@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -36,6 +37,11 @@ const RelatoriosRoute = RelatoriosRouteImport.update({
 const PlanejamentoRoute = PlanejamentoRouteImport.update({
   id: '/planejamento',
   path: '/planejamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InclusaoRoute = InclusaoRouteImport.update({
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
+  '/onboarding': typeof OnboardingRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
+  '/onboarding': typeof OnboardingRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
+  '/onboarding': typeof OnboardingRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/configuracoes'
     | '/inclusao'
+    | '/onboarding'
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/configuracoes'
     | '/inclusao'
+    | '/onboarding'
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/configuracoes'
     | '/inclusao'
+    | '/onboarding'
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
+  OnboardingRoute: typeof OnboardingRoute
   PlanejamentoRoute: typeof PlanejamentoRouteWithChildren
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -217,6 +230,13 @@ declare module '@tanstack/react-router' {
       path: '/planejamento'
       fullPath: '/planejamento'
       preLoaderRoute: typeof PlanejamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inclusao': {
@@ -325,6 +345,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
+  OnboardingRoute: OnboardingRoute,
   PlanejamentoRoute: PlanejamentoRouteWithChildren,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,

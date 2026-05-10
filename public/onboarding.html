@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgilizaProf · Onboarding v4 (Lead Capture)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#1B2A4E;
+    --primary-soft:#EEF1F8;
+    --accent:#FF7A45;
+    --accent-warm:#FF9466;
+    --success:#10B981;
+    --bg:#FAF8F5;
+    --bg-soft:#F4F1EB;
+    --text:#1B2A4E;
+    --text-soft:#6B7691;
+    --border:#E4E8F0;
+    --purple:#7C5CFF;
+    --gold:#F5B53D;
+    --warning:#F59E0B;
+    --error:#EF4444;
+    --rainbow:linear-gradient(90deg,#FF4D4D,#FF9D2E,#FFD93D,#6BCB77,#4D96FF,#9B59B6);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:linear-gradient(135deg,#FAF8F5 0%,#F4F1EB 100%);
+    color:var(--text);overflow-x:hidden;min-height:100vh;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+
+  .onboarding-shell{
+    width:100%;max-width:1000px;background:#fff;
+    border-radius:28px;box-shadow:0 30px 80px rgba(27,42,78,.18);
+    overflow:hidden;position:relative;
+    height:90vh;min-height:700px;max-height:880px;
+    display:flex;flex-direction:column;
+  }
+
+  .top-bar{
+    display:flex;align-items:center;gap:16px;padding:16px 26px;
+    border-bottom:1px solid var(--border);background:#fff;
+    position:relative;z-index:5;flex-shrink:0;
+  }
+  .logo{
+    font-family:'Fraunces',serif;font-weight:800;font-size:18px;
+    color:var(--primary);display:flex;align-items:center;gap:8px;
+  }
+  .logo .dot{
+    width:28px;height:28px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-warm));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:900;font-size:14px;
+  }
+  .logo span{color:var(--accent);}
+  .progress-wrap{flex:1;display:flex;gap:6px;align-items:center;}
+  .progress-step{
+    flex:1;height:6px;background:var(--border);
+    border-radius:100px;overflow:hidden;position:relative;
+  }
+  .progress-step.active{background:var(--primary-soft);}
+  .progress-step.active::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(90deg,var(--accent),var(--accent-warm));
+    border-radius:100px;animation:fillProgress .6s ease forwards;
+  }
+  .progress-step.done{background:var(--success);}
+  @keyframes fillProgress{from{transform:translateX(-100%);}to{transform:translateX(0);}}
+  .skip-btn{
+    background:none;border:none;cursor:pointer;
+    font-size:13px;color:var(--text-soft);font-weight:600;
+    padding:6px 12px;border-radius:100px;transition:all .2s;
+  }
+  .skip-btn:hover{background:var(--bg-soft);color:var(--text);}
+
+  .stage{flex:1;position:relative;overflow:hidden;min-height:0;}
+  .screen{
+    position:absolute;inset:0;
+    padding:32px 56px;
+    display:flex;flex-direction:column;
+    opacity:0;pointer-events:none;
+    transform:translateX(40px);
+    transition:opacity .5s ease,transform .5s ease;
+    overflow-y:auto;
+    overflow-x:hidden;
+  }
+  .screen.active{opacity:1;pointer-events:auto;transform:translateX(0);}
+  /* scrollbar fina */
+  .screen::-webkit-scrollbar{width:6px;}
+  .screen::-webkit-scrollbar-track{background:transparent;}
+  .screen::-webkit-scrollbar-thumb{background:#D5D8E0;border-radius:10px;}
+  .screen::-webkit-scrollbar-thumb:hover{background:#B0B4C0;}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:6px 14px;border-radius:100px;
+    background:var(--primary-soft);color:var(--primary);
+    font-size:12px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.06em;
+    margin-bottom:14px;align-self:flex-start;
+  }
+  h1.screen-title{
+    font-family:'Fraunces',serif;font-size:34px;font-weight:800;
+    line-height:1.1;color:var(--primary);
+    margin-bottom:12px;letter-spacing:-.02em;
+  }
+  h1.screen-title em{font-style:italic;color:var(--accent);}
+  h1.screen-title em.greet-name{
+    white-space:nowrap;
+    display:inline-block;
+  }
+  .screen-sub{
+    font-size:15px;line-height:1.55;color:var(--text-soft);
+    margin-bottom:20px;max-width:600px;
+  }
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:13px 24px;border-radius:14px;
+    font-weight:700;font-size:14.5px;cursor:pointer;
+    border:none;text-decoration:none;
+    transition:all .2s ease;font-family:inherit;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent-warm));
+    color:#fff;box-shadow:0 8px 22px rgba(255,122,69,.3);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(255,122,69,.4);}
+  .btn-primary:disabled{
+    background:#E4E8F0;color:#9AA0AF;cursor:not-allowed;
+    transform:none;box-shadow:none;
+  }
+  .btn-ghost{
+    background:transparent;color:var(--text-soft);
+    border:1.5px solid var(--border);
+  }
+  .btn-ghost:hover{border-color:var(--primary);color:var(--primary);}
+  .btn-large{padding:16px 32px;font-size:15px;}
+
+  /* TELA 0 — LEAD CAPTURE */
+  #screen-0{
+    align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(ellipse at top,#FFF4EE 0%,#fff 60%);
+  }
+  .lead-illu{
+    width:90px;height:90px;border-radius:24px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-warm));
+    display:flex;align-items:center;justify-content:center;
+    font-size:48px;margin-bottom:18px;
+    box-shadow:0 20px 50px rgba(255,122,69,.3);
+    animation:bounceIn .7s cubic-bezier(.68,-.55,.27,1.55);
+  }
+  @keyframes bounceIn{from{transform:scale(0);}to{transform:scale(1);}}
+  #screen-0 .screen-sub{margin-left:auto;margin-right:auto;text-align:center;}
+  .lead-form{
+    background:#fff;border:1px solid var(--border);
+    border-radius:18px;padding:24px;max-width:440px;width:100%;
+    margin-top:6px;text-align:left;
+    box-shadow:0 12px 32px rgba(27,42,78,.06);
+  }
+  .lead-form-row{margin-bottom:16px;}
+  .lead-form-row:last-of-type{margin-bottom:14px;}
+  .lead-label{
+    display:block;font-size:12px;font-weight:700;
+    color:var(--primary);text-transform:uppercase;letter-spacing:.06em;
+    margin-bottom:6px;
+  }
+  .lead-input{
+    width:100%;padding:13px 16px;
+    border:1.5px solid var(--border);border-radius:12px;background:#fff;
+    font-size:15px;font-family:inherit;color:var(--primary);
+    transition:border .2s;
+  }
+  .lead-input:focus{outline:none;border-color:var(--accent);}
+  .lead-input.invalid{border-color:var(--error);}
+  .input-icon-wrap{position:relative;}
+  .input-icon-wrap .icon{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    font-size:16px;color:var(--text-soft);pointer-events:none;
+  }
+  .input-icon-wrap input{padding-left:40px;}
+  .lead-error{
+    font-size:11.5px;color:var(--error);margin-top:5px;
+    display:none;font-weight:600;
+  }
+  .lead-error.show{display:block;}
+  .lead-privacy{
+    font-size:11.5px;color:var(--text-soft);
+    line-height:1.5;text-align:center;margin-top:2px;
+  }
+  .lead-privacy strong{color:var(--text);}
+  .lead-trust-row{
+    display:flex;justify-content:center;gap:14px;margin-top:14px;
+    font-size:11.5px;color:var(--text-soft);font-weight:600;flex-wrap:wrap;
+  }
+  .lead-trust-row span{display:inline-flex;align-items:center;gap:4px;}
+
+  /* TELA 1 */
+  #screen-1{
+    align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(ellipse at top,#FFF4EE 0%,#fff 60%);
+  }
+  .welcome-illu{
+    width:120px;height:120px;border-radius:50%;
+    background:linear-gradient(135deg,#FFE4D6,#FFD0B8);
+    display:flex;align-items:center;justify-content:center;
+    font-size:54px;margin-bottom:22px;
+    animation:float 3s ease-in-out infinite;
+    box-shadow:0 20px 50px rgba(255,122,69,.25);
+  }
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  #screen-1 .screen-sub{text-align:center;margin-left:auto;margin-right:auto;}
+  .welcome-trust{
+    display:flex;gap:18px;flex-wrap:wrap;justify-content:center;
+    margin-top:20px;font-size:12px;color:var(--text-soft);font-weight:600;
+  }
+  .welcome-trust span{display:inline-flex;align-items:center;gap:5px;}
+
+  /* TELA 2 */
+  .pain-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:14px;
+    margin-top:6px;max-width:780px;
+  }
+  .pain-card{
+    background:#fff;border:2px solid var(--border);
+    border-radius:18px;padding:30px 20px 16px;cursor:pointer;
+    transition:all .25s ease;text-align:left;position:relative;
+  }
+  .pain-card:hover{
+    border-color:var(--accent);transform:translateY(-3px);
+    box-shadow:0 12px 28px rgba(27,42,78,.08);
+  }
+  .pain-card.selected{
+    border-color:var(--accent);
+    background:linear-gradient(135deg,#FFF4EE,#fff);
+    box-shadow:0 12px 28px rgba(255,122,69,.18);
+  }
+  .pain-card.selected::after{
+    content:"✓";position:absolute;top:14px;right:14px;
+    width:24px;height:24px;border-radius:50%;
+    background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:900;animation:popIn .3s ease;
+  }
+  @keyframes popIn{from{transform:scale(0);}to{transform:scale(1);}}
+  .pain-card .badge-top{
+    position:absolute;top:-10px;left:18px;
+    padding:4px 11px;border-radius:100px;
+    font-size:10.5px;font-weight:800;letter-spacing:.04em;
+    text-transform:uppercase;color:#fff;white-space:nowrap;
+  }
+  .pain-card .badge-top.gold{
+    background:linear-gradient(135deg,#F5B53D,#E89B12);
+    color:#3D2C00;box-shadow:0 4px 10px rgba(245,181,61,.4);
+  }
+  .pain-card .badge-top.purple{
+    background:linear-gradient(135deg,#7C5CFF,#5B3FE4);
+    box-shadow:0 4px 10px rgba(124,92,255,.4);
+  }
+  .pain-card .badge-top.rainbow{
+    background:var(--rainbow);color:#fff;font-weight:900;
+    box-shadow:0 4px 10px rgba(155,89,182,.3);
+  }
+  .pain-card .badge-top.blue{
+    background:linear-gradient(135deg,#1B2A4E,#3B5188);
+    box-shadow:0 4px 10px rgba(27,42,78,.3);
+  }
+  .pain-emoji{font-size:30px;margin-bottom:8px;display:block;}
+  .pain-title{font-weight:800;font-size:15.5px;color:var(--primary);margin-bottom:4px;}
+  .pain-desc{font-size:12.5px;color:var(--text-soft);line-height:1.4;}
+  .pain-stat{
+    display:inline-block;margin-top:8px;
+    background:var(--primary-soft);color:var(--primary);
+    padding:3px 9px;border-radius:8px;
+    font-size:11px;font-weight:700;
+  }
+
+  /* TELA 3 */
+  .form-card{
+    background:var(--bg-soft);border-radius:18px;
+    padding:22px;max-width:580px;margin-top:6px;
+  }
+  .form-row{margin-bottom:14px;}
+  .form-row:last-child{margin-bottom:0;}
+  .form-label{
+    display:block;font-size:12px;font-weight:700;
+    color:var(--primary);text-transform:uppercase;letter-spacing:.06em;
+    margin-bottom:6px;
+  }
+  .form-input{
+    width:100%;padding:12px 14px;
+    border:1.5px solid var(--border);border-radius:12px;background:#fff;
+    font-size:14.5px;font-family:inherit;color:var(--primary);
+    transition:border .2s;
+  }
+  .form-input:focus{outline:none;border-color:var(--accent);}
+  .chip-row{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{
+    padding:7px 13px;border-radius:100px;
+    border:1.5px solid var(--border);background:#fff;
+    font-size:12.5px;font-weight:600;color:var(--text);
+    cursor:pointer;transition:all .2s;font-family:inherit;
+  }
+  .chip:hover{border-color:var(--accent);}
+  .chip.selected{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .form-hint{
+    font-size:11.5px;color:var(--text-soft);
+    margin-top:5px;display:flex;align-items:center;gap:5px;
+  }
+  .focus-banner{
+    background:linear-gradient(135deg,#FFF4EE,#FFE4D6);
+    border:1.5px solid var(--accent);
+    border-radius:14px;padding:12px 16px;
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:14px;
+  }
+  .focus-banner .ico{font-size:24px;}
+  .focus-banner .txt{flex:1;font-size:13px;color:var(--primary);font-weight:600;}
+  .focus-banner .txt strong{color:var(--accent);}
+
+  /* TELA 4 */
+  .demo-badge-bar{
+    background:linear-gradient(90deg,#FEF3C7,#FDE68A);
+    border:1px solid #FCD34D;border-radius:12px;
+    padding:9px 14px;margin-bottom:12px;
+    font-size:12px;color:#78350F;font-weight:600;
+    display:flex;align-items:center;gap:8px;
+  }
+  .demo-badge-bar .pulse-dot{
+    width:8px;height:8px;border-radius:50%;background:var(--warning);
+    animation:pulseDot 1.5s infinite;flex-shrink:0;
+  }
+  @keyframes pulseDot{
+    0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.6);}
+    50%{box-shadow:0 0 0 6px rgba(245,158,11,0);}
+  }
+  .sofia-stage{
+    background:linear-gradient(135deg,#1E1B2E 0%,#15131F 100%);
+    border-radius:20px;padding:22px;color:#fff;
+    margin-top:4px;position:relative;overflow:hidden;
+  }
+  .sofia-stage::before{
+    content:"";position:absolute;top:-50px;right:-50px;
+    width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,122,69,.25),transparent 70%);
+  }
+  .sofia-demo-tag{
+    position:absolute;top:14px;right:14px;
+    background:rgba(245,158,11,.2);
+    border:1px solid rgba(245,158,11,.5);
+    color:#FCD34D;
+    padding:3px 9px;border-radius:100px;
+    font-size:10px;font-weight:800;letter-spacing:.04em;z-index:2;
+  }
+  .sofia-header{
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:16px;position:relative;
+  }
+  .sofia-avatar{
+    width:42px;height:42px;border-radius:50%;
+    background:linear-gradient(135deg,#FF7A45,#FF9466);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;box-shadow:0 0 0 3px rgba(255,122,69,.3);
+    position:relative;flex-shrink:0;
+  }
+  .sofia-avatar::after{
+    content:"";position:absolute;bottom:2px;right:2px;
+    width:9px;height:9px;border-radius:50%;
+    background:#22c55e;border:2px solid #1E1B2E;
+    animation:pulse 1.5s ease infinite;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.6);}
+    50%{box-shadow:0 0 0 5px rgba(34,197,94,0);}
+  }
+  .sofia-info h3{font-size:14.5px;font-weight:700;margin-bottom:1px;}
+  .sofia-info p{font-size:11.5px;color:#B8B5C7;}
+  .sofia-task{
+    color:#FFD0B8;font-size:10.5px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.06em;margin-top:1px;
+  }
+  .sofia-skip-btn{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.18);
+    color:#fff;font-size:11px;font-weight:600;
+    padding:6px 12px;border-radius:100px;cursor:pointer;
+    transition:all .2s;font-family:inherit;flex-shrink:0;
+    align-self:flex-start;
+  }
+  .sofia-skip-btn:hover{
+    background:rgba(255,255,255,.16);
+    border-color:rgba(255,255,255,.35);
+  }
+  .sofia-timer-wrap{
+    margin-bottom:12px;position:relative;
+  }
+  .sofia-timer-bar{
+    height:4px;border-radius:100px;
+    background:rgba(255,255,255,.08);overflow:hidden;
+  }
+  .sofia-timer-fill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--accent),var(--accent-warm));
+    border-radius:100px;
+    transition:width .3s linear;
+  }
+  .sofia-timer-txt{
+    font-size:11px;color:#B8B5C7;margin-top:6px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .sofia-timer-txt::before{
+    content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    animation:pulseDot 1.2s infinite;
+  }
+  .sofia-thinking{
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:12px;padding:12px 14px;margin-bottom:10px;position:relative;
+  }
+  .thinking-step{
+    display:flex;align-items:center;gap:9px;
+    padding:5px 0;font-size:12.5px;color:#D4D2DD;
+    opacity:.4;transition:all .4s;
+  }
+  .thinking-step.active{opacity:1;color:#fff;}
+  .thinking-step.done{opacity:.7;color:#86efac;}
+  .thinking-icon{
+    width:20px;height:20px;border-radius:50%;
+    background:rgba(255,255,255,.1);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;flex-shrink:0;
+  }
+  .thinking-step.active .thinking-icon{
+    background:var(--accent);animation:rotate 1s linear infinite;
+  }
+  .thinking-step.done .thinking-icon{background:#22c55e;color:#fff;}
+  @keyframes rotate{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+  .sofia-output{
+    background:#fff;border-radius:12px;padding:0;
+    color:var(--primary);margin-top:10px;
+    max-height:0;overflow:hidden;opacity:0;
+    transition:max-height .8s ease,padding .4s ease,opacity .5s;
+  }
+  .sofia-output.show{max-height:1000px;opacity:1;padding:18px;}
+  .output-header{
+    display:flex;align-items:center;gap:9px;
+    padding-bottom:10px;border-bottom:1px dashed var(--border);
+    margin-bottom:10px;flex-wrap:wrap;
+  }
+  .output-tag{
+    background:var(--warning);color:#fff;
+    padding:3px 9px;border-radius:100px;
+    font-size:10.5px;font-weight:700;
+  }
+  .output-title{font-family:'Fraunces',serif;font-weight:700;font-size:14px;}
+  .output-body{font-size:13px;line-height:1.55;color:var(--text);}
+  .output-body p{margin-bottom:7px;}
+  .output-body strong{color:var(--primary);}
+  .output-body ul{margin-left:16px;margin-bottom:7px;}
+  .output-body li{margin-bottom:3px;font-size:12.5px;}
+  .output-meta{
+    display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;
+    padding-top:10px;border-top:1px dashed var(--border);
+  }
+  .output-meta span{
+    background:var(--primary-soft);color:var(--primary);
+    padding:3px 8px;border-radius:7px;font-size:10.5px;font-weight:700;
+  }
+  .mini-plan{
+    width:100%;border-collapse:collapse;
+    font-size:11.5px;margin-top:4px;
+  }
+  .mini-plan th, .mini-plan td{
+    padding:6px 7px;border-bottom:1px solid var(--border);text-align:left;
+  }
+  .mini-plan th{
+    background:var(--primary-soft);color:var(--primary);
+    font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+  }
+  .real-cta-card{
+    margin-top:10px;
+    background:linear-gradient(135deg,#FFF4EE,#FFE4D6);
+    border:2px dashed var(--accent);
+    border-radius:14px;padding:14px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    opacity:0;max-height:0;overflow:hidden;
+    transition:all .6s ease;
+  }
+  .real-cta-card.show{opacity:1;max-height:300px;}
+  .real-cta-card .icon{font-size:28px;flex-shrink:0;}
+  .real-cta-card .text{flex:1;min-width:200px;}
+  .real-cta-card h4{
+    font-family:'Fraunces',serif;font-size:15px;
+    color:var(--primary);margin-bottom:3px;font-weight:700;
+  }
+  .real-cta-card p{font-size:12px;color:var(--text-soft);line-height:1.4;}
+
+  /* TELA 5 */
+  #screen-5{
+    align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(ellipse at center,#FFF4EE 0%,#fff 70%);
+    position:relative;
+  }
+  .confetti{position:absolute;width:10px;height:10px;pointer-events:none;}
+  .celebration-circle{
+    width:110px;height:110px;border-radius:50%;
+    background:linear-gradient(135deg,var(--success),#34D399);
+    display:flex;align-items:center;justify-content:center;
+    font-size:54px;color:#fff;margin-bottom:16px;
+    box-shadow:0 20px 50px rgba(16,185,129,.35);
+    animation:bounceIn .8s cubic-bezier(.68,-.55,.27,1.55);
+  }
+  #screen-5 .screen-sub{margin-left:auto;margin-right:auto;}
+  .multiplier-card{
+    background:linear-gradient(135deg,#1B2A4E 0%,#2D3E66 100%);
+    color:#fff;border-radius:18px;padding:22px;
+    max-width:540px;margin:6px auto 14px;
+    box-shadow:0 20px 50px rgba(27,42,78,.3);text-align:left;
+  }
+  .multiplier-card .mul-eyebrow{
+    font-size:11px;font-weight:800;letter-spacing:.08em;
+    color:#FFD0B8;text-transform:uppercase;margin-bottom:8px;
+  }
+  .multiplier-card h3{
+    font-family:'Fraunces',serif;font-size:20px;font-weight:700;
+    line-height:1.25;margin-bottom:10px;
+  }
+  .multiplier-input{
+    width:75px;padding:7px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.08);color:#fff;
+    font-size:17px;font-weight:800;text-align:center;font-family:inherit;
+  }
+  .multiplier-input:focus{outline:none;border-color:var(--accent);}
+  .multiplier-result{
+    background:rgba(255,122,69,.15);
+    border:1px solid rgba(255,122,69,.4);
+    border-radius:12px;padding:13px;text-align:center;margin-top:10px;
+  }
+  .multiplier-result .big{
+    font-family:'Fraunces',serif;font-size:32px;
+    color:var(--accent-warm);font-weight:800;line-height:1;
+  }
+  .multiplier-result .small{
+    font-size:11.5px;color:#D4D2DD;margin-top:4px;
+  }
+  .mul-formula{font-size:11.5px;color:#B8B5C7;margin-top:6px;text-align:center;}
+
+  /* BANNER DE URGÊNCIA TELA 6 */
+  .urgency-banner{
+    background:linear-gradient(135deg,#FFF4E6,#FFE5CC);
+    border:1.5px solid var(--accent);
+    border-radius:16px;padding:14px 18px;margin-bottom:14px;
+    display:flex;align-items:center;gap:14px;
+    position:relative;overflow:hidden;
+    animation:slidePulse .6s ease;
+  }
+  .urgency-banner::before{
+    content:"";position:absolute;top:0;left:-100%;
+    width:50%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+    animation:shineMove 3s ease infinite;
+  }
+  @keyframes shineMove{
+    0%{left:-100%;}50%{left:200%;}100%{left:200%;}
+  }
+  @keyframes slidePulse{
+    from{transform:translateY(8px);opacity:0;}
+    to{transform:translateY(0);opacity:1;}
+  }
+  .urgency-icon{font-size:28px;flex-shrink:0;animation:tilt 2s ease-in-out infinite;}
+  @keyframes tilt{
+    0%,100%{transform:rotate(-5deg);}50%{transform:rotate(8deg);}
+  }
+  .urgency-content{flex:1;}
+  .urgency-title{
+    font-family:'Fraunces',serif;font-weight:700;font-size:15px;
+    color:var(--primary);margin-bottom:3px;
+  }
+  .urgency-sub{font-size:12px;color:var(--text-soft);line-height:1.4;}
+  .urgency-counter{
+    background:var(--accent);color:#fff;
+    border-radius:12px;padding:8px 14px;text-align:center;
+    flex-shrink:0;box-shadow:0 6px 14px rgba(255,122,69,.35);
+  }
+  .urgency-counter .cnt-num{
+    font-family:'Fraunces',serif;font-size:22px;font-weight:800;line-height:1;
+  }
+  .urgency-counter .cnt-lbl{
+    font-size:9.5px;font-weight:800;text-transform:uppercase;
+    letter-spacing:.04em;opacity:.95;margin-top:2px;
+  }
+  .trust-row-final{
+    display:flex;justify-content:center;gap:18px;margin-top:18px;
+    font-size:12px;color:var(--text-soft);font-weight:600;flex-wrap:wrap;
+  }
+  .trust-row-final span{display:inline-flex;align-items:center;gap:5px;}
+
+  /* TELA 6 */
+  .next-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:14px;
+    margin-top:6px;
+  }
+  .next-card{
+    background:#fff;border:1.5px solid var(--border);
+    border-radius:16px;padding:20px;cursor:pointer;
+    transition:all .25s;position:relative;
+    text-decoration:none;color:inherit;display:block;
+  }
+  .next-card:hover{
+    border-color:var(--accent);transform:translateY(-3px);
+    box-shadow:0 12px 28px rgba(27,42,78,.08);
+  }
+  .next-card.primary{
+    border-color:var(--accent);
+    background:linear-gradient(135deg,#FFF4EE,#fff);
+  }
+  .next-card.primary::before{
+    content:"⭐ RECOMENDADO PRA VOCÊ";
+    position:absolute;top:-10px;left:14px;
+    background:var(--accent);color:#fff;
+    padding:3px 10px;border-radius:100px;
+    font-size:10px;font-weight:800;letter-spacing:.04em;
+  }
+  .next-card .icon-box{
+    width:40px;height:40px;border-radius:12px;
+    background:var(--primary-soft);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;margin-bottom:10px;
+  }
+  .next-card.primary .icon-box{
+    background:linear-gradient(135deg,var(--accent),var(--accent-warm));
+  }
+  .next-card h4{
+    font-size:14px;font-weight:700;color:var(--primary);
+    margin-bottom:5px;
+  }
+  .next-card p{font-size:12px;color:var(--text-soft);line-height:1.4;}
+  .next-card .arrow{
+    color:var(--accent);font-weight:800;font-size:13.5px;margin-top:8px;
+    display:inline-block;
+  }
+
+  .bottom-nav{
+    padding:14px 26px;border-top:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    background:#fff;gap:14px;flex-shrink:0;
+  }
+  .step-counter{font-size:12px;color:var(--text-soft);font-weight:600;}
+  .step-counter strong{color:var(--primary);}
+  .nav-buttons{display:flex;gap:10px;}
+
+  @media(max-width:760px){
+    body{padding:0;}
+    .onboarding-shell{
+      height:100vh;max-height:none;border-radius:0;
+    }
+    .screen{padding:24px 20px;}
+    h1.screen-title{font-size:24px;}
+    .pain-grid{grid-template-columns:1fr;}
+    .next-grid{grid-template-columns:1fr;}
+    .top-bar{padding:12px 16px;}
+    .bottom-nav{padding:12px 16px;flex-wrap:wrap;}
+  }
+
+  .speaker-note{
+    position:fixed;bottom:14px;left:14px;
+    background:rgba(27,42,78,.94);color:#fff;
+    padding:10px 14px;border-radius:10px;
+    font-size:11px;max-width:300px;line-height:1.4;
+    z-index:99;font-weight:500;
+    box-shadow:0 8px 22px rgba(0,0,0,.2);
+  }
+  .speaker-note strong{color:var(--accent-warm);}
+  .speaker-note .close-note{
+    background:none;border:none;color:#fff;
+    cursor:pointer;font-size:14px;float:right;margin-left:8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="speaker-note" id="speakerNote">
+  <button class="close-note" onclick="document.getElementById('speakerNote').style.display='none'">×</button>
+  <strong>📌 Onboarding v4 · Lead Capture</strong><br>
+  Tela 0: nome + WhatsApp · Tela 1: olá personalizado · Layout sem corte.
+</div>
+
+<div class="onboarding-shell">
+
+  <div class="top-bar">
+    <div class="logo">
+      <div class="dot">A</div>
+      <span style="color:var(--primary)">Agiliza</span><span>Prof</span>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-step active"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+      <div class="progress-step"></div>
+    </div>
+    <button class="skip-btn" id="skipBtn" onclick="skipOnboarding()" style="display:none">Pular</button>
+  </div>
+
+  <div class="stage">
+
+    <!-- TELA 0 — LEAD CAPTURE -->
+    <section class="screen active" id="screen-0">
+      <div class="lead-illu">👋</div>
+      <h1 class="screen-title">Antes de começar, <em>bora se conhecer?</em></h1>
+      <p class="screen-sub">
+        Em <strong>30 segundos</strong>, criamos seu acesso e você já vê a Sofia em ação.
+        Sem cartão, sem compromisso.
+      </p>
+
+      <div class="lead-form">
+        <div class="lead-form-row">
+          <label class="lead-label" for="leadName">Como podemos te chamar?</label>
+          <div class="input-icon-wrap">
+            <span class="icon">👩‍🏫</span>
+            <input type="text" id="leadName" class="lead-input" placeholder="Ex.: Professora Ana" autocomplete="given-name"/>
+          </div>
+          <div class="lead-error" id="errorName">Por favor, digite seu nome.</div>
+        </div>
+
+        <div class="lead-form-row">
+          <label class="lead-label" for="leadPhone">Seu WhatsApp</label>
+          <div class="input-icon-wrap">
+            <span class="icon">📱</span>
+            <input type="tel" id="leadPhone" class="lead-input" placeholder="(11) 91234-5678" autocomplete="tel" maxlength="15"/>
+          </div>
+          <div class="lead-error" id="errorPhone">Digite um WhatsApp válido com DDD.</div>
+        </div>
+
+        <p class="lead-privacy">
+          🔒 Usamos seu WhatsApp <strong>só pra te avisar</strong> sobre seu acesso e atualizações importantes.
+          <br>Nunca vendemos seus dados. Conformidade <strong>LGPD</strong>.
+        </p>
+      </div>
+
+      <div class="lead-trust-row">
+        <span>✨ Sem cartão</span>
+        <span>🔒 100% LGPD</span>
+        <span>🇧🇷 Servidores no Brasil</span>
+      </div>
+    </section>
+
+    <!-- TELA 1 — BOAS-VINDAS PERSONALIZADAS -->
+    <section class="screen" id="screen-1">
+      <div class="welcome-illu">🎉</div>
+      <h1 class="screen-title">Olá, <em id="greetName" class="greet-name">Professora!</em><br>Que bom <em>te ver aqui</em>.</h1>
+      <p class="screen-sub">
+        Em <strong>menos de 3 minutos</strong>, vou te mostrar — exatamente — o que a Sofia vai fazer pra você.
+        Sem manual, sem academiquês.
+      </p>
+      <button class="btn btn-primary btn-large" onclick="goNext()">
+        Quero ver a Sofia em ação →
+      </button>
+      <div class="welcome-trust">
+        <span>✨ Sem cartão de crédito</span>
+        <span>🔒 100% LGPD</span>
+        <span>👩‍🏫 Feito por professores</span>
+      </div>
+    </section>
+
+    <!-- TELA 2 -->
+    <section class="screen" id="screen-2">
+      <span class="eyebrow">🎯 Escolha sua primeira vitória</span>
+      <h1 class="screen-title">Por onde você quer <em>começar a brilhar?</em></h1>
+      <p class="screen-sub">
+        Tudo no AgilizaProf é incrível — mas cada professora tem uma dor maior. Escolha por onde a Sofia começa hoje.
+        (Você usa todos os recursos depois, no mesmo plano.)
+      </p>
+      <div class="pain-grid" id="painGrid">
+
+        <div class="pain-card selected" data-pain="pareceres" onclick="selectPain(this)">
+          <span class="badge-top gold">⭐ Melhor do mercado</span>
+          <span class="pain-emoji">✍️</span>
+          <div class="pain-title">Pareceres descritivos</div>
+          <div class="pain-desc">A Sofia escreve no SEU tom, individualizado por aluno, em ~4 minutos.</div>
+          <span class="pain-stat">⏱️ Economia: 40 min por parecer</span>
+        </div>
+
+        <div class="pain-card" data-pain="planejamento" onclick="selectPain(this)">
+          <span class="badge-top purple">⚡ Mais eficiente do Brasil</span>
+          <span class="pain-emoji">📘</span>
+          <div class="pain-title">Planejamento BNCC</div>
+          <div class="pain-desc">Plano semanal completo com habilidades e atividades — pronto em 5 min.</div>
+          <span class="pain-stat">⏱️ Economia: 3h por semana</span>
+        </div>
+
+        <div class="pain-card" data-pain="inclusao" onclick="selectPain(this)">
+          <span class="badge-top rainbow">🏆 Único no Brasil</span>
+          <span class="pain-emoji">🌈</span>
+          <div class="pain-title">Inclusão (PEI + adaptações)</div>
+          <div class="pain-desc">A única IA pedagógica que adapta atividades ao laudo (TEA, TDAH, DI, dislexia...).</div>
+          <span class="pain-stat">⏱️ Economia: 5h por aluno PCD</span>
+        </div>
+
+        <div class="pain-card" data-pain="agenda" onclick="selectPain(this)">
+          <span class="badge-top blue">🎯 Pra não esquecer nada</span>
+          <span class="pain-emoji">📅</span>
+          <div class="pain-title">Agenda escolar</div>
+          <div class="pain-desc">Reuniões, entregas, conselho — organizado com alertas inteligentes.</div>
+          <span class="pain-stat">⏱️ Economia: 2h por semana</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TELA 3 -->
+    <section class="screen" id="screen-3">
+      <span class="eyebrow">⚡ 30 segundos · só o essencial</span>
+      <h1 class="screen-title" id="titleStep3">Me conta só uma <em>turma e uma aluna</em>.</h1>
+      <p class="screen-sub" id="subStep3">Com isso a Sofia já consegue te mostrar do que é capaz.</p>
+
+      <div class="focus-banner" id="focusBanner">
+        <div class="ico" id="focusIco">✍️</div>
+        <div class="txt">Foco escolhido: <strong id="focusName">Pareceres descritivos</strong> · A Sofia vai te mostrar isso primeiro.</div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-row">
+          <label class="form-label">Sua turma</label>
+          <input type="text" class="form-input" id="inputTurma" placeholder="Ex.: 2º Ano A — Manhã" value="2º Ano A — Manhã"/>
+        </div>
+        <div class="form-row" id="rowAlunosTotal">
+          <label class="form-label" id="lblAlunosTotal">Quantos alunos tem essa turma?</label>
+          <input type="number" class="form-input" id="inputAlunosTotal" value="28" min="1" max="60" style="max-width:140px"/>
+          <p class="form-hint">💡 Vamos usar pra calcular seu tempo recuperado depois.</p>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Etapa</label>
+          <div class="chip-row" id="etapaChips">
+            <button class="chip" onclick="selectChip(this,'etapa')">Berçário</button>
+            <button class="chip" onclick="selectChip(this,'etapa')">Maternal</button>
+            <button class="chip" onclick="selectChip(this,'etapa')">Pré-escola</button>
+            <button class="chip selected" onclick="selectChip(this,'etapa')">Fundamental I</button>
+          </div>
+        </div>
+        <div class="form-row" id="rowAluna">
+          <label class="form-label" id="lblAluna">Nome de uma aluna (só pra demonstração)</label>
+          <input type="text" class="form-input" id="inputAluna" placeholder="Ex.: Helena" value="Helena"/>
+          <p class="form-hint">🔒 Os dados ficam só com você, criptografados, conforme LGPD.</p>
+        </div>
+        <div class="form-row" id="rowTema" style="display:none">
+          <label class="form-label">Tema ou disciplina foco da semana</label>
+          <input type="text" class="form-input" id="inputTema" placeholder="Ex.: Adição com reagrupamento" value="Adição com reagrupamento"/>
+          <p class="form-hint">📘 A Sofia vai gerar o plano semanal a partir desse foco.</p>
+        </div>
+        <div class="form-row" id="rowCompromisso" style="display:none">
+          <label class="form-label">Próximo compromisso importante</label>
+          <input type="text" class="form-input" id="inputCompromisso" placeholder="Ex.: Reunião pedagógica" value="Reunião pedagógica"/>
+          <p class="form-hint">📅 A Sofia vai organizar sua semana ao redor desse evento.</p>
+        </div>
+        <div class="form-row" id="rowLaudo" style="display:none">
+          <label class="form-label">Laudo da aluna</label>
+          <div class="chip-row">
+            <button class="chip selected" onclick="selectChip(this,'laudo')">TEA · Autismo</button>
+            <button class="chip" onclick="selectChip(this,'laudo')">TDAH</button>
+            <button class="chip" onclick="selectChip(this,'laudo')">Dislexia</button>
+            <button class="chip" onclick="selectChip(this,'laudo')">Síndrome de Down</button>
+            <button class="chip" onclick="selectChip(this,'laudo')">Deficiência Intelectual</button>
+            <button class="chip" onclick="selectChip(this,'laudo')">Altas Habilidades</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 4 -->
+    <section class="screen" id="screen-4">
+      <span class="eyebrow">🤖 Veja a Sofia trabalhando</span>
+      <h1 class="screen-title" id="titleStep4">Olha o que a Sofia vai fazer <em>pra você.</em></h1>
+
+      <div class="demo-badge-bar">
+        <span class="pulse-dot"></span>
+        <span><strong>Demonstração honesta:</strong> exemplo real baseado em casos brasileiros. No app, a Sofia escreve com seus dados.</span>
+      </div>
+
+      <div class="sofia-stage">
+        <div class="sofia-demo-tag">DEMO</div>
+        <div class="sofia-header">
+          <div class="sofia-avatar">🤖</div>
+          <div class="sofia-info">
+            <h3>Sofia · Assistente Pedagógica</h3>
+            <p>Treinada e alinhada à BNCC · LGPD ✓</p>
+            <p class="sofia-task" id="sofiaTask">Gerando: Parecer Descritivo</p>
+          </div>
+          <button class="sofia-skip-btn" id="sofiaSkipBtn" onclick="skipSofiaAnim()" style="display:none">
+            ⏭️ Pular animação
+          </button>
+        </div>
+        <div class="sofia-timer-wrap" id="sofiaTimerWrap">
+          <div class="sofia-timer-bar"><div class="sofia-timer-fill" id="sofiaTimerFill"></div></div>
+          <div class="sofia-timer-txt" id="sofiaTimerTxt">A Sofia tá pensando · ~5s pra você ver tudo</div>
+        </div>
+        <div class="sofia-thinking" id="sofiaThinking"></div>
+        <div class="sofia-output" id="sofiaOutput"></div>
+        <div class="real-cta-card" id="realCta">
+          <div class="icon">✨</div>
+          <div class="text">
+            <h4 id="realCtaTitle">Quer gerar um real agora — com seus dados?</h4>
+            <p>É só finalizar o cadastro e a Sofia já fica disponível pra você no app.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 5 -->
+    <section class="screen" id="screen-5">
+      <div class="celebration-circle" id="celebrationIco">⏱️</div>
+      <h1 class="screen-title" id="titleStep5">Cada parecer = <em>40 min</em> do seu domingo de volta.</h1>
+      <p class="screen-sub" id="subStep5">
+        Esse é o tempo médio que a Sofia economiza. Agora vê o que isso vira na sua realidade:
+      </p>
+
+      <div class="multiplier-card">
+        <div class="mul-eyebrow" id="mulEyebrow">📊 Calculadora de tempo recuperado</div>
+        <h3 id="mulQuestion">Sua turma tem <input type="number" class="multiplier-input" id="mulAlunos" value="28" min="1" max="60" oninput="calcMul()"/> alunos.</h3>
+        <div class="multiplier-result">
+          <div class="big" id="mulResult">18h 40min</div>
+          <div class="small" id="mulSmall">de domingo recuperado por bimestre · só com pareceres</div>
+        </div>
+        <div class="mul-formula" id="mulFormula">Cálculo: 28 alunos × 40 min = 1.120 min ≈ 18h 40min</div>
+      </div>
+
+      <p class="screen-sub" style="margin-top:0;font-size:13px;text-align:center;">
+        E isso é <strong>só uma das funcionalidades.</strong> Some as outras 3 e o tempo recuperado triplica.
+      </p>
+    </section>
+
+    <!-- TELA 6 -->
+    <section class="screen" id="screen-6">
+      <span class="eyebrow">🔥 Sua semana grátis começa AGORA</span>
+      <h1 class="screen-title" id="titleStep6">Comece sua <em>semana grátis</em>, <span id="greetName2">Professora</span> — <em>começa hoje.</em></h1>
+      <p class="screen-sub" id="subStep6">
+        Você tem <strong>14 dias completos sem cartão</strong> pra usar tudo. Mas o melhor jeito de começar é fazendo a primeira vitória <strong>agora</strong>, enquanto a clareza tá fresca.
+      </p>
+
+      <div class="urgency-banner">
+        <div class="urgency-icon">⏳</div>
+        <div class="urgency-content">
+          <div class="urgency-title">Domingo está chegando.</div>
+          <div class="urgency-sub">Cada hora que você adia é uma hora que vai gastar à noite. Comece agora e durma melhor essa semana.</div>
+        </div>
+        <div class="urgency-counter" id="urgencyCounter">
+          <div class="cnt-num" id="cntDays">14</div>
+          <div class="cnt-lbl">dias grátis</div>
+        </div>
+      </div>
+
+      <div class="next-grid" id="nextGrid"></div>
+
+      <div class="trust-row-final">
+        <span>✨ Sem cartão de crédito</span>
+        <span>🔒 Cancele quando quiser</span>
+        <span>💛 Garantia de 7 dias</span>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="bottom-nav">
+    <div class="step-counter">Passo <strong id="curStep">1</strong> de <strong>7</strong></div>
+    <div class="nav-buttons">
+      <button class="btn btn-ghost" id="btnBack" onclick="goBack()" style="display:none">← Voltar</button>
+      <button class="btn btn-primary" id="btnNext" onclick="goNext()">Criar meu acesso →</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentStep = 0;            // começa em 0 (lead capture)
+  const totalSteps = 7;           // 0,1,2,3,4,5,6
+  let painSelected = "pareceres";
+  let leadData = { name:"", phone:"" };
+
+  // ============ HELPER: detecta etapa selecionada ============
+  function getEtapa(){
+    const sel = document.querySelector('#etapaChips .chip.selected');
+    if(!sel) return 'fundamental';
+    const txt = sel.textContent.trim().toLowerCase();
+    if(txt.includes('berçário')||txt.includes('bercario')) return 'bercario';
+    if(txt.includes('maternal')) return 'maternal';
+    if(txt.includes('pré-escola')||txt.includes('pre-escola')||txt.includes('pré')) return 'pre';
+    return 'fundamental';
+  }
+  function isInfantil(){
+    const e = getEtapa();
+    return e==='bercario' || e==='maternal' || e==='pre';
+  }
+
+  // ============ CONFIG POR DOR ============
+  const PAIN_CONFIG = {
+    pareceres: {
+      icon: "✍️",
+      label: "Pareceres descritivos",
+      task: "Gerando: Parecer Descritivo",
+      titleStep3: "Me conta sobre uma <em>aluna sua</em>.",
+      titleStep4: "Olha o parecer que a Sofia <em>vai escrever pra você.</em>",
+      titleStep5: "Cada parecer = <em>40 min</em> do seu domingo de volta.",
+      celebrationIco: "✍️",
+      mulEyebrow: "📊 Calculadora · Pareceres descritivos",
+      mulQuestionPrefix: "Sua turma tem ",
+      mulQuestionSuffix: " alunos.",
+      mulMinPerUnit: 40,
+      mulMinDefault: 28,
+      mulSmall: "de domingo recuperado por bimestre · só com pareceres",
+      mulFormulaFn: (n)=>`Cálculo: ${n} alunos × 40 min = ${n*40} min ≈ ${formatTime(n*40)}`,
+      thinkingSteps: [
+        "Lendo o perfil da aluna {NAME}...",
+        "Buscando habilidades BNCC compatíveis...",
+        "Convocando referências pedagógicas...",
+        "Escrevendo no tom empático e individualizado..."
+      ],
+      thinkingIcons: ["📋","📘","📚","✍️"],
+      output: {
+        title: "Parecer descritivo · {NAME} · 1º Bimestre",
+        body: `<p>{NAME} vem demonstrando avanços significativos na <strong>oralidade e leitura fluente</strong>, lendo com entonação e compreendendo textos curtos com autonomia. Sua postura sociável favorece o trabalho em grupo.</p>
+               <p>Na <strong>matemática</strong>, está em construção do conceito de adição com reagrupamento, etapa esperada para o momento. Recomenda-se continuar com materiais concretos.</p>
+               <p>Na dimensão socioemocional, demonstra escuta e respeito.</p>`,
+        meta: ["📘 EF02LP01","📘 EF02MA05","📚 Paulo Freire","⏱️ ~4 min"]
+      },
+      realCtaTitle: "Quer gerar o parecer real da sua aluna agora?",
+      realCtaRoute: "/relatorios"
+    },
+    planejamento: {
+      icon: "📘",
+      label: "Planejamento BNCC",
+      task: "Gerando: Plano Semanal BNCC",
+      titleStep3: "Qual o <em>tema da semana</em>?",
+      titleStep4: "Olha o plano que a Sofia <em>vai montar pra sua semana.</em>",
+      titleStep5: "Cada plano semanal = <em>3 horas</em> do seu tempo de volta.",
+      celebrationIco: "📘",
+      mulEyebrow: "📊 Calculadora · Planejamento semanal",
+      mulQuestionPrefix: "Você planeja por ",
+      mulQuestionSuffix: " semanas no ano letivo.",
+      mulMinPerUnit: 180,
+      mulMinDefault: 40,
+      mulSmall: "recuperadas no ano letivo · só com planejamento",
+      mulFormulaFn: (n)=>`Cálculo: ${n} semanas × 3h = ${n*3}h por ano`,
+      thinkingSteps: [
+        "Analisando o tema <em>{NAME}</em> e a etapa da turma...",
+        "Selecionando habilidades BNCC compatíveis...",
+        "Distribuindo nos 5 dias úteis com coerência...",
+        "Sugerindo atividades adequadas à faixa etária..."
+      ],
+      thinkingIcons: ["📋","📘","📅","🎨"],
+      output: {
+        title: "Plano BNCC · Tema: {NAME} · Semana 12",
+        body: `<table class="mini-plan">
+                <tr><th>Dia</th><th>Componente</th><th>Habilidade</th><th>Atividade</th></tr>
+                <tr><td>Seg</td><td>Matemática</td><td>EF02MA05</td><td>Introdução a {NAME} com material dourado</td></tr>
+                <tr><td>Ter</td><td>Matemática</td><td>EF02MA06</td><td>Resolução de problemas com {NAME}</td></tr>
+                <tr><td>Qua</td><td>Português</td><td>EF02LP01</td><td>Leitura de problema matemático</td></tr>
+                <tr><td>Qui</td><td>Matemática</td><td>EF02MA07</td><td>Jogos de cálculo mental</td></tr>
+                <tr><td>Sex</td><td>Artes</td><td>EF15AR04</td><td>Registro visual do que aprenderam</td></tr>
+              </table>`,
+        meta: ["✅ 5 dias","📘 5 habilidades","🎨 Atividades reais","⏱️ ~5 min"]
+      },
+      realCtaTitle: "Quer montar o plano real da sua próxima semana?",
+      realCtaRoute: "/planejamento"
+    },
+    inclusao: {
+      icon: "🌈",
+      label: "Inclusão (PEI)",
+      task: "Gerando: PEI · Lei 14.254/2021",
+      titleStep3: "Me conta sobre seu <em>aluno PCD</em>.",
+      titleStep4: "Olha o PEI que a Sofia <em>vai adaptar pra esse aluno.</em>",
+      titleStep5: "Cada PEI completo = <em>5 horas</em> do seu tempo de volta.",
+      celebrationIco: "🌈",
+      mulEyebrow: "📊 Calculadora · Inclusão (PEI)",
+      mulQuestionPrefix: "Sua turma tem ",
+      mulQuestionSuffix: " alunos com laudo.",
+      mulMinPerUnit: 300,
+      mulMinDefault: 3,
+      mulSmall: "recuperadas por bimestre · só com PEIs adaptados",
+      mulFormulaFn: (n)=>`Cálculo: ${n} alunos PCD × 5h = ${n*5}h por bimestre`,
+      thinkingSteps: [
+        "Lendo o laudo e perfil de {NAME}...",
+        "Identificando objetivos pedagógicos por eixo...",
+        "Adaptando atividades ao perfil sensorial...",
+        "Estruturando PEI conforme Lei 14.254/2021..."
+      ],
+      thinkingIcons: ["📋","🎯","🌈","📜"],
+      output: {
+        title: "PEI · {NAME} · 2º Ano · Lei 14.254/2021",
+        body: `<p><strong>Caracterização:</strong> Educando com diagnóstico de TEA (Nível 1). Reconhece alfabeto, lê palavras CV com mediação. Sensibilidade auditiva alta — fones em uso.</p>
+               <p><strong>Objetivos vigentes:</strong></p>
+               <ul>
+                 <li>Ler 20 palavras com encontros consonantais</li>
+                 <li>Resolver adições até 20 com material concreto</li>
+                 <li>Sustentar trabalho em dupla por 20 min</li>
+                 <li>Reconhecer sobrecarga e solicitar pausa</li>
+               </ul>
+               <p><strong>Estratégias:</strong> Apoio visual em Português · Material dourado em Matemática.</p>`,
+        meta: ["🌈 Adaptado TEA","📜 Lei 14.254","🎯 4 objetivos","⏱️ ~6 min"]
+      },
+      realCtaTitle: "Quer criar o PEI real do seu aluno agora?",
+      realCtaRoute: "/inclusao"
+    },
+    agenda: {
+      icon: "📅",
+      label: "Agenda escolar",
+      task: "Organizando: Agenda da Semana",
+      titleStep3: "Qual seu <em>próximo compromisso</em>?",
+      titleStep4: "Olha como a Sofia <em>vai organizar sua semana.</em>",
+      titleStep5: "Cada semana organizada = <em>2 horas</em> do seu tempo de volta.",
+      celebrationIco: "📅",
+      mulEyebrow: "📊 Calculadora · Agenda escolar",
+      mulQuestionPrefix: "Você trabalha por ",
+      mulQuestionSuffix: " semanas no ano.",
+      mulMinPerUnit: 120,
+      mulMinDefault: 40,
+      mulSmall: "de organização recuperadas no ano · só com a agenda",
+      mulFormulaFn: (n)=>`Cálculo: ${n} semanas × 2h = ${n*2}h por ano`,
+      thinkingSteps: [
+        "Encaixando <em>{NAME}</em> na sua semana...",
+        "Organizando demais compromissos ao redor...",
+        "Identificando conflitos de horário...",
+        "Programando lembretes inteligentes..."
+      ],
+      thinkingIcons: ["📋","📅","⚠️","🔔"],
+      output: {
+        title: "Agenda · Semana 12 · Foco: {NAME}",
+        body: `<table class="mini-plan">
+                <tr><th>Dia</th><th>Hora</th><th>Compromisso</th><th>Tipo</th></tr>
+                <tr><td>Seg</td><td>15h</td><td><strong>{NAME}</strong></td><td>⭐ Prioridade</td></tr>
+                <tr><td>Ter</td><td>13h</td><td>Entrega de pareceres</td><td>📝 Entrega</td></tr>
+                <tr><td>Qua</td><td>10h</td><td>Atendimento aos pais</td><td>🤝 Família</td></tr>
+                <tr><td>Qui</td><td>15h</td><td>AEE — apoio inclusão</td><td>🌈 Inclusão</td></tr>
+                <tr><td>Sex</td><td>14h</td><td>Conselho de classe</td><td>📋 Conselho</td></tr>
+              </table>`,
+        meta: ["📅 5 compromissos","🔔 Alertas","⚠️ Sem conflitos","⏱️ ~3 min"]
+      },
+      realCtaTitle: "Quer organizar sua agenda real da semana?",
+      realCtaRoute: "/agenda"
+    }
+  };
+
+  const NEXT_CARDS = {
+    pareceres: { icon:"✍️", title:"Gerar meu primeiro parecer real", desc:"Cadastre 1 aluna e a Sofia entrega o parecer em ~4 minutos.", arrow:"Começar agora →", route:"/relatorios" },
+    planejamento: { icon:"📘", title:"Montar plano BNCC da semana", desc:"Drag & drop com habilidades reais. Pronto da segunda à sexta.", arrow:"Abrir planejamento →", route:"/planejamento" },
+    inclusao: { icon:"🌈", title:"Criar PEI do meu primeiro aluno PCD", desc:"Adapte atividades ao laudo (TEA, TDAH, dislexia, etc.).", arrow:"Abrir inclusão →", route:"/inclusao" },
+    agenda: { icon:"📅", title:"Organizar minha agenda da semana", desc:"Reuniões, entregas e conselhos com alertas inteligentes.", arrow:"Abrir agenda →", route:"/agenda" },
+    sofia: { icon:"🤖", title:"Conversar com a Sofia", desc:"Pergunte qualquer coisa. Ela conhece BNCC e seu tom.", arrow:"Abrir Sofia →", route:"/assistente" }
+  };
+
+  // ============ HELPERS ============
+  function formatTime(totalMin){
+    const h = Math.floor(totalMin/60);
+    const m = totalMin%60;
+    let txt = '';
+    if(h>0) txt += h+'h ';
+    if(m>0||h===0) txt += m+'min';
+    return txt.trim();
+  }
+  function getFirstName(full){
+    if(!full) return 'Professora';
+    return full.trim().split(/\s+/)[0];
+  }
+
+  // ============ MÁSCARA TELEFONE BR ============
+  document.getElementById('leadPhone').addEventListener('input', function(e){
+    let v = e.target.value.replace(/\D/g,'').slice(0,11);
+    if(v.length===0) e.target.value='';
+    else if(v.length<=2) e.target.value='('+v;
+    else if(v.length<=6) e.target.value='('+v.slice(0,2)+') '+v.slice(2);
+    else if(v.length<=10) e.target.value='('+v.slice(0,2)+') '+v.slice(2,6)+'-'+v.slice(6);
+    else e.target.value='('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
+  });
+
+  function validateLead(){
+    const name = document.getElementById('leadName').value.trim();
+    const phone = document.getElementById('leadPhone').value.replace(/\D/g,'');
+    let ok = true;
+
+    if(name.length<2){
+      document.getElementById('errorName').classList.add('show');
+      document.getElementById('leadName').classList.add('invalid');
+      ok = false;
+    } else {
+      document.getElementById('errorName').classList.remove('show');
+      document.getElementById('leadName').classList.remove('invalid');
+    }
+    if(phone.length<10 || phone.length>11){
+      document.getElementById('errorPhone').classList.add('show');
+      document.getElementById('leadPhone').classList.add('invalid');
+      ok = false;
+    } else {
+      document.getElementById('errorPhone').classList.remove('show');
+      document.getElementById('leadPhone').classList.remove('invalid');
+    }
+
+    if(ok){
+      leadData.name = name;
+      leadData.phone = document.getElementById('leadPhone').value;
+      // 📡 Aqui é onde você envia ao seu backend / CRM:
+      // fetch('/api/lead', { method:'POST', body: JSON.stringify(leadData) })
+      console.log('✅ LEAD CAPTURADO:', leadData);
+    }
+    return ok;
+  }
+
+  // limpa erro ao digitar
+  document.getElementById('leadName').addEventListener('input', ()=>{
+    document.getElementById('errorName').classList.remove('show');
+    document.getElementById('leadName').classList.remove('invalid');
+  });
+  document.getElementById('leadPhone').addEventListener('input', ()=>{
+    document.getElementById('errorPhone').classList.remove('show');
+    document.getElementById('leadPhone').classList.remove('invalid');
+  });
+
+  // ============ NAVIGATION ============
+  function updateUI(){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-'+currentStep).classList.add('active');
+
+    const steps = document.querySelectorAll('.progress-step');
+    steps.forEach((s,i)=>{
+      s.classList.remove('active','done');
+      if(i < currentStep) s.classList.add('done');
+      else if(i === currentStep) s.classList.add('active');
+    });
+
+    document.getElementById('curStep').textContent = currentStep+1;
+    document.getElementById('btnBack').style.display = (currentStep===0 || currentStep===1) ? 'none' : 'inline-flex';
+    document.getElementById('skipBtn').style.display = (currentStep===0) ? 'none' : 'inline-block';
+
+    const next = document.getElementById('btnNext');
+    if(currentStep === 0) next.innerHTML = "Criar meu acesso →";
+    else if(currentStep === 1) next.innerHTML = "Quero ver a Sofia em ação →";
+    else if(currentStep === 4) next.innerHTML = "Calcular meu tempo recuperado →";
+    else if(currentStep === 5) next.innerHTML = "Ver meus próximos passos →";
+    else if(currentStep === totalSteps-1){ next.style.display='none'; }
+    else { next.innerHTML = "Continuar →"; next.style.display='inline-flex'; }
+
+    if(currentStep === 1) renderGreeting();
+    if(currentStep === 3) adaptStep3();
+    if(currentStep === 4) { adaptStep4(); runSofia(); }
+    if(currentStep === 5) { adaptStep5(); launchConfetti(); calcMul(); }
+    if(currentStep === 6) adaptStep6();
+  }
+
+  function goNext(){
+    if(currentStep === 0){
+      if(!validateLead()) return;
+    }
+    if(currentStep < totalSteps-1){
+      currentStep++;
+      updateUI();
+    } else {
+      alert('🎉 Bem-vinda ao AgilizaProf, '+getFirstName(leadData.name)+'! Indo pro painel...');
+    }
+  }
+  function goBack(){if(currentStep>0){currentStep--;updateUI();}}
+  function skipOnboarding(){
+    if(confirm('Pular o onboarding? Você pode acessá-lo depois pelo menu.')){
+      alert('Indo direto pro painel.');
+    }
+  }
+
+  function renderGreeting(){
+    const first = getFirstName(leadData.name);
+    document.getElementById('greetName').textContent = first + '!';
+    document.getElementById('greetName2').textContent = first;
+  }
+
+  function selectPain(el){
+    document.querySelectorAll('.pain-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    painSelected = el.dataset.pain;
+  }
+  function selectChip(el, group){
+    if(group==='etapa' || group==='laudo'){
+      el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+  }
+
+  // ============ ADAPTAÇÕES ============
+  function adaptStep3(){
+    const cfg = PAIN_CONFIG[painSelected];
+    document.getElementById('titleStep3').innerHTML = cfg.titleStep3;
+    document.getElementById('focusName').textContent = cfg.label;
+    document.getElementById('focusIco').textContent = cfg.icon;
+    document.getElementById('rowLaudo').style.display = (painSelected==='inclusao') ? 'block' : 'none';
+
+    // Mostra o campo certo conforme a dor escolhida
+    const rowAluna = document.getElementById('rowAluna');
+    const rowTema = document.getElementById('rowTema');
+    const rowCompromisso = document.getElementById('rowCompromisso');
+    rowAluna.style.display = 'none';
+    rowTema.style.display = 'none';
+    rowCompromisso.style.display = 'none';
+
+    if(painSelected === 'pareceres' || painSelected === 'inclusao'){
+      rowAluna.style.display = 'block';
+      const lbl = document.getElementById('lblAluna');
+      lbl.textContent = (painSelected === 'inclusao')
+        ? 'Nome do aluno PCD (só pra demonstração)'
+        : 'Nome de uma aluna (só pra demonstração)';
+    } else if(painSelected === 'planejamento'){
+      rowTema.style.display = 'block';
+    } else if(painSelected === 'agenda'){
+      rowCompromisso.style.display = 'block';
+    }
+
+    const lblTotal = document.getElementById('lblAlunosTotal');
+    if(painSelected==='inclusao') lblTotal.textContent = 'Quantos alunos com laudo (PCD) você tem?';
+    else lblTotal.textContent = 'Quantos alunos tem essa turma?';
+
+    if(painSelected==='inclusao') document.getElementById('inputAlunosTotal').value = 3;
+    else document.getElementById('inputAlunosTotal').value = 28;
+  }
+
+  // ============ Sobrescreve outputs quando for Educação Infantil ============
+  const INFANTIL_OUTPUTS = {
+    pareceres: {
+      title: "Parecer descritivo · {NAME} · 1º Semestre · Educação Infantil",
+      body: `<p>{NAME} demonstra crescente <strong>autonomia nas brincadeiras</strong> e participa ativamente das rodas de conversa, expressando ideias com vocabulário em ampliação.</p>
+             <p>Nos <strong>Campos de Experiência "O eu, o outro e o nós"</strong>, demonstra empatia ao acolher colegas. Em <strong>"Traços, sons, cores e formas"</strong>, explora materiais com curiosidade e elabora produções próprias.</p>
+             <p>Recomenda-se continuar fortalecendo brincadeiras simbólicas em pequenos grupos.</p>`,
+      meta: ["🌱 EI03EO04","🎨 EI03TS01","📘 BNCC Infantil","⏱️ ~4 min"]
+    },
+    planejamento: {
+      title: "Plano BNCC · Tema: {NAME} · Semana 12 · Pré-escola",
+      body: `<table class="mini-plan">
+              <tr><th>Dia</th><th>Campo de Experiência</th><th>Direito</th><th>Vivência</th></tr>
+              <tr><td>Seg</td><td>Escuta, fala, pensamento</td><td>Brincar</td><td>Roda de história sobre {NAME}</td></tr>
+              <tr><td>Ter</td><td>Traços, sons, cores</td><td>Expressar</td><td>Pintura livre inspirada em {NAME}</td></tr>
+              <tr><td>Qua</td><td>O eu, o outro e o nós</td><td>Conviver</td><td>Brincadeira coletiva temática</td></tr>
+              <tr><td>Qui</td><td>Espaços, tempos, quantidades</td><td>Explorar</td><td>Investigação sensorial guiada</td></tr>
+              <tr><td>Sex</td><td>Corpo, gestos, movimentos</td><td>Participar</td><td>Circuito motor temático</td></tr>
+            </table>`,
+      meta: ["✅ 5 campos","🌱 6 direitos","🎨 Vivências reais","⏱️ ~5 min"]
+    },
+    inclusao: {
+      title: "PEI · {NAME} · Pré-escola · Lei 14.254/2021",
+      body: `<p><strong>Caracterização:</strong> Criança com diagnóstico de TEA (Nível 1). Comunicação verbal em construção. Interesse forte por rotinas previsíveis e brincadeiras simbólicas com objetos.</p>
+             <p><strong>Objetivos vigentes (por Campo de Experiência):</strong></p>
+             <ul>
+               <li><em>Eu, outro e nós:</em> Sustentar brincadeira em dupla por 10 min</li>
+               <li><em>Escuta e fala:</em> Ampliar repertório verbal em 15 palavras</li>
+               <li><em>Corpo e movimentos:</em> Participar do circuito motor com mediação</li>
+               <li><em>Sensorial:</em> Reconhecer sobrecarga e usar canto da calma</li>
+             </ul>
+             <p><strong>Estratégias:</strong> Apoio visual com PECS · Antecipação de rotina · Pares aliados.</p>`,
+      meta: ["🌈 Adaptado TEA","📜 Lei 14.254","🎯 4 objetivos","⏱️ ~6 min"]
+    },
+    agenda: {
+      title: "Agenda · Semana 12 · Foco: {NAME} · Pré-escola",
+      body: `<table class="mini-plan">
+              <tr><th>Dia</th><th>Hora</th><th>Compromisso</th><th>Tipo</th></tr>
+              <tr><td>Seg</td><td>15h</td><td><strong>{NAME}</strong></td><td>⭐ Prioridade</td></tr>
+              <tr><td>Ter</td><td>13h</td><td>Registro de observações</td><td>📝 Registro</td></tr>
+              <tr><td>Qua</td><td>10h</td><td>Reunião com famílias</td><td>🤝 Família</td></tr>
+              <tr><td>Qui</td><td>15h</td><td>Apoio AEE</td><td>🌈 Inclusão</td></tr>
+              <tr><td>Sex</td><td>14h</td><td>Reunião pedagógica</td><td>📋 Pedagógico</td></tr>
+            </table>`,
+      meta: ["📅 5 compromissos","🔔 Alertas","⚠️ Sem conflitos","⏱️ ~3 min"]
+    }
+  };
+
+  function adaptStep4(){
+    const cfg = PAIN_CONFIG[painSelected];
+
+    // Variável de contexto muda conforme a dor
+    let ctx = 'Helena';
+    if(painSelected === 'pareceres' || painSelected === 'inclusao'){
+      ctx = document.getElementById('inputAluna').value || 'Helena';
+    } else if(painSelected === 'planejamento'){
+      ctx = document.getElementById('inputTema').value || 'Adição com reagrupamento';
+    } else if(painSelected === 'agenda'){
+      ctx = document.getElementById('inputCompromisso').value || 'Reunião pedagógica';
+    }
+
+    document.getElementById('titleStep4').innerHTML = cfg.titleStep4;
+    let taskText = cfg.task;
+    if(isInfantil()){
+      taskText = taskText + ' · Educação Infantil';
+    }
+    document.getElementById('sofiaTask').textContent = taskText;
+
+    const thinkingHtml = cfg.thinkingSteps.map((txt,i)=>{
+      const finalTxt = txt.replace('{NAME}', '<strong>'+ctx+'</strong>');
+      return `<div class="thinking-step" data-step="${i+1}"><div class="thinking-icon">${cfg.thinkingIcons[i]}</div><div>${finalTxt}</div></div>`;
+    }).join('');
+    document.getElementById('sofiaThinking').innerHTML = thinkingHtml;
+
+    // Se for Educação Infantil e houver variação, usa ela
+    let out = cfg.output;
+    if(isInfantil() && INFANTIL_OUTPUTS[painSelected]){
+      out = INFANTIL_OUTPUTS[painSelected];
+    }
+    const title = out.title.replace(/\{NAME\}/g, ctx);
+    const body = out.body.replace(/\{NAME\}/g, ctx);
+    const metaHtml = out.meta.map(m=>`<span>${m}</span>`).join('');
+
+    document.getElementById('sofiaOutput').innerHTML = `
+      <div class="output-header">
+        <span class="output-tag">EXEMPLO</span>
+        <div class="output-title">${title}</div>
+      </div>
+      <div class="output-body">
+        ${body}
+        <div class="output-meta">${metaHtml}</div>
+      </div>
+    `;
+
+    document.getElementById('realCtaTitle').textContent = cfg.realCtaTitle;
+  }
+
+  function adaptStep5(){
+    const cfg = PAIN_CONFIG[painSelected];
+    document.getElementById('titleStep5').innerHTML = cfg.titleStep5;
+    document.getElementById('celebrationIco').textContent = cfg.celebrationIco;
+    document.getElementById('mulEyebrow').textContent = cfg.mulEyebrow;
+    document.getElementById('mulSmall').textContent = cfg.mulSmall;
+
+    const totalAlunos = parseInt(document.getElementById('inputAlunosTotal').value)||cfg.mulMinDefault||28;
+    document.getElementById('mulQuestion').innerHTML =
+      cfg.mulQuestionPrefix +
+      `<input type="number" class="multiplier-input" id="mulAlunos" value="${totalAlunos}" min="1" max="60" oninput="calcMul()"/>` +
+      cfg.mulQuestionSuffix;
+  }
+
+  function calcMul(){
+    const cfg = PAIN_CONFIG[painSelected];
+    const n = parseInt(document.getElementById('mulAlunos').value)||0;
+    const totalMin = n * cfg.mulMinPerUnit;
+    document.getElementById('mulResult').textContent = formatTime(totalMin);
+    document.getElementById('mulFormula').textContent = cfg.mulFormulaFn(n);
+  }
+
+  function adaptStep6(){
+    const grid = document.getElementById('nextGrid');
+    const order = [painSelected];
+    ['pareceres','planejamento','inclusao','agenda','sofia'].forEach(k=>{
+      if(k!==painSelected) order.push(k);
+    });
+
+    grid.innerHTML = order.slice(0,4).map((key,i)=>{
+      const c = NEXT_CARDS[key];
+      const isPrimary = i===0;
+      return `
+        <a class="next-card${isPrimary?' primary':''}" href="${c.route}" onclick="goToApp(event,'${key}')">
+          <div class="icon-box" style="${isPrimary?'color:#fff':''}">${c.icon}</div>
+          <h4>${c.title}</h4>
+          <p>${c.desc}</p>
+          <span class="arrow">${c.arrow}</span>
+        </a>
+      `;
+    }).join('');
+
+    const cfg = PAIN_CONFIG[painSelected];
+    document.getElementById('subStep6').innerHTML =
+      `Como você escolheu <strong>${cfg.label}</strong>, recomendamos começar por aí. Mas todos os caminhos estão liberados pra você.`;
+  }
+
+  // ============ ANIMAÇÕES ============
+  // ====== Sofia animation com timer e skip ======
+  let sofiaTimers = [];
+  function clearSofiaTimers(){
+    sofiaTimers.forEach(t=>clearTimeout(t));
+    sofiaTimers = [];
+  }
+
+  function runSofia(){
+    clearSofiaTimers();
+    const steps = document.querySelectorAll('#sofiaThinking .thinking-step');
+    steps.forEach(s=>s.classList.remove('active','done'));
+    document.getElementById('sofiaOutput').classList.remove('show');
+    document.getElementById('realCta').classList.remove('show');
+
+    // Reset timer + esconder skip
+    const timerFill = document.getElementById('sofiaTimerFill');
+    const timerTxt = document.getElementById('sofiaTimerTxt');
+    const skipBtn = document.getElementById('sofiaSkipBtn');
+    timerFill.style.transition = 'none';
+    timerFill.style.width = '0%';
+    skipBtn.style.display = 'none';
+
+    // Inicia animação do timer (5s)
+    setTimeout(()=>{
+      timerFill.style.transition = 'width 5s linear';
+      timerFill.style.width = '100%';
+    }, 50);
+    timerTxt.innerHTML = 'A Sofia tá pensando · <strong>~5s</strong> pra você ver tudo';
+
+    // Mostra botão "pular" após 2s
+    sofiaTimers.push(setTimeout(()=>{
+      skipBtn.style.display = 'inline-flex';
+    }, 2000));
+
+    const delays = [200, 1100, 2100, 3000];
+    delays.forEach((d,i)=>{
+      sofiaTimers.push(setTimeout(()=>{
+        if(i>0){steps[i-1].classList.remove('active');steps[i-1].classList.add('done');}
+        steps[i].classList.add('active');
+      }, d));
+    });
+    sofiaTimers.push(setTimeout(()=>{
+      steps[3].classList.remove('active');
+      steps[3].classList.add('done');
+      document.getElementById('sofiaOutput').classList.add('show');
+      skipBtn.style.display = 'none';
+      timerTxt.innerHTML = '✅ Pronto · revise e siga quando quiser';
+    }, 4200));
+    sofiaTimers.push(setTimeout(()=>{
+      document.getElementById('realCta').classList.add('show');
+    }, 5200));
+  }
+
+  function skipSofiaAnim(){
+    clearSofiaTimers();
+    const steps = document.querySelectorAll('#sofiaThinking .thinking-step');
+    steps.forEach(s=>{s.classList.remove('active');s.classList.add('done');});
+    document.getElementById('sofiaTimerFill').style.transition = 'width .3s linear';
+    document.getElementById('sofiaTimerFill').style.width = '100%';
+    document.getElementById('sofiaTimerTxt').innerHTML = '✅ Pronto · revise e siga quando quiser';
+    document.getElementById('sofiaOutput').classList.add('show');
+    document.getElementById('realCta').classList.add('show');
+    document.getElementById('sofiaSkipBtn').style.display = 'none';
+  }
+
+  function launchConfetti(){
+    const colors = ['#FF7A45','#7C5CFF','#10B981','#F5B53D','#FF9466'];
+    const shell = document.getElementById('screen-5');
+    for(let i=0;i<35;i++){
+      const c = document.createElement('div');
+      c.className='confetti';
+      c.style.background = colors[Math.floor(Math.random()*colors.length)];
+      c.style.left = Math.random()*100 + '%';
+      c.style.top = '-20px';
+      c.style.borderRadius = Math.random()>.5 ? '50%' : '2px';
+      c.style.transform = 'rotate('+Math.random()*360+'deg)';
+      shell.appendChild(c);
+      const dur = 1500 + Math.random()*1500;
+      const xDrift = (Math.random()-0.5)*200;
+      c.animate([
+        {transform:'translate(0,0) rotate(0)',opacity:1},
+        {transform:`translate(${xDrift}px, 600px) rotate(${720+Math.random()*360}deg)`,opacity:0}
+      ], {duration:dur, easing:'cubic-bezier(.2,.6,.4,1)'}).onfinish = ()=> c.remove();
+    }
+  }
+
+  function goToApp(e,where){
+    e.preventDefault();
+    alert('No app real, isso te leva pra: ' + (NEXT_CARDS[where]?.route || '/'));
+  }
+
+  // foco no nome ao abrir
+  setTimeout(()=>{document.getElementById('leadName').focus();}, 400);
+  updateUI();
+</script>
+
+</body>
+</html>
