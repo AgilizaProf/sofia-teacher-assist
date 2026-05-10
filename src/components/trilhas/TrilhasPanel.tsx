@@ -76,6 +76,7 @@ export function TrilhasPanel() {
     ano: "",
     disciplinas: [] as string[],
     disciplinaCustom: "",
+    interdisciplinar: true,
     semestre: "1º semestre",
     contexto: "",
   });
@@ -105,10 +106,18 @@ export function TrilhasPanel() {
       setError("Selecione a turma, o ano e ao menos uma disciplina.");
       return;
     }
-    const interdisciplinar = discsAll.length > 1;
-    const disciplinaStr = interdisciplinar
-      ? `Interdisciplinar (${discsAll.join(", ")})`
-      : discsAll[0];
+    const multiplas = discsAll.length > 1;
+    const interdisciplinar = multiplas && form.interdisciplinar;
+    const disciplinaStr = !multiplas
+      ? discsAll[0]
+      : interdisciplinar
+        ? `Interdisciplinar (${discsAll.join(", ")})`
+        : discsAll.join(" + ");
+    const contextoFinal = !multiplas
+      ? form.contexto
+      : interdisciplinar
+        ? `${form.contexto ? form.contexto + "\n\n" : ""}Tratar como TRILHA INTERDISCIPLINAR: integre ${discsAll.join(", ")} em torno de um tema único, com habilidades BNCC de cada componente articuladas semana a semana.`
+        : `${form.contexto ? form.contexto + "\n\n" : ""}NÃO interdisciplinar: gere conteúdo SEPARADO para cada um dos componentes a seguir, mantendo identidade própria de cada disciplina/campo de experiência (${discsAll.join(", ")}). Para cada semana, indique claramente a qual componente pertence e suas habilidades BNCC específicas.`;
     setError(null); setLoading(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -119,7 +128,7 @@ export function TrilhasPanel() {
         ano: form.ano,
         disciplina: disciplinaStr,
         semestre: form.semestre,
-        contexto: form.contexto,
+        contexto: contextoFinal,
       };
       const { data, error: fnErr } = await supabase.functions.invoke("gerar-trilha", { body: payload });
       if (fnErr) throw fnErr;
@@ -159,7 +168,7 @@ export function TrilhasPanel() {
       }
       await carregar();
       setSelected(trilhaRow!.id);
-      setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", semestre: "1º semestre", contexto: "" });
+      setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", interdisciplinar: true, semestre: "1º semestre", contexto: "" });
     } catch (e) {
       setError((e as Error).message || "Não consegui gerar a trilha agora. Tente em instantes.");
     } finally {
@@ -300,6 +309,19 @@ export function TrilhasPanel() {
             onChange={(e) => setForm({ ...form, disciplinaCustom: e.target.value })}
             style={{ ...inputStyle, marginTop: 8, width: "100%" }}
           />
+          {(form.disciplinas.length + form.disciplinaCustom.split(",").map((s) => s.trim()).filter(Boolean).length) > 1 && (
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, fontSize: 12.5, color: "var(--ink-2)", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={form.interdisciplinar}
+                onChange={(e) => setForm({ ...form, interdisciplinar: e.target.checked })}
+              />
+              <span>
+                Tratar como <strong>interdisciplinar</strong> (tema único integrando os componentes).
+                <span style={{ color: "var(--muted)" }}> Desmarque para gerar conteúdo separado por disciplina/campo de experiência.</span>
+              </span>
+            </label>
+          )}
         </div>
         <textarea placeholder="Contexto adicional (opcional): projetos da escola, datas comemorativas..." value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} style={{ ...inputStyle, marginTop: 10, minHeight: 60, width: "100%", resize: "vertical" }} />
         {error && <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: "#FEF2F2", color: "#991B1B", fontSize: 13 }}>{error}</div>}
