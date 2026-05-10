@@ -28,6 +28,7 @@ import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento
 import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AdminProRouteImport } from './routes/admin.pro'
+import { Route as AdminManutencaoRouteImport } from './routes/admin.manutencao'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -127,6 +128,11 @@ const AdminProRoute = AdminProRouteImport.update({
   path: '/pro',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminManutencaoRoute = AdminManutencaoRouteImport.update({
+  id: '/manutencao',
+  path: '/manutencao',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiSofiaSuggestionsRoute = ApiSofiaSuggestionsRouteImport.update({
   id: '/api/sofia/suggestions',
   path: '/api/sofia/suggestions',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/admin/manutencao'
     | '/admin/pro'
     | '/admin/usuarios'
     | '/inclusao/pei'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/admin/manutencao'
     | '/admin/pro'
     | '/admin/usuarios'
     | '/inclusao/pei'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/relatorios'
     | '/reset-password'
+    | '/admin/manutencao'
     | '/admin/pro'
     | '/admin/usuarios'
     | '/inclusao/pei'
@@ -419,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/manutencao': {
+      id: '/admin/manutencao'
+      path: '/manutencao'
+      fullPath: '/admin/manutencao'
+      preLoaderRoute: typeof AdminManutencaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/sofia/suggestions': {
       id: '/api/sofia/suggestions'
       path: '/api/sofia/suggestions'
@@ -430,12 +449,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminManutencaoRoute: typeof AdminManutencaoRoute
   AdminProRoute: typeof AdminProRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminManutencaoRoute: AdminManutencaoRoute,
   AdminProRoute: AdminProRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -488,3 +509,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
