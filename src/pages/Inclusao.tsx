@@ -1320,8 +1320,14 @@ export function Inclusao() {
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Aulas adaptadas</div>
-                    <div className="kpi-value">0<span className="small"> /0</span></div>
-                    <div className="kpi-sub">nenhuma adaptação registrada</div>
+                    <div className="kpi-value">{selecionadosCount}<span className="small"> /{studentPlans.length}</span></div>
+                    <div className="kpi-sub">
+                      {studentPlans.length === 0
+                        ? "gere atividades em Planejamento"
+                        : selecionadosCount === 0
+                        ? `${studentPlans.length} disponível(is) · selecione em Planejamento`
+                        : `${selecionadosCount} selecionada(s) em Planejamento`}
+                    </div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Objetivos PEI atingidos</div>
