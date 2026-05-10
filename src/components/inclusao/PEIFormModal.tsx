@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, Save, Printer, Plus, Trash2, FileText, Sparkles } from "lucide-react";
+import { X, Save, Printer, Plus, Trash2, FileText, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 
@@ -109,6 +109,245 @@ const sectionBadge: React.CSSProperties = {
   fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 999,
   background: "var(--accent-soft)", color: "#B8410E",
 };
+
+// ============ Sugestões por transtorno/deficiência ============
+type Perfil =
+  | "tea" | "tdah" | "dislexia" | "discalculia" | "di"
+  | "down" | "dv" | "da" | "df" | "ah" | "generico";
+
+function detectarPerfil(diag?: string, cid?: string): Perfil {
+  const s = `${diag || ""} ${cid || ""}`.toLowerCase();
+  if (/tea|autis|f84/.test(s)) return "tea";
+  if (/tdah|déficit de atenção|deficit de atencao|f90/.test(s)) return "tdah";
+  if (/dislex|f81\.0/.test(s)) return "dislexia";
+  if (/discalcul|f81\.2/.test(s)) return "discalculia";
+  if (/down|t21|q90/.test(s)) return "down";
+  if (/intelect|\bdi\b|f7[01239]/.test(s)) return "di";
+  if (/visual|baixa visão|cego|h54/.test(s)) return "dv";
+  if (/auditiv|surd|h90/.test(s)) return "da";
+  if (/física|fisica|cadeirante|paralisia|motor/.test(s)) return "df";
+  if (/altas habilidades|superdota|ah\/sd/.test(s)) return "ah";
+  return "generico";
+}
+
+type SugKey =
+  | "caracterizacao" | "habilidades" | "pontosForca" | "necessidadesApoio"
+  | "objetivoTexto" | "objetivoCriterios"
+  | "adaptCurric" | "adaptAval" | "metodologias" | "recursos"
+  | "formasAval" | "familiaPart" | "acordosFam"
+  | "equipeFuncao";
+
+const SUG: Record<Perfil, Partial<Record<SugKey, string[]>>> = {
+  tea: {
+    caracterizacao: ["Dificuldade na interação social recíproca", "Padrões restritos e repetitivos de comportamento", "Hipersensibilidade auditiva a sons altos", "Apego intenso a rotina previsível"],
+    habilidades: ["Reconhece rotina visual", "Identifica letras e números", "Memória visual acima da média", "Segue instruções de 1 passo"],
+    pontosForca: ["Interesse intenso por temas específicos", "Boa memória visual", "Atenção a detalhes", "Habilidade com tecnologia"],
+    necessidadesApoio: ["Antecipação de mudanças na rotina", "Apoio na comunicação social", "Regulação sensorial (fones, cantinho da calma)", "Mediação em interações com pares"],
+    objetivoTexto: ["Iniciar e manter interação com par por 5 minutos", "Ampliar repertório alimentar com 3 novos itens", "Comunicar necessidades básicas via PECS/fala", "Tolerar mudanças de rotina anunciadas com pictogramas"],
+    objetivoCriterios: ["Em 4 de 5 oportunidades observadas", "Com mediação visual em 80% das tentativas", "Registro em 3 sessões consecutivas"],
+    adaptCurric: ["Conteúdos com apoio visual e instruções segmentadas", "Priorização de habilidades funcionais e de comunicação", "Recortes da BNCC com foco em rotina e autocuidado"],
+    adaptAval: ["Avaliação por observação e portfólio", "Tempo estendido e ambiente de baixa estimulação", "Itens com pictograma + texto"],
+    metodologias: ["TEACCH (ensino estruturado)", "PECS / comunicação alternativa", "ABA com reforço positivo", "Histórias sociais e roteiros visuais"],
+    recursos: ["Pictogramas e agenda visual", "Fones abafadores", "Cantinho da calma com objetos sensoriais", "Timer visual"],
+    formasAval: ["Registro de evidências em portfólio", "Rubrica de habilidades sociais e comunicação", "Vídeo curto de evidência (com autorização)"],
+    familiaPart: ["Caderno de comunicação diário", "Reuniões mensais com equipe multi", "Alinhamento com terapeutas (TO, fono, psicologia)"],
+    acordosFam: ["Manter rotinas de sono e alimentação", "Comunicar previamente ausências/mudanças", "Protocolo de crise compartilhado"],
+    equipeFuncao: ["Mediador(a) de inclusão", "Terapeuta ocupacional", "Fonoaudiólogo(a)", "Psicólogo(a) ABA"],
+  },
+  tdah: {
+    caracterizacao: ["Desatenção em tarefas longas", "Hiperatividade motora em sala", "Impulsividade nas respostas", "Dificuldade em organizar materiais e tempo"],
+    habilidades: ["Boa oralidade e criatividade", "Resolve tarefas curtas com sucesso", "Engaja-se em atividades de movimento"],
+    pontosForca: ["Criatividade", "Energia e entusiasmo", "Pensamento divergente", "Boa memória para temas de interesse"],
+    necessidadesApoio: ["Quebrar tarefas em etapas curtas", "Lembretes visuais e timer", "Pausas ativas a cada 15 minutos", "Reforço imediato e específico"],
+    objetivoTexto: ["Concluir tarefa em 4 etapas com checklist", "Permanecer na atividade por 15 min com pausas", "Organizar material escolar antes da saída"],
+    objetivoCriterios: ["Em 4 de 5 dias da semana", "Com no máximo 1 lembrete do adulto", "Registro semanal em rubrica"],
+    adaptCurric: ["Tarefas segmentadas com checklist", "Redução de cópia, foco no essencial", "Conteúdos com apoio multimodal"],
+    adaptAval: ["Tempo estendido e fracionamento", "Prova com menos itens por página", "Leitura do enunciado em voz alta"],
+    metodologias: ["Ensino explícito de funções executivas", "Economia de fichas / reforço positivo", "Pausas ativas e movimento estruturado"],
+    recursos: ["Timer visual", "Checklist e agenda", "Almofada / faixa elástica na cadeira", "Fone para foco"],
+    formasAval: ["Rubrica de autorregulação", "Autoavaliação semanal", "Registro de tempo em tarefa"],
+    familiaPart: ["Agenda compartilhada de tarefas", "Reuniões quinzenais", "Alinhamento com neuropediatria/psicologia"],
+    acordosFam: ["Rotina de estudos em casa", "Sono regular", "Combinados sobre uso de telas"],
+    equipeFuncao: ["Psicopedagogo(a)", "Psicólogo(a)", "Neuropediatra (referência)"],
+  },
+  dislexia: {
+    caracterizacao: ["Dificuldade na decodificação leitora", "Trocas e omissões fonológicas", "Leitura lenta e silabada", "Dificuldade em soletrar"],
+    habilidades: ["Boa compreensão oral", "Raciocínio lógico preservado", "Vocabulário adequado à idade"],
+    pontosForca: ["Pensamento visual", "Criatividade narrativa oral", "Boa memória de longo prazo para histórias"],
+    necessidadesApoio: ["Consciência fonológica explícita", "Leitura compartilhada e mediada", "Materiais com fonte ampliada e espaçada", "Tempo estendido na leitura"],
+    objetivoTexto: ["Ler 20 palavras CV/CVC com autonomia", "Segmentar e contar fonemas em palavras de 3-4 letras", "Produzir frase de 5 palavras com apoio"],
+    objetivoCriterios: ["80% de acerto em 3 sessões", "Com apoio do alfabeto móvel", "Registro em ficha de leitura"],
+    adaptCurric: ["Priorização da consciência fonológica", "Textos curtos com vocabulário controlado", "Suporte de áudio para textos longos"],
+    adaptAval: ["Leitura do enunciado em voz alta", "Avaliação oral complementar", "Tempo estendido e ortografia não pontuada"],
+    metodologias: ["Método fônico estruturado (Orton-Gillingham)", "Multissensorial (visual + auditivo + tátil)", "Leitura compartilhada e repetida"],
+    recursos: ["Texto-para-fala / audiolivro", "Fonte OpenDyslexic, espaçamento ampliado", "Marcador de linha", "Alfabeto móvel"],
+    formasAval: ["Avaliação oral", "Portfólio de leitura", "Rubrica fonológica"],
+    familiaPart: ["Leitura diária em casa (10 min)", "Reuniões bimestrais", "Alinhamento com fonoaudiologia"],
+    acordosFam: ["Não cobrar ortografia em tarefas livres", "Valorizar produção oral", "Manter rotina de leitura prazerosa"],
+    equipeFuncao: ["Fonoaudiólogo(a)", "Psicopedagogo(a)", "Professor(a) de AEE"],
+  },
+  discalculia: {
+    caracterizacao: ["Dificuldade no senso numérico", "Trocas em fatos básicos da adição/subtração", "Dificuldade em sequência e valor posicional"],
+    habilidades: ["Reconhece numerais até 20", "Faz contagem 1 a 1 com material concreto"],
+    pontosForca: ["Boa expressão verbal", "Engaja-se com jogos manipulativos"],
+    necessidadesApoio: ["Material concreto sempre disponível", "Tabelas de apoio (fatos, valor posicional)", "Tempo estendido em cálculo"],
+    objetivoTexto: ["Resolver adições até 20 com material dourado", "Reconhecer valor posicional até a centena", "Resolver problema simples com 1 operação"],
+    objetivoCriterios: ["80% de acerto com apoio concreto", "Em 3 sessões consecutivas"],
+    adaptCurric: ["Uso permanente de material concreto", "Tabela de fatos disponível na avaliação", "Problemas com enunciado curto e ilustrado"],
+    adaptAval: ["Calculadora ou tabela de fatos liberada", "Tempo estendido", "Avaliação oral do raciocínio"],
+    metodologias: ["Método CPA (Concreto-Pictórico-Abstrato)", "Singapura", "Numicon, ábaco, material dourado"],
+    recursos: ["Material dourado", "Numicon / ábaco", "Tabela de fatos", "Reta numérica"],
+    formasAval: ["Observação de raciocínio com material", "Portfólio de problemas", "Entrevista clínica (Piaget)"],
+    familiaPart: ["Jogos matemáticos em casa", "Reuniões bimestrais"],
+    acordosFam: ["Evitar cobrança de cálculo mental sem apoio", "Valorizar o processo e não só o resultado"],
+    equipeFuncao: ["Psicopedagogo(a)", "Professor(a) de AEE"],
+  },
+  di: {
+    caracterizacao: ["Atraso global no desenvolvimento", "Necessidade de mais tempo para internalizar conteúdos", "Funcionalidade preservada com apoio"],
+    habilidades: ["Realiza autocuidado com supervisão", "Reconhece o próprio nome", "Segue rotinas conhecidas"],
+    pontosForca: ["Afetividade", "Engajamento em tarefas práticas", "Interesse por música/arte"],
+    necessidadesApoio: ["Instrução repetida e modelada", "Apoio visual permanente", "Generalização em contextos variados"],
+    objetivoTexto: ["Reconhecer e escrever o próprio nome", "Identificar números de 1 a 10 com material concreto", "Realizar autocuidado (banheiro/lanche) com autonomia"],
+    objetivoCriterios: ["Em 4 de 5 oportunidades", "Com modelagem inicial e desfade gradual"],
+    adaptCurric: ["Currículo funcional com habilidades de vida diária", "Recortes da BNCC priorizando comunicação e autonomia"],
+    adaptAval: ["Avaliação por observação e registro", "Tarefas com apoio visual e modelo", "Ênfase no processo"],
+    metodologias: ["Ensino estruturado (TEACCH)", "Modelagem + desvanecimento de pistas", "Aprendizagem cooperativa com tutoria de pares"],
+    recursos: ["Pictogramas", "Material concreto manipulável", "Vídeos-modelo curtos"],
+    formasAval: ["Portfólio com fotos", "Rubrica de funcionalidade", "Observação direta"],
+    familiaPart: ["Treino de habilidades de vida em casa", "Reuniões mensais"],
+    acordosFam: ["Reforçar autonomia nas tarefas diárias", "Manter rotina previsível"],
+    equipeFuncao: ["Mediador(a)", "Terapeuta ocupacional", "Professor(a) de AEE"],
+  },
+  down: {
+    caracterizacao: ["Hipotonia muscular leve", "Atraso na linguagem expressiva", "Boa memória visual e imitação"],
+    habilidades: ["Imita gestos e ações", "Reconhece familiares e rotina"],
+    pontosForca: ["Sociabilidade", "Memória visual", "Engajamento em música e dança"],
+    necessidadesApoio: ["Estímulo à linguagem oral", "Atividades de motricidade fina", "Instruções curtas e visuais"],
+    objetivoTexto: ["Ampliar vocabulário expressivo (50 palavras)", "Realizar pinça digital em atividades de recorte", "Reconhecer letras do próprio nome"],
+    objetivoCriterios: ["Em 4 de 5 sessões", "Com apoio visual e modelagem"],
+    adaptCurric: ["Foco em comunicação e funcionalidade", "Atividades concretas e contextualizadas"],
+    adaptAval: ["Avaliação por observação", "Tarefas com apoio visual"],
+    metodologias: ["Método das Boquinhas (alfabetização)", "PODD / comunicação alternativa", "Multissensorial"],
+    recursos: ["Pranchas de comunicação", "Material concreto", "Apoio visual constante"],
+    formasAval: ["Portfólio", "Registro de evidências em vídeo"],
+    familiaPart: ["Estimulação da linguagem em casa", "Acompanhamento com equipe multi"],
+    acordosFam: ["Frequência regular nas terapias", "Comunicação semanal com a escola"],
+    equipeFuncao: ["Fonoaudiólogo(a)", "Terapeuta ocupacional", "Fisioterapeuta"],
+  },
+  dv: {
+    caracterizacao: ["Baixa visão / cegueira", "Necessita material em alto contraste ou Braille", "Boa percepção auditiva e tátil"],
+    habilidades: ["Orienta-se em ambientes conhecidos", "Reconhece objetos pelo tato"],
+    pontosForca: ["Memória auditiva", "Atenção sustentada à fala", "Discriminação tátil"],
+    necessidadesApoio: ["Material ampliado / Braille / áudio", "Descrição verbal de imagens", "Mobilidade orientada no ambiente"],
+    objetivoTexto: ["Ler texto em fonte ampliada/Braille com fluência", "Locomover-se com autonomia em rotas escolares", "Usar leitor de tela em tarefas digitais"],
+    objetivoCriterios: ["Com tempo estendido", "Em 80% das tentativas"],
+    adaptCurric: ["Materiais transcritos para Braille / ampliados", "Descrição verbal sistemática de imagens", "Atividades táteis e sonoras"],
+    adaptAval: ["Provas em Braille / ampliadas / áudio", "Tempo estendido (até 50%)", "Ledor(a) quando necessário"],
+    metodologias: ["Sorobã", "Braille / Reglete", "Tecnologia assistiva (NVDA, DOSVOX)"],
+    recursos: ["Lupa eletrônica", "Sorobã", "Reglete e punção", "Leitor de tela"],
+    formasAval: ["Avaliação oral e tátil", "Portfólio em formato acessível"],
+    familiaPart: ["Treino de orientação e mobilidade em casa", "Reuniões mensais"],
+    acordosFam: ["Manter materiais acessíveis em casa", "Estimular autonomia"],
+    equipeFuncao: ["Professor(a) de AEE com Braille", "Instrutor(a) de orientação e mobilidade"],
+  },
+  da: {
+    caracterizacao: ["Surdez / deficiência auditiva", "Comunicação prioritária em Libras", "Português como L2"],
+    habilidades: ["Comunica-se em Libras com fluência", "Boa percepção visual"],
+    pontosForca: ["Memória visual", "Expressividade gestual", "Atenção visual"],
+    necessidadesApoio: ["Intérprete de Libras", "Material visual e legendado", "Português escrito como L2"],
+    objetivoTexto: ["Produzir narrativa em Libras com início, meio e fim", "Ler e compreender texto curto em português", "Escrever frase em português com apoio visual"],
+    objetivoCriterios: ["Com mediação do intérprete", "Em 4 de 5 produções"],
+    adaptCurric: ["Bilíngue Libras–Português escrito", "Conteúdos com forte apoio visual", "Glossários ilustrados"],
+    adaptAval: ["Prova em Libras (vídeo)", "Avaliação visual e escrita", "Tempo estendido"],
+    metodologias: ["Educação Bilíngue (Libras L1, Português L2)", "Pedagogia visual"],
+    recursos: ["Intérprete de Libras", "Vídeos legendados", "Glossário visual"],
+    formasAval: ["Vídeo de produção em Libras", "Portfólio bilíngue"],
+    familiaPart: ["Estimular Libras em família", "Participar de cursos de Libras"],
+    acordosFam: ["Comunicação acessível em casa", "Frequência ao AEE bilíngue"],
+    equipeFuncao: ["Intérprete de Libras", "Professor(a) bilíngue", "Fonoaudiólogo(a)"],
+  },
+  df: {
+    caracterizacao: ["Deficiência física / motora", "Mobilidade reduzida", "Funções cognitivas preservadas"],
+    habilidades: ["Acompanha o conteúdo cognitivamente", "Comunica-se com clareza"],
+    pontosForca: ["Raciocínio preservado", "Persistência", "Boa expressão verbal"],
+    necessidadesApoio: ["Acessibilidade arquitetônica", "Mobiliário adaptado", "Tecnologia assistiva para escrita"],
+    objetivoTexto: ["Registrar atividades com tecnologia assistiva", "Participar de atividades coletivas com adaptação", "Realizar autocuidado com adaptações"],
+    objetivoCriterios: ["Em 100% das aulas", "Com recurso assistivo disponível"],
+    adaptCurric: ["Substituir registro escrito por digital quando necessário", "Atividades adaptadas para participação plena"],
+    adaptAval: ["Prova digital / oral", "Tempo estendido", "Ledor(a) ou escriba"],
+    metodologias: ["Desenho Universal para Aprendizagem (DUA)", "Tecnologia assistiva", "Aprendizagem cooperativa"],
+    recursos: ["Engrossador de lápis", "Teclado adaptado", "Notebook / tablet", "Plano inclinado"],
+    formasAval: ["Avaliação digital", "Registro em vídeo/áudio"],
+    familiaPart: ["Acompanhamento fisioterápico", "Reuniões mensais"],
+    acordosFam: ["Manter equipamentos em uso", "Estimular autonomia"],
+    equipeFuncao: ["Fisioterapeuta", "Terapeuta ocupacional", "Cuidador(a)"],
+  },
+  ah: {
+    caracterizacao: ["Altas habilidades / superdotação", "Avanço em área específica", "Possível assincronia (cognitivo > socioemocional)"],
+    habilidades: ["Domina conteúdos do ano em aprofundamento", "Resolve problemas complexos"],
+    pontosForca: ["Curiosidade intelectual", "Criatividade", "Liderança"],
+    necessidadesApoio: ["Enriquecimento curricular", "Mentoria em área de interesse", "Apoio socioemocional"],
+    objetivoTexto: ["Desenvolver projeto de aprofundamento em área de interesse", "Apresentar produção autoral à turma", "Participar de atividade de enriquecimento extraclasse"],
+    objetivoCriterios: ["Entrega bimestral", "Avaliação por rubrica de projeto"],
+    adaptCurric: ["Compactação curricular do já dominado", "Aprofundamento e ampliação", "Projetos investigativos"],
+    adaptAval: ["Avaliação por projeto e produção autoral", "Rubrica avançada"],
+    metodologias: ["Modelo Triádico de Renzulli", "Aprendizagem por projetos (PBL)", "Mentoria"],
+    recursos: ["Acesso a biblioteca/laboratório", "Mentor(a) externo(a)", "Materiais de aprofundamento"],
+    formasAval: ["Portfólio de projetos", "Apresentação pública", "Rubrica de criatividade e profundidade"],
+    familiaPart: ["Apoiar projetos em casa", "Buscar atividades de enriquecimento"],
+    acordosFam: ["Equilibrar desafio acadêmico e socioemocional", "Estimular convivência com pares de interesse"],
+    equipeFuncao: ["Professor(a) de sala de recursos AH/SD", "Mentor(a) de área", "Psicólogo(a) escolar"],
+  },
+  generico: {
+    caracterizacao: ["Descrever histórico escolar relevante", "Intervenções já realizadas", "Preferências e barreiras observadas"],
+    habilidades: ["Listar habilidades já consolidadas", "Indicar nível de leitura/escrita/cálculo"],
+    pontosForca: ["Interesses e talentos", "Recursos pessoais e familiares"],
+    necessidadesApoio: ["Tipos de apoio (pedagógico, sensorial, comunicação)", "Frequência do apoio necessário"],
+    objetivoTexto: ["Definir meta observável e mensurável"],
+    objetivoCriterios: ["80% de acerto em 3 sessões consecutivas"],
+    adaptCurric: ["Recortes da BNCC priorizados"],
+    adaptAval: ["Tempo estendido", "Leitura em voz alta", "Redução de itens"],
+    metodologias: ["DUA", "Ensino explícito", "Aprendizagem cooperativa"],
+    recursos: ["Material concreto", "Apoio visual", "Tecnologia assistiva"],
+    formasAval: ["Observação", "Portfólio", "Rubrica"],
+    familiaPart: ["Reuniões periódicas", "Comunicação contínua"],
+    acordosFam: ["Combinados de rotina", "Protocolo de comunicação"],
+    equipeFuncao: ["Professor(a) regente", "Coordenação", "AEE"],
+  },
+};
+
+function SugChips({ items, onPick }: { items?: string[]; onPick: (s: string) => void }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+      <span style={{ fontSize: 10, color: "var(--muted)", display: "inline-flex", alignItems: "center", gap: 3, fontWeight: 700 }}>
+        <Wand2 size={10} /> Sugestões:
+      </span>
+      {items.map((s, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => onPick(s)}
+          style={{
+            fontSize: 11, padding: "3px 8px", borderRadius: 999,
+            border: "1px solid var(--border)", background: "#FFF7F2",
+            color: "#B8410E", cursor: "pointer", fontWeight: 600,
+          }}
+          title="Clique para inserir no campo"
+        >
+          + {s}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function append(prev: string, add: string): string {
+  const t = (prev || "").trim();
+  if (!t) return add;
+  if (t.includes(add)) return t;
+  return t.endsWith(".") || t.endsWith(";") ? `${t} ${add}` : `${t}; ${add}`;
+}
 
 type Props = {
   open: boolean;
