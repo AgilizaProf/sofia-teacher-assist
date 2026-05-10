@@ -2430,6 +2430,16 @@ ${corpo}
                           </button>
                         )}
                         {parecerAtual && (
+                          <button className="inc-btn-ghost" onClick={startEditParecer}>
+                            <Pencil size={14} /> Editar
+                          </button>
+                        )}
+                        {parecerAtual && (
+                          <button className="inc-btn-ghost" onClick={exportarParecerWord}>
+                            <FileDown size={14} /> Salvar em Word
+                          </button>
+                        )}
+                        {parecerAtual && (
                           <button className="inc-btn-ghost" onClick={imprimirParecer}>
                             <Printer size={14} /> Imprimir / PDF
                           </button>
