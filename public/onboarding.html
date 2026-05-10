@@ -1005,6 +1005,12 @@
         <span>🔒 Cancele quando quiser</span>
         <span>💛 Garantia de 7 dias</span>
       </div>
+
+      <div style="margin-top:20px;text-align:center;">
+        <button class="btn btn-primary" onclick="goHome()" style="font-size:15px;padding:14px 28px;">
+          🏠 Ir para a página inicial
+        </button>
+      </div>
     </section>
 
   </div>
@@ -1609,6 +1615,11 @@
     const route = (cfg && cfg.realCtaRoute) || '/';
     try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
     (window.top || window).location.href = route;
+  }
+
+  function goHome(){
+    try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
+    (window.top || window).location.href = '/';
   }
 
   // foco no nome ao abrir
