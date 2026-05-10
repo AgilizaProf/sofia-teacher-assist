@@ -330,5 +330,29 @@
   setTimeout(launchConfetti, 250);
 </script>
 
+<script>
+  (function hydrateReceipt(){
+    var qs = new URLSearchParams(window.location.search);
+    var fmt = function(d){
+      var dd = String(d.getDate()).padStart(2,'0');
+      var mm = String(d.getMonth()+1).padStart(2,'0');
+      return dd + '/' + mm + '/' + d.getFullYear();
+    };
+    var name = qs.get('name');
+    var email = qs.get('email');
+    var purchaseStr = qs.get('purchase');
+    var purchase = purchaseStr ? new Date(purchaseStr) : new Date();
+    if (isNaN(purchase.getTime())) purchase = new Date();
+    var guarantee = new Date(purchase); guarantee.setDate(guarantee.getDate()+7);
+    var renewal = new Date(purchase); renewal.setDate(renewal.getDate()+365);
+    var set = function(id, v){ var el = document.getElementById(id); if(el && v) el.textContent = v; };
+    if (name) set('rcp-name', name);
+    if (email) set('rcp-email', email);
+    set('rcp-guarantee', fmt(guarantee));
+    set('rcp-guarantee2', fmt(guarantee));
+    set('rcp-renewal', fmt(renewal));
+  })();
+</script>
+
 </body>
 </html>
