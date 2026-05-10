@@ -673,6 +673,7 @@ export function Inclusao() {
   // PEI persistido pelo PEIFormModal — mesmo storage key
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
   const [objetivosModalOpen, setObjetivosModalOpen] = useState(false);
+  const [previewParecerOpen, setPreviewParecerOpen] = useState(false);
   const setAnamData = (updater: (prev: ReturnType<typeof buildBlankAnam>) => ReturnType<typeof buildBlankAnam>) => {
     setAnamByStudent((all) => ({ ...all, [studentKey]: updater(all[studentKey] || buildBlankAnam()) }));
   };
