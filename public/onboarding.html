@@ -1307,6 +1307,7 @@
   function goBack(){if(currentStep>0){currentStep--;updateUI();}}
   function skipOnboarding(){
     if(confirm('Pular o onboarding? Você pode acessá-lo depois pelo menu.')){
+      try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
       (window.top || window).location.href = '/';
     }
   }
@@ -1599,12 +1600,14 @@
   function goToApp(e,where){
     e.preventDefault();
     const route = NEXT_CARDS[where]?.route || '/';
+    try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
     (window.top || window).location.href = route;
   }
 
   function goToRealCta(){
     const cfg = PAIN_CONFIG[painSelected];
     const route = (cfg && cfg.realCtaRoute) || '/';
+    try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
     (window.top || window).location.href = route;
   }
 
