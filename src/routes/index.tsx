@@ -27,8 +27,7 @@ function Index() {
   useEffect(() => {
     try {
       const done = localStorage.getItem("agp_onboarding_completed");
-      if (!done) {
-        localStorage.setItem("agp_onboarding_completed", "pending");
+      if (done !== "1") {
         navigate({ to: "/onboarding" });
       }
     } catch {
