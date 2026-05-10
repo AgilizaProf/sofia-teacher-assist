@@ -613,6 +613,9 @@ export function Inclusao() {
   const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [turmaFilter, setTurmaFilter] = useState<string[]>([]);
+  const [diagFilter, setDiagFilter] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState<null | "turma" | "diag">(null);
   const [planYearFilter, setPlanYearFilter] = useState<string>("");
   type RegCat = "ped" | "com" | "sen" | "fam";
   type RegItem = { id: string; when: string; who: string; cat: RegCat; body: string };
