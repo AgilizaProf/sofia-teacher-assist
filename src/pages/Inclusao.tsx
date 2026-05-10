@@ -1676,11 +1676,11 @@ export function Inclusao() {
                       {studentPlans.length > 0 && (
                         <button
                           className="btn btn-primary bg-orange-400 text-orange-400"
-                          onClick={agendarPlanos}
+                          onClick={abrirAgendarPeriodo}
                           disabled={agendando}
                           title="A Sofia distribui as atividades selecionadas em dias úteis na sua agenda."
                         >
-                          <Sparkles size={14} /> {agendando ? "Agendando…" : "Sofia preencher agenda"}
+                          <Sparkles size={14} /> {agendando ? "Agendando…" : `Sofia preencher agenda${selecionadosCount ? ` (${selecionadosCount})` : ""}`}
                         </button>
                       )}
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
