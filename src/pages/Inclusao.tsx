@@ -753,6 +753,7 @@ export function Inclusao() {
   const [agendarPeriodOpen, setAgendarPeriodOpen] = useState(false);
   type PeriodoAg = "dia" | "semana" | "mes" | "bimestre" | "trimestre" | "semestre";
   const [periodoAg, setPeriodoAg] = useState<PeriodoAg>("semana");
+  const [planViewMode, setPlanViewMode] = useState<"completo" | "topicos">("completo");
   const viewingPlan = studentPlans.find((p) => p.id === viewPlanId) || null;
   const selecionadosCount = Object.values(agendarSel).filter(Boolean).length;
   const todosSelecionados = studentPlans.length > 0 && studentPlans.every((p) => agendarSel[p.id]);
