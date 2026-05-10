@@ -1034,10 +1034,29 @@ export function Inclusao() {
       const regs = regsDoPeriodo.map((r) => ({
         when: r.when, cat: r.cat, body: r.body,
       }));
-      const peiResumo = (plansByStudent[selected.id] || [])
-        .slice(0, 3)
-        .map((p) => `• ${p.titulo || p.disciplina || "Plano"}: ${p.objetivo || ""}`)
+      // Resumo do PEI real do aluno (não dos planos de aula)
+      const pei = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+      const objs = (Array.isArray(pei.objetivos) ? pei.objetivos : []) as Array<{ texto?: string; status?: string; prazo?: string; criterios?: string }>;
+      const PRAZO: Record<string, string> = { curto: "curto prazo", medio: "médio prazo", longo: "longo prazo" };
+      const STATUS: Record<string, string> = { nao_iniciado: "não iniciado", em_andamento: "em andamento", atingido: "atingido", revisar: "revisar" };
+      const linhasObj = objs
+        .filter((o) => (o.texto || "").trim())
+        .map((o, i) => `  ${i + 1}. ${o.texto} — status: ${STATUS[o.status || ""] || o.status || "—"}${o.prazo ? ` (${PRAZO[o.prazo] || o.prazo})` : ""}${o.criterios ? ` · critérios: ${o.criterios}` : ""}`)
         .join("\n");
+      const partes: string[] = [];
+      if (pei.diagnostico || pei.cid) partes.push(`Diagnóstico: ${(pei.diagnostico as string) || "—"}${pei.cid ? ` (CID ${pei.cid})` : ""}`);
+      if (pei.caracterizacao) partes.push(`Caracterização: ${pei.caracterizacao}`);
+      if (pei.habilidadesDesenvolvidas) partes.push(`Habilidades já desenvolvidas: ${pei.habilidadesDesenvolvidas}`);
+      if (pei.pontosForca) partes.push(`Pontos de força: ${pei.pontosForca}`);
+      if (pei.necessidadesApoio) partes.push(`Necessidades de apoio: ${pei.necessidadesApoio}`);
+      if (linhasObj) partes.push(`Objetivos do PEI:\n${linhasObj}`);
+      if (pei.adaptacoesCurriculares) partes.push(`Adaptações curriculares: ${pei.adaptacoesCurriculares}`);
+      if (pei.adaptacoesAvaliativas) partes.push(`Adaptações avaliativas: ${pei.adaptacoesAvaliativas}`);
+      if (pei.metodologias) partes.push(`Metodologias: ${pei.metodologias}`);
+      if (pei.recursosApoio) partes.push(`Recursos de apoio: ${pei.recursosApoio}`);
+      if (pei.formasAvaliacao) partes.push(`Formas de avaliação: ${pei.formasAvaliacao}`);
+      if (pei.familiaParticipacao) partes.push(`Família/participação: ${pei.familiaParticipacao}`);
+      const peiResumo = partes.join("\n");
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
           aluno: selected.name,
@@ -2270,14 +2289,25 @@ export function Inclusao() {
                         {anamneseResumo ? " e a anamnese" : ""} de {selected.name.split(" ")[0]} em um parecer pronto para exportar e assinar.
                       </p>
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {(() => {
+                          const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+                          const temPEI = Boolean(
+                            (Array.isArray(peiSel.objetivos) && peiSel.objetivos.length) ||
+                            peiSel.caracterizacao || peiSel.habilidadesDesenvolvidas ||
+                            peiSel.adaptacoesCurriculares || peiSel.metodologias
+                          );
+                          const semDados = regsDoPeriodo.length === 0 && !anamneseResumo && !temPEI;
+                          return (
                         <button
                           className="btn btn-primary bg-orange-400 text-orange-400"
                           onClick={handleGerarParecer}
-                          disabled={gerandoParecer || regsDoPeriodo.length === 0}
-                          title={regsDoPeriodo.length === 0 ? "Não há registros no período selecionado." : ""}
+                          disabled={gerandoParecer || semDados}
+                          title={semDados ? "Preencha a anamnese, o PEI ou adicione registros para gerar o parecer." : ""}
                         >
                           <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
                         </button>
+                          );
+                        })()}
                         {parecerAtual && (
                           <button className="inc-btn-ghost" onClick={imprimirParecer}>
                             <Printer size={14} /> Imprimir / PDF
