@@ -2241,26 +2241,81 @@ export function Inclusao() {
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="rel-feature">
-                      <h4>Parecer descritivo bimestral · 1º bim 2026</h4>
+                      <h4>Parecer descritivo · {relIntervalo.label}</h4>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end", marginBottom: 12, padding: 12, background: "#fff", border: "1px solid var(--border)", borderRadius: 10 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Período</label>
+                          <select value={relTipo} onChange={(e) => setRelTipo(e.target.value as RelTipo)} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                            <option value="bimestre">Bimestral</option>
+                            <option value="trimestre">Trimestral</option>
+                            <option value="semestre">Semestral</option>
+                            <option value="anual">Anual</option>
+                          </select>
+                        </div>
+                        {relTipo !== "anual" && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Qual</label>
+                            <select value={relNumero} onChange={(e) => setRelNumero(parseInt(e.target.value))} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                              {Array.from({ length: relMaxNumero }).map((_, i) => (
+                                <option key={i + 1} value={i + 1}>{i + 1}º</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Ano letivo</label>
+                          <select value={relAno} onChange={(e) => setRelAno(parseInt(e.target.value))} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                            {[0, -1, -2].map((d) => {
+                              const y = new Date().getFullYear() + d;
+                              return <option key={y} value={y}>{y}</option>;
+                            })}
+                          </select>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
+                          <select value={relFormato} onChange={(e) => setRelFormato(e.target.value as "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                            <option value="topicos">Tópicos (estruturado)</option>
+                            <option value="texto">Texto corrido</option>
+                          </select>
+                        </div>
+                        <div style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }}>
+                          {relIntervalo.inicio.toLocaleDateString("pt-BR")} → {relIntervalo.fim.toLocaleDateString("pt-BR")}
+                        </div>
+                      </div>
                       <p>
-                        A Sofia consolida <b>{(regByStudent[selected.id] || []).length} registro(s)</b>
+                        A Sofia consolida <b>{regsDoPeriodo.length} registro(s)</b> do período
                         {studentPlans.length ? `, ${studentPlans.length} plano(s) PEI` : ""}
                         {anamneseResumo ? " e a anamnese" : ""} de {selected.name.split(" ")[0]} em um parecer pronto para exportar e assinar.
                       </p>
-                      <button
-                        className="btn btn-primary bg-orange-400 text-orange-400"
-                        onClick={handleGerarParecer}
-                        disabled={gerandoParecer || (regByStudent[selected.id] || []).length === 0}
-                        title={(regByStudent[selected.id] || []).length === 0 ? "Cadastre ao menos um registro para gerar o parecer." : ""}
-                      >
-                        <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
-                      </button>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button
+                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          onClick={handleGerarParecer}
+                          disabled={gerandoParecer || regsDoPeriodo.length === 0}
+                          title={regsDoPeriodo.length === 0 ? "Não há registros no período selecionado." : ""}
+                        >
+                          <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
+                        </button>
+                        {parecerAtual && (
+                          <button className="inc-btn-ghost" onClick={imprimirParecer}>
+                            <Printer size={14} /> Imprimir / PDF
+                          </button>
+                        )}
+                      </div>
                       {parecerAtual && (
                         <div style={{ marginTop: 14, padding: 14, background: "#fff", border: "1px solid var(--border)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                             <b style={{ fontFamily: "'Fraunces',serif", fontSize: 15 }}>{parecerAtual.titulo || "Parecer descritivo"}</b>
-                            <span style={{ fontSize: 11, color: "var(--muted)" }}>Gerado em {parecerAtual.geradoEm}</span>
+                            <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                              {parecerAtual.periodoLabel ? `${parecerAtual.periodoLabel} · ` : ""}Gerado em {parecerAtual.geradoEm}
+                            </span>
                           </div>
+                          {parecerAtual.formato === "texto" && parecerAtual.texto ? (
+                            <div style={{ fontSize: 13, lineHeight: 1.6, textAlign: "justify" }}>
+                              {parecerAtual.texto.split(/\n+/).map((p, i) => <p key={i} style={{ margin: "0 0 8px" }}>{p}</p>)}
+                            </div>
+                          ) : (
+                            <>
                           {parecerAtual.resumo && <p style={{ margin: 0, fontSize: 13 }}>{parecerAtual.resumo}</p>}
                           {parecerAtual.pedagogico && (<div><b style={{ fontSize: 12 }}>Pedagógico</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.pedagogico}</p></div>)}
                           {parecerAtual.comportamental && (<div><b style={{ fontSize: 12 }}>Comportamental</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.comportamental}</p></div>)}
@@ -2286,6 +2341,8 @@ export function Inclusao() {
                               <b style={{ fontSize: 12 }}>Comunicação à família</b>
                               <p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAtual.comunicacao_familias}</p>
                             </div>
+                          )}
+                            </>
                           )}
                         </div>
                       )}
