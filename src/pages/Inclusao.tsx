@@ -1831,6 +1831,23 @@ export function Inclusao() {
                             <span style={{ fontSize: 12, color: "var(--muted)" }}>
                               {selecionadosCount} de {studentPlans.length} selecionado(s)
                             </span>
+                            <div style={{ marginLeft: "auto", display: "inline-flex", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+                              {(["completo", "topicos"] as const).map((m) => (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => setPlanViewMode(m)}
+                                  style={{
+                                    padding: "6px 12px", fontSize: 12, fontWeight: 600,
+                                    background: planViewMode === m ? "var(--accent)" : "#fff",
+                                    color: planViewMode === m ? "#fff" : "var(--text)",
+                                    border: "none", cursor: "pointer",
+                                  }}
+                                >
+                                  {m === "completo" ? "Plano completo" : "Apenas tópicos"}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         )}
                         {studentPlans.length === 0 ? (
