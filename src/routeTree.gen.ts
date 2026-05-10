@@ -29,6 +29,9 @@ import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AdminProRouteImport } from './routes/admin.pro'
 import { Route as AdminManutencaoRouteImport } from './routes/admin.manutencao'
+import { Route as AdminInfraRouteImport } from './routes/admin.infra'
+import { Route as AdminErrosRouteImport } from './routes/admin.erros'
+import { Route as AdminConversaoRouteImport } from './routes/admin.conversao'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 
@@ -134,6 +137,21 @@ const AdminManutencaoRoute = AdminManutencaoRouteImport.update({
   path: '/manutencao',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminInfraRoute = AdminInfraRouteImport.update({
+  id: '/infra',
+  path: '/infra',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminErrosRoute = AdminErrosRouteImport.update({
+  id: '/erros',
+  path: '/erros',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConversaoRoute = AdminConversaoRouteImport.update({
+  id: '/conversao',
+  path: '/conversao',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
   id: '/atividades',
   path: '/atividades',
@@ -160,6 +178,9 @@ export interface FileRoutesByFullPath {
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/conversao': typeof AdminConversaoRoute
+  '/admin/erros': typeof AdminErrosRoute
+  '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
@@ -183,6 +204,9 @@ export interface FileRoutesByTo {
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/conversao': typeof AdminConversaoRoute
+  '/admin/erros': typeof AdminErrosRoute
+  '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
@@ -208,6 +232,9 @@ export interface FileRoutesById {
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/conversao': typeof AdminConversaoRoute
+  '/admin/erros': typeof AdminErrosRoute
+  '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
@@ -234,6 +261,9 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/reset-password'
     | '/admin/atividades'
+    | '/admin/conversao'
+    | '/admin/erros'
+    | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
     | '/admin/usuarios'
@@ -257,6 +287,9 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/reset-password'
     | '/admin/atividades'
+    | '/admin/conversao'
+    | '/admin/erros'
+    | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
     | '/admin/usuarios'
@@ -281,6 +314,9 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/reset-password'
     | '/admin/atividades'
+    | '/admin/conversao'
+    | '/admin/erros'
+    | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
     | '/admin/usuarios'
@@ -450,6 +486,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminManutencaoRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/infra': {
+      id: '/admin/infra'
+      path: '/infra'
+      fullPath: '/admin/infra'
+      preLoaderRoute: typeof AdminInfraRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/erros': {
+      id: '/admin/erros'
+      path: '/erros'
+      fullPath: '/admin/erros'
+      preLoaderRoute: typeof AdminErrosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/conversao': {
+      id: '/admin/conversao'
+      path: '/conversao'
+      fullPath: '/admin/conversao'
+      preLoaderRoute: typeof AdminConversaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/atividades': {
       id: '/admin/atividades'
       path: '/atividades'
@@ -469,6 +526,9 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAtividadesRoute: typeof AdminAtividadesRoute
+  AdminConversaoRoute: typeof AdminConversaoRoute
+  AdminErrosRoute: typeof AdminErrosRoute
+  AdminInfraRoute: typeof AdminInfraRoute
   AdminManutencaoRoute: typeof AdminManutencaoRoute
   AdminProRoute: typeof AdminProRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
@@ -477,6 +537,9 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAtividadesRoute: AdminAtividadesRoute,
+  AdminConversaoRoute: AdminConversaoRoute,
+  AdminErrosRoute: AdminErrosRoute,
+  AdminInfraRoute: AdminInfraRoute,
   AdminManutencaoRoute: AdminManutencaoRoute,
   AdminProRoute: AdminProRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
