@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2 } from "lucide-react";
+import { useTurmas } from "@/hooks/useTurmas";
+
+const DISCIPLINAS_COMUNS = [
+  "Português", "Matemática", "Ciências", "História", "Geografia",
+  "Arte", "Educação Física", "Inglês", "Ensino Religioso",
+];
 
 type Trilha = {
   id: string;
@@ -24,10 +30,19 @@ type Semana = {
 };
 
 export function TrilhasPanel() {
+  const { turmas: turmasCadastradas } = useTurmas();
   const [trilhas, setTrilhas] = useState<Trilha[]>([]);
   const [semanas, setSemanas] = useState<Semana[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [form, setForm] = useState({ turma: "", ano: "", disciplina: "", semestre: "1º semestre", contexto: "" });
+  const [form, setForm] = useState({
+    turmaId: "",
+    turma: "",
+    ano: "",
+    disciplinas: [] as string[],
+    disciplinaCustom: "",
+    semestre: "1º semestre",
+    contexto: "",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gerandoSemana, setGerandoSemana] = useState<string | null>(null);
@@ -46,16 +61,31 @@ export function TrilhasPanel() {
   }, [selected]);
 
   const gerarTrilha = async () => {
-    if (!form.turma || !form.ano || !form.disciplina) {
-      setError("Preencha turma, ano e disciplina.");
+    const discsAll = [
+      ...form.disciplinas,
+      ...form.disciplinaCustom.split(",").map((s) => s.trim()).filter(Boolean),
+    ];
+    if (!form.turma || !form.ano || discsAll.length === 0) {
+      setError("Selecione a turma, o ano e ao menos uma disciplina.");
       return;
     }
+    const interdisciplinar = discsAll.length > 1;
+    const disciplinaStr = interdisciplinar
+      ? `Interdisciplinar (${discsAll.join(", ")})`
+      : discsAll[0];
     setError(null); setLoading(true);
     try {
       const { data: u } = await supabase.auth.getUser();
       const userId = u?.user?.id;
       if (!userId) throw new Error("Faça login novamente.");
-      const { data, error: fnErr } = await supabase.functions.invoke("gerar-trilha", { body: form });
+      const payload = {
+        turma: form.turma,
+        ano: form.ano,
+        disciplina: disciplinaStr,
+        semestre: form.semestre,
+        contexto: form.contexto,
+      };
+      const { data, error: fnErr } = await supabase.functions.invoke("gerar-trilha", { body: payload });
       if (fnErr) throw fnErr;
       const t = (data as { trilha?: Record<string, unknown> })?.trilha || {};
       const tema = (t.tema_central as { titulo?: string; justificativa?: string }) || {};
@@ -66,7 +96,7 @@ export function TrilhasPanel() {
         client_id: `tr_${Date.now()}`,
         turma: form.turma,
         ano_escolar: form.ano,
-        disciplina: form.disciplina,
+        disciplina: disciplinaStr,
         semestre: form.semestre,
         ano_letivo: new Date().getFullYear(),
         tema_central: tema.titulo || "Trilha sem título",
@@ -93,7 +123,7 @@ export function TrilhasPanel() {
       }
       await carregar();
       setSelected(trilhaRow!.id);
-      setForm({ turma: "", ano: "", disciplina: "", semestre: "1º semestre", contexto: "" });
+      setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", semestre: "1º semestre", contexto: "" });
     } catch (e) {
       setError((e as Error).message || "Não consegui gerar a trilha agora. Tente em instantes.");
     } finally {
@@ -155,12 +185,76 @@ export function TrilhasPanel() {
       <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: 20 }}>
         <h2 style={{ fontSize: 18, marginBottom: 4 }}>Nova trilha semestral <small style={{ color: "var(--muted)", fontWeight: 400, fontSize: 12.5, marginLeft: 6 }}>· Sofia distribui ~20 semanas com BNCC</small></h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginTop: 14 }}>
-          <input placeholder="Turma (ex: 2º A)" value={form.turma} onChange={(e) => setForm({ ...form, turma: e.target.value })} style={inputStyle} />
+          <select
+            value={form.turmaId}
+            onChange={(e) => {
+              const id = e.target.value;
+              if (id === "__manual__") {
+                setForm({ ...form, turmaId: id, turma: "", ano: form.ano });
+                return;
+              }
+              const t = turmasCadastradas.find((x) => x.id === id);
+              setForm({
+                ...form,
+                turmaId: id,
+                turma: t?.name ?? "",
+                ano: t?.grade || form.ano,
+              });
+            }}
+            style={inputStyle}
+          >
+            <option value="">Selecione a turma…</option>
+            {turmasCadastradas.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}{t.grade ? ` · ${t.grade}` : ""}</option>
+            ))}
+            <option value="__manual__">Outra (digitar)</option>
+          </select>
+          {form.turmaId === "__manual__" && (
+            <input placeholder="Nome da turma" value={form.turma} onChange={(e) => setForm({ ...form, turma: e.target.value })} style={inputStyle} />
+          )}
           <input placeholder="Ano escolar (ex: 2º ano EF)" value={form.ano} onChange={(e) => setForm({ ...form, ano: e.target.value })} style={inputStyle} />
-          <input placeholder="Disciplina" value={form.disciplina} onChange={(e) => setForm({ ...form, disciplina: e.target.value })} style={inputStyle} />
           <select value={form.semestre} onChange={(e) => setForm({ ...form, semestre: e.target.value })} style={inputStyle}>
             <option>1º semestre</option><option>2º semestre</option>
           </select>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 6 }}>
+            Disciplinas <span style={{ color: "var(--ink-2)" }}>· selecione uma ou mais (interdisciplinar)</span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {DISCIPLINAS_COMUNS.map((d) => {
+              const active = form.disciplinas.includes(d);
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setForm({
+                    ...form,
+                    disciplinas: active
+                      ? form.disciplinas.filter((x) => x !== d)
+                      : [...form.disciplinas, d],
+                  })}
+                  style={{
+                    padding: "5px 11px",
+                    borderRadius: 99,
+                    border: "1px solid " + (active ? "var(--orange)" : "var(--line)"),
+                    background: active ? "#FFF7ED" : "#fff",
+                    color: active ? "#9A3412" : "var(--ink)",
+                    fontSize: 12.5,
+                    cursor: "pointer",
+                  }}
+                >
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+          <input
+            placeholder="Outras disciplinas (separe por vírgula)"
+            value={form.disciplinaCustom}
+            onChange={(e) => setForm({ ...form, disciplinaCustom: e.target.value })}
+            style={{ ...inputStyle, marginTop: 8, width: "100%" }}
+          />
         </div>
         <textarea placeholder="Contexto adicional (opcional): projetos da escola, datas comemorativas..." value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} style={{ ...inputStyle, marginTop: 10, minHeight: 60, width: "100%", resize: "vertical" }} />
         {error && <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: "#FEF2F2", color: "#991B1B", fontSize: 13 }}>{error}</div>}
