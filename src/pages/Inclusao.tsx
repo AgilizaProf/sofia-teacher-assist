@@ -753,6 +753,7 @@ export function Inclusao() {
   const [agendarPeriodOpen, setAgendarPeriodOpen] = useState(false);
   type PeriodoAg = "dia" | "semana" | "mes" | "bimestre" | "trimestre" | "semestre";
   const [periodoAg, setPeriodoAg] = useState<PeriodoAg>("semana");
+  const [planViewMode, setPlanViewMode] = useState<"completo" | "topicos">("completo");
   const viewingPlan = studentPlans.find((p) => p.id === viewPlanId) || null;
   const selecionadosCount = Object.values(agendarSel).filter(Boolean).length;
   const todosSelecionados = studentPlans.length > 0 && studentPlans.every((p) => agendarSel[p.id]);
@@ -828,6 +829,79 @@ export function Inclusao() {
       return;
     }
     setAgendarPeriodOpen(true);
+  };
+
+  const imprimirSelecionados = () => {
+    if (!selected) return;
+    const ids = Object.keys(agendarSel).filter((k) => agendarSel[k]);
+    const escolhidos = studentPlans.filter((p) => ids.includes(p.id));
+    if (escolhidos.length === 0) {
+      toast.error("Selecione ao menos uma atividade para imprimir.");
+      return;
+    }
+    const esc = (s: string) =>
+      String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
+    const fmtData = (d: string) => (d ? d.split("-").reverse().join("/") : "—");
+    const blocos = escolhidos.map((p) => {
+      if (planViewMode === "topicos") {
+        return `
+          <article class="topico">
+            <header>
+              <span class="data">${esc(fmtData(p.data))}</span>
+              <span class="disc">${esc(p.disciplina || "")}</span>
+            </header>
+            <h2>${esc(p.titulo || "")}</h2>
+            ${p.tema ? `<p class="tema"><b>Conteúdo:</b> ${esc(p.tema)}</p>` : ""}
+          </article>`;
+      }
+      return `
+        <article class="plano">
+          <header>
+            <span class="data">${esc(fmtData(p.data))}</span>
+            <span class="disc">${esc(p.disciplina || "")} · ${esc(p.duracao || "")}</span>
+          </header>
+          <h2>${esc(p.titulo || "")}</h2>
+          ${p.tema ? `<p><b>Conteúdo:</b> ${esc(p.tema)}</p>` : ""}
+          ${p.objetivo ? `<p><b>Objetivo:</b> ${esc(p.objetivo)}</p>` : ""}
+          ${p.abertura ? `<p><b>Abertura:</b> ${esc(p.abertura)}</p>` : ""}
+          ${p.desenvolvimento ? `<p><b>Desenvolvimento:</b> ${esc(p.desenvolvimento)}</p>` : ""}
+          ${p.fechamento ? `<p><b>Fechamento:</b> ${esc(p.fechamento)}</p>` : ""}
+          ${p.materiais?.length ? `<p><b>Materiais:</b> ${p.materiais.map(esc).join(", ")}</p>` : ""}
+          ${p.metodologia ? `<p><b>Metodologia:</b> ${esc(p.metodologia)}</p>` : ""}
+          ${p.avaliacao ? `<p><b>Avaliação:</b> ${esc(p.avaliacao)}</p>` : ""}
+          ${p.habilidades?.length ? `<p><b>BNCC:</b> ${p.habilidades.map((h) => esc(h.codigo) + " — " + esc(h.descricao)).join("; ")}</p>` : ""}
+          ${p.adaptacoes?.length ? `<p><b>Adaptações:</b> ${p.adaptacoes.map((a) => esc(a.categoria) + ": " + esc(a.texto)).join("; ")}</p>` : ""}
+          ${p.observacoes ? `<p><b>Observações:</b> ${esc(p.observacoes)}</p>` : ""}
+        </article>`;
+    }).join("");
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Atividades · ${esc(selected.name)}</title>
+      <style>
+        @page{size:A4;margin:18mm;}
+        body{font-family:Inter,Arial,sans-serif;color:#1B2A4E;margin:0;font-size:12pt;line-height:1.45;}
+        h1{font-size:16pt;margin:0 0 4mm;}
+        .meta{color:#6B7691;font-size:10pt;margin-bottom:8mm;}
+        article{border:1px solid #E4E8F0;border-radius:6px;padding:6mm;margin-bottom:5mm;page-break-inside:avoid;}
+        article.topico{padding:4mm 5mm;}
+        article header{display:flex;justify-content:space-between;font-size:9.5pt;color:#6B7691;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2mm;}
+        article .disc{font-weight:700;color:#B8410E;}
+        article h2{font-size:13pt;margin:0 0 3mm;}
+        article p{margin:1.5mm 0;}
+        article .tema{font-size:11pt;}
+        @media print{ body{margin:0;} button{display:none;} }
+        .toolbar{position:fixed;top:8px;right:8px;}
+        .toolbar button{padding:8px 14px;background:#FF7A45;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;}
+      </style></head>
+      <body>
+        <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
+        <h1>Atividades · ${esc(selected.name)}</h1>
+        <div class="meta">${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")} · ${escolhidos.length} atividade(s) · modo ${planViewMode === "topicos" ? "tópicos" : "completo"}</div>
+        ${blocos}
+        <script>setTimeout(function(){ window.print(); }, 400);</script>
+      </body></html>`;
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) { toast.error("Bloqueador de pop-up impediu a impressão."); return; }
+    w.document.write(html);
+    w.document.close();
   };
 
   const agendarPlanos = async () => {
@@ -1690,6 +1764,16 @@ export function Inclusao() {
                           <Sparkles size={14} /> {agendando ? "Agendando…" : `Sofia preencher agenda${selecionadosCount ? ` (${selecionadosCount})` : ""}`}
                         </button>
                       )}
+                      {studentPlans.length > 0 && (
+                        <button
+                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          onClick={imprimirSelecionados}
+                          disabled={selecionadosCount === 0}
+                          title="Imprime as atividades selecionadas no modo escolhido."
+                        >
+                          <Printer size={14} /> Imprimir{selecionadosCount ? ` (${selecionadosCount})` : ""}
+                        </button>
+                      )}
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
@@ -1747,6 +1831,23 @@ export function Inclusao() {
                             <span style={{ fontSize: 12, color: "var(--muted)" }}>
                               {selecionadosCount} de {studentPlans.length} selecionado(s)
                             </span>
+                            <div style={{ marginLeft: "auto", display: "inline-flex", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+                              {(["completo", "topicos"] as const).map((m) => (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => setPlanViewMode(m)}
+                                  style={{
+                                    padding: "6px 12px", fontSize: 12, fontWeight: 600,
+                                    background: planViewMode === m ? "var(--accent)" : "#fff",
+                                    color: planViewMode === m ? "#fff" : "var(--text)",
+                                    border: "none", cursor: "pointer",
+                                  }}
+                                >
+                                  {m === "completo" ? "Plano completo" : "Apenas tópicos"}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         )}
                         {studentPlans.length === 0 ? (
@@ -1755,6 +1856,26 @@ export function Inclusao() {
                             Use <b>Gerar novo plano adaptado</b> para começar.
                           </div>
                         ) : studentPlans.map((p) => (
+                          planViewMode === "topicos" ? (
+                          <div className="plan-item" key={p.id} style={{ gridTemplateColumns: "auto 1fr auto", padding: "10px 14px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 11.5, color: "var(--muted)" }}>
+                              <input
+                                type="checkbox"
+                                checked={!!agendarSel[p.id]}
+                                onChange={(e) => setAgendarSel((s) => ({ ...s, [p.id]: e.target.checked }))}
+                                style={{ cursor: "pointer" }}
+                              />
+                              {p.data ? p.data.split("-").reverse().slice(0,2).join("/") : "—"}
+                            </label>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }}>
+                              <span className="bncc" style={{ fontSize: 11 }}>{p.disciplina || "Aula"}</span>
+                              <b style={{ fontSize: 13.5 }}>{p.tema || p.titulo}</b>
+                            </div>
+                            <button className="inc-btn-ghost" onClick={() => setViewPlanId(p.id)}>
+                              <BookOpen size={12} /> Abrir
+                            </button>
+                          </div>
+                          ) : (
                           <div className="plan-item" key={p.id}>
                             <div className="when">
                               <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", textTransform: "none", fontSize: 11 }}>
@@ -1801,6 +1922,7 @@ export function Inclusao() {
                               ><X size={12} /> Excluir</button>
                             </div>
                           </div>
+                          )
                         ))}
                       </div>
                     )}
