@@ -2346,6 +2346,111 @@ export function Inclusao() {
         } : null}
       />
 
+      {/* Objetivos PEI atingidos */}
+      {selected && (() => {
+        const STATUS_OPTS: Array<{ v: string; l: string; color: string }> = [
+          { v: "nao_iniciado", l: "Não iniciado", color: "#6B7280" },
+          { v: "em_andamento", l: "Em andamento", color: "#1E40AF" },
+          { v: "atingido", l: "Atingido", color: "#166534" },
+          { v: "revisar", l: "Revisar", color: "#B45309" },
+        ];
+        const PRAZO_LBL: Record<string, string> = { curto: "Curto prazo", medio: "Médio prazo", longo: "Longo prazo" };
+        const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+        const objs = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as Array<{ id: string; texto: string; status: string; prazo?: string; criterios?: string }>;
+        const atingidos = objs.filter((o) => o.status === "atingido").length;
+        const setStatus = (id: string, status: string) => {
+          setPeiByStudent((all) => {
+            const cur = (all[selected.id] || {}) as Record<string, unknown>;
+            const arr = (Array.isArray(cur.objetivos) ? cur.objetivos : []) as Array<Record<string, unknown>>;
+            const next = arr.map((o) => (o.id === id ? { ...o, status } : o));
+            return { ...all, [selected.id]: { ...cur, objetivos: next, atualizadoEm: new Date().toISOString() } };
+          });
+        };
+        return (
+          <div
+            className={"inc-modal-overlay" + (objetivosModalOpen ? " open" : "")}
+            onClick={(e) => { if (e.target === e.currentTarget) setObjetivosModalOpen(false); }}
+          >
+            <div className="inc-modal" style={{ maxWidth: 720 }}>
+              <div className="inc-modal-bar" />
+              <div className="inc-modal-head">
+                <div>
+                  <h2>Objetivos do PEI · {selected.name}</h2>
+                  <span className="meta" style={{ display: "block", marginTop: 4 }}>
+                    {atingidos} de {objs.length} atingido(s) · Lei 14.254/2021
+                  </span>
+                </div>
+                <button className="inc-modal-close" onClick={() => setObjetivosModalOpen(false)} aria-label="Fechar"><X size={16} /></button>
+              </div>
+              <div className="inc-modal-body" style={{ background: "var(--bg)" }}>
+                {objs.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "24px 12px" }}>
+                    <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 12 }}>
+                      Nenhum objetivo cadastrado no PEI ainda. Abra o PEI para definir metas pedagógicas individualizadas.
+                    </p>
+                    <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => { setObjetivosModalOpen(false); setPeiOpen(true); }}>
+                      <FileText size={14} /> Abrir PEI
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {objs.map((o, i) => {
+                      const st = STATUS_OPTS.find((s) => s.v === o.status) || STATUS_OPTS[0];
+                      return (
+                        <div key={o.id} style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 10, padding: 12 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 999, background: "#E9F0FF", color: "#1F4FB8" }}>#{i + 1}</span>
+                            {o.prazo && (
+                              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>
+                                {PRAZO_LBL[o.prazo] || o.prazo}
+                              </span>
+                            )}
+                            <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: st.color, padding: "3px 8px", borderRadius: 999, background: `${st.color}15` }}>
+                              ● {st.l}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 13, margin: "0 0 8px", color: "var(--text)" }}>{o.texto || <i style={{ color: "var(--muted)" }}>(sem descrição)</i>}</p>
+                          {o.criterios && (
+                            <p style={{ fontSize: 11.5, margin: "0 0 8px", color: "var(--muted)" }}>
+                              <b>Critérios:</b> {o.criterios}
+                            </p>
+                          )}
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                            {STATUS_OPTS.map((s) => (
+                              <button
+                                key={s.v}
+                                type="button"
+                                onClick={() => setStatus(o.id, s.v)}
+                                style={{
+                                  fontSize: 11, padding: "4px 10px", borderRadius: 999,
+                                  border: o.status === s.v ? `1.5px solid ${s.color}` : "1px solid var(--border)",
+                                  background: o.status === s.v ? `${s.color}18` : "#fff",
+                                  color: o.status === s.v ? s.color : "var(--text)",
+                                  cursor: "pointer", fontWeight: o.status === s.v ? 700 : 500,
+                                }}
+                              >
+                                {s.l}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="inc-modal-foot">
+                <span className="legal">Status sincronizado com o PEI · Lei 14.254/2021</span>
+                <button className="inc-btn-ghost" onClick={() => { setObjetivosModalOpen(false); setPeiOpen(true); }}>
+                  <FileText size={14} /> Editar no PEI
+                </button>
+                <button className="btn btn-primary" onClick={() => setObjetivosModalOpen(false)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Anamnese: Imprimir */}
       <div className={"inc-modal-overlay" + (anamPrintOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setAnamPrintOpen(false); }}>
         <div className="inc-modal" style={{ maxWidth: 880 }}>
