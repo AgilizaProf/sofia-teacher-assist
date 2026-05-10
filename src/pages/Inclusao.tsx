@@ -739,7 +739,14 @@ export function Inclusao() {
 
   // Planos adaptados gerados pela Sofia, persistidos por aluno
   const [plansByStudent, setPlansByStudent] = usePersistentState<Record<string, PlanoInclusao[]>>("inc_plans", {});
-  const studentPlans = (selectedId && plansByStudent[selectedId]) || [];
+  const studentPlansRaw = (selectedId && plansByStudent[selectedId]) || [];
+  // Ordena por data (mais próxima → mais distante). Sem data vai para o fim.
+  const studentPlans = [...studentPlansRaw].sort((a, b) => {
+    if (!a.data && !b.data) return 0;
+    if (!a.data) return 1;
+    if (!b.data) return -1;
+    return a.data.localeCompare(b.data);
+  });
   const [viewPlanId, setViewPlanId] = useState<string | null>(null);
   const [agendarSel, setAgendarSel] = useState<Record<string, boolean>>({});
   const [agendando, setAgendando] = useState(false);
