@@ -25,7 +25,7 @@ function ProPage() {
   const grant = async () => {
     if (!email.trim()) { toast.error("Informe um e-mail"); return; }
     setBusy(true);
-    const { data, error } = await supabase.rpc("admin_grant_pro", { _email: email, _ciclo: ciclo, _dias: dias, _motivo: motivo || null });
+    const { data, error } = await supabase.rpc("admin_grant_pro", { _email: email, _ciclo: ciclo, _dias: dias, _motivo: motivo || undefined });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success((data as { status: string }).status === "pending" ? "Concessão pendente — será aplicada no signup" : "Acesso Pro concedido");
