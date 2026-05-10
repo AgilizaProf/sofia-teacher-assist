@@ -8,6 +8,42 @@ const DISCIPLINAS_COMUNS = [
   "Arte", "Educação Física", "Inglês", "Ensino Religioso",
 ];
 
+const ANOS_ESCOLARES = [
+  "Educação Infantil — Creche (0 a 3 anos)",
+  "Educação Infantil — Pré-escola (4 e 5 anos)",
+  "1º ano — Ensino Fundamental",
+  "2º ano — Ensino Fundamental",
+  "3º ano — Ensino Fundamental",
+  "4º ano — Ensino Fundamental",
+  "5º ano — Ensino Fundamental",
+  "6º ano — Ensino Fundamental",
+  "7º ano — Ensino Fundamental",
+  "8º ano — Ensino Fundamental",
+  "9º ano — Ensino Fundamental",
+  "1ª série — Ensino Médio",
+  "2ª série — Ensino Médio",
+  "3ª série — Ensino Médio",
+  "EJA — Fundamental",
+  "EJA — Médio",
+];
+
+function normalizarAno(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+  const direct = ANOS_ESCOLARES.find((a) => a.toLowerCase() === s.toLowerCase());
+  if (direct) return direct;
+  const num = s.match(/(\d+)\s*[ºoª]?/);
+  if (num) {
+    const n = parseInt(num[1], 10);
+    if (/médio|medio|em\b/i.test(s) && n >= 1 && n <= 3) {
+      return `${n}ª série — Ensino Médio`;
+    }
+    if (n >= 1 && n <= 9) return `${n}º ano — Ensino Fundamental`;
+  }
+  return s;
+}
+
 type Trilha = {
   id: string;
   turma: string | null;
@@ -198,7 +234,7 @@ export function TrilhasPanel() {
                 ...form,
                 turmaId: id,
                 turma: t?.name ?? "",
-                ano: t?.grade || form.ano,
+                ano: normalizarAno(t?.grade) || form.ano,
               });
             }}
             style={inputStyle}
@@ -212,7 +248,16 @@ export function TrilhasPanel() {
           {form.turmaId === "__manual__" && (
             <input placeholder="Nome da turma" value={form.turma} onChange={(e) => setForm({ ...form, turma: e.target.value })} style={inputStyle} />
           )}
-          <input placeholder="Ano escolar (ex: 2º ano EF)" value={form.ano} onChange={(e) => setForm({ ...form, ano: e.target.value })} style={inputStyle} />
+          <select
+            value={ANOS_ESCOLARES.includes(form.ano) ? form.ano : ""}
+            onChange={(e) => setForm({ ...form, ano: e.target.value })}
+            style={inputStyle}
+          >
+            <option value="">Ano de escolaridade…</option>
+            {ANOS_ESCOLARES.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
           <select value={form.semestre} onChange={(e) => setForm({ ...form, semestre: e.target.value })} style={inputStyle}>
             <option>1º semestre</option><option>2º semestre</option>
           </select>
@@ -308,7 +353,7 @@ export function TrilhasPanel() {
                         </div>
                         {planoAberto === s.id && s.plano_gerado != null && (
                           <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8, padding: 10, background: "#fff", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12.5, color: "var(--ink-2)" }}>
-                            <PlanoSemanal plano={s.plano_gerado} />
+                            <PlanoSemanal plano={s.plano_gerado} trilha={t} semana={s} />
                           </div>
                         )}
                       </div>
@@ -325,30 +370,113 @@ export function TrilhasPanel() {
   );
 }
 
-function PlanoSemanal({ plano }: { plano: unknown }) {
+function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilha; semana: Semana }) {
   const p = (plano || {}) as {
     objetivo_geral?: string;
     dias?: Array<{ dia?: string; titulo?: string; objetivo?: string; abertura?: string; desenvolvimento?: string; fechamento?: string; materiais?: string[]; habilidade_bncc?: string; adaptacao_pcd?: string }>;
     avaliacao_formativa?: string;
     ponte_proxima_semana?: string;
   };
+  const dias = p.dias || [];
+  const today = new Date().toISOString().slice(0, 10);
+  const [datas, setDatas] = useState<Record<number, string>>({});
+  const [salvos, setSalvos] = useState<Record<number, "salvando" | "ok" | string>>({});
+  const [salvandoTodos, setSalvandoTodos] = useState(false);
+
+  async function salvarDia(i: number, d: NonNullable<typeof p.dias>[number]) {
+    setSalvos((x) => ({ ...x, [i]: "salvando" }));
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const userId = u?.user?.id;
+      if (!userId) throw new Error("Faça login novamente.");
+      const dataDia = datas[i] || today;
+      const titulo = d.titulo || `${trilha.disciplina ?? "Aula"} — S${semana.semana} dia ${i + 1}`;
+      const payload = {
+        user_id: userId,
+        client_id: `pa_${Date.now()}_${i}`,
+        titulo,
+        dia: dataDia,
+        semana: `S${semana.semana}`,
+        data: {
+          origem: "trilha",
+          trilha_id: trilha.id,
+          trilha_tema: trilha.tema_central,
+          turma: trilha.turma,
+          ano: trilha.ano_escolar,
+          disciplina: trilha.disciplina,
+          semana_numero: semana.semana,
+          plano: d,
+          objetivo_geral_semana: p.objetivo_geral || null,
+        } as never,
+      };
+      const { error } = await supabase.from("planos_aula").insert([payload]);
+      if (error) throw error;
+      setSalvos((x) => ({ ...x, [i]: "ok" }));
+    } catch (e) {
+      setSalvos((x) => ({ ...x, [i]: (e as Error).message || "Erro" }));
+    }
+  }
+
+  async function salvarTodos() {
+    setSalvandoTodos(true);
+    for (let i = 0; i < dias.length; i++) {
+      // só salva os ainda não salvos
+      if (salvos[i] !== "ok") {
+        await salvarDia(i, dias[i]);
+      }
+    }
+    setSalvandoTodos(false);
+  }
+
   return (
     <div style={{ display: "grid", gap: 8 }}>
       {p.objetivo_geral && <div><strong>Objetivo geral:</strong> {p.objetivo_geral}</div>}
-      {(p.dias || []).map((d, i) => (
-        <div key={i} style={{ borderLeft: "3px solid var(--orange)", paddingLeft: 8 }}>
-          <div style={{ fontWeight: 600 }}>{d.dia} — {d.titulo}</div>
-          {d.objetivo && <div><em>Objetivo:</em> {d.objetivo}</div>}
-          {d.abertura && <div><em>Abertura:</em> {d.abertura}</div>}
-          {d.desenvolvimento && <div><em>Desenvolvimento:</em> {d.desenvolvimento}</div>}
-          {d.fechamento && <div><em>Fechamento:</em> {d.fechamento}</div>}
-          {Array.isArray(d.materiais) && d.materiais.length > 0 && <div><em>Materiais:</em> {d.materiais.join(", ")}</div>}
-          {d.habilidade_bncc && <div><em>BNCC:</em> {d.habilidade_bncc}</div>}
-          {d.adaptacao_pcd && <div><em>Adaptação PCD:</em> {d.adaptacao_pcd}</div>}
-        </div>
-      ))}
+      {dias.map((d, i) => {
+        const status = salvos[i];
+        return (
+          <div key={i} style={{ borderLeft: "3px solid var(--orange)", paddingLeft: 8 }}>
+            <div style={{ fontWeight: 600 }}>{d.dia} — {d.titulo}</div>
+            {d.objetivo && <div><em>Objetivo:</em> {d.objetivo}</div>}
+            {d.abertura && <div><em>Abertura:</em> {d.abertura}</div>}
+            {d.desenvolvimento && <div><em>Desenvolvimento:</em> {d.desenvolvimento}</div>}
+            {d.fechamento && <div><em>Fechamento:</em> {d.fechamento}</div>}
+            {Array.isArray(d.materiais) && d.materiais.length > 0 && <div><em>Materiais:</em> {d.materiais.join(", ")}</div>}
+            {d.habilidade_bncc && <div><em>BNCC:</em> {d.habilidade_bncc}</div>}
+            {d.adaptacao_pcd && <div><em>Adaptação PCD:</em> {d.adaptacao_pcd}</div>}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+              <label style={{ fontSize: 11.5, color: "var(--muted)" }}>Distribuir no dia:</label>
+              <input
+                type="date"
+                value={datas[i] || today}
+                onChange={(e) => setDatas((x) => ({ ...x, [i]: e.target.value }))}
+                style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }}
+              />
+              <button
+                className="pl-btn ghost"
+                onClick={() => salvarDia(i, d)}
+                disabled={status === "salvando"}
+                style={{ fontSize: 11 }}
+              >
+                {status === "salvando" ? <Loader2 size={11} className="animate-spin" /> : status === "ok" ? <CheckCircle2 size={11} /> : <BookOpen size={11} />}
+                {status === "ok" ? "Salvo no Planejamento" : status === "salvando" ? "Salvando…" : "Salvar como plano de aula"}
+              </button>
+              {typeof status === "string" && status !== "ok" && status !== "salvando" && (
+                <span style={{ fontSize: 11, color: "#991B1B" }}>{status}</span>
+              )}
+            </div>
+          </div>
+        );
+      })}
       {p.avaliacao_formativa && <div><strong>Avaliação formativa:</strong> {p.avaliacao_formativa}</div>}
       {p.ponte_proxima_semana && <div><strong>Ponte p/ próxima semana:</strong> {p.ponte_proxima_semana}</div>}
+      {dias.length > 0 && (
+        <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
+          <button className="pl-btn primary" onClick={salvarTodos} disabled={salvandoTodos} style={{ fontSize: 12 }}>
+            {salvandoTodos ? <Loader2 size={12} className="animate-spin" /> : <BookOpen size={12} />}
+            {salvandoTodos ? "Salvando todos…" : "Salvar todos os planos de aula"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
