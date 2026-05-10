@@ -2104,3 +2104,89 @@ function InclusaoSuggestions({
     </div>
   );
 }
+
+function FilterPopover({
+  options,
+  selected,
+  onToggle,
+  onClear,
+  onClose,
+  emptyLabel,
+}: {
+  options: string[];
+  selected: string[];
+  onToggle: (v: string) => void;
+  onClear: () => void;
+  onClose: () => void;
+  emptyLabel: string;
+}) {
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, zIndex: 40 }}
+      />
+      <div
+        role="menu"
+        style={{
+          position: "absolute",
+          top: "calc(100% + 6px)",
+          left: 0,
+          zIndex: 50,
+          minWidth: 240,
+          maxHeight: 320,
+          overflowY: "auto",
+          background: "#fff",
+          border: "1px solid var(--border, #E5E7EB)",
+          borderRadius: 10,
+          boxShadow: "0 12px 30px rgba(15,23,42,.12)",
+          padding: 8,
+        }}
+      >
+        {options.length === 0 ? (
+          <div style={{ padding: "10px 8px", fontSize: 12.5, color: "var(--muted, #64748B)" }}>{emptyLabel}</div>
+        ) : (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 6px 8px", borderBottom: "1px solid #F1F5F9", marginBottom: 4 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--muted, #64748B)", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                {selected.length} selecionado{selected.length === 1 ? "" : "s"}
+              </span>
+              <button
+                type="button"
+                onClick={onClear}
+                style={{ fontSize: 11.5, color: "var(--orange, #F97316)", fontWeight: 600 }}
+              >
+                Limpar
+              </button>
+            </div>
+            {options.map((opt) => {
+              const checked = selected.includes(opt);
+              return (
+                <label
+                  key={opt}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "7px 8px",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    fontSize: 13,
+                    background: checked ? "#FFF7ED" : "transparent",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onToggle(opt)}
+                  />
+                  <span>{opt}</span>
+                </label>
+              );
+            })}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
