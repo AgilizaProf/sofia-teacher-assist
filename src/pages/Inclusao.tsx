@@ -1732,6 +1732,16 @@ export function Inclusao() {
                       </div>
                     ) : (
                       <div className="plan-list">
+                        {studentPlans.length > 0 && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 2px" }}>
+                            <button type="button" className="inc-btn-ghost" onClick={toggleSelTodos}>
+                              {todosSelecionados ? "Desmarcar todos" : "Selecionar todos"}
+                            </button>
+                            <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                              {selecionadosCount} de {studentPlans.length} selecionado(s)
+                            </span>
+                          </div>
+                        )}
                         {studentPlans.length === 0 ? (
                           <div style={{ background: "#fff", border: "1px dashed var(--border)", borderRadius: 11, padding: 22, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
                             Nenhum plano de aula registrado para <b>{selected?.name || "este aluno"}</b> ainda.<br />
