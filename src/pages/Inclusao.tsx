@@ -751,7 +751,17 @@ export function Inclusao() {
     return a.data.localeCompare(b.data);
   });
   const [viewPlanId, setViewPlanId] = useState<string | null>(null);
-  const [agendarSel, setAgendarSel] = useState<Record<string, boolean>>({});
+  // Seleção de aulas por aluno, persistida no storage
+  const [agendarSelByStudent, setAgendarSelByStudent] = usePersistentState<Record<string, Record<string, boolean>>>("inc_plan_sel", {});
+  const agendarSel = (selectedId && agendarSelByStudent[selectedId]) || {};
+  const setAgendarSel = (updater: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => {
+    if (!selectedId) return;
+    setAgendarSelByStudent((all) => {
+      const prev = all[selectedId] || {};
+      const next = typeof updater === "function" ? (updater as (p: Record<string, boolean>) => Record<string, boolean>)(prev) : updater;
+      return { ...all, [selectedId]: next };
+    });
+  };
   const [agendando, setAgendando] = useState(false);
   const [agendarPeriodOpen, setAgendarPeriodOpen] = useState(false);
   type PeriodoAg = "dia" | "semana" | "mes" | "bimestre" | "trimestre" | "semestre";
