@@ -1280,26 +1280,8 @@ export function Inclusao() {
             return (
               <AppHeader
                 breadcrumb={crumbs}
-                secondaryStatus={view === "detail" && selected ? "PEI ainda não criado · comece pela Anamnese" : null}
                 actions={
                   <>
-                    {view === "detail" && (
-                      <button
-                        className="inc-btn-ghost"
-                        disabled={adaptarDisabled}
-                        title={adaptarDisabled ? adaptarTooltip : "Adaptar a próxima aula com a Sofia"}
-                        style={adaptarDisabled ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
-                        onClick={() => {
-                          if (adaptarDisabled) return;
-                          sofia.openSofia({
-                            prompt: `Adapte a aula de ${proxAula!.disciplina} para ${selected!.name}.`,
-                            send: false,
-                          });
-                        }}
-                      >
-                        <Sparkles size={14} /> Adaptar aula de hoje
-                      </button>
-                    )}
                     <button className="inc-btn-ghost" onClick={() => setTutorialOpen(true)}>
                       <HelpCircle size={14} /> Tutorial Inclusão
                     </button>
