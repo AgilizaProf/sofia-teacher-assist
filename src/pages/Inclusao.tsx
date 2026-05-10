@@ -2430,7 +2430,7 @@ ${corpo}
                           </button>
                         )}
                         {parecerAtual && (
-                          <button className="inc-btn-ghost" onClick={startEditParecer}>
+                          <button className="inc-btn-ghost" onClick={() => { startEditParecer(); setPreviewParecerOpen(true); }}>
                             <Pencil size={14} /> Editar
                           </button>
                         )}
