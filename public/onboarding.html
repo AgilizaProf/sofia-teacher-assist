@@ -1558,7 +1558,8 @@
 
   function goToApp(e,where){
     e.preventDefault();
-    alert('No app real, isso te leva pra: ' + (NEXT_CARDS[where]?.route || '/'));
+    const route = NEXT_CARDS[where]?.route || '/';
+    (window.top || window).location.href = route;
   }
 
   // foco no nome ao abrir
