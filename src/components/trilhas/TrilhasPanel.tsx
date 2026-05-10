@@ -8,6 +8,42 @@ const DISCIPLINAS_COMUNS = [
   "Arte", "Educação Física", "Inglês", "Ensino Religioso",
 ];
 
+const ANOS_ESCOLARES = [
+  "Educação Infantil — Creche (0 a 3 anos)",
+  "Educação Infantil — Pré-escola (4 e 5 anos)",
+  "1º ano — Ensino Fundamental",
+  "2º ano — Ensino Fundamental",
+  "3º ano — Ensino Fundamental",
+  "4º ano — Ensino Fundamental",
+  "5º ano — Ensino Fundamental",
+  "6º ano — Ensino Fundamental",
+  "7º ano — Ensino Fundamental",
+  "8º ano — Ensino Fundamental",
+  "9º ano — Ensino Fundamental",
+  "1ª série — Ensino Médio",
+  "2ª série — Ensino Médio",
+  "3ª série — Ensino Médio",
+  "EJA — Fundamental",
+  "EJA — Médio",
+];
+
+function normalizarAno(raw: string | null | undefined): string {
+  if (!raw) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+  const direct = ANOS_ESCOLARES.find((a) => a.toLowerCase() === s.toLowerCase());
+  if (direct) return direct;
+  const num = s.match(/(\d+)\s*[ºoª]?/);
+  if (num) {
+    const n = parseInt(num[1], 10);
+    if (/médio|medio|em\b/i.test(s) && n >= 1 && n <= 3) {
+      return `${n}ª série — Ensino Médio`;
+    }
+    if (n >= 1 && n <= 9) return `${n}º ano — Ensino Fundamental`;
+  }
+  return s;
+}
+
 type Trilha = {
   id: string;
   turma: string | null;
