@@ -1992,6 +1992,60 @@ export function Inclusao() {
         }}
       />
 
+      {/* Período do agendamento */}
+      <div className={"inc-modal-overlay" + (agendarPeriodOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setAgendarPeriodOpen(false); }}>
+        <div className="inc-modal" style={{ maxWidth: 520 }}>
+          <div className="inc-modal-bar" />
+          <div className="inc-modal-head">
+            <h2>Como distribuir as atividades?</h2>
+            <span className="meta">{selecionadosCount} atividade(s) selecionada(s)</span>
+            <button className="inc-modal-close" onClick={() => setAgendarPeriodOpen(false)} aria-label="Fechar"><X size={16} /></button>
+          </div>
+          <div className="inc-modal-body plain" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>
+              A Sofia distribui as atividades em dias úteis a partir de hoje, conforme o período escolhido.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {([
+                { k: "dia", l: "Dia", d: "Todas no mesmo dia útil" },
+                { k: "semana", l: "Semana", d: "Próximos 7 dias" },
+                { k: "mes", l: "Mês", d: "Próximos 30 dias" },
+                { k: "bimestre", l: "Bimestre", d: "Próximos 60 dias" },
+                { k: "trimestre", l: "Trimestre", d: "Próximos 90 dias" },
+                { k: "semestre", l: "Semestre", d: "Próximos 180 dias" },
+              ] as Array<{ k: PeriodoAg; l: string; d: string }>).map((opt) => {
+                const ativo = periodoAg === opt.k;
+                return (
+                  <button
+                    key={opt.k}
+                    type="button"
+                    onClick={() => setPeriodoAg(opt.k)}
+                    style={{
+                      textAlign: "left", padding: "10px 12px", borderRadius: 9, cursor: "pointer",
+                      border: ativo ? "2px solid var(--accent)" : "1px solid var(--border)",
+                      background: ativo ? "var(--accent-soft)" : "#fff",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{opt.l}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{opt.d}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ padding: "12px 18px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <button className="inc-btn-ghost" onClick={() => setAgendarPeriodOpen(false)}>Cancelar</button>
+            <button
+              className="btn btn-primary bg-orange-400 text-orange-400"
+              onClick={agendarPlanos}
+              disabled={agendando}
+            >
+              <Sparkles size={14} /> {agendando ? "Agendando…" : "Confirmar e agendar"}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* PEI completo */}
       <div className={"inc-modal-overlay" + (peiOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setPeiOpen(false); }}>
         <div className="inc-modal" style={{ maxWidth: 880 }}>
