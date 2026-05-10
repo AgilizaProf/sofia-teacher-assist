@@ -22,6 +22,7 @@ import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
 import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
 import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
@@ -94,6 +95,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const PlanejamentoEiRoute = PlanejamentoEiRouteImport.update({
   id: '/ei',
   path: '/ei',
@@ -117,7 +123,7 @@ const ApiSofiaSuggestionsRoute = ApiSofiaSuggestionsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/auth': typeof AuthRoute
@@ -132,11 +138,11 @@ export interface FileRoutesByFullPath {
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/auth': typeof AuthRoute
@@ -151,12 +157,13 @@ export interface FileRoutesByTo {
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
+  '/admin': typeof AdminIndexRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/auth': typeof AuthRoute
@@ -171,6 +178,7 @@ export interface FileRoutesById {
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
 }
 export interface FileRouteTypes {
@@ -192,11 +200,11 @@ export interface FileRouteTypes {
     | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/planejamento/ei'
+    | '/admin/'
     | '/api/sofia/suggestions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/agenda'
     | '/assistente'
     | '/auth'
@@ -211,6 +219,7 @@ export interface FileRouteTypes {
     | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/planejamento/ei'
+    | '/admin'
     | '/api/sofia/suggestions'
   id:
     | '__root__'
@@ -230,12 +239,13 @@ export interface FileRouteTypes {
     | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/planejamento/ei'
+    | '/admin/'
     | '/api/sofia/suggestions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AgendaRoute: typeof AgendaRoute
   AssistenteRoute: typeof AssistenteRoute
   AuthRoute: typeof AuthRoute
@@ -343,6 +353,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/planejamento/ei': {
       id: '/planejamento/ei'
       path: '/ei'
@@ -374,6 +391,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface InclusaoRouteChildren {
   InclusaoPeiRoute: typeof InclusaoPeiRoute
 }
@@ -402,7 +429,7 @@ const PlanejamentoRouteWithChildren = PlanejamentoRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   AgendaRoute: AgendaRoute,
   AssistenteRoute: AssistenteRoute,
   AuthRoute: AuthRoute,
