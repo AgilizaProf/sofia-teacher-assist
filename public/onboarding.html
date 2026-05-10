@@ -1267,7 +1267,7 @@
   function goBack(){if(currentStep>0){currentStep--;updateUI();}}
   function skipOnboarding(){
     if(confirm('Pular o onboarding? Você pode acessá-lo depois pelo menu.')){
-      alert('Indo direto pro painel.');
+      (window.top || window).location.href = '/';
     }
   }
 
