@@ -743,7 +743,21 @@ export function Inclusao() {
   const [viewPlanId, setViewPlanId] = useState<string | null>(null);
   const [agendarSel, setAgendarSel] = useState<Record<string, boolean>>({});
   const [agendando, setAgendando] = useState(false);
+  const [agendarPeriodOpen, setAgendarPeriodOpen] = useState(false);
+  type PeriodoAg = "dia" | "semana" | "mes" | "bimestre" | "trimestre" | "semestre";
+  const [periodoAg, setPeriodoAg] = useState<PeriodoAg>("semana");
   const viewingPlan = studentPlans.find((p) => p.id === viewPlanId) || null;
+  const selecionadosCount = Object.values(agendarSel).filter(Boolean).length;
+  const todosSelecionados = studentPlans.length > 0 && studentPlans.every((p) => agendarSel[p.id]);
+  const toggleSelTodos = () => {
+    if (todosSelecionados) {
+      setAgendarSel({});
+    } else {
+      const next: Record<string, boolean> = {};
+      for (const p of studentPlans) next[p.id] = true;
+      setAgendarSel(next);
+    }
+  };
 
   const updatePlan = (planId: string, patch: Partial<PlanoInclusao>) => {
     if (!selectedId) return;
@@ -759,6 +773,56 @@ export function Inclusao() {
     return d;
   };
 
+  // Janela total de dias para cada período (a partir de hoje)
+  const PERIODO_DIAS: Record<PeriodoAg, number> = {
+    dia: 1, semana: 7, mes: 30, bimestre: 60, trimestre: 90, semestre: 180,
+  };
+  const PERIODO_LABEL: Record<PeriodoAg, string> = {
+    dia: "no mesmo dia", semana: "ao longo da semana", mes: "ao longo do mês",
+    bimestre: "ao longo do bimestre", trimestre: "ao longo do trimestre", semestre: "ao longo do semestre",
+  };
+
+  // Gera N datas distribuídas em dias úteis dentro da janela do período.
+  const gerarDatasDistribuidas = (n: number, periodo: PeriodoAg): string[] => {
+    const start = nextWeekday(new Date());
+    if (periodo === "dia") {
+      const iso = start.toISOString().slice(0, 10);
+      return Array(n).fill(iso);
+    }
+    const totalDias = PERIODO_DIAS[periodo];
+    // Lista de dias úteis dentro da janela
+    const uteis: Date[] = [];
+    for (let i = 0; i < totalDias; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      if (d.getDay() !== 0 && d.getDay() !== 6) uteis.push(d);
+    }
+    if (uteis.length === 0) return [];
+    const resultado: string[] = [];
+    if (n <= uteis.length) {
+      // espaça uniformemente
+      const step = uteis.length / n;
+      for (let i = 0; i < n; i++) {
+        const idx = Math.min(uteis.length - 1, Math.floor(i * step));
+        resultado.push(uteis[idx].toISOString().slice(0, 10));
+      }
+    } else {
+      // mais planos do que dias — ciclo
+      for (let i = 0; i < n; i++) resultado.push(uteis[i % uteis.length].toISOString().slice(0, 10));
+    }
+    return resultado;
+  };
+
+  const abrirAgendarPeriodo = () => {
+    if (!selectedId) return;
+    const ids = Object.keys(agendarSel).filter((k) => agendarSel[k]);
+    if (ids.length === 0) {
+      toast.error("Selecione ao menos uma atividade para agendar.");
+      return;
+    }
+    setAgendarPeriodOpen(true);
+  };
+
   const agendarPlanos = async () => {
     if (!selectedId || !selected) return;
     const ids = Object.keys(agendarSel).filter((k) => agendarSel[k]);
@@ -769,20 +833,12 @@ export function Inclusao() {
     }
     setAgendando(true);
     try {
-      let cursor = nextWeekday(new Date());
+      const datas = gerarDatasDistribuidas(escolhidos.length, periodoAg);
       let okCount = 0;
-      for (const p of escolhidos) {
-        let dataEvento = p.data;
-        // Se data não definida ou no passado, distribui em dias úteis a partir de hoje
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-        const dPlano = p.data ? new Date(p.data + "T00:00:00") : null;
-        if (!dPlano || dPlano < hoje) {
-          dataEvento = cursor.toISOString().slice(0, 10);
-          updatePlan(p.id, { data: dataEvento });
-          // avança cursor para próximo dia útil
-          const nxt = new Date(cursor); nxt.setDate(nxt.getDate() + 1);
-          cursor = nextWeekday(nxt);
-        }
+      for (let i = 0; i < escolhidos.length; i++) {
+        const p = escolhidos[i];
+        const dataEvento = datas[i] || datas[datas.length - 1];
+        updatePlan(p.id, { data: dataEvento });
         await createAgendaEvent({
           title: `${p.titulo} · ${selected.name.split(" ")[0]}`,
           date: dataEvento,
@@ -791,8 +847,9 @@ export function Inclusao() {
         });
         okCount++;
       }
-      toast.success(`Sofia agendou ${okCount} atividade(s) na agenda.`);
+      toast.success(`Sofia agendou ${okCount} atividade(s) ${PERIODO_LABEL[periodoAg]}.`);
       setAgendarSel({});
+      setAgendarPeriodOpen(false);
     } catch (e) {
       console.error(e);
       toast.error("Erro ao agendar", { description: e instanceof Error ? e.message : "" });
@@ -1619,11 +1676,11 @@ export function Inclusao() {
                       {studentPlans.length > 0 && (
                         <button
                           className="btn btn-primary bg-orange-400 text-orange-400"
-                          onClick={agendarPlanos}
+                          onClick={abrirAgendarPeriodo}
                           disabled={agendando}
                           title="A Sofia distribui as atividades selecionadas em dias úteis na sua agenda."
                         >
-                          <Sparkles size={14} /> {agendando ? "Agendando…" : "Sofia preencher agenda"}
+                          <Sparkles size={14} /> {agendando ? "Agendando…" : `Sofia preencher agenda${selecionadosCount ? ` (${selecionadosCount})` : ""}`}
                         </button>
                       )}
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
@@ -1675,6 +1732,16 @@ export function Inclusao() {
                       </div>
                     ) : (
                       <div className="plan-list">
+                        {studentPlans.length > 0 && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 2px" }}>
+                            <button type="button" className="inc-btn-ghost" onClick={toggleSelTodos}>
+                              {todosSelecionados ? "Desmarcar todos" : "Selecionar todos"}
+                            </button>
+                            <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                              {selecionadosCount} de {studentPlans.length} selecionado(s)
+                            </span>
+                          </div>
+                        )}
                         {studentPlans.length === 0 ? (
                           <div style={{ background: "#fff", border: "1px dashed var(--border)", borderRadius: 11, padding: 22, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
                             Nenhum plano de aula registrado para <b>{selected?.name || "este aluno"}</b> ainda.<br />
@@ -1924,6 +1991,60 @@ export function Inclusao() {
           }
         }}
       />
+
+      {/* Período do agendamento */}
+      <div className={"inc-modal-overlay" + (agendarPeriodOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setAgendarPeriodOpen(false); }}>
+        <div className="inc-modal" style={{ maxWidth: 520 }}>
+          <div className="inc-modal-bar" />
+          <div className="inc-modal-head">
+            <h2>Como distribuir as atividades?</h2>
+            <span className="meta">{selecionadosCount} atividade(s) selecionada(s)</span>
+            <button className="inc-modal-close" onClick={() => setAgendarPeriodOpen(false)} aria-label="Fechar"><X size={16} /></button>
+          </div>
+          <div className="inc-modal-body plain" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <p style={{ fontSize: 13, color: "var(--muted)" }}>
+              A Sofia distribui as atividades em dias úteis a partir de hoje, conforme o período escolhido.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {([
+                { k: "dia", l: "Dia", d: "Todas no mesmo dia útil" },
+                { k: "semana", l: "Semana", d: "Próximos 7 dias" },
+                { k: "mes", l: "Mês", d: "Próximos 30 dias" },
+                { k: "bimestre", l: "Bimestre", d: "Próximos 60 dias" },
+                { k: "trimestre", l: "Trimestre", d: "Próximos 90 dias" },
+                { k: "semestre", l: "Semestre", d: "Próximos 180 dias" },
+              ] as Array<{ k: PeriodoAg; l: string; d: string }>).map((opt) => {
+                const ativo = periodoAg === opt.k;
+                return (
+                  <button
+                    key={opt.k}
+                    type="button"
+                    onClick={() => setPeriodoAg(opt.k)}
+                    style={{
+                      textAlign: "left", padding: "10px 12px", borderRadius: 9, cursor: "pointer",
+                      border: ativo ? "2px solid var(--accent)" : "1px solid var(--border)",
+                      background: ativo ? "var(--accent-soft)" : "#fff",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{opt.l}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{opt.d}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ padding: "12px 18px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <button className="inc-btn-ghost" onClick={() => setAgendarPeriodOpen(false)}>Cancelar</button>
+            <button
+              className="btn btn-primary bg-orange-400 text-orange-400"
+              onClick={agendarPlanos}
+              disabled={agendando}
+            >
+              <Sparkles size={14} /> {agendando ? "Agendando…" : "Confirmar e agendar"}
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* PEI completo */}
       <div className={"inc-modal-overlay" + (peiOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setPeiOpen(false); }}>
