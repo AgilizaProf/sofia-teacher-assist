@@ -31,14 +31,14 @@
     font-family:'Inter',sans-serif;
     background:linear-gradient(135deg,#FAF8F5 0%,#F4F1EB 100%);
     color:var(--text);overflow-x:hidden;min-height:100vh;
-    display:flex;align-items:center;justify-content:center;padding:20px;
+    display:flex;align-items:center;justify-content:center;padding:12px;
   }
 
   .onboarding-shell{
     width:100%;max-width:1000px;background:#fff;
     border-radius:28px;box-shadow:0 30px 80px rgba(27,42,78,.18);
     overflow:hidden;position:relative;
-    height:90vh;min-height:700px;max-height:880px;
+    height:calc(100vh - 24px);min-height:0;max-height:none;
     display:flex;flex-direction:column;
   }
 
@@ -905,7 +905,7 @@
         </div>
         <div class="sofia-thinking" id="sofiaThinking"></div>
         <div class="sofia-output" id="sofiaOutput"></div>
-        <div class="real-cta-card" id="realCta">
+        <div class="real-cta-card" id="realCta" style="cursor:pointer" onclick="goToRealCta()">
           <div class="icon">✨</div>
           <div class="text">
             <h4 id="realCtaTitle">Quer gerar um real agora — com seus dados?</h4>
@@ -1267,7 +1267,7 @@
   function goBack(){if(currentStep>0){currentStep--;updateUI();}}
   function skipOnboarding(){
     if(confirm('Pular o onboarding? Você pode acessá-lo depois pelo menu.')){
-      alert('Indo direto pro painel.');
+      (window.top || window).location.href = '/';
     }
   }
 
@@ -1558,7 +1558,14 @@
 
   function goToApp(e,where){
     e.preventDefault();
-    alert('No app real, isso te leva pra: ' + (NEXT_CARDS[where]?.route || '/'));
+    const route = NEXT_CARDS[where]?.route || '/';
+    (window.top || window).location.href = route;
+  }
+
+  function goToRealCta(){
+    const cfg = PAIN_CONFIG[painSelected];
+    const route = (cfg && cfg.realCtaRoute) || '/';
+    (window.top || window).location.href = route;
   }
 
   // foco no nome ao abrir
