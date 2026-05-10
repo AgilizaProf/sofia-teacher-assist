@@ -4,6 +4,7 @@ import type React from "react";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CommandPalette } from "@/components/CommandPalette";
+import { useIsAdmin } from "@/lib/admin/useIsAdmin";
 
 export const sidebarCss = `
 .ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
@@ -60,6 +61,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const [paletteOpen, setPaletteOpen] = useState(false);
   const usingInternal = !onCmdK;
   const handleCmdK = onCmdK || (() => setPaletteOpen(true));
+  const { isAdmin } = useIsAdmin();
 
   useEffect(() => {
     if (!usingInternal) return;
@@ -124,6 +126,12 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <Svg className="sb-icon" c={<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>} />
           <span>Sair</span>
         </button>
+        {isAdmin && (
+          <Link to="/admin" className="sb-item" aria-label="Painel administrativo" style={{marginTop:8,background:"rgba(255,122,69,.10)",color:"#FF7A45",fontWeight:700}}>
+            <Svg className="sb-icon" c={<><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></>} />
+            <span>Admin</span>
+          </Link>
+        )}
       </nav>
       <div className="sb-foot">
         <div className="sb-plan" role="complementary" aria-label="Oferta plano anual">
