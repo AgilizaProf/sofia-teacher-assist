@@ -1031,7 +1031,7 @@ export function Inclusao() {
     if (!selected) return;
     setGerandoParecer(true);
     try {
-      const regs = (regByStudent[selected.id] || []).map((r) => ({
+      const regs = regsDoPeriodo.map((r) => ({
         when: r.when, cat: r.cat, body: r.body,
       }));
       const peiResumo = (plansByStudent[selected.id] || [])
@@ -1042,14 +1042,21 @@ export function Inclusao() {
         body: {
           aluno: selected.name,
           diagnostico: selected.diag || "",
-          periodo: "Bimestral",
+          periodo: relIntervalo.label,
+          intervalo: `${relIntervalo.inicio.toLocaleDateString("pt-BR")} a ${relIntervalo.fim.toLocaleDateString("pt-BR")}`,
+          formato: relFormato,
           anamneseResumo,
           peiResumo,
           registros: regs,
         },
       });
       if (error) throw error;
-      const parecer: Parecer = { ...(data?.parecer || {}), geradoEm: new Date().toLocaleString("pt-BR") };
+      const parecer: Parecer = {
+        ...(data?.parecer || {}),
+        periodoLabel: relIntervalo.label,
+        formato: relFormato,
+        geradoEm: new Date().toLocaleString("pt-BR"),
+      };
       setParecerByStudent((all) => ({ ...all, [selected.id]: parecer }));
       toast.success("Parecer gerado pela Sofia.");
     } catch (e) {
@@ -1058,6 +1065,61 @@ export function Inclusao() {
     } finally {
       setGerandoParecer(false);
     }
+  };
+
+  const imprimirParecer = () => {
+    if (!parecerAtual || !selected) return;
+    const w = window.open("", "_blank");
+    if (!w) return;
+    const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+    const ul = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : "";
+    const corpo = parecerAtual.formato === "texto" && parecerAtual.texto
+      ? `<div class="texto">${esc(parecerAtual.texto).split(/\n+/).map((p) => `<p>${p}</p>`).join("")}</div>`
+      : `
+        ${parecerAtual.resumo ? `<p><b>Resumo:</b> ${esc(parecerAtual.resumo)}</p>` : ""}
+        ${parecerAtual.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAtual.pedagogico)}</p>` : ""}
+        ${parecerAtual.comportamental ? `<h3>Comportamental</h3><p>${esc(parecerAtual.comportamental)}</p>` : ""}
+        ${parecerAtual.sensorial ? `<h3>Sensorial</h3><p>${esc(parecerAtual.sensorial)}</p>` : ""}
+        ${parecerAtual.familia ? `<h3>Família</h3><p>${esc(parecerAtual.familia)}</p>` : ""}
+        ${parecerAtual.avancos?.length ? `<h3>Avanços</h3>${ul(parecerAtual.avancos)}` : ""}
+        ${parecerAtual.desafios?.length ? `<h3>Desafios</h3>${ul(parecerAtual.desafios)}` : ""}
+        ${parecerAtual.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ul(parecerAtual.encaminhamentos)}` : ""}
+        ${parecerAtual.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAtual.comunicacao_familias)}</p>` : ""}
+      `;
+    w.document.write(`
+      <!doctype html><html><head><meta charset="utf-8"/>
+      <title>Parecer · ${esc(selected.name)}</title>
+      <style>
+        @page{size:A4;margin:18mm 16mm;}
+        body{font-family:'Inter',Arial,sans-serif;color:#0F1B36;font-size:11pt;line-height:1.5;}
+        h1{font-size:18pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
+        h3{font-size:12pt;margin:12pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
+        .meta{font-size:9pt;color:#6B7691;margin-bottom:10pt;}
+        ul{margin:4pt 0 0 16pt;}
+        .texto p{text-align:justify;margin:0 0 8pt;}
+        .legal{margin-top:16pt;font-size:8.5pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
+        .sig{margin-top:24pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
+        .sig div{border-top:1px solid #333;padding-top:4pt;font-size:9pt;text-align:center;}
+        .toolbar{position:fixed;top:8px;right:8px;}
+        @media print{.toolbar{display:none;}}
+      </style></head><body>
+      <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
+      <h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
+      <div class="meta">
+        <b>Aluno(a):</b> ${esc(selected.name)} · ${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")}<br/>
+        <b>Diagnóstico:</b> ${esc(selected.diag || "—")} ${selected.cid ? "· " + esc(selected.cid) : ""}<br/>
+        <b>Período:</b> ${esc(parecerAtual.periodoLabel || "")} · <b>Gerado em:</b> ${esc(parecerAtual.geradoEm || "")}
+      </div>
+      ${corpo}
+      <div class="sig">
+        <div>Professor(a) regente</div>
+        <div>Coordenação pedagógica</div>
+      </div>
+      <div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
+      </body></html>
+    `);
+    w.document.close();
+    setTimeout(() => w.focus(), 200);
   };
 
   const goView = (v: ViewKey) => {
