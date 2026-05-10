@@ -1764,6 +1764,16 @@ export function Inclusao() {
                           <Sparkles size={14} /> {agendando ? "Agendando…" : `Sofia preencher agenda${selecionadosCount ? ` (${selecionadosCount})` : ""}`}
                         </button>
                       )}
+                      {studentPlans.length > 0 && (
+                        <button
+                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          onClick={imprimirSelecionados}
+                          disabled={selecionadosCount === 0}
+                          title="Imprime as atividades selecionadas no modo escolhido."
+                        >
+                          <Printer size={14} /> Imprimir{selecionadosCount ? ` (${selecionadosCount})` : ""}
+                        </button>
+                      )}
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
