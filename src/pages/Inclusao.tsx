@@ -1009,8 +1009,44 @@ export function Inclusao() {
                       onChange={(e) => setQuery(e.target.value)}
                     />
                   </div>
-                  <button className="list-filter">Turma: Todas</button>
-                  <button className="list-filter">Diagnóstico: Todos</button>
+                  <div style={{ position: "relative" }}>
+                    <button
+                      className="list-filter"
+                      onClick={() => setFilterOpen(filterOpen === "turma" ? null : "turma")}
+                      aria-expanded={filterOpen === "turma"}
+                    >
+                      Turma: {turmaFilter.length === 0 ? "Todas" : turmaFilter.length === 1 ? turmaFilter[0] : `${turmaFilter.length} selecionadas`}
+                    </button>
+                    {filterOpen === "turma" && (
+                      <FilterPopover
+                        options={turmasUnicas}
+                        selected={turmaFilter}
+                        onToggle={(v) => setTurmaFilter((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v])}
+                        onClear={() => setTurmaFilter([])}
+                        onClose={() => setFilterOpen(null)}
+                        emptyLabel="Nenhuma turma cadastrada."
+                      />
+                    )}
+                  </div>
+                  <div style={{ position: "relative" }}>
+                    <button
+                      className="list-filter"
+                      onClick={() => setFilterOpen(filterOpen === "diag" ? null : "diag")}
+                      aria-expanded={filterOpen === "diag"}
+                    >
+                      Diagnóstico: {diagFilter.length === 0 ? "Todos" : diagFilter.length === 1 ? diagFilter[0] : `${diagFilter.length} selecionados`}
+                    </button>
+                    {filterOpen === "diag" && (
+                      <FilterPopover
+                        options={diagsUnicos}
+                        selected={diagFilter}
+                        onToggle={(v) => setDiagFilter((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v])}
+                        onClear={() => setDiagFilter([])}
+                        onClose={() => setFilterOpen(null)}
+                        emptyLabel="Nenhum diagnóstico registrado."
+                      />
+                    )}
+                  </div>
                   <div className="list-actions">
                     <button className="btn btn-primary bg-orange-400 text-orange-400 btn-cadastrar" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
                   </div>
