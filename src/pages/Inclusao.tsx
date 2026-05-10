@@ -1340,11 +1340,26 @@ export function Inclusao() {
                         : `${selecionadosCount} selecionada(s) em Planejamento`}
                     </div>
                   </div>
-                  <div className="kpi">
-                    <div className="kpi-label">Objetivos PEI atingidos</div>
-                    <div className="kpi-value">0<span className="small"> /0</span></div>
-                    <div className="kpi-sub">defina objetivos no PEI</div>
-                  </div>
+                  {(() => {
+                    const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+                    const objs = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as Array<{ id: string; texto: string; status: string; prazo?: string }>;
+                    const atingidos = objs.filter((o) => o.status === "atingido").length;
+                    return (
+                      <button
+                        type="button"
+                        className="kpi"
+                        onClick={() => setObjetivosModalOpen(true)}
+                        style={{ textAlign: "left", cursor: "pointer", border: "1px solid var(--border)", background: "#fff" }}
+                        title="Abrir lista de objetivos do PEI"
+                      >
+                        <div className="kpi-label">Objetivos PEI atingidos</div>
+                        <div className="kpi-value">{atingidos}<span className="small"> /{objs.length}</span></div>
+                        <div className="kpi-sub">
+                          {objs.length === 0 ? "defina objetivos no PEI" : `clique para revisar status`}
+                        </div>
+                      </button>
+                    );
+                  })()}
                   <div className="kpi">
                     <div className="kpi-label">Evolução pedagógica</div>
                     {(() => {
