@@ -20,6 +20,7 @@ import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
 import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusaoVisualizarModal";
+import { PEIFormModal } from "@/components/inclusao/PEIFormModal";
 import { createAgendaEvent } from "@/lib/db/agenda";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -2176,52 +2177,18 @@ export function Inclusao() {
       </div>
 
       {/* PEI completo */}
-      <div className={"inc-modal-overlay" + (peiOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setPeiOpen(false); }}>
-        <div className="inc-modal" style={{ maxWidth: 880 }}>
-          <div className="inc-modal-bar" />
-          <div className="inc-modal-head">
-            <h2>Plano Educacional Individualizado{selected ? ` · ${selected.name}` : ""}</h2>
-            <span className="meta">PEI-2026-PA-v3.2<br />Lei 14.254/2021</span>
-            <button className="inc-modal-close" onClick={() => setPeiOpen(false)} aria-label="Fechar"><X size={16} /></button>
-          </div>
-          <div className="inc-modal-body">
-            <div className="inc-a4">
-              <div className="inc-a4-head">
-                <div className="inc-a4-logo">M</div>
-                <div className="center">
-                  <b>Prefeitura Municipal de São Paulo</b>
-                  <span>Secretaria Municipal da Educação · Diretoria Regional Sul<br />EMEF Profa. Maria Aparecida Silva</span>
-                </div>
-                <div className="stamp">PROTOCOLO<br />#PEI-2026-PA-v3.2<br />04/04/2026</div>
-              </div>
-              <h1>Plano Educacional Individualizado</h1>
-              <div className="ident">
-                <span><b>Educando:</b> {selected ? selected.name : "—"}</span>
-                <span><b>Idade:</b> 7 anos</span>
-                <span><b>Turma:</b> 2º Ano A · Manhã</span>
-                <span><b>Ref. curricular:</b> 2º Ano EF</span>
-                <span><b>CID:</b> —</span>
-                <span><b>AEE:</b> —</span>
-              </div>
-              <h2>1. Caracterização e Anamnese</h2>
-              <p>O educando apresenta diagnóstico de TEA (Nível 1). Reconhece o alfabeto e lê palavras CV com mediação. Em Matemática demonstra fluência com material concreto. Sensibilidade auditiva alta — fones abafadores em uso. Família participativa.</p>
-              <h2>2. Objetivos vigentes</h2>
-              <ul>
-                <li><b>#1</b> Ler 20 palavras com encontros consonantais com mediação visual</li>
-                <li><b>#3</b> Resolver operações de adição até 20 com material concreto · atingido</li>
-                <li><b>#4</b> Compreender "metade" e "inteiro" com mediação visual</li>
-                <li><b>#6</b> Sustentar trabalho em dupla por 20 min · atingido</li>
-                <li><b>#7</b> Reconhecer sobrecarga sensorial e solicitar pausa · atingido</li>
-              </ul>
-            </div>
-          </div>
-          <div className="inc-modal-foot">
-            <span className="legal">Conforme Lei 14.254/2021 · BNCC Inclusão</span>
-            <button className="inc-btn-ghost"><FileText size={14} /> Word</button>
-            <button className="btn btn-primary bg-orange-400 text-orange-400"><Printer size={14} /> Imprimir / PDF</button>
-          </div>
-        </div>
-      </div>
+      <PEIFormModal
+        open={peiOpen}
+        onClose={() => setPeiOpen(false)}
+        aluno={selected ? {
+          id: selected.id,
+          name: selected.name,
+          diag: selected.diag,
+          cid: selected.cid,
+          anoEscolar: selected.anoEscolar,
+          turma: selected.turma,
+        } : null}
+      />
 
       {/* Anamnese: Imprimir */}
       <div className={"inc-modal-overlay" + (anamPrintOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setAnamPrintOpen(false); }}>
