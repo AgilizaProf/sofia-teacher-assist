@@ -1856,6 +1856,26 @@ export function Inclusao() {
                             Use <b>Gerar novo plano adaptado</b> para começar.
                           </div>
                         ) : studentPlans.map((p) => (
+                          planViewMode === "topicos" ? (
+                          <div className="plan-item" key={p.id} style={{ gridTemplateColumns: "auto 1fr auto", padding: "10px 14px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 11.5, color: "var(--muted)" }}>
+                              <input
+                                type="checkbox"
+                                checked={!!agendarSel[p.id]}
+                                onChange={(e) => setAgendarSel((s) => ({ ...s, [p.id]: e.target.checked }))}
+                                style={{ cursor: "pointer" }}
+                              />
+                              {p.data ? p.data.split("-").reverse().slice(0,2).join("/") : "—"}
+                            </label>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }}>
+                              <span className="bncc" style={{ fontSize: 11 }}>{p.disciplina || "Aula"}</span>
+                              <b style={{ fontSize: 13.5 }}>{p.tema || p.titulo}</b>
+                            </div>
+                            <button className="inc-btn-ghost" onClick={() => setViewPlanId(p.id)}>
+                              <BookOpen size={12} /> Abrir
+                            </button>
+                          </div>
+                          ) : (
                           <div className="plan-item" key={p.id}>
                             <div className="when">
                               <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", textTransform: "none", fontSize: 11 }}>
@@ -1902,6 +1922,7 @@ export function Inclusao() {
                               ><X size={12} /> Excluir</button>
                             </div>
                           </div>
+                          )
                         ))}
                       </div>
                     )}
