@@ -914,51 +914,63 @@ export function Relatorios() {
           <div className="rel-sec-head" style={{ marginTop: 34 }}>
             <div>
               <h2>Finalizados recentemente</h2>
-              <p>Acesse, baixe em PDF ou duplique para o próximo bimestre.</p>
+              <p>Clique em um(a) aluno(a) para abrir o parecer finalizado.</p>
             </div>
-            <div className="rel-sec-actions">
-              <button className="rel-pill" aria-label="Exportar tudo em PDF"><Download size={13} /> Exportar tudo (PDF)</button>
-              <button
-                className="rel-pill"
-                aria-label={verTodosHist ? "Recolher lista" : "Ver todos os finalizados"}
-                aria-expanded={verTodosHist}
-                disabled={HISTORY.length === 0}
-                onClick={() => setVerTodosHist((v) => !v)}
-                title={HISTORY.length === 0 ? "Sem finalizados ainda" : undefined}
-              >
-                {verTodosHist ? "Recolher" : `Ver todos (${HISTORY.length}) →`}
-              </button>
-            </div>
+            {(() => {
+              const finList = alunosLista.filter((a) => a.status === "done");
+              return (
+                <div className="rel-sec-actions">
+                  <button
+                    className="rel-pill"
+                    aria-label={verTodosHist ? "Recolher lista" : "Ver todos os finalizados"}
+                    aria-expanded={verTodosHist}
+                    disabled={finList.length <= HIST_LIMIT}
+                    onClick={() => setVerTodosHist((v) => !v)}
+                  >
+                    {verTodosHist ? "Recolher" : `Ver todos (${finList.length}) →`}
+                  </button>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="rel-history">
-            {HISTORY.length === 0 && (
-              <EmptyState
-                icon="📂"
-                title="Nenhum parecer finalizado ainda."
-                description="Finalize seus primeiros pareceres pra acompanhar o histórico aqui."
-              />
-            )}
-            {(verTodosHist ? HISTORY : HISTORY.slice(0, HIST_LIMIT)).map((h) => (
-              <div key={h.initials} className="rel-h-row">
-                <div className="rel-h-av" style={{ background: h.bg }}>{h.initials}</div>
-                <div className="rel-h-name"><b>{h.name} · 1º bimestre</b><small>{h.meta}</small></div>
-                <span className="rel-status done"><span className="dot" />ASSINADO</span>
-                <div className="rel-h-date">{h.date}</div>
-                <div className="rel-h-actions">
-                  <button className="rel-h-icon" aria-label="Baixar PDF"><Download size={13} /></button>
-                  <button className="rel-h-icon" aria-label="Duplicar"><Copy size={13} /></button>
-                  <button className="rel-h-icon" aria-label="Abrir"><ArrowRight size={13} /></button>
-                </div>
-              </div>
-            ))}
-            {!verTodosHist && HISTORY.length > HIST_LIMIT && (
-              <div style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}>
-                <button className="rel-pill" onClick={() => setVerTodosHist(true)}>
-                  Ver todos os {HISTORY.length} finalizados →
-                </button>
-              </div>
-            )}
+            {(() => {
+              const finList = alunosLista.filter((a) => a.status === "done");
+              if (finList.length === 0) {
+                return (
+                  <EmptyState
+                    icon="📂"
+                    title="Nenhum parecer finalizado ainda."
+                    description="Finalize seus primeiros pareceres pra acompanhar o histórico aqui."
+                  />
+                );
+              }
+              const visible = verTodosHist ? finList : finList.slice(0, HIST_LIMIT);
+              const palette = ["#FF6A2C", "#6E5BE6", "#16A36B", "#3B82F6", "#EC4899", "#E9A23B"];
+              return visible.map((a, idx) => {
+                const initials = a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+                return (
+                  <button
+                    key={a.id}
+                    className="rel-h-row"
+                    onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}
+                    style={{ width: "100%", textAlign: "left", cursor: "pointer", background: "transparent", border: 0, borderBottom: "1px solid #F1EFE8" }}
+                  >
+                    <div className="rel-h-av" style={{ background: palette[idx % palette.length] }}>{initials}</div>
+                    <div className="rel-h-name">
+                      <b>{a.nome}</b>
+                      <small>{a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · ${a.pcd}` : ""}</small>
+                    </div>
+                    <span className="rel-status done"><span className="dot" />FINALIZADO</span>
+                    <div className="rel-h-date">Bimestre atual</div>
+                    <div className="rel-h-actions">
+                      <span className="rel-h-icon" aria-hidden><ArrowRight size={13} /></span>
+                    </div>
+                  </button>
+                );
+              });
+            })()}
           </div>
         </div>
       </main>
