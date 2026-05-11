@@ -488,6 +488,22 @@ export function Relatorios() {
   // Modal de status (A FAZER / EM RASCUNHO / FINALIZADOS) acionado nos KPIs
   const [statusModal, setStatusModal] = useState<"todo" | "draft" | "done" | null>(null);
 
+  // Impressão em lote
+  const [printSelectOpen, setPrintSelectOpen] = useState(false);
+  const [printSelected, setPrintSelected] = useState<Set<string>>(new Set());
+  const abrirImpressaoLote = () => {
+    // Pré-seleciona os finalizados.
+    const finals = alunosLista.filter((a) => a.status === "done").map((a) => a.id);
+    setPrintSelected(new Set(finals));
+    setPrintSelectOpen(true);
+  };
+  const togglePrintSelected = (id: string) =>
+    setPrintSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
   // Tutorial "Como funciona"
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
