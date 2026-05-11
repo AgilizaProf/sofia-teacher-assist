@@ -979,6 +979,13 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
             <div className="rel-sec-actions">
               <button
                 className="rel-pill"
+                onClick={abrirImpressaoLote}
+                title="Selecionar vários alunos e imprimir/exportar em PDF de uma só vez"
+              >
+                <Download size={13} /> Imprimir vários
+              </button>
+              <button
+                className="rel-pill"
                 onClick={abrirNovoAluno}
                 style={{ background: "var(--primary-dark)", color: "#fff", border: 0 }}
                 title="Cadastrar novo aluno e vincular a uma turma"
