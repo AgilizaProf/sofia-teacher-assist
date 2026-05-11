@@ -594,17 +594,21 @@ export function Relatorios() {
     const rub = getAlunoRubric(id);
     const keys = competKeysFor(id, turma, pcd);
     let preenchido = 0; let pesoTotal = 0; let pontos = 0;
+    let naoObservadas = 0; let semAvaliacao = 0;
     keys.forEach((k) => {
       const s = rub[k];
+      if (!s) { semAvaliacao += 1; return; }
+      if (s === "no") { naoObservadas += 1; return; }
+      preenchido += 1;
       pesoTotal += 3;
-      if (s && s !== "no") preenchido += 1;
-      if (s === "na") pontos += 0;
-      else if (s === "ed") pontos += 2;
+      if (s === "ed") pontos += 2;
       else if (s === "co") pontos += 3;
     });
-    const pctPreenchido = keys.length ? Math.round((preenchido / keys.length) * 100) : 0;
+    // Itens marcados como "Não observada" são desconsiderados do denominador.
+    const universo = Math.max(0, keys.length - naoObservadas);
+    const pctPreenchido = universo > 0 ? Math.round((preenchido / universo) * 100) : 0;
     const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
-    return { pctPreenchido, pctDesempenho };
+    return { pctPreenchido, pctDesempenho, naoObservadas, semAvaliacao, total: keys.length };
   };
 
   // Deriva valores reais do SofiaContext
@@ -643,14 +647,27 @@ export function Relatorios() {
 
   // Lista por aluno (estado Pro)
   const alunosLista = useMemo(() => {
-    type Item = { id: string; nome: string; turma: string; pcd: string; status: "done" | "draft" | "todo"; statusLabel: string };
+    type Item = { id: string; nome: string; turma: string; pcd: string; status: "done" | "draft" | "review" | "todo"; statusLabel: string; naoObservadas: number };
+    const STATUS_LABEL: Record<Item["status"], string> = {
+      todo: "A FAZER", draft: "RASCUNHO", review: "PARA REVISAR", done: "FINALIZADO",
+    };
+    const deriveStatus = (id: string, turma: string, pcd: string): { status: Item["status"]; naoObservadas: number } => {
+      const { pctPreenchido, naoObservadas, total } = computeProgress(id, turma, pcd);
+      const temParecer = Boolean(parecerByAluno[id]);
+      if (temParecer) return { status: "done", naoObservadas };
+      if (total === 0) return { status: "todo", naoObservadas };
+      // pctPreenchido considera apenas o universo avaliável (exclui "Não observada").
+      if (pctPreenchido >= 100) return { status: "review", naoObservadas };
+      if (pctPreenchido > 0) return { status: "draft", naoObservadas };
+      return { status: "todo", naoObservadas };
+    };
     if (dashStudents.length > 0) {
       return dashStudents.map((s, i): Item => {
-        let status: "done" | "draft" | "todo" = "todo";
-        let statusLabel = "A FAZER";
-        if (i < finalizados) { status = "done"; statusLabel = "FINALIZADO"; }
-        else if (i < finalizados + rascunhos) { status = "draft"; statusLabel = "RASCUNHO"; }
-        return { id: `al-${i}`, nome: s.name, turma: s.classRef || "", pcd: s.pcd && s.pcd !== "nao" ? s.pcd : "", status, statusLabel };
+        const id = `al-${i}`;
+        const turma = s.classRef || "";
+        const pcd = s.pcd && s.pcd !== "nao" ? s.pcd : "";
+        const { status, naoObservadas } = deriveStatus(id, turma, pcd);
+        return { id, nome: s.name, turma, pcd, status, statusLabel: STATUS_LABEL[status], naoObservadas };
       });
     }
     if (!isPro || alunosCount === 0) return [] as Item[];
@@ -658,14 +675,14 @@ export function Relatorios() {
     const pcd = ctx.entity.todos_alunos_pcd;
     for (let i = 0; i < alunosCount; i++) {
       const nome = i < pcd.length ? pcd[i].nome : `Aluno(a) ${i + 1}`;
-      let status: "done" | "draft" | "todo" = "todo";
-      let statusLabel = "A FAZER";
-      if (i < finalizados) { status = "done"; statusLabel = "FINALIZADO"; }
-      else if (i < finalizados + rascunhos) { status = "draft"; statusLabel = "RASCUNHO"; }
-      out.push({ id: `al-${i}`, nome, turma: ctx.entity.turma_atual?.nome || "", pcd: "", status, statusLabel });
+      const id = `al-${i}`;
+      const turma = ctx.entity.turma_atual?.nome || "";
+      const { status, naoObservadas } = deriveStatus(id, turma, "");
+      out.push({ id, nome, turma, pcd: "", status, statusLabel: STATUS_LABEL[status], naoObservadas });
     }
     return out;
-  }, [isPro, alunosCount, finalizados, rascunhos, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, dashStudents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPro, alunosCount, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, dashStudents, bnccByAluno, parecerByAluno, yearOverride]);
 
   const alunosFiltered = useMemo(() => alunosLista.filter((a) => {
     if (tab !== "all" && a.status !== tab) return false;
@@ -842,13 +859,18 @@ export function Relatorios() {
           {/* Filters */}
           <div className="rel-filters" id="rel-filters-anchor">
             <div className="rel-tabs" role="tablist">
-              {TABS.map((t) => (
-                <button key={t.key} role="tab" aria-selected={tab === t.key}
-                  className={"rel-tab" + (tab === t.key ? " active" : "")}
-                  onClick={() => setTab(t.key)}>
-                  {t.label} <span className="count">{t.count}</span>
-                </button>
-              ))}
+              {TABS.map((t) => {
+                const count = t.key === "all"
+                  ? alunosLista.length
+                  : alunosLista.filter((a) => a.status === t.key).length;
+                return (
+                  <button key={t.key} role="tab" aria-selected={tab === t.key}
+                    className={"rel-tab" + (tab === t.key ? " active" : "")}
+                    onClick={() => setTab(t.key)}>
+                    {t.label} <span className="count">{count}</span>
+                  </button>
+                );
+              })}
             </div>
             <div className="rel-divider" />
             <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")} aria-haspopup="menu">
@@ -901,7 +923,7 @@ export function Relatorios() {
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
-                   const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+                   const { pctPreenchido, pctDesempenho, naoObservadas } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
@@ -909,6 +931,15 @@ export function Relatorios() {
                         <span>Desempenho {pctDesempenho}%</span>
                       </div>
                       <div className="rel-progress"><i style={{ width: `${pctPreenchido}%` }} /></div>
+                      {naoObservadas > 0 && (
+                        <div
+                          title="Itens marcados como 'Não observada' não entram no cálculo. Avalie-os para refletir no parecer."
+                          style={{ marginTop: 6, display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 8px", borderRadius: 999, background: "#FFF7ED", color: "#9A3412", border: "1px solid #FED7AA", fontSize: 11, fontWeight: 600 }}
+                        >
+                          <span aria-hidden>⚠</span>
+                          {naoObservadas} {naoObservadas === 1 ? "item não observado" : "itens não observados"}
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -928,6 +959,11 @@ export function Relatorios() {
                   {a.status === "draft" && (
                     <button className="rel-btn-card dark" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
                       <Edit3 size={13} /> Abrir rascunho
+                    </button>
+                  )}
+                  {a.status === "review" && (
+                    <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
+                      <CheckCircle2 size={13} /> Revisar e gerar
                     </button>
                   )}
                   {a.status === "done" && (
