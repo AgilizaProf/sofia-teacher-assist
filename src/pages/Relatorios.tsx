@@ -782,17 +782,42 @@ export function Relatorios() {
 
           {/* KPIs */}
           <div className="rel-kpis">
-            <div className="rel-kpi">
+            <div
+              className="rel-kpi"
+              role="button"
+              tabIndex={0}
+              onClick={() => { setTab("todo"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setTab("todo"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); } }}
+              style={{ cursor: "pointer" }}
+              aria-label={`Ver ${aFazer} aluno(s) a fazer`}
+            >
               <div className="rel-kpi-top"><span className="rel-kpi-label">A FAZER</span><div className="rel-kpi-icon amber"><Clock size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{aFazer}<small> alunos</small></div>
               <div className="rel-kpi-foot">{aFazer > 0 ? `${aFazer} pendente(s)` : "—"}</div>
             </div>
-            <div className="rel-kpi">
+            <div
+              className="rel-kpi"
+              role="button"
+              tabIndex={0}
+              onClick={() => { setTab("draft"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setTab("draft"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); } }}
+              style={{ cursor: "pointer" }}
+              aria-label={`Ver ${rascunhos} aluno(s) em rascunho`}
+            >
               <div className="rel-kpi-top"><span className="rel-kpi-label">EM RASCUNHO</span><div className="rel-kpi-icon violet"><Edit3 size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{rascunhos}<small> pareceres</small></div>
               <div className="rel-kpi-foot">{rascunhos > 0 ? "aguardando revisão" : "—"}</div>
             </div>
-            <div className="rel-kpi" id="rel-kpi-pareceres">
+            <div
+              className="rel-kpi"
+              id="rel-kpi-pareceres"
+              role="button"
+              tabIndex={0}
+              onClick={() => { setTab("done"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setTab("done"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); } }}
+              style={{ cursor: "pointer" }}
+              aria-label={`Ver ${finalizados} aluno(s) finalizados`}
+            >
               <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do bimestre</div>
