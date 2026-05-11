@@ -242,8 +242,27 @@ export function Assistente() {
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
   const [ctxOpen, setCtxOpen] = useState(false);
-  const [observacoes, setObservacoes] = useState("");
-  const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
+  const [observacoes, setObservacoes] = usePersistentState<string>("assist_ctx_obs", "");
+  const [selectedTurma, setSelectedTurma] = usePersistentState<string | null>("assist_ctx_turma", null);
+  // Novos campos de contexto, todos persistidos para a Sofia "lembrar".
+  const [ctxBimestre, setCtxBimestre] = usePersistentState<string>("assist_ctx_bimestre", "");
+  const [ctxDuracao, setCtxDuracao] = usePersistentState<string>("assist_ctx_duracao", "");
+  const [ctxFocos, setCtxFocos] = usePersistentState<string[]>("assist_ctx_focos", []);
+  const [ctxEstilo, setCtxEstilo] = usePersistentState<string[]>("assist_ctx_estilo", []);
+  const [ctxRecursos, setCtxRecursos] = usePersistentState<string[]>("assist_ctx_recursos", []);
+  const [ctxEvitar, setCtxEvitar] = usePersistentState<string[]>("assist_ctx_evitar", []);
+  const [ctxDocs, setCtxDocs] = usePersistentState<string[]>("assist_ctx_docs", []);
+  const [ctxMomento, setCtxMomento] = usePersistentState<string[]>("assist_ctx_momento", []);
+  const toggleIn = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
+    setter((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
+  const OPT_FOCOS = ["Alfabetização","Letramento","Numeralização","Leitura","Escrita","Compreensão de texto","Resolução de problemas","Habilidades socioemocionais","Projeto interdisciplinar","Preparação para avaliações"];
+  const OPT_ESTILO = ["Respostas mais objetivas","Respostas mais detalhadas","Tom acolhedor","Linguagem técnica","Com exemplos práticos","Sempre citar BNCC","Sempre sugerir adaptação PCD"];
+  const OPT_RECURSOS = ["Projetor","Quadro digital","Computadores","Tablets","Internet em sala","Materiais manipuláveis","Biblioteca","Pátio / área externa","Sala de informática"];
+  const OPT_EVITAR = ["Som alto","Grupos grandes","Atividades com tela","Exposição individual","Estímulo visual excessivo","Tarefa para casa longa"];
+  const OPT_DOCS = ["BNCC","Currículo estadual","Currículo municipal","PPP da escola","Material apostilado","Plano de ação da coordenação"];
+  const OPT_MOMENTO = ["Início do turno","Antes do recreio","Após o recreio","Final do turno"];
+  const OPT_BIMESTRE = ["1º bimestre","2º bimestre","3º bimestre","4º bimestre","1º trimestre","2º trimestre","3º trimestre","Recuperação"];
+  const OPT_DURACAO = ["30 min","45 min","50 min","60 min","90 min","2 aulas geminadas"];
 
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
