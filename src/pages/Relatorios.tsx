@@ -859,13 +859,18 @@ export function Relatorios() {
           {/* Filters */}
           <div className="rel-filters" id="rel-filters-anchor">
             <div className="rel-tabs" role="tablist">
-              {TABS.map((t) => (
-                <button key={t.key} role="tab" aria-selected={tab === t.key}
-                  className={"rel-tab" + (tab === t.key ? " active" : "")}
-                  onClick={() => setTab(t.key)}>
-                  {t.label} <span className="count">{t.count}</span>
-                </button>
-              ))}
+              {TABS.map((t) => {
+                const count = t.key === "all"
+                  ? alunosLista.length
+                  : alunosLista.filter((a) => a.status === t.key).length;
+                return (
+                  <button key={t.key} role="tab" aria-selected={tab === t.key}
+                    className={"rel-tab" + (tab === t.key ? " active" : "")}
+                    onClick={() => setTab(t.key)}>
+                    {t.label} <span className="count">{count}</span>
+                  </button>
+                );
+              })}
             </div>
             <div className="rel-divider" />
             <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")} aria-haspopup="menu">
