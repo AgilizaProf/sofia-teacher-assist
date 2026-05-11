@@ -1872,7 +1872,7 @@ export function Planejamento() {
   const [m6Tags, setM6Tags] = useState<string[]>([]);
   const [m6Reminder, setM6Reminder] = usePersistentState<boolean>("plan_m6_reminder", false);
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
-  const [m6PatternDismissed, setM6PatternDismissed] = usePersistentState<boolean>("plan_m6_pattern_dismissed", false);
+  const [m6PatternDismissedKey, setM6PatternDismissedKey] = usePersistentState<string>("plan_m6_pattern_dismissed_key", "");
   const [m6EditingId, setM6EditingId] = useState<string | null>(null);
   // Sugestão "Próxima aula" que a Sofia gera após salvar um diário novo.
   type M6NextSuggestion = {
