@@ -720,12 +720,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
 
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
-  const finalizados = ctx.dataState.pareceres_finalizados;
   const alunosCount = dashStudents.length > 0 ? dashStudents.length : ctx.dataState.alunos_count;
-  const pct = totalBim > 0 ? Math.round((finalizados / totalBim) * 100) : 0;
-  const restantes = Math.max(0, totalBim - finalizados);
-  const aFazer = Math.max(0, alunosCount - finalizados - Math.min(3, restantes));
-  const rascunhos = Math.min(3, restantes);
   const horasEcon = ctx.user.horas_economizadas_mes;
 
   // Mesmo cálculo da página inicial (Tempo devolvido)
