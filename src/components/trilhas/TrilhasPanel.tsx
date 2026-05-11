@@ -409,8 +409,15 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const [datas, setDatas] = useState<Record<number, string>>({});
   const [salvos, setSalvos] = useState<Record<number, "salvando" | "ok" | string>>({});
   const [salvandoTodos, setSalvandoTodos] = useState(false);
-  const [formato, setFormato] = useState<"completo" | "topicos">("completo");
-  const [selecionados, setSelecionados] = useState<Set<number>>(() => new Set(dias.map((_, i) => i)));
+  // Persistência por (trilha, semana) — sobrevive a troca de aba M1–M7 e reload.
+  const persistKey = `trilha_plano_${trilha.id}_${semana.id}`;
+  const [formato, setFormato] = usePersistentState<"completo" | "topicos">(`${persistKey}_formato`, "completo");
+  const [selIds, setSelIds] = usePersistentState<number[]>(`${persistKey}_sel`, dias.map((_, i) => i));
+  const selecionados = useMemo(() => new Set(selIds), [selIds]);
+  const setSelecionados = (updater: Set<number> | ((prev: Set<number>) => Set<number>)) => {
+    const next = typeof updater === "function" ? (updater as (p: Set<number>) => Set<number>)(new Set(selIds)) : updater;
+    setSelIds(Array.from(next).sort((a, b) => a - b));
+  };
   const [editando, setEditando] = useState<Record<number, boolean>>({});
   const [rascunho, setRascunho] = useState<Record<number, DiaPlano>>({});
 
