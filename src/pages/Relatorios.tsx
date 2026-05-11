@@ -1896,6 +1896,86 @@ ${linhasArea}
           </div>
         );
       })()}
+
+      {printSelectOpen && (() => {
+        const total = alunosLista.length;
+        const allSelected = total > 0 && printSelected.size === total;
+        const semParecer = alunosLista.filter((a) => printSelected.has(a.id) && !parecerByAluno[a.id]).length;
+        return (
+          <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setPrintSelectOpen(false)}>
+            <div className="rel-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>IMPRIMIR EM LOTE · {printSelected.size}/{total}</div>
+                  <h3 style={{ margin: 0 }}>Selecione os alunos para imprimir</h3>
+                  <div className="rel-modal-meta">Cada aluno gera uma folha. Use <i>Salvar como PDF</i> na janela de impressão para um único arquivo.</div>
+                </div>
+                <button onClick={() => setPrintSelectOpen(false)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+              </div>
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 8px" }}>
+                <button className="rel-btn-card" onClick={() => setPrintSelected(new Set(alunosLista.map((a) => a.id)))}>Selecionar todos</button>
+                <button className="rel-btn-card" onClick={() => setPrintSelected(new Set(alunosLista.filter((a) => a.status === "done").map((a) => a.id)))}>Apenas finalizados</button>
+                <button className="rel-btn-card" onClick={() => setPrintSelected(new Set())}>Limpar</button>
+                {allSelected && <span style={{ alignSelf: "center", fontSize: 12, color: "var(--muted)" }}>Todos selecionados</span>}
+              </div>
+
+              <div className="rel-modal-body" style={{ padding: 6, maxHeight: "48vh", overflow: "auto" }}>
+                {alunosLista.length === 0 ? (
+                  <div style={{ padding: 18, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>Nenhum aluno cadastrado ainda.</div>
+                ) : (
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                    {alunosLista.map((a) => {
+                      const checked = printSelected.has(a.id);
+                      const tem = Boolean(parecerByAluno[a.id]);
+                      return (
+                        <li key={a.id}>
+                          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: checked ? "rgba(255,106,44,.06)" : "#fff", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => togglePrintSelected(a.id)}
+                              style={{ width: 16, height: 16, accentColor: "var(--accent)" }}
+                            />
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                              <span style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{a.nome}</span>
+                              <span style={{ fontSize: 12, color: "var(--muted)" }}>{a.turma || "Sem turma"} · {a.statusLabel}{a.pcd ? ` · PCD: ${a.pcd}` : ""}</span>
+                            </div>
+                            {!tem && (
+                              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#9C6B1F", background: "#FFF7ED", padding: "2px 8px", borderRadius: 999 }}>Sem parecer</span>
+                            )}
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              {semParecer > 0 && (
+                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#FFF7ED", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
+                  {semParecer} aluno(s) selecionado(s) ainda não têm parecer gerado — só a rubrica BNCC será impressa.
+                </div>
+              )}
+
+              <div className="rel-modal-foot">
+                <button className="rel-btn-card" onClick={() => setPrintSelectOpen(false)}>Cancelar</button>
+                <button
+                  className="rel-btn-card dark"
+                  onClick={() => {
+                    const sel = alunosLista.filter((a) => printSelected.has(a.id)).map((a) => ({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }));
+                    if (sel.length === 0) { toast.error("Selecione ao menos um aluno."); return; }
+                    setPrintSelectOpen(false);
+                    printBatchReports(sel);
+                  }}
+                >
+                  <Download size={13} strokeWidth={2.4} /> Imprimir {printSelected.size > 0 ? `(${printSelected.size})` : ""}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
