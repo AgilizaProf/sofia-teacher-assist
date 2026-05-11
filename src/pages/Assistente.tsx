@@ -88,6 +88,14 @@ const css = `
 .ctx-field label{font-size:12px;color:var(--text-soft);font-weight:600;}
 .ctx-field input,.ctx-field select,.ctx-field textarea{padding:9px 12px;border-radius:10px;border:1px solid var(--line-soft);font-size:13px;font-family:inherit;color:var(--text);background:#fff;}
 .ctx-field input:focus,.ctx-field select:focus,.ctx-field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,106,44,.15);}
+.ctx-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.ctx-chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);font-weight:500;cursor:pointer;transition:all .15s ease;}
+.ctx-chip:hover{border-color:#cfd4e1;}
+.ctx-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;box-shadow:0 4px 10px -4px rgba(255,106,44,.45);}
+.ctx-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:520px){.ctx-grid2{grid-template-columns:1fr;}}
+.ctx-field-inline{display:flex;flex-direction:column;gap:6px;}
+.ctx-field-inline > label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
 .ctx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ctx-pcd-list{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--paper);border-radius:10px;border:1px solid var(--line-soft);}
 .ctx-pcd-tag{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line-soft);padding:5px 10px;border-radius:999px;font-size:11.5px;color:var(--text-soft);}
