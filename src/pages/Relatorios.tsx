@@ -480,6 +480,13 @@ export function Relatorios() {
   const [verTodosHist, setVerTodosHist] = useState(false);
   const HIST_LIMIT = 5;
 
+  // Modal unificado por aluno (todo / draft / review / done)
+  type AlunoModalData = { id: string; nome: string; turma: string; pcd: string; status: "todo" | "draft" | "review" | "done"; statusLabel: string };
+  const [alunoModal, setAlunoModal] = useState<AlunoModalData | null>(null);
+
+  // Tutorial "Como funciona"
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
     const cls = dashClasses.find((c) => c.name === turma);
