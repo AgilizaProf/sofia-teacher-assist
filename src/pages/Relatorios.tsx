@@ -923,7 +923,7 @@ export function Relatorios() {
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
-                   const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+                   const { pctPreenchido, pctDesempenho, naoObservadas } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 6 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
@@ -931,6 +931,15 @@ export function Relatorios() {
                         <span>Desempenho {pctDesempenho}%</span>
                       </div>
                       <div className="rel-progress"><i style={{ width: `${pctPreenchido}%` }} /></div>
+                      {naoObservadas > 0 && (
+                        <div
+                          title="Itens marcados como 'Não observada' não entram no cálculo. Avalie-os para refletir no parecer."
+                          style={{ marginTop: 6, display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 8px", borderRadius: 999, background: "#FFF7ED", color: "#9A3412", border: "1px solid #FED7AA", fontSize: 11, fontWeight: 600 }}
+                        >
+                          <span aria-hidden>⚠</span>
+                          {naoObservadas} {naoObservadas === 1 ? "item não observado" : "itens não observados"}
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -950,6 +959,11 @@ export function Relatorios() {
                   {a.status === "draft" && (
                     <button className="rel-btn-card dark" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
                       <Edit3 size={13} /> Abrir rascunho
+                    </button>
+                  )}
+                  {a.status === "review" && (
+                    <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
+                      <CheckCircle2 size={13} /> Revisar e gerar
                     </button>
                   )}
                   {a.status === "done" && (
