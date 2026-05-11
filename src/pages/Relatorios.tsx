@@ -1335,6 +1335,24 @@ export function Relatorios() {
           ? "Rascunho pronto para revisão final. Confira o texto, ajuste e finalize."
           : "Parecer finalizado. Você pode reabrir, exportar em PDF/Word ou imprimir.";
         const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const parecerAluno = parecerByAluno[a.id] || null;
+        const gerando = gerandoParecerId === a.id;
+        const ulHtml = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+        const parecerHtml = parecerAluno
+          ? (parecerAluno.formato === "texto" && parecerAluno.texto
+              ? `<section><h2>Parecer descritivo</h2><div>${esc(parecerAluno.texto).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 8pt;">${p}</p>`).join("")}</div></section>`
+              : `<section><h2>Parecer descritivo</h2>
+                  ${parecerAluno.resumo ? `<p><b>Resumo:</b> ${esc(parecerAluno.resumo)}</p>` : ""}
+                  ${parecerAluno.pedagogico ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
+                  ${parecerAluno.comportamental ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Comportamental</h3><p>${esc(parecerAluno.comportamental)}</p>` : ""}
+                  ${parecerAluno.sensorial ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Sensorial</h3><p>${esc(parecerAluno.sensorial)}</p>` : ""}
+                  ${parecerAluno.familia ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Família</h3><p>${esc(parecerAluno.familia)}</p>` : ""}
+                  ${parecerAluno.avancos?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Avanços</h3>${ulHtml(parecerAluno.avancos)}` : ""}
+                  ${parecerAluno.desafios?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Desafios</h3>${ulHtml(parecerAluno.desafios)}` : ""}
+                  ${parecerAluno.encaminhamentos?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Encaminhamentos</h3>${ulHtml(parecerAluno.encaminhamentos)}` : ""}
+                  ${parecerAluno.comunicacao_familias ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Comunicação à família</h3><p>${esc(parecerAluno.comunicacao_familias)}</p>` : ""}
+                </section>`)
+          : "";
         const buildReportHtml = () => {
           const areas = areasFor(a.id, a.turma, a.pcd);
           const rub = getAlunoRubric(a.id);
@@ -1380,6 +1398,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
   <div class="kpi"><small>Bimestre</small><b>${bimestreNum}º</b></div>
 </div>
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
+${parecerHtml}
 ${linhasArea}
 <div class="sig">
   <div>Professor(a) responsável<br/>${esc(user.name || "")}</div>
@@ -1437,26 +1456,138 @@ ${linhasArea}
                     </div>
                   );
                 })()}
+
+                {/* Geração com a Sofia — mesmo modelo da Inclusão */}
+                {!isDone && (
+                  <div style={{ marginTop: 16, padding: 12, background: "#FBFAF6", border: "1px solid var(--line-soft)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
+                        <select value={formatoParecer} onChange={(e) => setFormatoParecer(e.target.value as "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--line-soft)", fontSize: 13, background: "#fff" }}>
+                          <option value="topicos">Tópicos (estruturado)</option>
+                          <option value="texto">Texto corrido</option>
+                        </select>
+                      </div>
+                      <button
+                        className="rel-btn-card accent"
+                        disabled={gerando}
+                        onClick={() => handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
+                      >
+                        <Sparkles size={13} /> {gerando ? "Gerando…" : (parecerAluno ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
+                      </button>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                      A Sofia consolida a avaliação BNCC e observações em um parecer descritivo pronto para revisão.
+                    </div>
+                  </div>
+                )}
+
+                {/* Render do parecer + edição */}
+                {parecerAluno && (
+                  <div style={{ marginTop: 14, padding: 14, background: "#fff", border: "1px solid var(--line-soft)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <b style={{ fontFamily: "'Fraunces',serif", fontSize: 15 }}>{parecerAluno.titulo || "Parecer descritivo"}</b>
+                      <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                        {parecerAluno.periodoLabel ? `${parecerAluno.periodoLabel} · ` : ""}Gerado em {parecerAluno.geradoEm}
+                      </span>
+                    </div>
+                    {!editandoParecer ? (
+                      <>
+                        {parecerAluno.formato === "texto" && parecerAluno.texto ? (
+                          <div style={{ fontSize: 13, lineHeight: 1.6, textAlign: "justify" }}>
+                            {parecerAluno.texto.split(/\n+/).map((p, i) => <p key={i} style={{ margin: "0 0 8px" }}>{p}</p>)}
+                          </div>
+                        ) : (
+                          <>
+                            {parecerAluno.resumo && <p style={{ margin: 0, fontSize: 13 }}>{parecerAluno.resumo}</p>}
+                            {parecerAluno.pedagogico && (<div><b style={{ fontSize: 12 }}>Pedagógico</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.pedagogico}</p></div>)}
+                            {parecerAluno.comportamental && (<div><b style={{ fontSize: 12 }}>Comportamental</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.comportamental}</p></div>)}
+                            {parecerAluno.sensorial && (<div><b style={{ fontSize: 12 }}>Sensorial</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.sensorial}</p></div>)}
+                            {parecerAluno.familia && (<div><b style={{ fontSize: 12 }}>Família</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.familia}</p></div>)}
+                            {parecerAluno.avancos && parecerAluno.avancos.length > 0 && (
+                              <div><b style={{ fontSize: 12 }}>Avanços</b>
+                                <ul style={{ margin: "4px 0 0 18px", fontSize: 13 }}>{parecerAluno.avancos.map((x, i) => <li key={i}>{x}</li>)}</ul>
+                              </div>
+                            )}
+                            {parecerAluno.desafios && parecerAluno.desafios.length > 0 && (
+                              <div><b style={{ fontSize: 12 }}>Desafios</b>
+                                <ul style={{ margin: "4px 0 0 18px", fontSize: 13 }}>{parecerAluno.desafios.map((x, i) => <li key={i}>{x}</li>)}</ul>
+                              </div>
+                            )}
+                            {parecerAluno.encaminhamentos && parecerAluno.encaminhamentos.length > 0 && (
+                              <div><b style={{ fontSize: 12 }}>Encaminhamentos</b>
+                                <ul style={{ margin: "4px 0 0 18px", fontSize: 13 }}>{parecerAluno.encaminhamentos.map((x, i) => <li key={i}>{x}</li>)}</ul>
+                              </div>
+                            )}
+                            {parecerAluno.comunicacao_familias && (
+                              <div style={{ background: "#FFF7ED", padding: 10, borderRadius: 8 }}>
+                                <b style={{ fontSize: 12 }}>Comunicação à família</b>
+                                <p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.comunicacao_familias}</p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                          <button className="rel-btn-card" onClick={() => { setParecerDraft({ ...parecerAluno }); setEditandoParecer(true); }}>
+                            <Edit3 size={13} /> Editar texto
+                          </button>
+                          <button className="rel-btn-card" onClick={exportWord}>
+                            <Download size={13} /> Salvar em Word
+                          </button>
+                          <button className="rel-btn-card dark" onClick={exportPdf}>
+                            <Download size={13} /> Imprimir / PDF
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {parecerDraft?.formato === "texto" ? (
+                          <textarea
+                            value={parecerDraft?.texto || ""}
+                            onChange={(e) => setParecerDraft((d) => d ? { ...d, texto: e.target.value } : d)}
+                            style={{ minHeight: 220, padding: 10, border: "1px solid var(--line-soft)", borderRadius: 8, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
+                          />
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {(["resumo","pedagogico","comportamental","sensorial","familia","comunicacao_familias"] as const).map((k) => (
+                              <div key={k}>
+                                <label style={{ fontSize: 11, fontWeight: 700, textTransform: "capitalize", color: "var(--muted)" }}>{k.replace("_", " ")}</label>
+                                <textarea
+                                  value={(parecerDraft?.[k] as string) || ""}
+                                  onChange={(e) => setParecerDraft((d) => d ? { ...d, [k]: e.target.value } : d)}
+                                  style={{ width: "100%", minHeight: 60, padding: 8, border: "1px solid var(--line-soft)", borderRadius: 8, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
+                                />
+                              </div>
+                            ))}
+                            {(["avancos","desafios","encaminhamentos"] as const).map((k) => (
+                              <div key={k}>
+                                <label style={{ fontSize: 11, fontWeight: 700, textTransform: "capitalize", color: "var(--muted)" }}>{k} (uma por linha)</label>
+                                <textarea
+                                  value={(parecerDraft?.[k] as string[] | undefined)?.join("\n") || ""}
+                                  onChange={(e) => setParecerDraft((d) => d ? { ...d, [k]: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) } : d)}
+                                  style={{ width: "100%", minHeight: 60, padding: 8, border: "1px solid var(--line-soft)", borderRadius: 8, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button className="rel-btn-card accent" onClick={() => {
+                            if (parecerDraft) setParecerByAluno((all) => ({ ...all, [a.id]: { ...parecerDraft } }));
+                            setEditandoParecer(false); setParecerDraft(null);
+                            toast.success("Parecer salvo.");
+                          }}><CheckCircle2 size={13} /> Salvar alterações</button>
+                          <button className="rel-btn-card" onClick={() => { setEditandoParecer(false); setParecerDraft(null); }}>Cancelar</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="rel-modal-foot" style={{ flexWrap: "wrap" }}>
                 <button className="rel-btn-card" onClick={() => { setAlunoModal(null); setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }); }}>
                   <ClipboardList size={13} /> Avaliar BNCC
                 </button>
-                {isTodo && (
-                  <button className="rel-btn-card accent" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Gere o parecer descritivo bimestral de ${a.nome} (${a.turma || "sem turma"}) alinhado à BNCC. Use o que estiver preenchido na anamnese, registros e PEI.`, send: false }); }}>
-                    <Sparkles size={13} /> Gerar com a Sofia
-                  </button>
-                )}
-                {isDraft && (
-                  <button className="rel-btn-card dark" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Vamos continuar o rascunho do parecer de ${a.nome}.`, send: false }); }}>
-                    <Edit3 size={13} /> Continuar rascunho
-                  </button>
-                )}
-                {isReview && (
-                  <button className="rel-btn-card accent" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Abra o parecer de ${a.nome} para revisão final.`, send: false }); }}>
-                    <CheckCircle2 size={13} /> Revisar e finalizar
-                  </button>
-                )}
                 {isDone && (
                   <>
                     <button className="rel-btn-card" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Mostre o parecer finalizado de ${a.nome}.`, send: false }); }}>
