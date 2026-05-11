@@ -488,6 +488,73 @@ export function Relatorios() {
   // Tutorial "Como funciona"
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
+  // ===== Parecer descritivo (mesmo modelo da aba Relatórios da Inclusão) =====
+  type Parecer = {
+    titulo?: string; resumo?: string;
+    pedagogico?: string; comportamental?: string; sensorial?: string; familia?: string;
+    avancos?: string[]; desafios?: string[]; encaminhamentos?: string[];
+    comunicacao_familias?: string;
+    texto?: string;
+    periodoLabel?: string;
+    formato?: "topicos" | "texto";
+    geradoEm?: string;
+  };
+  const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, Parecer>>("rel_parecer", {});
+  const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
+  const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
+  const [editandoParecer, setEditandoParecer] = useState(false);
+  const [parecerDraft, setParecerDraft] = useState<Parecer | null>(null);
+
+  const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }) => {
+    setGerandoParecerId(a.id);
+    try {
+      const areas = areasFor(a.id, a.turma, a.pcd);
+      const rub = getAlunoRubric(a.id);
+      const linhas = areas.map((area, ai) => {
+        const itens = area.comps.map((c, ci) => {
+          const lbl = BNCC_STATUS.find((x) => x.k === rub[`${ai}.${ci}`])?.label || "Não observada";
+          return `  - ${c}: ${lbl}`;
+        }).join("\n");
+        return `${area.area}\n${itens}`;
+      }).join("\n\n");
+      const aluno = dashStudents.find((s) => s.name === a.nome);
+      const cls = dashClasses.find((c) => c.name === a.turma);
+      const periodoLabel = `${bimestreNum}º bimestre · ${new Date().getFullYear()}`;
+      const peiResumo = [
+        a.pcd ? `Condição/PCD: ${a.pcd}` : "",
+        cls?.grade ? `Ano/Etapa: ${cls.grade}` : "",
+        aluno?.notes ? `Observações: ${aluno.notes}` : "",
+        `Avaliação BNCC do bimestre por área:\n${linhas}`,
+      ].filter(Boolean).join("\n");
+      const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
+        body: {
+          aluno: a.nome,
+          diagnostico: a.pcd || "",
+          periodo: "Bimestral",
+          intervalo: periodoLabel,
+          formato: formatoParecer,
+          anamneseResumo: "",
+          peiResumo,
+          registros: [],
+        },
+      });
+      if (error) throw error;
+      const parecer: Parecer = {
+        ...((data as { parecer?: Parecer })?.parecer || {}),
+        periodoLabel,
+        formato: formatoParecer,
+        geradoEm: new Date().toLocaleString("pt-BR"),
+      };
+      setParecerByAluno((all) => ({ ...all, [a.id]: parecer }));
+      toast.success("Parecer gerado pela Sofia.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Não foi possível gerar o parecer. ${msg}`);
+    } finally {
+      setGerandoParecerId(null);
+    }
+  };
+
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
     const cls = dashClasses.find((c) => c.name === turma);
