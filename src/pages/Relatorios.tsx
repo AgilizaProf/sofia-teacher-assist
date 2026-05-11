@@ -485,6 +485,9 @@ export function Relatorios() {
   type AlunoModalData = { id: string; nome: string; turma: string; pcd: string; status: "todo" | "draft" | "review" | "done"; statusLabel: string };
   const [alunoModal, setAlunoModal] = useState<AlunoModalData | null>(null);
 
+  // Modal de status (A FAZER / EM RASCUNHO / FINALIZADOS) acionado nos KPIs
+  const [statusModal, setStatusModal] = useState<"todo" | "draft" | "done" | null>(null);
+
   // Tutorial "Como funciona"
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
