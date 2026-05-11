@@ -785,6 +785,14 @@ export function Relatorios() {
               <Search size={13} color="#7a8194" />
               <input placeholder="Buscar aluno..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar aluno" />
             </div>
+            <button
+              className="rel-pill"
+              onClick={abrirNovoAluno}
+              style={{ marginLeft: "auto", background: "var(--primary-dark)", color: "#fff", border: 0 }}
+              title="Cadastrar novo aluno e vincular a uma turma"
+            >
+              <UserPlus size={13} /> Cadastrar aluno
+            </button>
           </div>
 
           {/* Cards grid */}
