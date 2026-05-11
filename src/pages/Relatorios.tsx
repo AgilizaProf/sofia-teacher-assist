@@ -593,21 +593,22 @@ export function Relatorios() {
   const computeProgress = (id: string, turma: string, pcd?: string) => {
     const rub = getAlunoRubric(id);
     const keys = competKeysFor(id, turma, pcd);
-    let preenchido = 0; let pesoTotal = 0; let pontos = 0; let naoObservadas = 0;
+    let preenchido = 0; let pesoTotal = 0; let pontos = 0;
+    let naoObservadas = 0; let semAvaliacao = 0;
     keys.forEach((k) => {
       const s = rub[k];
-      // "no" (não observada) e itens sem avaliação são desconsiderados do cálculo.
-      if (!s || s === "no") { naoObservadas += 1; return; }
+      if (!s) { semAvaliacao += 1; return; }
+      if (s === "no") { naoObservadas += 1; return; }
       preenchido += 1;
       pesoTotal += 3;
-      if (s === "na") pontos += 0;
-      else if (s === "ed") pontos += 2;
+      if (s === "ed") pontos += 2;
       else if (s === "co") pontos += 3;
     });
-    const avaliados = keys.length - naoObservadas;
-    const pctPreenchido = avaliados > 0 ? Math.round((preenchido / avaliados) * 100) : 0;
+    // Itens marcados como "Não observada" são desconsiderados do denominador.
+    const universo = Math.max(0, keys.length - naoObservadas);
+    const pctPreenchido = universo > 0 ? Math.round((preenchido / universo) * 100) : 0;
     const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
-    return { pctPreenchido, pctDesempenho, naoObservadas, total: keys.length, avaliados };
+    return { pctPreenchido, pctDesempenho, naoObservadas, semAvaliacao, total: keys.length };
   };
 
   // Deriva valores reais do SofiaContext
