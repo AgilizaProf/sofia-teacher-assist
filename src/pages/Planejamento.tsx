@@ -3960,16 +3960,57 @@ export function Planejamento() {
                         </button>
                       </div>
                     )}
-                    {m6SofiaPattern && m6PatternDismissedKey !== m6SofiaPattern.key && (
+                    {m6SofiaPattern && m6SofiaPicked && m6PatternDismissedKey !== m6SofiaPattern.key && (
                       <div className="pl-d6-pattern">
                         <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>✨ Sofia detectou um padrão</div>
                         <p style={{ fontSize: 13, color: "#7A2E0A", lineHeight: 1.5, margin: 0 }}>
-                          {m6SofiaPattern.n} dos últimos {m6SofiaPattern.total} registros mencionam <strong>"{m6SofiaPattern.label}"</strong>. Quer que eu sugira {m6SofiaPattern.sugestao}?
+                          {m6SofiaPattern.n} dos últimos {m6SofiaPattern.total} registros indicam <strong>{m6SofiaPattern.label}</strong>. Selecionei automaticamente a melhor intervenção da biblioteca:
                         </p>
-                        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                          <button className="pl-btn primary" onClick={() => { showToast(m6SofiaPattern.toast); setM6PatternDismissedKey(m6SofiaPattern.key); }}>{m6SofiaPattern.acao}</button>
+                        <div style={{ marginTop: 10, padding: 10, borderRadius: 10, background: "#fff", border: "1px solid #FED7AA" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 18 }}>{m6SofiaPicked.icone}</span>
+                            <strong style={{ fontSize: 13, color: "#7A2E0A" }}>{m6SofiaPicked.titulo}</strong>
+                            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--orange-2)", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 99, padding: "2px 8px" }}>
+                              {M6_CAT_LABEL[m6SofiaPicked.categoria]}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 12, color: "#7A2E0A", lineHeight: 1.45, margin: "4px 0" }}>{m6SofiaPicked.descricao}</p>
+                          <p style={{ fontSize: 11, color: "#9A3412", lineHeight: 1.4, margin: "4px 0 0", fontStyle: "italic" }}>
+                            <strong>Por que esta?</strong> {m6SofiaPicked.porQue}
+                          </p>
+                        </div>
+                        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                          <button className="pl-btn primary" onClick={() => { showToast(m6SofiaPicked.toast); setM6PatternDismissedKey(m6SofiaPattern.key); }}>Aplicar esta intervenção</button>
+                          {m6SofiaSugestoes.length > 1 && (
+                            <button className="pl-btn ghost" onClick={() => setM6SofiaShowAlt((v) => !v)}>
+                              {m6SofiaShowAlt ? "Ocultar alternativas" : `Ver ${m6SofiaSugestoes.length - 1} alternativa${m6SofiaSugestoes.length - 1 > 1 ? "s" : ""}`}
+                            </button>
+                          )}
                           <button className="pl-btn ghost" onClick={() => setM6PatternDismissedKey(m6SofiaPattern.key)}>Agora não</button>
                         </div>
+                        {m6SofiaShowAlt && m6SofiaSugestoes.length > 1 && (
+                          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                            {m6SofiaSugestoes.filter((s) => s.i.id !== m6SofiaPicked.id).map((s) => (
+                              <button
+                                key={s.i.id}
+                                onClick={() => { setM6SofiaPickedId(s.i.id); setM6SofiaShowAlt(false); }}
+                                style={{ textAlign: "left", padding: "8px 10px", borderRadius: 8, background: "#fff", border: "1px solid var(--line)", cursor: "pointer", display: "flex", gap: 8, alignItems: "flex-start" }}
+                                title="Trocar para esta intervenção"
+                              >
+                                <span style={{ fontSize: 16 }}>{s.i.icone}</span>
+                                <span style={{ flex: 1, minWidth: 0 }}>
+                                  <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                                    <strong style={{ fontSize: 12, color: "var(--ink)" }}>{s.i.titulo}</strong>
+                                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-2)", background: "var(--soft)", borderRadius: 99, padding: "1px 6px" }}>
+                                      {M6_CAT_LABEL[s.i.categoria]}
+                                    </span>
+                                  </span>
+                                  <span style={{ display: "block", fontSize: 11, color: "var(--ink-2)", lineHeight: 1.4, marginTop: 2 }}>{s.i.descricao}</span>
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                     {m6FilteredEntries.length === 0 ? (
