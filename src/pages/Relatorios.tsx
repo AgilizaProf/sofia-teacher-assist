@@ -789,8 +789,8 @@ export function Relatorios() {
               className="rel-kpi"
               role="button"
               tabIndex={0}
-              onClick={() => { setTab("todo"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setTab("todo"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); } }}
+              onClick={() => setStatusModal("todo")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("todo"); } }}
               style={{ cursor: "pointer" }}
               aria-label={`Ver ${aFazer} aluno(s) a fazer`}
             >
@@ -802,8 +802,8 @@ export function Relatorios() {
               className="rel-kpi"
               role="button"
               tabIndex={0}
-              onClick={() => { setTab("draft"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setTab("draft"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); } }}
+              onClick={() => setStatusModal("draft")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("draft"); } }}
               style={{ cursor: "pointer" }}
               aria-label={`Ver ${rascunhos} aluno(s) em rascunho`}
             >
@@ -816,8 +816,8 @@ export function Relatorios() {
               id="rel-kpi-pareceres"
               role="button"
               tabIndex={0}
-              onClick={() => { setTab("done"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setTab("done"); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); } }}
+              onClick={() => setStatusModal("done")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("done"); } }}
               style={{ cursor: "pointer" }}
               aria-label={`Ver ${finalizados} aluno(s) finalizados`}
             >
