@@ -488,6 +488,22 @@ export function Relatorios() {
   // Modal de status (A FAZER / EM RASCUNHO / FINALIZADOS) acionado nos KPIs
   const [statusModal, setStatusModal] = useState<"todo" | "draft" | "done" | null>(null);
 
+  // Impressão em lote
+  const [printSelectOpen, setPrintSelectOpen] = useState(false);
+  const [printSelected, setPrintSelected] = useState<Set<string>>(new Set());
+  const abrirImpressaoLote = () => {
+    // Pré-seleciona os finalizados.
+    const finals = alunosLista.filter((a) => a.status === "done").map((a) => a.id);
+    setPrintSelected(new Set(finals));
+    setPrintSelectOpen(true);
+  };
+  const togglePrintSelected = (id: string) =>
+    setPrintSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
   // Tutorial "Como funciona"
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
@@ -612,6 +628,94 @@ export function Relatorios() {
     const pctPreenchido = universo > 0 ? Math.round((preenchido / universo) * 100) : 0;
     const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
     return { pctPreenchido, pctDesempenho, naoObservadas, semAvaliacao, total: keys.length };
+  };
+
+  // ===== Helpers de impressão (parecer único e em lote) =====
+  const buildReportBodyFor = (a: { id: string; nome: string; turma: string; pcd: string }) => {
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const ulHtml = (arr?: string[]) => (arr && arr.length ? `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
+    const areas = areasFor(a.id, a.turma, a.pcd);
+    const rub = getAlunoRubric(a.id);
+    const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+    const dataStr = new Date().toLocaleDateString("pt-BR");
+    const aluno = dashStudents.find((s) => s.name === a.nome);
+    const cls = dashClasses.find((c) => c.name === a.turma);
+    const escola = dashSchools.find((s) => s.name === cls?.school);
+    const parecerAluno = parecerByAluno[a.id] || null;
+    const parecerHtml = parecerAluno
+      ? (parecerAluno.formato === "texto" && parecerAluno.texto
+          ? `<section><h2>Parecer descritivo</h2><div>${esc(parecerAluno.texto).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 8pt;">${p}</p>`).join("")}</div></section>`
+          : `<section><h2>Parecer descritivo</h2>
+              ${parecerAluno.resumo ? `<p><b>Resumo:</b> ${esc(parecerAluno.resumo)}</p>` : ""}
+              ${parecerAluno.pedagogico ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
+              ${parecerAluno.comportamental ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Comportamental</h3><p>${esc(parecerAluno.comportamental)}</p>` : ""}
+              ${parecerAluno.sensorial ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Sensorial</h3><p>${esc(parecerAluno.sensorial)}</p>` : ""}
+              ${parecerAluno.familia ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Família</h3><p>${esc(parecerAluno.familia)}</p>` : ""}
+              ${parecerAluno.avancos?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Avanços</h3>${ulHtml(parecerAluno.avancos)}` : ""}
+              ${parecerAluno.desafios?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Desafios</h3>${ulHtml(parecerAluno.desafios)}` : ""}
+              ${parecerAluno.encaminhamentos?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Encaminhamentos</h3>${ulHtml(parecerAluno.encaminhamentos)}` : ""}
+              ${parecerAluno.comunicacao_familias ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Comunicação à família</h3><p>${esc(parecerAluno.comunicacao_familias)}</p>` : ""}
+            </section>`)
+      : "";
+    const linhasArea = areas.map((area, ai) => {
+      const itens = area.comps.map((c, ci) => {
+        const lbl = BNCC_STATUS.find((x) => x.k === rub[`${ai}.${ci}`])?.label || "Não observada";
+        return `<li><span>${esc(c)}</span><b>${esc(lbl)}</b></li>`;
+      }).join("");
+      return `<section><h2>${esc(area.area)}</h2><ul class="rub">${itens}</ul></section>`;
+    }).join("");
+    return `<article class="report">
+<h1>Parecer descritivo · ${esc(a.nome)}</h1>
+<div class="meta">
+  ${esc(a.turma || "Sem turma")} · ${bimestreNum}º bimestre${a.pcd ? ` · PCD: ${esc(a.pcd)}` : ""}
+  ${escola ? ` · ${esc(escola.name)}` : ""}
+  ${aluno?.birth ? ` · Nascimento: ${esc(new Date(aluno.birth).toLocaleDateString("pt-BR"))}` : ""}
+</div>
+<div class="kpis">
+  <div class="kpi"><small>Avaliado</small><b>${pctPreenchido}%</b></div>
+  <div class="kpi"><small>Desempenho</small><b>${pctDesempenho}%</b></div>
+  <div class="kpi"><small>Bimestre</small><b>${bimestreNum}º</b></div>
+</div>
+${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
+${parecerHtml}
+${linhasArea}
+<div class="sig">
+  <div>Professor(a) responsável<br/>${esc(user.name || "")}</div>
+  <div>Coordenação pedagógica</div>
+  <div>Família / Responsável</div>
+</div>
+<div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Pareceres descritivos</div>
+</article>`;
+  };
+
+  const PRINT_CSS = `@page{size:A4;margin:22mm 20mm;}
+body{font-family:'Inter',Arial,sans-serif;color:#0B1220;line-height:1.55;font-size:12pt;margin:0;}
+.report{page-break-after:always;}
+.report:last-of-type{page-break-after:auto;}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:22pt;margin:0 0 4px;color:#0F1B36;}
+h2{font-size:12pt;color:#FF6A2C;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #E7E9EF;padding-bottom:4px;}
+.meta{color:#6B7691;font-size:10.5pt;margin-bottom:18px;}
+.kpis{display:flex;gap:14px;margin:14px 0 8px;}
+.kpi{flex:1;border:1px solid #E7E9EF;border-radius:8px;padding:10px 12px;}
+.kpi b{display:block;font-size:16pt;color:#0F1B36;}
+.kpi small{color:#6B7691;font-size:9.5pt;text-transform:uppercase;letter-spacing:.06em;}
+ul.rub{list-style:none;padding:0;margin:0;}
+ul.rub li{display:flex;justify-content:space-between;gap:14px;padding:5px 0;border-bottom:1px dashed #E7E9EF;font-size:10.5pt;}
+ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
+.sig{margin-top:42px;display:flex;justify-content:space-between;gap:30px;}
+.sig div{flex:1;border-top:1px solid #0B1220;padding-top:6px;font-size:10pt;text-align:center;color:#3B4256;}
+.foot{margin-top:30px;font-size:9pt;color:#6B7691;text-align:center;}`;
+
+  const printBatchReports = (alunos: { id: string; nome: string; turma: string; pcd: string }[]) => {
+    if (alunos.length === 0) { toast.error("Selecione ao menos um aluno."); return; }
+    const bodies = alunos.map((a) => buildReportBodyFor(a)).join("\n");
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Pareceres · ${alunos.length} aluno(s)</title><style>${PRINT_CSS}</style></head><body>${bodies}</body></html>`;
+    const w = window.open("", "_blank", "width=900,height=1000");
+    if (!w) { toast.error("Permita pop-ups para imprimir."); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+    w.focus();
+    setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 400);
+    toast.success(`Abrindo impressão de ${alunos.length} parecer(es) — escolha 'Salvar como PDF' se preferir.`);
   };
 
   // Deriva valores reais do SofiaContext
@@ -873,6 +977,13 @@ export function Relatorios() {
               <p>Filtre por status, turma ou aluno. Clique para gerar com a Sofia ou abrir o rascunho.</p>
             </div>
             <div className="rel-sec-actions">
+              <button
+                className="rel-pill"
+                onClick={abrirImpressaoLote}
+                title="Selecionar vários alunos e imprimir/exportar em PDF de uma só vez"
+              >
+                <Download size={13} /> Imprimir vários
+              </button>
               <button
                 className="rel-pill"
                 onClick={abrirNovoAluno}
@@ -1779,6 +1890,86 @@ ${linhasArea}
                 <button className="rel-btn-card" onClick={() => setStatusModal(null)}>Fechar</button>
                 <button className="rel-btn-card dark" onClick={() => { setTab(statusModal); setStatusModal(null); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
                   Ver na lista <ArrowRight size={13} strokeWidth={2.4} />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {printSelectOpen && (() => {
+        const total = alunosLista.length;
+        const allSelected = total > 0 && printSelected.size === total;
+        const semParecer = alunosLista.filter((a) => printSelected.has(a.id) && !parecerByAluno[a.id]).length;
+        return (
+          <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setPrintSelectOpen(false)}>
+            <div className="rel-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>IMPRIMIR EM LOTE · {printSelected.size}/{total}</div>
+                  <h3 style={{ margin: 0 }}>Selecione os alunos para imprimir</h3>
+                  <div className="rel-modal-meta">Cada aluno gera uma folha. Use <i>Salvar como PDF</i> na janela de impressão para um único arquivo.</div>
+                </div>
+                <button onClick={() => setPrintSelectOpen(false)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+              </div>
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 8px" }}>
+                <button className="rel-btn-card" onClick={() => setPrintSelected(new Set(alunosLista.map((a) => a.id)))}>Selecionar todos</button>
+                <button className="rel-btn-card" onClick={() => setPrintSelected(new Set(alunosLista.filter((a) => a.status === "done").map((a) => a.id)))}>Apenas finalizados</button>
+                <button className="rel-btn-card" onClick={() => setPrintSelected(new Set())}>Limpar</button>
+                {allSelected && <span style={{ alignSelf: "center", fontSize: 12, color: "var(--muted)" }}>Todos selecionados</span>}
+              </div>
+
+              <div className="rel-modal-body" style={{ padding: 6, maxHeight: "48vh", overflow: "auto" }}>
+                {alunosLista.length === 0 ? (
+                  <div style={{ padding: 18, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>Nenhum aluno cadastrado ainda.</div>
+                ) : (
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                    {alunosLista.map((a) => {
+                      const checked = printSelected.has(a.id);
+                      const tem = Boolean(parecerByAluno[a.id]);
+                      return (
+                        <li key={a.id}>
+                          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: checked ? "rgba(255,106,44,.06)" : "#fff", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => togglePrintSelected(a.id)}
+                              style={{ width: 16, height: 16, accentColor: "var(--accent)" }}
+                            />
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                              <span style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{a.nome}</span>
+                              <span style={{ fontSize: 12, color: "var(--muted)" }}>{a.turma || "Sem turma"} · {a.statusLabel}{a.pcd ? ` · PCD: ${a.pcd}` : ""}</span>
+                            </div>
+                            {!tem && (
+                              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#9C6B1F", background: "#FFF7ED", padding: "2px 8px", borderRadius: 999 }}>Sem parecer</span>
+                            )}
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              {semParecer > 0 && (
+                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#FFF7ED", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
+                  {semParecer} aluno(s) selecionado(s) ainda não têm parecer gerado — só a rubrica BNCC será impressa.
+                </div>
+              )}
+
+              <div className="rel-modal-foot">
+                <button className="rel-btn-card" onClick={() => setPrintSelectOpen(false)}>Cancelar</button>
+                <button
+                  className="rel-btn-card dark"
+                  onClick={() => {
+                    const sel = alunosLista.filter((a) => printSelected.has(a.id)).map((a) => ({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }));
+                    if (sel.length === 0) { toast.error("Selecione ao menos um aluno."); return; }
+                    setPrintSelectOpen(false);
+                    printBatchReports(sel);
+                  }}
+                >
+                  <Download size={13} strokeWidth={2.4} /> Imprimir {printSelected.size > 0 ? `(${printSelected.size})` : ""}
                 </button>
               </div>
             </div>
