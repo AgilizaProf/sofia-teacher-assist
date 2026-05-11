@@ -1266,6 +1266,82 @@ export function Relatorios() {
           : isReview
           ? "Rascunho pronto para revisão final. Confira o texto, ajuste e finalize."
           : "Parecer finalizado. Você pode reabrir, exportar em PDF/Word ou imprimir.";
+        const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const buildReportHtml = () => {
+          const areas = areasFor(a.id, a.turma, a.pcd);
+          const rub = getAlunoRubric(a.id);
+          const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+          const dataStr = new Date().toLocaleDateString("pt-BR");
+          const aluno = dashStudents.find((s) => s.name === a.nome);
+          const cls = dashClasses.find((c) => c.name === a.turma);
+          const escola = dashSchools.find((s) => s.name === cls?.school);
+          const linhasArea = areas.map((area, ai) => {
+            const itens = area.comps.map((c, ci) => {
+              const lbl = BNCC_STATUS.find((x) => x.k === rub[`${ai}.${ci}`])?.label || "Não observada";
+              return `<li><span>${esc(c)}</span><b>${esc(lbl)}</b></li>`;
+            }).join("");
+            return `<section><h2>${esc(area.area)}</h2><ul class="rub">${itens}</ul></section>`;
+          }).join("");
+          return `<!doctype html><html><head><meta charset="utf-8"><title>Parecer · ${esc(a.nome)}</title>
+<style>
+@page{size:A4;margin:22mm 20mm;}
+body{font-family:'Inter',Arial,sans-serif;color:#0B1220;line-height:1.55;font-size:12pt;margin:0;}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:22pt;margin:0 0 4px;color:#0F1B36;}
+h2{font-size:12pt;color:#FF6A2C;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #E7E9EF;padding-bottom:4px;}
+.meta{color:#6B7691;font-size:10.5pt;margin-bottom:18px;}
+.kpis{display:flex;gap:14px;margin:14px 0 8px;}
+.kpi{flex:1;border:1px solid #E7E9EF;border-radius:8px;padding:10px 12px;}
+.kpi b{display:block;font-size:16pt;color:#0F1B36;}
+.kpi small{color:#6B7691;font-size:9.5pt;text-transform:uppercase;letter-spacing:.06em;}
+ul.rub{list-style:none;padding:0;margin:0;}
+ul.rub li{display:flex;justify-content:space-between;gap:14px;padding:5px 0;border-bottom:1px dashed #E7E9EF;font-size:10.5pt;}
+ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
+.sig{margin-top:42px;display:flex;justify-content:space-between;gap:30px;}
+.sig div{flex:1;border-top:1px solid #0B1220;padding-top:6px;font-size:10pt;text-align:center;color:#3B4256;}
+.foot{margin-top:30px;font-size:9pt;color:#6B7691;text-align:center;}
+</style></head><body>
+<h1>Parecer descritivo · ${esc(a.nome)}</h1>
+<div class="meta">
+  ${esc(a.turma || "Sem turma")} · ${bimestreNum}º bimestre${a.pcd ? ` · PCD: ${esc(a.pcd)}` : ""}
+  ${escola ? ` · ${esc(escola.name)}` : ""}
+  ${aluno?.birth ? ` · Nascimento: ${esc(new Date(aluno.birth).toLocaleDateString("pt-BR"))}` : ""}
+</div>
+<div class="kpis">
+  <div class="kpi"><small>Avaliado</small><b>${pctPreenchido}%</b></div>
+  <div class="kpi"><small>Desempenho</small><b>${pctDesempenho}%</b></div>
+  <div class="kpi"><small>Bimestre</small><b>${bimestreNum}º</b></div>
+</div>
+${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
+${linhasArea}
+<div class="sig">
+  <div>Professor(a) responsável<br/>${esc(user.name || "")}</div>
+  <div>Coordenação pedagógica</div>
+  <div>Família / Responsável</div>
+</div>
+<div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Pareceres descritivos</div>
+</body></html>`;
+        };
+        const exportPdf = () => {
+          const html = buildReportHtml();
+          const w = window.open("", "_blank", "width=900,height=1000");
+          if (!w) { toast.error("Permita pop-ups para gerar o PDF."); return; }
+          w.document.open(); w.document.write(html); w.document.close();
+          w.focus();
+          setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 350);
+          toast.success("Abrindo janela de impressão (escolha 'Salvar como PDF').");
+        };
+        const exportWord = () => {
+          const html = buildReportHtml();
+          const docHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">${html.replace(/^<!doctype html>/i, "").replace(/^<html>/i, "").replace(/<\/html>$/i, "")}</html>`;
+          const blob = new Blob(['\ufeff', docHtml], { type: "application/msword" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${bimestreNum}bim.doc`;
+          document.body.appendChild(link); link.click(); document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+          toast.success("Documento Word exportado.");
+        };
         return (
           <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setAlunoModal(null)}>
             <div className="rel-modal" onClick={(e) => e.stopPropagation()}>
@@ -1318,7 +1394,10 @@ export function Relatorios() {
                     <button className="rel-btn-card" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Mostre o parecer finalizado de ${a.nome}.`, send: false }); }}>
                       <FileText size={13} /> Ver parecer
                     </button>
-                    <button className="rel-btn-card dark" onClick={() => toast.success("Exportação em PDF iniciada.")}>
+                    <button className="rel-btn-card" onClick={exportWord}>
+                      <Download size={13} /> Word
+                    </button>
+                    <button className="rel-btn-card dark" onClick={exportPdf}>
                       <Download size={13} /> PDF
                     </button>
                   </>
