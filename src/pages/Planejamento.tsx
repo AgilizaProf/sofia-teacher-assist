@@ -1993,88 +1993,167 @@ export function Planejamento() {
       return true;
     });
   }, [m6Entries, m6HasFilter, m6FilterTag, m6FilterTurma, m6FilterAluno]);
-  // Detecta padrões reais nos últimos 5 registros do diário (M6) e devolve
-  // a sugestão da Sofia mais relevante. Se não houver padrão (≥2 ocorrências),
-  // retorna null e o card não é exibido.
-  const m6SofiaPattern = useMemo(() => {
+  // ---------------------------------------------------------------------------
+  // Sofia: detecção de padrões + biblioteca de intervenções alternativas.
+  // 1) Lê os últimos 5 registros do M6 e calcula um "score" por padrão
+  //    (agitação, reforço, inclusão, engajamento, família, cansaço), com
+  //    peso maior para registros mais recentes.
+  // 2) Cruza os padrões detectados com a biblioteca M6_INTERVENCOES e escolhe
+  //    automaticamente a intervenção mais aderente. As demais alternativas
+  //    aparecem como opções secundárias para a professora trocar com 1 clique.
+  // ---------------------------------------------------------------------------
+  const m6SofiaPatternData = useMemo(() => {
     const ultimos = [...m6Entries]
       .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
       .slice(0, 5);
     if (ultimos.length < 2) return null;
-    type Cat = {
-      key: string;
-      label: string;
-      test: (txt: string, emoji: string) => boolean;
-      sugestao: string;
-      acao: string;
-      toast: string;
+    type PatKey = "agitacao" | "reforco" | "inclusao" | "funcionou" | "familia" | "cansaco";
+    const patternMeta: Record<PatKey, { label: string; test: (t: string, e: string) => boolean }> = {
+      agitacao:  { label: "agitação / dispersão",         test: (t) => /agita|recreio|disper|barulh|conflit|inquiet|tumult/.test(t) },
+      reforco:   { label: "dúvidas no conceito-chave",    test: (t) => /trav|reforço|reforco|não entend|nao entend|dúvida|duvida|dificuldade|errou|erros/.test(t) },
+      inclusao:  { label: "necessidades de inclusão",     test: (t) => /pcd|tea|tdah|inclus|adapta|sensori/.test(t) },
+      funcionou: { label: "estratégias que engajaram",    test: (t, e) => /funcionou|engaj|gostaram|deu certo|adoraram/.test(t) || /🌟|😄/.test(e) },
+      familia:   { label: "pontos para a família",        test: (t) => /famíl|famil|responsáv|responsav|casa|pais\b|mãe|mae\b|pai\b/.test(t) },
+      cansaco:   { label: "turma cansada / desmotivada",  test: (t, e) => /cansad|desmotiv|sono|apát|apat|sem ânimo|sem animo/.test(t) || /😣|😐/.test(e) },
     };
-    const cats: Cat[] = [
-      {
-        key: "agitacao",
-        label: "agitação após recreio",
-        test: (t) => /agita|recreio|disper|barulh|conflit|inquiet/.test(t),
-        sugestao: "atividades de respiração (4-7-8) na abertura da próxima aula",
-        acao: "Sim, sugerir respiração",
-        toast: "✓ Respiração 4-7-8 adicionada à abertura do próximo plano.",
-      },
-      {
-        key: "reforco",
-        label: "dúvidas no conceito-chave",
-        test: (t) => /trav|reforço|reforco|não entend|nao entend|dúvida|duvida|dificuldade/.test(t),
-        sugestao: "10 min de retomada com material concreto/visual antes de avançar",
-        acao: "Sim, planejar retomada",
-        toast: "✓ Bloco de retomada com material concreto adicionado.",
-      },
-      {
-        key: "inclusao",
-        label: "necessidades de inclusão",
-        test: (t) => /pcd|tea|tdah|inclus|adapta/.test(t),
-        sugestao: "adaptações visuais, tempo extra e parceria de apoio",
-        acao: "Sim, gerar adaptações",
-        toast: "✓ Adaptações PCD adicionadas ao próximo plano.",
-      },
-      {
-        key: "funcionou",
-        label: "estratégias que engajaram",
-        test: (t, emoji) => /funcionou|engaj|gostaram|deu certo/.test(t) || /🌟|😄/.test(emoji),
-        sugestao: "replicar a dinâmica que funcionou ampliando para produção em duplas",
-        acao: "Sim, ampliar estratégia",
-        toast: "✓ Estratégia replicada no próximo plano.",
-      },
-      {
-        key: "familia",
-        label: "pontos para comunicar à família",
-        test: (t) => /famíl|famil|responsáv|responsav|casa|pais\b/.test(t),
-        sugestao: "rascunhar um comunicado curto para as famílias",
-        acao: "Sim, rascunhar bilhete",
-        toast: "✓ Rascunho de comunicado salvo em Comunicação.",
-      },
-      {
-        key: "cansaco",
-        label: "turma cansada / desmotivada",
-        test: (t, emoji) => /cansad|desmotiv|sono|apát|apat/.test(t) || /😣|😐/.test(emoji),
-        sugestao: "abrir mais leve, com dinâmica curta em pé antes do conteúdo",
-        acao: "Sim, sugerir dinâmica",
-        toast: "✓ Dinâmica de aquecimento adicionada à abertura.",
-      },
-    ];
-    let melhor: { cat: Cat; n: number } | null = null;
-    for (const c of cats) {
-      const n = ultimos.filter((e) => c.test(`${e.title} ${e.text} ${e.tags.join(" ")}`.toLowerCase(), e.emoji)).length;
-      if (n >= 2 && (!melhor || n > melhor.n)) melhor = { cat: c, n };
-    }
-    if (!melhor) return null;
+    // Score com peso por recência: mais recente vale mais.
+    const scores: Record<string, { n: number; score: number }> = {};
+    (Object.keys(patternMeta) as PatKey[]).forEach((k) => { scores[k] = { n: 0, score: 0 }; });
+    ultimos.forEach((e, idx) => {
+      const peso = ultimos.length - idx; // 5,4,3,2,1
+      const txt = `${e.title} ${e.text} ${e.tags.join(" ")}`.toLowerCase();
+      (Object.keys(patternMeta) as PatKey[]).forEach((k) => {
+        if (patternMeta[k].test(txt, e.emoji)) {
+          scores[k].n += 1;
+          scores[k].score += peso;
+        }
+      });
+    });
+    const detectados = (Object.keys(scores) as PatKey[])
+      .filter((k) => scores[k].n >= 2)
+      .sort((a, b) => scores[b].score - scores[a].score);
+    if (detectados.length === 0) return null;
+    const principal = detectados[0];
     return {
       total: ultimos.length,
-      n: melhor.n,
-      label: melhor.cat.label,
-      sugestao: melhor.cat.sugestao,
-      acao: melhor.cat.acao,
-      toast: melhor.cat.toast,
-      key: melhor.cat.key,
+      detectados,
+      principal,
+      label: patternMeta[principal].label,
+      n: scores[principal].n,
+      scores,
     };
   }, [m6Entries]);
+
+  // Biblioteca de intervenções alternativas. Cada item declara que padrões
+  // atende e seu peso para ranqueamento. A categoria identifica visualmente
+  // o tipo (respiração, jogo calmante, reorganização de rotina, reforço…).
+  type M6Intervencao = {
+    id: string;
+    categoria: "respiracao" | "jogo_calmante" | "rotina" | "reforco" | "inclusao" | "engajamento" | "familia";
+    icone: string;
+    titulo: string;
+    descricao: string;
+    porQue: string;
+    toast: string;
+    atende: { padrao: string; peso: number }[];
+  };
+  const M6_INTERVENCOES = useMemo<M6Intervencao[]>(() => [
+    { id: "resp_478", categoria: "respiracao", icone: "🌬️", titulo: "Respiração 4-7-8 (3 min)",
+      descricao: "Inspira em 4, segura em 7, expira em 8. Faça 3 ciclos guiados antes de apresentar o objetivo.",
+      porQue: "Reduz batimento cardíaco e ajuda a turma a aterrissar depois do recreio.",
+      toast: "✓ Respiração 4-7-8 adicionada à abertura do próximo plano.",
+      atende: [{ padrao: "agitacao", peso: 3 }, { padrao: "cansaco", peso: 1 }] },
+    { id: "resp_quadrada", categoria: "respiracao", icone: "🟦", titulo: "Respiração quadrada (2 min)",
+      descricao: "Desenhe um quadrado no ar: 4s inspira, 4s segura, 4s expira, 4s pausa. 4 voltas.",
+      porQue: "Bom quando há barulho/conflito mas a turma resiste a fechar os olhos.",
+      toast: "✓ Respiração quadrada adicionada à abertura.",
+      atende: [{ padrao: "agitacao", peso: 2 }] },
+    { id: "jogo_silencio", categoria: "jogo_calmante", icone: "🤫", titulo: "Jogo do Silêncio dos 60 segundos",
+      descricao: "Cronômetro projetado: turma fica em silêncio total por 60s ouvindo o ambiente. Conta o que escutou.",
+      porQue: "Canaliza a agitação em foco sensorial sem confronto.",
+      toast: "✓ Jogo do Silêncio adicionado à abertura.",
+      atende: [{ padrao: "agitacao", peso: 2 }, { padrao: "inclusao", peso: 1 }] },
+    { id: "jogo_estatua", categoria: "jogo_calmante", icone: "🗿", titulo: "Estátua musical lenta",
+      descricao: "Música calma toca, turma anda devagar; ao parar, viram estátuas por 10s. 3 rodadas.",
+      porQue: "Gasta energia residual em movimento controlado, baixa o nível geral.",
+      toast: "✓ Estátua musical adicionada à abertura.",
+      atende: [{ padrao: "agitacao", peso: 2 }, { padrao: "cansaco", peso: 2 }] },
+    { id: "rotina_blocos", categoria: "rotina", icone: "🧱", titulo: "Reorganizar em 2 blocos curtos",
+      descricao: "Quebre a explicação em 2 blocos de 15 min com checagem rápida (3 perguntas) entre eles.",
+      porQue: "Atenção sustentada cai após 15 min — evita o pico de dispersão.",
+      toast: "✓ Plano reorganizado em 2 blocos com checagem.",
+      atende: [{ padrao: "agitacao", peso: 2 }, { padrao: "reforco", peso: 2 }, { padrao: "cansaco", peso: 2 }] },
+    { id: "rotina_inverter", categoria: "rotina", icone: "🔄", titulo: "Inverter ordem da aula",
+      descricao: "Comece pela atividade prática/jogo e use a explicação como fechamento sistematizador.",
+      porQue: "Quando a turma chega cansada, partir do concreto resgata o engajamento.",
+      toast: "✓ Ordem da aula invertida no próximo plano.",
+      atende: [{ padrao: "cansaco", peso: 3 }, { padrao: "funcionou", peso: 1 }] },
+    { id: "ref_concreto", categoria: "reforco", icone: "🧩", titulo: "Retomada com material concreto (10 min)",
+      descricao: "Volta ao conceito-chave usando manipuláveis/visual antes de avançar para a nova etapa.",
+      porQue: "Recorrência de dúvidas indica que o conceito não consolidou no abstrato.",
+      toast: "✓ Bloco de retomada com material concreto adicionado.",
+      atende: [{ padrao: "reforco", peso: 3 }, { padrao: "inclusao", peso: 1 }] },
+    { id: "ref_pares", categoria: "reforco", icone: "👥", titulo: "Reforço entre pares (think-pair-share)",
+      descricao: "1 min pensa sozinho · 2 min em dupla · 2 min compartilha. Foco no item que mais travou.",
+      porQue: "Quem entendeu explica com vocabulário próximo de quem não entendeu.",
+      toast: "✓ Think-pair-share adicionado ao próximo plano.",
+      atende: [{ padrao: "reforco", peso: 2 }, { padrao: "funcionou", peso: 1 }] },
+    { id: "ref_revisao_jogo", categoria: "reforco", icone: "🎯", titulo: "Revisão em formato de jogo",
+      descricao: "Quiz rápido (Plickers/cartelas) com as 5 questões que mais travaram. Feedback imediato.",
+      porQue: "Alia reforço pedagógico e engajamento — atende dois padrões ao mesmo tempo.",
+      toast: "✓ Quiz de revisão adicionado ao próximo plano.",
+      atende: [{ padrao: "reforco", peso: 2 }, { padrao: "funcionou", peso: 2 }] },
+    { id: "incl_visual", categoria: "inclusao", icone: "🧷", titulo: "Adaptações visuais + tempo extra",
+      descricao: "Roteiro pictórico, fonte ampliada, tempo extra e parceria de apoio para o aluno PCD.",
+      porQue: "Recorrência do tema inclusão pede ajuste estrutural, não pontual.",
+      toast: "✓ Adaptações PCD adicionadas ao próximo plano.",
+      atende: [{ padrao: "inclusao", peso: 3 }] },
+    { id: "eng_replicar", categoria: "engajamento", icone: "✨", titulo: "Replicar dinâmica que funcionou",
+      descricao: "Mesmo formato que engajou, com novo conteúdo, ampliando para produção em duplas.",
+      porQue: "Padrão positivo recente — vale escalar antes que se desgaste.",
+      toast: "✓ Estratégia replicada no próximo plano.",
+      atende: [{ padrao: "funcionou", peso: 3 }] },
+    { id: "fam_bilhete", categoria: "familia", icone: "✉️", titulo: "Rascunhar bilhete para as famílias",
+      descricao: "Comunicado curto (3 frases) com o ponto observado e o que pedir em casa.",
+      porQue: "Padrão de menções à família indica que vale alinhar.",
+      toast: "✓ Rascunho de bilhete salvo em Comunicação.",
+      atende: [{ padrao: "familia", peso: 3 }] },
+  ], []);
+
+  const m6SofiaSugestoes = useMemo(() => {
+    if (!m6SofiaPatternData) return [] as { i: M6Intervencao; score: number }[];
+    const { scores } = m6SofiaPatternData;
+    return M6_INTERVENCOES
+      .map((i) => ({
+        i,
+        score: i.atende.reduce((acc, a) => acc + (scores[a.padrao]?.score ?? 0) * a.peso, 0),
+      }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score);
+  }, [m6SofiaPatternData, M6_INTERVENCOES]);
+
+  const M6_CAT_LABEL: Record<M6Intervencao["categoria"], string> = {
+    respiracao: "Respiração",
+    jogo_calmante: "Jogo calmante",
+    rotina: "Reorganização de rotina",
+    reforco: "Reforço pedagógico",
+    inclusao: "Inclusão",
+    engajamento: "Engajamento",
+    familia: "Família",
+  };
+  const [m6SofiaPickedId, setM6SofiaPickedId] = useState<string | null>(null);
+  const [m6SofiaShowAlt, setM6SofiaShowAlt] = useState(false);
+  const m6SofiaPicked = useMemo(() => {
+    if (m6SofiaSugestoes.length === 0) return null;
+    if (m6SofiaPickedId) {
+      const found = m6SofiaSugestoes.find((s) => s.i.id === m6SofiaPickedId);
+      if (found) return found.i;
+    }
+    return m6SofiaSugestoes[0].i;
+  }, [m6SofiaSugestoes, m6SofiaPickedId]);
+  const m6SofiaPattern = m6SofiaPatternData && m6SofiaPicked
+    ? { total: m6SofiaPatternData.total, n: m6SofiaPatternData.n, label: m6SofiaPatternData.label, key: `${m6SofiaPatternData.principal}:${m6SofiaPicked.id}` }
+    : null;
   const m6ClearFilters = () => {
     // Limpa também o espelho em localStorage para que a próxima visita
     // venha realmente sem filtros.
@@ -3881,16 +3960,57 @@ export function Planejamento() {
                         </button>
                       </div>
                     )}
-                    {m6SofiaPattern && m6PatternDismissedKey !== m6SofiaPattern.key && (
+                    {m6SofiaPattern && m6SofiaPicked && m6PatternDismissedKey !== m6SofiaPattern.key && (
                       <div className="pl-d6-pattern">
                         <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>✨ Sofia detectou um padrão</div>
                         <p style={{ fontSize: 13, color: "#7A2E0A", lineHeight: 1.5, margin: 0 }}>
-                          {m6SofiaPattern.n} dos últimos {m6SofiaPattern.total} registros mencionam <strong>"{m6SofiaPattern.label}"</strong>. Quer que eu sugira {m6SofiaPattern.sugestao}?
+                          {m6SofiaPattern.n} dos últimos {m6SofiaPattern.total} registros indicam <strong>{m6SofiaPattern.label}</strong>. Selecionei automaticamente a melhor intervenção da biblioteca:
                         </p>
-                        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                          <button className="pl-btn primary" onClick={() => { showToast(m6SofiaPattern.toast); setM6PatternDismissedKey(m6SofiaPattern.key); }}>{m6SofiaPattern.acao}</button>
+                        <div style={{ marginTop: 10, padding: 10, borderRadius: 10, background: "#fff", border: "1px solid #FED7AA" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                            <span style={{ fontSize: 18 }}>{m6SofiaPicked.icone}</span>
+                            <strong style={{ fontSize: 13, color: "#7A2E0A" }}>{m6SofiaPicked.titulo}</strong>
+                            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--orange-2)", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 99, padding: "2px 8px" }}>
+                              {M6_CAT_LABEL[m6SofiaPicked.categoria]}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 12, color: "#7A2E0A", lineHeight: 1.45, margin: "4px 0" }}>{m6SofiaPicked.descricao}</p>
+                          <p style={{ fontSize: 11, color: "#9A3412", lineHeight: 1.4, margin: "4px 0 0", fontStyle: "italic" }}>
+                            <strong>Por que esta?</strong> {m6SofiaPicked.porQue}
+                          </p>
+                        </div>
+                        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                          <button className="pl-btn primary" onClick={() => { showToast(m6SofiaPicked.toast); setM6PatternDismissedKey(m6SofiaPattern.key); }}>Aplicar esta intervenção</button>
+                          {m6SofiaSugestoes.length > 1 && (
+                            <button className="pl-btn ghost" onClick={() => setM6SofiaShowAlt((v) => !v)}>
+                              {m6SofiaShowAlt ? "Ocultar alternativas" : `Ver ${m6SofiaSugestoes.length - 1} alternativa${m6SofiaSugestoes.length - 1 > 1 ? "s" : ""}`}
+                            </button>
+                          )}
                           <button className="pl-btn ghost" onClick={() => setM6PatternDismissedKey(m6SofiaPattern.key)}>Agora não</button>
                         </div>
+                        {m6SofiaShowAlt && m6SofiaSugestoes.length > 1 && (
+                          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                            {m6SofiaSugestoes.filter((s) => s.i.id !== m6SofiaPicked.id).map((s) => (
+                              <button
+                                key={s.i.id}
+                                onClick={() => { setM6SofiaPickedId(s.i.id); setM6SofiaShowAlt(false); }}
+                                style={{ textAlign: "left", padding: "8px 10px", borderRadius: 8, background: "#fff", border: "1px solid var(--line)", cursor: "pointer", display: "flex", gap: 8, alignItems: "flex-start" }}
+                                title="Trocar para esta intervenção"
+                              >
+                                <span style={{ fontSize: 16 }}>{s.i.icone}</span>
+                                <span style={{ flex: 1, minWidth: 0 }}>
+                                  <span style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                                    <strong style={{ fontSize: 12, color: "var(--ink)" }}>{s.i.titulo}</strong>
+                                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-2)", background: "var(--soft)", borderRadius: 99, padding: "1px 6px" }}>
+                                      {M6_CAT_LABEL[s.i.categoria]}
+                                    </span>
+                                  </span>
+                                  <span style={{ display: "block", fontSize: 11, color: "var(--ink-2)", lineHeight: 1.4, marginTop: 2 }}>{s.i.descricao}</span>
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                     {m6FilteredEntries.length === 0 ? (
