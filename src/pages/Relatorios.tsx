@@ -817,7 +817,12 @@ export function Relatorios() {
             )}
 
             {alunosFiltered.map((a) => (
-              <article key={a.id} className="rel-card">
+              <article
+                key={a.id}
+                className="rel-card"
+                onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="rel-card-head">
                   <div className="rel-av">{a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}</div>
                   <div className="rel-stu">
@@ -839,7 +844,7 @@ export function Relatorios() {
                     </div>
                   );
                 })()}
-                <div className="rel-card-foot">
+                <div className="rel-card-foot" onClick={(e) => e.stopPropagation()}>
                   <button
                     className="rel-btn-card"
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
@@ -848,17 +853,17 @@ export function Relatorios() {
                     <ClipboardList size={13} /> Avaliar BNCC
                   </button>
                   {a.status === "todo" && (
-                    <button className="rel-btn-card accent" onClick={() => sofia.openSofia({ prompt: `Gere o parecer descritivo bimestral de ${a.nome} alinhado à BNCC.`, send: false })}>
+                    <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
                       <Sparkles size={13} /> Gerar com Sofia
                     </button>
                   )}
                   {a.status === "draft" && (
-                    <button className="rel-btn-card dark" onClick={() => sofia.openSofia({ prompt: `Vamos revisar o rascunho do parecer de ${a.nome}.`, send: false })}>
+                    <button className="rel-btn-card dark" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
                       <Edit3 size={13} /> Abrir rascunho
                     </button>
                   )}
                   {a.status === "done" && (
-                    <button className="rel-btn-card" onClick={() => sofia.openSofia({ prompt: `Mostre o parecer finalizado de ${a.nome}.`, send: false })}>
+                    <button className="rel-btn-card" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
                       <CheckCircle2 size={13} /> Ver finalizado
                     </button>
                   )}
