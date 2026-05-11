@@ -489,7 +489,7 @@ export function Relatorios() {
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
   // ===== Parecer descritivo (mesmo modelo da aba Relatórios da Inclusão) =====
-  type Parecer = {
+  type ParecerNarrativo = {
     titulo?: string; resumo?: string;
     pedagogico?: string; comportamental?: string; sensorial?: string; familia?: string;
     avancos?: string[]; desafios?: string[]; encaminhamentos?: string[];
@@ -499,11 +499,11 @@ export function Relatorios() {
     formato?: "topicos" | "texto";
     geradoEm?: string;
   };
-  const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, Parecer>>("rel_parecer", {});
+  const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, ParecerNarrativo>>("rel_parecer", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
   const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
   const [editandoParecer, setEditandoParecer] = useState(false);
-  const [parecerDraft, setParecerDraft] = useState<Parecer | null>(null);
+  const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
   const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }) => {
     setGerandoParecerId(a.id);
@@ -539,8 +539,8 @@ export function Relatorios() {
         },
       });
       if (error) throw error;
-      const parecer: Parecer = {
-        ...((data as { parecer?: Parecer })?.parecer || {}),
+      const parecer: ParecerNarrativo = {
+        ...((data as { parecer?: ParecerNarrativo })?.parecer || {}),
         periodoLabel,
         formato: formatoParecer,
         geradoEm: new Date().toLocaleString("pt-BR"),
