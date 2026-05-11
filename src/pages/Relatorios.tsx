@@ -647,14 +647,27 @@ export function Relatorios() {
 
   // Lista por aluno (estado Pro)
   const alunosLista = useMemo(() => {
-    type Item = { id: string; nome: string; turma: string; pcd: string; status: "done" | "draft" | "todo"; statusLabel: string };
+    type Item = { id: string; nome: string; turma: string; pcd: string; status: "done" | "draft" | "review" | "todo"; statusLabel: string; naoObservadas: number };
+    const STATUS_LABEL: Record<Item["status"], string> = {
+      todo: "A FAZER", draft: "RASCUNHO", review: "PARA REVISAR", done: "FINALIZADO",
+    };
+    const deriveStatus = (id: string, turma: string, pcd: string): { status: Item["status"]; naoObservadas: number } => {
+      const { pctPreenchido, naoObservadas, total } = computeProgress(id, turma, pcd);
+      const temParecer = Boolean(parecerByAluno[id]);
+      if (temParecer) return { status: "done", naoObservadas };
+      if (total === 0) return { status: "todo", naoObservadas };
+      // pctPreenchido considera apenas o universo avaliável (exclui "Não observada").
+      if (pctPreenchido >= 100) return { status: "review", naoObservadas };
+      if (pctPreenchido > 0) return { status: "draft", naoObservadas };
+      return { status: "todo", naoObservadas };
+    };
     if (dashStudents.length > 0) {
       return dashStudents.map((s, i): Item => {
-        let status: "done" | "draft" | "todo" = "todo";
-        let statusLabel = "A FAZER";
-        if (i < finalizados) { status = "done"; statusLabel = "FINALIZADO"; }
-        else if (i < finalizados + rascunhos) { status = "draft"; statusLabel = "RASCUNHO"; }
-        return { id: `al-${i}`, nome: s.name, turma: s.classRef || "", pcd: s.pcd && s.pcd !== "nao" ? s.pcd : "", status, statusLabel };
+        const id = `al-${i}`;
+        const turma = s.classRef || "";
+        const pcd = s.pcd && s.pcd !== "nao" ? s.pcd : "";
+        const { status, naoObservadas } = deriveStatus(id, turma, pcd);
+        return { id, nome: s.name, turma, pcd, status, statusLabel: STATUS_LABEL[status], naoObservadas };
       });
     }
     if (!isPro || alunosCount === 0) return [] as Item[];
@@ -662,14 +675,14 @@ export function Relatorios() {
     const pcd = ctx.entity.todos_alunos_pcd;
     for (let i = 0; i < alunosCount; i++) {
       const nome = i < pcd.length ? pcd[i].nome : `Aluno(a) ${i + 1}`;
-      let status: "done" | "draft" | "todo" = "todo";
-      let statusLabel = "A FAZER";
-      if (i < finalizados) { status = "done"; statusLabel = "FINALIZADO"; }
-      else if (i < finalizados + rascunhos) { status = "draft"; statusLabel = "RASCUNHO"; }
-      out.push({ id: `al-${i}`, nome, turma: ctx.entity.turma_atual?.nome || "", pcd: "", status, statusLabel });
+      const id = `al-${i}`;
+      const turma = ctx.entity.turma_atual?.nome || "";
+      const { status, naoObservadas } = deriveStatus(id, turma, "");
+      out.push({ id, nome, turma, pcd: "", status, statusLabel: STATUS_LABEL[status], naoObservadas });
     }
     return out;
-  }, [isPro, alunosCount, finalizados, rascunhos, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, dashStudents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPro, alunosCount, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, dashStudents, bnccByAluno, parecerByAluno, yearOverride]);
 
   const alunosFiltered = useMemo(() => alunosLista.filter((a) => {
     if (tab !== "all" && a.status !== tab) return false;
