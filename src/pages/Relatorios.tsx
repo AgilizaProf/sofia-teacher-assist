@@ -1531,6 +1531,36 @@ ${linhasArea}
                           <button className="rel-btn-card" onClick={() => { setParecerDraft({ ...parecerAluno }); setEditandoParecer(true); }}>
                             <Edit3 size={13} /> Editar texto
                           </button>
+                          <button className="rel-btn-card" onClick={() => {
+                            const p = parecerAluno;
+                            const partes: string[] = [];
+                            partes.push(`${p.titulo || "Parecer descritivo"}`);
+                            partes.push(`${a.nome}${a.turma ? ` · ${a.turma}` : ""}${p.periodoLabel ? ` · ${p.periodoLabel}` : ""}`);
+                            partes.push("");
+                            if (p.formato === "texto" && p.texto) {
+                              partes.push(p.texto);
+                            } else {
+                              if (p.resumo) partes.push(`Resumo:\n${p.resumo}\n`);
+                              if (p.pedagogico) partes.push(`Pedagógico:\n${p.pedagogico}\n`);
+                              if (p.comportamental) partes.push(`Comportamental:\n${p.comportamental}\n`);
+                              if (p.sensorial) partes.push(`Sensorial:\n${p.sensorial}\n`);
+                              if (p.familia) partes.push(`Família:\n${p.familia}\n`);
+                              if (p.avancos?.length) partes.push(`Avanços:\n${p.avancos.map((x) => `- ${x}`).join("\n")}\n`);
+                              if (p.desafios?.length) partes.push(`Desafios:\n${p.desafios.map((x) => `- ${x}`).join("\n")}\n`);
+                              if (p.encaminhamentos?.length) partes.push(`Encaminhamentos:\n${p.encaminhamentos.map((x) => `- ${x}`).join("\n")}\n`);
+                              if (p.comunicacao_familias) partes.push(`Comunicação à família:\n${p.comunicacao_familias}\n`);
+                            }
+                            const blob = new Blob([partes.join("\n")], { type: "text/plain;charset=utf-8" });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${bimestreNum}bim.txt`;
+                            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                            setTimeout(() => URL.revokeObjectURL(url), 1500);
+                            toast.success("Texto do parecer salvo.");
+                          }}>
+                            <Download size={13} /> Salvar texto
+                          </button>
                           <button className="rel-btn-card" onClick={exportWord}>
                             <Download size={13} /> Salvar em Word
                           </button>
