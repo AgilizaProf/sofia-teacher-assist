@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Printer, Download, Edit3, Save, X } from "lucide-react";
 import { useTurmas } from "@/hooks/useTurmas";
 
 const DISCIPLINAS_COMUNS = [
