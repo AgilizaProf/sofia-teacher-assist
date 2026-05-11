@@ -1250,6 +1250,117 @@ export function Relatorios() {
           </div>
         </div>
       )}
+
+      {alunoModal && (() => {
+        const a = alunoModal;
+        const isTodo = a.status === "todo";
+        const isDraft = a.status === "draft";
+        const isReview = a.status === "review";
+        const isDone = a.status === "done";
+        const headerColor = isTodo ? "#9C6B1F" : isDraft ? "#4B3CA8" : isReview ? "#C84A14" : "#0E7A4F";
+        const titulo = isTodo ? "Parecer a fazer" : isDraft ? "Rascunho do parecer" : isReview ? "Parecer para revisar" : "Parecer finalizado";
+        const descricao = isTodo
+          ? "Ainda não há parecer gerado. Use a Sofia para criar um rascunho a partir da anamnese, registros e PEI."
+          : isDraft
+          ? "Existe um rascunho salvo. Continue editando ou peça para a Sofia complementar."
+          : isReview
+          ? "Rascunho pronto para revisão final. Confira o texto, ajuste e finalize."
+          : "Parecer finalizado. Você pode reabrir, exportar em PDF/Word ou imprimir.";
+        return (
+          <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setAlunoModal(null)}>
+            <div className="rel-modal" onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: headerColor, marginBottom: 4 }}>{titulo}</div>
+                  <h3 style={{ margin: 0 }}>{a.nome}</h3>
+                  <div className="rel-modal-meta" style={{ marginBottom: 0 }}>
+                    {a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · PCD: ${a.pcd}` : ""}
+                  </div>
+                </div>
+                <button onClick={() => setAlunoModal(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+              </div>
+              <div style={{ marginTop: 14 }} className="rel-modal-body">
+                <p style={{ margin: 0 }}>{descricao}</p>
+                {(() => {
+                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+                  return (
+                    <div style={{ marginTop: 14 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
+                        <span>Avaliação BNCC</span>
+                        <span>{pctPreenchido}% avaliado · Desempenho {pctDesempenho}%</span>
+                      </div>
+                      <div className="rel-progress" style={{ marginTop: 6 }}><i style={{ width: `${pctPreenchido}%` }} /></div>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="rel-modal-foot" style={{ flexWrap: "wrap" }}>
+                <button className="rel-btn-card" onClick={() => { setAlunoModal(null); setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }); }}>
+                  <ClipboardList size={13} /> Avaliar BNCC
+                </button>
+                {isTodo && (
+                  <button className="rel-btn-card accent" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Gere o parecer descritivo bimestral de ${a.nome} (${a.turma || "sem turma"}) alinhado à BNCC. Use o que estiver preenchido na anamnese, registros e PEI.`, send: false }); }}>
+                    <Sparkles size={13} /> Gerar com a Sofia
+                  </button>
+                )}
+                {isDraft && (
+                  <button className="rel-btn-card dark" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Vamos continuar o rascunho do parecer de ${a.nome}.`, send: false }); }}>
+                    <Edit3 size={13} /> Continuar rascunho
+                  </button>
+                )}
+                {isReview && (
+                  <button className="rel-btn-card accent" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Abra o parecer de ${a.nome} para revisão final.`, send: false }); }}>
+                    <CheckCircle2 size={13} /> Revisar e finalizar
+                  </button>
+                )}
+                {isDone && (
+                  <>
+                    <button className="rel-btn-card" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Mostre o parecer finalizado de ${a.nome}.`, send: false }); }}>
+                      <FileText size={13} /> Ver parecer
+                    </button>
+                    <button className="rel-btn-card dark" onClick={() => toast.success("Exportação em PDF iniciada.")}>
+                      <Download size={13} /> PDF
+                    </button>
+                  </>
+                )}
+                <button className="rel-btn-card" onClick={() => setAlunoModal(null)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {tutorialOpen && (
+        <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setTutorialOpen(false)}>
+          <div className="rel-modal" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Tutorial · 60s</div>
+                <h3 style={{ margin: 0 }}>Como funciona esta página</h3>
+                <div className="rel-modal-meta">Um passo a passo rápido para gerar pareceres com a Sofia.</div>
+              </div>
+              <button onClick={() => setTutorialOpen(false)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+            </div>
+            <div className="rel-modal-body">
+              <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+                <li><b>Cadastre o(a) aluno(a)</b> no botão <i>Cadastrar aluno</i>, vinculando a uma turma já criada.</li>
+                <li><b>Avalie a BNCC</b> clicando em <i>Avaliar BNCC</i> no card do aluno: marque cada competência como NO, NA, ED ou CO.</li>
+                <li><b>Gere o parecer com a Sofia</b>: ela usa anamnese, registros, PEI e a rubrica BNCC para escrever um rascunho.</li>
+                <li><b>Revise e finalize</b>: edite o texto, salve em PDF/Word ou imprima quando estiver pronto.</li>
+                <li><b>Acompanhe o progresso</b> nos KPIs do topo (a fazer, rascunho, finalizados e tempo economizado).</li>
+                <li><b>Filtre</b> por status, turma, bimestre ou apenas alunos PCD usando os filtros acima da lista.</li>
+              </ol>
+              <p style={{ marginTop: 14, fontSize: 12, color: "var(--muted)" }}>Dica: clique em qualquer card de aluno (ou em um(a) aluno(a) finalizado(a) abaixo) para abrir as ações específicas daquele status.</p>
+            </div>
+            <div className="rel-modal-foot">
+              <button className="rel-btn-card" onClick={() => setTutorialOpen(false)}>Fechar</button>
+              <button className="rel-btn-card dark" onClick={() => { setTutorialOpen(false); abrirNovoAluno(); }}>
+                Começar agora <ArrowRight size={13} strokeWidth={2.4} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
