@@ -88,6 +88,14 @@ const css = `
 .ctx-field label{font-size:12px;color:var(--text-soft);font-weight:600;}
 .ctx-field input,.ctx-field select,.ctx-field textarea{padding:9px 12px;border-radius:10px;border:1px solid var(--line-soft);font-size:13px;font-family:inherit;color:var(--text);background:#fff;}
 .ctx-field input:focus,.ctx-field select:focus,.ctx-field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,106,44,.15);}
+.ctx-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.ctx-chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);font-weight:500;cursor:pointer;transition:all .15s ease;}
+.ctx-chip:hover{border-color:#cfd4e1;}
+.ctx-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;box-shadow:0 4px 10px -4px rgba(255,106,44,.45);}
+.ctx-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:520px){.ctx-grid2{grid-template-columns:1fr;}}
+.ctx-field-inline{display:flex;flex-direction:column;gap:6px;}
+.ctx-field-inline > label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
 .ctx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ctx-pcd-list{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--paper);border-radius:10px;border:1px solid var(--line-soft);}
 .ctx-pcd-tag{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line-soft);padding:5px 10px;border-radius:999px;font-size:11.5px;color:var(--text-soft);}
@@ -242,8 +250,27 @@ export function Assistente() {
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
   const [ctxOpen, setCtxOpen] = useState(false);
-  const [observacoes, setObservacoes] = useState("");
-  const [selectedTurma, setSelectedTurma] = useState<string | null>(null);
+  const [observacoes, setObservacoes] = usePersistentState<string>("assist_ctx_obs", "");
+  const [selectedTurma, setSelectedTurma] = usePersistentState<string | null>("assist_ctx_turma", null);
+  // Novos campos de contexto, todos persistidos para a Sofia "lembrar".
+  const [ctxBimestre, setCtxBimestre] = usePersistentState<string>("assist_ctx_bimestre", "");
+  const [ctxDuracao, setCtxDuracao] = usePersistentState<string>("assist_ctx_duracao", "");
+  const [ctxFocos, setCtxFocos] = usePersistentState<string[]>("assist_ctx_focos", []);
+  const [ctxEstilo, setCtxEstilo] = usePersistentState<string[]>("assist_ctx_estilo", []);
+  const [ctxRecursos, setCtxRecursos] = usePersistentState<string[]>("assist_ctx_recursos", []);
+  const [ctxEvitar, setCtxEvitar] = usePersistentState<string[]>("assist_ctx_evitar", []);
+  const [ctxDocs, setCtxDocs] = usePersistentState<string[]>("assist_ctx_docs", []);
+  const [ctxMomento, setCtxMomento] = usePersistentState<string[]>("assist_ctx_momento", []);
+  const toggleIn = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
+    setter((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
+  const OPT_FOCOS = ["Alfabetização","Letramento","Numeralização","Leitura","Escrita","Compreensão de texto","Resolução de problemas","Habilidades socioemocionais","Projeto interdisciplinar","Preparação para avaliações"];
+  const OPT_ESTILO = ["Respostas mais objetivas","Respostas mais detalhadas","Tom acolhedor","Linguagem técnica","Com exemplos práticos","Sempre citar BNCC","Sempre sugerir adaptação PCD"];
+  const OPT_RECURSOS = ["Projetor","Quadro digital","Computadores","Tablets","Internet em sala","Materiais manipuláveis","Biblioteca","Pátio / área externa","Sala de informática"];
+  const OPT_EVITAR = ["Som alto","Grupos grandes","Atividades com tela","Exposição individual","Estímulo visual excessivo","Tarefa para casa longa"];
+  const OPT_DOCS = ["BNCC","Currículo estadual","Currículo municipal","PPP da escola","Material apostilado","Plano de ação da coordenação"];
+  const OPT_MOMENTO = ["Início do turno","Antes do recreio","Após o recreio","Final do turno"];
+  const OPT_BIMESTRE = ["1º bimestre","2º bimestre","3º bimestre","4º bimestre","1º trimestre","2º trimestre","3º trimestre","Recuperação"];
+  const OPT_DURACAO = ["30 min","45 min","50 min","60 min","90 min","2 aulas geminadas"];
 
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
@@ -652,6 +679,79 @@ export function Assistente() {
               )}
 
               <div className="ctx-section">
+                <div className="ctx-grid2">
+                  <div className="ctx-field-inline">
+                    <label>Etapa atual</label>
+                    <select className="" value={ctxBimestre} onChange={(e) => setCtxBimestre(e.target.value)} style={{ padding: "9px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Selecione…</option>
+                      {OPT_BIMESTRE.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                  <div className="ctx-field-inline">
+                    <label>Duração típica da aula</label>
+                    <select value={ctxDuracao} onChange={(e) => setCtxDuracao(e.target.value)} style={{ padding: "9px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Selecione…</option>
+                      {OPT_DURACAO.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Foco pedagógico do momento</div>
+                <div className="ctx-chips">
+                  {OPT_FOCOS.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxFocos.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxFocos)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Estilo de resposta da Sofia</div>
+                <div className="ctx-chips">
+                  {OPT_ESTILO.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxEstilo.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxEstilo)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Recursos disponíveis em sala</div>
+                <div className="ctx-chips">
+                  {OPT_RECURSOS.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxRecursos.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxRecursos)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Restrições / o que evitar</div>
+                <div className="ctx-chips">
+                  {OPT_EVITAR.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxEvitar.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxEvitar)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Documentos pedagógicos seguidos</div>
+                <div className="ctx-chips">
+                  {OPT_DOCS.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxDocs.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxDocs)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Momento do dia em foco</div>
+                <div className="ctx-chips">
+                  {OPT_MOMENTO.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxMomento.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxMomento)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
                 <div className="ctx-section-label">Observações para a Sofia</div>
                 <div className="ctx-field">
                   <textarea
@@ -675,6 +775,14 @@ export function Assistente() {
                       : " Sem alunos PCD registrados.";
                     partes.push(`Foque na turma ${turmaSelecionada.name} com ${turmaSelecionada.alunos.length} alunos.${pcdTxt}`);
                   }
+                  if (ctxBimestre) partes.push(`Etapa atual: ${ctxBimestre}.`);
+                  if (ctxDuracao) partes.push(`Duração típica da aula: ${ctxDuracao}.`);
+                  if (ctxFocos.length) partes.push(`Foco pedagógico: ${ctxFocos.join(", ")}.`);
+                  if (ctxEstilo.length) partes.push(`Estilo de resposta: ${ctxEstilo.join("; ")}.`);
+                  if (ctxRecursos.length) partes.push(`Recursos disponíveis: ${ctxRecursos.join(", ")}.`);
+                  if (ctxEvitar.length) partes.push(`Evitar: ${ctxEvitar.join(", ")}.`);
+                  if (ctxDocs.length) partes.push(`Documentos seguidos: ${ctxDocs.join(", ")}.`);
+                  if (ctxMomento.length) partes.push(`Momento do dia em foco: ${ctxMomento.join(", ")}.`);
                   if (observacoes.trim()) partes.push(observacoes.trim());
                   if (partes.length) {
                     sofia.openSofia({ prompt: `Atualize meu contexto: ${partes.join(" ")}`, send: false });
