@@ -679,6 +679,79 @@ export function Assistente() {
               )}
 
               <div className="ctx-section">
+                <div className="ctx-grid2">
+                  <div className="ctx-field-inline">
+                    <label>Etapa atual</label>
+                    <select className="" value={ctxBimestre} onChange={(e) => setCtxBimestre(e.target.value)} style={{ padding: "9px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Selecione…</option>
+                      {OPT_BIMESTRE.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                  <div className="ctx-field-inline">
+                    <label>Duração típica da aula</label>
+                    <select value={ctxDuracao} onChange={(e) => setCtxDuracao(e.target.value)} style={{ padding: "9px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Selecione…</option>
+                      {OPT_DURACAO.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Foco pedagógico do momento</div>
+                <div className="ctx-chips">
+                  {OPT_FOCOS.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxFocos.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxFocos)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Estilo de resposta da Sofia</div>
+                <div className="ctx-chips">
+                  {OPT_ESTILO.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxEstilo.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxEstilo)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Recursos disponíveis em sala</div>
+                <div className="ctx-chips">
+                  {OPT_RECURSOS.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxRecursos.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxRecursos)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Restrições / o que evitar</div>
+                <div className="ctx-chips">
+                  {OPT_EVITAR.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxEvitar.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxEvitar)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Documentos pedagógicos seguidos</div>
+                <div className="ctx-chips">
+                  {OPT_DOCS.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxDocs.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxDocs)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
+                <div className="ctx-section-label">Momento do dia em foco</div>
+                <div className="ctx-chips">
+                  {OPT_MOMENTO.map((o) => (
+                    <button key={o} type="button" className={"ctx-chip" + (ctxMomento.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxMomento)(o)}>{o}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="ctx-section">
                 <div className="ctx-section-label">Observações para a Sofia</div>
                 <div className="ctx-field">
                   <textarea
@@ -702,6 +775,14 @@ export function Assistente() {
                       : " Sem alunos PCD registrados.";
                     partes.push(`Foque na turma ${turmaSelecionada.name} com ${turmaSelecionada.alunos.length} alunos.${pcdTxt}`);
                   }
+                  if (ctxBimestre) partes.push(`Etapa atual: ${ctxBimestre}.`);
+                  if (ctxDuracao) partes.push(`Duração típica da aula: ${ctxDuracao}.`);
+                  if (ctxFocos.length) partes.push(`Foco pedagógico: ${ctxFocos.join(", ")}.`);
+                  if (ctxEstilo.length) partes.push(`Estilo de resposta: ${ctxEstilo.join("; ")}.`);
+                  if (ctxRecursos.length) partes.push(`Recursos disponíveis: ${ctxRecursos.join(", ")}.`);
+                  if (ctxEvitar.length) partes.push(`Evitar: ${ctxEvitar.join(", ")}.`);
+                  if (ctxDocs.length) partes.push(`Documentos seguidos: ${ctxDocs.join(", ")}.`);
+                  if (ctxMomento.length) partes.push(`Momento do dia em foco: ${ctxMomento.join(", ")}.`);
                   if (observacoes.trim()) partes.push(observacoes.trim());
                   if (partes.length) {
                     sofia.openSofia({ prompt: `Atualize meu contexto: ${partes.join(" ")}`, send: false });
