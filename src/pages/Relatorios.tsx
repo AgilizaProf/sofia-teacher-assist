@@ -14,6 +14,7 @@ import {
   MessageSquare, Download, Copy, X, ClipboardList, UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const css = `
 .rel-root{
