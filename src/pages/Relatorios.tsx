@@ -720,12 +720,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
 
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
-  const finalizados = ctx.dataState.pareceres_finalizados;
   const alunosCount = dashStudents.length > 0 ? dashStudents.length : ctx.dataState.alunos_count;
-  const pct = totalBim > 0 ? Math.round((finalizados / totalBim) * 100) : 0;
-  const restantes = Math.max(0, totalBim - finalizados);
-  const aFazer = Math.max(0, alunosCount - finalizados - Math.min(3, restantes));
-  const rascunhos = Math.min(3, restantes);
   const horasEcon = ctx.user.horas_economizadas_mes;
 
   // Mesmo cálculo da página inicial (Tempo devolvido)
@@ -733,7 +728,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
     dashSchools.length * 10 +
     dashClasses.length * 20 +
     dashStudents.length * 5 +
-    (user.documentsGenerated || finalizados) * 30;
+    (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 30;
   const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
   const animatedMin = useAnimatedNumber(totalSavedMin, 900);
   const savedH = Math.floor(animatedMin / 60);
@@ -798,6 +793,15 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
     if (filterPcd === "Apenas PCD" && !a.pcd) return false;
     return true;
   }), [alunosLista, tab, search, filterTurma, filterPcd]);
+
+  // Contagens reais derivadas da lista de alunos (PROGRESSO DO BIMESTRE / KPIs).
+  const finalizados = alunosLista.filter((a) => a.status === "done").length;
+  const rascunhos = alunosLista.filter((a) => a.status === "draft").length;
+  const aRevisar = alunosLista.filter((a) => a.status === "review").length;
+  const aFazer = alunosLista.filter((a) => a.status === "todo").length;
+  const totalAlunos = alunosLista.length || alunosCount;
+  const pct = totalAlunos > 0 ? Math.round((finalizados / totalAlunos) * 100) : 0;
+  const restantes = Math.max(0, totalAlunos - finalizados);
 
   // Bubble Sofia contextual (proativo)
   const bubbleMsg = (() => {
