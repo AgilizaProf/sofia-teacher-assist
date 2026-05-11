@@ -1993,6 +1993,88 @@ export function Planejamento() {
       return true;
     });
   }, [m6Entries, m6HasFilter, m6FilterTag, m6FilterTurma, m6FilterAluno]);
+  // Detecta padrões reais nos últimos 5 registros do diário (M6) e devolve
+  // a sugestão da Sofia mais relevante. Se não houver padrão (≥2 ocorrências),
+  // retorna null e o card não é exibido.
+  const m6SofiaPattern = useMemo(() => {
+    const ultimos = [...m6Entries]
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+      .slice(0, 5);
+    if (ultimos.length < 2) return null;
+    type Cat = {
+      key: string;
+      label: string;
+      test: (txt: string, emoji: string) => boolean;
+      sugestao: string;
+      acao: string;
+      toast: string;
+    };
+    const cats: Cat[] = [
+      {
+        key: "agitacao",
+        label: "agitação após recreio",
+        test: (t) => /agita|recreio|disper|barulh|conflit|inquiet/.test(t),
+        sugestao: "atividades de respiração (4-7-8) na abertura da próxima aula",
+        acao: "Sim, sugerir respiração",
+        toast: "✓ Respiração 4-7-8 adicionada à abertura do próximo plano.",
+      },
+      {
+        key: "reforco",
+        label: "dúvidas no conceito-chave",
+        test: (t) => /trav|reforço|reforco|não entend|nao entend|dúvida|duvida|dificuldade/.test(t),
+        sugestao: "10 min de retomada com material concreto/visual antes de avançar",
+        acao: "Sim, planejar retomada",
+        toast: "✓ Bloco de retomada com material concreto adicionado.",
+      },
+      {
+        key: "inclusao",
+        label: "necessidades de inclusão",
+        test: (t) => /pcd|tea|tdah|inclus|adapta/.test(t),
+        sugestao: "adaptações visuais, tempo extra e parceria de apoio",
+        acao: "Sim, gerar adaptações",
+        toast: "✓ Adaptações PCD adicionadas ao próximo plano.",
+      },
+      {
+        key: "funcionou",
+        label: "estratégias que engajaram",
+        test: (t, emoji) => /funcionou|engaj|gostaram|deu certo/.test(t) || /🌟|😄/.test(emoji),
+        sugestao: "replicar a dinâmica que funcionou ampliando para produção em duplas",
+        acao: "Sim, ampliar estratégia",
+        toast: "✓ Estratégia replicada no próximo plano.",
+      },
+      {
+        key: "familia",
+        label: "pontos para comunicar à família",
+        test: (t) => /famíl|famil|responsáv|responsav|casa|pais\b/.test(t),
+        sugestao: "rascunhar um comunicado curto para as famílias",
+        acao: "Sim, rascunhar bilhete",
+        toast: "✓ Rascunho de comunicado salvo em Comunicação.",
+      },
+      {
+        key: "cansaco",
+        label: "turma cansada / desmotivada",
+        test: (t, emoji) => /cansad|desmotiv|sono|apát|apat/.test(t) || /😣|😐/.test(emoji),
+        sugestao: "abrir mais leve, com dinâmica curta em pé antes do conteúdo",
+        acao: "Sim, sugerir dinâmica",
+        toast: "✓ Dinâmica de aquecimento adicionada à abertura.",
+      },
+    ];
+    let melhor: { cat: Cat; n: number } | null = null;
+    for (const c of cats) {
+      const n = ultimos.filter((e) => c.test(`${e.title} ${e.text} ${e.tags.join(" ")}`.toLowerCase(), e.emoji)).length;
+      if (n >= 2 && (!melhor || n > melhor.n)) melhor = { cat: c, n };
+    }
+    if (!melhor) return null;
+    return {
+      total: ultimos.length,
+      n: melhor.n,
+      label: melhor.cat.label,
+      sugestao: melhor.cat.sugestao,
+      acao: melhor.cat.acao,
+      toast: melhor.cat.toast,
+      key: melhor.cat.key,
+    };
+  }, [m6Entries]);
   const m6ClearFilters = () => {
     // Limpa também o espelho em localStorage para que a próxima visita
     // venha realmente sem filtros.
