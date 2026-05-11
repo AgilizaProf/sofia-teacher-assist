@@ -3881,14 +3881,14 @@ export function Planejamento() {
                         </button>
                       </div>
                     )}
-                    {!m6PatternDismissed && (
+                    {!m6PatternDismissed && m6SofiaPattern && (
                       <div className="pl-d6-pattern">
                         <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>✨ Sofia detectou um padrão</div>
                         <p style={{ fontSize: 13, color: "#7A2E0A", lineHeight: 1.5, margin: 0 }}>
-                          3 dos últimos 5 registros mencionam <strong>"agitação após recreio"</strong>. Quer que eu sugira atividades de respiração?
+                          {m6SofiaPattern.n} dos últimos {m6SofiaPattern.total} registros mencionam <strong>"{m6SofiaPattern.label}"</strong>. Quer que eu sugira {m6SofiaPattern.sugestao}?
                         </p>
                         <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                          <button className="pl-btn primary" onClick={() => { showToast("✓ Sugestões de respiração adicionadas ao planejamento."); setM6PatternDismissed(true); }}>Sim, sugerir</button>
+                          <button className="pl-btn primary" onClick={() => { showToast(m6SofiaPattern.toast); setM6PatternDismissed(true); }}>{m6SofiaPattern.acao}</button>
                           <button className="pl-btn ghost" onClick={() => setM6PatternDismissed(true)}>Agora não</button>
                         </div>
                       </div>
