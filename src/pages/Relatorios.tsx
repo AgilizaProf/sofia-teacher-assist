@@ -1733,6 +1733,58 @@ ${linhasArea}
           </div>
         </div>
       )}
+
+      {statusModal && (() => {
+        const labelMap: Record<"todo" | "draft" | "done", { title: string; eyebrow: string; desc: string }> = {
+          todo:  { title: "Alunos a fazer",      eyebrow: "A FAZER",      desc: "Estes alunos ainda não tiveram a BNCC avaliada neste bimestre." },
+          draft: { title: "Pareceres em rascunho", eyebrow: "EM RASCUNHO", desc: "Avaliações iniciadas que ainda não foram concluídas." },
+          done:  { title: "Pareceres finalizados", eyebrow: "FINALIZADOS", desc: "Pareceres já gerados — clique para revisar e exportar." },
+        };
+        const info = labelMap[statusModal];
+        const lista = alunosLista.filter((a) => a.status === statusModal);
+        return (
+          <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setStatusModal(null)}>
+            <div className="rel-modal" onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>{info.eyebrow} · {lista.length}</div>
+                  <h3 style={{ margin: 0 }}>{info.title}</h3>
+                  <div className="rel-modal-meta">{info.desc}</div>
+                </div>
+                <button onClick={() => setStatusModal(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+              </div>
+              <div className="rel-modal-body" style={{ padding: 8 }}>
+                {lista.length === 0 ? (
+                  <div style={{ padding: 18, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>Nenhum aluno nesta categoria.</div>
+                ) : (
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                    {lista.map((a) => (
+                      <li key={a.id}>
+                        <button
+                          onClick={() => { setStatusModal(null); setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel }); }}
+                          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff", cursor: "pointer", textAlign: "left" }}
+                        >
+                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            <span style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{a.nome}</span>
+                            <span style={{ fontSize: 12, color: "var(--muted)" }}>{a.turma || "Sem turma"}{a.pcd ? ` · PCD: ${a.pcd}` : ""}{a.naoObservadas ? ` · ${a.naoObservadas} não observada(s)` : ""}</span>
+                          </div>
+                          <ArrowRight size={14} strokeWidth={2.2} color="var(--muted)" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="rel-modal-foot">
+                <button className="rel-btn-card" onClick={() => setStatusModal(null)}>Fechar</button>
+                <button className="rel-btn-card dark" onClick={() => { setTab(statusModal); setStatusModal(null); document.getElementById("rel-filters-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>
+                  Ver na lista <ArrowRight size={13} strokeWidth={2.4} />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
