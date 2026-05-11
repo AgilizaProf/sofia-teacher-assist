@@ -453,9 +453,24 @@ export function Relatorios() {
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
   type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
-  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const [dashStudents, setDashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
   const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
+
+  // Cadastro rápido de aluno (vincula a uma turma já criada)
+  const [novoAlunoOpen, setNovoAlunoOpen] = useState(false);
+  const [novoAluno, setNovoAluno] = useState<DashStudent>({ name: "", classRef: "", birth: "", pcd: "nao", notes: "" });
+  const abrirNovoAluno = () => {
+    setNovoAluno({ name: "", classRef: dashClasses[0]?.name || "", birth: "", pcd: "nao", notes: "" });
+    setNovoAlunoOpen(true);
+  };
+  const salvarNovoAluno = () => {
+    const nome = novoAluno.name.trim();
+    if (!nome) { toast.error("Informe o nome do(a) aluno(a)."); return; }
+    setDashStudents((cur) => [...cur, { ...novoAluno, name: nome, createdAt: new Date().toISOString() }]);
+    setNovoAlunoOpen(false);
+    toast.success(`${nome} cadastrado(a) com sucesso.`);
+  };
 
   // Rubrica BNCC por aluno (persistido)
   const [bnccByAluno, setBnccByAluno] = usePersistentState<Record<string, Record<string, BnccStatus>>>("rel_bncc", {});
