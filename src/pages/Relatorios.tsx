@@ -480,6 +480,13 @@ export function Relatorios() {
   const [verTodosHist, setVerTodosHist] = useState(false);
   const HIST_LIMIT = 5;
 
+  // Modal unificado por aluno (todo / draft / review / done)
+  type AlunoModalData = { id: string; nome: string; turma: string; pcd: string; status: "todo" | "draft" | "review" | "done"; statusLabel: string };
+  const [alunoModal, setAlunoModal] = useState<AlunoModalData | null>(null);
+
+  // Tutorial "Como funciona"
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
     const cls = dashClasses.find((c) => c.name === turma);
@@ -674,7 +681,7 @@ export function Relatorios() {
                   <button className="rel-btn-primary" onClick={goLote} aria-label="Gerar com a Sofia">
                     <Sparkles size={14} strokeWidth={2.4} /> {totalBim === 0 ? (isEi ? "Gerar primeiro relatório" : "Gerar primeiro parecer") : restantes > 0 ? `Gerar ${restantes} restantes` : "Exportar tudo (PDF)"} <ArrowRight size={14} strokeWidth={2.4} />
                   </button>
-                  <button className="rel-btn-ghost" aria-label="Ver vídeo de como funciona">
+                  <button className="rel-btn-ghost" aria-label="Ver como funciona" onClick={() => setTutorialOpen(true)}>
                     <PlayCircle size={14} /> Como funciona · 60s
                   </button>
                 </div>
@@ -752,6 +759,16 @@ export function Relatorios() {
               <h2>Pareceres deste bimestre</h2>
               <p>Filtre por status, turma ou aluno. Clique para gerar com a Sofia ou abrir o rascunho.</p>
             </div>
+            <div className="rel-sec-actions">
+              <button
+                className="rel-pill"
+                onClick={abrirNovoAluno}
+                style={{ background: "var(--primary-dark)", color: "#fff", border: 0 }}
+                title="Cadastrar novo aluno e vincular a uma turma"
+              >
+                <UserPlus size={13} /> Cadastrar aluno
+              </button>
+            </div>
           </div>
 
           {/* Filters */}
@@ -785,14 +802,6 @@ export function Relatorios() {
               <Search size={13} color="#7a8194" />
               <input placeholder="Buscar aluno..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar aluno" />
             </div>
-            <button
-              className="rel-pill"
-              onClick={abrirNovoAluno}
-              style={{ marginLeft: "auto", background: "var(--primary-dark)", color: "#fff", border: 0 }}
-              title="Cadastrar novo aluno e vincular a uma turma"
-            >
-              <UserPlus size={13} /> Cadastrar aluno
-            </button>
           </div>
 
           {/* Cards grid */}
@@ -808,7 +817,12 @@ export function Relatorios() {
             )}
 
             {alunosFiltered.map((a) => (
-              <article key={a.id} className="rel-card">
+              <article
+                key={a.id}
+                className="rel-card"
+                onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="rel-card-head">
                   <div className="rel-av">{a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}</div>
                   <div className="rel-stu">
@@ -830,7 +844,7 @@ export function Relatorios() {
                     </div>
                   );
                 })()}
-                <div className="rel-card-foot">
+                <div className="rel-card-foot" onClick={(e) => e.stopPropagation()}>
                   <button
                     className="rel-btn-card"
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
@@ -839,17 +853,17 @@ export function Relatorios() {
                     <ClipboardList size={13} /> Avaliar BNCC
                   </button>
                   {a.status === "todo" && (
-                    <button className="rel-btn-card accent" onClick={() => sofia.openSofia({ prompt: `Gere o parecer descritivo bimestral de ${a.nome} alinhado à BNCC.`, send: false })}>
+                    <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
                       <Sparkles size={13} /> Gerar com Sofia
                     </button>
                   )}
                   {a.status === "draft" && (
-                    <button className="rel-btn-card dark" onClick={() => sofia.openSofia({ prompt: `Vamos revisar o rascunho do parecer de ${a.nome}.`, send: false })}>
+                    <button className="rel-btn-card dark" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
                       <Edit3 size={13} /> Abrir rascunho
                     </button>
                   )}
                   {a.status === "done" && (
-                    <button className="rel-btn-card" onClick={() => sofia.openSofia({ prompt: `Mostre o parecer finalizado de ${a.nome}.`, send: false })}>
+                    <button className="rel-btn-card" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
                       <CheckCircle2 size={13} /> Ver finalizado
                     </button>
                   )}
@@ -900,51 +914,63 @@ export function Relatorios() {
           <div className="rel-sec-head" style={{ marginTop: 34 }}>
             <div>
               <h2>Finalizados recentemente</h2>
-              <p>Acesse, baixe em PDF ou duplique para o próximo bimestre.</p>
+              <p>Clique em um(a) aluno(a) para abrir o parecer finalizado.</p>
             </div>
-            <div className="rel-sec-actions">
-              <button className="rel-pill" aria-label="Exportar tudo em PDF"><Download size={13} /> Exportar tudo (PDF)</button>
-              <button
-                className="rel-pill"
-                aria-label={verTodosHist ? "Recolher lista" : "Ver todos os finalizados"}
-                aria-expanded={verTodosHist}
-                disabled={HISTORY.length === 0}
-                onClick={() => setVerTodosHist((v) => !v)}
-                title={HISTORY.length === 0 ? "Sem finalizados ainda" : undefined}
-              >
-                {verTodosHist ? "Recolher" : `Ver todos (${HISTORY.length}) →`}
-              </button>
-            </div>
+            {(() => {
+              const finList = alunosLista.filter((a) => a.status === "done");
+              return (
+                <div className="rel-sec-actions">
+                  <button
+                    className="rel-pill"
+                    aria-label={verTodosHist ? "Recolher lista" : "Ver todos os finalizados"}
+                    aria-expanded={verTodosHist}
+                    disabled={finList.length <= HIST_LIMIT}
+                    onClick={() => setVerTodosHist((v) => !v)}
+                  >
+                    {verTodosHist ? "Recolher" : `Ver todos (${finList.length}) →`}
+                  </button>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="rel-history">
-            {HISTORY.length === 0 && (
-              <EmptyState
-                icon="📂"
-                title="Nenhum parecer finalizado ainda."
-                description="Finalize seus primeiros pareceres pra acompanhar o histórico aqui."
-              />
-            )}
-            {(verTodosHist ? HISTORY : HISTORY.slice(0, HIST_LIMIT)).map((h) => (
-              <div key={h.initials} className="rel-h-row">
-                <div className="rel-h-av" style={{ background: h.bg }}>{h.initials}</div>
-                <div className="rel-h-name"><b>{h.name} · 1º bimestre</b><small>{h.meta}</small></div>
-                <span className="rel-status done"><span className="dot" />ASSINADO</span>
-                <div className="rel-h-date">{h.date}</div>
-                <div className="rel-h-actions">
-                  <button className="rel-h-icon" aria-label="Baixar PDF"><Download size={13} /></button>
-                  <button className="rel-h-icon" aria-label="Duplicar"><Copy size={13} /></button>
-                  <button className="rel-h-icon" aria-label="Abrir"><ArrowRight size={13} /></button>
-                </div>
-              </div>
-            ))}
-            {!verTodosHist && HISTORY.length > HIST_LIMIT && (
-              <div style={{ display: "flex", justifyContent: "center", padding: "10px 0" }}>
-                <button className="rel-pill" onClick={() => setVerTodosHist(true)}>
-                  Ver todos os {HISTORY.length} finalizados →
-                </button>
-              </div>
-            )}
+            {(() => {
+              const finList = alunosLista.filter((a) => a.status === "done");
+              if (finList.length === 0) {
+                return (
+                  <EmptyState
+                    icon="📂"
+                    title="Nenhum parecer finalizado ainda."
+                    description="Finalize seus primeiros pareceres pra acompanhar o histórico aqui."
+                  />
+                );
+              }
+              const visible = verTodosHist ? finList : finList.slice(0, HIST_LIMIT);
+              const palette = ["#FF6A2C", "#6E5BE6", "#16A36B", "#3B82F6", "#EC4899", "#E9A23B"];
+              return visible.map((a, idx) => {
+                const initials = a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+                return (
+                  <button
+                    key={a.id}
+                    className="rel-h-row"
+                    onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}
+                    style={{ width: "100%", textAlign: "left", cursor: "pointer", background: "transparent", border: 0, borderBottom: "1px solid #F1EFE8" }}
+                  >
+                    <div className="rel-h-av" style={{ background: palette[idx % palette.length] }}>{initials}</div>
+                    <div className="rel-h-name">
+                      <b>{a.nome}</b>
+                      <small>{a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · ${a.pcd}` : ""}</small>
+                    </div>
+                    <span className="rel-status done"><span className="dot" />FINALIZADO</span>
+                    <div className="rel-h-date">Bimestre atual</div>
+                    <div className="rel-h-actions">
+                      <span className="rel-h-icon" aria-hidden><ArrowRight size={13} /></span>
+                    </div>
+                  </button>
+                );
+              });
+            })()}
           </div>
         </div>
       </main>
@@ -1219,6 +1245,117 @@ export function Relatorios() {
               <button onClick={() => setNovoAlunoOpen(false)} style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancelar</button>
               <button onClick={salvarNovoAluno} style={{ background: "var(--primary-dark)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <UserPlus size={13} /> Cadastrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {alunoModal && (() => {
+        const a = alunoModal;
+        const isTodo = a.status === "todo";
+        const isDraft = a.status === "draft";
+        const isReview = a.status === "review";
+        const isDone = a.status === "done";
+        const headerColor = isTodo ? "#9C6B1F" : isDraft ? "#4B3CA8" : isReview ? "#C84A14" : "#0E7A4F";
+        const titulo = isTodo ? "Parecer a fazer" : isDraft ? "Rascunho do parecer" : isReview ? "Parecer para revisar" : "Parecer finalizado";
+        const descricao = isTodo
+          ? "Ainda não há parecer gerado. Use a Sofia para criar um rascunho a partir da anamnese, registros e PEI."
+          : isDraft
+          ? "Existe um rascunho salvo. Continue editando ou peça para a Sofia complementar."
+          : isReview
+          ? "Rascunho pronto para revisão final. Confira o texto, ajuste e finalize."
+          : "Parecer finalizado. Você pode reabrir, exportar em PDF/Word ou imprimir.";
+        return (
+          <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setAlunoModal(null)}>
+            <div className="rel-modal" onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: headerColor, marginBottom: 4 }}>{titulo}</div>
+                  <h3 style={{ margin: 0 }}>{a.nome}</h3>
+                  <div className="rel-modal-meta" style={{ marginBottom: 0 }}>
+                    {a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · PCD: ${a.pcd}` : ""}
+                  </div>
+                </div>
+                <button onClick={() => setAlunoModal(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+              </div>
+              <div style={{ marginTop: 14 }} className="rel-modal-body">
+                <p style={{ margin: 0 }}>{descricao}</p>
+                {(() => {
+                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+                  return (
+                    <div style={{ marginTop: 14 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
+                        <span>Avaliação BNCC</span>
+                        <span>{pctPreenchido}% avaliado · Desempenho {pctDesempenho}%</span>
+                      </div>
+                      <div className="rel-progress" style={{ marginTop: 6 }}><i style={{ width: `${pctPreenchido}%` }} /></div>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="rel-modal-foot" style={{ flexWrap: "wrap" }}>
+                <button className="rel-btn-card" onClick={() => { setAlunoModal(null); setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }); }}>
+                  <ClipboardList size={13} /> Avaliar BNCC
+                </button>
+                {isTodo && (
+                  <button className="rel-btn-card accent" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Gere o parecer descritivo bimestral de ${a.nome} (${a.turma || "sem turma"}) alinhado à BNCC. Use o que estiver preenchido na anamnese, registros e PEI.`, send: false }); }}>
+                    <Sparkles size={13} /> Gerar com a Sofia
+                  </button>
+                )}
+                {isDraft && (
+                  <button className="rel-btn-card dark" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Vamos continuar o rascunho do parecer de ${a.nome}.`, send: false }); }}>
+                    <Edit3 size={13} /> Continuar rascunho
+                  </button>
+                )}
+                {isReview && (
+                  <button className="rel-btn-card accent" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Abra o parecer de ${a.nome} para revisão final.`, send: false }); }}>
+                    <CheckCircle2 size={13} /> Revisar e finalizar
+                  </button>
+                )}
+                {isDone && (
+                  <>
+                    <button className="rel-btn-card" onClick={() => { setAlunoModal(null); sofia.openSofia({ prompt: `Mostre o parecer finalizado de ${a.nome}.`, send: false }); }}>
+                      <FileText size={13} /> Ver parecer
+                    </button>
+                    <button className="rel-btn-card dark" onClick={() => toast.success("Exportação em PDF iniciada.")}>
+                      <Download size={13} /> PDF
+                    </button>
+                  </>
+                )}
+                <button className="rel-btn-card" onClick={() => setAlunoModal(null)}>Fechar</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {tutorialOpen && (
+        <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setTutorialOpen(false)}>
+          <div className="rel-modal" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Tutorial · 60s</div>
+                <h3 style={{ margin: 0 }}>Como funciona esta página</h3>
+                <div className="rel-modal-meta">Um passo a passo rápido para gerar pareceres com a Sofia.</div>
+              </div>
+              <button onClick={() => setTutorialOpen(false)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+            </div>
+            <div className="rel-modal-body">
+              <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+                <li><b>Cadastre o(a) aluno(a)</b> no botão <i>Cadastrar aluno</i>, vinculando a uma turma já criada.</li>
+                <li><b>Avalie a BNCC</b> clicando em <i>Avaliar BNCC</i> no card do aluno: marque cada competência como NO, NA, ED ou CO.</li>
+                <li><b>Gere o parecer com a Sofia</b>: ela usa anamnese, registros, PEI e a rubrica BNCC para escrever um rascunho.</li>
+                <li><b>Revise e finalize</b>: edite o texto, salve em PDF/Word ou imprima quando estiver pronto.</li>
+                <li><b>Acompanhe o progresso</b> nos KPIs do topo (a fazer, rascunho, finalizados e tempo economizado).</li>
+                <li><b>Filtre</b> por status, turma, bimestre ou apenas alunos PCD usando os filtros acima da lista.</li>
+              </ol>
+              <p style={{ marginTop: 14, fontSize: 12, color: "var(--muted)" }}>Dica: clique em qualquer card de aluno (ou em um(a) aluno(a) finalizado(a) abaixo) para abrir as ações específicas daquele status.</p>
+            </div>
+            <div className="rel-modal-foot">
+              <button className="rel-btn-card" onClick={() => setTutorialOpen(false)}>Fechar</button>
+              <button className="rel-btn-card dark" onClick={() => { setTutorialOpen(false); abrirNovoAluno(); }}>
+                Começar agora <ArrowRight size={13} strokeWidth={2.4} />
               </button>
             </div>
           </div>
