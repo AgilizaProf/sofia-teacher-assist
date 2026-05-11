@@ -794,6 +794,15 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
     return true;
   }), [alunosLista, tab, search, filterTurma, filterPcd]);
 
+  // Contagens reais derivadas da lista de alunos (PROGRESSO DO BIMESTRE / KPIs).
+  const finalizados = alunosLista.filter((a) => a.status === "done").length;
+  const rascunhos = alunosLista.filter((a) => a.status === "draft").length;
+  const aRevisar = alunosLista.filter((a) => a.status === "review").length;
+  const aFazer = alunosLista.filter((a) => a.status === "todo").length;
+  const totalAlunos = alunosLista.length || alunosCount;
+  const pct = totalAlunos > 0 ? Math.round((finalizados / totalAlunos) * 100) : 0;
+  const restantes = Math.max(0, totalAlunos - finalizados);
+
   // Bubble Sofia contextual (proativo)
   const bubbleMsg = (() => {
     if (!isPro) return null;
