@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Printer, Download, Edit3, Save, X } from "lucide-react";
 import { useTurmas } from "@/hooks/useTurmas";
 
 const DISCIPLINAS_COMUNS = [
@@ -393,19 +393,47 @@ export function TrilhasPanel() {
 }
 
 function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilha; semana: Semana }) {
-  const p = (plano || {}) as {
+  type DiaPlano = { dia?: string; titulo?: string; objetivo?: string; abertura?: string; desenvolvimento?: string; fechamento?: string; materiais?: string[]; habilidade_bncc?: string; adaptacao_pcd?: string };
+  const pInicial = (plano || {}) as {
     objetivo_geral?: string;
-    dias?: Array<{ dia?: string; titulo?: string; objetivo?: string; abertura?: string; desenvolvimento?: string; fechamento?: string; materiais?: string[]; habilidade_bncc?: string; adaptacao_pcd?: string }>;
+    dias?: DiaPlano[];
     avaliacao_formativa?: string;
     ponte_proxima_semana?: string;
   };
-  const dias = p.dias || [];
+  const [dias, setDias] = useState<DiaPlano[]>(pInicial.dias || []);
+  const objetivoGeral = pInicial.objetivo_geral || "";
+  const avaliacao = pInicial.avaliacao_formativa || "";
+  const ponte = pInicial.ponte_proxima_semana || "";
   const today = new Date().toISOString().slice(0, 10);
   const [datas, setDatas] = useState<Record<number, string>>({});
   const [salvos, setSalvos] = useState<Record<number, "salvando" | "ok" | string>>({});
   const [salvandoTodos, setSalvandoTodos] = useState(false);
+  const [formato, setFormato] = useState<"completo" | "topicos">("completo");
+  const [selecionados, setSelecionados] = useState<Set<number>>(() => new Set(dias.map((_, i) => i)));
+  const [editando, setEditando] = useState<Record<number, boolean>>({});
+  const [rascunho, setRascunho] = useState<Record<number, DiaPlano>>({});
 
-  async function salvarDia(i: number, d: NonNullable<typeof p.dias>[number]) {
+  const toggleSel = (i: number) => setSelecionados((prev) => {
+    const next = new Set(prev);
+    if (next.has(i)) next.delete(i); else next.add(i);
+    return next;
+  });
+  const selecionarTodos = () => setSelecionados(new Set(dias.map((_, i) => i)));
+  const desmarcarTodos = () => setSelecionados(new Set());
+
+  const iniciarEdicao = (i: number) => { setRascunho((r) => ({ ...r, [i]: { ...dias[i] } })); setEditando((e) => ({ ...e, [i]: true })); };
+  const cancelarEdicao = (i: number) => { setEditando((e) => ({ ...e, [i]: false })); };
+  const confirmarEdicao = (i: number) => {
+    setDias((arr) => arr.map((d, idx) => (idx === i ? { ...(rascunho[i] || d) } : d)));
+    setEditando((e) => ({ ...e, [i]: false }));
+  };
+  const setRascunhoCampo = (i: number, campo: keyof DiaPlano, valor: string) => {
+    setRascunho((r) => ({ ...r, [i]: { ...(r[i] || dias[i]), [campo]: campo === "materiais" ? valor.split(",").map((s) => s.trim()).filter(Boolean) : valor } }));
+  };
+
+  const diasSelecionados = useMemo(() => dias.filter((_, i) => selecionados.has(i)), [dias, selecionados]);
+
+  async function salvarDia(i: number, d: DiaPlano) {
     setSalvos((x) => ({ ...x, [i]: "salvando" }));
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -428,7 +456,7 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
           disciplina: trilha.disciplina,
           semana_numero: semana.semana,
           plano: d,
-          objetivo_geral_semana: p.objetivo_geral || null,
+          objetivo_geral_semana: objetivoGeral || null,
         } as never,
       };
       const { error } = await supabase.from("planos_aula").insert([payload]);
@@ -439,32 +467,152 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
     }
   }
 
-  async function salvarTodos() {
+  async function salvarSelecionados() {
     setSalvandoTodos(true);
     for (let i = 0; i < dias.length; i++) {
-      // só salva os ainda não salvos
-      if (salvos[i] !== "ok") {
-        await salvarDia(i, dias[i]);
-      }
+      if (!selecionados.has(i)) continue;
+      if (salvos[i] === "ok") continue;
+      await salvarDia(i, dias[i]);
     }
     setSalvandoTodos(false);
   }
 
+  // ===== Exportações =====
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const buildHtml = (modo: "completo" | "topicos") => {
+    const cabec = `<h1>${esc(trilha.tema_central || "Trilha")} · S${semana.semana}</h1>
+<div class="meta">${esc(trilha.turma || "")} · ${esc(trilha.ano_escolar || "")} · ${esc(trilha.disciplina || "")} · ${esc(trilha.semestre || "")}</div>
+${objetivoGeral ? `<p><b>Objetivo geral:</b> ${esc(objetivoGeral)}</p>` : ""}`;
+    const corpo = diasSelecionados.map((d, idx) => {
+      const titulo = `<h2>Dia ${idx + 1}${d.dia ? ` · ${esc(d.dia)}` : ""}${d.titulo ? ` — ${esc(d.titulo)}` : ""}</h2>`;
+      if (modo === "topicos") {
+        const itens: string[] = [];
+        if (d.objetivo) itens.push(`<li><b>Objetivo:</b> ${esc(d.objetivo)}</li>`);
+        if (d.habilidade_bncc) itens.push(`<li><b>BNCC:</b> ${esc(d.habilidade_bncc)}</li>`);
+        if (d.abertura) itens.push(`<li><b>Abertura:</b> ${esc(d.abertura)}</li>`);
+        if (d.desenvolvimento) itens.push(`<li><b>Desenvolvimento:</b> ${esc(d.desenvolvimento)}</li>`);
+        if (d.fechamento) itens.push(`<li><b>Fechamento:</b> ${esc(d.fechamento)}</li>`);
+        if (Array.isArray(d.materiais) && d.materiais.length) itens.push(`<li><b>Materiais:</b> ${esc(d.materiais.join(", "))}</li>`);
+        if (d.adaptacao_pcd) itens.push(`<li><b>Adaptação PCD:</b> ${esc(d.adaptacao_pcd)}</li>`);
+        return `${titulo}<ul>${itens.join("")}</ul>`;
+      }
+      const par = (rot: string, txt?: string) => (txt ? `<p><b>${rot}:</b> ${esc(txt)}</p>` : "");
+      return `${titulo}
+${par("Objetivo", d.objetivo)}
+${par("BNCC", d.habilidade_bncc)}
+${par("Abertura", d.abertura)}
+${par("Desenvolvimento", d.desenvolvimento)}
+${par("Fechamento", d.fechamento)}
+${Array.isArray(d.materiais) && d.materiais.length ? `<p><b>Materiais:</b> ${esc(d.materiais.join(", "))}</p>` : ""}
+${par("Adaptação PCD", d.adaptacao_pcd)}`;
+    }).join("\n");
+    const rod = `${avaliacao ? `<p><b>Avaliação formativa:</b> ${esc(avaliacao)}</p>` : ""}${ponte ? `<p><b>Ponte p/ próxima semana:</b> ${esc(ponte)}</p>` : ""}`;
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Trilha · S${semana.semana}</title>
+<style>@page{size:A4;margin:22mm 20mm;}body{font-family:Inter,Arial,sans-serif;color:#0B1220;line-height:1.55;font-size:12pt;}h1{font-family:Fraunces,Georgia,serif;font-size:22pt;margin:0 0 4px;color:#0F1B36;}h2{font-size:13pt;color:#FF6A2C;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #E7E9EF;padding-bottom:4px;}.meta{color:#6B7691;font-size:10.5pt;margin-bottom:14px;}p{margin:6px 0;}ul{margin:6px 0;padding-left:18px;}</style></head><body>${cabec}${corpo}${rod}</body></html>`;
+  };
+  const exportarPdf = () => {
+    if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
+    const html = buildHtml(formato);
+    const w = window.open("", "_blank", "width=900,height=1000");
+    if (!w) { alert("Permita pop-ups para gerar o PDF."); return; }
+    w.document.open(); w.document.write(html); w.document.close(); w.focus();
+    setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 350);
+  };
+  const exportarWord = () => {
+    if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
+    const html = buildHtml(formato);
+    const docHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">${html.replace(/^<!doctype html>/i, "").replace(/^<html>/i, "").replace(/<\/html>$/i, "")}</html>`;
+    const blob = new Blob(['\ufeff', docHtml], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Trilha_${(trilha.tema_central || "plano").replace(/\s+/g, "_")}_S${semana.semana}.doc`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  };
+
+  const renderCampo = (i: number, campo: keyof DiaPlano, label: string, multi = false) => {
+    const d = dias[i];
+    if (editando[i]) {
+      const valor = (rascunho[i]?.[campo] as string | string[] | undefined);
+      const v = Array.isArray(valor) ? valor.join(", ") : (valor || "");
+      return (
+        <div style={{ marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 2 }}>{label}</div>
+          {multi ? (
+            <textarea value={v} onChange={(e) => setRascunhoCampo(i, campo, e.target.value)} style={{ ...inputStyle, width: "100%", minHeight: 50, fontSize: 12.5 }} />
+          ) : (
+            <input value={v} onChange={(e) => setRascunhoCampo(i, campo, e.target.value)} style={{ ...inputStyle, width: "100%", fontSize: 12.5 }} />
+          )}
+        </div>
+      );
+    }
+    const val = d[campo];
+    if (!val || (Array.isArray(val) && val.length === 0)) return null;
+    const display = Array.isArray(val) ? val.join(", ") : String(val);
+    if (formato === "topicos") return <li><strong>{label}:</strong> {display}</li>;
+    return <div><em>{label}:</em> {display}</div>;
+  };
+
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      {p.objetivo_geral && <div><strong>Objetivo geral:</strong> {p.objetivo_geral}</div>}
+      {/* Toolbar: formato + seleção (alinhado com cabeçalho da BNCC/semana) */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", borderBottom: "1px dashed var(--line)", paddingBottom: 8 }}>
+        <div style={{ display: "inline-flex", gap: 4, background: "#F1F5F9", borderRadius: 8, padding: 3 }}>
+          <button type="button" onClick={() => setFormato("completo")}
+            style={{ padding: "4px 10px", borderRadius: 6, border: 0, fontSize: 11.5, fontWeight: 700, cursor: "pointer", background: formato === "completo" ? "#fff" : "transparent", color: formato === "completo" ? "var(--ink)" : "var(--muted)" }}>
+            Plano completo
+          </button>
+          <button type="button" onClick={() => setFormato("topicos")}
+            style={{ padding: "4px 10px", borderRadius: 6, border: 0, fontSize: 11.5, fontWeight: 700, cursor: "pointer", background: formato === "topicos" ? "#fff" : "transparent", color: formato === "topicos" ? "var(--ink)" : "var(--muted)" }}>
+            Tópicos
+          </button>
+        </div>
+        <div style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+          <span style={{ fontSize: 11.5, color: "var(--muted)" }}>{selecionados.size}/{dias.length} selecionado(s)</span>
+          <button className="pl-btn ghost" onClick={selecionarTodos} style={{ fontSize: 11 }}>Selecionar todos</button>
+          <button className="pl-btn ghost" onClick={desmarcarTodos} style={{ fontSize: 11 }}>Desmarcar todos</button>
+        </div>
+      </div>
+
+      {objetivoGeral && <div><strong>Objetivo geral:</strong> {objetivoGeral}</div>}
       {dias.map((d, i) => {
         const status = salvos[i];
+        const sel = selecionados.has(i);
+        const isEditing = !!editando[i];
+        const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => formato === "topicos"
+          ? <ul style={{ margin: "4px 0", paddingLeft: 18 }}>{children}</ul>
+          : <>{children}</>;
         return (
-          <div key={i} style={{ borderLeft: "3px solid var(--orange)", paddingLeft: 8 }}>
-            <div style={{ fontWeight: 600 }}>{d.dia} — {d.titulo}</div>
-            {d.objetivo && <div><em>Objetivo:</em> {d.objetivo}</div>}
-            {d.abertura && <div><em>Abertura:</em> {d.abertura}</div>}
-            {d.desenvolvimento && <div><em>Desenvolvimento:</em> {d.desenvolvimento}</div>}
-            {d.fechamento && <div><em>Fechamento:</em> {d.fechamento}</div>}
-            {Array.isArray(d.materiais) && d.materiais.length > 0 && <div><em>Materiais:</em> {d.materiais.join(", ")}</div>}
-            {d.habilidade_bncc && <div><em>BNCC:</em> {d.habilidade_bncc}</div>}
-            {d.adaptacao_pcd && <div><em>Adaptação PCD:</em> {d.adaptacao_pcd}</div>}
+          <div key={i} style={{ borderLeft: `3px solid ${sel ? "var(--orange)" : "#E2E8F0"}`, paddingLeft: 8, opacity: sel ? 1 : 0.6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input type="checkbox" checked={sel} onChange={() => toggleSel(i)} style={{ width: 14, height: 14, accentColor: "var(--orange)" }} />
+              {isEditing ? (
+                <>
+                  <input value={(rascunho[i]?.dia ?? d.dia ?? "")} onChange={(e) => setRascunhoCampo(i, "dia", e.target.value)} placeholder="Dia" style={{ ...inputStyle, fontSize: 12.5, padding: "4px 8px", maxWidth: 140 }} />
+                  <input value={(rascunho[i]?.titulo ?? d.titulo ?? "")} onChange={(e) => setRascunhoCampo(i, "titulo", e.target.value)} placeholder="Título" style={{ ...inputStyle, fontSize: 12.5, padding: "4px 8px", flex: 1 }} />
+                </>
+              ) : (
+                <div style={{ fontWeight: 600, flex: 1 }}>{d.dia}{d.dia && d.titulo ? " — " : ""}{d.titulo}</div>
+              )}
+              {isEditing ? (
+                <>
+                  <button className="pl-btn ghost" onClick={() => confirmarEdicao(i)} style={{ fontSize: 11 }}><Save size={11} /> Aplicar</button>
+                  <button className="pl-btn ghost" onClick={() => cancelarEdicao(i)} style={{ fontSize: 11 }}><X size={11} /> Cancelar</button>
+                </>
+              ) : (
+                <button className="pl-btn ghost" onClick={() => iniciarEdicao(i)} title="Editar atividade" style={{ fontSize: 11 }}><Edit3 size={11} /> Editar</button>
+              )}
+            </div>
+            <Wrapper>
+              {renderCampo(i, "objetivo", "Objetivo")}
+              {renderCampo(i, "habilidade_bncc", "BNCC")}
+              {renderCampo(i, "abertura", "Abertura", true)}
+              {renderCampo(i, "desenvolvimento", "Desenvolvimento", true)}
+              {renderCampo(i, "fechamento", "Fechamento", true)}
+              {renderCampo(i, "materiais", "Materiais")}
+              {renderCampo(i, "adaptacao_pcd", "Adaptação PCD", true)}
+            </Wrapper>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
               <label style={{ fontSize: 11.5, color: "var(--muted)" }}>Distribuir no dia:</label>
               <input
@@ -489,13 +637,19 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
           </div>
         );
       })}
-      {p.avaliacao_formativa && <div><strong>Avaliação formativa:</strong> {p.avaliacao_formativa}</div>}
-      {p.ponte_proxima_semana && <div><strong>Ponte p/ próxima semana:</strong> {p.ponte_proxima_semana}</div>}
+      {avaliacao && <div><strong>Avaliação formativa:</strong> {avaliacao}</div>}
+      {ponte && <div><strong>Ponte p/ próxima semana:</strong> {ponte}</div>}
       {dias.length > 0 && (
-        <div style={{ marginTop: 6, display: "flex", justifyContent: "flex-end" }}>
-          <button className="pl-btn primary" onClick={salvarTodos} disabled={salvandoTodos} style={{ fontSize: 12 }}>
+        <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 6 }}>
+          <button className="pl-btn ghost" onClick={exportarPdf} style={{ fontSize: 12 }} disabled={selecionados.size === 0}>
+            <Printer size={12} /> Imprimir / PDF
+          </button>
+          <button className="pl-btn ghost" onClick={exportarWord} style={{ fontSize: 12 }} disabled={selecionados.size === 0}>
+            <Download size={12} /> Salvar em Word
+          </button>
+          <button className="pl-btn primary" onClick={salvarSelecionados} disabled={salvandoTodos || selecionados.size === 0} style={{ fontSize: 12 }}>
             {salvandoTodos ? <Loader2 size={12} className="animate-spin" /> : <BookOpen size={12} />}
-            {salvandoTodos ? "Salvando todos…" : "Salvar todos os planos de aula"}
+            {salvandoTodos ? "Salvando…" : `Salvar ${selecionados.size > 0 ? `(${selecionados.size}) ` : ""}no Planejamento`}
           </button>
         </div>
       )}
