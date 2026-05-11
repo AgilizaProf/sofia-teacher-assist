@@ -728,7 +728,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
     dashSchools.length * 10 +
     dashClasses.length * 20 +
     dashStudents.length * 5 +
-    (user.documentsGenerated || finalizados) * 30;
+    (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 30;
   const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
   const animatedMin = useAnimatedNumber(totalSavedMin, 900);
   const savedH = Math.floor(animatedMin / 60);
