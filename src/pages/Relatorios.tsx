@@ -11,8 +11,9 @@ import { useEiMode } from "@/lib/ei/useEiMode";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
-  MessageSquare, Download, Copy, X, ClipboardList,
+  MessageSquare, Download, Copy, X, ClipboardList, UserPlus,
 } from "lucide-react";
+import { toast } from "sonner";
 
 const css = `
 .rel-root{
@@ -452,9 +453,24 @@ export function Relatorios() {
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
   type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
-  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const [dashStudents, setDashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
   const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
+
+  // Cadastro rápido de aluno (vincula a uma turma já criada)
+  const [novoAlunoOpen, setNovoAlunoOpen] = useState(false);
+  const [novoAluno, setNovoAluno] = useState<DashStudent>({ name: "", classRef: "", birth: "", pcd: "nao", notes: "" });
+  const abrirNovoAluno = () => {
+    setNovoAluno({ name: "", classRef: dashClasses[0]?.name || "", birth: "", pcd: "nao", notes: "" });
+    setNovoAlunoOpen(true);
+  };
+  const salvarNovoAluno = () => {
+    const nome = novoAluno.name.trim();
+    if (!nome) { toast.error("Informe o nome do(a) aluno(a)."); return; }
+    setDashStudents((cur) => [...cur, { ...novoAluno, name: nome, createdAt: new Date().toISOString() }]);
+    setNovoAlunoOpen(false);
+    toast.success(`${nome} cadastrado(a) com sucesso.`);
+  };
 
   // Rubrica BNCC por aluno (persistido)
   const [bnccByAluno, setBnccByAluno] = usePersistentState<Record<string, Record<string, BnccStatus>>>("rel_bncc", {});
@@ -769,6 +785,14 @@ export function Relatorios() {
               <Search size={13} color="#7a8194" />
               <input placeholder="Buscar aluno..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar aluno" />
             </div>
+            <button
+              className="rel-pill"
+              onClick={abrirNovoAluno}
+              style={{ marginLeft: "auto", background: "var(--primary-dark)", color: "#fff", border: 0 }}
+              title="Cadastrar novo aluno e vincular a uma turma"
+            >
+              <UserPlus size={13} /> Cadastrar aluno
+            </button>
           </div>
 
           {/* Cards grid */}
@@ -1106,6 +1130,100 @@ export function Relatorios() {
           </div>
         );
       })()}
+      {novoAlunoOpen && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setNovoAlunoOpen(false); }}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,27,54,.55)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+        >
+          <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 480, boxShadow: "0 20px 60px rgba(0,0,0,.25)", overflow: "hidden" }}>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line-soft)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "var(--primary-dark)" }}>Cadastrar aluno</h3>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)" }}>Vincule o(a) aluno(a) a uma turma já cadastrada.</p>
+              </div>
+              <button onClick={() => setNovoAlunoOpen(false)} aria-label="Fechar" style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--muted)" }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
+                Nome completo
+                <input
+                  value={novoAluno.name}
+                  onChange={(e) => setNovoAluno((s) => ({ ...s, name: e.target.value }))}
+                  placeholder="Ex.: Pedro Henrique Silva"
+                  style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--line-soft)", fontSize: 13 }}
+                  autoFocus
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
+                Turma
+                {dashClasses.length === 0 ? (
+                  <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500, padding: "9px 12px", border: "1px dashed var(--line-soft)", borderRadius: 8 }}>
+                    Nenhuma turma cadastrada — o(a) aluno(a) ficará como “Sem turma”.
+                  </span>
+                ) : (
+                  <select
+                    value={novoAluno.classRef}
+                    onChange={(e) => setNovoAluno((s) => ({ ...s, classRef: e.target.value }))}
+                    style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--line-soft)", fontSize: 13, background: "#fff" }}
+                  >
+                    <option value="">Sem turma</option>
+                    {dashClasses.map((c) => (
+                      <option key={c.name} value={c.name}>{c.name}{c.grade ? ` · ${c.grade}` : ""}{c.shift ? ` · ${c.shift}` : ""}</option>
+                    ))}
+                  </select>
+                )}
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
+                  Data de nascimento
+                  <input
+                    type="date"
+                    value={novoAluno.birth}
+                    onChange={(e) => setNovoAluno((s) => ({ ...s, birth: e.target.value }))}
+                    style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--line-soft)", fontSize: 13 }}
+                  />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
+                  PCD
+                  <select
+                    value={novoAluno.pcd}
+                    onChange={(e) => setNovoAluno((s) => ({ ...s, pcd: e.target.value }))}
+                    style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--line-soft)", fontSize: 13, background: "#fff" }}
+                  >
+                    <option value="nao">Não</option>
+                    <option value="TEA">TEA</option>
+                    <option value="TDAH">TDAH</option>
+                    <option value="Dislexia">Dislexia</option>
+                    <option value="Discalculia">Discalculia</option>
+                    <option value="Deficiência intelectual">Deficiência intelectual</option>
+                    <option value="Deficiência física">Deficiência física</option>
+                    <option value="Deficiência visual">Deficiência visual</option>
+                    <option value="Deficiência auditiva">Deficiência auditiva</option>
+                    <option value="AH/SD">Altas habilidades / Superdotação</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </label>
+              </div>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
+                Observações (opcional)
+                <textarea
+                  value={novoAluno.notes}
+                  onChange={(e) => setNovoAluno((s) => ({ ...s, notes: e.target.value }))}
+                  rows={3}
+                  placeholder="Informações relevantes para o parecer…"
+                  style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--line-soft)", fontSize: 13, resize: "vertical", fontFamily: "inherit" }}
+                />
+              </label>
+            </div>
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line-soft)", display: "flex", gap: 8, justifyContent: "flex-end", background: "#FAFAFB" }}>
+              <button onClick={() => setNovoAlunoOpen(false)} style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancelar</button>
+              <button onClick={salvarNovoAluno} style={{ background: "var(--primary-dark)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <UserPlus size={13} /> Cadastrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
