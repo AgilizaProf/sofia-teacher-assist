@@ -139,21 +139,12 @@ const css = `
 .hero-metric-value{font-family:'Fraunces',serif;font-weight:800;font-size:54px;color:#fff;line-height:1;letter-spacing:-0.03em;margin-bottom:6px;display:flex;align-items:baseline;gap:4px;}
 .hero-metric-unit{font-size:22px;color:rgba(255,255,255,.62);font-weight:600;}
 .hero-metric-label{font-size:12px;color:rgba(255,255,255,.74);margin-bottom:16px;}
-.hero-tier-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:100px;background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);box-shadow:0 6px 18px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.18);margin-bottom:10px;font-size:11.5px;font-weight:800;color:#fff;letter-spacing:.02em;line-height:1;}
-.hero-tier-badge .tier-emoji{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));box-shadow:0 4px 10px rgba(255,122,69,.45);font-size:13px;}
-.hero-tier-badge .tier-name{display:inline-flex;align-items:center;gap:6px;}
-.hero-tier-badge .tier-name::after{content:"";width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.45);}
-.hero-tier-badge .tier-range{color:rgba(255,255,255,.78);font-weight:700;}
-.hero-tier-badge.tier-0 .tier-emoji{background:linear-gradient(135deg,#86efac,#22c55e);box-shadow:0 4px 10px rgba(34,197,94,.45);}
-.hero-tier-badge.tier-1 .tier-emoji{background:linear-gradient(135deg,#fde68a,#f59e0b);box-shadow:0 4px 10px rgba(245,158,11,.45);}
-.hero-tier-badge.tier-2 .tier-emoji{background:linear-gradient(135deg,#a5b4fc,#6366f1);box-shadow:0 4px 10px rgba(99,102,241,.45);}
-.hero-tier-badge.tier-3 .tier-emoji{background:linear-gradient(135deg,#fda4af,#f43f5e);box-shadow:0 4px 10px rgba(244,63,94,.45);}
-.hero-tier-badge.tier-4 .tier-emoji{background:linear-gradient(135deg,#7dd3fc,#0ea5e9);box-shadow:0 4px 10px rgba(14,165,233,.45);}
-.hero-tier-badge.tier-5 .tier-emoji{background:linear-gradient(135deg,#c4b5fd,#8b5cf6);box-shadow:0 4px 10px rgba(139,92,246,.45);}
-.hero-tier-badge.tier-6 .tier-emoji{background:linear-gradient(135deg,#fdba74,#ea580c);box-shadow:0 4px 10px rgba(234,88,12,.45);}
-.hero-tier-badge.tier-7 .tier-emoji{background:linear-gradient(135deg,#fcd34d,#d97706);box-shadow:0 6px 14px rgba(217,119,6,.55);}
-.hero-tier-badge.tier-8 .tier-emoji{background:linear-gradient(135deg,#fef08a,#facc15);box-shadow:0 0 0 2px rgba(250,204,21,.35),0 8px 18px rgba(250,204,21,.55);animation:tierPulse 2.4s ease-in-out infinite;}
-@keyframes tierPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+.hero-tier-badge{display:inline-flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;font-weight:800;color:#fff;letter-spacing:.01em;line-height:1;}
+.hero-tier-badge .tier-emoji{font-size:30px;line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));transition:transform .3s ease;}
+.hero-tier-badge:hover .tier-emoji{transform:scale(1.12) rotate(-4deg);}
+.hero-tier-badge .tier-name{font-family:'Fraunces',serif;font-weight:700;font-size:14px;color:#fff;}
+.hero-tier-badge.tier-8 .tier-emoji{animation:tierPulse 2.4s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(250,204,21,.65)) drop-shadow(0 4px 10px rgba(0,0,0,.3));}
+@keyframes tierPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
 .hero-metric-bar{height:5px;background:rgba(255,255,255,.10);border-radius:100px;overflow:hidden;margin-bottom:8px;position:relative;}
 .hero-metric-fill{height:100%;width:78%;background:linear-gradient(90deg,var(--accent),var(--accent-warm));border-radius:100px;box-shadow:0 0 12px rgba(255,122,69,.50);position:relative;}
 .hero-metric-fill::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);width:8px;height:8px;background:#fff;border-radius:50%;box-shadow:0 0 8px rgba(255,255,255,.8);}
