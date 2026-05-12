@@ -709,7 +709,11 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
   const printBatchReports = (alunos: { id: string; nome: string; turma: string; pcd: string }[]) => {
     if (alunos.length === 0) { toast.error("Selecione ao menos um aluno."); return; }
     const bodies = alunos.map((a) => buildReportBodyFor(a)).join("\n");
-    const html = wrapStandardPrintHtml(`Pareceres · ${alunos.length} aluno(s)`, bodies, PRINT_CSS);
+    const html = wrapStandardPrintHtml(`Pareceres · ${alunos.length} aluno(s)`, bodies, {
+      extraCss: PRINT_CSS,
+      professorNome: user.name,
+      docType: "parecer",
+    });
     const w = window.open("", "_blank", "width=900,height=1000");
     if (!w) { toast.error("Permita pop-ups para imprimir."); return; }
     w.document.open(); w.document.write(html); w.document.close();
@@ -1568,7 +1572,11 @@ ${linhasArea}
   <div>Família / Responsável</div>
 </div>
 <div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Pareceres descritivos</div>`;
-          return wrapStandardPrintHtml(`Parecer · ${esc(a.nome)}`, bodyInner, PRINT_CSS);
+          return wrapStandardPrintHtml(`Parecer · ${esc(a.nome)}`, bodyInner, {
+            extraCss: PRINT_CSS,
+            professorNome: user.name,
+            docType: "parecer",
+          });
         };
         const exportPdf = () => {
           const html = buildReportHtml();
