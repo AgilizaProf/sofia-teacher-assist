@@ -451,18 +451,21 @@ export function Dashboard() {
   const totalMinutes = user.hoursSavedTotal * 60 + earnedMinutes;
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
-  // Tier atual baseado nas horas totais economizadas.
+  // Faixas (tiers) para a mensagem do contador "Tempo devolvido".
+  // Baseadas no total de horas acumuladas — escolhemos a faixa onde
+  // `h` cai (min ≤ h ≤ max). 500h tem mensagem própria de marco histórico.
   const HOUR_TIERS = [
-    { h: 4,   icon: "☕",  text: "4 horas",   sub: "Uma manhã ou tarde inteira de volta pra você." },
-    { h: 8,   icon: "📚",  text: "8 horas",   sub: "Um dia inteiro de trabalho economizado." },
-    { h: 20,  icon: "🌅",  text: "20 horas",  sub: "Quatro dias de planejamento que viraram ensino." },
-    { h: 40,  icon: "🏖️", text: "40 horas",  sub: "Uma semana inteira de trabalho devolvida." },
-    { h: 80,  icon: "✈️",  text: "80 horas",  sub: "Duas semanas que viraram ensino de verdade." },
-    { h: 130, icon: "🎯",  text: "130 horas", sub: "Mais de um mês de trabalho economizado no ano." },
-    { h: 200, icon: "🏆",  text: "200 horas", sub: "Nível lendário. Você mudou sua prática docente." },
-    { h: 500, icon: "🌟",  text: "500 horas", sub: "Impossível? Você fez. São 62 dias de trabalho de volta." },
+    { min: 0,   max: 3,    icon: "🌱",  text: "Você está começando. Cada documento que o app gera é tempo que vai direto para os seus alunos." },
+    { min: 4,   max: 7,    icon: "☕",  text: "Uma manhã inteira economizada — tempo que não precisou sair do seu fim de semana." },
+    { min: 8,   max: 19,   icon: "📚",  text: "Um dia de trabalho inteiro de volta pra você. Menos burocracia, mais fôlego." },
+    { min: 20,  max: 39,   icon: "🌅",  text: "Com 20+ horas de volta, você já sente a diferença na sua rotina." },
+    { min: 40,  max: 79,   icon: "🏖️", text: "Uma semana de trabalho economizada. Esse tempo existia antes — só estava escondido nos documentos." },
+    { min: 80,  max: 129,  icon: "✈️",  text: "80 horas. Se fossem aulas de 50 minutos, você \"ganhou\" quase 100 aulas extras de preparo." },
+    { min: 130, max: 199,  icon: "🎯",  text: "130 horas economizadas — mais de um mês de trabalho que voltou para você e seus alunos." },
+    { min: 200, max: 499,  icon: "🏆",  text: "200+ horas. Você transformou sua rotina docente. Extraordinário." },
+    { min: 500, max: 9999, icon: "🌟",  text: "500 horas. Isso é mais de dois meses de trabalho inteiros devolvidos à sua vida. Histórico!" },
   ] as const;
-  const currentTier = [...HOUR_TIERS].reverse().find((t) => h >= t.h) || null;
+  const currentTier = HOUR_TIERS.find((t) => h >= t.min && h <= t.max) || HOUR_TIERS[0];
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
   // Cálculo: alunos sem parecer no bimestre.
@@ -851,16 +854,8 @@ export function Dashboard() {
                 <span>{h}</span>h<span className="hero-metric-unit"><span>{m}</span>min</span>
               </div>
               <div className="hero-metric-label">
-                {totalMinutes === 0
-                  ? "comece a usar a Sofia pra economizar tempo"
-                  : currentTier
-                    ? (
-                        <>
-                          <span style={{ marginRight: 6 }}>{currentTier.icon}</span>
-                          {currentTier.sub}
-                        </>
-                      )
-                    : "continue usando a Sofia — sua próxima conquista está em 4h ☕"}
+                <span style={{ marginRight: 6 }}>{currentTier.icon}</span>
+                {currentTier.text}
               </div>
             </div>
           </section>
