@@ -181,6 +181,24 @@ const css = `
   text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;}
 .suggest h3{margin:6px 0 4px;font-family:'Fraunces',serif;font-weight:600;font-size:22px;line-height:1.25;color:#fff;}
 .suggest p{margin:0;color:#aab2c8;font-size:13px;}
+.suggest{position:relative;overflow:hidden;}
+.suggest::before{content:"";position:absolute;inset:-40% -10% auto auto;width:280px;height:280px;
+  background:radial-gradient(circle,rgba(255,106,44,.18) 0%,transparent 70%);pointer-events:none;
+  animation:suggestGlow 8s ease-in-out infinite;}
+@keyframes suggestGlow{0%,100%{transform:translate(0,0) scale(1);opacity:.8;}50%{transform:translate(-20px,20px) scale(1.15);opacity:1;}}
+.suggest-body{display:contents;}
+.suggest-fade{animation:suggestFade .45s ease;}
+@keyframes suggestFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.suggest-foot{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
+.suggest-dots{display:flex;gap:6px;}
+.suggest-dot{width:6px;height:6px;border-radius:99px;background:rgba(255,255,255,.18);transition:all .25s;cursor:pointer;border:none;padding:0;}
+.suggest-dot.on{background:#FF8A4C;width:18px;}
+.suggest-nav{display:flex;gap:6px;align-items:center;}
+.suggest-nav button{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);color:#cbd1e3;display:grid;place-items:center;border:1px solid rgba(255,255,255,.08);transition:all .15s;}
+.suggest-nav button:hover{background:rgba(255,106,44,.18);color:#fff;border-color:rgba(255,106,44,.35);}
+.suggest-counter{font-size:11px;color:#7c8499;font-family:'JetBrains Mono',monospace;letter-spacing:.04em;}
+.suggest .ico-tile{transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.suggest:hover .ico-tile{transform:rotate(-6deg) scale(1.05);}
 .ap-root .btn-cta{background:linear-gradient(180deg,#FF7A3D,#FF5A14) !important;color:#fff !important;padding:12px 18px;border-radius:12px;
   font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px;border:none;
   box-shadow:0 12px 24px -8px rgba(255,90,20,.55),inset 0 1px 0 rgba(255,255,255,.25);}
