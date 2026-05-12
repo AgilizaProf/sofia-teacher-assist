@@ -1714,6 +1714,8 @@ export function Dashboard() {
                 for (const name of names) {
                   await createDbStudent(buildStudentInput({ name, classRef, birth: "", pcd, notes: "" }));
                 }
+                // Cada aluno em massa vale 1 min de tempo devolvido.
+                setBulkStudentsCount((n) => (Number.isFinite(n) ? n : 0) + names.length);
                 toast.success(`${names.length} aluno(s) cadastrado(s)`);
               } catch (err) {
                 console.error("[Dashboard] erro no cadastro em massa:", err);
