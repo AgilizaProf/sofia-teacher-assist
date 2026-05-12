@@ -109,7 +109,7 @@ export function AppHeader({ breadcrumb, actions, secondaryStatus, hideActiveChip
                 <div className="av">{initialsFromName(u.nome)}</div>
                 <div>
                   <div className="nm">{u.nome}</div>
-                  <div className="pl">{planoLabel}</div>
+                  <div className="pl" style={{ textTransform: "none", letterSpacing: 0 }}>{planoLabel}</div>
                 </div>
               </div>
             );
