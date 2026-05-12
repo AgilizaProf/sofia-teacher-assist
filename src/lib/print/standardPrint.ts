@@ -77,33 +77,8 @@ function buildPrintCss(
 
 @page {
   size: A4;
+  /* Margem superior reservada para a faixa azul fixa (print-header) */
   margin: 2.8cm 2cm 2.8cm 2cm;
-  @top-left {
-    content: "  AGILIZAPROF";
-    font-family: 'Fraunces', Georgia, serif;
-    font-weight: 700; font-size: 9pt; color: #ffffff;
-    background: #1F3A5F;
-    letter-spacing: .14em;
-    vertical-align: middle;
-    width: 100%;
-    padding: 6pt 0;
-  }
-  @top-right {
-    content: "${escCss(headerRight)}  ";
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: 700; font-size: 8.5pt; color: #ffffff;
-    background: #1F3A5F;
-    letter-spacing: .12em;
-    vertical-align: middle;
-    width: 100%;
-    padding: 6pt 0;
-  }
-  @top-center {
-    content: "";
-    background: #1F3A5F;
-    width: 100%;
-    padding: 6pt 0;
-  }
   @bottom-left {
     content: "${escCss(footerLeft)}";
     font-family: 'Fraunces', Georgia, serif;
@@ -119,6 +94,43 @@ function buildPrintCss(
     font-family: Arial, Helvetica, sans-serif;
     font-size: 9pt; color: #6b7280;
   }
+}
+
+/* Garante impressão das cores de fundo (faixa azul) em todos os navegadores */
+html, body, .print-header, .page-band, .field-box > .label, .section-band, .digital-sig {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+/* Faixa de cabeçalho fixa — azul sólida com texto branco, repete em toda página impressa */
+.print-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 1.4cm;
+  background: #1F3A5F !important;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1cm;
+  z-index: 9998;
+  font-size: 9pt;
+  letter-spacing: .14em;
+}
+.print-header .brand {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  color: #ffffff;
+}
+.print-header .doc-kind {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: .12em;
+}
+@media screen {
+  body { padding-top: 1.4cm; }
 }
 
 html, body {
@@ -209,16 +221,8 @@ h2 + p > em:only-child,
   font-size: 13pt; color: #475569; margin-top: 4pt;
 }
 
-/* Faixa superior interna (cabeçalho de página em tela) */
-.page-band {
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 0.8pt solid #1F3A5F;
-  padding-bottom: 4pt; margin-bottom: 14pt;
-  font-size: 9pt; color: #1F3A5F; letter-spacing: .14em;
-}
-.page-band .brand { font-family: 'Fraunces', Georgia, serif; font-weight: 700; }
-.page-band .doc-kind { font-family: Arial, Helvetica, sans-serif; }
-@media print { .page-band { display: none; } }
+/* (Cabeçalho legado .page-band substituído pelo .print-header fixo) */
+.page-band { display: none !important; }
 
 /* Áreas/blocos de conteúdo — sem linhas de preenchimento */
 .doc-block, .card, .pei-block {
