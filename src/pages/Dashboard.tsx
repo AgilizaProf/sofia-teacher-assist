@@ -865,6 +865,17 @@ export function Dashboard() {
                 <Svg strokeWidth={2.5} c={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />
                 Tempo devolvido a você
               </div>
+              <div
+                className={`hero-tier-badge ${currentTier.tone}`}
+                title={`Nível ${currentTier.name} · ${currentTier.min}${currentTier.max < 9999 ? `–${currentTier.max}` : "+"} h`}
+                aria-label={`Selo ${currentTier.name}`}
+              >
+                <span className="tier-emoji" aria-hidden>{currentTier.icon}</span>
+                <span className="tier-name">Nível {currentTier.name}</span>
+                <span className="tier-range">
+                  {currentTier.max < 9999 ? `${currentTier.min}–${currentTier.max} h` : `${currentTier.min}+ h`}
+                </span>
+              </div>
               <div className="hero-metric-value">
                 <span>{h}</span>h<span className="hero-metric-unit"><span>{m}</span>min</span>
               </div>
