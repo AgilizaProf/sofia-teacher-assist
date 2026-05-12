@@ -750,7 +750,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
 
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
-  const alunosCount = dashStudents.length > 0 ? dashStudents.length : ctx.dataState.alunos_count;
+  const alunosCount = combinedStudents.length > 0 ? combinedStudents.length : ctx.dataState.alunos_count;
   const horasEcon = ctx.user.horas_economizadas_mes;
 
   // Mesmo cálculo da página inicial (Tempo devolvido)
