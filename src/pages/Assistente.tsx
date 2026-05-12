@@ -678,21 +678,37 @@ export function Assistente() {
                   : "Cadastre suas turmas e alunos para que eu tenha contexto e possa gerar pareceres, planos e adaptações em minutos."}
               </p>
 
-              <div className="suggest">
-                <div className="ico-tile"><FileText size={22} /></div>
-                <div>
-                  <div className="label"><Star size={11} fill="currentColor" /> SUGESTÃO PRA VOCÊ AGORA</div>
-                  <h3 dangerouslySetInnerHTML={{ __html: fala.texto || "Comece cadastrando sua primeira turma" }} />
-                  <p>{fala.acoes[0]?.prompt ? "A Sofia sugere essa próxima ação com base no seu contexto agora." : "Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui."}</p>
+              <div className="suggest" key={sugAtual?.id}>
+                <div className="ico-tile suggest-fade">{sugAtual?.icon ?? <FileText size={22} />}</div>
+                <div className="suggest-fade" key={sugAnimKey}>
+                  <div className="label"><Star size={11} fill="currentColor" /> {sugAtual?.label?.toUpperCase() ?? "SUGESTÃO PRA VOCÊ AGORA"}</div>
+                  <h3>{sugAtual?.title ?? "Comece cadastrando sua primeira turma"}</h3>
+                  <p>{sugAtual?.subtitle ?? "Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui."}</p>
                 </div>
-                <button className="btn-cta" onClick={() => {
-                  const a = fala.acoes[0];
-                  if (a?.prompt) sofia.openSofia({ prompt: a.prompt, send: false });
-                  else if (a?.to) navigate({ to: a.to as string });
-                  else navigate({ to: "/" });
-                }} aria-label={fala.acoes[0]?.label || "Começar agora"}>
-                  {fala.acoes[0]?.label || "Começar agora"} <ArrowRight size={14} />
+                <button className="btn-cta" onClick={() => sugAtual?.onAction?.()} aria-label={sugAtual?.cta || "Começar agora"}>
+                  {sugAtual?.cta || "Começar agora"} <ArrowRight size={14} />
                 </button>
+                {sugestoes.length > 1 && (
+                  <div className="suggest-foot">
+                    <div className="suggest-dots" role="tablist" aria-label="Sugestões">
+                      {sugestoes.map((s, i) => (
+                        <button
+                          key={s.id}
+                          role="tab"
+                          aria-selected={i === sugIdx}
+                          aria-label={s.label}
+                          className={"suggest-dot" + (i === sugIdx ? " on" : "")}
+                          onClick={() => { setSugIdx(i); setSugAnimKey((k) => k + 1); }}
+                        />
+                      ))}
+                    </div>
+                    <div className="suggest-counter">{String(sugIdx + 1).padStart(2, "0")} / {String(sugestoes.length).padStart(2, "0")}</div>
+                    <div className="suggest-nav">
+                      <button onClick={() => goSug(-1)} aria-label="Sugestão anterior"><ChevronLeft size={14} /></button>
+                      <button onClick={() => goSug(1)} aria-label="Próxima sugestão"><ChevronRight size={14} /></button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="tasks-wrap">
