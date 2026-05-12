@@ -1,6 +1,7 @@
 // Roteador central de modelos da Sofia.
 // Gemini 1.5/2.5 Flash via Lovable AI Gateway -> respostas rápidas.
 // Claude 3.5 Haiku via API direta da Anthropic -> produção de documentos.
+import { isBudgetExceeded, recordUsage, MONTHLY_LIMIT_BRL } from "./ai-budget.ts";
 
 export const MODELOS = {
   RAPIDO: "google/gemini-2.5-flash",
@@ -60,6 +61,7 @@ export type CallAIArgs = {
   user: string;
   json?: boolean;
   maxTokens?: number;
+  userId?: string | null;
 };
 
 export type CallAIResult = {
@@ -69,10 +71,31 @@ export type CallAIResult = {
   error?: string;
   provider: "lovable" | "anthropic";
   model: string;
+  usage?: { inputTokens: number; outputTokens: number; costBrl: number };
+  blocked?: boolean;
+  usedBrl?: number;
+  limitBrl?: number;
 };
 
 export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
   const route = rotear(args.tipo);
+
+  // Checagem de orçamento ANTES da chamada (evita gastar se já estourou).
+  if (args.userId) {
+    const b = await isBudgetExceeded(args.userId);
+    if (b.exceeded) {
+      return {
+        ok: false,
+        status: 402,
+        text: "",
+        error: `Limite mensal de IA atingido (R$ ${b.usedBrl.toFixed(2)} / R$ ${b.limitBrl.toFixed(2)}).`,
+        blocked: true,
+        usedBrl: b.usedBrl,
+        limitBrl: b.limitBrl,
+        ...route,
+      };
+    }
+  }
 
   if (route.provider === "lovable") {
     const KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -97,7 +120,13 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     }
     const data = await resp.json();
     const text = data?.choices?.[0]?.message?.content || "";
-    return { ok: true, status: 200, text, ...route };
+    const inTok = Number(data?.usage?.prompt_tokens ?? 0);
+    const outTok = Number(data?.usage?.completion_tokens ?? 0);
+    let costBrl = 0;
+    if (args.userId) {
+      costBrl = await recordUsage({ userId: args.userId, provider: "lovable", model: route.model, task: args.tipo, inputTokens: inTok, outputTokens: outTok });
+    }
+    return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, ...route };
   }
 
   // Anthropic provider (Claude 3.5 Haiku)
@@ -135,7 +164,13 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     const end = text.lastIndexOf("}");
     if (start >= 0 && end > start) text = text.slice(start, end + 1);
   }
-  return { ok: true, status: 200, text, ...route };
+  const inTok = Number(data?.usage?.input_tokens ?? 0);
+  const outTok = Number(data?.usage?.output_tokens ?? 0);
+  let costBrl = 0;
+  if (args.userId) {
+    costBrl = await recordUsage({ userId: args.userId, provider: "anthropic", model: route.model, task: args.tipo, inputTokens: inTok, outputTokens: outTok });
+  }
+  return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, ...route };
 }
 
 export const corsHeaders = {
@@ -146,6 +181,17 @@ export const corsHeaders = {
 };
 
 export function aiErrorResponse(r: CallAIResult): Response {
+  if (r.blocked) {
+    return new Response(
+      JSON.stringify({
+        error: `Você atingiu o limite mensal de uso da IA (R$ ${MONTHLY_LIMIT_BRL.toFixed(2)}). O contador zera no início do próximo mês.`,
+        blocked: true,
+        usedBrl: r.usedBrl,
+        limitBrl: r.limitBrl,
+      }),
+      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
   if (r.status === 429) {
     return new Response(
       JSON.stringify({ error: "Estou com muitas conversas agora. Tente em instantes." }),
