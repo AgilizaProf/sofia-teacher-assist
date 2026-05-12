@@ -79,26 +79,59 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const usingInternal = !onCmdK;
   const handleCmdK = onCmdK || (() => setPaletteOpen(true));
   const { isAdmin } = useIsAdmin();
-  const plans = [
+  const sofiaCtx = useSofiaContext();
+  const userPlan = sofiaCtx.user.plano; // "free" | "pro"
+  const userCiclo = sofiaCtx.user.ciclo ?? null; // "mensal" | "anual" | null
+
+  type PlanCard = {
+    key: string;
+    tag: string;
+    title: string;
+    desc: string;
+    aria: string;
+    href: string | undefined;
+    cta: string;
+    silver?: boolean;
+  };
+  const planAnual: PlanCard = {
+    key: "anual",
+    tag: "PLANO ANUAL",
+    title: "Créditos ilimitados por R$ 247/ano",
+    desc: "~9.000 créditos/ano · economize 41%.",
+    aria: "Ver oferta do plano anual",
+    href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7798ddd616d8438a92b0e2bceaa20bab",
+    cta: "Ver oferta",
+  };
+  const planMensal: PlanCard = {
+    key: "mensal",
+    tag: "PLANO MENSAL",
+    title: "Créditos ilimitados por R$ 34,90/mês",
+    desc: "30 dias de acesso · cancele quando quiser.",
+    aria: "Ver oferta do plano mensal",
+    href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=e2da862aba6042019234b1840f2593ef",
+    cta: "Ver oferta",
+    silver: true,
+  };
+  const planConvide: PlanCard = {
+    key: "convide",
+    tag: "GANHE DIAS GRÁTIS",
+    title: "Convide outra professora e ganhe 1 mês grátis",
+    desc: "Ela também ganha 30 dias.",
+    aria: "Convidar professora",
+    href: "/configuracoes#convide",
+    cta: "Convidar",
+  };
+  const plans: PlanCard[] =
+    userPlan === "pro" && userCiclo === "anual"
+      ? [planConvide]
+      : userPlan === "pro" && userCiclo === "mensal"
+        ? [planAnual]
+        : [planAnual, planMensal];
     {
-      key: "anual",
-      tag: "PLANO ANUAL",
-      title: "Créditos ilimitados por R$ 247/ano",
-      desc: "~9.000 créditos/ano · economize 41%.",
-      aria: "Ver oferta do plano anual",
-      href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7798ddd616d8438a92b0e2bceaa20bab" as string | undefined,
-    },
-    {
-      key: "mensal",
-      tag: "PLANO MENSAL",
-      title: "Créditos ilimitados por R$ 34,90/mês",
-      desc: "30 dias de acesso · cancele quando quiser.",
-      aria: "Ver oferta do plano mensal",
-      href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=e2da862aba6042019234b1840f2593ef",
-    },
-  ];
   const [planIdx, setPlanIdx] = useState(0);
-  const currentPlan = plans[planIdx];
+  useEffect(() => { setPlanIdx(0); }, [plans.length]);
+  const safeIdx = Math.min(planIdx, plans.length - 1);
+  const currentPlan = plans[safeIdx];
   const prevPlan = () => setPlanIdx((i) => (i - 1 + plans.length) % plans.length);
   const nextPlan = () => setPlanIdx((i) => (i + 1) % plans.length);
 
