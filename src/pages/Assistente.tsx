@@ -3,7 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil,
   FileText, Send, User, Sparkles, ArrowRight,
-  Calendar, CheckSquare, Star, X,
+  Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
+  GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
@@ -180,6 +181,24 @@ const css = `
   text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;}
 .suggest h3{margin:6px 0 4px;font-family:'Fraunces',serif;font-weight:600;font-size:22px;line-height:1.25;color:#fff;}
 .suggest p{margin:0;color:#aab2c8;font-size:13px;}
+.suggest{position:relative;overflow:hidden;}
+.suggest::before{content:"";position:absolute;inset:-40% -10% auto auto;width:280px;height:280px;
+  background:radial-gradient(circle,rgba(255,106,44,.18) 0%,transparent 70%);pointer-events:none;
+  animation:suggestGlow 8s ease-in-out infinite;}
+@keyframes suggestGlow{0%,100%{transform:translate(0,0) scale(1);opacity:.8;}50%{transform:translate(-20px,20px) scale(1.15);opacity:1;}}
+.suggest-body{display:contents;}
+.suggest-fade{animation:suggestFade .45s ease;}
+@keyframes suggestFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.suggest-foot{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);}
+.suggest-dots{display:flex;gap:6px;}
+.suggest-dot{width:6px;height:6px;border-radius:99px;background:rgba(255,255,255,.18);transition:all .25s;cursor:pointer;border:none;padding:0;}
+.suggest-dot.on{background:#FF8A4C;width:18px;}
+.suggest-nav{display:flex;gap:6px;align-items:center;}
+.suggest-nav button{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);color:#cbd1e3;display:grid;place-items:center;border:1px solid rgba(255,255,255,.08);transition:all .15s;}
+.suggest-nav button:hover{background:rgba(255,106,44,.18);color:#fff;border-color:rgba(255,106,44,.35);}
+.suggest-counter{font-size:11px;color:#7c8499;font-family:'JetBrains Mono',monospace;letter-spacing:.04em;}
+.suggest .ico-tile{transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+.suggest:hover .ico-tile{transform:rotate(-6deg) scale(1.05);}
 .ap-root .btn-cta{background:linear-gradient(180deg,#FF7A3D,#FF5A14) !important;color:#fff !important;padding:12px 18px;border-radius:12px;
   font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px;border:none;
   box-shadow:0 12px 24px -8px rgba(255,90,20,.55),inset 0 1px 0 rgba(255,255,255,.25);}
@@ -340,6 +359,185 @@ export function Assistente() {
   const turmaSelecionada = selectedTurma ? turmasInfo.find((t) => t.name === selectedTurma) : null;
   const messages = sofia.messages;
   const loading = sofia.loading;
+
+  // ---------- Sugestões dinâmicas com base em contexto real ----------
+  type Sugestao = {
+    id: string;
+    label: string;
+    title: string;
+    subtitle: string;
+    cta: string;
+    icon: React.ReactNode;
+    onAction: () => void;
+  };
+  const sugestoes: Sugestao[] = useMemo(() => {
+    const out: Sugestao[] = [];
+    const ds = ctx.dataState;
+    const turma = ctx.entity.turma_atual?.nome || turmaSelecionada?.name || "sua turma";
+    const pcd = ctx.entity.todos_alunos_pcd[0];
+    const goto = (to: string) => () => navigate({ to });
+    const ask = (prompt: string) => () => sofia.openSofia({ prompt, send: false });
+
+    // Sugestão da Sofia (regras)
+    if (fala.texto) {
+      out.push({
+        id: "fala",
+        label: "Sugestão pra você agora",
+        title: fala.texto.replace(/<\/?em>/g, ""),
+        subtitle: "A Sofia analisou seu contexto agora e sugere essa próxima ação.",
+        cta: fala.acoes[0]?.label || "Começar agora",
+        icon: <Sparkles size={22} />,
+        onAction: () => {
+          const a = fala.acoes[0];
+          if (a?.prompt) sofia.openSofia({ prompt: a.prompt, send: false });
+          else if (a?.to) navigate({ to: a.to as string });
+          else navigate({ to: "/" });
+        },
+      });
+    }
+
+    // Pareceres pendentes
+    const pendentes = Math.max(0, (ds.pareceres_total_bimestre ?? 0) - (ds.pareceres_finalizados ?? 0));
+    if (pendentes > 0) {
+      out.push({
+        id: "pareceres",
+        label: `${pendentes} parecer${pendentes > 1 ? "es" : ""} pendente${pendentes > 1 ? "s" : ""}`,
+        title: `Faltam ${pendentes} pareceres do bimestre em ${turma}`,
+        subtitle: "Posso gerar todos em ordem de prioridade — começando pelos PCDs.",
+        cta: "Começar pareceres",
+        icon: <ClipboardList size={22} />,
+        onAction: ask(`Vamos gerar os ${pendentes} pareceres pendentes do bimestre da ${turma}, começando pelos alunos PCD.`),
+      });
+    }
+
+    // Próxima aula
+    if (proxima && proxima.minutos_ate >= 0 && proxima.minutos_ate <= 240) {
+      const min = proxima.minutos_ate;
+      const quando = min < 60 ? `em ${min} min` : `em ${Math.round(min / 60)}h`;
+      out.push({
+        id: "proxima",
+        label: "Sua próxima aula",
+        title: `${proxima.disciplina} ${quando} · ${proxima.turma}`,
+        subtitle: pcd
+          ? `Posso adaptar a aula para ${pcd.nome} (${pcd.condicao}) antes do sinal.`
+          : "Quer um plano enxuto pronto para imprimir?",
+        cta: pcd ? "Adaptar para PCD" : "Gerar plano rápido",
+        icon: <Clock size={22} />,
+        onAction: ask(
+          pcd
+            ? `Adapte rapidamente o plano da próxima aula (${proxima.disciplina}, ${proxima.turma}) para ${pcd.nome} — ${pcd.condicao}.`
+            : `Crie um plano de aula enxuto e pronto para imprimir para ${proxima.disciplina} na ${proxima.turma}, começando ${quando}.`
+        ),
+      });
+    }
+
+    // Onboarding (sem turmas)
+    if (ds.turmas_count === 0) {
+      out.push({
+        id: "onb-turma",
+        label: "Primeiro passo",
+        title: "Cadastre sua primeira turma para liberar o contexto",
+        subtitle: "Sem turma minhas sugestões ficam genéricas. Em 30 s já fica pronto.",
+        cta: "Cadastrar turma",
+        icon: <GraduationCap size={22} />,
+        onAction: goto("/"),
+      });
+    } else if (ds.alunos_count === 0) {
+      out.push({
+        id: "onb-alunos",
+        label: "Quase lá",
+        title: `A turma ${turma} ainda não tem alunos`,
+        subtitle: "Cadastre a lista para que eu personalize pareceres, planos e adaptações.",
+        cta: "Adicionar alunos",
+        icon: <Users size={22} />,
+        onAction: goto("/"),
+      });
+    }
+
+    // PCD sem PEI / inclusão
+    if (pcd) {
+      out.push({
+        id: "pei",
+        label: "Inclusão",
+        title: `${pcd.nome} (${pcd.condicao}) precisa de plano individualizado`,
+        subtitle: "Posso montar o PEI a partir da anamnese e dos eixos da BNCC.",
+        cta: "Gerar PEI",
+        icon: <Brain size={22} />,
+        onAction: ask(`Monte um PEI completo para ${pcd.nome} (${pcd.condicao}) com objetivos de curto e longo prazo.`),
+      });
+    }
+
+    // Agenda
+    if (ds.eventos_agenda_mes > 0) {
+      out.push({
+        id: "agenda",
+        label: "Sua agenda do mês",
+        title: `${ds.eventos_agenda_mes} eventos marcados em ${new Date().toLocaleDateString("pt-BR", { month: "long" })}`,
+        subtitle: "Quer que eu destaque os que precisam de preparação prévia?",
+        cta: "Ver prioridades",
+        icon: <Calendar size={22} />,
+        onAction: ask("Liste os eventos da minha agenda deste mês que precisam de preparação e me diga por onde começar."),
+      });
+    }
+
+    // Planejamento
+    if (ds.alunos_count > 0) {
+      out.push({
+        id: "plano",
+        label: "Planejamento da semana",
+        title: `Quer um plano semanal completo para ${turma}?`,
+        subtitle: "Defino objetivos, BNCC, materiais e adaptações em uma só passada.",
+        cta: "Montar a semana",
+        icon: <BookOpen size={22} />,
+        onAction: goto("/planejamento"),
+      });
+    }
+
+    // Streak / parabéns
+    if (ctx.user.streak_dias && ctx.user.streak_dias >= 3) {
+      out.push({
+        id: "streak",
+        label: "Você está em sequência",
+        title: `${ctx.user.streak_dias} dias seguidos por aqui — bora manter o ritmo?`,
+        subtitle: "Posso te entregar o foco do dia em 10 segundos.",
+        cta: "Ver foco de hoje",
+        icon: <Star size={22} />,
+        onAction: goto("/"),
+      });
+    }
+
+    // fallback se nada bater
+    if (out.length === 0) {
+      out.push({
+        id: "fallback",
+        label: "Comece por aqui",
+        title: "Conte o que está pegando hoje e eu já te ajudo",
+        subtitle: "Pareceres, planos, adaptações, dinâmicas — é só pedir em linguagem natural.",
+        cta: "Abrir conversa",
+        icon: <Sparkles size={22} />,
+        onAction: () => sofia.openSofia({ prompt: "", send: false }),
+      });
+    }
+    return out;
+  }, [ctx, fala, proxima, navigate, sofia, turmaSelecionada]);
+
+  const [sugIdx, setSugIdx] = useState(0);
+  const [sugAnimKey, setSugAnimKey] = useState(0);
+  useEffect(() => { setSugIdx((i) => Math.min(i, Math.max(0, sugestoes.length - 1))); }, [sugestoes.length]);
+  useEffect(() => {
+    if (sugestoes.length <= 1) return;
+    const id = setInterval(() => {
+      setSugIdx((i) => (i + 1) % sugestoes.length);
+      setSugAnimKey((k) => k + 1);
+    }, 7000);
+    return () => clearInterval(id);
+  }, [sugestoes.length]);
+  const sugAtual = sugestoes[sugIdx] ?? sugestoes[0];
+  const goSug = (delta: number) => {
+    setSugIdx((i) => (i + delta + sugestoes.length) % sugestoes.length);
+    setSugAnimKey((k) => k + 1);
+  };
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -480,21 +678,37 @@ export function Assistente() {
                   : "Cadastre suas turmas e alunos para que eu tenha contexto e possa gerar pareceres, planos e adaptações em minutos."}
               </p>
 
-              <div className="suggest">
-                <div className="ico-tile"><FileText size={22} /></div>
-                <div>
-                  <div className="label"><Star size={11} fill="currentColor" /> SUGESTÃO PRA VOCÊ AGORA</div>
-                  <h3 dangerouslySetInnerHTML={{ __html: fala.texto || "Comece cadastrando sua primeira turma" }} />
-                  <p>{fala.acoes[0]?.prompt ? "A Sofia sugere essa próxima ação com base no seu contexto agora." : "Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui."}</p>
+              <div className="suggest" key={sugAtual?.id}>
+                <div className="ico-tile suggest-fade">{sugAtual?.icon ?? <FileText size={22} />}</div>
+                <div className="suggest-fade" key={sugAnimKey}>
+                  <div className="label"><Star size={11} fill="currentColor" /> {sugAtual?.label?.toUpperCase() ?? "SUGESTÃO PRA VOCÊ AGORA"}</div>
+                  <h3>{sugAtual?.title ?? "Comece cadastrando sua primeira turma"}</h3>
+                  <p>{sugAtual?.subtitle ?? "Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui."}</p>
                 </div>
-                <button className="btn-cta" onClick={() => {
-                  const a = fala.acoes[0];
-                  if (a?.prompt) sofia.openSofia({ prompt: a.prompt, send: false });
-                  else if (a?.to) navigate({ to: a.to as string });
-                  else navigate({ to: "/" });
-                }} aria-label={fala.acoes[0]?.label || "Começar agora"}>
-                  {fala.acoes[0]?.label || "Começar agora"} <ArrowRight size={14} />
+                <button className="btn-cta" onClick={() => sugAtual?.onAction?.()} aria-label={sugAtual?.cta || "Começar agora"}>
+                  {sugAtual?.cta || "Começar agora"} <ArrowRight size={14} />
                 </button>
+                {sugestoes.length > 1 && (
+                  <div className="suggest-foot">
+                    <div className="suggest-dots" role="tablist" aria-label="Sugestões">
+                      {sugestoes.map((s, i) => (
+                        <button
+                          key={s.id}
+                          role="tab"
+                          aria-selected={i === sugIdx}
+                          aria-label={s.label}
+                          className={"suggest-dot" + (i === sugIdx ? " on" : "")}
+                          onClick={() => { setSugIdx(i); setSugAnimKey((k) => k + 1); }}
+                        />
+                      ))}
+                    </div>
+                    <div className="suggest-counter">{String(sugIdx + 1).padStart(2, "0")} / {String(sugestoes.length).padStart(2, "0")}</div>
+                    <div className="suggest-nav">
+                      <button onClick={() => goSug(-1)} aria-label="Sugestão anterior"><ChevronLeft size={14} /></button>
+                      <button onClick={() => goSug(1)} aria-label="Próxima sugestão"><ChevronRight size={14} /></button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="tasks-wrap">
