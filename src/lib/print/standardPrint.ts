@@ -436,6 +436,21 @@ function buildScreenFooter(_professorNome: string, compliance: string): string {
 </div>`;
 }
 
+const DOC_TYPE_LABEL: Record<DocType, string> = {
+  parecer: "RELATÓRIO PEDAGÓGICO",
+  pei: "PLANO EDUCACIONAL INDIVIDUALIZADO",
+  planejamento: "PLANEJAMENTO PEDAGÓGICO",
+  "plano-adaptado": "PLANO ADAPTADO",
+};
+
+function buildPrintHeader(docType: DocType): string {
+  return `
+<div class="print-header" role="banner">
+  <div class="brand">AGILIZAPROF</div>
+  <div class="doc-kind">${escHtml(DOC_TYPE_LABEL[docType])}</div>
+</div>`;
+}
+
 /**
  * Embrulha o conteúdo HTML do documento com o CSS padrão.
  * Aceita string (extraCss legado) ou objeto de opções.
@@ -453,8 +468,9 @@ export function wrapStandardPrintHtml(
   const incluirAssinatura = opts.incluirAssinatura !== false;
 
   const css = buildPrintCss(professor, compliance, docType);
+  const header = buildPrintHeader(docType);
   const sig = incluirAssinatura ? buildSignatureBlock(professor) : "";
   const screenFoot = buildScreenFooter(professor, compliance);
 
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${escHtml(title)}</title><style>${css}\n${opts.extraCss ?? ""}</style></head><body>${bodyHtml}${sig}${screenFoot}</body></html>`;
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${escHtml(title)}</title><style>${css}\n${opts.extraCss ?? ""}</style></head><body>${header}${bodyHtml}${sig}${screenFoot}</body></html>`;
 }
