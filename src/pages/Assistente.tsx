@@ -743,38 +743,22 @@ export function Assistente() {
 
               <div className="ctx-section">
                 <div className="ctx-section-label">Foco pedagógico do momento</div>
-                <div className="ctx-chips">
-                  {OPT_FOCOS.map((o) => (
-                    <button key={o} type="button" className={"ctx-chip" + (ctxFocos.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxFocos)(o)}>{o}</button>
-                  ))}
-                </div>
+                <CtxChipGroup options={OPT_FOCOS} value={ctxFocos} onToggle={toggleIn(setCtxFocos)} />
               </div>
 
               <div className="ctx-section">
                 <div className="ctx-section-label">Estilo de resposta da Sofia</div>
-                <div className="ctx-chips">
-                  {OPT_ESTILO.map((o) => (
-                    <button key={o} type="button" className={"ctx-chip" + (ctxEstilo.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxEstilo)(o)}>{o}</button>
-                  ))}
-                </div>
+                <CtxChipGroup options={OPT_ESTILO} value={ctxEstilo} onToggle={toggleIn(setCtxEstilo)} />
               </div>
 
               <div className="ctx-section">
                 <div className="ctx-section-label">Recursos disponíveis em sala</div>
-                <div className="ctx-chips">
-                  {OPT_RECURSOS.map((o) => (
-                    <button key={o} type="button" className={"ctx-chip" + (ctxRecursos.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxRecursos)(o)}>{o}</button>
-                  ))}
-                </div>
+                <CtxChipGroup options={OPT_RECURSOS} value={ctxRecursos} onToggle={toggleIn(setCtxRecursos)} />
               </div>
 
               <div className="ctx-section">
                 <div className="ctx-section-label">Restrições / o que evitar</div>
-                <div className="ctx-chips">
-                  {OPT_EVITAR.map((o) => (
-                    <button key={o} type="button" className={"ctx-chip" + (ctxEvitar.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxEvitar)(o)}>{o}</button>
-                  ))}
-                </div>
+                <CtxChipGroup options={OPT_EVITAR} value={ctxEvitar} onToggle={toggleIn(setCtxEvitar)} />
               </div>
 
               <div className="ctx-section">
