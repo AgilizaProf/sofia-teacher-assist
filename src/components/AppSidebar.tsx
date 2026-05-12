@@ -41,10 +41,9 @@ export const sidebarCss = `
 .sb-plan-btn{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#F97316;color:#fff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 10px rgba(249,115,22,.35);}
 .sb-plan-btn:hover{background:#EA580C;}
 .sb-plan-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
-.sb-plan-nav{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(154,52,18,.12);color:#9A3412;border:none;cursor:pointer;padding:0;transition:.15s;}
-.sb-plan-nav:hover{background:rgba(154,52,18,.22);}
-.sb-plan.silver .sb-plan-nav{background:rgba(51,65,85,.12);color:#334155;}
-.sb-plan.silver .sb-plan-nav:hover{background:rgba(51,65,85,.22);}
+.sb-plan-nav{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#9A3412;border:none;cursor:pointer;padding:0;opacity:.55;transition:opacity .15s;line-height:0;}
+.sb-plan-nav:hover{opacity:1;}
+.sb-plan.silver .sb-plan-nav{color:#334155;}
 .sb-plan-dots{display:flex;gap:5px;justify-content:center;}
 .sb-plan-dot{width:5px;height:5px;border-radius:50%;background:rgba(154,52,18,.30);border:none;padding:0;cursor:pointer;transition:.18s;}
 .sb-plan-dot.active{background:#9A3412;width:14px;border-radius:3px;}
