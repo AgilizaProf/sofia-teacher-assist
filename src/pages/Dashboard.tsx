@@ -854,16 +854,8 @@ export function Dashboard() {
                 <span>{h}</span>h<span className="hero-metric-unit"><span>{m}</span>min</span>
               </div>
               <div className="hero-metric-label">
-                {totalMinutes === 0
-                  ? "comece a usar a Sofia pra economizar tempo"
-                  : currentTier
-                    ? (
-                        <>
-                          <span style={{ marginRight: 6 }}>{currentTier.icon}</span>
-                          {currentTier.sub}
-                        </>
-                      )
-                    : "continue usando a Sofia — sua próxima conquista está em 4h ☕"}
+                <span style={{ marginRight: 6 }}>{currentTier.icon}</span>
+                {currentTier.text}
               </div>
             </div>
           </section>
