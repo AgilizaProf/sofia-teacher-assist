@@ -14,6 +14,7 @@ import { SofiaFocoCard } from "@/components/sofia/SofiaFocoCard";
 import { SofiaAdaptacaoCard } from "@/components/sofia/SofiaAdaptacaoCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { AtividadeFeed } from "@/components/dashboard/AtividadeFeed";
+import { useActivityFeed, relativeTime, type ActivityType } from "@/lib/activity/activityLog";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { Header as AppHeader } from "@/components/Header";
