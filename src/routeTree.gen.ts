@@ -18,6 +18,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AtividadeRouteImport } from './routes/atividade'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -80,6 +81,11 @@ const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtividadeRoute = AtividadeRouteImport.update({
+  id: '/atividade',
+  path: '/atividade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssistenteRoute = AssistenteRouteImport.update({
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
   '/inclusao': typeof InclusaoRouteWithChildren
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agenda'
     | '/assistente'
+    | '/atividade'
     | '/auth'
     | '/configuracoes'
     | '/inclusao'
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/assistente'
+    | '/atividade'
     | '/auth'
     | '/configuracoes'
     | '/inclusao'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agenda'
     | '/assistente'
+    | '/atividade'
     | '/auth'
     | '/configuracoes'
     | '/inclusao'
@@ -332,6 +344,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AgendaRoute: typeof AgendaRoute
   AssistenteRoute: typeof AssistenteRoute
+  AtividadeRoute: typeof AtividadeRoute
   AuthRoute: typeof AuthRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
@@ -407,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atividade': {
+      id: '/atividade'
+      path: '/atividade'
+      fullPath: '/atividade'
+      preLoaderRoute: typeof AtividadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assistente': {
@@ -579,6 +599,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AgendaRoute: AgendaRoute,
   AssistenteRoute: AssistenteRoute,
+  AtividadeRoute: AtividadeRoute,
   AuthRoute: AuthRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
@@ -593,3 +614,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
