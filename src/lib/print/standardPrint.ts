@@ -102,7 +102,7 @@ function buildPrintCss(
   --band: #F5F1EA;           /* bege claro p/ faixas de seção */
   --gold: #C9B98A;           /* filete dourado discreto */
   --rule: #e5e7eb;
-  --muted: #6b7280;
+  --muted: #1F3A5F;
   /* Altura da faixa azul + folga acima do conteúdo (compensa A4 e Letter) */
   --print-header-h: 1.4cm;
   --print-header-gap: 0.7cm;
@@ -120,12 +120,12 @@ function buildPrintCss(
   @bottom-center {
     content: "${escCss(compliance)}";
     font-family: Arial, Helvetica, sans-serif;
-    font-style: italic; font-size: 8.5pt; color: #6b7280;
+    font-style: italic; font-size: 8.5pt; color: #1F3A5F;
   }
   @bottom-right {
     content: counter(page) " / " counter(pages);
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 9pt; color: #6b7280;
+    font-size: 9pt; color: #1F3A5F;
   }
 }
 @page :first {
@@ -241,7 +241,7 @@ h2 + p > em:only-child,
   display: block;
   font-family: Arial, Helvetica, sans-serif;
   font-style: italic;
-  color: #6b7280;
+  color: #1F3A5F;
   font-size: 10.5pt;
   margin: -4pt 0 8pt 0;
 }
@@ -271,7 +271,7 @@ h2 + p > em:only-child,
 .doc-cover .subtitle {
   font-family: 'Fraunces', Georgia, serif;
   font-style: italic;
-  font-size: 13pt; color: #475569; margin-top: 4pt;
+  font-size: 13pt; color: #1F3A5F; margin-top: 4pt;
 }
 
 /* (Cabeçalho legado .page-band substituído pelo .print-header fixo) */
@@ -410,12 +410,12 @@ ${
 }
 .screen-foot .legal {
   font-style: italic;
-  color: #6b7280;
+  color: #1F3A5F;
   text-align: center;
   word-wrap: break-word;
 }
 .screen-foot .page {
-  color: #6b7280;
+  color: #1F3A5F;
   text-align: right;
   white-space: nowrap;
 }
@@ -452,9 +452,9 @@ h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
 }
 .digital-sig .line {
   margin-top: 14px; border-top: 1px solid #1F3A5F;
-  padding-top: 4px; font-size: 10pt; color: #475569; text-align: center;
+  padding-top: 4px; font-size: 10pt; color: #1F3A5F; text-align: center;
 }
-.digital-sig .hint { margin-top: 8px; font-size: 9pt; color: #6b7280; font-style: italic; }
+.digital-sig .hint { margin-top: 8px; font-size: 9pt; color: #1F3A5F; font-style: italic; }
 `;
 }
 
