@@ -1180,23 +1180,18 @@ ${corpo}
         ${parecerAtual.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ul(parecerAtual.encaminhamentos)}` : ""}
         ${parecerAtual.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAtual.comunicacao_familias)}</p>` : ""}
       `;
-    w.document.write(`
-      <!doctype html><html><head><meta charset="utf-8"/>
-      <title>Parecer · ${esc(selected.name)}</title>
-      <style>
-        @page{size:A4;margin:18mm 16mm;}
-        body{font-family:'Inter',Arial,sans-serif;color:#0F1B36;font-size:11pt;line-height:1.5;}
-        h1{font-size:18pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
-        h3{font-size:12pt;margin:12pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
-        .meta{font-size:9pt;color:#6B7691;margin-bottom:10pt;}
-        ul{margin:4pt 0 0 16pt;}
-        .texto p{text-align:justify;margin:0 0 8pt;}
-        .legal{margin-top:16pt;font-size:8.5pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
-        .sig{margin-top:24pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
-        .sig div{border-top:1px solid #333;padding-top:4pt;font-size:9pt;text-align:center;}
-        .toolbar{position:fixed;top:8px;right:8px;}
-        @media print{.toolbar{display:none;}}
-      </style></head><body>
+    const extra = `
+      h1{font-size:16pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
+      h3{font-size:12pt;margin:12pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
+      .meta{font-size:11pt;color:#6B7691;margin-bottom:10pt;}
+      ul{margin:4pt 0 0 16pt;}
+      .texto p{text-align:justify;margin:0 0 8pt;}
+      .legal{margin-top:16pt;font-size:10pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
+      .sig{margin-top:24pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
+      .sig div{border-top:1px solid #333;padding-top:4pt;font-size:11pt;text-align:center;}
+      .toolbar{position:fixed;top:8px;right:8px;}
+    `;
+    const inner = `
       <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
       <h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
       <div class="meta">
@@ -1210,8 +1205,8 @@ ${corpo}
         <div>Coordenação pedagógica</div>
       </div>
       <div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
-      </body></html>
-    `);
+    `;
+    w.document.write(wrapStandardPrintHtml(`Parecer · ${esc(selected.name)}`, inner, extra));
     w.document.close();
     setTimeout(() => w.focus(), 200);
   };
