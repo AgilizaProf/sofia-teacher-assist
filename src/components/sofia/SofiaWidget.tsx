@@ -113,6 +113,23 @@ export function SofiaWidget() {
   const hydrated = useHydrated();
   const sofiaCtx = useSofiaContext();
   const firstName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || "").trim();
+  const [alreadyGreeted, setAlreadyGreeted] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      setAlreadyGreeted(localStorage.getItem("sofia-greeted") === "1");
+    } catch { /* ignore */ }
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!s.open || !hydrated) return;
+    try {
+      if (localStorage.getItem("sofia-greeted") !== "1") {
+        localStorage.setItem("sofia-greeted", "1");
+      }
+    } catch { /* ignore */ }
+  }, [s.open, hydrated]);
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
@@ -221,7 +238,9 @@ export function SofiaWidget() {
                   <div style={{ display: "grid", placeItems: "center", marginBottom: 10 }}>
                     <div className="sofia-avatar-token sofia-avatar-token--lg"><Sparkles size={28} /></div>
                   </div>
-                  <h3>{greeting(hydrated)}{firstName ? `, ${firstName}` : ""} 👋</h3>
+                  {!alreadyGreeted && (
+                    <h3>{greeting(hydrated)}{firstName ? `, ${firstName}` : ""} 👋</h3>
+                  )}
                   <p>Vamos juntas? Posso preparar um <span className="sofia-em">parecer em ~4 min</span>, um <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação inclusiva — escolha por onde começar.</p>
                   <div className="sofia-suggest">
                     {SUGGESTIONS.map((q) => (
