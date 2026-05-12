@@ -9,6 +9,7 @@ export type SofiaUser = {
   nome: string;
   primeiro_nome: string;
   plano: "free" | "pro";
+  ciclo?: "mensal" | "anual" | null;
   streak_dias: number;
   horas_economizadas_mes: number;
   creditos_usados: number;
