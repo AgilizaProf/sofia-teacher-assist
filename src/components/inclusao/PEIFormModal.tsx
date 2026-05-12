@@ -3,6 +3,7 @@ import { X, Save, Printer, Plus, Trash2, FileText, Sparkles, Wand2 } from "lucid
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { wrapStandardPrintHtml } from "@/lib/print/standardPrint";
+import { useUser } from "@/lib/mockData";
 
 type Aluno = {
   id: string;
