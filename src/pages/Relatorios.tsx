@@ -8,6 +8,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useEiMode } from "@/lib/ei/useEiMode";
+import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -459,6 +460,31 @@ export function Relatorios() {
   const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
+  // Alunos cadastrados no banco (Inclusão) — entram automaticamente na lista de Relatórios.
+  const { students: dbStudents } = useInclusaoStudents();
+  const combinedStudents = useMemo<DashStudent[]>(() => {
+    const seen = new Set<string>();
+    const out: DashStudent[] = [];
+    const push = (s: DashStudent) => {
+      const key = s.name.trim().toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      out.push(s);
+    };
+    dashStudents.forEach(push);
+    dbStudents.forEach((s) =>
+      push({
+        name: s.name,
+        classRef: s.turma && s.turma !== "Sem turma" ? s.turma : "",
+        birth: s.birth ?? "",
+        pcd: s.diag || s.pcd || "nao",
+        notes: s.notes ?? "",
+        createdAt: s.createdAt,
+      }),
+    );
+    return out;
+  }, [dashStudents, dbStudents]);
+
   // Cadastro rápido de aluno (vincula a uma turma já criada)
   const [novoAlunoOpen, setNovoAlunoOpen] = useState(false);
   const [novoAluno, setNovoAluno] = useState<DashStudent>({ name: "", classRef: "", birth: "", pcd: "nao", notes: "" });
@@ -724,7 +750,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
 
   // Deriva valores reais do SofiaContext
   const totalBim = ctx.dataState.pareceres_total_bimestre;
-  const alunosCount = dashStudents.length > 0 ? dashStudents.length : ctx.dataState.alunos_count;
+  const alunosCount = combinedStudents.length > 0 ? combinedStudents.length : ctx.dataState.alunos_count;
   const horasEcon = ctx.user.horas_economizadas_mes;
 
   // Mesmo cálculo da página inicial (Tempo devolvido)
@@ -748,7 +774,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
     }
   }, [totalSavedMin]);
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
-  const isPro = ctx.user.plano === "pro" || dashStudents.length > 0;
+  const isPro = ctx.user.plano === "pro" || combinedStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
 
   // Lista por aluno (estado Pro)
@@ -767,8 +793,8 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
       if (pctPreenchido > 0) return { status: "draft", naoObservadas };
       return { status: "todo", naoObservadas };
     };
-    if (dashStudents.length > 0) {
-      return dashStudents.map((s, i): Item => {
+    if (combinedStudents.length > 0) {
+      return combinedStudents.map((s, i): Item => {
         const id = `al-${i}`;
         const turma = s.classRef || "";
         const pcd = s.pcd && s.pcd !== "nao" ? s.pcd : "";
@@ -788,7 +814,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPro, alunosCount, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, dashStudents, bnccByAluno, parecerByAluno, yearOverride]);
+  }, [isPro, alunosCount, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, combinedStudents, bnccByAluno, parecerByAluno, yearOverride]);
 
   const alunosFiltered = useMemo(() => alunosLista.filter((a) => {
     if (tab !== "all" && a.status !== tab) return false;
