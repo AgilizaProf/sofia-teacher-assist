@@ -5,12 +5,14 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useIsAdmin } from "@/lib/admin/useIsAdmin";
+import logoImg from "@/assets/agilizaprof-logo.jpg";
 
 export const sidebarCss = `
 .ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
 .ap-sidebar::before{content:"";position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(255,122,69,.14) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
 .sb-head{padding:18px 18px 12px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
-.sb-logo-icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#FF7A45,#FF9466);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:17px;color:#fff;box-shadow:0 6px 18px rgba(255,122,69,.40);flex-shrink:0;}
+.sb-logo-icon{width:34px;height:34px;border-radius:9px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(255,122,69,.40);flex-shrink:0;background:#1B2A4E;}
+.sb-logo-icon img{width:100%;height:100%;object-fit:cover;display:block;}
 .sb-logo-text{font-family:'Fraunces',serif;font-weight:900;font-size:16px;color:#fff;letter-spacing:-0.03em;line-height:1;}
 .sb-logo-text span{color:#FF7A45;}
 .sb-cmdk{margin:6px 14px 14px;padding:8px 11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:8px;display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .2s;position:relative;z-index:1;}
@@ -118,7 +120,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
     <>
     <aside className="ap-sidebar">
       <div className="sb-head">
-        <div className="sb-logo-icon">A</div>
+        <div className="sb-logo-icon"><img src={logoImg} alt="AgilizaProf" /></div>
         <div className="sb-logo-text">Agiliza<span>Prof</span></div>
       </div>
       <button className="sb-cmdk" onClick={handleCmdK} aria-label="Buscar ou navegar">
