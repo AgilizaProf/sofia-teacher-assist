@@ -28,7 +28,10 @@ export const sidebarCss = `
 .sb-badge.exclusive{background:linear-gradient(135deg,#FF7A45,#FFB07A);box-shadow:0 2px 6px rgba(255,122,69,.45);}
 .sb-shortcut{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.40);font-weight:600;}
 .sb-foot{padding:10px 12px 12px;position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.06);margin-top:auto;}
-.sb-plan{margin:0 10px 10px;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);border:1px solid #F7C9A8;border-radius:10px;padding:10px 12px;color:#3a1f0b;position:relative;z-index:1;height:148px;width:calc(100% - 20px);box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;gap:4px;overflow:hidden;}
+.sb-plan{margin:0 10px 10px;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);border:1px solid #F7C9A8;border-radius:10px;padding:10px 12px;color:#3a1f0b;position:relative;z-index:1;height:148px;width:calc(100% - 20px);box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;overflow:hidden;}
+.sb-plan-top{display:flex;flex-direction:column;gap:2px;}
+.sb-plan-bottom{display:flex;flex-direction:column;gap:8px;align-items:stretch;}
+.sb-plan-btn{align-self:flex-start;}
 .sb-plan.silver{background:linear-gradient(180deg,#F1F3F6 0%,#C9CED6 100%);border:1px solid #B8BFC9;color:#1f2937;}
 .sb-plan-tag{font-size:8.5px;font-weight:800;color:#9A3412;letter-spacing:.08em;display:inline-flex;align-items:center;gap:4px;}
 .sb-plan.silver .sb-plan-tag{color:#475569;}
@@ -38,7 +41,7 @@ export const sidebarCss = `
 .sb-plan.silver p{color:#475569;}
 .sb-plan-btn{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#F97316;color:#fff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 10px rgba(249,115,22,.35);}
 .sb-plan-btn:hover{background:#EA580C;}
-.sb-plan-row{margin-top:auto;padding-top:7px;display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.sb-plan-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
 .sb-plan-nav{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(154,52,18,.12);color:#9A3412;border:none;cursor:pointer;padding:0;transition:.15s;}
 .sb-plan-nav:hover{background:rgba(154,52,18,.22);}
 .sb-plan.silver .sb-plan-nav{background:rgba(51,65,85,.12);color:#334155;}
@@ -169,17 +172,20 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
       </nav>
       <div className="sb-foot">
         <div className={"sb-plan" + (currentPlan.key === "mensal" ? " silver" : "")} role="complementary" aria-label={currentPlan.aria}>
-          <span className="sb-plan-tag">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
-            {currentPlan.tag}
-          </span>
-          <h4>{currentPlan.title}</h4>
-          <p>{currentPlan.desc}</p>
-          <button className="sb-plan-btn" aria-label={currentPlan.aria}>
-            Ver oferta
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
-          <div className="sb-plan-row">
+          <div className="sb-plan-top">
+            <span className="sb-plan-tag">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
+              {currentPlan.tag}
+            </span>
+            <h4>{currentPlan.title}</h4>
+            <p>{currentPlan.desc}</p>
+          </div>
+          <div className="sb-plan-bottom">
+            <button className="sb-plan-btn" aria-label={currentPlan.aria}>
+              Ver oferta
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <div className="sb-plan-row">
             <button type="button" className="sb-plan-nav" aria-label="Plano anterior" onClick={prevPlan}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
@@ -199,6 +205,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
             <button type="button" className="sb-plan-nav" aria-label="Próximo plano" onClick={nextPlan}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
+            </div>
           </div>
         </div>
       </div>
