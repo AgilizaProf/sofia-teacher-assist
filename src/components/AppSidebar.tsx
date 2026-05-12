@@ -169,17 +169,20 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
       </nav>
       <div className="sb-foot">
         <div className={"sb-plan" + (currentPlan.key === "mensal" ? " silver" : "")} role="complementary" aria-label={currentPlan.aria}>
-          <span className="sb-plan-tag">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
-            {currentPlan.tag}
-          </span>
-          <h4>{currentPlan.title}</h4>
-          <p>{currentPlan.desc}</p>
-          <button className="sb-plan-btn" aria-label={currentPlan.aria}>
-            Ver oferta
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
-          <div className="sb-plan-row">
+          <div className="sb-plan-top">
+            <span className="sb-plan-tag">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
+              {currentPlan.tag}
+            </span>
+            <h4>{currentPlan.title}</h4>
+            <p>{currentPlan.desc}</p>
+          </div>
+          <div className="sb-plan-bottom">
+            <button className="sb-plan-btn" aria-label={currentPlan.aria}>
+              Ver oferta
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <div className="sb-plan-row">
             <button type="button" className="sb-plan-nav" aria-label="Plano anterior" onClick={prevPlan}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
@@ -199,6 +202,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
             <button type="button" className="sb-plan-nav" aria-label="Próximo plano" onClick={nextPlan}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
+            </div>
           </div>
         </div>
       </div>
