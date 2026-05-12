@@ -5,14 +5,10 @@ import { User, Loader2 } from "lucide-react";
 
 type Profile = {
   display_name: string;
-  avatar_url: string;
   email: string;
   telefone: string;
   cidade: string;
   uf: string;
-  escola: string;
-  turmas: string[];
-  disciplinas: string[];
   etapa_ensino: string;
   sofia_tom: string;
   sofia_lembretes: boolean;
@@ -20,14 +16,10 @@ type Profile = {
 
 const EMPTY: Profile = {
   display_name: "",
-  avatar_url: "",
   email: "",
   telefone: "",
   cidade: "",
   uf: "",
-  escola: "",
-  turmas: [],
-  disciplinas: [],
   etapa_ensino: "",
   sofia_tom: "acolhedor",
   sofia_lembretes: true,
@@ -53,20 +45,11 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: ".04em",
 };
 
-function joinArr(a: string[] | null | undefined): string {
-  return (a ?? []).join(", ");
-}
-function splitArr(s: string): string[] {
-  return s.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 30);
-}
-
 export function ProfileEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile>(EMPTY);
-  const [turmasStr, setTurmasStr] = useState("");
-  const [discsStr, setDiscsStr] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -79,7 +62,7 @@ export function ProfileEditor() {
       if (active) setUserId(user.id);
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name,avatar_url,email,telefone,cidade,uf,escola,turmas,disciplinas,etapa_ensino,sofia_tom,sofia_lembretes")
+        .select("display_name,email,telefone,cidade,uf,etapa_ensino,sofia_tom,sofia_lembretes")
         .eq("user_id", user.id)
         .maybeSingle();
       if (!active) return;
@@ -88,21 +71,15 @@ export function ProfileEditor() {
       } else if (data) {
         const next: Profile = {
           display_name: data.display_name ?? "",
-          avatar_url: data.avatar_url ?? "",
           email: data.email ?? user.email ?? "",
           telefone: data.telefone ?? "",
           cidade: data.cidade ?? "",
           uf: data.uf ?? "",
-          escola: data.escola ?? "",
-          turmas: data.turmas ?? [],
-          disciplinas: data.disciplinas ?? [],
           etapa_ensino: data.etapa_ensino ?? "",
           sofia_tom: data.sofia_tom ?? "acolhedor",
           sofia_lembretes: data.sofia_lembretes ?? true,
         };
         setProfile(next);
-        setTurmasStr(joinArr(next.turmas));
-        setDiscsStr(joinArr(next.disciplinas));
       } else {
         setProfile({ ...EMPTY, email: user.email ?? "" });
       }
@@ -133,14 +110,10 @@ export function ProfileEditor() {
     const payload = {
       user_id: userId,
       display_name: profile.display_name.trim() || null,
-      avatar_url: profile.avatar_url.trim() || null,
       email: profile.email.trim() || null,
       telefone: profile.telefone.trim() || null,
       cidade: profile.cidade.trim() || null,
       uf: profile.uf.trim().toUpperCase() || null,
-      escola: profile.escola.trim() || null,
-      turmas: splitArr(turmasStr),
-      disciplinas: splitArr(discsStr),
       etapa_ensino: profile.etapa_ensino || null,
       sofia_tom: profile.sofia_tom || "acolhedor",
       sofia_lembretes: profile.sofia_lembretes,
@@ -197,11 +170,6 @@ export function ProfileEditor() {
           <input style={fieldStyle} value={profile.telefone} maxLength={30}
             onChange={(e) => update("telefone", e.target.value)} placeholder="(11) 99999-9999" />
         </div>
-        <div>
-          <label style={labelStyle}>URL do avatar</label>
-          <input style={fieldStyle} value={profile.avatar_url} maxLength={500}
-            onChange={(e) => update("avatar_url", e.target.value)} placeholder="https://…" />
-        </div>
         <div style={{ gridColumn: "span 2", display: "grid", gridTemplateColumns: "1fr 80px", gap: 14 }}>
           <div>
             <label style={labelStyle}>Cidade</label>
@@ -213,21 +181,6 @@ export function ProfileEditor() {
             <input style={fieldStyle} value={profile.uf} maxLength={2}
               onChange={(e) => update("uf", e.target.value.toUpperCase())} placeholder="SP" />
           </div>
-        </div>
-        <div style={{ gridColumn: "span 2" }}>
-          <label style={labelStyle}>Escola</label>
-          <input style={fieldStyle} value={profile.escola} maxLength={150}
-            onChange={(e) => update("escola", e.target.value)} />
-        </div>
-        <div>
-          <label style={labelStyle}>Turmas (separadas por vírgula)</label>
-          <input style={fieldStyle} value={turmasStr} maxLength={300}
-            onChange={(e) => setTurmasStr(e.target.value)} placeholder="3º A, 4º B" />
-        </div>
-        <div>
-          <label style={labelStyle}>Disciplinas (separadas por vírgula)</label>
-          <input style={fieldStyle} value={discsStr} maxLength={300}
-            onChange={(e) => setDiscsStr(e.target.value)} placeholder="Português, Matemática" />
         </div>
         <div>
           <label style={labelStyle}>Etapa de ensino</label>
