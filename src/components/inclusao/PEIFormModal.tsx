@@ -491,7 +491,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
       </div>
       <div class="legal">Documento elaborado conforme a <b>Lei nº 14.254/2021</b>, que dispõe sobre o acompanhamento integral para educandos com dislexia, TDAH e outros transtornos de aprendizagem, e em consonância com a <b>Lei nº 13.146/2015</b> (LBI), <b>Lei nº 12.764/2012</b> (PNPDTEA) e a <b>BNCC</b>.</div>
     `;
-    w.document.write(wrapStandardPrintHtml(`PEI · ${esc(aluno?.name || "")}`, inner, extraCss));
+    w.document.write(wrapStandardPrintHtml(`PEI · ${esc(aluno?.name || "")}`, inner, {
+      extraCss,
+      professorNome: user.name,
+      docType: "pei",
+    }));
     w.document.close();
     setTimeout(() => w.focus(), 200);
   };
