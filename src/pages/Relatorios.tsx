@@ -1547,24 +1547,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
             }).join("");
             return `<section><h2>${esc(area.area)}</h2><ul class="rub">${itens}</ul></section>`;
           }).join("");
-          return `<!doctype html><html><head><meta charset="utf-8"><title>Parecer · ${esc(a.nome)}</title>
-<style>
-@page{size:A4;margin:22mm 20mm;}
-body{font-family:'Inter',Arial,sans-serif;color:#0B1220;line-height:1.55;font-size:12pt;margin:0;}
-h1{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:22pt;margin:0 0 4px;color:#0F1B36;}
-h2{font-size:12pt;color:#FF6A2C;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #E7E9EF;padding-bottom:4px;}
-.meta{color:#6B7691;font-size:10.5pt;margin-bottom:18px;}
-.kpis{display:flex;gap:14px;margin:14px 0 8px;}
-.kpi{flex:1;border:1px solid #E7E9EF;border-radius:8px;padding:10px 12px;}
-.kpi b{display:block;font-size:16pt;color:#0F1B36;}
-.kpi small{color:#6B7691;font-size:9.5pt;text-transform:uppercase;letter-spacing:.06em;}
-ul.rub{list-style:none;padding:0;margin:0;}
-ul.rub li{display:flex;justify-content:space-between;gap:14px;padding:5px 0;border-bottom:1px dashed #E7E9EF;font-size:10.5pt;}
-ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
-.sig{margin-top:42px;display:flex;justify-content:space-between;gap:30px;}
-.sig div{flex:1;border-top:1px solid #0B1220;padding-top:6px;font-size:10pt;text-align:center;color:#3B4256;}
-.foot{margin-top:30px;font-size:9pt;color:#6B7691;text-align:center;}
-</style></head><body>
+          const bodyInner = `
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
 <div class="meta">
   ${esc(a.turma || "Sem turma")} · ${bimestreNum}º bimestre${a.pcd ? ` · PCD: ${esc(a.pcd)}` : ""}
@@ -1584,8 +1567,8 @@ ${linhasArea}
   <div>Coordenação pedagógica</div>
   <div>Família / Responsável</div>
 </div>
-<div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Pareceres descritivos</div>
-</body></html>`;
+<div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Pareceres descritivos</div>`;
+          return wrapStandardPrintHtml(`Parecer · ${esc(a.nome)}`, bodyInner, PRINT_CSS);
         };
         const exportPdf = () => {
           const html = buildReportHtml();
