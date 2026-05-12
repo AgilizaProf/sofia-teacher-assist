@@ -184,6 +184,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
             <div className="sb-plan-dots" role="tablist" aria-label="Selecionar plano">
+              <button type="button" className="sb-plan-nav" aria-label="Plano anterior" onClick={prevPlan}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
               {plans.map((p, i) => (
                 <button
                   key={p.key}
@@ -195,6 +198,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
                   onClick={() => setPlanIdx(i)}
                 />
               ))}
+              <button type="button" className="sb-plan-nav" aria-label="Próximo plano" onClick={nextPlan}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
           </div>
         </div>
