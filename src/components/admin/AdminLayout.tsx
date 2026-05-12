@@ -11,6 +11,7 @@ const navItems = [
   { to: "/admin/manutencao", label: "Manutenção", icon: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" },
   { to: "/admin/erros", label: "Erros", icon: "M12 9v4 M12 17h.01 M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" },
   { to: "/admin/infra", label: "Infra", icon: "M2 12h6l3-9 4 18 3-9h4" },
+  { to: "/admin/ia", label: "Consumo IA", icon: "M12 2a5 5 0 0 0-5 5v3a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z M5 13v1a7 7 0 0 0 14 0v-1 M12 21v-3" },
 ];
 
 export function AdminLayout({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
