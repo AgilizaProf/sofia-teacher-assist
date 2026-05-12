@@ -13,6 +13,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { wrapStandardPrintHtml } from "@/lib/print/standardPrint";
+import { useUser } from "@/lib/mockData";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
