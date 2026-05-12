@@ -79,26 +79,58 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const usingInternal = !onCmdK;
   const handleCmdK = onCmdK || (() => setPaletteOpen(true));
   const { isAdmin } = useIsAdmin();
-  const plans = [
-    {
-      key: "anual",
-      tag: "PLANO ANUAL",
-      title: "Créditos ilimitados por R$ 247/ano",
-      desc: "~9.000 créditos/ano · economize 41%.",
-      aria: "Ver oferta do plano anual",
-      href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7798ddd616d8438a92b0e2bceaa20bab" as string | undefined,
-    },
-    {
-      key: "mensal",
-      tag: "PLANO MENSAL",
-      title: "Créditos ilimitados por R$ 34,90/mês",
-      desc: "30 dias de acesso · cancele quando quiser.",
-      aria: "Ver oferta do plano mensal",
-      href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=e2da862aba6042019234b1840f2593ef",
-    },
-  ];
+  const sofiaCtx = useSofiaContext();
+  const userPlan = sofiaCtx.user.plano; // "free" | "pro"
+  const userCiclo = sofiaCtx.user.ciclo ?? null; // "mensal" | "anual" | null
+
+  type PlanCard = {
+    key: string;
+    tag: string;
+    title: string;
+    desc: string;
+    aria: string;
+    href: string | undefined;
+    cta: string;
+    silver?: boolean;
+  };
+  const planAnual: PlanCard = {
+    key: "anual",
+    tag: "PLANO ANUAL",
+    title: "Créditos ilimitados por R$ 247/ano",
+    desc: "~9.000 créditos/ano · economize 41%.",
+    aria: "Ver oferta do plano anual",
+    href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7798ddd616d8438a92b0e2bceaa20bab",
+    cta: "Ver oferta",
+  };
+  const planMensal: PlanCard = {
+    key: "mensal",
+    tag: "PLANO MENSAL",
+    title: "Créditos ilimitados por R$ 34,90/mês",
+    desc: "30 dias de acesso · cancele quando quiser.",
+    aria: "Ver oferta do plano mensal",
+    href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=e2da862aba6042019234b1840f2593ef",
+    cta: "Ver oferta",
+    silver: true,
+  };
+  const planConvide: PlanCard = {
+    key: "convide",
+    tag: "GANHE DIAS GRÁTIS",
+    title: "Convide outra professora e ganhe 1 mês grátis",
+    desc: "Ela também ganha 30 dias.",
+    aria: "Convidar professora",
+    href: "/configuracoes#convide",
+    cta: "Convidar",
+  };
+  const plans: PlanCard[] =
+    userPlan === "pro" && userCiclo === "anual"
+      ? [planConvide]
+      : userPlan === "pro" && userCiclo === "mensal"
+        ? [planAnual]
+        : [planAnual, planMensal];
   const [planIdx, setPlanIdx] = useState(0);
-  const currentPlan = plans[planIdx];
+  useEffect(() => { setPlanIdx(0); }, [plans.length]);
+  const safeIdx = Math.min(planIdx, plans.length - 1);
+  const currentPlan = plans[safeIdx];
   const prevPlan = () => setPlanIdx((i) => (i - 1 + plans.length) % plans.length);
   const nextPlan = () => setPlanIdx((i) => (i + 1) % plans.length);
 
@@ -173,7 +205,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
         )}
       </nav>
       <div className="sb-foot">
-        <div className={"sb-plan" + (currentPlan.key === "mensal" ? " silver" : "")} role="complementary" aria-label={currentPlan.aria}>
+        <div className={"sb-plan" + (currentPlan.silver ? " silver" : "")} role="complementary" aria-label={currentPlan.aria}>
           <div className="sb-plan-top">
             <span className="sb-plan-tag">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
@@ -184,22 +216,35 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           </div>
           <div className="sb-plan-bottom">
             {currentPlan.href ? (
-              <a
-                className="sb-plan-btn"
-                aria-label={currentPlan.aria}
-                href={currentPlan.href}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ver oferta
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-              </a>
+              currentPlan.href.startsWith("/") ? (
+                <Link
+                  className="sb-plan-btn"
+                  aria-label={currentPlan.aria}
+                  to={currentPlan.href.split("#")[0]}
+                  hash={currentPlan.href.includes("#") ? currentPlan.href.split("#")[1] : undefined}
+                >
+                  {currentPlan.cta}
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </Link>
+              ) : (
+                <a
+                  className="sb-plan-btn"
+                  aria-label={currentPlan.aria}
+                  href={currentPlan.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {currentPlan.cta}
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+              )
             ) : (
               <button className="sb-plan-btn" aria-label={currentPlan.aria}>
-                Ver oferta
+                {currentPlan.cta}
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
             )}
+            {plans.length > 1 ? (
             <div className="sb-plan-dots" role="tablist" aria-label="Selecionar plano">
               <button type="button" className="sb-plan-nav" aria-label="Plano anterior" onClick={prevPlan}>
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
@@ -209,9 +254,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
                   key={p.key}
                   type="button"
                   role="tab"
-                  aria-selected={i === planIdx}
+                  aria-selected={i === safeIdx}
                   aria-label={p.tag}
-                  className={"sb-plan-dot" + (i === planIdx ? " active" : "")}
+                  className={"sb-plan-dot" + (i === safeIdx ? " active" : "")}
                   onClick={() => setPlanIdx(i)}
                 />
               ))}
@@ -219,6 +264,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
               </button>
             </div>
+            ) : null}
           </div>
         </div>
       </div>

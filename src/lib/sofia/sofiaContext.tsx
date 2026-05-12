@@ -119,6 +119,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
   const [account, setAccount] = useState<MockAccount>(() => (typeof window === "undefined" ? "free_vazio" : getMockAccount()));
   const [tick, setTick] = useState(0);
   const [authUser, setAuthUser] = useState<{ nome: string; primeiro_nome: string } | null>(null);
+  const [planInfo, setPlanInfo] = useState<{ plano: "free" | "pro"; ciclo: "mensal" | "anual" | null } | null>(null);
 
   useEffect(() => {
     const unsub = subscribeMockAccount(setAccount);
@@ -156,15 +157,34 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
       const primeiro = nome.split(" ")[0];
       setAuthUser({ nome, primeiro_nome: primeiro });
     }
+    async function loadPlan(uid: string) {
+      try {
+        const { data } = await supabase
+          .from("subscriptions")
+          .select("plano, ciclo, status, current_period_end")
+          .eq("user_id", uid)
+          .maybeSingle();
+        if (!mounted) return;
+        const row = data as { plano?: string; ciclo?: string | null; status?: string; current_period_end?: string | null } | null;
+        const stillValid = !row?.current_period_end || new Date(row.current_period_end) > new Date();
+        const isPro = row?.plano === "pro" && row?.status === "active" && stillValid;
+        const ciclo: "mensal" | "anual" | null = isPro && (row?.ciclo === "mensal" || row?.ciclo === "anual") ? row!.ciclo as "mensal" | "anual" : null;
+        setPlanInfo({ plano: isPro ? "pro" : "free", ciclo });
+      } catch (err) {
+        console.warn("[SofiaContext] loadPlan falhou:", err);
+        if (mounted) setPlanInfo({ plano: "free", ciclo: null });
+      }
+    }
     supabase.auth.getSession().then(({ data }) => {
       const u = data.session?.user;
-      if (!u) { setAuthUser(null); return; }
+      if (!u) { setAuthUser(null); setPlanInfo(null); return; }
       const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
       const metaName =
         (typeof meta.display_name === "string" ? meta.display_name : null) ||
         (typeof meta.name === "string" ? meta.name : null) ||
         (typeof meta.full_name === "string" ? meta.full_name : null);
       loadProfile(u.id, u.email ?? null, metaName);
+      loadPlan(u.id);
     }).catch((err) => {
       console.warn("[SofiaContext] getSession falhou:", err);
       if (mounted) setAuthUser(null);
@@ -173,13 +193,14 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
     try {
       const res = supabase.auth.onAuthStateChange((_e, s) => {
       const u = s?.user;
-      if (!u) { setAuthUser(null); return; }
+      if (!u) { setAuthUser(null); setPlanInfo(null); return; }
       const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
       const metaName =
         (typeof meta.display_name === "string" ? meta.display_name : null) ||
         (typeof meta.name === "string" ? meta.name : null) ||
         (typeof meta.full_name === "string" ? meta.full_name : null);
       loadProfile(u.id, u.email ?? null, metaName);
+      loadPlan(u.id);
       });
       sub = res.data;
     } catch (err) {
@@ -188,22 +209,38 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
     const onProfileUpdate = () => {
       supabase.auth.getSession().then(({ data }) => {
         const u = data.session?.user;
-        if (u) loadProfile(u.id, u.email ?? null, null);
+        if (u) { loadProfile(u.id, u.email ?? null, null); loadPlan(u.id); }
       }).catch(() => { /* ignore */ });
     };
     window.addEventListener("sofia:profile-updated", onProfileUpdate);
+    const onPlanUpdate = () => {
+      supabase.auth.getSession().then(({ data }) => {
+        const u = data.session?.user;
+        if (u) loadPlan(u.id);
+      }).catch(() => { /* ignore */ });
+    };
+    window.addEventListener("sofia:plan-updated", onPlanUpdate);
     return () => {
       mounted = false;
       try { sub?.subscription.unsubscribe(); } catch { /* ignore */ }
       window.removeEventListener("sofia:profile-updated", onProfileUpdate);
+      window.removeEventListener("sofia:plan-updated", onPlanUpdate);
     };
   }, []);
 
   const value = useMemo(() => {
     const base = buildContext(account, route, alunoId);
-    if (!authUser) return base;
-    return { ...base, user: { ...base.user, nome: authUser.nome, primeiro_nome: authUser.primeiro_nome } };
-  }, [account, route, alunoId, tick, authUser]);
+    const user = { ...base.user };
+    if (authUser) {
+      user.nome = authUser.nome;
+      user.primeiro_nome = authUser.primeiro_nome;
+    }
+    if (planInfo) {
+      user.plano = planInfo.plano;
+      user.ciclo = planInfo.ciclo;
+    }
+    return { ...base, user };
+  }, [account, route, alunoId, tick, authUser, planInfo]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
