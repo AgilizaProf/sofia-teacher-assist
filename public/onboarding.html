@@ -608,6 +608,24 @@
     .urgency-counter .cnt-num{font-size:16px;}
     .urgency-counter .cnt-lbl{margin-top:0;font-size:9px;}
   }
+  /* Telas pequenas (≤375px): banner ainda mais compacto, contador
+     embaixo e ocupando linha inteira pra não espremer o título. */
+  @media(max-width:375px){
+    .urgency-banner{
+      padding:10px 12px;gap:8px;border-radius:14px;margin-bottom:10px;
+    }
+    .urgency-icon{font-size:20px;align-self:flex-start;margin-top:2px;}
+    .urgency-content{flex:1 1 100%;}
+    .urgency-title{font-size:13px;line-height:1.2;margin-bottom:2px;}
+    .urgency-sub{font-size:11px;line-height:1.35;}
+    .urgency-counter{
+      margin-left:0;width:100%;justify-content:center;
+      padding:6px 10px;border-radius:10px;
+      box-shadow:0 4px 10px rgba(255,122,69,.28);
+    }
+    .urgency-counter .cnt-num{font-size:15px;}
+    .urgency-counter .cnt-lbl{font-size:9px;letter-spacing:.03em;}
+  }
   .trust-row-final{
     display:flex;justify-content:center;gap:18px;margin-top:18px;
     font-size:12px;color:var(--text-soft);font-weight:600;flex-wrap:wrap;
