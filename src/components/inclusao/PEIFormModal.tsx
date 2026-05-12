@@ -358,6 +358,7 @@ type Props = {
 };
 
 export function PEIFormModal({ open, onClose, aluno }: Props) {
+  const user = useUser();
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, PEIData>>("inc_pei", {});
   const dataAtual = aluno ? (peiByStudent[aluno.id] ?? blankPEI()) : blankPEI();
   const [draft, setDraft] = useState<PEIData>(dataAtual);
