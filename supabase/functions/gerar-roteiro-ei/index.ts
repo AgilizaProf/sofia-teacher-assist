@@ -1,10 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
+    const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     const body = await req.json().catch(() => ({}));
     const {
       turma = "",
@@ -83,7 +85,7 @@ Regras:
 - ${faixa_etaria.includes("Bem pequenos") ? "Para BEM PEQUENOS: máximo 2 materiais centrais, espaço para exploração livre." : ""}
 - ${faixa_etaria.includes("Pré") || faixa_etaria.includes("Pequenos") || faixa_etaria.includes("Maiores") ? "PRÉ-ESCOLA: pode incluir registro (desenho, colagem, fala). NUNCA cópia, ditado ou exercício formal." : ""}`;
 
-    const r = await callAI({ tipo: "roteiro_ei", system: sys, user, json: true, maxTokens: 3500 });
+    const r = await callAI({ userId, tipo: "roteiro_ei", system: sys, user, json: true, maxTokens: 3500 });
     if (!r.ok) return aiErrorResponse(r);
 
     let roteiro: Record<string, unknown> = {};

@@ -1,9 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
+    const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     const body = await req.json().catch(() => ({}));
     const {
       turma = "",
@@ -32,7 +34,7 @@ Responda APENAS em JSON válido neste formato:
   "semanas": [{"semana": 1, "titulo": "", "habilidades_foco": [""], "tipo_atividade": "", "conecta_anterior": "", "prepara_proxima": ""}]
 }`;
 
-    const r = await callAI({ tipo: "trilha_geracao", system: sys, user, json: true, maxTokens: 6000 });
+    const r = await callAI({ userId, tipo: "trilha_geracao", system: sys, user, json: true, maxTokens: 6000 });
     if (!r.ok) return aiErrorResponse(r);
     let trilha: Record<string, unknown> = {};
     try { trilha = JSON.parse(r.text || "{}"); } catch { trilha = { erro: "JSON inválido", raw: r.text }; }
