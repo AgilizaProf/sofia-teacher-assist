@@ -96,6 +96,8 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   ];
   const [planIdx, setPlanIdx] = useState(0);
   const currentPlan = plans[planIdx];
+  const prevPlan = () => setPlanIdx((i) => (i - 1 + plans.length) % plans.length);
+  const nextPlan = () => setPlanIdx((i) => (i + 1) % plans.length);
 
   useEffect(() => {
     if (!usingInternal) return;
