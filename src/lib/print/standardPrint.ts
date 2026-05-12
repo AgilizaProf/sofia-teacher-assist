@@ -240,19 +240,19 @@ li > strong:first-child {
   color: #1F3A5F;
 }
 h1, .doc-title {
-  font-size: 22pt;
-  margin: 0 0 12pt 0;
-  line-height: 1.15;
+  font-size: 26pt;
+  margin: 0 0 10pt 0;
+  line-height: 1.1;
 }
 h2, .section-title {
-  font-size: 17pt;
-  margin: 22pt 0 10pt 0;
+  font-size: 20pt;
+  margin: 24pt 0 10pt 0;
   padding-bottom: 0;
   border-bottom: none;
   line-height: 1.2;
 }
-h3 { font-size: 13pt; margin: 14pt 0 6pt 0; line-height: 1.25; }
-h4 { font-size: 11.5pt; margin: 10pt 0 4pt 0; line-height: 1.25; text-transform: none; }
+h3 { font-size: 13.5pt; margin: 14pt 0 6pt 0; line-height: 1.25; }
+h4 { font-size: 12pt; margin: 10pt 0 4pt 0; line-height: 1.25; text-transform: none; }
 
 /* Primeiro título de seção logo após a capa não precisa de margem extra acima */
 .doc-cover + h2,
@@ -267,35 +267,41 @@ h2 + p > em:only-child,
   font-style: italic;
   color: #1F3A5F;
   font-size: 10.5pt;
-  margin: -4pt 0 8pt 0;
+  opacity: .85;
+  margin: -2pt 0 10pt 0;
 }
 
 /* Capa estilizada */
 .doc-cover {
   text-align: center;
-  padding: 18pt 0 22pt 0;
-  margin-bottom: 22pt;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 6pt 0 18pt 0;
+  margin-bottom: 18pt;
+  border-bottom: none;
 }
 .doc-cover .overline {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 9pt; letter-spacing: .22em; color: #1F3A5F;
-  text-transform: uppercase; margin-bottom: 10pt; font-weight: 700;
+  font-size: 9.5pt; letter-spacing: .26em; color: #1F3A5F;
+  text-transform: uppercase; margin-bottom: 12pt; font-weight: 700;
 }
 .doc-cover h1 {
   text-align: center;
   color: #1F3A5F;
-  font-size: 32pt;
+  font-size: 44pt;
   margin: 0;
+  line-height: 1.05;
 }
 .doc-cover .gold-rule {
-  width: 110px; height: 0; margin: 10pt auto 10pt auto;
+  width: 130px; height: 0; margin: 12pt auto 14pt auto;
   border-top: 1.2pt solid #C9B98A;
 }
 .doc-cover .subtitle {
   font-family: 'Fraunces', Georgia, serif;
   font-style: italic;
-  font-size: 13pt; color: #1F3A5F; margin-top: 4pt;
+  font-size: 14pt; color: #1F3A5F; margin-top: 0;
+}
+.doc-cover + p,
+.doc-cover ~ p:first-of-type {
+  margin-top: 14pt;
 }
 
 /* (Cabeçalho legado .page-band substituído pelo .print-header fixo) */
@@ -312,7 +318,7 @@ h2 + p > em:only-child,
 
 /* Caixa rotulada: faixa bege com borda azul, pronta p/ receber texto da IA */
 .field-box {
-  margin: 10pt 0;
+  margin: 6pt 0;
   border-top: 1px solid #1F3A5F;
   border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
@@ -324,14 +330,14 @@ h2 + p > em:only-child,
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
   color: #1F3A5F;
-  font-size: 10pt;
-  letter-spacing: .08em;
+  font-size: 9.5pt;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  padding: 5pt 10pt;
+  padding: 4pt 10pt;
 }
 .field-box > .content {
-  padding: 10pt 12pt;
-  min-height: 36pt;
+  padding: 8pt 10pt 14pt 10pt;
+  min-height: 28pt;
   color: #111111;
 }
 
