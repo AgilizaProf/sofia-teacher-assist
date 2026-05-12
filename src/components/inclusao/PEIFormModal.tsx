@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { X, Save, Printer, Plus, Trash2, FileText, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { wrapStandardPrintHtml } from "@/lib/print/standardPrint";
 
 type Aluno = {
   id: string;
@@ -433,23 +434,18 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
       `<li><b>#${i + 1} (${o.prazo === "curto" ? "Curto prazo" : o.prazo === "medio" ? "Médio prazo" : "Longo prazo"})</b> — ${esc(o.texto)}<br/><i>Critérios:</i> ${esc(o.criterios || "—")} · <i>Status:</i> ${esc(o.status)}</li>`,
     ).join("");
     const eq = draft.equipe.map((e) => `<li>${esc(e.nome)} — ${esc(e.funcao)}</li>`).join("");
-    w.document.write(`
-      <!doctype html><html><head><meta charset="utf-8"/>
-      <title>PEI · ${esc(aluno?.name || "")}</title>
-      <style>
-        @page{size:A4;margin:18mm 16mm;}
-        body{font-family:'Inter',Arial,sans-serif;color:#0F1B36;font-size:11pt;line-height:1.45;}
-        h1{font-size:18pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
-        h2{font-size:12pt;margin:14pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
-        .meta{font-size:9pt;color:#6B7691;margin-bottom:10pt;}
-        .ident{display:grid;grid-template-columns:1fr 1fr;gap:4pt 16pt;margin-bottom:10pt;}
-        ul{margin:0;padding-left:14pt;}
-        .legal{margin-top:16pt;font-size:8.5pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
-        .sig{margin-top:18pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
-        .sig div{border-top:1px solid #333;padding-top:4pt;font-size:9pt;text-align:center;}
-        .toolbar{position:fixed;top:8px;right:8px;}
-        @media print{.toolbar{display:none;}}
-      </style></head><body>
+    const extraCss = `
+      h1{font-size:16pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
+      h2{font-size:12pt;margin:14pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
+      .meta{font-size:11pt;color:#6B7691;margin-bottom:10pt;}
+      .ident{display:grid;grid-template-columns:1fr 1fr;gap:4pt 16pt;margin-bottom:10pt;}
+      ul{margin:0;padding-left:14pt;}
+      .legal{margin-top:16pt;font-size:10pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
+      .sig{margin-top:18pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
+      .sig div{border-top:1px solid #333;padding-top:4pt;font-size:11pt;text-align:center;}
+      .toolbar{position:fixed;top:8px;right:8px;}
+    `;
+    const inner = `
       <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
       <h1>Plano Educacional Individualizado (PEI)</h1>
       <div class="meta">Protocolo ${esc(draft.protocolo)} · Vigência ${esc(draft.vigencia.inicio || "—")} a ${esc(draft.vigencia.fim || "—")} · Lei 14.254/2021</div>
@@ -492,8 +488,8 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
         <div>${esc(draft.assinaturas.familia || "Família / responsável")}</div>
       </div>
       <div class="legal">Documento elaborado conforme a <b>Lei nº 14.254/2021</b>, que dispõe sobre o acompanhamento integral para educandos com dislexia, TDAH e outros transtornos de aprendizagem, e em consonância com a <b>Lei nº 13.146/2015</b> (LBI), <b>Lei nº 12.764/2012</b> (PNPDTEA) e a <b>BNCC</b>.</div>
-      </body></html>
-    `);
+    `;
+    w.document.write(wrapStandardPrintHtml(`PEI · ${esc(aluno?.name || "")}`, inner, extraCss));
     w.document.close();
     setTimeout(() => w.focus(), 200);
   };
