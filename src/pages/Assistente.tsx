@@ -16,6 +16,45 @@ import { Header as AppHeader } from "@/components/Header";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 
+function CtxChipGroup({ options, value, onToggle }: { options: string[]; value: string[]; onToggle: (v: string) => void }) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (adding) inputRef.current?.focus(); }, [adding]);
+  const customs = value.filter((v) => !options.includes(v));
+  const commit = () => {
+    const v = draft.trim();
+    if (v && !value.includes(v)) onToggle(v);
+    setDraft(""); setAdding(false);
+  };
+  return (
+    <div className="ctx-chips">
+      {options.map((o) => (
+        <button key={o} type="button" className={"ctx-chip" + (value.includes(o) ? " on" : "")} onClick={() => onToggle(o)}>{o}</button>
+      ))}
+      {customs.map((o) => (
+        <button key={o} type="button" className="ctx-chip on" onClick={() => onToggle(o)} title="Clique para remover">{o} ×</button>
+      ))}
+      {adding ? (
+        <span className="ctx-chip-input">
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(""); setAdding(false); } }}
+            onBlur={commit}
+            placeholder="Digite e Enter"
+            maxLength={60}
+          />
+          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={commit}>Adicionar</button>
+        </span>
+      ) : (
+        <button type="button" className="ctx-chip-add" onClick={() => setAdding(true)}>+ Outro</button>
+      )}
+    </div>
+  );
+}
+
 const css = `
 .ap-root{
   --primary:#1B2A4E;--primary-dark:#0F1B36;--accent:#FF6A2C;--accent-warm:#FF9466;
