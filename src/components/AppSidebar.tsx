@@ -127,7 +127,6 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
       : userPlan === "pro" && userCiclo === "mensal"
         ? [planAnual]
         : [planAnual, planMensal];
-    {
   const [planIdx, setPlanIdx] = useState(0);
   useEffect(() => { setPlanIdx(0); }, [plans.length]);
   const safeIdx = Math.min(planIdx, plans.length - 1);
