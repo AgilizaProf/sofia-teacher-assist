@@ -73,12 +73,15 @@ function buildPrintCss(
   --gold: #C9B98A;           /* filete dourado discreto */
   --rule: #e5e7eb;
   --muted: #6b7280;
+  /* Altura da faixa azul + folga acima do conteúdo (compensa A4 e Letter) */
+  --print-header-h: 1.4cm;
+  --print-header-gap: 0.7cm;
 }
 
 @page {
   size: A4;
-  /* Margem superior reservada para a faixa azul fixa (print-header) */
-  margin: 2.8cm 2cm 2.8cm 2cm;
+  /* Margem superior = altura da faixa + folga; vale para A4 e Letter */
+  margin: calc(var(--print-header-h) + var(--print-header-gap)) 2cm 2.8cm 2cm;
   @bottom-left {
     content: "${escCss(footerLeft)}";
     font-family: 'Fraunces', Georgia, serif;
@@ -95,6 +98,13 @@ function buildPrintCss(
     font-size: 9pt; color: #6b7280;
   }
 }
+@page :first {
+  margin-top: calc(var(--print-header-h) + var(--print-header-gap));
+}
+/* Suporte a impressão em Carta/Letter sem cortar conteúdo */
+@media print and (min-width: 8in) {
+  @page { size: Letter; }
+}
 
 /* Garante impressão das cores de fundo (faixa azul) em todos os navegadores */
 html, body, .print-header, .page-band, .field-box > .label, .section-band, .digital-sig {
@@ -107,7 +117,7 @@ html, body, .print-header, .page-band, .field-box > .label, .section-band, .digi
 .print-header {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 1.4cm;
+  height: var(--print-header-h);
   background: #1F3A5F !important;
   color: #ffffff;
   display: flex;
@@ -117,6 +127,7 @@ html, body, .print-header, .page-band, .field-box > .label, .section-band, .digi
   z-index: 9998;
   font-size: 9pt;
   letter-spacing: .14em;
+  box-sizing: border-box;
 }
 .print-header .brand {
   font-family: 'Fraunces', Georgia, serif;
@@ -130,7 +141,19 @@ html, body, .print-header, .page-band, .field-box > .label, .section-band, .digi
   letter-spacing: .12em;
 }
 @media screen {
-  body { padding-top: 1.4cm; }
+  body { padding-top: calc(var(--print-header-h) + var(--print-header-gap)); }
+}
+
+/* Em alguns engines (Chrome) o position:fixed permanece dentro da área de
+   conteúdo da página impressa. Garantimos folga inicial para que o conteúdo
+   nunca seja cortado pela faixa, mesmo em A4 ou Letter. */
+@media print {
+  body::before {
+    content: "";
+    display: block;
+    height: var(--print-header-h);
+    margin-bottom: var(--print-header-gap);
+  }
 }
 
 html, body {
