@@ -215,6 +215,30 @@ h1, h2, h3, h4, h5, h6,
   letter-spacing: -0.01em;
   text-align: left;
 }
+
+/* Marcadores de listas ordenadas e títulos numerados em azul */
+ol { list-style: none; counter-reset: section; padding-left: 0; }
+ol > li {
+  counter-increment: section;
+  position: relative;
+  padding-left: 1.6em;
+  margin: 4pt 0;
+}
+ol > li::before {
+  content: counter(section) ".";
+  position: absolute; left: 0; top: 0;
+  color: #1F3A5F;
+  font-weight: 700;
+}
+
+/* Títulos numerados (ex.: "1. Identificação do educando") em azul,
+   mesmo quando renderizados como <p><strong>...</strong></p> */
+.numbered-title,
+h2 strong, h3 strong, h4 strong,
+p > strong:only-child,
+li > strong:first-child {
+  color: #1F3A5F;
+}
 h1, .doc-title {
   font-size: 22pt;
   margin: 0 0 12pt 0;
