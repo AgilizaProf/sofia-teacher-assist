@@ -37,6 +37,41 @@ const COMPLIANCE_BY_TYPE: Record<DocType, string> = {
     "Documento elaborado com suporte do AgilizaProf | Em conformidade com a Lei Brasileira de Inclusão — Lei nº 13.146/2015",
 };
 
+/** Rótulo da faixa de cabeçalho impressa, por tipo de documento. */
+const DOC_TYPE_LABEL: Record<DocType, string> = {
+  parecer: "RELATÓRIO PEDAGÓGICO",
+  pei: "PLANO EDUCACIONAL INDIVIDUALIZADO",
+  planejamento: "PLANEJAMENTO PEDAGÓGICO",
+  "plano-adaptado": "PLANO ADAPTADO",
+};
+
+/** Fallback seguro caso o tipo não seja reconhecido (ex.: dado vindo do banco). */
+const DEFAULT_DOC_TYPE: DocType = "parecer";
+const FALLBACK_DOC_LABEL = "DOCUMENTO PEDAGÓGICO";
+const FALLBACK_COMPLIANCE =
+  "Documento elaborado com suporte do AgilizaProf";
+
+function isDocType(value: unknown): value is DocType {
+  return (
+    value === "parecer" ||
+    value === "pei" ||
+    value === "planejamento" ||
+    value === "plano-adaptado"
+  );
+}
+
+function resolveDocType(value: unknown): DocType {
+  return isDocType(value) ? value : DEFAULT_DOC_TYPE;
+}
+
+function getDocLabel(docType: DocType): string {
+  return DOC_TYPE_LABEL[docType] ?? FALLBACK_DOC_LABEL;
+}
+
+function getCompliance(docType: DocType): string {
+  return COMPLIANCE_BY_TYPE[docType] ?? FALLBACK_COMPLIANCE;
+}
+
 function escCss(s: string): string {
   return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
@@ -54,13 +89,8 @@ function buildPrintCss(
   const isPlanejamento = docType === "planejamento";
   // Rodapé via @page margin boxes (usado na impressão real do navegador)
   const footerLeft = "Documento gerado pela plataforma AgilizaProf";
-  const docTypeLabel: Record<DocType, string> = {
-    parecer: "PARECER DESCRITIVO",
-    pei: "PEI",
-    planejamento: "PLANEJAMENTO DE AULA",
-    "plano-adaptado": "PLANO ADAPTADO",
-  };
-  const headerRight = docTypeLabel[docType];
+  // headerRight é renderizado pelo .print-header (HTML), não pelo CSS.
+  void docType;
   return `
 /* Fontes — Fraunces para títulos, Arial para corpo */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
@@ -459,18 +489,11 @@ function buildScreenFooter(_professorNome: string, compliance: string): string {
 </div>`;
 }
 
-const DOC_TYPE_LABEL: Record<DocType, string> = {
-  parecer: "RELATÓRIO PEDAGÓGICO",
-  pei: "PLANO EDUCACIONAL INDIVIDUALIZADO",
-  planejamento: "PLANEJAMENTO PEDAGÓGICO",
-  "plano-adaptado": "PLANO ADAPTADO",
-};
-
 function buildPrintHeader(docType: DocType): string {
   return `
 <div class="print-header" role="banner">
   <div class="brand">AGILIZAPROF</div>
-  <div class="doc-kind">${escHtml(DOC_TYPE_LABEL[docType])}</div>
+  <div class="doc-kind">${escHtml(getDocLabel(docType))}</div>
 </div>`;
 }
 
@@ -485,9 +508,9 @@ export function wrapStandardPrintHtml(
 ): string {
   const opts: StandardPrintOptions =
     typeof optsOrCss === "string" ? { extraCss: optsOrCss } : optsOrCss;
-  const docType: DocType = opts.docType ?? "parecer";
+  const docType: DocType = resolveDocType(opts.docType);
   const professor = (opts.professorNome ?? "").trim();
-  const compliance = COMPLIANCE_BY_TYPE[docType];
+  const compliance = getCompliance(docType);
   const incluirAssinatura = opts.incluirAssinatura !== false;
 
   const css = buildPrintCss(professor, compliance, docType);
