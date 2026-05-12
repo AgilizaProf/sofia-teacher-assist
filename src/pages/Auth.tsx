@@ -110,11 +110,18 @@ export function AuthPage() {
     e.preventDefault();
     setForgotLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const { requestPasswordReset } = await import("@/lib/passwordReset.functions");
+      const res = await requestPasswordReset({
+        data: { email: forgotEmail, redirectTo: `${window.location.origin}/reset-password` },
       });
-      if (error) throw error;
-      toast.success("Enviamos um link de redefinição para seu e-mail.");
+      if (!res.ok && res.blocked) {
+        const motivo = res.reason === "email"
+          ? "Muitas tentativas para este e-mail."
+          : "Muitas tentativas a partir desta rede.";
+        toast.error(`${motivo} Tente novamente em ~${res.waitMinutes} min.`);
+        return;
+      }
+      toast.success("Se o e-mail estiver cadastrado, enviaremos um link de redefinição em instantes.");
       setForgotOpen(false);
       setForgotEmail("");
     } catch (err) {
