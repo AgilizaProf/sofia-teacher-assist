@@ -26,29 +26,83 @@ function ResetPasswordPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [invalidLink, setInvalidLink] = useState(false);
+  const [recoveryUserId, setRecoveryUserId] = useState<string | null>(null);
+  const [recoveryEmail, setRecoveryEmail] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Aceitar APENAS sessões originadas do fluxo de recuperação.
-    // Se o usuário cair aqui sem token de recuperação válido, bloqueia.
+    // Segurança: aceitar APENAS sessões originadas do link de recuperação
+    // recém-aberto. Se houver uma sessão antiga no navegador (ex.: dispositivo
+    // compartilhado), ela é descartada para impedir que outro usuário troque
+    // a senha de quem estava logado anteriormente.
+    let cancelled = false;
     let recovered = false;
+
+    const finalizeRecovery = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!data.user) {
+        setInvalidLink(true);
+        return;
+      }
+      recovered = true;
+      setRecoveryUserId(data.user.id);
+      setRecoveryEmail(data.user.email ?? null);
+      setReady(true);
+    };
+
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        recovered = true;
-        setReady(true);
-      }
+      if (event === "PASSWORD_RECOVERY") void finalizeRecovery();
     });
-    const hash = typeof window !== "undefined" ? window.location.hash : "";
-    const hasRecoveryHash = /type=recovery/.test(hash) || /access_token=/.test(hash);
-    const timer = setTimeout(() => {
-      if (!recovered) {
-        // Sem evento de recuperação dentro do prazo: link inválido/expirado.
-        if (!hasRecoveryHash) setInvalidLink(true);
+
+    (async () => {
+      try {
+        const url = new URL(window.location.href);
+        const hash = window.location.hash || "";
+        const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+
+        const code = url.searchParams.get("code");
+        const tokenHash = url.searchParams.get("token_hash") || hashParams.get("token_hash");
+        const type = url.searchParams.get("type") || hashParams.get("type");
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+
+        // Antes de aplicar o token de recuperação, encerra qualquer sessão
+        // pré-existente NESTE navegador (apenas local) para garantir que a
+        // sessão ativa será exclusivamente a do link.
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          await finalizeRecovery();
+        } else if (tokenHash && type === "recovery") {
+          const { error } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
+          if (error) throw error;
+          await finalizeRecovery();
+        } else if (accessToken && refreshToken && type === "recovery") {
+          const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (error) throw error;
+          await finalizeRecovery();
+        }
+        // Limpa imediatamente os tokens da URL para evitar vazamento via
+        // histórico do navegador, referer ou compartilhamento de link.
+        if (code || tokenHash || accessToken) {
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      } catch (err) {
+        if (!cancelled) setInvalidLink(true);
       }
-    }, 1500);
+    })();
+
+    const timer = setTimeout(() => {
+      if (!recovered && !cancelled) setInvalidLink(true);
+    }, 4000);
+
     return () => {
+      cancelled = true;
       clearTimeout(timer);
       sub.subscription.unsubscribe();
     };
@@ -61,9 +115,12 @@ function ResetPasswordPage() {
     e.preventDefault();
     if (!meets) return toast.error("A senha não atende aos requisitos mínimos de segurança.");
     if (password !== confirm) return toast.error("As senhas não coincidem.");
+    if (recoveryEmail && password.toLowerCase().includes(recoveryEmail.split("@")[0].toLowerCase())) {
+      return toast.error("A senha não pode conter partes do seu e-mail.");
+    }
     // Garantir que ainda há sessão de recuperação ativa.
     const { data: sess } = await supabase.auth.getSession();
-    if (!sess.session) {
+    if (!sess.session || !recoveryUserId || sess.session.user.id !== recoveryUserId) {
       toast.error("Sessão de recuperação expirada. Solicite um novo link.");
       setInvalidLink(true);
       return;
@@ -72,8 +129,10 @@ function ResetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success("Senha atualizada com sucesso! Faça login com a nova senha.");
-      await supabase.auth.signOut();
+      // Invalida TODAS as sessões ativas em qualquer dispositivo,
+      // garantindo que apenas o dono do e-mail consiga entrar novamente.
+      await supabase.auth.signOut({ scope: "global" }).catch(() => {});
+      toast.success("Senha atualizada! Por segurança, todas as sessões foram encerradas. Faça login novamente.");
       navigate({ to: "/auth" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao redefinir senha.");
