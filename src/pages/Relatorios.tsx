@@ -460,6 +460,31 @@ export function Relatorios() {
   const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
+  // Alunos cadastrados no banco (Inclusão) — entram automaticamente na lista de Relatórios.
+  const { students: dbStudents } = useInclusaoStudents();
+  const combinedStudents = useMemo<DashStudent[]>(() => {
+    const seen = new Set<string>();
+    const out: DashStudent[] = [];
+    const push = (s: DashStudent) => {
+      const key = s.name.trim().toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      out.push(s);
+    };
+    dashStudents.forEach(push);
+    dbStudents.forEach((s) =>
+      push({
+        name: s.name,
+        classRef: s.turma && s.turma !== "Sem turma" ? s.turma : "",
+        birth: s.birth ?? "",
+        pcd: s.diag || s.pcd || "nao",
+        notes: s.notes ?? "",
+        createdAt: s.createdAt,
+      }),
+    );
+    return out;
+  }, [dashStudents, dbStudents]);
+
   // Cadastro rápido de aluno (vincula a uma turma já criada)
   const [novoAlunoOpen, setNovoAlunoOpen] = useState(false);
   const [novoAluno, setNovoAluno] = useState<DashStudent>({ name: "", classRef: "", birth: "", pcd: "nao", notes: "" });
