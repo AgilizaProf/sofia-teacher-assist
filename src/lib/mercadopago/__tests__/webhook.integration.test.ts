@@ -4,14 +4,17 @@ import {
   buildSignedRequest,
   setEnv,
   clearEnv,
-  createSupabaseMock,
   mockMpFetch,
 } from "./test-helpers";
 
-/* Hoisted mock — must be declared before importing the route. */
-const sb = createSupabaseMock();
+/* Hoisted mock — vi.hoisted runs before any imports, including the route. */
+const { sb } = vi.hoisted(() => {
+  // Inline the supabase mock factory to keep it inside the hoisted scope.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+  const { createSupabaseMock } = require("./test-helpers") as typeof import("./test-helpers");
+  return { sb: createSupabaseMock() };
+});
 vi.mock("@/integrations/supabase/client.server", () => ({
-  // Re-export the same object reference so route imports share state with tests.
   supabaseAdmin: sb.client,
 }));
 
