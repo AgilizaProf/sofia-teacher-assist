@@ -797,26 +797,14 @@ export function Dashboard() {
             <div className="hero-left">
               <h1 className="hero-title" suppressHydrationWarning>
                 {heroGreeting}.
-                {totalStudents === 0 ? (
-                  <><br />Comece configurando <span className="accent">sua primeira turma.</span></>
-                ) : null}
+                {heroDynamic.titleExtra}
               </h1>
-              <p className="hero-sub" suppressHydrationWarning>{heroSubText}</p>
+              <p className="hero-sub" suppressHydrationWarning>{heroDynamic.sub}</p>
               <div className="hero-cta-row">
-                {totalStudents === 0 ? (
-                  <button className="hero-cta" onClick={() => setClassOpen(true)}>
-                    Criar primeira turma
-                    <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
-                  </button>
-                ) : (
-                  <button
-                    className="hero-cta"
-                    onClick={() => navigate({ to: "/relatorios", search: { tab: "todo" } })}
-                  >
-                    Começar pelos pareceres
-                    <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
-                  </button>
-                )}
+                <button className="hero-cta" onClick={heroDynamic.onCta}>
+                  {heroDynamic.ctaLabel}
+                  <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
+                </button>
                 <button className="hero-cta-ghost">
                   <Svg strokeWidth={2.5} c={<polygon points="5 3 19 12 5 21 5 3"/>} />
                   Tutorial · 90s
