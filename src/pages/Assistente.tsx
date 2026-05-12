@@ -521,22 +521,8 @@ export function Assistente() {
     return out;
   }, [ctx, fala, proxima, navigate, sofia, turmaSelecionada]);
 
-  const [sugIdx, setSugIdx] = useState(0);
-  const [sugAnimKey, setSugAnimKey] = useState(0);
-  useEffect(() => { setSugIdx((i) => Math.min(i, Math.max(0, sugestoes.length - 1))); }, [sugestoes.length]);
-  useEffect(() => {
-    if (sugestoes.length <= 1) return;
-    const id = setInterval(() => {
-      setSugIdx((i) => (i + 1) % sugestoes.length);
-      setSugAnimKey((k) => k + 1);
-    }, 7000);
-    return () => clearInterval(id);
-  }, [sugestoes.length]);
-  const sugAtual = sugestoes[sugIdx] ?? sugestoes[0];
-  const goSug = (delta: number) => {
-    setSugIdx((i) => (i + delta + sugestoes.length) % sugestoes.length);
-    setSugAnimKey((k) => k + 1);
-  };
+  // Apenas a sugestão mais relevante do contexto atual (sem rotação automática).
+  const sugAtual = sugestoes[0];
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -680,7 +666,7 @@ export function Assistente() {
 
               <div className="suggest" key={sugAtual?.id}>
                 <div className="ico-tile suggest-fade">{sugAtual?.icon ?? <FileText size={22} />}</div>
-                <div className="suggest-fade" key={sugAnimKey}>
+                <div className="suggest-fade">
                   <div className="label"><Star size={11} fill="currentColor" /> {sugAtual?.label?.toUpperCase() ?? "SUGESTÃO PRA VOCÊ AGORA"}</div>
                   <h3>{sugAtual?.title ?? "Comece cadastrando sua primeira turma"}</h3>
                   <p>{sugAtual?.subtitle ?? "Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui."}</p>
@@ -688,27 +674,6 @@ export function Assistente() {
                 <button className="btn-cta" onClick={() => sugAtual?.onAction?.()} aria-label={sugAtual?.cta || "Começar agora"}>
                   {sugAtual?.cta || "Começar agora"} <ArrowRight size={14} />
                 </button>
-                {sugestoes.length > 1 && (
-                  <div className="suggest-foot">
-                    <div className="suggest-dots" role="tablist" aria-label="Sugestões">
-                      {sugestoes.map((s, i) => (
-                        <button
-                          key={s.id}
-                          role="tab"
-                          aria-selected={i === sugIdx}
-                          aria-label={s.label}
-                          className={"suggest-dot" + (i === sugIdx ? " on" : "")}
-                          onClick={() => { setSugIdx(i); setSugAnimKey((k) => k + 1); }}
-                        />
-                      ))}
-                    </div>
-                    <div className="suggest-counter">{String(sugIdx + 1).padStart(2, "0")} / {String(sugestoes.length).padStart(2, "0")}</div>
-                    <div className="suggest-nav">
-                      <button onClick={() => goSug(-1)} aria-label="Sugestão anterior"><ChevronLeft size={14} /></button>
-                      <button onClick={() => goSug(1)} aria-label="Próxima sugestão"><ChevronRight size={14} /></button>
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="tasks-wrap">
