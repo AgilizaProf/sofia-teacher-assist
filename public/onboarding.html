@@ -1518,16 +1518,18 @@
 
   function adaptStep6(){
     const grid = document.getElementById('nextGrid');
-    const order = [painSelected];
-    ['pareceres','planejamento','inclusao','agenda','sofia'].forEach(k=>{
-      if(k!==painSelected) order.push(k);
-    });
+    // Sempre exibimos os 4 caminhos principais — pareceres/planejamento/
+    // inclusão/agenda — começando pelo escolhido pela professora.
+    const fixed = ['pareceres','planejamento','inclusao','agenda'];
+    const order = fixed.includes(painSelected)
+      ? [painSelected, ...fixed.filter(k=>k!==painSelected)]
+      : fixed;
 
     grid.innerHTML = order.slice(0,4).map((key,i)=>{
       const c = NEXT_CARDS[key];
       const isPrimary = i===0;
       return `
-        <a class="next-card${isPrimary?' primary':''}" href="${c.route}" onclick="goToApp(event,'${key}')">
+        <a class="next-card${isPrimary?' primary':''}" href="${c.route}" onclick="goToApp(event,'${key}')" role="link" aria-label="${c.title} — ${c.arrow.replace(/\s*→\s*$/,'')}">
           <div class="icon-box" style="${isPrimary?'color:#fff':''}">${c.icon}</div>
           <h4>${c.title}</h4>
           <p>${c.desc}</p>
