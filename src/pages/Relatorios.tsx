@@ -8,6 +8,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useEiMode } from "@/lib/ei/useEiMode";
+import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
