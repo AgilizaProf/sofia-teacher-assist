@@ -3,7 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil,
   FileText, Send, User, Sparkles, ArrowRight,
-  Calendar, CheckSquare, Star, X,
+  Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
+  GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
