@@ -46,64 +46,196 @@ function escHtml(s: string): string {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-function buildPrintCss(professorNome: string, compliance: string): string {
-  const profLine = professorNome ? `Prof(a). ${escCss(professorNome)}` : "";
+function buildPrintCss(
+  professorNome: string,
+  compliance: string,
+  docType: DocType,
+): string {
+  const isPlanejamento = docType === "planejamento";
+  // Rodapé via @page margin boxes (usado na impressão real do navegador)
+  const footerLeft = "Documento gerado pela plataforma AgilizaProf";
   return `
+/* Fontes — Fraunces para títulos, Arial para corpo */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
+
 @page {
   size: A4;
-  margin: 2cm 2cm 2.6cm 2cm;
-  @bottom-left   { content: "${profLine}"; font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #475569; }
-  @bottom-center { content: "${escCss(compliance)}"; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; color: #475569; }
-  @bottom-right  { content: "Página " counter(page) " de " counter(pages); font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #475569; }
+  margin: 2.2cm 2cm 2.8cm 2cm;
+  @bottom-left {
+    content: "${escCss(footerLeft)}";
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 9pt; color: #1f2a44;
+  }
+  @bottom-center {
+    content: "${escCss(compliance)}";
+    font-family: Arial, Helvetica, sans-serif;
+    font-style: italic; font-size: 8.5pt; color: #6b7280;
+  }
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt; color: #6b7280;
+  }
 }
 
 html, body {
-  font-family: Arial, Helvetica, sans-serif !important;
-  font-size: 12pt !important;
-  line-height: 1.5 !important;
-  color: #0B1220;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #000;
   margin: 0;
   padding: 0;
   background: #fff;
 }
 
-body * {
-  font-family: Arial, Helvetica, sans-serif !important;
+/* Corpo: Arial 12, espaçamento 1,5, justificado */
+p, li, td, th, dd, dt, .doc-body, .doc-block, .kpi, .card, .pei-block, section, article {
+  font-family: Arial, Helvetica, sans-serif;
   line-height: 1.5;
+  color: #000;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
 }
 
-/* Borda 1px sólida em TODAS as páginas (fixa cobre cada folha impressa) */
+/* Títulos: Fraunces Bold, azul profundo */
+h1, h2, h3, h4, h5, h6,
+.doc-title, .section-title {
+  font-family: 'Fraunces', Georgia, 'Times New Roman', serif !important;
+  font-weight: 700;
+  color: #14315c; /* azul profundo */
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+h1, .doc-title {
+  font-size: 24pt;
+  margin: 0 0 14pt 0;
+}
+h2, .section-title {
+  font-size: 16pt;
+  margin: 18pt 0 8pt 0;
+  padding-bottom: 4pt;
+  border-bottom: 1px solid #d4af37; /* divisória dourada sutil */
+}
+h3 { font-size: 13pt; margin: 14pt 0 6pt 0; }
+h4 { font-size: 12pt; margin: 12pt 0 4pt 0; }
+
+/* Capa / cabeçalho do documento */
+.doc-cover {
+  text-align: center;
+  padding: 8pt 0 18pt 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 18pt;
+}
+.doc-cover h1 {
+  text-align: center;
+  color: #14315c;
+}
+.doc-cover .subtitle {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt; color: #475569; margin-top: 4pt;
+}
+
+/* Áreas/blocos de conteúdo — sem linhas de preenchimento, apenas blocos suaves */
+.doc-block, .card, .pei-block {
+  background: #fafaf7;
+  border: 1px solid #ececec;
+  border-radius: 4px;
+  padding: 10pt 14pt;
+  margin: 8pt 0;
+}
+
+/* Tabelas elegantes */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8pt 0;
+}
+th, td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 6pt 8pt;
+  vertical-align: top;
+  text-align: left;
+}
+th {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  color: #14315c;
+  border-bottom: 1px solid #d4af37;
+}
+
+${
+  isPlanejamento
+    ? `
+/* Borda dupla editorial só no Planejamento: traço azul + filete dourado interno */
 @media print {
   html::before {
     content: "";
     position: fixed;
-    top: 0; right: 0; bottom: 0; left: 0;
-    border: 1px solid #000;
+    top: 8mm; right: 8mm; bottom: 8mm; left: 8mm;
+    border: 1.5pt solid #14315c;
+    outline: 1pt solid #d4af37;
+    outline-offset: -3mm;
     pointer-events: none;
     z-index: 9999;
   }
-  /* Esconder rodapé "em tela" durante impressão (já está nos margin boxes) */
-  .screen-foot { display: none !important; }
 }
-/* Em tela (pré-visualização do pop-up) também desenha a moldura */
 @media screen {
-  body { border: 1px solid #000; padding: 12mm; box-sizing: border-box; min-height: 100vh; }
-  .screen-foot {
-    margin-top: 24px; padding-top: 10px; border-top: 1px dashed #cbd5e1;
-    display: flex; justify-content: space-between; gap: 12px;
-    font-size: 10pt; color: #475569;
+  body {
+    border: 1.5pt solid #14315c;
+    outline: 1pt solid #d4af37;
+    outline-offset: -8px;
+    padding: 14mm;
+    box-sizing: border-box;
+    min-height: 100vh;
   }
-  .screen-foot .center { text-align: center; flex: 1; }
+}
+`
+    : `
+@media screen {
+  body { padding: 14mm; box-sizing: border-box; min-height: 100vh; }
+}
+`
 }
 
-/* Blocos não podem ser quebrados no meio */
+/* Rodapé "na tela" — filete dourado, AgilizaProf em Fraunces, base legal em itálico cinza */
+.screen-foot {
+  margin-top: 28px;
+  padding-top: 10px;
+  border-top: 1px solid #d4af37;
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 12px;
+  align-items: start;
+  font-size: 9.5pt;
+}
+.screen-foot .brand {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  color: #14315c;
+}
+.screen-foot .legal {
+  font-style: italic;
+  color: #6b7280;
+  text-align: center;
+  word-wrap: break-word;
+}
+.screen-foot .page {
+  color: #6b7280;
+  text-align: right;
+  white-space: nowrap;
+}
+@media print {
+  .screen-foot { display: none !important; }
+}
+
+/* Quebras */
 section, article, table, tr, .doc-block, .kpi, .kpis, ul, ol, li, .sig, h1, h2, h3, h4, p, .card, .pei-block {
   page-break-inside: avoid;
   break-inside: avoid;
 }
 h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
 
-/* Toolbars/botões nunca aparecem no PDF/impresso */
 @media print {
   .toolbar, button, .no-print { display: none !important; }
 }
@@ -111,27 +243,29 @@ h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
 /* Bloco de assinatura digital */
 .digital-sig {
   margin-top: 28px; padding: 14px 16px;
-  border: 1px solid #cbd5e1; border-radius: 6px;
+  border: 1px solid #e5e7eb; border-radius: 4px;
+  background: #fafaf7;
   page-break-inside: avoid; break-inside: avoid;
 }
 .digital-sig .label {
-  font-size: 10pt; color: #475569; text-transform: uppercase;
-  letter-spacing: .06em; margin-bottom: 8px; font-weight: 700;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 10pt; color: #14315c; text-transform: uppercase;
+  letter-spacing: .08em; margin-bottom: 8px; font-weight: 700;
 }
 .digital-sig .row {
   display: flex; justify-content: space-between; gap: 16px;
   font-size: 11pt; flex-wrap: wrap;
 }
 .digital-sig .line {
-  margin-top: 14px; border-top: 1px solid #0B1220;
+  margin-top: 14px; border-top: 1px solid #14315c;
   padding-top: 4px; font-size: 10pt; color: #475569; text-align: center;
 }
-.digital-sig .hint { margin-top: 8px; font-size: 9pt; color: #64748b; }
+.digital-sig .hint { margin-top: 8px; font-size: 9pt; color: #6b7280; font-style: italic; }
 `;
 }
 
 /** CSS padrão (sem personalização) – mantido para compatibilidade. */
-export const STANDARD_PRINT_CSS = buildPrintCss("", COMPLIANCE_BY_TYPE.parecer);
+export const STANDARD_PRINT_CSS = buildPrintCss("", COMPLIANCE_BY_TYPE.parecer, "parecer");
 
 function buildSignatureBlock(professorNome: string): string {
   const data = new Date().toLocaleDateString("pt-BR", {
@@ -152,12 +286,12 @@ function buildSignatureBlock(professorNome: string): string {
 </div>`;
 }
 
-function buildScreenFooter(professorNome: string, compliance: string): string {
+function buildScreenFooter(_professorNome: string, compliance: string): string {
   return `
 <div class="screen-foot">
-  <div>${escHtml(professorNome ? "Prof(a). " + professorNome : "")}</div>
-  <div class="center">${escHtml(compliance)}</div>
-  <div>Página 1 de 1</div>
+  <div class="brand">Documento gerado pela plataforma AgilizaProf</div>
+  <div class="legal">${escHtml(compliance)}</div>
+  <div class="page">Página 1 de 1</div>
 </div>`;
 }
 
@@ -177,7 +311,7 @@ export function wrapStandardPrintHtml(
   const compliance = COMPLIANCE_BY_TYPE[docType];
   const incluirAssinatura = opts.incluirAssinatura !== false;
 
-  const css = buildPrintCss(professor, compliance);
+  const css = buildPrintCss(professor, compliance, docType);
   const sig = incluirAssinatura ? buildSignatureBlock(professor) : "";
   const screenFoot = buildScreenFooter(professor, compliance);
 
