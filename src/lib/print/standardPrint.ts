@@ -77,22 +77,32 @@ function buildPrintCss(
 
 @page {
   size: A4;
-  margin: 2.6cm 2cm 2.8cm 2cm;
+  margin: 2.8cm 2cm 2.8cm 2cm;
   @top-left {
-    content: "AGILIZAPROF";
+    content: "  AGILIZAPROF";
     font-family: 'Fraunces', Georgia, serif;
-    font-weight: 700; font-size: 9pt; color: #1F3A5F;
+    font-weight: 700; font-size: 9pt; color: #ffffff;
+    background: #1F3A5F;
     letter-spacing: .14em;
-    border-bottom: 0.6pt solid #1F3A5F;
+    vertical-align: middle;
     width: 100%;
+    padding: 6pt 0;
   }
   @top-right {
-    content: "${escCss(headerRight)}";
+    content: "${escCss(headerRight)}  ";
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 8.5pt; color: #1F3A5F;
-    letter-spacing: .1em;
-    border-bottom: 0.6pt solid #1F3A5F;
+    font-weight: 700; font-size: 8.5pt; color: #ffffff;
+    background: #1F3A5F;
+    letter-spacing: .12em;
+    vertical-align: middle;
     width: 100%;
+    padding: 6pt 0;
+  }
+  @top-center {
+    content: "";
+    background: #1F3A5F;
+    width: 100%;
+    padding: 6pt 0;
   }
   @bottom-left {
     content: "${escCss(footerLeft)}";
@@ -147,8 +157,8 @@ h1, .doc-title {
 h2, .section-title {
   font-size: 16pt;
   margin: 18pt 0 8pt 0;
-  padding-bottom: 4pt;
-  border-bottom: 1px solid #C9B98A; /* filete dourado discreto */
+  padding-bottom: 0;
+  border-bottom: none;
 }
 h3 { font-size: 13pt; margin: 14pt 0 6pt 0; }
 h4 { font-size: 12pt; margin: 12pt 0 4pt 0; }
@@ -163,20 +173,22 @@ h4 { font-size: 12pt; margin: 12pt 0 4pt 0; }
 .doc-cover .overline {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 9pt; letter-spacing: .22em; color: #1F3A5F;
-  text-transform: uppercase; margin-bottom: 10pt;
+  text-transform: uppercase; margin-bottom: 10pt; font-weight: 700;
 }
 .doc-cover h1 {
   text-align: center;
   color: #1F3A5F;
-  font-size: 28pt;
+  font-size: 32pt;
+  margin: 0;
 }
 .doc-cover .gold-rule {
-  width: 80px; height: 0; margin: 10pt auto 12pt auto;
+  width: 110px; height: 0; margin: 10pt auto 10pt auto;
   border-top: 1.2pt solid #C9B98A;
 }
 .doc-cover .subtitle {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 11pt; color: #475569; margin-top: 4pt;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 13pt; color: #475569; margin-top: 4pt;
 }
 
 /* Faixa superior interna (cabeçalho de página em tela) */
@@ -202,15 +214,14 @@ h4 { font-size: 12pt; margin: 12pt 0 4pt 0; }
 /* Caixa rotulada: faixa bege com borda azul, pronta p/ receber texto da IA */
 .field-box {
   margin: 10pt 0;
-  border: 1px solid #1F3A5F;
-  border-radius: 4px;
+  border-top: 1px solid #1F3A5F;
+  border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
   overflow: hidden;
 }
 .field-box > .label {
   display: block;
   background: #F5F1EA;
-  border-bottom: 1px solid #1F3A5F;
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
   color: #1F3A5F;
