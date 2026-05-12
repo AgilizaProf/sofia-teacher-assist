@@ -489,18 +489,11 @@ function buildScreenFooter(_professorNome: string, compliance: string): string {
 </div>`;
 }
 
-const DOC_TYPE_LABEL: Record<DocType, string> = {
-  parecer: "RELATÓRIO PEDAGÓGICO",
-  pei: "PLANO EDUCACIONAL INDIVIDUALIZADO",
-  planejamento: "PLANEJAMENTO PEDAGÓGICO",
-  "plano-adaptado": "PLANO ADAPTADO",
-};
-
 function buildPrintHeader(docType: DocType): string {
   return `
 <div class="print-header" role="banner">
   <div class="brand">AGILIZAPROF</div>
-  <div class="doc-kind">${escHtml(DOC_TYPE_LABEL[docType])}</div>
+  <div class="doc-kind">${escHtml(getDocLabel(docType))}</div>
 </div>`;
 }
 
