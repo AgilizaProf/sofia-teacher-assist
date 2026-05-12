@@ -41,10 +41,9 @@ export const sidebarCss = `
 .sb-plan-btn{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#F97316;color:#fff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 10px rgba(249,115,22,.35);}
 .sb-plan-btn:hover{background:#EA580C;}
 .sb-plan-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
-.sb-plan-nav{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(154,52,18,.12);color:#9A3412;border:none;cursor:pointer;padding:0;transition:.15s;}
-.sb-plan-nav:hover{background:rgba(154,52,18,.22);}
-.sb-plan.silver .sb-plan-nav{background:rgba(51,65,85,.12);color:#334155;}
-.sb-plan.silver .sb-plan-nav:hover{background:rgba(51,65,85,.22);}
+.sb-plan-nav{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#9A3412;border:none;cursor:pointer;padding:0;opacity:.55;transition:opacity .15s;line-height:0;}
+.sb-plan-nav:hover{opacity:1;}
+.sb-plan.silver .sb-plan-nav{color:#334155;}
 .sb-plan-dots{display:flex;gap:5px;justify-content:center;}
 .sb-plan-dot{width:5px;height:5px;border-radius:50%;background:rgba(154,52,18,.30);border:none;padding:0;cursor:pointer;transition:.18s;}
 .sb-plan-dot.active{background:#9A3412;width:14px;border-radius:3px;}
@@ -96,6 +95,8 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   ];
   const [planIdx, setPlanIdx] = useState(0);
   const currentPlan = plans[planIdx];
+  const prevPlan = () => setPlanIdx((i) => (i - 1 + plans.length) % plans.length);
+  const nextPlan = () => setPlanIdx((i) => (i + 1) % plans.length);
 
   useEffect(() => {
     if (!usingInternal) return;
@@ -183,6 +184,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
             <div className="sb-plan-dots" role="tablist" aria-label="Selecionar plano">
+              <button type="button" className="sb-plan-nav" aria-label="Plano anterior" onClick={prevPlan}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
               {plans.map((p, i) => (
                 <button
                   key={p.key}
@@ -194,6 +198,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
                   onClick={() => setPlanIdx(i)}
                 />
               ))}
+              <button type="button" className="sb-plan-nav" aria-label="Próximo plano" onClick={nextPlan}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
             </div>
           </div>
         </div>
