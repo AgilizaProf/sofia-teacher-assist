@@ -91,8 +91,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
       key: "mensal",
       tag: "PLANO MENSAL",
       title: "Créditos ilimitados por R$ 34,90/mês",
-      desc: "Flexibilidade total · cancele quando quiser.",
+      desc: "30 dias de acesso · cancele quando quiser.",
       aria: "Ver oferta do plano mensal",
+      href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=e2da862aba6042019234b1840f2593ef",
     },
   ];
   const [planIdx, setPlanIdx] = useState(0);
