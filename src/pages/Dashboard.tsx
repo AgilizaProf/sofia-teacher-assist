@@ -862,10 +862,7 @@ export function Dashboard() {
                 aria-label={`Selo ${currentTier.name}`}
               >
                 <span className="tier-emoji" aria-hidden>{currentTier.icon}</span>
-                <span className="tier-name">Nível {currentTier.name}</span>
-                <span className="tier-range">
-                  {currentTier.max < 9999 ? `${currentTier.min}–${currentTier.max} h` : `${currentTier.min}+ h`}
-                </span>
+                <span className="tier-name">{currentTier.name}</span>
               </div>
               <div className="hero-metric-value">
                 <span>{h}</span>h<span className="hero-metric-unit"><span>{m}</span>min</span>
