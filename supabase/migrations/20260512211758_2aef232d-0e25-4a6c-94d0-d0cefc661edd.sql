@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.mp_expire_subscriptions() FROM PUBLIC, anon, authenticated;
