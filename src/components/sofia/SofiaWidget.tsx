@@ -4,6 +4,7 @@ import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2, AlertT
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "@tanstack/react-router";
 import { useSofia } from "./SofiaProvider";
+import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 
 const css = `
 .sofia-fab{position:fixed;right:24px;bottom:24px;z-index:50;width:56px;height:56px;border:none;border-radius:50%;cursor:pointer;
@@ -110,6 +111,8 @@ export function SofiaWidget() {
   const navigate = useNavigate();
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const hydrated = useHydrated();
+  const sofiaCtx = useSofiaContext();
+  const firstName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || "").trim();
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
@@ -218,7 +221,7 @@ export function SofiaWidget() {
                   <div style={{ display: "grid", placeItems: "center", marginBottom: 10 }}>
                     <div className="sofia-avatar-token sofia-avatar-token--lg"><Sparkles size={28} /></div>
                   </div>
-                  <h3>{greeting(hydrated)}, professora 👋</h3>
+                  <h3>{greeting(hydrated)}{firstName ? `, ${firstName}` : ""} 👋</h3>
                   <p>Vamos juntas? Posso preparar um <span className="sofia-em">parecer em ~4 min</span>, um <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação inclusiva — escolha por onde começar.</p>
                   <div className="sofia-suggest">
                     {SUGGESTIONS.map((q) => (
