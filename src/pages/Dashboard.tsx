@@ -440,18 +440,29 @@ export function Dashboard() {
     );
   }, [atvHistRegular, atvHistPcd, incPlans, m6Entries]);
   const documentsGenerated = Math.max(user.documentsGenerated, generatedDocsCount);
-  // Tempo devolvido cresce conforme o usuário cadastra/usa funcionalidades
+  // Tempo devolvido cresce conforme o usuário cadastra/usa funcionalidades.
+  // Agora consideramos TODAS as horas economizadas no app (acumulado), não
+  // apenas a semana atual.
   const earnedMinutes =
     totalSchools * 10 +
     totalClasses * 20 +
     totalStudents * 5 +
     documentsGenerated * 30;
-  const totalMinutes = user.hoursSavedWeek * 60 + user.minutesSavedWeek + earnedMinutes;
+  const totalMinutes = user.hoursSavedTotal * 60 + earnedMinutes;
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
-  const goalMinutes = Math.max(1, user.weeklyGoalHours * 60);
-  const goalPct = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100));
-  const goalReached = totalMinutes >= goalMinutes;
+  // Tier atual baseado nas horas totais economizadas.
+  const HOUR_TIERS = [
+    { h: 4,   icon: "☕",  text: "4 horas",   sub: "Uma manhã ou tarde inteira de volta pra você." },
+    { h: 8,   icon: "📚",  text: "8 horas",   sub: "Um dia inteiro de trabalho economizado." },
+    { h: 20,  icon: "🌅",  text: "20 horas",  sub: "Quatro dias de planejamento que viraram ensino." },
+    { h: 40,  icon: "🏖️", text: "40 horas",  sub: "Uma semana inteira de trabalho devolvida." },
+    { h: 80,  icon: "✈️",  text: "80 horas",  sub: "Duas semanas que viraram ensino de verdade." },
+    { h: 130, icon: "🎯",  text: "130 horas", sub: "Mais de um mês de trabalho economizado no ano." },
+    { h: 200, icon: "🏆",  text: "200 horas", sub: "Nível lendário. Você mudou sua prática docente." },
+    { h: 500, icon: "🌟",  text: "500 horas", sub: "Impossível? Você fez. São 62 dias de trabalho de volta." },
+  ] as const;
+  const currentTier = [...HOUR_TIERS].reverse().find((t) => h >= t.h) || null;
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
   // Cálculo: alunos sem parecer no bimestre.
@@ -842,17 +853,15 @@ export function Dashboard() {
               <div className="hero-metric-label">
                 {totalMinutes === 0
                   ? "comece a usar a Sofia pra economizar tempo"
-                  : goalReached
-                    ? "meta semanal alcançada 🎉"
-                    : "continue usando a Sofia pra economizar mais tempo"}
+                  : currentTier
+                    ? (
+                        <>
+                          <span style={{ marginRight: 6 }}>{currentTier.icon}</span>
+                          {currentTier.sub}
+                        </>
+                      )
+                    : "continue usando a Sofia — sua próxima conquista está em 4h ☕"}
               </div>
-              <div className="hero-metric-bar">
-                <div
-                  className="hero-metric-fill"
-                  style={{ width: `${goalPct}%` }}
-                />
-              </div>
-              <div className="hero-metric-foot"><span>Meta: {user.weeklyGoalHours}h</span><span>{goalPct}%</span></div>
             </div>
           </section>
 
