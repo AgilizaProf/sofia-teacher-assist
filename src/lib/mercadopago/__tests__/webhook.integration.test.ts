@@ -7,12 +7,90 @@ import {
   mockMpFetch,
 } from "./test-helpers";
 
-/* Hoisted mock — vi.hoisted runs before any imports, including the route. */
+/* Hoisted mock — vi.hoisted runs before any imports, including the route.
+ * Everything used inside MUST be defined inside the factory (no outer refs). */
 const { sb } = vi.hoisted(() => {
-  // Inline the supabase mock factory to keep it inside the hoisted scope.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-  const { createSupabaseMock } = require("./test-helpers") as typeof import("./test-helpers");
-  return { sb: createSupabaseMock() };
+  type SupabaseCall = {
+    table: string;
+    op: "select" | "upsert" | "update" | "insert" | "delete";
+    payload?: unknown;
+    filters: Array<{ kind: string; column: string; value: unknown }>;
+    upsertOptions?: unknown;
+    selectColumns?: string;
+  };
+  const calls: SupabaseCall[] = [];
+  const queue: Record<string, { data: unknown; error: unknown } | undefined> = {};
+  const buildBuilder = (call: SupabaseCall) => {
+    const finalize = () =>
+      Promise.resolve(queue[`${call.table}:${call.op}`] ?? { data: null, error: null });
+    const b: Record<string, unknown> = {};
+    b.select = (cols?: string) => {
+      call.op = "select";
+      call.selectColumns = cols;
+      return b;
+    };
+    b.eq = (column: string, value: unknown) => {
+      call.filters.push({ kind: "eq", column, value });
+      return b;
+    };
+    b.ilike = (column: string, value: unknown) => {
+      call.filters.push({ kind: "ilike", column, value });
+      return b;
+    };
+    b.maybeSingle = () => finalize();
+    b.single = () => finalize();
+    b.then = (
+      onFulfilled?: (v: { data: unknown; error: unknown }) => unknown,
+      onRejected?: (e: unknown) => unknown
+    ) => finalize().then(onFulfilled, onRejected);
+    return b;
+  };
+  const client = {
+    from(table: string) {
+      const baseCall: SupabaseCall = { table, op: "select", filters: [] };
+      return {
+        select(cols?: string) {
+          baseCall.op = "select";
+          baseCall.selectColumns = cols;
+          calls.push(baseCall);
+          return buildBuilder(baseCall);
+        },
+        upsert(payload: unknown, options?: unknown) {
+          baseCall.op = "upsert";
+          baseCall.payload = payload;
+          baseCall.upsertOptions = options;
+          calls.push(baseCall);
+          return buildBuilder(baseCall);
+        },
+        update(payload: unknown) {
+          baseCall.op = "update";
+          baseCall.payload = payload;
+          calls.push(baseCall);
+          return buildBuilder(baseCall);
+        },
+        insert(payload: unknown) {
+          baseCall.op = "insert";
+          baseCall.payload = payload;
+          calls.push(baseCall);
+          return buildBuilder(baseCall);
+        },
+      };
+    },
+  };
+  return {
+    sb: {
+      client,
+      calls,
+      queue,
+      reset() {
+        calls.length = 0;
+        for (const k of Object.keys(queue)) delete queue[k];
+      },
+      callsFor(table: string) {
+        return calls.filter((c) => c.table === table);
+      },
+    },
+  };
 });
 vi.mock("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: sb.client,
