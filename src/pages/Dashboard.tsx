@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser, greeting } from "@/lib/mockData";
 import { updateLoginStreak } from "@/lib/datetime";
@@ -849,7 +849,7 @@ export function Dashboard() {
 
   return (
     <div className="ap-root">
-      <style dangerouslySetInnerHTML={{ __html: css + emptyStateCss }} />
+      <style dangerouslySetInnerHTML={{ __html: css + emptyStateCss + sidebarCss }} />
       <div className="ap-app">
         <AppSidebar active="home" onCmdK={() => setCmdk(true)} />
 
