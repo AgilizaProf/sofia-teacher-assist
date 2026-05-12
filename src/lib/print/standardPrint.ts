@@ -54,17 +54,50 @@ function buildPrintCss(
   const isPlanejamento = docType === "planejamento";
   // Rodapé via @page margin boxes (usado na impressão real do navegador)
   const footerLeft = "Documento gerado pela plataforma AgilizaProf";
+  const docTypeLabel: Record<DocType, string> = {
+    parecer: "PARECER DESCRITIVO",
+    pei: "PEI",
+    planejamento: "PLANEJAMENTO DE AULA",
+    "plano-adaptado": "PLANO ADAPTADO",
+  };
+  const headerRight = docTypeLabel[docType];
   return `
 /* Fontes — Fraunces para títulos, Arial para corpo */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
 
+/* Paleta sóbria e elegante */
+:root {
+  --ink: #111111;            /* preto suave */
+  --accent: #1F3A5F;         /* azul profundo editorial */
+  --band: #F5F1EA;           /* bege claro p/ faixas de seção */
+  --gold: #C9B98A;           /* filete dourado discreto */
+  --rule: #e5e7eb;
+  --muted: #6b7280;
+}
+
 @page {
   size: A4;
-  margin: 2.2cm 2cm 2.8cm 2cm;
+  margin: 2.6cm 2cm 2.8cm 2cm;
+  @top-left {
+    content: "AGILIZAPROF";
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700; font-size: 9pt; color: #1F3A5F;
+    letter-spacing: .14em;
+    border-bottom: 0.6pt solid #1F3A5F;
+    width: 100%;
+  }
+  @top-right {
+    content: "${escCss(headerRight)}";
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8.5pt; color: #1F3A5F;
+    letter-spacing: .1em;
+    border-bottom: 0.6pt solid #1F3A5F;
+    width: 100%;
+  }
   @bottom-left {
     content: "${escCss(footerLeft)}";
     font-family: 'Fraunces', Georgia, serif;
-    font-size: 9pt; color: #1f2a44;
+    font-size: 9pt; color: #1F3A5F;
   }
   @bottom-center {
     content: "${escCss(compliance)}";
@@ -82,7 +115,7 @@ html, body {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 12pt;
   line-height: 1.5;
-  color: #000;
+  color: #111111;
   margin: 0;
   padding: 0;
   background: #fff;
@@ -92,7 +125,7 @@ html, body {
 p, li, td, th, dd, dt, .doc-body, .doc-block, .kpi, .card, .pei-block, section, article {
   font-family: Arial, Helvetica, sans-serif;
   line-height: 1.5;
-  color: #000;
+  color: #111111;
   text-align: justify;
   text-justify: inter-word;
   hyphens: auto;
@@ -103,7 +136,7 @@ h1, h2, h3, h4, h5, h6,
 .doc-title, .section-title {
   font-family: 'Fraunces', Georgia, 'Times New Roman', serif !important;
   font-weight: 700;
-  color: #14315c; /* azul profundo */
+  color: #1F3A5F; /* azul profundo editorial */
   letter-spacing: -0.01em;
   text-align: left;
 }
@@ -115,34 +148,109 @@ h2, .section-title {
   font-size: 16pt;
   margin: 18pt 0 8pt 0;
   padding-bottom: 4pt;
-  border-bottom: 1px solid #d4af37; /* divisória dourada sutil */
+  border-bottom: 1px solid #C9B98A; /* filete dourado discreto */
 }
 h3 { font-size: 13pt; margin: 14pt 0 6pt 0; }
 h4 { font-size: 12pt; margin: 12pt 0 4pt 0; }
 
-/* Capa / cabeçalho do documento */
+/* Capa estilizada */
 .doc-cover {
   text-align: center;
-  padding: 8pt 0 18pt 0;
+  padding: 18pt 0 22pt 0;
+  margin-bottom: 22pt;
   border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 18pt;
+}
+.doc-cover .overline {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9pt; letter-spacing: .22em; color: #1F3A5F;
+  text-transform: uppercase; margin-bottom: 10pt;
 }
 .doc-cover h1 {
   text-align: center;
-  color: #14315c;
+  color: #1F3A5F;
+  font-size: 28pt;
+}
+.doc-cover .gold-rule {
+  width: 80px; height: 0; margin: 10pt auto 12pt auto;
+  border-top: 1.2pt solid #C9B98A;
 }
 .doc-cover .subtitle {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 11pt; color: #475569; margin-top: 4pt;
 }
 
-/* Áreas/blocos de conteúdo — sem linhas de preenchimento, apenas blocos suaves */
+/* Faixa superior interna (cabeçalho de página em tela) */
+.page-band {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 0.8pt solid #1F3A5F;
+  padding-bottom: 4pt; margin-bottom: 14pt;
+  font-size: 9pt; color: #1F3A5F; letter-spacing: .14em;
+}
+.page-band .brand { font-family: 'Fraunces', Georgia, serif; font-weight: 700; }
+.page-band .doc-kind { font-family: Arial, Helvetica, sans-serif; }
+@media print { .page-band { display: none; } }
+
+/* Áreas/blocos de conteúdo — sem linhas de preenchimento */
 .doc-block, .card, .pei-block {
-  background: #fafaf7;
-  border: 1px solid #ececec;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
-  padding: 10pt 14pt;
+  padding: 12pt 14pt;
   margin: 8pt 0;
+}
+
+/* Caixa rotulada: faixa bege com borda azul, pronta p/ receber texto da IA */
+.field-box {
+  margin: 10pt 0;
+  border: 1px solid #1F3A5F;
+  border-radius: 4px;
+  background: #ffffff;
+  overflow: hidden;
+}
+.field-box > .label {
+  display: block;
+  background: #F5F1EA;
+  border-bottom: 1px solid #1F3A5F;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  color: #1F3A5F;
+  font-size: 10pt;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 5pt 10pt;
+}
+.field-box > .content {
+  padding: 10pt 12pt;
+  min-height: 36pt;
+  color: #111111;
+}
+
+/* Faixa de seção bege para destacar grupos */
+.section-band {
+  background: #F5F1EA;
+  border-left: 3pt solid #1F3A5F;
+  padding: 6pt 12pt;
+  margin: 14pt 0 8pt 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  color: #1F3A5F;
+  letter-spacing: .04em;
+}
+
+/* Filete dourado utilitário */
+.gold-divider {
+  border: 0; border-top: 1px solid #C9B98A; margin: 14pt 0;
+}
+
+/* Substitui linhas pontilhadas por blocos brancos com borda fina */
+.fill-line, .dotted-line, .underline-fill {
+  display: block;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 3px;
+  background: #ffffff;
+  min-height: 28pt;
+  padding: 8pt 10pt;
+  text-decoration: none !important;
 }
 
 /* Tabelas elegantes */
@@ -160,8 +268,8 @@ th, td {
 th {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
-  color: #14315c;
-  border-bottom: 1px solid #d4af37;
+  color: #1F3A5F;
+  border-bottom: 1px solid #C9B98A;
 }
 
 ${
@@ -173,8 +281,8 @@ ${
     content: "";
     position: fixed;
     top: 8mm; right: 8mm; bottom: 8mm; left: 8mm;
-    border: 1.5pt solid #14315c;
-    outline: 1pt solid #d4af37;
+    border: 1.5pt solid #1F3A5F;
+    outline: 1pt solid #C9B98A;
     outline-offset: -3mm;
     pointer-events: none;
     z-index: 9999;
@@ -182,8 +290,8 @@ ${
 }
 @media screen {
   body {
-    border: 1.5pt solid #14315c;
-    outline: 1pt solid #d4af37;
+    border: 1.5pt solid #1F3A5F;
+    outline: 1pt solid #C9B98A;
     outline-offset: -8px;
     padding: 14mm;
     box-sizing: border-box;
@@ -202,7 +310,7 @@ ${
 .screen-foot {
   margin-top: 28px;
   padding-top: 10px;
-  border-top: 1px solid #d4af37;
+  border-top: 1px solid #C9B98A;
   display: grid;
   grid-template-columns: 1fr 2fr auto;
   gap: 12px;
@@ -212,7 +320,7 @@ ${
 .screen-foot .brand {
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 700;
-  color: #14315c;
+  color: #1F3A5F;
 }
 .screen-foot .legal {
   font-style: italic;
@@ -244,12 +352,12 @@ h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
 .digital-sig {
   margin-top: 28px; padding: 14px 16px;
   border: 1px solid #e5e7eb; border-radius: 4px;
-  background: #fafaf7;
+  background: #F5F1EA;
   page-break-inside: avoid; break-inside: avoid;
 }
 .digital-sig .label {
   font-family: 'Fraunces', Georgia, serif;
-  font-size: 10pt; color: #14315c; text-transform: uppercase;
+  font-size: 10pt; color: #1F3A5F; text-transform: uppercase;
   letter-spacing: .08em; margin-bottom: 8px; font-weight: 700;
 }
 .digital-sig .row {
@@ -257,7 +365,7 @@ h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
   font-size: 11pt; flex-wrap: wrap;
 }
 .digital-sig .line {
-  margin-top: 14px; border-top: 1px solid #14315c;
+  margin-top: 14px; border-top: 1px solid #1F3A5F;
   padding-top: 4px; font-size: 10pt; color: #475569; text-align: center;
 }
 .digital-sig .hint { margin-top: 8px; font-size: 9pt; color: #6b7280; font-style: italic; }
