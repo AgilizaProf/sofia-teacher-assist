@@ -434,6 +434,12 @@ export function Dashboard() {
   const [atvHistPcd] = usePersistentState<unknown[]>("plan_atividade_pcd_hist_v1", []);
   const [incPlans] = usePersistentState<Record<string, unknown[]>>("inc_plans", {});
   const [m6Entries] = usePersistentState<unknown[]>("plan_m6_entries", []);
+  // Quantos alunos foram cadastrados em massa (cadastro individual NÃO conta
+  // pro tempo devolvido, conforme regra do produto).
+  const [bulkStudentsCount, setBulkStudentsCount] = usePersistentState<number>(
+    "bulk_students_count_v1",
+    0,
+  );
   const generatedDocsCount = useMemo(() => {
     const incTotal = Object.values(incPlans || {}).reduce(
       (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0,
@@ -446,14 +452,31 @@ export function Dashboard() {
     );
   }, [atvHistRegular, atvHistPcd, incPlans, m6Entries]);
   const documentsGenerated = Math.max(user.documentsGenerated, generatedDocsCount);
-  // Tempo devolvido cresce conforme o usuário cadastra/usa funcionalidades.
-  // Agora consideramos TODAS as horas economizadas no app (acumulado), não
-  // apenas a semana atual.
+  // Tempo devolvido — regras de produto:
+  //   • Aluno cadastrado individualmente: NÃO conta.
+  //   • Aluno cadastrado em massa: 1 min por aluno.
+  //   • Cada planejamento de aula: 60 min × quantidade.
+  //   • Cada relatório/parecer escrito: 40 min × quantidade.
+  //   • Cada PEI: 300 min (5 h) × quantidade.
+  const lessonPlansCount =
+    (Array.isArray(atvHistRegular) ? atvHistRegular.length : 0) +
+    (Array.isArray(atvHistPcd) ? atvHistPcd.length : 0);
+  const peiCount = useMemo(
+    () =>
+      Object.values(incPlans || {}).reduce(
+        (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0),
+        0,
+      ),
+    [incPlans],
+  );
+  // Pareceres finalizados: usamos o counter mock (`user.documentsGenerated`)
+  // como proxy do que foi escrito de fato em Relatórios.
+  const reportsCount = Math.max(0, user.documentsGenerated);
   const earnedMinutes =
-    totalSchools * 10 +
-    totalClasses * 20 +
-    totalStudents * 5 +
-    documentsGenerated * 30;
+    bulkStudentsCount * 1 +
+    lessonPlansCount * 60 +
+    reportsCount * 40 +
+    peiCount * 300;
   const totalMinutes = user.hoursSavedTotal * 60 + earnedMinutes;
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
