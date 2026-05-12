@@ -38,6 +38,7 @@ import { Route as AdminConversaoRouteImport } from './routes/admin.conversao'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
+import { Route as ApiPublicWebhooksMercadopagoTestRouteImport } from './routes/api/public/webhooks/mercadopago.test'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -187,6 +188,12 @@ const ApiPublicWebhooksMercadopagoRoute =
     path: '/api/public/webhooks/mercadopago',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWebhooksMercadopagoTestRoute =
+  ApiPublicWebhooksMercadopagoTestRouteImport.update({
+    id: '/test',
+    path: '/test',
+    getParentRoute: () => ApiPublicWebhooksMercadopagoRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -217,7 +224,8 @@ export interface FileRoutesByFullPath {
   '/planejamento/ei': typeof PlanejamentoEiRoute
   '/admin/': typeof AdminIndexRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
-  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRouteWithChildren
+  '/api/public/webhooks/mercadopago/test': typeof ApiPublicWebhooksMercadopagoTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -247,7 +255,8 @@ export interface FileRoutesByTo {
   '/planejamento/ei': typeof PlanejamentoEiRoute
   '/admin': typeof AdminIndexRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
-  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRouteWithChildren
+  '/api/public/webhooks/mercadopago/test': typeof ApiPublicWebhooksMercadopagoTestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -279,7 +288,8 @@ export interface FileRoutesById {
   '/planejamento/ei': typeof PlanejamentoEiRoute
   '/admin/': typeof AdminIndexRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
-  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRouteWithChildren
+  '/api/public/webhooks/mercadopago/test': typeof ApiPublicWebhooksMercadopagoTestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/api/sofia/suggestions'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/mercadopago/test'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -343,6 +354,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api/sofia/suggestions'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/mercadopago/test'
   id:
     | '__root__'
     | '/'
@@ -374,6 +386,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/api/sofia/suggestions'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/mercadopago/test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -393,7 +406,7 @@ export interface RootRouteChildren {
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiSofiaSuggestionsRoute: typeof ApiSofiaSuggestionsRoute
-  ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
+  ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -601,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksMercadopagoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/mercadopago/test': {
+      id: '/api/public/webhooks/mercadopago/test'
+      path: '/test'
+      fullPath: '/api/public/webhooks/mercadopago/test'
+      preLoaderRoute: typeof ApiPublicWebhooksMercadopagoTestRouteImport
+      parentRoute: typeof ApiPublicWebhooksMercadopagoRoute
+    }
   }
 }
 
@@ -656,6 +676,21 @@ const PlanejamentoRouteWithChildren = PlanejamentoRoute._addFileChildren(
   PlanejamentoRouteChildren,
 )
 
+interface ApiPublicWebhooksMercadopagoRouteChildren {
+  ApiPublicWebhooksMercadopagoTestRoute: typeof ApiPublicWebhooksMercadopagoTestRoute
+}
+
+const ApiPublicWebhooksMercadopagoRouteChildren: ApiPublicWebhooksMercadopagoRouteChildren =
+  {
+    ApiPublicWebhooksMercadopagoTestRoute:
+      ApiPublicWebhooksMercadopagoTestRoute,
+  }
+
+const ApiPublicWebhooksMercadopagoRouteWithChildren =
+  ApiPublicWebhooksMercadopagoRoute._addFileChildren(
+    ApiPublicWebhooksMercadopagoRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
@@ -673,7 +708,8 @@ const rootRouteChildren: RootRouteChildren = {
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiSofiaSuggestionsRoute: ApiSofiaSuggestionsRoute,
-  ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
+  ApiPublicWebhooksMercadopagoRoute:
+    ApiPublicWebhooksMercadopagoRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
