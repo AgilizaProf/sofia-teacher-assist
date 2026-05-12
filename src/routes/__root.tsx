@@ -13,6 +13,7 @@ import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useAiBudgetWarnings } from "@/hooks/useAiBudgetWarnings";
 import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
 import { installPlatformTelemetry, trackPageVisit } from "@/lib/admin/track";
 import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
@@ -102,6 +103,7 @@ function RootComponent() {
   useReducedMotion();
   const { ready, authed, isPublicRoute } = useAuthGuard();
   const showSofia = ready && authed && !isPublicRoute;
+  useAiBudgetWarnings();
   return (
     <SofiaProvider>
       <SofiaContextProvider>
