@@ -1413,6 +1413,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      mp_expire_subscriptions: { Args: never; Returns: number }
       process_due_referrals: { Args: { _uid: string }; Returns: number }
     }
     Enums: {

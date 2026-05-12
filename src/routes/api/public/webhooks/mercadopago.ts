@@ -1,0 +1,203 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { createHmac, timingSafeEqual } from "crypto";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+/**
+ * Mercado Pago webhook for subscription (preapproval) lifecycle.
+ *
+ * Verifies x-signature according to MP spec:
+ *   manifest = `id:{data.id};request-id:{x-request-id};ts:{ts};`
+ *   v1 = HMAC_SHA256(MP_WEBHOOK_SECRET, manifest)
+ *
+ * On preapproval events, fetches the preapproval from MP and upserts the
+ * matching user's row in `subscriptions`:
+ *  - status authorized  -> plano=pro, ciclo=mensal, status=active,
+ *                          current_period_end = next_payment_date
+ *  - status paused/cancelled -> status=canceled, current_period_end preserved
+ *    (downgrade to free is handled by the hourly mp_expire_subscriptions job)
+ */
+export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const secret = process.env.MP_WEBHOOK_SECRET;
+        const accessToken = process.env.MP_ACCESS_TOKEN;
+        if (!secret || !accessToken) {
+          console.error("[mp-webhook] missing MP_WEBHOOK_SECRET or MP_ACCESS_TOKEN");
+          return new Response("Server not configured", { status: 500 });
+        }
+
+        const rawBody = await request.text();
+        const url = new URL(request.url);
+
+        // Parse payload (best-effort; invalid JSON => 400)
+        let payload: {
+          type?: string;
+          action?: string;
+          data?: { id?: string };
+        };
+        try {
+          payload = rawBody ? JSON.parse(rawBody) : {};
+        } catch {
+          return new Response("Invalid JSON", { status: 400 });
+        }
+
+        // Resource id can come in body.data.id or query (?data.id=...&type=...)
+        const dataId =
+          payload?.data?.id?.toString() ||
+          url.searchParams.get("data.id") ||
+          url.searchParams.get("id") ||
+          "";
+        const eventType = (payload?.type || url.searchParams.get("type") || "").toLowerCase();
+
+        // ---- Signature verification (MP format) -------------------------
+        const sigHeader = request.headers.get("x-signature") || "";
+        const requestId = request.headers.get("x-request-id") || "";
+        const parts = Object.fromEntries(
+          sigHeader
+            .split(",")
+            .map((p) => p.trim().split("="))
+            .filter((p) => p.length === 2)
+            .map(([k, v]) => [k.trim(), v.trim()])
+        );
+        const ts = parts["ts"];
+        const v1 = parts["v1"];
+        if (!ts || !v1 || !requestId || !dataId) {
+          return new Response("Invalid signature headers", { status: 401 });
+        }
+        const manifest = `id:${dataId};request-id:${requestId};ts:${ts};`;
+        const expected = createHmac("sha256", secret).update(manifest).digest("hex");
+        const a = Buffer.from(expected, "hex");
+        const b = Buffer.from(v1, "hex");
+        if (a.length !== b.length || !timingSafeEqual(a, b)) {
+          return new Response("Invalid signature", { status: 401 });
+        }
+
+        // ---- Only handle subscription (preapproval) events --------------
+        const isPreapproval =
+          eventType.includes("preapproval") || eventType.includes("subscription");
+        if (!isPreapproval) {
+          // Acknowledge other event types so MP doesn't retry forever.
+          return new Response("ok", { status: 200 });
+        }
+
+        // ---- Fetch preapproval from MP ----------------------------------
+        const mpRes = await fetch(`https://api.mercadopago.com/preapproval/${dataId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!mpRes.ok) {
+          const txt = await mpRes.text().catch(() => "");
+          console.error("[mp-webhook] preapproval fetch failed", mpRes.status, txt);
+          return new Response("Upstream error", { status: 502 });
+        }
+        const sub = (await mpRes.json()) as {
+          id: string;
+          status: string; // pending | authorized | paused | cancelled
+          payer_email?: string;
+          next_payment_date?: string;
+          date_created?: string;
+          reason?: string;
+        };
+
+        const email = (sub.payer_email || "").toLowerCase().trim();
+        if (!email) {
+          console.warn("[mp-webhook] preapproval has no payer_email", sub.id);
+          return new Response("ok", { status: 200 });
+        }
+
+        // Look up the user via profiles (unique email per user)
+        const { data: profile, error: profErr } = await supabaseAdmin
+          .from("profiles")
+          .select("user_id")
+          .ilike("email", email)
+          .maybeSingle();
+        if (profErr) {
+          console.error("[mp-webhook] profile lookup failed", profErr);
+          return new Response("DB error", { status: 500 });
+        }
+        if (!profile?.user_id) {
+          // No account yet — acknowledge; account creation flow can pick up later.
+          console.warn("[mp-webhook] no profile for email", email);
+          return new Response("ok", { status: 200 });
+        }
+        const userId = profile.user_id;
+
+        // Compute period end: prefer next_payment_date, else now + 30 days
+        const periodEnd =
+          sub.next_payment_date ||
+          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const status = sub.status?.toLowerCase();
+
+        // Don't overwrite admin grants or other paid sources
+        const { data: current } = await supabaseAdmin
+          .from("subscriptions")
+          .select("source, plano, current_period_end")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        const blocking =
+          current &&
+          current.source === "admin_grant" &&
+          current.plano === "pro" &&
+          current.current_period_end &&
+          new Date(current.current_period_end) > new Date();
+
+        if (blocking) {
+          console.log("[mp-webhook] skipping update: active admin_grant for", email);
+          return new Response("ok", { status: 200 });
+        }
+
+        const baseMeta = {
+          preapproval_id: sub.id,
+          mp_status: status,
+          last_event: eventType,
+          updated_via: "webhook",
+          updated_at: new Date().toISOString(),
+        };
+
+        if (status === "authorized") {
+          await supabaseAdmin
+            .from("subscriptions")
+            .upsert(
+              {
+                user_id: userId,
+                plano: "pro",
+                ciclo: "mensal",
+                status: "active",
+                source: "mercadopago",
+                started_at: sub.date_created || new Date().toISOString(),
+                current_period_end: periodEnd,
+                metadata: baseMeta,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "user_id" }
+            );
+        } else if (status === "paused" || status === "cancelled") {
+          // Keep current_period_end so the user retains access until paid period ends.
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({
+              status: "canceled",
+              metadata: baseMeta,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId)
+            .eq("source", "mercadopago");
+        } else {
+          // pending or unknown: just record metadata
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({
+              metadata: baseMeta,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId)
+            .eq("source", "mercadopago");
+        }
+
+        return new Response("ok", { status: 200 });
+      },
+    },
+  },
+});
