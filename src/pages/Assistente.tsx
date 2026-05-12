@@ -92,6 +92,11 @@ const css = `
 .ctx-chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);font-weight:500;cursor:pointer;transition:all .15s ease;}
 .ctx-chip:hover{border-color:#cfd4e1;}
 .ctx-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;box-shadow:0 4px 10px -4px rgba(255,106,44,.45);}
+.ctx-chip-add{padding:6px 10px;border-radius:999px;border:1px dashed var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);font-weight:500;cursor:pointer;transition:all .15s ease;}
+.ctx-chip-add:hover{border-color:#cfd4e1;color:var(--text);}
+.ctx-chip-input{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 10px;border-radius:999px;border:1px solid var(--accent);background:#fff;}
+.ctx-chip-input input{border:none;outline:none;font-size:12px;background:transparent;width:130px;color:var(--text);}
+.ctx-chip-input button{border:none;background:var(--accent);color:#fff;font-size:11px;font-weight:600;border-radius:999px;padding:4px 10px;cursor:pointer;}
 .ctx-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media (max-width:520px){.ctx-grid2{grid-template-columns:1fr;}}
 .ctx-field-inline{display:flex;flex-direction:column;gap:6px;}
