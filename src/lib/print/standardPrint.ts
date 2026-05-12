@@ -151,17 +151,35 @@ h1, h2, h3, h4, h5, h6,
   text-align: left;
 }
 h1, .doc-title {
-  font-size: 24pt;
-  margin: 0 0 14pt 0;
+  font-size: 22pt;
+  margin: 0 0 12pt 0;
+  line-height: 1.15;
 }
 h2, .section-title {
-  font-size: 16pt;
-  margin: 18pt 0 8pt 0;
+  font-size: 17pt;
+  margin: 22pt 0 10pt 0;
   padding-bottom: 0;
   border-bottom: none;
+  line-height: 1.2;
 }
-h3 { font-size: 13pt; margin: 14pt 0 6pt 0; }
-h4 { font-size: 12pt; margin: 12pt 0 4pt 0; }
+h3 { font-size: 13pt; margin: 14pt 0 6pt 0; line-height: 1.25; }
+h4 { font-size: 11.5pt; margin: 10pt 0 4pt 0; line-height: 1.25; text-transform: none; }
+
+/* Primeiro título de seção logo após a capa não precisa de margem extra acima */
+.doc-cover + h2,
+.doc-cover + .section-title { margin-top: 8pt; }
+
+/* Subtítulo italicizado abaixo dos títulos de seção (descrição da seção) */
+h2 + p > em:only-child,
+.section-title + p > em:only-child,
+.section-hint {
+  display: block;
+  font-family: Arial, Helvetica, sans-serif;
+  font-style: italic;
+  color: #6b7280;
+  font-size: 10.5pt;
+  margin: -4pt 0 8pt 0;
+}
 
 /* Capa estilizada */
 .doc-cover {
