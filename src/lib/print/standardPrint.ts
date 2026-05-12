@@ -508,9 +508,9 @@ export function wrapStandardPrintHtml(
 ): string {
   const opts: StandardPrintOptions =
     typeof optsOrCss === "string" ? { extraCss: optsOrCss } : optsOrCss;
-  const docType: DocType = opts.docType ?? "parecer";
+  const docType: DocType = resolveDocType(opts.docType);
   const professor = (opts.professorNome ?? "").trim();
-  const compliance = COMPLIANCE_BY_TYPE[docType];
+  const compliance = getCompliance(docType);
   const incluirAssinatura = opts.incluirAssinatura !== false;
 
   const css = buildPrintCss(professor, compliance, docType);
