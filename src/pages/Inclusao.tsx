@@ -717,16 +717,18 @@ export function Inclusao() {
 <head><meta charset="utf-8"/><title>Parecer · ${esc(selected.name)}</title>
 <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
 <style>
-  @page WordSection1 { size: A4; mso-page-orientation: portrait; margin: 18mm 16mm; }
-  div.WordSection1 { page: WordSection1; }
-  body { font-family: 'Calibri','Arial',sans-serif; color:#0F1B36; font-size:11pt; line-height:1.5; }
-  h1 { font-size:18pt; margin:0 0 6pt; border-bottom:2px solid #FF7A45; padding-bottom:4pt; }
-  h3 { font-size:12pt; margin:12pt 0 4pt; color:#FF7A45; text-transform:uppercase; }
-  .meta { font-size:9.5pt; color:#6B7691; margin-bottom:10pt; }
+  @page WordSection1 { size: A4; mso-page-orientation: portrait; margin: 2cm; mso-border-surround-header: 1pt solid #000; mso-border-surround-footer: 1pt solid #000; }
+  div.WordSection1 { page: WordSection1; border:1px solid #000; padding:6mm; }
+  body, p, li, td, h1, h2, h3, h4 { font-family: Arial, sans-serif !important; line-height:1.5 !important; }
+  body { color:#0F1B36; font-size:12pt; }
+  h1 { font-size:16pt; margin:0 0 6pt; border-bottom:2px solid #FF7A45; padding-bottom:4pt; page-break-after:avoid; }
+  h3 { font-size:12pt; margin:12pt 0 4pt; color:#FF7A45; text-transform:uppercase; page-break-after:avoid; }
+  .meta { font-size:11pt; color:#6B7691; margin-bottom:10pt; }
+  ul, p, table { page-break-inside:avoid; }
   ul { margin:4pt 0 0 18pt; }
-  .legal { margin-top:16pt; font-size:8.5pt; color:#6B7691; border-top:1px dashed #ccc; padding-top:6pt; }
+  .legal { margin-top:16pt; font-size:10pt; color:#6B7691; border-top:1px dashed #ccc; padding-top:6pt; }
   table.sig { width:100%; margin-top:24pt; }
-  table.sig td { border-top:1px solid #333; padding-top:4pt; font-size:9.5pt; text-align:center; width:50%; }
+  table.sig td { border-top:1px solid #333; padding-top:4pt; font-size:11pt; text-align:center; width:50%; }
 </style></head>
 <body><div class="WordSection1">
 <h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
