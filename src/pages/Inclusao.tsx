@@ -964,30 +964,26 @@ ${corpo}
           ${p.observacoes ? `<p><b>Observações:</b> ${esc(p.observacoes)}</p>` : ""}
         </article>`;
     }).join("");
-    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Atividades · ${esc(selected.name)}</title>
-      <style>
-        @page{size:A4;margin:18mm;}
-        body{font-family:Inter,Arial,sans-serif;color:#1B2A4E;margin:0;font-size:12pt;line-height:1.45;}
-        h1{font-size:16pt;margin:0 0 4mm;}
-        .meta{color:#6B7691;font-size:10pt;margin-bottom:8mm;}
-        article{border:1px solid #E4E8F0;border-radius:6px;padding:6mm;margin-bottom:5mm;page-break-inside:avoid;}
-        article.topico{padding:4mm 5mm;}
-        article header{display:flex;justify-content:space-between;font-size:9.5pt;color:#6B7691;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2mm;}
-        article .disc{font-weight:700;color:#B8410E;}
-        article h2{font-size:13pt;margin:0 0 3mm;}
-        article p{margin:1.5mm 0;}
-        article .tema{font-size:11pt;}
-        @media print{ body{margin:0;} button{display:none;} }
-        .toolbar{position:fixed;top:8px;right:8px;}
-        .toolbar button{padding:8px 14px;background:#FF7A45;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;}
-      </style></head>
-      <body>
-        <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
-        <h1>Atividades · ${esc(selected.name)}</h1>
-        <div class="meta">${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")} · ${escolhidos.length} atividade(s) · modo ${planViewMode === "topicos" ? "tópicos" : "completo"}</div>
-        ${blocos}
-        <script>setTimeout(function(){ window.print(); }, 400);</script>
-      </body></html>`;
+    const extra = `
+      h1{font-size:16pt;margin:0 0 4mm;}
+      .meta{color:#6B7691;font-size:11pt;margin-bottom:8mm;}
+      article{border:1px solid #E4E8F0;border-radius:6px;padding:6mm;margin-bottom:5mm;}
+      article.topico{padding:4mm 5mm;}
+      article header{display:flex;justify-content:space-between;font-size:11pt;color:#6B7691;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2mm;}
+      article .disc{font-weight:700;color:#B8410E;}
+      article h2{font-size:13pt;margin:0 0 3mm;}
+      article p{margin:1.5mm 0;}
+      .toolbar{position:fixed;top:8px;right:8px;}
+      .toolbar button{padding:8px 14px;background:#FF7A45;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;}
+    `;
+    const inner = `
+      <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
+      <h1>Atividades · ${esc(selected.name)}</h1>
+      <div class="meta">${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")} · ${escolhidos.length} atividade(s) · modo ${planViewMode === "topicos" ? "tópicos" : "completo"}</div>
+      ${blocos}
+      <script>setTimeout(function(){ window.print(); }, 400);</script>
+    `;
+    const html = wrapStandardPrintHtml(`Atividades · ${esc(selected.name)}`, inner, extra);
     const w = window.open("", "_blank", "width=900,height=700");
     if (!w) { toast.error("Bloqueador de pop-up impediu a impressão."); return; }
     w.document.write(html);
