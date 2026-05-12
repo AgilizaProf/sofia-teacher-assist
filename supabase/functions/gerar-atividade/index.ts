@@ -404,6 +404,17 @@ serve(async (req) => {
 
     const parseResp = async (r: Response) => {
       const d = await r.json();
+      if (userId) {
+        const inTok = Number(d?.usage?.prompt_tokens ?? 0);
+        const outTok = Number(d?.usage?.completion_tokens ?? 0);
+        if (inTok || outTok) {
+          await recordUsage({
+            userId, provider: "lovable", model: "google/gemini-2.5-flash",
+            task: useOpcoes ? "atividade_opcoes" : "atividade_plano",
+            inputTokens: inTok, outputTokens: outTok,
+          });
+        }
+      }
       const c = d?.choices?.[0]?.message?.tool_calls?.[0];
       const a = c?.function?.arguments;
       return typeof a === "string" ? JSON.parse(a) : (a ?? null);
