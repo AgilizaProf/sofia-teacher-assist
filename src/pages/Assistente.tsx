@@ -359,6 +359,185 @@ export function Assistente() {
   const turmaSelecionada = selectedTurma ? turmasInfo.find((t) => t.name === selectedTurma) : null;
   const messages = sofia.messages;
   const loading = sofia.loading;
+
+  // ---------- Sugestões dinâmicas com base em contexto real ----------
+  type Sugestao = {
+    id: string;
+    label: string;
+    title: string;
+    subtitle: string;
+    cta: string;
+    icon: React.ReactNode;
+    onAction: () => void;
+  };
+  const sugestoes: Sugestao[] = useMemo(() => {
+    const out: Sugestao[] = [];
+    const ds = ctx.dataState;
+    const turma = ctx.entity.turma_atual?.nome || turmaSelecionada?.name || "sua turma";
+    const pcd = ctx.entity.todos_alunos_pcd[0];
+    const goto = (to: string) => () => navigate({ to });
+    const ask = (prompt: string) => () => sofia.openSofia({ prompt, send: false });
+
+    // Sugestão da Sofia (regras)
+    if (fala.texto) {
+      out.push({
+        id: "fala",
+        label: "Sugestão pra você agora",
+        title: fala.texto.replace(/<\/?em>/g, ""),
+        subtitle: "A Sofia analisou seu contexto agora e sugere essa próxima ação.",
+        cta: fala.acoes[0]?.label || "Começar agora",
+        icon: <Sparkles size={22} />,
+        onAction: () => {
+          const a = fala.acoes[0];
+          if (a?.prompt) sofia.openSofia({ prompt: a.prompt, send: false });
+          else if (a?.to) navigate({ to: a.to as string });
+          else navigate({ to: "/" });
+        },
+      });
+    }
+
+    // Pareceres pendentes
+    const pendentes = Math.max(0, (ds.pareceres_total_bimestre ?? 0) - (ds.pareceres_finalizados ?? 0));
+    if (pendentes > 0) {
+      out.push({
+        id: "pareceres",
+        label: `${pendentes} parecer${pendentes > 1 ? "es" : ""} pendente${pendentes > 1 ? "s" : ""}`,
+        title: `Faltam ${pendentes} pareceres do bimestre em ${turma}`,
+        subtitle: "Posso gerar todos em ordem de prioridade — começando pelos PCDs.",
+        cta: "Começar pareceres",
+        icon: <ClipboardList size={22} />,
+        onAction: ask(`Vamos gerar os ${pendentes} pareceres pendentes do bimestre da ${turma}, começando pelos alunos PCD.`),
+      });
+    }
+
+    // Próxima aula
+    if (proxima && proxima.minutos_ate >= 0 && proxima.minutos_ate <= 240) {
+      const min = proxima.minutos_ate;
+      const quando = min < 60 ? `em ${min} min` : `em ${Math.round(min / 60)}h`;
+      out.push({
+        id: "proxima",
+        label: "Sua próxima aula",
+        title: `${proxima.disciplina} ${quando} · ${proxima.turma}`,
+        subtitle: pcd
+          ? `Posso adaptar a aula para ${pcd.nome} (${pcd.condicao}) antes do sinal.`
+          : "Quer um plano enxuto pronto para imprimir?",
+        cta: pcd ? "Adaptar para PCD" : "Gerar plano rápido",
+        icon: <Clock size={22} />,
+        onAction: ask(
+          pcd
+            ? `Adapte rapidamente o plano da próxima aula (${proxima.disciplina}, ${proxima.turma}) para ${pcd.nome} — ${pcd.condicao}.`
+            : `Crie um plano de aula enxuto e pronto para imprimir para ${proxima.disciplina} na ${proxima.turma}, começando ${quando}.`
+        ),
+      });
+    }
+
+    // Onboarding (sem turmas)
+    if (ds.turmas_count === 0) {
+      out.push({
+        id: "onb-turma",
+        label: "Primeiro passo",
+        title: "Cadastre sua primeira turma para liberar o contexto",
+        subtitle: "Sem turma minhas sugestões ficam genéricas. Em 30 s já fica pronto.",
+        cta: "Cadastrar turma",
+        icon: <GraduationCap size={22} />,
+        onAction: goto("/"),
+      });
+    } else if (ds.alunos_count === 0) {
+      out.push({
+        id: "onb-alunos",
+        label: "Quase lá",
+        title: `A turma ${turma} ainda não tem alunos`,
+        subtitle: "Cadastre a lista para que eu personalize pareceres, planos e adaptações.",
+        cta: "Adicionar alunos",
+        icon: <Users size={22} />,
+        onAction: goto("/"),
+      });
+    }
+
+    // PCD sem PEI / inclusão
+    if (pcd) {
+      out.push({
+        id: "pei",
+        label: "Inclusão",
+        title: `${pcd.nome} (${pcd.condicao}) precisa de plano individualizado`,
+        subtitle: "Posso montar o PEI a partir da anamnese e dos eixos da BNCC.",
+        cta: "Gerar PEI",
+        icon: <Brain size={22} />,
+        onAction: ask(`Monte um PEI completo para ${pcd.nome} (${pcd.condicao}) com objetivos de curto e longo prazo.`),
+      });
+    }
+
+    // Agenda
+    if (ds.eventos_agenda_mes > 0) {
+      out.push({
+        id: "agenda",
+        label: "Sua agenda do mês",
+        title: `${ds.eventos_agenda_mes} eventos marcados em ${new Date().toLocaleDateString("pt-BR", { month: "long" })}`,
+        subtitle: "Quer que eu destaque os que precisam de preparação prévia?",
+        cta: "Ver prioridades",
+        icon: <Calendar size={22} />,
+        onAction: ask("Liste os eventos da minha agenda deste mês que precisam de preparação e me diga por onde começar."),
+      });
+    }
+
+    // Planejamento
+    if (ds.alunos_count > 0) {
+      out.push({
+        id: "plano",
+        label: "Planejamento da semana",
+        title: `Quer um plano semanal completo para ${turma}?`,
+        subtitle: "Defino objetivos, BNCC, materiais e adaptações em uma só passada.",
+        cta: "Montar a semana",
+        icon: <BookOpen size={22} />,
+        onAction: goto("/planejamento"),
+      });
+    }
+
+    // Streak / parabéns
+    if (ctx.user.streak_dias && ctx.user.streak_dias >= 3) {
+      out.push({
+        id: "streak",
+        label: "Você está em sequência",
+        title: `${ctx.user.streak_dias} dias seguidos por aqui — bora manter o ritmo?`,
+        subtitle: "Posso te entregar o foco do dia em 10 segundos.",
+        cta: "Ver foco de hoje",
+        icon: <Star size={22} />,
+        onAction: goto("/"),
+      });
+    }
+
+    // fallback se nada bater
+    if (out.length === 0) {
+      out.push({
+        id: "fallback",
+        label: "Comece por aqui",
+        title: "Conte o que está pegando hoje e eu já te ajudo",
+        subtitle: "Pareceres, planos, adaptações, dinâmicas — é só pedir em linguagem natural.",
+        cta: "Abrir conversa",
+        icon: <Sparkles size={22} />,
+        onAction: () => sofia.openSofia({ prompt: "", send: false }),
+      });
+    }
+    return out;
+  }, [ctx, fala, proxima, navigate, sofia, turmaSelecionada]);
+
+  const [sugIdx, setSugIdx] = useState(0);
+  const [sugAnimKey, setSugAnimKey] = useState(0);
+  useEffect(() => { setSugIdx((i) => Math.min(i, Math.max(0, sugestoes.length - 1))); }, [sugestoes.length]);
+  useEffect(() => {
+    if (sugestoes.length <= 1) return;
+    const id = setInterval(() => {
+      setSugIdx((i) => (i + 1) % sugestoes.length);
+      setSugAnimKey((k) => k + 1);
+    }, 7000);
+    return () => clearInterval(id);
+  }, [sugestoes.length]);
+  const sugAtual = sugestoes[sugIdx] ?? sugestoes[0];
+  const goSug = (delta: number) => {
+    setSugIdx((i) => (i + delta + sugestoes.length) % sugestoes.length);
+    setSugAnimKey((k) => k + 1);
+  };
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
