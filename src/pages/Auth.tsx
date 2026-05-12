@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
+import logoImg from "@/assets/agilizaprof-logo.jpg";
 
 function postLoginRoute(): "/" | "/onboarding" {
   try {
@@ -133,7 +134,7 @@ export function AuthPage() {
       <div className="split">
         <aside className="left">
           <div className="left-inner">
-            <div className="logo">Agiliza<span>Prof</span></div>
+            <div className="logo"><img src={logoImg} alt="AgilizaProf" className="logo-img" />Agiliza<span>Prof</span></div>
             <div className="headline-block">
               <span className="eyebrow"><span className="star">★</span>Feito de professores para professores</span>
               <h1 className="headline">A <span className="accent">1ª IA pedagógica</span> treinada e alinhada à BNCC do Brasil.</h1>
@@ -279,7 +280,8 @@ const css = `
 .left::before{content:"";position:absolute;top:-150px;right:-150px;width:500px;height:500px;background:radial-gradient(circle,rgba(255,122,69,.20) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
 .left::after{content:"";position:absolute;bottom:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(255,148,102,.10) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
 .left-inner{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;gap:40px;}
-.logo{font-family:'Fraunces',serif;font-weight:900;font-size:30px;color:#fff;letter-spacing:-0.04em;line-height:1;display:flex;align-items:baseline;}
+.logo{font-family:'Fraunces',serif;font-weight:900;font-size:30px;color:#fff;letter-spacing:-0.04em;line-height:1;display:flex;align-items:center;gap:12px;}
+.logo-img{width:44px;height:44px;border-radius:10px;object-fit:cover;box-shadow:0 8px 24px rgba(255,122,69,.35);}
 .logo span{color:var(--accent);}
 .headline-block{display:flex;flex-direction:column;justify-content:flex-start;gap:30px;max-width:560px;margin-top:24px;}
 .eyebrow{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;background:rgba(255,255,255,.10);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.20);padding:9px 18px;border-radius:100px;font-size:12px;font-weight:700;color:#fff;letter-spacing:.06em;line-height:1.3;text-transform:uppercase;}
