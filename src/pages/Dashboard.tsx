@@ -461,15 +461,15 @@ export function Dashboard() {
   // Baseadas no total de horas acumuladas — escolhemos a faixa onde
   // `h` cai (min ≤ h ≤ max). 500h tem mensagem própria de marco histórico.
   const HOUR_TIERS = [
-    { min: 0,   max: 3,    icon: "🌱",  name: "Semente",      tone: "tier-0", text: "Você está começando. Cada documento que o app gera é tempo que vai direto para os seus alunos." },
-    { min: 4,   max: 7,    icon: "☕",  name: "Manhã livre",  tone: "tier-1", text: "Uma manhã inteira economizada — tempo que não precisou sair do seu fim de semana." },
-    { min: 8,   max: 19,   icon: "📚",  name: "Dia inteiro",  tone: "tier-2", text: "Um dia de trabalho inteiro de volta pra você. Menos burocracia, mais fôlego." },
-    { min: 20,  max: 39,   icon: "🌅",  name: "Rotina leve",  tone: "tier-3", text: "Com 20+ horas de volta, você já sente a diferença na sua rotina." },
-    { min: 40,  max: 79,   icon: "🏖️", name: "Semana extra", tone: "tier-4", text: "Uma semana de trabalho economizada. Esse tempo existia antes — só estava escondido nos documentos." },
-    { min: 80,  max: 129,  icon: "✈️",  name: "100 aulas",    tone: "tier-5", text: "80 horas. Se fossem aulas de 50 minutos, você \"ganhou\" quase 100 aulas extras de preparo." },
-    { min: 130, max: 199,  icon: "🎯",  name: "Mês extra",    tone: "tier-6", text: "130 horas economizadas — mais de um mês de trabalho que voltou para você e seus alunos." },
-    { min: 200, max: 499,  icon: "🏆",  name: "Extraordinário", tone: "tier-7", text: "200+ horas. Você transformou sua rotina docente. Extraordinário." },
-    { min: 500, max: 9999, icon: "🌟",  name: "Lendário",     tone: "tier-8", text: "500 horas. Isso é mais de dois meses de trabalho inteiros devolvidos à sua vida. Histórico!" },
+    { min: 0,   max: 3,    icon: "🌱",  name: "Semente",        tone: "tier-0", text: "Você já começou. Esse tempo que voltou pra você é só o início." },
+    { min: 4,   max: 7,    icon: "☕",  name: "Manhã livre",    tone: "tier-1", text: "Uma manhã inteira de volta. Tempo que foi pro café, pro descanso, pra você." },
+    { min: 8,   max: 19,   icon: "📚",  name: "Dia inteiro",    tone: "tier-2", text: "Um dia inteiro que não virou pilha de documentos. Você merecia isso há muito tempo." },
+    { min: 20,  max: 39,   icon: "🌅",  name: "Rotina leve",    tone: "tier-3", text: "Você ganhou dias inteiros de volta. Dias que eram seus e que a burocracia tinha tomado." },
+    { min: 40,  max: 79,   icon: "🏖️", name: "Semana extra",   tone: "tier-4", text: "Uma semana de trabalho devolvida. Sabe aquele fôlego que faltava? Ele está aqui." },
+    { min: 80,  max: 129,  icon: "✈️",  name: "Vida de volta",  tone: "tier-5", text: "Dois meses de noites e fins de semana que ficaram com você. Com sua família. Com sua vida." },
+    { min: 130, max: 199,  icon: "🎯",  name: "Mais leveza",    tone: "tier-6", text: "Você ensina com mais leveza agora. A gente vê isso nesses números." },
+    { min: 200, max: 499,  icon: "🏆",  name: "Extraordinário", tone: "tier-7", text: "200 horas. Cada uma delas foi escolhida por você — não tomada pela papelada." },
+    { min: 500, max: 9999, icon: "🌟",  name: "Lendário",       tone: "tier-8", text: "500 horas de volta pra você. Obrigado por confiar na gente pra cuidar do que era burocracia, enquanto você cuidava do que importa." },
   ] as const;
   const currentTier = HOUR_TIERS.find((t) => h >= t.min && h <= t.max) || HOUR_TIERS[0];
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
