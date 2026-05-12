@@ -10,7 +10,7 @@ export const TEST_DATA_ID = "preapproval_abc123";
 /** Pre-computed v1 = HMAC_SHA256(TEST_SECRET, manifest) */
 // manifest = `id:preapproval_abc123;request-id:11111111-1111-1111-1111-111111111111;ts:1700000000;`
 export const TEST_V1_VALID =
-  "be58cc5b8f1eaaa3e1e4a31cba6ceeefedc1a9f4e0a8f86d20c34e7f7b8b3ca0";
+  "9043c6c34416cba51bce762e21e88dd52e7817e4e118a74a94e0529592b2be99";
 
 export const preapprovalAuthorized = {
   type: "subscription_preapproval",
