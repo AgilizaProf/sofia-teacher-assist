@@ -16,8 +16,10 @@ import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagament
 import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento-confirmado-anual'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
+import { Route as EiRouteImport } from './routes/ei'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AtividadeRouteImport } from './routes/atividade'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -72,6 +74,11 @@ const InclusaoRoute = InclusaoRouteImport.update({
   path: '/inclusao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EiRoute = EiRouteImport.update({
+  id: '/ei',
+  path: '/ei',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
@@ -80,6 +87,11 @@ const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtividadeRoute = AtividadeRouteImport.update({
+  id: '/atividade',
+  path: '/atividade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssistenteRoute = AssistenteRouteImport.update({
@@ -168,8 +180,10 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
@@ -194,8 +208,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
@@ -222,8 +238,10 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
+  '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
+  '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
@@ -251,8 +269,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agenda'
     | '/assistente'
+    | '/atividade'
     | '/auth'
     | '/configuracoes'
+    | '/ei'
     | '/inclusao'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
@@ -277,8 +297,10 @@ export interface FileRouteTypes {
     | '/'
     | '/agenda'
     | '/assistente'
+    | '/atividade'
     | '/auth'
     | '/configuracoes'
+    | '/ei'
     | '/inclusao'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
@@ -304,8 +326,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agenda'
     | '/assistente'
+    | '/atividade'
     | '/auth'
     | '/configuracoes'
+    | '/ei'
     | '/inclusao'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
@@ -332,8 +356,10 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AgendaRoute: typeof AgendaRoute
   AssistenteRoute: typeof AssistenteRoute
+  AtividadeRoute: typeof AtividadeRoute
   AuthRoute: typeof AuthRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
+  EiRoute: typeof EiRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   PagamentoConfirmadoAnualRoute: typeof PagamentoConfirmadoAnualRoute
@@ -395,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InclusaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ei': {
+      id: '/ei'
+      path: '/ei'
+      fullPath: '/ei'
+      preLoaderRoute: typeof EiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/configuracoes': {
       id: '/configuracoes'
       path: '/configuracoes'
@@ -407,6 +440,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atividade': {
+      id: '/atividade'
+      path: '/atividade'
+      fullPath: '/atividade'
+      preLoaderRoute: typeof AtividadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assistente': {
@@ -579,8 +619,10 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AgendaRoute: AgendaRoute,
   AssistenteRoute: AssistenteRoute,
+  AtividadeRoute: AtividadeRoute,
   AuthRoute: AuthRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
+  EiRoute: EiRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   PagamentoConfirmadoAnualRoute: PagamentoConfirmadoAnualRoute,
