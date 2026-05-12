@@ -205,7 +205,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
         )}
       </nav>
       <div className="sb-foot">
-        <div className={"sb-plan" + (currentPlan.key === "mensal" ? " silver" : "")} role="complementary" aria-label={currentPlan.aria}>
+        <div className={"sb-plan" + (currentPlan.silver ? " silver" : "")} role="complementary" aria-label={currentPlan.aria}>
           <div className="sb-plan-top">
             <span className="sb-plan-tag">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
@@ -216,22 +216,35 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           </div>
           <div className="sb-plan-bottom">
             {currentPlan.href ? (
-              <a
-                className="sb-plan-btn"
-                aria-label={currentPlan.aria}
-                href={currentPlan.href}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Ver oferta
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-              </a>
+              currentPlan.href.startsWith("/") ? (
+                <Link
+                  className="sb-plan-btn"
+                  aria-label={currentPlan.aria}
+                  to={currentPlan.href.split("#")[0]}
+                  hash={currentPlan.href.includes("#") ? currentPlan.href.split("#")[1] : undefined}
+                >
+                  {currentPlan.cta}
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </Link>
+              ) : (
+                <a
+                  className="sb-plan-btn"
+                  aria-label={currentPlan.aria}
+                  href={currentPlan.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {currentPlan.cta}
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+              )
             ) : (
               <button className="sb-plan-btn" aria-label={currentPlan.aria}>
-                Ver oferta
+                {currentPlan.cta}
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
             )}
+            {plans.length > 1 ? (
             <div className="sb-plan-dots" role="tablist" aria-label="Selecionar plano">
               <button type="button" className="sb-plan-nav" aria-label="Plano anterior" onClick={prevPlan}>
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
@@ -241,9 +254,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
                   key={p.key}
                   type="button"
                   role="tab"
-                  aria-selected={i === planIdx}
+                  aria-selected={i === safeIdx}
                   aria-label={p.tag}
-                  className={"sb-plan-dot" + (i === planIdx ? " active" : "")}
+                  className={"sb-plan-dot" + (i === safeIdx ? " active" : "")}
                   onClick={() => setPlanIdx(i)}
                 />
               ))}
@@ -251,6 +264,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
               </button>
             </div>
+            ) : null}
           </div>
         </div>
       </div>
