@@ -1,9 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/admin/ia")({ component: IaPage });
+export const Route = createFileRoute("/admin/ia")({
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw redirect({ to: "/auth" });
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!data) throw redirect({ to: "/" });
+  },
+  component: IaPage,
+});
 
 const LIMIT_BRL = 4.2;
 
