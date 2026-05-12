@@ -1668,8 +1668,17 @@
   }
 
   function goHome(){
+    // Marca onboarding como concluído e força a navegação no top-level
+    // (a página vive dentro de um <iframe> em /onboarding).
     try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    (window.top || window).location.href = '/';
+    try{ localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
+    try{
+      const top = window.top || window.parent || window;
+      top.location.assign('/');
+    }catch(_){
+      window.location.assign('/');
+    }
+    return false;
   }
 
   // foco no nome ao abrir
