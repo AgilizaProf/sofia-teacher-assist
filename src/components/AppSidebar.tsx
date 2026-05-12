@@ -86,6 +86,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
       title: "Créditos ilimitados por R$ 247/ano",
       desc: "~9.000 créditos/ano · economize 41%.",
       aria: "Ver oferta do plano anual",
+      href: undefined as string | undefined,
     },
     {
       key: "mensal",
@@ -182,10 +183,23 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
             <p>{currentPlan.desc}</p>
           </div>
           <div className="sb-plan-bottom">
-            <button className="sb-plan-btn" aria-label={currentPlan.aria}>
-              Ver oferta
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
+            {currentPlan.href ? (
+              <a
+                className="sb-plan-btn"
+                aria-label={currentPlan.aria}
+                href={currentPlan.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ver oferta
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+            ) : (
+              <button className="sb-plan-btn" aria-label={currentPlan.aria}>
+                Ver oferta
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            )}
             <div className="sb-plan-dots" role="tablist" aria-label="Selecionar plano">
               <button type="button" className="sb-plan-nav" aria-label="Plano anterior" onClick={prevPlan}>
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
