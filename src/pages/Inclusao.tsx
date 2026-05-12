@@ -593,6 +593,7 @@ const ANAM_SUGESTOES: Record<string, string[]> = {
 };
 
 export function Inclusao() {
+  const user = useUser();
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
   const { students, create: createStudent } = useInclusaoStudents();
