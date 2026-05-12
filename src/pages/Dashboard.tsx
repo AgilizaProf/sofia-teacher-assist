@@ -853,17 +853,15 @@ export function Dashboard() {
               <div className="hero-metric-label">
                 {totalMinutes === 0
                   ? "comece a usar a Sofia pra economizar tempo"
-                  : goalReached
-                    ? "meta semanal alcançada 🎉"
-                    : "continue usando a Sofia pra economizar mais tempo"}
+                  : currentTier
+                    ? (
+                        <>
+                          <span style={{ marginRight: 6 }}>{currentTier.icon}</span>
+                          {currentTier.sub}
+                        </>
+                      )
+                    : "continue usando a Sofia — sua próxima conquista está em 4h ☕"}
               </div>
-              <div className="hero-metric-bar">
-                <div
-                  className="hero-metric-fill"
-                  style={{ width: `${goalPct}%` }}
-                />
-              </div>
-              <div className="hero-metric-foot"><span>Meta: {user.weeklyGoalHours}h</span><span>{goalPct}%</span></div>
             </div>
           </section>
 
