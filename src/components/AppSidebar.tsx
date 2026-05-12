@@ -34,6 +34,9 @@ export const sidebarCss = `
 .sb-plan p{margin:0;font-size:9.5px;color:#5a3a20;line-height:1.3;}
 .sb-plan-btn{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#F97316;color:#fff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 10px rgba(249,115,22,.35);}
 .sb-plan-btn:hover{background:#EA580C;}
+.sb-plan-dots{display:flex;gap:5px;justify-content:center;margin-top:7px;}
+.sb-plan-dot{width:5px;height:5px;border-radius:50%;background:rgba(154,52,18,.30);border:none;padding:0;cursor:pointer;transition:.18s;}
+.sb-plan-dot.active{background:#9A3412;width:14px;border-radius:3px;}
 .sb-version{font-size:10px;color:rgba(255,255,255,.30);text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;}
 .sb-bruna{margin:0 10px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 10px;display:flex;gap:10px;align-items:center;cursor:pointer;transition:.2s;color:#fff;text-align:left;width:calc(100% - 20px);}
 .sb-bruna:hover{background:rgba(255,122,69,.10);border-color:rgba(255,122,69,.32);}
