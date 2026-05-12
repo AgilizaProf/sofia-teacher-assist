@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import logoImg from "@/assets/agilizaprof-logo.jpg";
 
 const navItems = [
   { to: "/admin", label: "Visão geral", icon: "M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 9h8V3h-8z" },
@@ -19,7 +20,8 @@ export function AdminLayout({ children, title, subtitle }: { children: ReactNode
       <style>{`
         .ad-sb{width:240px;background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;}
         .ad-sb-head{padding:18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06);}
-        .ad-sb-logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#FF7A45,#FF9466);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:16px;}
+        .ad-sb-logo{width:34px;height:34px;border-radius:9px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#1B2A4E;}
+        .ad-sb-logo img{width:100%;height:100%;object-fit:cover;display:block;}
         .ad-sb-title{font-family:'Fraunces',serif;font-weight:800;font-size:14px;line-height:1.1}
         .ad-sb-tag{font-size:9px;font-weight:800;color:#FF7A45;letter-spacing:.12em;text-transform:uppercase;}
         .ad-nav{padding:14px 10px;display:flex;flex-direction:column;gap:2px;flex:1;}
@@ -70,7 +72,7 @@ export function AdminLayout({ children, title, subtitle }: { children: ReactNode
       `}</style>
       <aside className="ad-sb">
         <div className="ad-sb-head">
-          <div className="ad-sb-logo">A</div>
+          <div className="ad-sb-logo"><img src={logoImg} alt="AgilizaProf" /></div>
           <div>
             <div className="ad-sb-title">AgilizaProf</div>
             <div className="ad-sb-tag">Admin</div>
