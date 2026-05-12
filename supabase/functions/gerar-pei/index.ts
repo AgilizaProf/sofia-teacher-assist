@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 
 type Registro = { when?: string; cat?: string; body?: string };
 
@@ -7,6 +8,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
+    const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     const body = await req.json().catch(() => ({}));
     const {
       aluno = "",
@@ -81,7 +83,7 @@ Regras:
 - Estratégias específicas para o tipo de necessidade ("${tipo_necessidade || "não informada"}").
 - Sem comparar o aluno com a turma.`;
 
-    const r = await callAI({ tipo: "pei", system: sys, user, json: true, maxTokens: 4096 });
+    const r = await callAI({ userId, tipo: "pei", system: sys, user, json: true, maxTokens: 4096 });
     if (!r.ok) return aiErrorResponse(r);
 
     let pei: Record<string, unknown> = {};

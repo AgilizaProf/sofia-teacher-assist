@@ -83,6 +83,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage: {
+        Row: {
+          cost_brl: number
+          created_at: string
+          id: string
+          input_tokens: number
+          model: string
+          month: string
+          output_tokens: number
+          provider: string
+          task: string | null
+          user_id: string
+        }
+        Insert: {
+          cost_brl?: number
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          model: string
+          month?: string
+          output_tokens?: number
+          provider: string
+          task?: string | null
+          user_id: string
+        }
+        Update: {
+          cost_brl?: number
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          model?: string
+          month?: string
+          output_tokens?: number
+          provider?: string
+          task?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       alunos_anamnese: {
         Row: {
           aluno_client_id: string
@@ -1364,6 +1403,7 @@ export type Database = {
         Returns: Json
       }
       admin_revoke_pro: { Args: { _user_id: string }; Returns: undefined }
+      ai_month_usage_brl: { Args: { _user_id: string }; Returns: number }
       cleanup_old_sofia_conversations: { Args: never; Returns: undefined }
       ensure_referral_code: { Args: { _uid: string }; Returns: string }
       has_role: {

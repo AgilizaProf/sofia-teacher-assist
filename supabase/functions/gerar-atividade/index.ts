@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { userIdFromAuthHeader, isBudgetExceeded, recordUsage, MONTHLY_LIMIT_BRL } from "../_shared/ai-budget.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +14,19 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
+    const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    if (userId) {
+      const b = await isBudgetExceeded(userId);
+      if (b.exceeded) {
+        return new Response(
+          JSON.stringify({
+            error: `Você atingiu o limite mensal de uso da IA (R$ ${MONTHLY_LIMIT_BRL.toFixed(2)}). O contador zera no início do próximo mês.`,
+            blocked: true, usedBrl: b.usedBrl, limitBrl: b.limitBrl,
+          }),
+          { status: 402, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
+    }
     const body = await req.json().catch(() => ({}));
     const {
       modo = "regular",
@@ -390,6 +404,17 @@ serve(async (req) => {
 
     const parseResp = async (r: Response) => {
       const d = await r.json();
+      if (userId) {
+        const inTok = Number(d?.usage?.prompt_tokens ?? 0);
+        const outTok = Number(d?.usage?.completion_tokens ?? 0);
+        if (inTok || outTok) {
+          await recordUsage({
+            userId, provider: "lovable", model: "google/gemini-2.5-flash",
+            task: useOpcoes ? "atividade_opcoes" : "atividade_plano",
+            inputTokens: inTok, outputTokens: outTok,
+          });
+        }
+      }
       const c = d?.choices?.[0]?.message?.tool_calls?.[0];
       const a = c?.function?.arguments;
       return typeof a === "string" ? JSON.parse(a) : (a ?? null);

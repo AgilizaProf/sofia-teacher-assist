@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 
 type Registro = { when?: string; cat?: string; body?: string };
 
@@ -7,6 +8,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
+    const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     const body = await req.json().catch(() => ({}));
     const {
       aluno = "",
@@ -60,7 +62,7 @@ ${formato === "texto" ? `Responda APENAS com JSON válido neste formato:
   "comunicacao_familias": "1 parágrafo curto pronto para enviar à família"
 }`}`;
 
-    const r = await callAI({ tipo: "parecer", system: sys, user, json: true, maxTokens: 3000 });
+    const r = await callAI({ userId, tipo: "parecer", system: sys, user, json: true, maxTokens: 3000 });
     if (!r.ok) return aiErrorResponse(r);
     const raw = r.text || "{}";
     let parecer: Record<string, unknown> = {};

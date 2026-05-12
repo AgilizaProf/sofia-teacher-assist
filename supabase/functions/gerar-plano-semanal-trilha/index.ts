@@ -1,9 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
+    const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     const body = await req.json().catch(() => ({}));
     const {
       semana = 1,
@@ -44,7 +46,7 @@ Responda APENAS em JSON:
   "ponte_proxima_semana": ""
 }`;
 
-    const r = await callAI({ tipo: "trilha_semana", system: sys, user, json: true, maxTokens: 4000 });
+    const r = await callAI({ userId, tipo: "trilha_semana", system: sys, user, json: true, maxTokens: 4000 });
     if (!r.ok) return aiErrorResponse(r);
     let plano: Record<string, unknown> = {};
     try { plano = JSON.parse(r.text || "{}"); } catch { plano = { erro: "JSON inválido", raw: r.text }; }

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { validateSofiaOutput } from "@/lib/sofia-validator";
 import { buildSofiaPrompt } from "@/lib/sofia-constitution";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertBudget, recordUsage, BudgetExceededError, MONTHLY_LIMIT_BRL } from "@/lib/aiBudget.server";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -30,6 +31,24 @@ export const askSofia = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY ausente.");
+
+    // Bloqueio por orçamento mensal.
+    try {
+      await assertBudget(userId);
+    } catch (e) {
+      if (e instanceof BudgetExceededError) {
+        return {
+          conversationId: data.conversationId ?? null,
+          content: `Você atingiu o limite mensal de uso da IA (R$ ${MONTHLY_LIMIT_BRL.toFixed(2)}). O contador zera no início do próximo mês.`,
+          issues: null,
+          sanitizedApplied: false,
+          blocked: true,
+          usedBrl: e.usedBrl,
+          limitBrl: e.limitBrl,
+        };
+      }
+      throw e;
+    }
 
     // ensure conversation
     let conversationId = data.conversationId;
@@ -68,8 +87,16 @@ export const askSofia = createServerFn({ method: "POST" })
       const t = await res.text();
       throw new Error(`Falha no AI Gateway (${res.status}): ${t.slice(0, 300)}`);
     }
-    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }>; usage?: { prompt_tokens?: number; completion_tokens?: number } };
     const raw = json.choices?.[0]?.message?.content || "";
+    await recordUsage({
+      userId,
+      provider: "lovable",
+      model: "google/gemini-2.5-flash",
+      task: "chat",
+      inputTokens: Number(json.usage?.prompt_tokens ?? 0),
+      outputTokens: Number(json.usage?.completion_tokens ?? 0),
+    });
     const { ok, issues, sanitized } = validateSofiaOutput(raw);
 
     await supabase.from("sofia_messages").insert([{
