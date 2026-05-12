@@ -1657,14 +1657,18 @@
     e.preventDefault();
     const route = NEXT_CARDS[where]?.route || '/';
     try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    (window.top || window).location.href = route;
+    try{ localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
+    try{ (window.top || window.parent || window).location.assign(route); }
+    catch(_){ window.location.assign(route); }
   }
 
   function goToRealCta(){
     const cfg = PAIN_CONFIG[painSelected];
     const route = (cfg && cfg.realCtaRoute) || '/';
     try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    (window.top || window).location.href = route;
+    try{ localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
+    try{ (window.top || window.parent || window).location.assign(route); }
+    catch(_){ window.location.assign(route); }
   }
 
   function goHome(){
