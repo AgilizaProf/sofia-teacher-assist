@@ -16,6 +16,45 @@ import { Header as AppHeader } from "@/components/Header";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 
+function CtxChipGroup({ options, value, onToggle }: { options: string[]; value: string[]; onToggle: (v: string) => void }) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (adding) inputRef.current?.focus(); }, [adding]);
+  const customs = value.filter((v) => !options.includes(v));
+  const commit = () => {
+    const v = draft.trim();
+    if (v && !value.includes(v)) onToggle(v);
+    setDraft(""); setAdding(false);
+  };
+  return (
+    <div className="ctx-chips">
+      {options.map((o) => (
+        <button key={o} type="button" className={"ctx-chip" + (value.includes(o) ? " on" : "")} onClick={() => onToggle(o)}>{o}</button>
+      ))}
+      {customs.map((o) => (
+        <button key={o} type="button" className="ctx-chip on" onClick={() => onToggle(o)} title="Clique para remover">{o} ×</button>
+      ))}
+      {adding ? (
+        <span className="ctx-chip-input">
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } if (e.key === "Escape") { setDraft(""); setAdding(false); } }}
+            onBlur={commit}
+            placeholder="Digite e Enter"
+            maxLength={60}
+          />
+          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={commit}>Adicionar</button>
+        </span>
+      ) : (
+        <button type="button" className="ctx-chip-add" onClick={() => setAdding(true)}>+ Outro</button>
+      )}
+    </div>
+  );
+}
+
 const css = `
 .ap-root{
   --primary:#1B2A4E;--primary-dark:#0F1B36;--accent:#FF6A2C;--accent-warm:#FF9466;
@@ -92,6 +131,11 @@ const css = `
 .ctx-chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);font-weight:500;cursor:pointer;transition:all .15s ease;}
 .ctx-chip:hover{border-color:#cfd4e1;}
 .ctx-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;box-shadow:0 4px 10px -4px rgba(255,106,44,.45);}
+.ctx-chip-add{padding:6px 10px;border-radius:999px;border:1px dashed var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);font-weight:500;cursor:pointer;transition:all .15s ease;}
+.ctx-chip-add:hover{border-color:#cfd4e1;color:var(--text);}
+.ctx-chip-input{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 10px;border-radius:999px;border:1px solid var(--accent);background:#fff;}
+.ctx-chip-input input{border:none;outline:none;font-size:12px;background:transparent;width:130px;color:var(--text);}
+.ctx-chip-input button{border:none;background:var(--accent);color:#fff;font-size:11px;font-weight:600;border-radius:999px;padding:4px 10px;cursor:pointer;}
 .ctx-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media (max-width:520px){.ctx-grid2{grid-template-columns:1fr;}}
 .ctx-field-inline{display:flex;flex-direction:column;gap:6px;}
@@ -699,38 +743,22 @@ export function Assistente() {
 
               <div className="ctx-section">
                 <div className="ctx-section-label">Foco pedagógico do momento</div>
-                <div className="ctx-chips">
-                  {OPT_FOCOS.map((o) => (
-                    <button key={o} type="button" className={"ctx-chip" + (ctxFocos.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxFocos)(o)}>{o}</button>
-                  ))}
-                </div>
+                <CtxChipGroup options={OPT_FOCOS} value={ctxFocos} onToggle={toggleIn(setCtxFocos)} />
               </div>
 
               <div className="ctx-section">
                 <div className="ctx-section-label">Estilo de resposta da Sofia</div>
-                <div className="ctx-chips">
-                  {OPT_ESTILO.map((o) => (
-                    <button key={o} type="button" className={"ctx-chip" + (ctxEstilo.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxEstilo)(o)}>{o}</button>
-                  ))}
-                </div>
+                <CtxChipGroup options={OPT_ESTILO} value={ctxEstilo} onToggle={toggleIn(setCtxEstilo)} />
               </div>
 
               <div className="ctx-section">
                 <div className="ctx-section-label">Recursos disponíveis em sala</div>
-                <div className="ctx-chips">
-                  {OPT_RECURSOS.map((o) => (
-                    <button key={o} type="button" className={"ctx-chip" + (ctxRecursos.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxRecursos)(o)}>{o}</button>
-                  ))}
-                </div>
+                <CtxChipGroup options={OPT_RECURSOS} value={ctxRecursos} onToggle={toggleIn(setCtxRecursos)} />
               </div>
 
               <div className="ctx-section">
                 <div className="ctx-section-label">Restrições / o que evitar</div>
-                <div className="ctx-chips">
-                  {OPT_EVITAR.map((o) => (
-                    <button key={o} type="button" className={"ctx-chip" + (ctxEvitar.includes(o) ? " on" : "")} onClick={() => toggleIn(setCtxEvitar)(o)}>{o}</button>
-                  ))}
-                </div>
+                <CtxChipGroup options={OPT_EVITAR} value={ctxEvitar} onToggle={toggleIn(setCtxEvitar)} />
               </div>
 
               <div className="ctx-section">
