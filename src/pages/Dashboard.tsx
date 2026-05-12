@@ -483,6 +483,116 @@ export function Dashboard() {
   const sofia = useSofia();
   const navigate = useNavigate();
 
+  // ── Card principal dinâmico ───────────────────────────────────────────────
+  // O hero muda conforme o "estado de jornada" do usuário: o que ele acabou
+  // de fazer (atividade recente <24h), o que está em aberto (pareceres,
+  // PCDs sem plano, turma sem alunos) ou se já está em dia.
+  const { all: activityAll } = useActivityFeed();
+  const heroDynamic = useMemo(() => {
+    type Hero = {
+      kind: string;
+      titleExtra: React.ReactNode | null;
+      sub: string;
+      ctaLabel: string;
+      onCta: () => void;
+    };
+    // 1. Sem turmas
+    if (totalClasses === 0) {
+      return {
+        kind: "no-classes",
+        titleExtra: <><br />Comece configurando <span className="accent">sua primeira turma.</span></>,
+        sub: "Cadastre suas turmas e alunos para que a Sofia possa te ajudar a gerar pareceres, planos de aula e adaptações em minutos.",
+        ctaLabel: "Criar primeira turma",
+        onCta: () => setClassOpen(true),
+      } as Hero;
+    }
+    // 2. Tem turma mas nenhum aluno
+    if (totalStudents === 0) {
+      const turma = classes[0]?.name;
+      return {
+        kind: "no-students",
+        titleExtra: <><br />Adicione alunos {turma ? <>à turma <span className="accent">{turma}</span></> : <span className="accent">à sua turma</span>}.</>,
+        sub: "Com os alunos cadastrados, a Sofia já consegue sugerir pareceres, adaptações e planos personalizados.",
+        ctaLabel: "Cadastrar aluno",
+        onCta: () => setStudentOpen(true),
+      } as Hero;
+    }
+    // 3. Atividade recente (<24h) → "Continue de onde parou"
+    const recent = activityAll[0];
+    const recentTs = recent ? Date.parse(recent.ts) : 0;
+    if (recent && Number.isFinite(recentTs) && Date.now() - recentTs < 24 * 60 * 60 * 1000) {
+      const map: Record<ActivityType, { label: string; cta: string; to: string; search?: Record<string, string> }> = {
+        parecer:      { label: "no parecer",        cta: "Voltar para os pareceres",   to: "/relatorios",   search: { tab: "todo" } },
+        planejamento: { label: "no planejamento",   cta: "Continuar planejamento",     to: "/planejamento" },
+        adaptacao:    { label: "nas adaptações",    cta: "Voltar para inclusão",       to: "/inclusao" },
+        aluno:        { label: "no cadastro de aluno", cta: "Cadastrar próximo aluno", to: "/" },
+        exportacao:   { label: "na exportação",     cta: "Ver documentos",             to: "/relatorios" },
+      };
+      const meta = map[recent.type] ?? map.parecer;
+      return {
+        kind: `recent:${recent.type}`,
+        titleExtra: <><br />Continue <span className="accent">de onde parou</span>.</>,
+        sub: `Você estava trabalhando ${meta.label} ${relativeTime(recent.ts)} — ${recent.description}.`,
+        ctaLabel: meta.cta,
+        onCta: () => {
+          if (recent.type === "aluno") { setStudentOpen(true); return; }
+          navigate({ to: meta.to, ...(meta.search ? { search: meta.search } : {}) } as Parameters<typeof navigate>[0]);
+        },
+      } as Hero;
+    }
+    // 4. Pareceres pendentes
+    if (pareceresPendentes.alunos > 0) {
+      const a = pareceresPendentes.alunos;
+      const t = Math.max(1, pareceresPendentes.turmas);
+      return {
+        kind: "pareceres",
+        titleExtra: <><br />Foque agora <span className="accent">nos pareceres do bimestre</span>.</>,
+        sub: `Você tem ${a} ${a === 1 ? "aluno" : "alunos"} em ${t} ${t === 1 ? "turma" : "turmas"} aguardando o relatório descritivo.`,
+        ctaLabel: "Começar pelos pareceres",
+        onCta: () => navigate({ to: "/relatorios", search: { tab: "todo" } }),
+      } as Hero;
+    }
+    // 5. Tem aluno PCD sem plano de inclusão
+    const pcdStudents = students.filter((s) => s.pcd && s.pcd !== "nao");
+    const pcdSemPlano = pcdStudents.find((s) => {
+      const key = (s.name || "").toLowerCase();
+      const plans = (incPlans as Record<string, unknown[]> | undefined)?.[key];
+      return !plans || plans.length === 0;
+    });
+    if (pcdSemPlano) {
+      return {
+        kind: "pcd-sem-plano",
+        titleExtra: <><br />Crie o plano de inclusão de <span className="accent">{pcdSemPlano.name}</span>.</>,
+        sub: "A Sofia já tem o contexto deste aluno e pode montar um PEI inicial em poucos minutos.",
+        ctaLabel: "Abrir inclusão",
+        onCta: () => navigate({ to: "/inclusao" }),
+      } as Hero;
+    }
+    // 6. Sem registros M6 esta semana
+    const m6Week = (Array.isArray(m6Entries) ? m6Entries : []).some((e) => {
+      const ts = (e as { createdAt?: string; ts?: string })?.createdAt ?? (e as { ts?: string })?.ts;
+      const t = ts ? Date.parse(ts) : 0;
+      return Number.isFinite(t) && Date.now() - t < 7 * 24 * 60 * 60 * 1000;
+    });
+    if (!m6Week) {
+      return {
+        kind: "diario",
+        titleExtra: <><br />Que tal um <span className="accent">registro rápido no diário</span>?</>,
+        sub: "Anotar como foi a aula desta semana ajuda a Sofia a sugerir intervenções mais precisas.",
+        ctaLabel: "Abrir diário (M6)",
+        onCta: () => navigate({ to: "/planejamento" }),
+      } as Hero;
+    }
+    // 7. Tudo em dia
+    return {
+      kind: "tudo-em-dia",
+      titleExtra: <><br />Tudo <span className="accent">em dia por aqui</span> ✨</>,
+      sub: "Pareceres entregues, alunos atualizados. Que tal adiantar o planejamento da próxima semana?",
+      ctaLabel: "Planejar próxima semana",
+      onCta: () => navigate({ to: "/planejamento" }),
+    } as Hero;
+  }, [totalClasses, totalStudents, classes, activityAll, pareceresPendentes, students, incPlans, m6Entries, navigate]);
+
   // ── Deep-link vindo das notificações da Sofia ─────────────────────────────
   // Lê ?open=schools|classes|students|agenda&target=<nome>, rola até a seção
   // correspondente, destaca-a e abre o modal certo. O target é casado por
