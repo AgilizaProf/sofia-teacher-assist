@@ -774,7 +774,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
     }
   }, [totalSavedMin]);
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
-  const isPro = ctx.user.plano === "pro" || dashStudents.length > 0;
+  const isPro = ctx.user.plano === "pro" || combinedStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
 
   // Lista por aluno (estado Pro)
@@ -793,8 +793,8 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
       if (pctPreenchido > 0) return { status: "draft", naoObservadas };
       return { status: "todo", naoObservadas };
     };
-    if (dashStudents.length > 0) {
-      return dashStudents.map((s, i): Item => {
+    if (combinedStudents.length > 0) {
+      return combinedStudents.map((s, i): Item => {
         const id = `al-${i}`;
         const turma = s.classRef || "";
         const pcd = s.pcd && s.pcd !== "nao" ? s.pcd : "";
@@ -814,7 +814,7 @@ ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPro, alunosCount, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, dashStudents, bnccByAluno, parecerByAluno, yearOverride]);
+  }, [isPro, alunosCount, ctx.entity.todos_alunos_pcd, ctx.entity.turma_atual, combinedStudents, bnccByAluno, parecerByAluno, yearOverride]);
 
   const alunosFiltered = useMemo(() => alunosLista.filter((a) => {
     if (tab !== "all" && a.status !== tab) return false;
