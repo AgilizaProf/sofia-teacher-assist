@@ -38,12 +38,14 @@ export const askSofia = createServerFn({ method: "POST" })
     } catch (e) {
       if (e instanceof BudgetExceededError) {
         return {
-          conversationId: data.conversationId,
+          conversationId: data.conversationId ?? null,
           content: `Você atingiu o limite mensal de uso da IA (R$ ${MONTHLY_LIMIT_BRL.toFixed(2)}). O contador zera no início do próximo mês.`,
-          issues: [{ tipo: "budget", mensagem: "limite_mensal_atingido", usedBrl: e.usedBrl, limitBrl: e.limitBrl }],
+          issues: null,
           sanitizedApplied: false,
           blocked: true,
-        } as const;
+          usedBrl: e.usedBrl,
+          limitBrl: e.limitBrl,
+        };
       }
       throw e;
     }
