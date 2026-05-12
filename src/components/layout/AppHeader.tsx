@@ -97,13 +97,23 @@ export function AppHeader({ breadcrumb, actions, secondaryStatus, hideActiveChip
               </div>
             </div>
           )}
-          <div className="ah-user" aria-label={`Usuária ${u.nome}, ${u.plano === "pro" ? "Plano Pro" : "Plano Free"}`}>
-            <div className="av">{initialsFromName(u.nome)}</div>
-            <div>
-              <div className="nm">{u.nome}</div>
-              <div className="pl">PLANO {u.plano === "pro" ? "PRO" : "FREE"}</div>
-            </div>
-          </div>
+          {(() => {
+            const planoLabel =
+              u.plano === "pro"
+                ? u.ciclo === "anual"
+                  ? "Plano anual"
+                  : "Plano mensal"
+                : "Plano free";
+            return (
+              <div className="ah-user" aria-label={`Usuária ${u.nome}, ${planoLabel}`}>
+                <div className="av">{initialsFromName(u.nome)}</div>
+                <div>
+                  <div className="nm">{u.nome}</div>
+                  <div className="pl">{planoLabel}</div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </header>
     </>
