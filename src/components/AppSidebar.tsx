@@ -86,7 +86,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
       title: "Créditos ilimitados por R$ 247/ano",
       desc: "~9.000 créditos/ano · economize 41%.",
       aria: "Ver oferta do plano anual",
-      href: undefined as string | undefined,
+      href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7798ddd616d8438a92b0e2bceaa20bab" as string | undefined,
     },
     {
       key: "mensal",

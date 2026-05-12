@@ -212,6 +212,8 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago/test")({
                       next_payment_date: preapproval.next_payment_date,
                       date_created: preapproval.date_created,
                       reason: preapproval.reason,
+                        preapproval_plan_id: preapproval.preapproval_plan_id,
+                        auto_recurring: preapproval.auto_recurring,
                     }
                   : null,
               }

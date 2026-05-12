@@ -97,7 +97,28 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
           next_payment_date?: string;
           date_created?: string;
           reason?: string;
+          preapproval_plan_id?: string;
+          auto_recurring?: {
+            frequency?: number;
+            frequency_type?: string; // "months" | "days" | "years"
+          };
         };
+
+        // ---- Detect plan cycle (mensal vs anual) -----------------------
+        // Known plan IDs (preferred) + auto_recurring fallback.
+        const ANNUAL_PLAN_ID = "7798ddd616d8438a92b0e2bceaa20bab";
+        const MONTHLY_PLAN_ID = "e2da862aba6042019234b1840f2593ef";
+        const planId = sub.preapproval_plan_id || "";
+        const freqType = (sub.auto_recurring?.frequency_type || "").toLowerCase();
+        const freq = sub.auto_recurring?.frequency || 0;
+        const isAnnual =
+          planId === ANNUAL_PLAN_ID ||
+          freqType === "years" ||
+          (freqType === "months" && freq >= 12) ||
+          (freqType === "days" && freq >= 365);
+        const ciclo: "anual" | "mensal" = isAnnual ? "anual" : "mensal";
+        const periodDays = isAnnual ? 365 : 30;
+        void MONTHLY_PLAN_ID;
 
         const email = (sub.payer_email || "").toLowerCase().trim();
         if (!email) {
@@ -122,10 +143,10 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
         }
         const userId = profile.user_id;
 
-        // Compute period end: prefer next_payment_date, else now + 30 days
+        // Compute period end: prefer next_payment_date, else now + N days (30/365)
         const periodEnd =
           sub.next_payment_date ||
-          new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000).toISOString();
 
         const status = sub.status?.toLowerCase();
 
@@ -150,7 +171,9 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
 
         const baseMeta = {
           preapproval_id: sub.id,
+          preapproval_plan_id: planId || null,
           mp_status: status,
+          ciclo,
           last_event: eventType,
           updated_via: "webhook",
           updated_at: new Date().toISOString(),
@@ -163,7 +186,7 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
               {
                 user_id: userId,
                 plano: "pro",
-                ciclo: "mensal",
+                ciclo,
                 status: "active",
                 source: "mercadopago",
                 started_at: sub.date_created || new Date().toISOString(),
