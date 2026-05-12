@@ -29,14 +29,27 @@ export const sidebarCss = `
 .sb-shortcut{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.40);font-weight:600;}
 .sb-foot{padding:10px 12px 12px;position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.06);margin-top:auto;}
 .sb-plan{margin:0 10px 10px;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);border:1px solid #F7C9A8;border-radius:10px;padding:8px 10px;color:#3a1f0b;position:relative;z-index:1;}
+.sb-plan.silver{background:linear-gradient(180deg,#F1F3F6 0%,#C9CED6 100%);border:1px solid #B8BFC9;color:#1f2937;}
 .sb-plan-tag{font-size:8.5px;font-weight:800;color:#9A3412;letter-spacing:.08em;display:inline-flex;align-items:center;gap:4px;}
+.sb-plan.silver .sb-plan-tag{color:#475569;}
 .sb-plan h4{margin:3px 0 1px;font-family:'Fraunces',serif;font-weight:700;font-size:11px;color:#3a1f0b;line-height:1.2;}
+.sb-plan.silver h4{color:#1f2937;}
 .sb-plan p{margin:0;font-size:9.5px;color:#5a3a20;line-height:1.3;}
+.sb-plan.silver p{color:#475569;}
 .sb-plan-btn{margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#F97316;color:#fff;padding:4px 8px;border-radius:7px;font-size:10px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 10px rgba(249,115,22,.35);}
 .sb-plan-btn:hover{background:#EA580C;}
-.sb-plan-dots{display:flex;gap:5px;justify-content:center;margin-top:7px;}
+.sb-plan.silver .sb-plan-btn{background:linear-gradient(135deg,#64748B,#334155);box-shadow:0 4px 10px rgba(51,65,85,.35);}
+.sb-plan.silver .sb-plan-btn:hover{background:linear-gradient(135deg,#475569,#1e293b);}
+.sb-plan-row{margin-top:7px;display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.sb-plan-nav{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(154,52,18,.12);color:#9A3412;border:none;cursor:pointer;padding:0;transition:.15s;}
+.sb-plan-nav:hover{background:rgba(154,52,18,.22);}
+.sb-plan.silver .sb-plan-nav{background:rgba(51,65,85,.12);color:#334155;}
+.sb-plan.silver .sb-plan-nav:hover{background:rgba(51,65,85,.22);}
+.sb-plan-dots{display:flex;gap:5px;justify-content:center;}
 .sb-plan-dot{width:5px;height:5px;border-radius:50%;background:rgba(154,52,18,.30);border:none;padding:0;cursor:pointer;transition:.18s;}
 .sb-plan-dot.active{background:#9A3412;width:14px;border-radius:3px;}
+.sb-plan.silver .sb-plan-dot{background:rgba(51,65,85,.30);}
+.sb-plan.silver .sb-plan-dot.active{background:#334155;}
 .sb-version{font-size:10px;color:rgba(255,255,255,.30);text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600;}
 .sb-bruna{margin:0 10px 10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:9px 10px;display:flex;gap:10px;align-items:center;cursor:pointer;transition:.2s;color:#fff;text-align:left;width:calc(100% - 20px);}
 .sb-bruna:hover{background:rgba(255,122,69,.10);border-color:rgba(255,122,69,.32);}
@@ -67,12 +80,14 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const { isAdmin } = useIsAdmin();
   const plans = [
     {
+      key: "anual",
       tag: "PLANO ANUAL",
       title: "Créditos ilimitados por R$ 247/ano",
       desc: "~9.000 créditos/ano · economize 41%.",
       aria: "Ver oferta do plano anual",
     },
     {
+      key: "mensal",
       tag: "PLANO MENSAL",
       title: "Créditos ilimitados por R$ 34,90/mês",
       desc: "Flexibilidade total · cancele quando quiser.",
@@ -80,11 +95,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
     },
   ];
   const [planIdx, setPlanIdx] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setPlanIdx((i) => (i + 1) % plans.length), 6000);
-    return () => clearInterval(id);
-  }, [plans.length]);
   const currentPlan = plans[planIdx];
+  const prevPlan = () => setPlanIdx((i) => (i - 1 + plans.length) % plans.length);
+  const nextPlan = () => setPlanIdx((i) => (i + 1) % plans.length);
 
   useEffect(() => {
     if (!usingInternal) return;
@@ -157,7 +170,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
         )}
       </nav>
       <div className="sb-foot">
-        <div className="sb-plan" role="complementary" aria-label={currentPlan.aria}>
+        <div className={"sb-plan" + (currentPlan.key === "mensal" ? " silver" : "")} role="complementary" aria-label={currentPlan.aria}>
           <span className="sb-plan-tag">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></svg>
             {currentPlan.tag}
@@ -168,18 +181,26 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
             Ver oferta
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
-          <div className="sb-plan-dots" role="tablist" aria-label="Selecionar plano">
-            {plans.map((p, i) => (
-              <button
-                key={p.tag}
-                type="button"
-                role="tab"
-                aria-selected={i === planIdx}
-                aria-label={p.tag}
-                className={"sb-plan-dot" + (i === planIdx ? " active" : "")}
-                onClick={() => setPlanIdx(i)}
-              />
-            ))}
+          <div className="sb-plan-row">
+            <button type="button" className="sb-plan-nav" aria-label="Plano anterior" onClick={prevPlan}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div className="sb-plan-dots" role="tablist" aria-label="Selecionar plano">
+              {plans.map((p, i) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === planIdx}
+                  aria-label={p.tag}
+                  className={"sb-plan-dot" + (i === planIdx ? " active" : "")}
+                  onClick={() => setPlanIdx(i)}
+                />
+              ))}
+            </div>
+            <button type="button" className="sb-plan-nav" aria-label="Próximo plano" onClick={nextPlan}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
         </div>
       </div>
