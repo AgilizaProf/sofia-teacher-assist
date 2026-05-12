@@ -209,3 +209,40 @@ button[aria-label="Dispensar"] > * {
   }
   html { scroll-behavior: auto !important; }
 }
+
+/* ==========================================================================
+   Padrão único para documentos salvos/impressos
+   - Arial 12 / espaçamento 1,5 / margens 2cm / borda 1px / sem quebra de bloco
+   ========================================================================== */
+@page { size: A4; margin: 2cm; }
+
+@media print {
+  html, body {
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  body * {
+    font-family: Arial, Helvetica, sans-serif !important;
+    line-height: 1.5 !important;
+  }
+  /* Borda 1px sólida em cada folha */
+  html::before {
+    content: "";
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
+    border: 1px solid #000;
+    pointer-events: none;
+    z-index: 9999;
+  }
+  /* Blocos não podem ser quebrados no meio de páginas */
+  section, article, table, tr, .doc-block, .kpi, ul, ol, li, .sig, h1, h2, h3, h4, p, .card, .pei-block {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  h1, h2, h3, h4 { page-break-after: avoid !important; break-after: avoid !important; }
+  /* Esconde botões/sidebar/UI ao imprimir */
+  .ap-sidebar, .toolbar, button, .no-print, header[role="banner"] { display: none !important; }
+}

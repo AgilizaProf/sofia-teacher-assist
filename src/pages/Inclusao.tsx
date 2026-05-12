@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
+import { wrapStandardPrintHtml } from "@/lib/print/standardPrint";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
@@ -716,16 +717,18 @@ export function Inclusao() {
 <head><meta charset="utf-8"/><title>Parecer · ${esc(selected.name)}</title>
 <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
 <style>
-  @page WordSection1 { size: A4; mso-page-orientation: portrait; margin: 18mm 16mm; }
-  div.WordSection1 { page: WordSection1; }
-  body { font-family: 'Calibri','Arial',sans-serif; color:#0F1B36; font-size:11pt; line-height:1.5; }
-  h1 { font-size:18pt; margin:0 0 6pt; border-bottom:2px solid #FF7A45; padding-bottom:4pt; }
-  h3 { font-size:12pt; margin:12pt 0 4pt; color:#FF7A45; text-transform:uppercase; }
-  .meta { font-size:9.5pt; color:#6B7691; margin-bottom:10pt; }
+  @page WordSection1 { size: A4; mso-page-orientation: portrait; margin: 2cm; mso-border-surround-header: 1pt solid #000; mso-border-surround-footer: 1pt solid #000; }
+  div.WordSection1 { page: WordSection1; border:1px solid #000; padding:6mm; }
+  body, p, li, td, h1, h2, h3, h4 { font-family: Arial, sans-serif !important; line-height:1.5 !important; }
+  body { color:#0F1B36; font-size:12pt; }
+  h1 { font-size:16pt; margin:0 0 6pt; border-bottom:2px solid #FF7A45; padding-bottom:4pt; page-break-after:avoid; }
+  h3 { font-size:12pt; margin:12pt 0 4pt; color:#FF7A45; text-transform:uppercase; page-break-after:avoid; }
+  .meta { font-size:11pt; color:#6B7691; margin-bottom:10pt; }
+  ul, p, table { page-break-inside:avoid; }
   ul { margin:4pt 0 0 18pt; }
-  .legal { margin-top:16pt; font-size:8.5pt; color:#6B7691; border-top:1px dashed #ccc; padding-top:6pt; }
+  .legal { margin-top:16pt; font-size:10pt; color:#6B7691; border-top:1px dashed #ccc; padding-top:6pt; }
   table.sig { width:100%; margin-top:24pt; }
-  table.sig td { border-top:1px solid #333; padding-top:4pt; font-size:9.5pt; text-align:center; width:50%; }
+  table.sig td { border-top:1px solid #333; padding-top:4pt; font-size:11pt; text-align:center; width:50%; }
 </style></head>
 <body><div class="WordSection1">
 <h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
@@ -964,30 +967,26 @@ ${corpo}
           ${p.observacoes ? `<p><b>Observações:</b> ${esc(p.observacoes)}</p>` : ""}
         </article>`;
     }).join("");
-    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Atividades · ${esc(selected.name)}</title>
-      <style>
-        @page{size:A4;margin:18mm;}
-        body{font-family:Inter,Arial,sans-serif;color:#1B2A4E;margin:0;font-size:12pt;line-height:1.45;}
-        h1{font-size:16pt;margin:0 0 4mm;}
-        .meta{color:#6B7691;font-size:10pt;margin-bottom:8mm;}
-        article{border:1px solid #E4E8F0;border-radius:6px;padding:6mm;margin-bottom:5mm;page-break-inside:avoid;}
-        article.topico{padding:4mm 5mm;}
-        article header{display:flex;justify-content:space-between;font-size:9.5pt;color:#6B7691;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2mm;}
-        article .disc{font-weight:700;color:#B8410E;}
-        article h2{font-size:13pt;margin:0 0 3mm;}
-        article p{margin:1.5mm 0;}
-        article .tema{font-size:11pt;}
-        @media print{ body{margin:0;} button{display:none;} }
-        .toolbar{position:fixed;top:8px;right:8px;}
-        .toolbar button{padding:8px 14px;background:#FF7A45;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;}
-      </style></head>
-      <body>
-        <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
-        <h1>Atividades · ${esc(selected.name)}</h1>
-        <div class="meta">${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")} · ${escolhidos.length} atividade(s) · modo ${planViewMode === "topicos" ? "tópicos" : "completo"}</div>
-        ${blocos}
-        <script>setTimeout(function(){ window.print(); }, 400);</script>
-      </body></html>`;
+    const extra = `
+      h1{font-size:16pt;margin:0 0 4mm;}
+      .meta{color:#6B7691;font-size:11pt;margin-bottom:8mm;}
+      article{border:1px solid #E4E8F0;border-radius:6px;padding:6mm;margin-bottom:5mm;}
+      article.topico{padding:4mm 5mm;}
+      article header{display:flex;justify-content:space-between;font-size:11pt;color:#6B7691;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2mm;}
+      article .disc{font-weight:700;color:#B8410E;}
+      article h2{font-size:13pt;margin:0 0 3mm;}
+      article p{margin:1.5mm 0;}
+      .toolbar{position:fixed;top:8px;right:8px;}
+      .toolbar button{padding:8px 14px;background:#FF7A45;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;}
+    `;
+    const inner = `
+      <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
+      <h1>Atividades · ${esc(selected.name)}</h1>
+      <div class="meta">${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")} · ${escolhidos.length} atividade(s) · modo ${planViewMode === "topicos" ? "tópicos" : "completo"}</div>
+      ${blocos}
+      <script>setTimeout(function(){ window.print(); }, 400);</script>
+    `;
+    const html = wrapStandardPrintHtml(`Atividades · ${esc(selected.name)}`, inner, extra);
     const w = window.open("", "_blank", "width=900,height=700");
     if (!w) { toast.error("Bloqueador de pop-up impediu a impressão."); return; }
     w.document.write(html);
@@ -1181,23 +1180,18 @@ ${corpo}
         ${parecerAtual.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ul(parecerAtual.encaminhamentos)}` : ""}
         ${parecerAtual.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAtual.comunicacao_familias)}</p>` : ""}
       `;
-    w.document.write(`
-      <!doctype html><html><head><meta charset="utf-8"/>
-      <title>Parecer · ${esc(selected.name)}</title>
-      <style>
-        @page{size:A4;margin:18mm 16mm;}
-        body{font-family:'Inter',Arial,sans-serif;color:#0F1B36;font-size:11pt;line-height:1.5;}
-        h1{font-size:18pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
-        h3{font-size:12pt;margin:12pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
-        .meta{font-size:9pt;color:#6B7691;margin-bottom:10pt;}
-        ul{margin:4pt 0 0 16pt;}
-        .texto p{text-align:justify;margin:0 0 8pt;}
-        .legal{margin-top:16pt;font-size:8.5pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
-        .sig{margin-top:24pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
-        .sig div{border-top:1px solid #333;padding-top:4pt;font-size:9pt;text-align:center;}
-        .toolbar{position:fixed;top:8px;right:8px;}
-        @media print{.toolbar{display:none;}}
-      </style></head><body>
+    const extra = `
+      h1{font-size:16pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
+      h3{font-size:12pt;margin:12pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
+      .meta{font-size:11pt;color:#6B7691;margin-bottom:10pt;}
+      ul{margin:4pt 0 0 16pt;}
+      .texto p{text-align:justify;margin:0 0 8pt;}
+      .legal{margin-top:16pt;font-size:10pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
+      .sig{margin-top:24pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
+      .sig div{border-top:1px solid #333;padding-top:4pt;font-size:11pt;text-align:center;}
+      .toolbar{position:fixed;top:8px;right:8px;}
+    `;
+    const inner = `
       <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
       <h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
       <div class="meta">
@@ -1211,8 +1205,8 @@ ${corpo}
         <div>Coordenação pedagógica</div>
       </div>
       <div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
-      </body></html>
-    `);
+    `;
+    w.document.write(wrapStandardPrintHtml(`Parecer · ${esc(selected.name)}`, inner, extra));
     w.document.close();
     setTimeout(() => w.focus(), 200);
   };
