@@ -10,7 +10,6 @@ import { SofiaNotificationsWidget } from "@/components/sofia/SofiaNotificationsW
 import { SofiaAutoReminders } from "@/lib/sofia/autoReminders";
 import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
-import { StorageDiagnosticsButton } from "@/components/dev/StorageDiagnosticsButton";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
@@ -127,7 +126,6 @@ function RootComponent() {
               </>
             )}
             <Toaster position="top-right" richColors />
-            <StorageDiagnosticsButton />
           </SofiaNotificationsProvider>
         </SofiaUserDataProvider>
       </SofiaContextProvider>
