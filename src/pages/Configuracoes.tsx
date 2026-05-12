@@ -36,7 +36,8 @@ function getPrincipleBody(idx: number): string {
 export function Configuracoes() {
   const [open, setOpen] = useState<Record<number, boolean>>({});
   const toggle = (n: number) => setOpen((o) => ({ ...o, [n]: !o[n] }));
-  const [principlesOpen, setPrinciplesOpen] = useState(true);
+  const [principlesOpen, setPrinciplesOpen] = useState(false);
+  const [a11yOpen, setA11yOpen] = useState(false);
   const { mode: rmMode, setMode: setRmMode } = useReducedMotion();
   const RM_OPTS: Array<{ v: ReducedMotionMode; label: string; desc: string }> = [
     { v: "system", label: "Seguir sistema", desc: "Usa a preferência do seu dispositivo." },
@@ -76,10 +77,28 @@ export function Configuracoes() {
 
           <section aria-labelledby="acessibilidade-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-              <h2 id="acessibilidade-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
+              <h2 id="acessibilidade-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
                 ♿ Acessibilidade
               </h2>
+              <button
+                type="button"
+                onClick={() => setA11yOpen((v) => !v)}
+                aria-expanded={a11yOpen}
+                aria-controls="a11y-content"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  background: a11yOpen ? "#FF7A45" : "transparent",
+                  color: a11yOpen ? "#fff" : "#FF7A45",
+                  border: "1px solid #FF7A45",
+                  padding: "6px 10px", borderRadius: 8, fontWeight: 600, fontSize: 12,
+                  cursor: "pointer", whiteSpace: "nowrap",
+                }}
+              >
+                {a11yOpen ? "Recolher" : "Expandir"}
+                <ChevronDown size={14} style={{ transform: a11yOpen ? "rotate(180deg)" : "none", transition: ".2s" }} />
+              </button>
             </div>
+            {a11yOpen && (<div id="a11y-content">
             <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 14px" }}>
               Ajuste como o app se comporta para tornar a navegação mais confortável.
             </p>
@@ -112,6 +131,7 @@ export function Configuracoes() {
                 })}
               </div>
             </div>
+            </div>)}
           </section>
 
           <section aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
