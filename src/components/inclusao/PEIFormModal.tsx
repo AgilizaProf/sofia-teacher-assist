@@ -3,6 +3,7 @@ import { X, Save, Printer, Plus, Trash2, FileText, Sparkles, Wand2 } from "lucid
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { wrapStandardPrintHtml } from "@/lib/print/standardPrint";
+import { useUser } from "@/lib/mockData";
 
 type Aluno = {
   id: string;
@@ -357,6 +358,7 @@ type Props = {
 };
 
 export function PEIFormModal({ open, onClose, aluno }: Props) {
+  const user = useUser();
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, PEIData>>("inc_pei", {});
   const dataAtual = aluno ? (peiByStudent[aluno.id] ?? blankPEI()) : blankPEI();
   const [draft, setDraft] = useState<PEIData>(dataAtual);
@@ -489,7 +491,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
       </div>
       <div class="legal">Documento elaborado conforme a <b>Lei nº 14.254/2021</b>, que dispõe sobre o acompanhamento integral para educandos com dislexia, TDAH e outros transtornos de aprendizagem, e em consonância com a <b>Lei nº 13.146/2015</b> (LBI), <b>Lei nº 12.764/2012</b> (PNPDTEA) e a <b>BNCC</b>.</div>
     `;
-    w.document.write(wrapStandardPrintHtml(`PEI · ${esc(aluno?.name || "")}`, inner, extraCss));
+    w.document.write(wrapStandardPrintHtml(`PEI · ${esc(aluno?.name || "")}`, inner, {
+      extraCss,
+      professorNome: user.name,
+      docType: "pei",
+    }));
     w.document.close();
     setTimeout(() => w.focus(), 200);
   };

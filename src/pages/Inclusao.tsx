@@ -13,6 +13,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { wrapStandardPrintHtml } from "@/lib/print/standardPrint";
+import { useUser } from "@/lib/mockData";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
@@ -592,6 +593,7 @@ const ANAM_SUGESTOES: Record<string, string[]> = {
 };
 
 export function Inclusao() {
+  const user = useUser();
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
   const { students, create: createStudent } = useInclusaoStudents();
@@ -986,7 +988,11 @@ ${corpo}
       ${blocos}
       <script>setTimeout(function(){ window.print(); }, 400);</script>
     `;
-    const html = wrapStandardPrintHtml(`Atividades · ${esc(selected.name)}`, inner, extra);
+    const html = wrapStandardPrintHtml(`Atividades · ${esc(selected.name)}`, inner, {
+      extraCss: extra,
+      professorNome: user.name,
+      docType: "plano-adaptado",
+    });
     const w = window.open("", "_blank", "width=900,height=700");
     if (!w) { toast.error("Bloqueador de pop-up impediu a impressão."); return; }
     w.document.write(html);
@@ -1206,7 +1212,11 @@ ${corpo}
       </div>
       <div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
     `;
-    w.document.write(wrapStandardPrintHtml(`Parecer · ${esc(selected.name)}`, inner, extra));
+    w.document.write(wrapStandardPrintHtml(`Parecer · ${esc(selected.name)}`, inner, {
+      extraCss: extra,
+      professorNome: user.name,
+      docType: "plano-adaptado",
+    }));
     w.document.close();
     setTimeout(() => w.focus(), 200);
   };
