@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, ChevronDown, Download } from "lucide-react";
+import { Shield, ChevronDown } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
@@ -36,6 +36,7 @@ function getPrincipleBody(idx: number): string {
 export function Configuracoes() {
   const [open, setOpen] = useState<Record<number, boolean>>({});
   const toggle = (n: number) => setOpen((o) => ({ ...o, [n]: !o[n] }));
+  const [principlesOpen, setPrinciplesOpen] = useState(true);
   const { mode: rmMode, setMode: setRmMode } = useReducedMotion();
   const RM_OPTS: Array<{ v: ReducedMotionMode; label: string; desc: string }> = [
     { v: "system", label: "Seguir sistema", desc: "Usa a preferência do seu dispositivo." },
@@ -116,11 +117,30 @@ export function Configuracoes() {
           <section aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <Shield size={20} color="#FF7A45" />
-              <h2 id="principios-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
+              <h2 id="principios-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
                 🛡️ Princípios da Sofia
               </h2>
+              <button
+                type="button"
+                onClick={() => setPrinciplesOpen((v) => !v)}
+                aria-expanded={principlesOpen}
+                aria-controls="principios-content"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  background: principlesOpen ? "#FF7A45" : "transparent",
+                  color: principlesOpen ? "#fff" : "#FF7A45",
+                  border: "1px solid #FF7A45",
+                  padding: "6px 10px", borderRadius: 8, fontWeight: 600, fontSize: 12,
+                  cursor: "pointer", whiteSpace: "nowrap",
+                }}
+              >
+                {principlesOpen ? "Recolher" : "Expandir"}
+                <ChevronDown size={14} style={{ transform: principlesOpen ? "rotate(180deg)" : "none", transition: ".2s" }} />
+              </button>
             </div>
 
+            {principlesOpen && (
+            <div id="principios-content">
             <div
               role="status"
               style={{
@@ -175,21 +195,8 @@ export function Configuracoes() {
                 );
               })}
             </div>
-
-            <div style={{ marginTop: 18, display: "flex", justifyContent: "flex-end" }}>
-              <button
-                type="button"
-                title="Em breve"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  background: "#fff", color: "#1B2A4E",
-                  border: "1px solid #E4E8F0", borderRadius: 10,
-                  padding: "10px 14px", fontWeight: 600, fontSize: 13, cursor: "not-allowed", opacity: .85,
-                }}
-              >
-                <Download size={14} /> Baixar Constituição em PDF
-              </button>
             </div>
+            )}
           </section>
           </div>
         </main>
