@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Sparkles, Save, Loader2, FileText, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Sparkles, Save, Loader2, FileText, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw, Bug, Eraser } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -63,6 +63,17 @@ export function PeiPdi() {
   const [versions, setVersions] = useState<PeiRow[]>([]);
   const [loadingList, setLoadingList] = useState(false);
 
+  type DebugEntry = {
+    ts: string;
+    parte: "completo" | "a" | "b";
+    stage: "request" | "raw" | "parsed" | "error";
+    payload: unknown;
+  };
+  const [debugLog, setDebugLog] = useState<DebugEntry[]>([]);
+  const [debugOpen, setDebugOpen] = useState<boolean>(true);
+  const pushDebug = (e: Omit<DebugEntry, "ts">) =>
+    setDebugLog((prev) => [...prev, { ...e, ts: new Date().toLocaleTimeString("pt-BR") }]);
+
   const aluno = useMemo(() => students.find((s) => s.id === alunoId) || null, [students, alunoId]);
 
   // Load list of saved PEIs
@@ -83,6 +94,7 @@ export function PeiPdi() {
   const gerarPei = async () => {
     if (!aluno) { toast.error("Selecione um aluno PCD"); return; }
     setGenerating(true);
+    setDebugLog([]);
 
     const basePayload = {
       aluno: aluno.name,
@@ -102,11 +114,17 @@ export function PeiPdi() {
     const callPei = async (parte: "completo" | "a" | "b") => {
       const payload = { ...basePayload, parte };
       console.log(`[PEI] → request (parte=${parte})`, payload);
+      pushDebug({ parte, stage: "request", payload });
       const { data, error } = await supabase.functions.invoke("gerar-pei", { body: payload });
       console.log(`[PEI] ← raw response (parte=${parte})`, { data, error });
-      if (error) throw new Error(`Sofia falhou (parte=${parte}): ${error.message || error.name}`);
+      pushDebug({ parte, stage: "raw", payload: { data, error: error ? { message: error.message, name: error.name } : null } });
+      if (error) {
+        pushDebug({ parte, stage: "error", payload: error.message || error.name });
+        throw new Error(`Sofia falhou (parte=${parte}): ${error.message || error.name}`);
+      }
       const peiResp = (data as { pei?: Record<string, unknown> })?.pei;
       console.log(`[PEI] ← parsed pei (parte=${parte})`, peiResp);
+      pushDebug({ parte, stage: "parsed", payload: peiResp ?? null });
       if (!peiResp || typeof peiResp !== "object") {
         throw new Error(`Resposta vazia da Sofia (parte=${parte}). Conteúdo: ${JSON.stringify(data).slice(0, 200)}`);
       }
