@@ -87,9 +87,10 @@ function buildPrintCss(
   docType: DocType,
 ): string {
   const isPlanejamento = docType === "planejamento";
-  // Rodapé via @page margin boxes (usado na impressão real do navegador)
-  const footerLeft = "Documento gerado pela plataforma AgilizaProf";
-  // headerRight é renderizado pelo .print-header (HTML), não pelo CSS.
+  // Rodapé via @page margin boxes (usado na impressão real do navegador).
+  // Mantemos apenas a base legal centralizada + número de página à direita
+  // para evitar sobreposição entre a marca AgilizaProf (já presente no
+  // cabeçalho fixo) e o texto de conformidade.
   void docType;
   return `
 /* Fontes — Fraunces para títulos, Arial para corpo */
@@ -111,12 +112,7 @@ function buildPrintCss(
 @page {
   size: A4;
   /* Margem superior = altura da faixa + folga; vale para A4 e Letter */
-  margin: calc(var(--print-header-h) + var(--print-header-gap)) 2cm 2.8cm 2cm;
-  @bottom-left {
-    content: "${escCss(footerLeft)}";
-    font-family: 'Fraunces', Georgia, serif;
-    font-size: 9pt; color: #1F3A5F;
-  }
+  margin: calc(var(--print-header-h) + var(--print-header-gap)) 2cm 3cm 2cm;
   @bottom-center {
     content: "${escCss(compliance)}";
     font-family: Arial, Helvetica, sans-serif;
