@@ -1601,8 +1601,6 @@ ${parecerHtml}
           // Layout simplificado e legível para Word (.doc): fontes seguras
           // (Georgia para títulos, Arial para corpo), HEX simples, sem grid
           // moderno nem Google Fonts. Layout em 2 colunas via <table>.
-          const areas = areasFor(a.id, a.turma, a.pcd);
-          const rub = getAlunoRubric(a.id);
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = dashStudents.find((s) => s.name === a.nome);
           const cls = dashClasses.find((c) => c.name === a.turma);
@@ -1677,23 +1675,8 @@ ${parecerHtml}
             }
           }
 
-          const areasWord = areas
-            .map((area, ai) => {
-              const itens = area.comps
-                .map((c, ci) => {
-                  const lbl = BNCC_STATUS.find((x) => x.k === rub[`${ai}.${ci}`])?.label || "Não observada";
-                  return `<tr>
-  <td style="padding:5pt 8pt;border-bottom:1px solid ${BORDER};font-family:${bodyFont};font-size:11pt;color:${INK};">${esc(c)}</td>
-  <td style="padding:5pt 8pt;border-bottom:1px solid ${BORDER};font-family:${bodyFont};font-size:11pt;color:${ACCENT};font-weight:bold;text-align:right;white-space:nowrap;">${esc(lbl)}</td>
-</tr>`;
-                })
-                .join("");
-              return `${sectionTitle(area.area)}
-<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 10pt;">
-  ${itens}
-</table>`;
-            })
-            .join("");
+          // Habilidades BNCC removidas — somente texto corrido.
+          const areasWord = "";
 
           const obs = aluno?.notes ? sectionTitle("Observações") + para(aluno.notes) : "";
 
