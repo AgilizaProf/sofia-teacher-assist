@@ -331,3 +331,12 @@ button[aria-label="Dispensar"] > * {
   margin-left:auto;background:#FF7A45;color:#fff;font-size:10px;font-weight:800;
   padding:2px 8px;border-radius:100px;
 }
+
+/* === Mobile fine-tunes (≤480px) === */
+@media (max-width: 480px) {
+  /* Agenda — KPIs em 1 coluna */
+  .ag-radar { grid-template-columns: 1fr !important; }
+  /* Agenda — barra de ações empilha sem scroll horizontal */
+  .ag-actions { flex-wrap: wrap; gap: 8px; width: 100%; }
+  .ag-actions > * { flex: 1 1 auto; min-width: 0; }
+}
