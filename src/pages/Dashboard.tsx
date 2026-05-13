@@ -299,6 +299,18 @@ const css = `
 @media(max-width:1200px){.hero{grid-template-columns:1fr;gap:22px;padding:24px;}.grid-2{grid-template-columns:1fr;}}
 @media(max-width:900px){.ap-app{grid-template-columns:1fr;}.ap-sidebar{display:none;}.ap-main{padding:18px;}}
 @media(max-width:560px){.hero{padding:20px 18px;}.hero-title{font-size:26px;}.hero-metric-value{font-size:42px;}.today-focus{flex-direction:column;align-items:flex-start;}.today-focus-action{width:100%;justify-content:center;}.card-head{align-items:flex-start;}.filter-pills{width:100%;}}
+@media(max-width:480px){
+  .ap-main{padding:14px 12px 36px;max-width:100%;}
+  .hero{padding:18px 16px;border-radius:16px;gap:16px;}
+  .hero-title{font-size:22px;line-height:1.25;}
+  .hero-sub{font-size:13px;margin-bottom:16px;}
+  .hero-metric{padding:16px;}
+  .hero-metric-value{font-size:36px;}
+  .hero-cta,.hero-cta-ghost{width:100%;justify-content:center;}
+  .stats{grid-template-columns:1fr;gap:10px;}
+  .school-row{grid-template-columns:1fr;}
+  .grid-2{gap:12px;}
+}
 
 /* Highlight visual quando a Sofia abre uma seção via deep-link. */
 .sofia-highlight{position:relative;outline:2px solid var(--accent, #FF7A45);outline-offset:3px;border-radius:14px;animation:sofiaPulseHighlight 1.6s ease-out 1;box-shadow:0 0 0 6px rgba(255,122,69,.15);}
