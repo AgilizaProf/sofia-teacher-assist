@@ -1128,7 +1128,7 @@ ${corpo}
       if (pei.diagnostico || pei.cid) partes.push(`Diagnóstico: ${(pei.diagnostico as string) || "—"}${pei.cid ? ` (CID ${pei.cid})` : ""}`);
       if (pei.caracterizacao) partes.push(`Caracterização: ${pei.caracterizacao}`);
       if (pei.habilidadesDesenvolvidas) partes.push(`Habilidades já desenvolvidas: ${pei.habilidadesDesenvolvidas}`);
-      if (pei.pontosForca) partes.push(`Pontos de força: ${pei.pontosForca}`);
+      if (pei.pontosForca) partes.push(`Potencialidades: ${pei.pontosForca}`);
       if (pei.necessidadesApoio) partes.push(`Necessidades de apoio: ${pei.necessidadesApoio}`);
       if (linhasObj) partes.push(`Objetivos do PEI:\n${linhasObj}`);
       if (pei.adaptacoesCurriculares) partes.push(`Adaptações curriculares: ${pei.adaptacoesCurriculares}`);

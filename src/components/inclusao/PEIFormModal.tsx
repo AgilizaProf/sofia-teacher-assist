@@ -466,7 +466,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
       <p>${esc(draft.caracterizacao || "—")}</p>
       <h2>3. Habilidades já desenvolvidas</h2>
       <p><b>Habilidades:</b> ${esc(draft.habilidadesDesenvolvidas || "—")}</p>
-      <p><b>Pontos de força:</b> ${esc(draft.pontosForca || "—")}</p>
+      <p><b>Potencialidades:</b> ${esc(draft.pontosForca || "—")}</p>
       <p><b>Necessidades de apoio:</b> ${esc(draft.necessidadesApoio || "—")}</p>
       <h2>4. Objetivos pedagógicos individualizados</h2>
       <ul>${obj || "<li>—</li>"}</ul>
@@ -611,7 +611,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
 
           {/* 3. Habilidades */}
           <div style={sectionCss}>
-            <div style={sectionTitleCss}><span style={sectionBadge}>3</span>Habilidades já desenvolvidas e pontos de força</div>
+            <div style={sectionTitleCss}><span style={sectionBadge}>3</span>Habilidades já desenvolvidas e potencialidades</div>
             <label style={labelCss}>Habilidades já desenvolvidas</label>
             <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical", marginBottom: 10 }}
               value={draft.habilidadesDesenvolvidas}
@@ -620,7 +620,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
             <SugChips items={sug.habilidades} onPick={pickInto("habilidadesDesenvolvidas")} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div>
-                <label style={labelCss}>Pontos de força / interesses</label>
+                <label style={labelCss}>Potencialidades / interesses</label>
                 <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical" }}
                   value={draft.pontosForca}
                   onChange={(e) => set("pontosForca", e.target.value)}
