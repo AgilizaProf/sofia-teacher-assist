@@ -658,8 +658,12 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     if (!plano.titulo.trim()) f.push("titulo");
     if (!plano.objetivo.trim()) f.push("objetivo");
     if (!plano.abertura.trim() && !plano.desenvolvimento.trim() && !plano.fechamento.trim()) f.push("descricao");
-    if (plano.habilidades.length === 0) f.push("habilidades");
-    else if (plano.habilidades.some((h) => !h.codigo.trim() || !h.descricao.trim())) f.push("habilidades_incompletas");
+    // Habilidades: tolerante — basta uma habilidade com código OU descrição.
+    // Bloqueia apenas se todas estiverem completamente vazias.
+    const habsValidas = plano.habilidades.filter(
+      (h) => h.codigo.trim() !== "" || h.descricao.trim() !== "",
+    );
+    if (habsValidas.length === 0) f.push("habilidades");
     return f;
   };
 
