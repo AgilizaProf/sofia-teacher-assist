@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as RelatorioPedagogicoRouteImport } from './routes/relatorio-pedagogico'
+import { Route as PlanejamentoPedagogicoRouteImport } from './routes/planejamento-pedagogico'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagamento-confirmado-mensal'
 import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento-confirmado-anual'
@@ -54,6 +55,11 @@ const RelatoriosRoute = RelatoriosRouteImport.update({
 const RelatorioPedagogicoRoute = RelatorioPedagogicoRouteImport.update({
   id: '/relatorio-pedagogico',
   path: '/relatorio-pedagogico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanejamentoPedagogicoRoute = PlanejamentoPedagogicoRouteImport.update({
+  id: '/planejamento-pedagogico',
+  path: '/planejamento-pedagogico',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlanejamentoRoute = PlanejamentoRouteImport.update({
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
+  '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
+  '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -281,6 +289,7 @@ export interface FileRoutesById {
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
+  '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
     | '/planejamento'
+    | '/planejamento-pedagogico'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
     | '/planejamento'
+    | '/planejamento-pedagogico'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
     | '/planejamento'
+    | '/planejamento-pedagogico'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
@@ -415,6 +427,7 @@ export interface RootRouteChildren {
   PagamentoConfirmadoAnualRoute: typeof PagamentoConfirmadoAnualRoute
   PagamentoConfirmadoMensalRoute: typeof PagamentoConfirmadoMensalRoute
   PlanejamentoRoute: typeof PlanejamentoRouteWithChildren
+  PlanejamentoPedagogicoRoute: typeof PlanejamentoPedagogicoRoute
   RelatorioPedagogicoRoute: typeof RelatorioPedagogicoRoute
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -443,6 +456,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorio-pedagogico'
       fullPath: '/relatorio-pedagogico'
       preLoaderRoute: typeof RelatorioPedagogicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planejamento-pedagogico': {
+      id: '/planejamento-pedagogico'
+      path: '/planejamento-pedagogico'
+      fullPath: '/planejamento-pedagogico'
+      preLoaderRoute: typeof PlanejamentoPedagogicoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/planejamento': {
@@ -725,6 +745,7 @@ const rootRouteChildren: RootRouteChildren = {
   PagamentoConfirmadoAnualRoute: PagamentoConfirmadoAnualRoute,
   PagamentoConfirmadoMensalRoute: PagamentoConfirmadoMensalRoute,
   PlanejamentoRoute: PlanejamentoRouteWithChildren,
+  PlanejamentoPedagogicoRoute: PlanejamentoPedagogicoRoute,
   RelatorioPedagogicoRoute: RelatorioPedagogicoRoute,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
