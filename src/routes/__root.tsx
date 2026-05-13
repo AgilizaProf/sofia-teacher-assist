@@ -18,6 +18,7 @@ import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetc
 import { installPlatformTelemetry, trackPageVisit } from "@/lib/admin/track";
 import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
 import { useLocation } from "@tanstack/react-router";
+import { MobileTopBar } from "@/components/MobileTopBar";
 
 import appCss from "../styles.css?url";
 
@@ -110,6 +111,7 @@ function RootComponent() {
         <SofiaUserDataProvider>
           <SofiaNotificationsProvider>
             <MaintenanceBanner />
+            {showSofia && <MobileTopBar />}
             <Outlet />
             {showSofia && (
               <>
