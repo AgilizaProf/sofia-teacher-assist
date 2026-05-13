@@ -12,69 +12,8 @@ import logoImg from "@/assets/agilizaprof-logo.jpg";
  * touching individual page layouts.
  */
 
-export const mobileTopBarCss = `
-.mtb-spacer{display:none;}
-@media(max-width:820px){
-  .mtb-spacer{display:block;height:56px;}
-  body{overflow-x:hidden;}
-}
-.mtb-bar{
-  display:none;position:fixed;top:0;left:0;right:0;z-index:80;height:56px;
-  background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;
-  padding:0 14px;align-items:center;gap:12px;
-  box-shadow:0 2px 12px rgba(15,27,54,.18);
-}
-@media(max-width:820px){.mtb-bar{display:flex;}}
-.mtb-logo{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;flex:1;min-width:0;}
-.mtb-logo img{width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0;}
-.mtb-logo-text{font-family:'Fraunces',serif;font-weight:900;font-size:15px;letter-spacing:-0.02em;}
-.mtb-logo-text span{color:#FF7A45;}
-.mtb-burger{
-  width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
-  border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);
-  color:#fff;cursor:pointer;transition:background .15s;flex-shrink:0;
-}
-.mtb-burger:hover{background:rgba(255,255,255,.12);}
-.mtb-overlay{
-  position:fixed;inset:0;background:rgba(15,27,54,.55);z-index:90;
-  opacity:0;pointer-events:none;transition:opacity .2s;
-}
-.mtb-overlay.open{opacity:1;pointer-events:auto;}
-.mtb-drawer{
-  position:fixed;top:0;left:0;bottom:0;z-index:100;
-  width:min(86vw,320px);background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);
-  color:#fff;transform:translateX(-100%);transition:transform .22s ease-out;
-  display:flex;flex-direction:column;overflow:hidden;
-}
-.mtb-drawer.open{transform:translateX(0);}
-.mtb-drawer-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);
-}
-.mtb-close{
-  width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;
-  border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);
-  color:#fff;cursor:pointer;
-}
-.mtb-nav{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:2px;}
-.mtb-nav-label{
-  font-size:10px;font-weight:800;color:rgba(255,255,255,.40);
-  text-transform:uppercase;letter-spacing:.14em;padding:14px 12px 6px;
-}
-.mtb-link{
-  display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;
-  color:rgba(255,255,255,.78);font-weight:500;font-size:15px;text-decoration:none;
-  min-height:44px;transition:background .15s;
-}
-.mtb-link:active,.mtb-link:hover{background:rgba(255,255,255,.08);color:#fff;}
-.mtb-link.active{background:rgba(255,122,69,.16);color:#fff;font-weight:700;
-  box-shadow:inset 0 0 0 1px rgba(255,122,69,.30);}
-.mtb-link svg{width:18px;height:18px;flex-shrink:0;}
-.mtb-link .badge{
-  margin-left:auto;background:#FF7A45;color:#fff;font-size:10px;font-weight:800;
-  padding:2px 8px;border-radius:100px;
-}
-`;
+// CSS for MobileTopBar lives in src/styles.css (global) so it survives SSR
+// and benefits from the same processing pipeline as the rest of the app.
 
 type Item = { to: string; label: ReactNode; icon: ReactNode; badge?: string };
 
@@ -135,7 +74,6 @@ export function MobileTopBar() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: mobileTopBarCss }} />
       <div className="mtb-bar" role="banner">
         <Link to="/" className="mtb-logo" aria-label="Página inicial AgilizaProf">
           <img src={logoImg} alt="" />
