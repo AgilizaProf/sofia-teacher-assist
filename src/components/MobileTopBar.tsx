@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/admin/useIsAdmin";
-import logoImg from "@/assets/agilizaprof-logo.jpg";
+import logoImg from "@/assets/agilizaprof-logo.webp";
 
 /**
  * MobileTopBar — visible only on mobile (≤820px).

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import logoImg from "@/assets/agilizaprof-logo.jpg";
+import logoImg from "@/assets/agilizaprof-logo.webp";
 
 const navItems = [
   { to: "/admin", label: "Visão geral", icon: "M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 9h8V3h-8z" },
