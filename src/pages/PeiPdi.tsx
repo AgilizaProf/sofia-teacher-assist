@@ -83,42 +83,134 @@ export function PeiPdi() {
   const gerarPei = async () => {
     if (!aluno) { toast.error("Selecione um aluno PCD"); return; }
     setGenerating(true);
+
+    const basePayload = {
+      aluno: aluno.name,
+      ano_escolar: aluno.anoEscolar || "",
+      turma: aluno.turma || "",
+      tipo_necessidade: aluno.diag || "",
+      laudo: aluno.cid ? `CID: ${aluno.cid}` : "",
+      bimestre,
+      contexto_adicional: contexto,
+      registros: [] as unknown[],
+      adaptacoes: [] as string[],
+    };
+
+    type ParteA = Pick<PeiData, "perfil_aluno" | "objetivos_longo" | "objetivos_curto">;
+    type ParteB = Pick<PeiData, "estrategias" | "avaliacao" | "responsaveis">;
+
+    const callPei = async (parte: "completo" | "a" | "b") => {
+      const payload = { ...basePayload, parte };
+      console.log(`[PEI] → request (parte=${parte})`, payload);
+      const { data, error } = await supabase.functions.invoke("gerar-pei", { body: payload });
+      console.log(`[PEI] ← raw response (parte=${parte})`, { data, error });
+      if (error) throw new Error(`Sofia falhou (parte=${parte}): ${error.message || error.name}`);
+      const peiResp = (data as { pei?: Record<string, unknown> })?.pei;
+      console.log(`[PEI] ← parsed pei (parte=${parte})`, peiResp);
+      if (!peiResp || typeof peiResp !== "object") {
+        throw new Error(`Resposta vazia da Sofia (parte=${parte}). Conteúdo: ${JSON.stringify(data).slice(0, 200)}`);
+      }
+      return peiResp;
+    };
+
+    const explicarFaltantes = (obj: Record<string, unknown>, esperados: string[]) => {
+      const presentes = esperados.filter((k) => obj[k] != null);
+      const faltando = esperados.filter((k) => obj[k] == null);
+      return `Recebido: [${presentes.join(", ") || "nada"}]. Faltando: [${faltando.join(", ") || "nenhum"}].`;
+    };
+
+    const isTokenOverflow = (msg: string) =>
+      /token|max_tokens|too long|context length|truncat/i.test(msg);
+
     try {
-      const { data, error } = await supabase.functions.invoke("gerar-pei", {
-        body: {
-          aluno: aluno.name,
-          ano_escolar: aluno.anoEscolar || "",
-          turma: aluno.turma || "",
-          tipo_necessidade: aluno.diag || "",
-          laudo: aluno.cid ? `CID: ${aluno.cid}` : "",
-          bimestre,
-          contexto_adicional: contexto,
-          registros: [],
-          adaptacoes: [],
-        },
-      });
-      if (error) throw error;
-      const peiResp = (data as { pei?: PeiData })?.pei;
-      if (!peiResp || !peiResp.perfil_aluno) throw new Error("Resposta inválida da Sofia");
-      // merge with empty defaults to ensure all fields present
+      // 1) Tenta gerar tudo de uma vez.
+      const peiResp = (await callPei("completo")) as Partial<PeiData> & Record<string, unknown>;
+
+      let merged: PeiData;
+      if (!peiResp.perfil_aluno) {
+        // 2) Cenário 3: resposta sem perfil_aluno → split em 2 chamadas.
+        const motivo = explicarFaltantes(peiResp, [
+          "perfil_aluno", "objetivos_longo", "objetivos_curto",
+          "estrategias", "avaliacao", "responsaveis",
+        ]);
+        console.warn("[PEI] resposta inválida — dividindo em 2 chamadas. " + motivo);
+        toast.warning("Sofia devolveu resposta incompleta — gerando em 2 partes…");
+
+        const [a, b] = await Promise.all([
+          callPei("a") as Promise<ParteA>,
+          callPei("b") as Promise<ParteB>,
+        ]);
+
+        if (!a.perfil_aluno) {
+          throw new Error(
+            `Falha na parte A do PEI (perfil/objetivos). ${explicarFaltantes(
+              a as unknown as Record<string, unknown>,
+              ["perfil_aluno", "objetivos_longo", "objetivos_curto"],
+            )}`,
+          );
+        }
+        if (!b.estrategias) {
+          throw new Error(
+            `Falha na parte B do PEI (estratégias/avaliação). ${explicarFaltantes(
+              b as unknown as Record<string, unknown>,
+              ["estrategias", "avaliacao", "responsaveis"],
+            )}`,
+          );
+        }
+        merged = { ...a, ...b };
+      } else {
+        merged = peiResp as PeiData;
+      }
+
       setPei({
-        perfil_aluno: { ...emptyPei.perfil_aluno, ...peiResp.perfil_aluno },
-        objetivos_longo: peiResp.objetivos_longo || [],
-        objetivos_curto: peiResp.objetivos_curto || [],
-        estrategias: { ...emptyPei.estrategias, ...peiResp.estrategias },
-        avaliacao: { ...emptyPei.avaliacao, ...peiResp.avaliacao },
-        responsaveis: { ...emptyPei.responsaveis, ...peiResp.responsaveis },
+        perfil_aluno: { ...emptyPei.perfil_aluno, ...merged.perfil_aluno },
+        objetivos_longo: merged.objetivos_longo || [],
+        objetivos_curto: merged.objetivos_curto || [],
+        estrategias: { ...emptyPei.estrategias, ...merged.estrategias },
+        avaliacao: { ...emptyPei.avaliacao, ...merged.avaliacao },
+        responsaveis: { ...emptyPei.responsaveis, ...merged.responsaveis },
       });
       setCurrentId(null);
-      // next version number for this aluno+bimestre
       const next = versions
         .filter((v) => v.aluno_client_id === aluno.id && v.bimestre === bimestre)
         .reduce((m, v) => Math.max(m, v.versao), 0) + 1;
       setVersao(next);
       toast.success("PEI gerado pela Sofia");
     } catch (e) {
-      console.error(e);
-      toast.error((e as Error).message || "Falha ao gerar PEI");
+      const msg = (e as Error).message || "Falha ao gerar PEI";
+      console.error("[PEI] erro final:", e);
+
+      // Última tentativa: se foi estouro de tokens, divide em 2 e tenta de novo.
+      if (isTokenOverflow(msg)) {
+        try {
+          toast.warning("Resposta longa demais — tentando em 2 partes…");
+          const [a, b] = await Promise.all([
+            callPei("a") as Promise<ParteA>,
+            callPei("b") as Promise<ParteB>,
+          ]);
+          if (!a.perfil_aluno || !b.estrategias) {
+            throw new Error("Sofia ainda devolveu partes incompletas após o split.");
+          }
+          const merged: PeiData = { ...a, ...b };
+          setPei({
+            perfil_aluno: { ...emptyPei.perfil_aluno, ...merged.perfil_aluno },
+            objetivos_longo: merged.objetivos_longo || [],
+            objetivos_curto: merged.objetivos_curto || [],
+            estrategias: { ...emptyPei.estrategias, ...merged.estrategias },
+            avaliacao: { ...emptyPei.avaliacao, ...merged.avaliacao },
+            responsaveis: { ...emptyPei.responsaveis, ...merged.responsaveis },
+          });
+          setCurrentId(null);
+          toast.success("PEI gerado pela Sofia (em 2 partes)");
+          return;
+        } catch (e2) {
+          console.error("[PEI] split também falhou:", e2);
+          toast.error(`Falha ao gerar PEI em 2 partes: ${(e2 as Error).message}`);
+          return;
+        }
+      }
+
+      toast.error(msg);
     } finally {
       setGenerating(false);
     }

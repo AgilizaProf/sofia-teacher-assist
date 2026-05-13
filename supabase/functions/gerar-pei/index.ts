@@ -20,6 +20,7 @@ serve(async (req) => {
       contexto_adicional = "",
       registros = [] as Registro[],
       adaptacoes = [] as string[],
+      parte = "completo", // "a" | "b" | "completo"
     } = body || {};
 
     if (!aluno || !bimestre) {
@@ -48,7 +49,48 @@ ${linhas || "(nenhum registro)"}
 ADAPTAÇÕES JÁ APLICADAS:
 ${adapt || "(nenhuma registrada)"}
 
-Gere o PEI completo. Responda APENAS com JSON válido neste formato exato:
+${
+  parte === "a"
+    ? `Gere SOMENTE a parte A do PEI (perfil + objetivos). Responda APENAS com JSON válido neste formato exato:
+{
+  "perfil_aluno": {
+    "descricao": "descrição do perfil de aprendizagem",
+    "pontos_fortes": ["..."],
+    "areas_suporte": ["..."]
+  },
+  "objetivos_longo": [
+    { "id": "long-1", "objetivo": "...", "criterio_avaliacao": "..." }
+  ],
+  "objetivos_curto": [
+    { "id": "curt-1", "objetivo": "...", "indicador": "..." }
+  ]
+}
+Regras:
+- 3 a 5 objetivos de longo prazo (semestre).
+- 2 a 3 objetivos de curto prazo (bimestre atual).
+- Sem comparar o aluno com a turma.`
+    : parte === "b"
+    ? `Gere SOMENTE a parte B do PEI (estratégias, avaliação e responsáveis). Responda APENAS com JSON válido neste formato exato:
+{
+  "estrategias": {
+    "comunicacao": ["..."],
+    "organizacao": ["..."],
+    "materiais": ["..."],
+    "interacao": ["..."]
+  },
+  "avaliacao": {
+    "como_avaliar": "...",
+    "instrumentos": ["..."]
+  },
+  "responsaveis": {
+    "lista": ["Professora regente", "AEE", "Família"],
+    "periodicidade_revisao": "Bimestral"
+  }
+}
+Regras:
+- Estratégias específicas para o tipo de necessidade ("${tipo_necessidade || "não informada"}").
+- Sem comparar o aluno com a turma.`
+    : `Gere o PEI completo. Responda APENAS com JSON válido neste formato exato:
 {
   "perfil_aluno": {
     "descricao": "descrição do perfil de aprendizagem",
@@ -76,14 +118,15 @@ Gere o PEI completo. Responda APENAS com JSON válido neste formato exato:
     "periodicidade_revisao": "Bimestral"
   }
 }
-
 Regras:
 - 3 a 5 objetivos de longo prazo (semestre).
 - 2 a 3 objetivos de curto prazo (bimestre atual).
 - Estratégias específicas para o tipo de necessidade ("${tipo_necessidade || "não informada"}").
-- Sem comparar o aluno com a turma.`;
+- Sem comparar o aluno com a turma.`
+}`;
 
-    const r = await callAI({ userId, tipo: "pei", system: sys, user, json: true, maxTokens: 4096 });
+    const maxTokens = parte === "completo" ? 4096 : 2400;
+    const r = await callAI({ userId, tipo: "pei", system: sys, user, json: true, maxTokens });
     if (!r.ok) return aiErrorResponse(r);
 
     let pei: Record<string, unknown> = {};
