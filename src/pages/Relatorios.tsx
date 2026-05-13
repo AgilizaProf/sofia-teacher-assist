@@ -1575,7 +1575,6 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
         const buildReportHtml = () => {
           const areas = areasFor(a.id, a.turma, a.pcd);
           const rub = getAlunoRubric(a.id);
-          const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = dashStudents.find((s) => s.name === a.nome);
           const cls = dashClasses.find((c) => c.name === a.turma);
@@ -1589,16 +1588,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           }).join("");
           const bodyInner = `
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
-<div class="meta">
-  ${esc(a.turma || "Sem turma")} · ${bimestreNum}º bimestre${a.pcd ? ` · PCD: ${esc(a.pcd)}` : ""}
-  ${escola ? ` · ${esc(escola.name)}` : ""}
-  ${aluno?.birth ? ` · Nascimento: ${esc(new Date(aluno.birth).toLocaleDateString("pt-BR"))}` : ""}
-</div>
-<div class="kpis">
-  <div class="kpi"><small>Avaliado</small><b>${pctPreenchido}%</b></div>
-  <div class="kpi"><small>Desempenho</small><b>${pctDesempenho}%</b></div>
-  <div class="kpi"><small>Bimestre</small><b>${bimestreNum}º</b></div>
-</div>
+${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
 ${linhasArea}
