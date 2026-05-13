@@ -135,7 +135,7 @@ export function MobileTopBar() {
 
   return (
     <>
-      <style>{mobileTopBarCss}</style>
+      <style dangerouslySetInnerHTML={{ __html: mobileTopBarCss }} />
       <div className="mtb-bar" role="banner">
         <Link to="/" className="mtb-logo" aria-label="Página inicial AgilizaProf">
           <img src={logoImg} alt="" />
