@@ -1605,8 +1605,173 @@ ${linhasArea}
           toast.success("Abrindo janela de impressão (escolha 'Salvar como PDF').");
         };
         const exportWord = () => {
-          const html = buildReportHtml();
-          const docHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">${html.replace(/^<!doctype html>/i, "").replace(/^<html>/i, "").replace(/<\/html>$/i, "")}</html>`;
+          // Layout simplificado e legível para Word (.doc): fontes seguras
+          // (Georgia para títulos, Arial para corpo), HEX simples, sem grid
+          // moderno nem Google Fonts. Layout em 2 colunas via <table>.
+          const areas = areasFor(a.id, a.turma, a.pcd);
+          const rub = getAlunoRubric(a.id);
+          const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+          const dataStr = new Date().toLocaleDateString("pt-BR");
+          const aluno = dashStudents.find((s) => s.name === a.nome);
+          const cls = dashClasses.find((c) => c.name === a.turma);
+          const escola = dashSchools.find((s) => s.name === cls?.school);
+
+          const ACCENT = "#1F3A5F";
+          const INK = "#111111";
+          const GRAY = "#6B6B6B";
+          const BORDER = "#DDDDDD";
+          const SOFT = "#F5F1EA";
+          const GOLD = "#C9B98A";
+
+          const titleFont = "Georgia, 'Times New Roman', serif";
+          const bodyFont = "Arial, Helvetica, sans-serif";
+
+          const cellLabel = (label: string) =>
+            `<td width="50%" style="padding:6px 10px;background:${SOFT};border:1px solid ${BORDER};border-bottom:none;font-family:${bodyFont};font-size:9pt;font-weight:bold;color:${ACCENT};letter-spacing:1px;text-transform:uppercase;">${esc(label)}</td>`;
+          const cellValue = (value: string) =>
+            `<td width="50%" style="padding:8px 10px;background:#FFFFFF;border:1px solid ${BORDER};border-top:none;font-family:${bodyFont};font-size:11pt;color:${INK};">${esc(value || "—")}</td>`;
+
+          const ident = `
+<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
+  <tr>${cellLabel("Escola")}${cellLabel("Professor(a)")}</tr>
+  <tr>${cellValue(escola?.name || "")}${cellValue(user.name || "")}</tr>
+  <tr>${cellLabel("Turma / Bimestre")}${cellLabel("Data")}</tr>
+  <tr>${cellValue(`${a.turma || "Sem turma"} · ${bimestreNum}º bim.`)}${cellValue(dataStr)}</tr>
+</table>`;
+
+          const dadosEstudante = `
+<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
+  <tr>${cellLabel("Nome do(a) Estudante")}${cellLabel("Nascimento")}</tr>
+  <tr>${cellValue(a.nome)}${cellValue(aluno?.birth ? new Date(aluno.birth).toLocaleDateString("pt-BR") : "")}</tr>
+  ${a.pcd ? `<tr>${cellLabel("PCD")}${cellLabel("Período Avaliativo")}</tr><tr>${cellValue(a.pcd)}${cellValue(`${bimestreNum}º bimestre`)}</tr>` : ""}
+</table>`;
+
+          const kpisTable = `
+<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
+  <tr>
+    <td width="33%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
+      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Avaliado</div>
+      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${pctPreenchido}%</div>
+    </td>
+    <td width="33%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
+      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Desempenho</div>
+      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${pctDesempenho}%</div>
+    </td>
+    <td width="34%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
+      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Bimestre</div>
+      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${bimestreNum}º</div>
+    </td>
+  </tr>
+</table>`;
+
+          const sectionTitle = (t: string) =>
+            `<h2 style="font-family:${titleFont};font-size:14pt;color:${ACCENT};margin:18pt 0 8pt;font-weight:bold;border-bottom:1px solid ${GOLD};padding-bottom:4pt;">${esc(t)}</h2>`;
+          const para = (txt: string) =>
+            `<p style="font-family:${bodyFont};font-size:11pt;color:${INK};line-height:1.5;text-align:justify;margin:0 0 8pt;">${esc(txt)}</p>`;
+          const subTitle = (t: string) =>
+            `<h3 style="font-family:${titleFont};font-size:11pt;color:${ACCENT};margin:10pt 0 4pt;font-weight:bold;">${esc(t)}</h3>`;
+          const ulList = (arr?: string[]) =>
+            arr && arr.length
+              ? `<ul style="font-family:${bodyFont};font-size:11pt;color:${INK};line-height:1.5;margin:0 0 8pt 18pt;padding:0;">${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`
+              : "";
+
+          let parecerWord = "";
+          if (parecerAluno) {
+            parecerWord += sectionTitle("Parecer descritivo");
+            if (parecerAluno.formato === "texto" && parecerAluno.texto) {
+              parecerWord += parecerAluno.texto.split(/\n+/).map((p) => para(p)).join("");
+            } else {
+              if (parecerAluno.resumo) parecerWord += para(parecerAluno.resumo);
+              if (parecerAluno.pedagogico) parecerWord += subTitle("Pedagógico") + para(parecerAluno.pedagogico);
+              if (parecerAluno.comportamental) parecerWord += subTitle("Comportamental") + para(parecerAluno.comportamental);
+              if (parecerAluno.sensorial) parecerWord += subTitle("Sensorial") + para(parecerAluno.sensorial);
+              if (parecerAluno.familia) parecerWord += subTitle("Família") + para(parecerAluno.familia);
+              if (parecerAluno.avancos?.length) parecerWord += subTitle("Avanços") + ulList(parecerAluno.avancos);
+              if (parecerAluno.desafios?.length) parecerWord += subTitle("Desafios") + ulList(parecerAluno.desafios);
+              if (parecerAluno.encaminhamentos?.length) parecerWord += subTitle("Encaminhamentos") + ulList(parecerAluno.encaminhamentos);
+              if (parecerAluno.comunicacao_familias) parecerWord += subTitle("Comunicação à família") + para(parecerAluno.comunicacao_familias);
+            }
+          }
+
+          const areasWord = areas
+            .map((area, ai) => {
+              const itens = area.comps
+                .map((c, ci) => {
+                  const lbl = BNCC_STATUS.find((x) => x.k === rub[`${ai}.${ci}`])?.label || "Não observada";
+                  return `<tr>
+  <td style="padding:5pt 8pt;border-bottom:1px solid ${BORDER};font-family:${bodyFont};font-size:11pt;color:${INK};">${esc(c)}</td>
+  <td style="padding:5pt 8pt;border-bottom:1px solid ${BORDER};font-family:${bodyFont};font-size:11pt;color:${ACCENT};font-weight:bold;text-align:right;white-space:nowrap;">${esc(lbl)}</td>
+</tr>`;
+                })
+                .join("");
+              return `${sectionTitle(area.area)}
+<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 10pt;">
+  ${itens}
+</table>`;
+            })
+            .join("");
+
+          const obs = aluno?.notes ? sectionTitle("Observações") + para(aluno.notes) : "";
+
+          const sigCell = (role: string) =>
+            `<td width="33%" style="padding:24pt 8pt 6pt;border-top:1px solid ${GRAY};font-family:${bodyFont};font-size:10pt;color:${GRAY};text-align:center;">${esc(role)}</td>`;
+          const signatures = `
+<table width="100%" cellspacing="0" cellpadding="20" border="0" style="border-collapse:collapse;margin:36pt 0 0;">
+  <tr><td colspan="3" style="height:30pt;">&nbsp;</td></tr>
+  <tr>
+    ${sigCell("Professor(a) responsável")}
+    ${sigCell("Coordenação pedagógica")}
+    ${sigCell("Família / Responsável")}
+  </tr>
+</table>`;
+
+          const docHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8"/>
+<title>Parecer · ${esc(a.nome)}</title>
+<!--[if gte mso 9]>
+<xml>
+  <w:WordDocument>
+    <w:View>Print</w:View>
+    <w:Zoom>100</w:Zoom>
+    <w:DoNotOptimizeForBrowser/>
+  </w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+  @page Section1 { size: 21cm 29.7cm; margin: 2cm 2cm 2cm 2.5cm; }
+  div.Section1 { page: Section1; }
+  body { font-family: ${bodyFont}; color: ${INK}; font-size: 11pt; }
+  h1, h2, h3, p, td, div { font-family: ${bodyFont}; }
+</style>
+</head>
+<body>
+<div class="Section1">
+  <table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:${ACCENT};margin:0 0 18pt;">
+    <tr><td style="padding:10pt 14pt;color:#FFFFFF;font-family:${titleFont};font-size:11pt;font-weight:bold;letter-spacing:1px;">AGILIZAPROF · RELATÓRIO PEDAGÓGICO</td></tr>
+  </table>
+  <div style="text-align:center;margin:0 0 18pt;">
+    <div style="font-family:${bodyFont};font-size:9pt;font-weight:bold;color:${ACCENT};letter-spacing:1px;">DOCUMENTO PEDAGÓGICO • AGILIZAPROF</div>
+    <h1 style="font-family:${titleFont};font-size:24pt;color:${INK};margin:8pt 0 4pt;font-weight:bold;">Parecer Descritivo</h1>
+    <div style="width:80pt;border-top:1.5pt solid ${GOLD};margin:6pt auto;"></div>
+    <div style="font-family:${titleFont};font-style:italic;font-size:11pt;color:${GRAY};">${esc(a.nome)}</div>
+  </div>
+  ${sectionTitle("Identificação")}
+  ${ident}
+  ${sectionTitle("Dados do(a) Estudante")}
+  ${dadosEstudante}
+  ${kpisTable}
+  ${obs}
+  ${parecerWord}
+  ${areasWord}
+  ${signatures}
+  <p style="margin-top:24pt;padding-top:6pt;border-top:1px solid ${GOLD};font-family:${bodyFont};font-size:9pt;color:${GRAY};text-align:center;font-style:italic;">
+    Documento gerado pela plataforma AgilizaProf em ${esc(dataStr)}<br/>
+    Fundamentação legal: LDB – Lei nº 9.394/96 (Art. 24, V) | BNCC – Resolução CNE/CP nº 2/2017
+  </p>
+</div>
+</body>
+</html>`;
           const blob = new Blob(['\ufeff', docHtml], { type: "application/msword" });
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
