@@ -712,19 +712,13 @@ export function Relatorios() {
               ${parecerAluno.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAluno.comunicacao_familias)}</p>` : ""}
             </section>`)
       : "";
-    const linhasArea = areas.map((area, ai) => {
-      const itens = area.comps.map((c, ci) => {
-        const lbl = BNCC_STATUS.find((x) => x.k === rub[`${ai}.${ci}`])?.label || "Não observada";
-        return `<li><span>${esc(c)}</span><b>${esc(lbl)}</b></li>`;
-      }).join("");
-      return `<section><h2>${esc(area.area)}</h2><ul class="rub">${itens}</ul></section>`;
-    }).join("");
+    // Habilidades BNCC removidas do documento exportado — manter somente texto corrido.
+    void areas; void rub;
     return `<article class="report">
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
 ${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
-${linhasArea}
 <div class="sig">
   <div>Professor(a) responsável<br/>${esc(user.name || "")}</div>
   <div>Coordenação pedagógica</div>
@@ -1573,25 +1567,15 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 </section>`)
           : "";
         const buildReportHtml = () => {
-          const areas = areasFor(a.id, a.turma, a.pcd);
-          const rub = getAlunoRubric(a.id);
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = dashStudents.find((s) => s.name === a.nome);
           const cls = dashClasses.find((c) => c.name === a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
-          const linhasArea = areas.map((area, ai) => {
-            const itens = area.comps.map((c, ci) => {
-              const lbl = BNCC_STATUS.find((x) => x.k === rub[`${ai}.${ci}`])?.label || "Não observada";
-              return `<li><span>${esc(c)}</span><b>${esc(lbl)}</b></li>`;
-            }).join("");
-            return `<section><h2>${esc(area.area)}</h2><ul class="rub">${itens}</ul></section>`;
-          }).join("");
           const bodyInner = `
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
 ${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
-${linhasArea}
 <div class="sig">
   <div>Professor(a) responsável<br/>${esc(user.name || "")}</div>
   <div>Coordenação pedagógica</div>
