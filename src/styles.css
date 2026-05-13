@@ -340,3 +340,19 @@ button[aria-label="Dispensar"] > * {
   .ag-actions { flex-wrap: wrap; gap: 8px; width: 100%; }
   .ag-actions > * { flex: 1 1 auto; min-width: 0; }
 }
+
+/* === Tablet refinements (481px–820px) === */
+@media (min-width: 481px) and (max-width: 820px) {
+  /* Drawer não ocupa a tela inteira em tablet */
+  .mtb-drawer { width: min(360px, 86vw) !important; }
+  /* Mais respiro lateral nas áreas principais */
+  .ap-main { padding: 20px 24px 56px !important; }
+  .pl-workspace { padding: 20px 24px 100px !important; }
+  .inc-a4 { padding: 28px 32px !important; }
+  /* Hero com padding mais confortável */
+  .hero, .plan-hero, .pl-hero { padding: 24px 28px !important; }
+  /* Gaps maiores entre cards */
+  .stats, .grid-2, .kpis, .list-grid, .ag-radar { gap: 16px !important; }
+  /* Agenda — 2 colunas em tablet */
+  .ag-radar { grid-template-columns: repeat(2, 1fr) !important; }
+}
