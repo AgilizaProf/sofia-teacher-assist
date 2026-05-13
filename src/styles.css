@@ -266,9 +266,11 @@ button[aria-label="Dispensar"] > * {
   .app-header .ah-streak,
   .app-header .ah-secstatus,
   .app-header .ah-credits,
-  .app-header .ah-icon{display:none !important;}
+  .app-header .ah-icon,
+  .app-header .sofia-active-chip{display:none !important;}
   .app-header .ah-user{padding:2px 4px !important;}
   .app-header .ah-user .nm,
+  .app-header .ah-user .pl,
   .app-header .ah-user .role,
   .app-header .ah-user small{display:none !important;}
   .app-header .ah-crumbs{font-size:11.5px !important;}
