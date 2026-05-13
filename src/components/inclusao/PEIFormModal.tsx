@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { X, Save, Printer, Plus, Trash2, FileText, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
-import { wrapStandardPrintHtml } from "@/lib/print/standardPrint";
+import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { useUser } from "@/lib/mockData";
 
 type Aluno = {
