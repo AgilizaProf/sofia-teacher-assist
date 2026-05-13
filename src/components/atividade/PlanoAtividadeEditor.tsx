@@ -2189,6 +2189,8 @@ const css = `
 .atv-btn:disabled{opacity:.5;cursor:not-allowed;}
 .atv-warn{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(245,158,11,.10);color:#92400E;display:flex;align-items:center;gap:8px;font-size:12.5px;}
 .atv-error{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(239,68,68,.10);color:#991B1B;display:flex;align-items:center;gap:8px;font-size:12.5px;}
+.atv-error--flash{animation:atvErrFlash 1.6s ease;box-shadow:0 0 0 2px rgba(239,68,68,.45);}
+@keyframes atvErrFlash{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}30%{box-shadow:0 0 0 4px rgba(239,68,68,.55)}}
 .atv-empty{background:#fff;border:1px dashed var(--line,#E2E8F0);border-radius:12px;padding:48px 24px;text-align:center;color:var(--muted,#64748B);}
 .atv-empty h3{font-size:18px;color:var(--ink,#0F172A);margin:8px 0 4px;}
 .atv-empty p{max-width:520px;margin:0 auto;font-size:13.5px;line-height:1.5;}
