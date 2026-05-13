@@ -1,19 +1,23 @@
 /**
  * Gerador de PDFs pedagógicos — layout editorial AgilizaProf.
+ * Estilo alinhado ao template oficial:
+ *   • Margens A4: 2,2cm topo / 2cm dir / 2,4cm base / 3cm esq
+ *   • Faixa azul de cabeçalho 0,6cm (AGILIZAPROF · NOME DO DOC)
+ *   • Filete dourado no rodapé + base legal + nº de página
+ *   • Capa: eyebrow azul, título Fraunces 28pt preto, filete dourado
+ *     3,5cm, subtítulo Fraunces itálico cinza, intro Arial 11pt
+ *   • Campos: label bege (borda superior 2px azul) + valor branco,
+ *     fechado com linha #DDD na base
+ *   • Texto longo IA: caixa branca borda #DDD, padding 15px,
+ *     Arial 12pt, line-height 1.6, justificado
+ *   • Assinaturas em grid 2×2 com linha cinza
  *
- * Uso (igual ao standardPrint):
- *   const html = wrapEditorialPrintHtml("Relatório", bodyHtml, {
- *     docType: "parecer",
- *     professorNome: "Maria Silva",
- *   });
- *   const w = window.open("", "_blank"); w!.document.write(html);
- *   w!.document.close(); w!.focus(); w!.print();
- *
- * Helpers para montar o corpo:
- *   editorialCover({ title, subtitle, intro })
- *   editorialSectionTitle("Identificação do educando")
- *   editorialField("Nome", "João da Silva")          // campo curto
- *   editorialLongField("Parecer", "Texto longo...")  // campo longo (texto IA)
+ * Uso:
+ *   import {
+ *     printEditorial, editorialCover, editorialSection,
+ *     editorialField, editorialFieldsGrid, editorialLongField,
+ *     editorialHint, editorialSignatures,
+ *   } from "@/lib/print/editorialPrint";
  */
 
 export type EditorialDocType =
@@ -26,30 +30,31 @@ export type EditorialDocType =
 
 export interface EditorialPrintOptions {
   docType?: EditorialDocType;
-  docLabel?: string;       // sobrescreve o rótulo do cabeçalho
-  professorNome?: string;
-  legalBase?: string;      // sobrescreve a base legal do rodapé
-  incluirAssinatura?: boolean;
+  docLabel?: string;
+  legalBase?: string;
   extraCss?: string;
 }
 
 const DOC_LABEL: Record<EditorialDocType, string> = {
   parecer: "RELATÓRIO PEDAGÓGICO",
+  relatorio: "RELATÓRIO PEDAGÓGICO",
   pei: "PLANO EDUCACIONAL INDIVIDUALIZADO",
   planejamento: "PLANEJAMENTO PEDAGÓGICO",
   "plano-adaptado": "PLANO ADAPTADO",
-  relatorio: "RELATÓRIO PEDAGÓGICO",
   anamnese: "ANAMNESE PEDAGÓGICA",
 };
 
 const LEGAL_BASE: Record<EditorialDocType, string> = {
-  parecer: "Em conformidade com a BNCC — Base Nacional Comum Curricular",
-  relatorio: "Em conformidade com a BNCC — Base Nacional Comum Curricular",
-  planejamento: "Em conformidade com a BNCC — Base Nacional Comum Curricular",
-  pei: "Em conformidade com a Lei nº 14.254/2021 — Lei do PEI",
+  parecer:
+    "Fundamentação legal: LDB – Lei nº 9.394/96 (Art. 24, V) | BNCC – Resolução CNE/CP nº 2/2017",
+  relatorio:
+    "Fundamentação legal: LDB – Lei nº 9.394/96 (Art. 24, V) | BNCC – Resolução CNE/CP nº 2/2017",
+  planejamento:
+    "Fundamentação legal: LDB – Lei nº 9.394/96 | BNCC – Resolução CNE/CP nº 2/2017",
+  pei: "Fundamentação legal: Lei nº 14.254/2021 — Lei do PEI",
   "plano-adaptado":
-    "Em conformidade com a Lei Brasileira de Inclusão — Lei nº 13.146/2015",
-  anamnese: "Em conformidade com a LGPD — Lei nº 13.709/2018",
+    "Fundamentação legal: Lei Brasileira de Inclusão — Lei nº 13.146/2015",
+  anamnese: "Fundamentação legal: LGPD — Lei nº 13.709/2018",
 };
 
 function escHtml(s: unknown): string {
@@ -66,266 +71,233 @@ function escCss(s: string): string {
 
 function buildCss(legal: string): string {
   return `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
 
 :root{
   --ink:#111111;
-  --blue:#1F3A5F;
-  --beige:#F5F1EA;
-  --gold:#C9B98A;
-  --muted:#6B6B6B;
-  --rule:#DDDDDD;
+  --accent:#1F3A5F;
+  --soft:#F5F1EA;
+  --divider:#C9B98A;
+  --gray:#6B6B6B;
+  --border:#DDDDDD;
+  --font-title:'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: Arial, Helvetica, sans-serif;
   --header-h:0.6cm;
 }
 
-@page{
-  size:A4;
-  margin: calc(2.2cm + var(--header-h) + 0.4cm) 2cm 2.4cm 3cm;
-  @bottom-center{
-    content:"Documento gerado pela plataforma AgilizaProf";
-    font-family:'Fraunces',Georgia,serif;
-    font-weight:700;
-    font-size:9pt; color:var(--blue);
-  }
-  @bottom-left{
-    content:"${escCss(legal)}";
-    font-family:Arial,Helvetica,sans-serif;
-    font-style:italic; font-size:8.5pt; color:#6B6B6B;
-  }
-  @bottom-right{
-    content: counter(page);
-    font-family:Arial,Helvetica,sans-serif;
-    font-size:9pt; color:#6B6B6B;
-  }
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  font-family:var(--font-body);
+  color:var(--ink);
+  background:#e5e5e5;
+  font-size:11pt;
+  line-height:1.5;
 }
 
-/* Cabeçalho fixo (faixa azul 0,6cm) — repete em toda página impressa */
-html,body,.ed-header,.ed-field>.label,.ed-cover{
-  -webkit-print-color-adjust:exact !important;
-  print-color-adjust:exact !important;
-  color-adjust:exact !important;
+/* ─── Página A4 simulada ─── */
+.page-a4{
+  width:210mm;
+  min-height:297mm;
+  background:#fff;
+  padding:2.2cm 2cm 2.4cm 3cm;
+  margin:2rem auto;
+  box-shadow:0 4px 12px rgba(0,0,0,.1);
+  position:relative;
 }
 
-.ed-header{
-  position:fixed;
+/* ─── Cabeçalho fixo (faixa azul 0,6cm) ─── */
+.page-header{
+  position:absolute;
   top:0; left:0; right:0;
-  height:var(--header-h);
-  background:#1F3A5F !important;
+  width:100%; height:var(--header-h);
+  background:#1F3A5F;
   color:#fff;
   display:flex; align-items:center; justify-content:space-between;
   padding:0 2cm 0 3cm;
-  font-size:8.5pt; letter-spacing:.18em;
-  box-sizing:border-box;
-  z-index:9998;
+  z-index:10;
 }
-.ed-header .brand{ font-family:'Fraunces',Georgia,serif; font-weight:700; }
-.ed-header .kind{ font-family:Arial,Helvetica,sans-serif; font-weight:700; letter-spacing:.14em; }
-
-/* Filete dourado acima do rodapé impresso */
-@media print{
-  body::after{
-    content:""; position:fixed;
-    left:3cm; right:2cm; bottom:1.6cm;
-    border-top:0.6pt solid #C9B98A;
-  }
-  body::before{
-    /* folga visual abaixo da faixa do cabeçalho */
-    content:""; display:block; height:0.4cm;
-  }
+.page-header .brand{
+  font-family:var(--font-title); font-weight:700;
+  font-size:9pt; letter-spacing:.5px;
+}
+.page-header .doc{
+  font-family:var(--font-body); font-size:8pt;
+  letter-spacing:.08em; text-transform:uppercase;
 }
 
-@media screen{
-  body{
-    padding: calc(var(--header-h) + 22mm) 20mm 24mm 30mm;
-    max-width:21cm; margin:0 auto; box-sizing:border-box;
-  }
+/* ─── Rodapé ─── */
+.page-footer{
+  position:absolute;
+  bottom:1.8cm; left:3cm; right:2cm;
+  border-top:1.5px solid var(--divider);
+  padding-top:.3cm;
+  text-align:center;
+  z-index:10;
+}
+.page-footer .title{
+  font-family:var(--font-title); font-weight:700;
+  font-size:9pt; color:var(--ink); margin-bottom:4px;
+}
+.page-footer .legal{
+  font-size:7.5pt; font-style:italic; color:var(--gray);
+}
+.page-footer .pagenum{
+  position:absolute; right:0; bottom:0;
+  font-size:7.5pt; color:var(--gray);
 }
 
-html,body{
-  font-family:Arial,Helvetica,sans-serif;
-  font-size:12pt; line-height:1.5; color:#111111;
-  margin:0; padding:0; background:#fff;
+/* ─── Capa ─── */
+.eyebrow{
+  font-family:var(--font-body);
+  font-size:9pt; font-weight:700;
+  color:var(--accent);
+  text-align:center; letter-spacing:.5px;
+  margin-bottom:.5rem;
+}
+h1.title{
+  font-family:var(--font-title);
+  font-size:28pt; font-weight:700;
+  color:var(--ink);
+  text-align:center;
+  line-height:1.1;
+  margin:0 0 .5rem 0;
+}
+.gold-divider{
+  width:3.5cm; height:1.5px;
+  background:var(--divider);
+  margin:.5rem auto 1rem auto;
+  border:0;
+}
+.subtitle{
+  font-family:var(--font-title); font-style:italic;
+  font-size:11pt; color:var(--gray);
+  text-align:center; margin:0 0 1.5rem 0;
+}
+p.intro-text{
+  font-size:11pt; line-height:1.5; text-align:justify;
+  margin:0 0 2rem 0;
 }
 
-/* Corpo */
-p,li,td,th,dd,dt{
-  font-family:Arial,Helvetica,sans-serif;
-  line-height:1.5; color:#111111;
-  text-align:justify; text-justify:inter-word; hyphens:auto;
+/* ─── Seções ─── */
+h2.section-title{
+  font-family:var(--font-title); font-weight:700;
+  font-size:14pt; color:var(--accent);
+  margin:1.5rem 0 .8rem 0;
+}
+p.hint{
+  font-size:10pt; font-style:italic; color:var(--gray);
+  margin:0 0 .8rem 0;
 }
 
-/* Títulos: Fraunces Bold, azul */
-h1,h2,h3,h4,h5,h6{
-  font-family:'Fraunces',Georgia,'Times New Roman',serif;
-  color:#1F3A5F; font-weight:700; letter-spacing:-.01em;
+/* ─── Campos curtos ─── */
+.grid-2{
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  margin-bottom:1rem;
 }
-
-/* Capa */
-.ed-cover{ text-align:center; margin: 4pt 0 22pt 0; }
-.ed-cover .overline{
-  font-family:Arial,Helvetica,sans-serif;
-  font-size:9pt; letter-spacing:.32em; color:#6B6B6B;
-  text-transform:uppercase; font-weight:700; margin-bottom:18pt;
-}
-.ed-cover h1{
-  font-size:32pt; line-height:1.05; margin:0;
-  letter-spacing:.02em; text-align:center;
-}
-.ed-cover .gold-rule{
-  width:96px; height:0; margin:14pt auto 12pt auto;
-  border-top:1.2pt solid #C9B98A;
-}
-.ed-cover .subtitle{
-  font-family:'Fraunces',Georgia,serif; font-weight:400;
-  font-size:13pt; color:#6B6B6B; margin:0;
-}
-.ed-cover .intro{
-  margin:18pt auto 0 auto; max-width:14cm;
-  font-family:Arial,Helvetica,sans-serif; font-size:11pt;
-  line-height:1.55; color:#111111; text-align:justify;
-}
-
-/* Seções */
-.ed-section-title{
-  font-family:'Fraunces',Georgia,serif; font-weight:700;
-  color:#1F3A5F; font-size:16pt;
-  margin:24pt 0 10pt 0; line-height:1.2;
-}
-.ed-section-title::after{
-  content:""; display:block; width:42px; margin-top:6pt;
-  border-top:1pt solid #C9B98A;
-}
-
-/* Campo curto: label bege + conteúdo branco + linha inferior #DDD */
-.ed-field{
-  margin:8pt 0;
-  border-bottom:1px solid #DDDDDD;
-  display:grid;
-  grid-template-columns: 5.4cm 1fr;
-  align-items:stretch;
+.field-box{
+  border-bottom:1px solid var(--border);
+  display:flex; flex-direction:column;
   background:#fff;
 }
-.ed-field>.label{
-  background:#F5F1EA;
-  font-family:Arial,Helvetica,sans-serif; font-weight:700;
-  color:#1F3A5F; font-size:10pt;
-  letter-spacing:.06em; text-transform:uppercase;
-  padding:8pt 12pt; display:flex; align-items:center;
+.field-box.full-width{ margin-bottom:10px; }
+.field-label{
+  background:var(--soft);
+  border-top:2px solid var(--accent);
+  color:var(--accent);
+  font-size:10pt; font-weight:700;
+  padding:6px 10px;
+  text-transform:uppercase;
+  font-family:var(--font-body);
+  letter-spacing:.04em;
 }
-.ed-field>.content{
-  background:#fff; padding:8pt 12pt;
-  font-family:Arial,Helvetica,sans-serif; font-size:12pt;
-  color:#111111; min-height:18pt;
-}
-
-/* Campo longo (texto da IA): caixa branca, borda fina, padding 10px */
-.ed-long{
-  border:1px solid #DDDDDD;
+.field-value{
   background:#fff;
-  padding:10px;
-  margin:10pt 0 14pt 0;
+  padding:8px 10px 12px 10px;
+  font-size:11pt; color:var(--ink);
+  line-height:1.3;
 }
-.ed-long .label{
-  display:block;
-  font-family:Arial,Helvetica,sans-serif; font-weight:700;
-  color:#1F3A5F; font-size:10pt;
-  letter-spacing:.06em; text-transform:uppercase;
-  margin:0 0 6pt 0;
-}
-.ed-long .content,
-.ed-long p{
-  font-family:Arial,Helvetica,sans-serif; font-size:12pt;
-  line-height:1.5; color:#111111;
-  text-align:justify; text-justify:inter-word; hyphens:auto;
-  margin:0 0 6pt 0;
-}
-.ed-long .content :last-child,
-.ed-long p:last-child{ margin-bottom:0; }
 
-/* Tabelas discretas */
-table{ width:100%; border-collapse:collapse; margin:8pt 0; }
-th,td{
-  border-bottom:1px solid #DDDDDD; padding:6pt 8pt;
-  vertical-align:top; text-align:left;
+/* ─── Texto longo (IA) ─── */
+.text-block{
+  border:1px solid var(--border);
+  padding:15px;
+  font-size:12pt; line-height:1.6;
+  text-align:justify;
+  min-height:80px;
+  margin:0 0 .5rem 0;
+  background:#fff;
+  color:var(--ink);
 }
-th{
-  font-family:'Fraunces',Georgia,serif; font-weight:700;
-  color:#1F3A5F; border-bottom:1px solid #C9B98A;
+.text-block p{ margin:0 0 .6rem 0; }
+.text-block p:last-child{ margin:0; }
+
+/* ─── Assinaturas ─── */
+.signatures-grid{
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:2rem 1rem;
+  margin:3rem 0 2rem 0;
 }
+.signature-box{ text-align:center; }
+.signature-line{
+  width:80%; height:1px;
+  background:var(--gray);
+  margin:0 auto .5rem auto;
+}
+.signature-name{ font-size:10pt; color:var(--gray); }
 
 /* Quebras */
-.ed-field,.ed-long,.ed-cover,table,tr,h1,h2,h3,h4,p{
-  page-break-inside:avoid; break-inside:avoid;
-}
-h1,h2,h3,h4,.ed-section-title{ page-break-after:avoid; break-after:avoid; }
+.field-box,.text-block,.signatures-grid,.signature-box,
+h1,h2,h3,h4,p{ page-break-inside:avoid; break-inside:avoid; }
+h1,h2,h3,h4,.section-title{ page-break-after:avoid; break-after:avoid; }
 
-/* Rodapé "na tela" (não imprime) */
-.ed-screen-foot{
-  margin-top:32pt; padding-top:10pt;
-  border-top:1px solid #C9B98A;
-  display:grid; grid-template-columns:1fr; gap:4pt;
-  text-align:center;
+/* ─── Impressão ─── */
+@media print{
+  @page{
+    size:A4;
+    margin:0;
+    @bottom-right{
+      content: counter(page);
+      font-family: Arial,Helvetica,sans-serif;
+      font-size:7.5pt; color:#6B6B6B;
+    }
+    @bottom-left{
+      content:"${escCss(legal)}";
+      font-family: Arial,Helvetica,sans-serif;
+      font-style:italic; font-size:7.5pt; color:#6B6B6B;
+    }
+  }
+  body{ background:transparent; padding:0; display:block; }
+  .page-a4{
+    box-shadow:none; margin:0;
+    page-break-after:always;
+  }
+  *{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+    color-adjust:exact !important;
+  }
+  .toolbar,button,.no-print{ display:none !important; }
 }
-.ed-screen-foot .brand{
-  font-family:'Fraunces',Georgia,serif; font-weight:700; color:#1F3A5F; font-size:10pt;
-}
-.ed-screen-foot .legal{
-  font-family:Arial,Helvetica,sans-serif; font-style:italic; color:#6B6B6B; font-size:9pt;
-}
-@media print{ .ed-screen-foot{ display:none !important; } }
-
-/* Assinatura digital */
-.ed-sig{
-  margin-top:26pt; padding:12pt 14pt;
-  border:1px solid #DDDDDD; background:#F5F1EA;
-  page-break-inside:avoid; break-inside:avoid;
-}
-.ed-sig .label{
-  font-family:'Fraunces',Georgia,serif; font-weight:700;
-  color:#1F3A5F; font-size:10pt; letter-spacing:.08em;
-  text-transform:uppercase; margin-bottom:8pt;
-}
-.ed-sig .row{ display:flex; justify-content:space-between; gap:16pt; flex-wrap:wrap; font-size:11pt; }
-.ed-sig .line{ margin-top:14pt; border-top:1px solid #1F3A5F; padding-top:4pt; font-size:10pt; color:#1F3A5F; text-align:center; }
-.ed-sig .hint{ margin-top:6pt; font-size:9pt; color:#6B6B6B; font-style:italic; text-align:center; }
-
-@media print{ .toolbar,button,.no-print{ display:none !important; } }
 `;
 }
 
 function buildHeader(label: string): string {
-  return `<div class="ed-header" role="banner">
+  return `<div class="page-header" role="banner">
   <div class="brand">AGILIZAPROF</div>
-  <div class="kind">${escHtml(label)}</div>
+  <div class="doc">${escHtml(label)}</div>
 </div>`;
 }
 
-function buildSignature(professorNome: string): string {
-  const data = new Date().toLocaleDateString("pt-BR", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-  const hora = new Date().toLocaleTimeString("pt-BR", {
-    hour: "2-digit", minute: "2-digit",
-  });
-  return `<div class="ed-sig">
-  <div class="label">Assinatura digital</div>
-  <div class="row">
-    <div><b>Professor(a):</b> ${escHtml(professorNome || "—")}</div>
-    <div><b>Emissão:</b> ${escHtml(data)} às ${escHtml(hora)}</div>
-  </div>
-  <div class="line">${escHtml(professorNome || "Assinatura do(a) professor(a)")}</div>
-  <div class="hint">Assinado eletronicamente por meio do AgilizaProf.</div>
-</div>`;
-}
-
-function buildScreenFoot(legal: string): string {
-  return `<div class="ed-screen-foot">
-  <div class="brand">Documento gerado pela plataforma AgilizaProf</div>
+function buildFooter(legal: string): string {
+  return `<div class="page-footer">
+  <div class="title">Documento gerado pela plataforma AgilizaProf</div>
   <div class="legal">${escHtml(legal)}</div>
+  <div class="pagenum"></div>
 </div>`;
 }
 
-/* ────────── helpers de conteúdo ────────── */
+/* ───────── Helpers de conteúdo ───────── */
 
 export function editorialCover(opts: {
   title: string;
@@ -333,46 +305,64 @@ export function editorialCover(opts: {
   intro?: string;
   overline?: string;
 }): string {
-  const overline = opts.overline ?? "Documento pedagógico • AgilizaProf";
-  return `<section class="ed-cover">
-  <div class="overline">${escHtml(overline)}</div>
-  <h1>${escHtml(opts.title)}</h1>
-  <div class="gold-rule" aria-hidden="true"></div>
-  ${opts.subtitle ? `<p class="subtitle">${escHtml(opts.subtitle)}</p>` : ""}
-  ${opts.intro ? `<p class="intro">${escHtml(opts.intro)}</p>` : ""}
-</section>`;
+  const overline = opts.overline ?? "DOCUMENTO PEDAGÓGICO • AGILIZAPROF";
+  return `<div class="eyebrow">${escHtml(overline)}</div>
+<h1 class="title">${escHtml(opts.title)}</h1>
+<hr class="gold-divider" aria-hidden="true"/>
+${opts.subtitle ? `<p class="subtitle">${escHtml(opts.subtitle)}</p>` : ""}
+${opts.intro ? `<p class="intro-text">${escHtml(opts.intro)}</p>` : ""}`;
 }
 
-export function editorialSectionTitle(text: string): string {
-  return `<h2 class="ed-section-title">${escHtml(text)}</h2>`;
+export function editorialSection(title: string, hint?: string): string {
+  return `<h2 class="section-title">${escHtml(title)}</h2>${
+    hint ? `<p class="hint">${escHtml(hint)}</p>` : ""
+  }`;
 }
 
-export function editorialField(label: string, value: string): string {
-  return `<div class="ed-field">
-  <div class="label">${escHtml(label)}</div>
-  <div class="content">${escHtml(value || "—")}</div>
+export function editorialField(label: string, value: string, opts: { full?: boolean } = {}): string {
+  return `<div class="field-box${opts.full ? " full-width" : ""}">
+  <div class="field-label">${escHtml(label)}</div>
+  <div class="field-value">${escHtml(value || "—")}</div>
 </div>`;
 }
 
-/** Campo longo. `value` pode ser texto (será envolvido em <p>) ou HTML pronto. */
-export function editorialLongField(
-  label: string,
-  value: string,
-  opts: { html?: boolean } = {},
-): string {
+/** Linha com 2 campos lado a lado. */
+export function editorialFieldsGrid(fields: Array<{ label: string; value: string }>): string {
+  const cells = fields.map((f) => editorialField(f.label, f.value)).join("");
+  return `<div class="grid-2">${cells}</div>`;
+}
+
+/** Caixa de texto longo (saída da IA). `value` aceita string ou HTML. */
+export function editorialLongField(value: string, opts: { html?: boolean } = {}): string {
   const inner = opts.html
     ? value
     : String(value || "—")
         .split(/\n{2,}/)
         .map((p) => `<p>${escHtml(p).replace(/\n/g, "<br/>")}</p>`)
         .join("");
-  return `<section class="ed-long">
-  <div class="label">${escHtml(label)}</div>
-  <div class="content">${inner}</div>
+  return `<div class="text-block">${inner}</div>`;
+}
+
+export function editorialHint(text: string): string {
+  return `<p class="hint">${escHtml(text)}</p>`;
+}
+
+export function editorialSignatures(names: string[]): string {
+  const cells = names
+    .map(
+      (n) => `<div class="signature-box">
+    <div class="signature-line" aria-hidden="true"></div>
+    <div class="signature-name">${escHtml(n)}</div>
+  </div>`,
+    )
+    .join("");
+  return `<section>
+  <h2 class="section-title">Assinaturas</h2>
+  <div class="signatures-grid">${cells}</div>
 </section>`;
 }
 
-/** Embrulha o corpo HTML do documento com o layout editorial. */
+/** Embrulha o HTML do documento já como página A4 com cabeçalho/rodapé. */
 export function wrapEditorialPrintHtml(
   title: string,
   bodyHtml: string,
@@ -381,18 +371,30 @@ export function wrapEditorialPrintHtml(
   const docType: EditorialDocType = opts.docType ?? "parecer";
   const label = opts.docLabel ?? DOC_LABEL[docType] ?? "DOCUMENTO PEDAGÓGICO";
   const legal = opts.legalBase ?? LEGAL_BASE[docType] ?? "Documento pedagógico AgilizaProf";
-  const professor = (opts.professorNome ?? "").trim();
-  const incluirAssinatura = opts.incluirAssinatura !== false;
 
   const css = buildCss(legal);
   const header = buildHeader(label);
-  const sig = incluirAssinatura ? buildSignature(professor) : "";
-  const screenFoot = buildScreenFoot(legal);
+  const footer = buildFooter(legal);
 
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${escHtml(title)}</title><style>${css}\n${opts.extraCss ?? ""}</style></head><body>${header}${bodyHtml}${sig}${screenFoot}</body></html>`;
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>${escHtml(title)}</title>
+<style>${css}\n${opts.extraCss ?? ""}</style>
+</head>
+<body>
+<main class="page-a4">
+${header}
+${bodyHtml}
+${footer}
+</main>
+</body>
+</html>`;
 }
 
-/** Atalho: abre o HTML editorial em nova aba e dispara a impressão. */
+/** Atalho: abre nova aba com o HTML editorial e dispara a impressão. */
 export function printEditorial(
   title: string,
   bodyHtml: string,
@@ -405,5 +407,5 @@ export function printEditorial(
   w.document.write(html);
   w.document.close();
   w.focus();
-  setTimeout(() => w.print(), 250);
+  setTimeout(() => w.print(), 300);
 }
