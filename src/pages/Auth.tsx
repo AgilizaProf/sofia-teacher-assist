@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
-import logoImg from "@/assets/agilizaprof-logo.jpg";
+import logoImg from "@/assets/agilizaprof-logo.webp";
 
 function postLoginRoute(): "/" | "/onboarding" {
   try {

@@ -5,7 +5,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useIsAdmin } from "@/lib/admin/useIsAdmin";
-import logoImg from "@/assets/agilizaprof-logo.jpg";
+import logoImg from "@/assets/agilizaprof-logo.webp";
 
 export const sidebarCss = `
 .ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;width:240px;flex-shrink:0;align-self:flex-start;}
