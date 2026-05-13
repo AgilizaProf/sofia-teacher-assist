@@ -425,10 +425,13 @@ ul.rub li b{
   text-align:center; font-style:italic;
 }
 
-/* Quebras */
-.field-box,.text-block,.signatures-grid,.signature-box,
-h1,h2,h3,h4,p{ page-break-inside:avoid; break-inside:avoid; }
+/* Quebras — evita órfãos só onde realmente quebraria sentido.
+   NÃO usar break-inside:avoid em blocos longos (text-block, field-box, p),
+   senão a impressora joga o bloco inteiro para a próxima página e deixa
+   um vão branco no final da folha anterior. */
+.signature-box,.signatures-grid{ page-break-inside:avoid; break-inside:avoid; }
 h1,h2,h3,h4,.section-title{ page-break-after:avoid; break-after:avoid; }
+p{ orphans:3; widows:3; }
 
 /* ─── Impressão ─── */
 @media print{
@@ -448,8 +451,8 @@ h1,h2,h3,h4,.section-title{ page-break-after:avoid; break-after:avoid; }
   }
   body{ background:transparent; padding:0; display:block; }
   .page-a4{
-    box-shadow:none; margin:0;
-    page-break-after:always;
+    box-shadow:none; margin:0; padding:2.2cm 2cm 2.4cm 3cm;
+    width:auto; min-height:0;
   }
   *{
     -webkit-print-color-adjust:exact !important;
