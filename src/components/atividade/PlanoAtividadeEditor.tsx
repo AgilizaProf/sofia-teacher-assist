@@ -658,8 +658,12 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     if (!plano.titulo.trim()) f.push("titulo");
     if (!plano.objetivo.trim()) f.push("objetivo");
     if (!plano.abertura.trim() && !plano.desenvolvimento.trim() && !plano.fechamento.trim()) f.push("descricao");
-    if (plano.habilidades.length === 0) f.push("habilidades");
-    else if (plano.habilidades.some((h) => !h.codigo.trim() || !h.descricao.trim())) f.push("habilidades_incompletas");
+    // Habilidades: tolerante — basta uma habilidade com código OU descrição.
+    // Bloqueia apenas se todas estiverem completamente vazias.
+    const habsValidas = plano.habilidades.filter(
+      (h) => h.codigo.trim() !== "" || h.descricao.trim() !== "",
+    );
+    if (habsValidas.length === 0) f.push("habilidades");
     return f;
   };
 
@@ -948,7 +952,20 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const exportarPDF = async () => {
     const f = validar();
     setMissing(f);
-    if (f.length > 0) return;
+    if (f.length > 0) {
+      const labels = f.map((k) => LABELS[k] || k).join(", ");
+      showToast(`⚠️ Preencha antes de exportar: ${labels}`);
+      // dá tempo do banner renderizar antes de rolar até ele
+      window.setTimeout(() => {
+        const el = document.getElementById("atv-missing-banner");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("atv-error--flash");
+          window.setTimeout(() => el.classList.remove("atv-error--flash"), 1600);
+        }
+      }, 50);
+      return;
+    }
     const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
@@ -1317,7 +1334,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         )}
 
         {missing.length > 0 && (
-          <div className="atv-error">
+          <div className="atv-error" id="atv-missing-banner">
             <AlertTriangle size={14} />
             <span>
               Antes de salvar, preencha:{" "}
@@ -2172,6 +2189,8 @@ const css = `
 .atv-btn:disabled{opacity:.5;cursor:not-allowed;}
 .atv-warn{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(245,158,11,.10);color:#92400E;display:flex;align-items:center;gap:8px;font-size:12.5px;}
 .atv-error{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(239,68,68,.10);color:#991B1B;display:flex;align-items:center;gap:8px;font-size:12.5px;}
+.atv-error--flash{animation:atvErrFlash 1.6s ease;box-shadow:0 0 0 2px rgba(239,68,68,.45);}
+@keyframes atvErrFlash{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}30%{box-shadow:0 0 0 4px rgba(239,68,68,.55)}}
 .atv-empty{background:#fff;border:1px dashed var(--line,#E2E8F0);border-radius:12px;padding:48px 24px;text-align:center;color:var(--muted,#64748B);}
 .atv-empty h3{font-size:18px;color:var(--ink,#0F172A);margin:8px 0 4px;}
 .atv-empty p{max-width:520px;margin:0 auto;font-size:13.5px;line-height:1.5;}
