@@ -33,6 +33,11 @@ export interface EditorialPrintOptions {
   docLabel?: string;
   legalBase?: string;
   extraCss?: string;
+  /** Aceito por compatibilidade com chamadas legadas; não é usado no layout editorial
+   *  (a assinatura faz parte do corpo do documento). */
+  professorNome?: string;
+  /** Compat: assinatura digital legada já vem no corpo. */
+  incluirAssinatura?: boolean;
 }
 
 const DOC_LABEL: Record<EditorialDocType, string> = {
@@ -245,6 +250,124 @@ p.hint{
   margin:0 auto .5rem auto;
 }
 .signature-name{ font-size:10pt; color:var(--gray); }
+
+/* ─── Compatibilidade com marcação legada (standardPrint) ───
+   permite que bodies já existentes (PEI, Parecer, Inclusão)
+   sejam renderizados com o visual editorial sem reescrita. */
+
+/* Capa legada: <section class="doc-cover"> */
+.doc-cover{ text-align:center; margin:0 0 1.5rem 0; }
+.doc-cover .overline{
+  font-family:var(--font-body); font-size:9pt; font-weight:700;
+  color:var(--accent); letter-spacing:.5px;
+  text-transform:uppercase; margin-bottom:.5rem;
+}
+.doc-cover h1{
+  font-family:var(--font-title); font-weight:700;
+  font-size:28pt; color:var(--ink);
+  text-align:center; line-height:1.1; margin:0 0 .5rem 0;
+  letter-spacing:0;
+}
+.doc-cover .gold-rule{
+  width:3.5cm; height:1.5px; background:var(--divider);
+  margin:.5rem auto 1rem auto; border:0;
+}
+.doc-cover .subtitle{
+  font-family:var(--font-title); font-style:italic;
+  font-size:11pt; color:var(--gray);
+  text-align:center; margin:0 0 1.5rem 0;
+}
+
+/* Títulos de seção genéricos h2/h3 (quando não usam .section-title) */
+h2{
+  font-family:var(--font-title); font-weight:700;
+  font-size:14pt; color:var(--accent);
+  margin:1.5rem 0 .8rem 0;
+}
+h3{
+  font-family:var(--font-title); font-weight:700;
+  font-size:12pt; color:var(--accent);
+  margin:1rem 0 .5rem 0;
+}
+
+/* Field-box legada (label em cima, conteúdo embaixo) */
+.field-box > .label{
+  display:block;
+  background:var(--soft);
+  border-top:2px solid var(--accent);
+  color:var(--accent);
+  font-family:var(--font-body); font-weight:700;
+  font-size:10pt; letter-spacing:.04em;
+  text-transform:uppercase;
+  padding:6px 10px;
+}
+.field-box > .content{
+  background:#fff;
+  padding:8px 10px 12px 10px;
+  font-size:11pt; color:var(--ink); line-height:1.3;
+}
+
+/* Faixa de seção bege legada */
+.section-band{
+  background:var(--soft);
+  border-left:3pt solid var(--accent);
+  padding:6pt 12pt;
+  margin:14pt 0 8pt 0;
+  font-family:var(--font-title); font-weight:700;
+  color:var(--accent); letter-spacing:.04em;
+}
+
+/* Bloco genérico legado (.doc-block / .card / .pei-block) */
+.doc-block,.card,.pei-block{
+  background:#fff;
+  border:1px solid var(--border);
+  padding:12pt 14pt;
+  margin:8pt 0;
+}
+
+/* Filete dourado utilitário */
+.gold-divider,.gold-rule{ border:0; border-top:1px solid var(--divider); margin:14pt 0; }
+
+/* Listas ordenadas com numeração azul */
+ol{ list-style:none; counter-reset:section; padding-left:0; }
+ol > li{
+  counter-increment:section; position:relative;
+  padding-left:1.6em; margin:4pt 0;
+}
+ol > li::before{
+  content: counter(section) ".";
+  position:absolute; left:0; top:0;
+  color:var(--accent); font-weight:700;
+}
+
+/* Tabelas */
+table{ width:100%; border-collapse:collapse; margin:8pt 0; }
+th,td{
+  border-bottom:1px solid var(--border);
+  padding:6pt 8pt; vertical-align:top; text-align:left;
+  font-size:11pt;
+}
+th{
+  font-family:var(--font-title); font-weight:700;
+  color:var(--accent); border-bottom:1px solid var(--divider);
+}
+
+/* Assinatura digital legada */
+.digital-sig{
+  margin-top:26pt; padding:12pt 14pt;
+  border:1px solid var(--border); background:var(--soft);
+}
+.digital-sig .label{
+  font-family:var(--font-title); font-weight:700;
+  color:var(--accent); font-size:10pt;
+  letter-spacing:.08em; text-transform:uppercase; margin-bottom:8pt;
+}
+.digital-sig .row{ display:flex; justify-content:space-between; gap:16pt; flex-wrap:wrap; font-size:11pt; }
+.digital-sig .line{ margin-top:14pt; border-top:1px solid var(--accent); padding-top:4pt; font-size:10pt; color:var(--accent); text-align:center; }
+.digital-sig .hint{ margin-top:6pt; font-size:9pt; color:var(--gray); font-style:italic; text-align:center; }
+
+/* Esconde rodapé/cabeçalho legado do standardPrint que possa vir no body */
+.print-header,.page-band,.screen-foot{ display:none !important; }
 
 /* Quebras */
 .field-box,.text-block,.signatures-grid,.signature-box,
