@@ -33,6 +33,11 @@ export interface EditorialPrintOptions {
   docLabel?: string;
   legalBase?: string;
   extraCss?: string;
+  /** Aceito por compatibilidade com chamadas legadas; não é usado no layout editorial
+   *  (a assinatura faz parte do corpo do documento). */
+  professorNome?: string;
+  /** Compat: assinatura digital legada já vem no corpo. */
+  incluirAssinatura?: boolean;
 }
 
 const DOC_LABEL: Record<EditorialDocType, string> = {
