@@ -973,82 +973,116 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       }, 50);
       return;
     }
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const margin = 40;
-    const contentW = pageW - margin * 2;
-    let y = margin;
-    const newPageIfNeeded = (h: number) => {
-      if (y + h > pageH - margin) { doc.addPage(); y = margin; }
-    };
-    const h1 = (s: string) => {
-      newPageIfNeeded(28);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.setTextColor(15,23,42);
-      doc.text(s, margin, y); y += 22;
-    };
-    const h2 = (s: string) => {
-      newPageIfNeeded(22);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(255,122,69);
-      doc.text(s, margin, y); y += 16;
-    };
-    const para = (s: string) => {
-      doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(40,40,40);
-      const lines = doc.splitTextToSize(s || "—", contentW) as string[];
-      lines.forEach((ln) => { newPageIfNeeded(14); doc.text(ln, margin, y); y += 14; });
-      y += 4;
-    };
 
-    h1(plano.titulo || "Plano de atividade");
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(100);
-    doc.text(
-      `${anoEscolar}  ·  ${disciplina}${turma ? `  ·  ${turma}` : ""}  ·  ${duracao}  ·  ${tipo}`,
-      margin, y,
+    // Mesmo layout editorial dos demais documentos (Relatório, PEI, Inclusão).
+    const titulo = plano.titulo || "Plano de atividade";
+    const meta = [
+      { label: "Ano escolar", value: anoEscolar || "—" },
+      { label: "Disciplina", value: disciplina || "—" },
+      { label: "Turma", value: turma || "—" },
+      { label: "Duração", value: duracao || "—" },
+      { label: "Tipo", value: tipo || "—" },
+      { label: "Modo", value: modo === "pcd" ? "Atividade PCD" : "Regular" },
+    ];
+
+    const partes: string[] = [];
+    partes.push(
+      editorialCover({
+        title: titulo,
+        overline:
+          modo === "pcd"
+            ? "PLANO DE ATIVIDADE PCD • AGILIZAPROF"
+            : "PLANO DE ATIVIDADE • AGILIZAPROF",
+        subtitle: `${disciplina}${anoEscolar ? ` · ${anoEscolar}` : ""}${turma ? ` · ${turma}` : ""}`,
+      }),
     );
-    y += 18;
+    partes.push(editorialSection("Identificação"));
+    partes.push(editorialFieldsGrid(meta));
 
-    h2("① Objetivo"); para(plano.objetivo);
-    h2("② Descrição da atividade");
-    para(`Abertura: ${plano.abertura}`);
-    para(`Desenvolvimento: ${plano.desenvolvimento}`);
-    para(`Fechamento: ${plano.fechamento}`);
+    if (plano.objetivo) {
+      partes.push(editorialSection("Objetivo"));
+      partes.push(editorialLongField(plano.objetivo));
+    }
 
-    h2("③ Habilidades BNCC");
-    plano.habilidades.forEach((h) => para(`• ${h.codigo} — ${h.descricao}`));
-    if (plano.habilidades.length === 0) para("—");
+    partes.push(editorialSection("Descrição da atividade"));
+    partes.push(
+      editorialLongField(
+        [
+          plano.abertura ? `Abertura\n${plano.abertura}` : "",
+          plano.desenvolvimento ? `Desenvolvimento\n${plano.desenvolvimento}` : "",
+          plano.fechamento ? `Fechamento\n${plano.fechamento}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n"),
+      ),
+    );
+
+    if (plano.habilidades.length > 0) {
+      partes.push(editorialSection("Habilidades BNCC"));
+      partes.push(
+        editorialLongField(
+          plano.habilidades
+            .map((h) => {
+              const cod = h.codigo?.trim();
+              const desc = h.descricao?.trim();
+              if (cod && desc) return `• ${cod} — ${desc}`;
+              return `• ${cod || desc || "—"}`;
+            })
+            .join("\n"),
+        ),
+      );
+    }
 
     if ((plano.contribuicoesInter ?? []).length > 0) {
-      h2("Contribuição por disciplina (interdisciplinar)");
-      plano.contribuicoesInter!.forEach((c) =>
-        para(`• ${c.disciplina}: ${c.contribuicao}`),
+      partes.push(editorialSection("Contribuição por disciplina (interdisciplinar)"));
+      partes.push(
+        editorialLongField(
+          plano.contribuicoesInter!
+            .map((c) => `• ${c.disciplina}: ${c.contribuicao}`)
+            .join("\n"),
+        ),
       );
     }
 
     if (plano.adaptacoes.length > 0) {
-      h2("④ Adaptações PCD");
-      plano.adaptacoes.forEach((a) => para(`[${a.categoria}] ${a.texto}`));
+      partes.push(editorialSection("Adaptações PCD"));
+      partes.push(
+        editorialLongField(
+          plano.adaptacoes.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
+        ),
+      );
     }
+
     if (plano.sugestoes.length > 0) {
-      h2("⑤ Sugestões da Sofia");
-      plano.sugestoes.forEach((s) => para(`• ${s.titulo} — ${s.descricao}`));
+      partes.push(editorialSection("Sugestões da Sofia"));
+      partes.push(
+        editorialLongField(
+          plano.sugestoes.map((s) => `• ${s.titulo} — ${s.descricao}`).join("\n"),
+        ),
+      );
     }
+
     if (plano.materiais.length > 0) {
-      h2("⑥ Materiais necessários");
-      plano.materiais.forEach((m) => para(`☐ ${m}`));
+      partes.push(editorialSection("Materiais necessários"));
+      partes.push(
+        editorialLongField(plano.materiais.map((m) => `☐ ${m}`).join("\n")),
+      );
     }
 
-    doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(150);
-    doc.text(`Gerado pela Sofia · ${new Date().toLocaleString("pt-BR")}`, margin, pageH - 20);
+    printEditorial(titulo, partes.join("\n"), {
+      docType: "planejamento",
+      docLabel:
+        modo === "pcd"
+          ? "PLANO DE ATIVIDADE PCD"
+          : "PLANO DE ATIVIDADE",
+    });
 
-    const safe = (plano.titulo || "plano").replace(/[^\w-]+/g, "_").slice(0, 60);
-    doc.save(`${safe}.pdf`);
     logActivity({
       type: "exportacao",
       description: `PDF exportado: ${plano.titulo}`,
       detail: `${anoEscolar} · ${disciplina}`,
     });
-    showToast("📄 PDF exportado");
+    showToast("📄 Documento aberto para impressão / PDF");
   };
 
   /* ─────────── Render ─────────── */
