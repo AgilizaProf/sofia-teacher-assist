@@ -674,14 +674,14 @@ export function Relatorios() {
           ? `<section><h2>Parecer descritivo</h2><div>${esc(parecerAluno.texto).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 8pt;">${p}</p>`).join("")}</div></section>`
           : `<section><h2>Parecer descritivo</h2>
               ${parecerAluno.resumo ? `<p><b>Resumo:</b> ${esc(parecerAluno.resumo)}</p>` : ""}
-              ${parecerAluno.pedagogico ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
-              ${parecerAluno.comportamental ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Comportamental</h3><p>${esc(parecerAluno.comportamental)}</p>` : ""}
-              ${parecerAluno.sensorial ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Sensorial</h3><p>${esc(parecerAluno.sensorial)}</p>` : ""}
-              ${parecerAluno.familia ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Família</h3><p>${esc(parecerAluno.familia)}</p>` : ""}
-              ${parecerAluno.avancos?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Avanços</h3>${ulHtml(parecerAluno.avancos)}` : ""}
-              ${parecerAluno.desafios?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Desafios</h3>${ulHtml(parecerAluno.desafios)}` : ""}
-              ${parecerAluno.encaminhamentos?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Encaminhamentos</h3>${ulHtml(parecerAluno.encaminhamentos)}` : ""}
-              ${parecerAluno.comunicacao_familias ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Comunicação à família</h3><p>${esc(parecerAluno.comunicacao_familias)}</p>` : ""}
+              ${parecerAluno.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
+              ${parecerAluno.comportamental ? `<h3>Comportamental</h3><p>${esc(parecerAluno.comportamental)}</p>` : ""}
+              ${parecerAluno.sensorial ? `<h3>Sensorial</h3><p>${esc(parecerAluno.sensorial)}</p>` : ""}
+              ${parecerAluno.familia ? `<h3>Família</h3><p>${esc(parecerAluno.familia)}</p>` : ""}
+              ${parecerAluno.avancos?.length ? `<h3>Avanços</h3>${ulHtml(parecerAluno.avancos)}` : ""}
+              ${parecerAluno.desafios?.length ? `<h3>Desafios</h3>${ulHtml(parecerAluno.desafios)}` : ""}
+              ${parecerAluno.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ulHtml(parecerAluno.encaminhamentos)}` : ""}
+              ${parecerAluno.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAluno.comunicacao_familias)}</p>` : ""}
             </section>`)
       : "";
     const linhasArea = areas.map((area, ai) => {
@@ -715,22 +715,13 @@ ${linhasArea}
 </article>`;
   };
 
+  // Apenas regras de quebra de página — toda a tipografia/cores
+  // herdam do CSS editorial (editorialPrint.ts).
   const PRINT_CSS = `
-.report{page-break-after:always;page-break-inside:avoid;break-inside:avoid;}
+.report{page-break-after:always;}
 .report:last-of-type{page-break-after:auto;}
-h1{font-weight:700;font-size:16pt;margin:0 0 4px;color:#0F1B36;}
-h2{font-size:12pt;color:#FF6A2C;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #E7E9EF;padding-bottom:4px;}
-.meta{color:#6B7691;font-size:12pt;margin-bottom:18px;}
-.kpis{display:flex;gap:14px;margin:14px 0 8px;}
-.kpi{flex:1;border:1px solid #E7E9EF;border-radius:8px;padding:10px 12px;}
-.kpi b{display:block;font-size:14pt;color:#0F1B36;}
-.kpi small{color:#6B7691;font-size:10pt;text-transform:uppercase;letter-spacing:.06em;}
-ul.rub{list-style:none;padding:0;margin:0;}
-ul.rub li{display:flex;justify-content:space-between;gap:14px;padding:5px 0;border-bottom:1px dashed #E7E9EF;font-size:12pt;}
-ul.rub li b{color:#0F1B36;font-weight:700;white-space:nowrap;}
-.sig{margin-top:42px;display:flex;justify-content:space-between;gap:30px;}
-.sig div{flex:1;border-top:1px solid #0B1220;padding-top:6px;font-size:11pt;text-align:center;color:#3B4256;}
-.foot{margin-top:30px;font-size:10pt;color:#6B7691;text-align:center;}`;
+article.report > section{ page-break-inside:avoid; break-inside:avoid; }
+`;
 
   const printBatchReports = (alunos: { id: string; nome: string; turma: string; pcd: string }[]) => {
     if (alunos.length === 0) { toast.error("Selecione ao menos um aluno."); return; }
