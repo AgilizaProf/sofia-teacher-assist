@@ -1543,14 +1543,14 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               ? `<section><h2>Parecer descritivo</h2><div>${esc(parecerAluno.texto).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 8pt;">${p}</p>`).join("")}</div></section>`
               : `<section><h2>Parecer descritivo</h2>
                   ${parecerAluno.resumo ? `<p><b>Resumo:</b> ${esc(parecerAluno.resumo)}</p>` : ""}
-                  ${parecerAluno.pedagogico ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
-                  ${parecerAluno.comportamental ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Comportamental</h3><p>${esc(parecerAluno.comportamental)}</p>` : ""}
-                  ${parecerAluno.sensorial ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Sensorial</h3><p>${esc(parecerAluno.sensorial)}</p>` : ""}
-                  ${parecerAluno.familia ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Família</h3><p>${esc(parecerAluno.familia)}</p>` : ""}
-                  ${parecerAluno.avancos?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Avanços</h3>${ulHtml(parecerAluno.avancos)}` : ""}
-                  ${parecerAluno.desafios?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Desafios</h3>${ulHtml(parecerAluno.desafios)}` : ""}
-                  ${parecerAluno.encaminhamentos?.length ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Encaminhamentos</h3>${ulHtml(parecerAluno.encaminhamentos)}` : ""}
-                  ${parecerAluno.comunicacao_familias ? `<h3 style="font-size:11pt;color:#FF6A2C;margin:10px 0 4px;">Comunicação à família</h3><p>${esc(parecerAluno.comunicacao_familias)}</p>` : ""}
+                  ${parecerAluno.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
+                  ${parecerAluno.comportamental ? `<h3>Comportamental</h3><p>${esc(parecerAluno.comportamental)}</p>` : ""}
+                  ${parecerAluno.sensorial ? `<h3>Sensorial</h3><p>${esc(parecerAluno.sensorial)}</p>` : ""}
+                  ${parecerAluno.familia ? `<h3>Família</h3><p>${esc(parecerAluno.familia)}</p>` : ""}
+                  ${parecerAluno.avancos?.length ? `<h3>Avanços</h3>${ulHtml(parecerAluno.avancos)}` : ""}
+                  ${parecerAluno.desafios?.length ? `<h3>Desafios</h3>${ulHtml(parecerAluno.desafios)}` : ""}
+                  ${parecerAluno.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ulHtml(parecerAluno.encaminhamentos)}` : ""}
+                  ${parecerAluno.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAluno.comunicacao_familias)}</p>` : ""}
                 </section>`)
           : "";
         const buildReportHtml = () => {
