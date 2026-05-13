@@ -952,7 +952,20 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const exportarPDF = async () => {
     const f = validar();
     setMissing(f);
-    if (f.length > 0) return;
+    if (f.length > 0) {
+      const labels = f.map((k) => LABELS[k] || k).join(", ");
+      showToast(`⚠️ Preencha antes de exportar: ${labels}`);
+      // dá tempo do banner renderizar antes de rolar até ele
+      window.setTimeout(() => {
+        const el = document.getElementById("atv-missing-banner");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("atv-error--flash");
+          window.setTimeout(() => el.classList.remove("atv-error--flash"), 1600);
+        }
+      }, 50);
+      return;
+    }
     const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
