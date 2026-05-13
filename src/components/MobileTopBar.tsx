@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/admin/useIsAdmin";
@@ -76,7 +76,7 @@ export const mobileTopBarCss = `
 }
 `;
 
-type Item = { to: string; label: string; icon: JSX.Element; badge?: string };
+type Item = { to: string; label: ReactNode; icon: ReactNode; badge?: string };
 
 const MAIN_ITEMS: Item[] = [
   { to: "/", label: "Página inicial", icon: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></> },
