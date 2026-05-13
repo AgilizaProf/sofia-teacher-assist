@@ -369,6 +369,62 @@ th{
 /* Esconde rodapé/cabeçalho legado do standardPrint que possa vir no body */
 .print-header,.page-band,.screen-foot{ display:none !important; }
 
+/* ─── Compat: marcação legada do Relatórios (h1, .meta, .kpis, ul.rub, .sig, .foot) ─── */
+h1{
+  font-family:var(--font-title); font-weight:700;
+  font-size:20pt; color:var(--ink);
+  margin:0 0 .25rem 0; line-height:1.2;
+}
+.meta{
+  color:var(--gray); font-size:10.5pt;
+  margin:0 0 14pt 0;
+}
+.kpis{
+  display:flex; gap:10pt; margin:10pt 0 14pt;
+}
+.kpi{
+  flex:1; border:1px solid var(--border);
+  background:var(--soft);
+  border-top:2px solid var(--accent);
+  padding:8pt 10pt;
+}
+.kpi small{
+  display:block;
+  font-family:var(--font-body); font-size:9pt; font-weight:700;
+  color:var(--accent); letter-spacing:.06em; text-transform:uppercase;
+  margin-bottom:2pt;
+}
+.kpi b{
+  display:block;
+  font-family:var(--font-title); font-weight:700;
+  font-size:14pt; color:var(--ink);
+}
+ul.rub{ list-style:none; padding:0; margin:0; }
+ul.rub li{
+  display:flex; justify-content:space-between; gap:14pt;
+  padding:5pt 0; border-bottom:1px dashed var(--border);
+  font-size:11pt;
+}
+ul.rub li b{
+  color:var(--accent); font-weight:700; white-space:nowrap;
+}
+.sig{
+  margin-top:36pt;
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:20pt;
+}
+.sig > div{
+  border-top:1px solid var(--gray);
+  padding-top:6pt;
+  font-size:10pt; color:var(--gray);
+  text-align:center;
+}
+.foot{
+  margin-top:24pt; padding-top:8pt;
+  border-top:1px solid var(--divider);
+  font-size:9pt; color:var(--gray);
+  text-align:center; font-style:italic;
+}
+
 /* Quebras */
 .field-box,.text-block,.signatures-grid,.signature-box,
 h1,h2,h3,h4,p{ page-break-inside:avoid; break-inside:avoid; }
