@@ -399,6 +399,67 @@ export function PeiPdi() {
         <div className="text-center pt-4">
           <Link to="/inclusao" className="text-xs text-muted-foreground hover:text-foreground">← Voltar para Inclusão</Link>
         </div>
+
+        <section className="bg-card border rounded-2xl overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setDebugOpen((v) => !v)}
+            className="w-full px-6 py-3 flex items-center justify-between text-sm font-semibold border-b bg-muted/40 hover:bg-muted"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Bug size={14} /> Debug Sofia · PEI
+              <span className="text-xs font-normal text-muted-foreground">({debugLog.length} eventos)</span>
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); setDebugLog([]); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setDebugLog([]); } }}
+                className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded border hover:bg-background cursor-pointer"
+              >
+                <Eraser size={12} /> Limpar
+              </span>
+              {debugOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </span>
+          </button>
+          {debugOpen && (
+            <div className="p-4 space-y-3 max-h-[500px] overflow-auto">
+              {debugLog.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nenhum evento ainda. Clique em <strong>Sofia gera o PEI</strong> para ver request, raw response e JSON parseado em tempo real (incluindo split parte=a / parte=b).
+                </p>
+              ) : (
+                debugLog.map((e, i) => {
+                  const stageColor =
+                    e.stage === "request" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                    e.stage === "raw" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                    e.stage === "parsed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                    "bg-rose-50 text-rose-700 border-rose-200";
+                  const parteColor =
+                    e.parte === "completo" ? "bg-violet-50 text-violet-700 border-violet-200" :
+                    e.parte === "a" ? "bg-sky-50 text-sky-700 border-sky-200" :
+                    "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200";
+                  return (
+                    <div key={i} className="border rounded-lg overflow-hidden">
+                      <div className="px-3 py-2 flex items-center gap-2 text-xs bg-background border-b">
+                        <span className={`px-2 py-0.5 rounded-full border ${stageColor}`}>{e.stage}</span>
+                        <span className={`px-2 py-0.5 rounded-full border ${parteColor}`}>parte={e.parte}</span>
+                        <span className="ml-auto text-muted-foreground">{e.ts}</span>
+                      </div>
+                      <pre className="text-[11px] leading-relaxed p-3 overflow-auto max-h-64 bg-muted/30 whitespace-pre-wrap break-words">
+{(() => {
+  try { return JSON.stringify(e.payload, null, 2); }
+  catch { return String(e.payload); }
+})()}
+                      </pre>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
