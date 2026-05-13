@@ -658,6 +658,35 @@ export function Relatorios() {
   };
 
   // ===== Helpers de impressão (parecer único e em lote) =====
+  const escHtmlBasic = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  /** Bloco editorial de identificação: só renderiza campos preenchidos. */
+  const buildIdentBlock = (info: {
+    aluno: { nome: string; turma?: string; pcd?: string };
+    escola?: string;
+    professor?: string;
+    periodo?: string;
+  }): string => {
+    const fields: Array<{ label: string; value: string }> = [];
+    if (info.aluno.nome) fields.push({ label: "Estudante", value: info.aluno.nome });
+    if (info.aluno.turma) fields.push({ label: "Turma", value: info.aluno.turma });
+    if (info.escola) fields.push({ label: "Escola", value: info.escola });
+    if (info.periodo) fields.push({ label: "Período avaliado", value: info.periodo });
+    if (info.professor) fields.push({ label: "Professor(a)", value: info.professor });
+    if (info.aluno.pcd) fields.push({ label: "PCD", value: info.aluno.pcd });
+    if (fields.length === 0) return "";
+    const cells = fields
+      .map(
+        (f) => `<div class="field-box">
+    <div class="field-label">${escHtmlBasic(f.label)}</div>
+    <div class="field-value">${escHtmlBasic(f.value)}</div>
+  </div>`,
+      )
+      .join("");
+    return `<div class="grid-2">${cells}</div>`;
+  };
+
   const buildReportBodyFor = (a: { id: string; nome: string; turma: string; pcd: string }) => {
     const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const ulHtml = (arr?: string[]) => (arr && arr.length ? `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
