@@ -658,12 +658,40 @@ export function Relatorios() {
   };
 
   // ===== Helpers de impressão (parecer único e em lote) =====
+  const escHtmlBasic = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  /** Bloco editorial de identificação: só renderiza campos preenchidos. */
+  const buildIdentBlock = (info: {
+    aluno: { nome: string; turma?: string; pcd?: string };
+    escola?: string;
+    professor?: string;
+    periodo?: string;
+  }): string => {
+    const fields: Array<{ label: string; value: string }> = [];
+    if (info.aluno.nome) fields.push({ label: "Estudante", value: info.aluno.nome });
+    if (info.aluno.turma) fields.push({ label: "Turma", value: info.aluno.turma });
+    if (info.escola) fields.push({ label: "Escola", value: info.escola });
+    if (info.periodo) fields.push({ label: "Período avaliado", value: info.periodo });
+    if (info.professor) fields.push({ label: "Professor(a)", value: info.professor });
+    if (info.aluno.pcd) fields.push({ label: "PCD", value: info.aluno.pcd });
+    if (fields.length === 0) return "";
+    const cells = fields
+      .map(
+        (f) => `<div class="field-box">
+    <div class="field-label">${escHtmlBasic(f.label)}</div>
+    <div class="field-value">${escHtmlBasic(f.value)}</div>
+  </div>`,
+      )
+      .join("");
+    return `<div class="grid-2">${cells}</div>`;
+  };
+
   const buildReportBodyFor = (a: { id: string; nome: string; turma: string; pcd: string }) => {
     const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const ulHtml = (arr?: string[]) => (arr && arr.length ? `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
     const areas = areasFor(a.id, a.turma, a.pcd);
     const rub = getAlunoRubric(a.id);
-    const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
     const dataStr = new Date().toLocaleDateString("pt-BR");
     const aluno = dashStudents.find((s) => s.name === a.nome);
     const cls = dashClasses.find((c) => c.name === a.turma);
@@ -693,16 +721,7 @@ export function Relatorios() {
     }).join("");
     return `<article class="report">
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
-<div class="meta">
-  ${esc(a.turma || "Sem turma")} · ${bimestreNum}º bimestre${a.pcd ? ` · PCD: ${esc(a.pcd)}` : ""}
-  ${escola ? ` · ${esc(escola.name)}` : ""}
-  ${aluno?.birth ? ` · Nascimento: ${esc(new Date(aluno.birth).toLocaleDateString("pt-BR"))}` : ""}
-</div>
-<div class="kpis">
-  <div class="kpi"><small>Avaliado</small><b>${pctPreenchido}%</b></div>
-  <div class="kpi"><small>Desempenho</small><b>${pctDesempenho}%</b></div>
-  <div class="kpi"><small>Bimestre</small><b>${bimestreNum}º</b></div>
-</div>
+${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
 ${linhasArea}
@@ -1556,7 +1575,6 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
         const buildReportHtml = () => {
           const areas = areasFor(a.id, a.turma, a.pcd);
           const rub = getAlunoRubric(a.id);
-          const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = dashStudents.find((s) => s.name === a.nome);
           const cls = dashClasses.find((c) => c.name === a.turma);
@@ -1570,16 +1588,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           }).join("");
           const bodyInner = `
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
-<div class="meta">
-  ${esc(a.turma || "Sem turma")} · ${bimestreNum}º bimestre${a.pcd ? ` · PCD: ${esc(a.pcd)}` : ""}
-  ${escola ? ` · ${esc(escola.name)}` : ""}
-  ${aluno?.birth ? ` · Nascimento: ${esc(new Date(aluno.birth).toLocaleDateString("pt-BR"))}` : ""}
-</div>
-<div class="kpis">
-  <div class="kpi"><small>Avaliado</small><b>${pctPreenchido}%</b></div>
-  <div class="kpi"><small>Desempenho</small><b>${pctDesempenho}%</b></div>
-  <div class="kpi"><small>Bimestre</small><b>${bimestreNum}º</b></div>
-</div>
+${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
 ${linhasArea}
@@ -1610,7 +1619,6 @@ ${linhasArea}
           // moderno nem Google Fonts. Layout em 2 colunas via <table>.
           const areas = areasFor(a.id, a.turma, a.pcd);
           const rub = getAlunoRubric(a.id);
-          const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = dashStudents.find((s) => s.name === a.nome);
           const cls = dashClasses.find((c) => c.name === a.turma);
@@ -1631,37 +1639,29 @@ ${linhasArea}
           const cellValue = (value: string) =>
             `<td width="50%" style="padding:8px 10px;background:#FFFFFF;border:1px solid ${BORDER};border-top:none;font-family:${bodyFont};font-size:11pt;color:${INK};">${esc(value || "—")}</td>`;
 
+          // Identificação dinâmica: só inclui campos preenchidos.
+          const identFields: Array<{ label: string; value: string }> = [];
+          if (a.nome) identFields.push({ label: "Estudante", value: a.nome });
+          if (a.turma) identFields.push({ label: "Turma", value: a.turma });
+          if (escola?.name) identFields.push({ label: "Escola", value: escola.name });
+          identFields.push({ label: "Período avaliado", value: `${bimestreNum}º bimestre` });
+          if (user.name) identFields.push({ label: "Professor(a)", value: user.name });
+          if (a.pcd) identFields.push({ label: "PCD", value: a.pcd });
+
+          const identRows: string[] = [];
+          for (let i = 0; i < identFields.length; i += 2) {
+            const left = identFields[i];
+            const right = identFields[i + 1];
+            identRows.push(
+              `<tr>${cellLabel(left.label)}${right ? cellLabel(right.label) : `<td width="50%" style="border:none;"></td>`}</tr>`,
+            );
+            identRows.push(
+              `<tr>${cellValue(left.value)}${right ? cellValue(right.value) : `<td width="50%" style="border:none;"></td>`}</tr>`,
+            );
+          }
           const ident = `
 <table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
-  <tr>${cellLabel("Escola")}${cellLabel("Professor(a)")}</tr>
-  <tr>${cellValue(escola?.name || "")}${cellValue(user.name || "")}</tr>
-  <tr>${cellLabel("Turma / Bimestre")}${cellLabel("Data")}</tr>
-  <tr>${cellValue(`${a.turma || "Sem turma"} · ${bimestreNum}º bim.`)}${cellValue(dataStr)}</tr>
-</table>`;
-
-          const dadosEstudante = `
-<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
-  <tr>${cellLabel("Nome do(a) Estudante")}${cellLabel("Nascimento")}</tr>
-  <tr>${cellValue(a.nome)}${cellValue(aluno?.birth ? new Date(aluno.birth).toLocaleDateString("pt-BR") : "")}</tr>
-  ${a.pcd ? `<tr>${cellLabel("PCD")}${cellLabel("Período Avaliativo")}</tr><tr>${cellValue(a.pcd)}${cellValue(`${bimestreNum}º bimestre`)}</tr>` : ""}
-</table>`;
-
-          const kpisTable = `
-<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
-  <tr>
-    <td width="33%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
-      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Avaliado</div>
-      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${pctPreenchido}%</div>
-    </td>
-    <td width="33%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
-      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Desempenho</div>
-      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${pctDesempenho}%</div>
-    </td>
-    <td width="34%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
-      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Bimestre</div>
-      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${bimestreNum}º</div>
-    </td>
-  </tr>
+  ${identRows.join("\n")}
 </table>`;
 
           const sectionTitle = (t: string) =>
@@ -1758,9 +1758,6 @@ ${linhasArea}
   </div>
   ${sectionTitle("Identificação")}
   ${ident}
-  ${sectionTitle("Dados do(a) Estudante")}
-  ${dadosEstudante}
-  ${kpisTable}
   ${obs}
   ${parecerWord}
   ${areasWord}
