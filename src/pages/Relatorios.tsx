@@ -1619,7 +1619,6 @@ ${linhasArea}
           // moderno nem Google Fonts. Layout em 2 colunas via <table>.
           const areas = areasFor(a.id, a.turma, a.pcd);
           const rub = getAlunoRubric(a.id);
-          const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = dashStudents.find((s) => s.name === a.nome);
           const cls = dashClasses.find((c) => c.name === a.turma);
@@ -1640,37 +1639,29 @@ ${linhasArea}
           const cellValue = (value: string) =>
             `<td width="50%" style="padding:8px 10px;background:#FFFFFF;border:1px solid ${BORDER};border-top:none;font-family:${bodyFont};font-size:11pt;color:${INK};">${esc(value || "—")}</td>`;
 
+          // Identificação dinâmica: só inclui campos preenchidos.
+          const identFields: Array<{ label: string; value: string }> = [];
+          if (a.nome) identFields.push({ label: "Estudante", value: a.nome });
+          if (a.turma) identFields.push({ label: "Turma", value: a.turma });
+          if (escola?.name) identFields.push({ label: "Escola", value: escola.name });
+          identFields.push({ label: "Período avaliado", value: `${bimestreNum}º bimestre` });
+          if (user.name) identFields.push({ label: "Professor(a)", value: user.name });
+          if (a.pcd) identFields.push({ label: "PCD", value: a.pcd });
+
+          const identRows: string[] = [];
+          for (let i = 0; i < identFields.length; i += 2) {
+            const left = identFields[i];
+            const right = identFields[i + 1];
+            identRows.push(
+              `<tr>${cellLabel(left.label)}${right ? cellLabel(right.label) : `<td width="50%" style="border:none;"></td>`}</tr>`,
+            );
+            identRows.push(
+              `<tr>${cellValue(left.value)}${right ? cellValue(right.value) : `<td width="50%" style="border:none;"></td>`}</tr>`,
+            );
+          }
           const ident = `
 <table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
-  <tr>${cellLabel("Escola")}${cellLabel("Professor(a)")}</tr>
-  <tr>${cellValue(escola?.name || "")}${cellValue(user.name || "")}</tr>
-  <tr>${cellLabel("Turma / Bimestre")}${cellLabel("Data")}</tr>
-  <tr>${cellValue(`${a.turma || "Sem turma"} · ${bimestreNum}º bim.`)}${cellValue(dataStr)}</tr>
-</table>`;
-
-          const dadosEstudante = `
-<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
-  <tr>${cellLabel("Nome do(a) Estudante")}${cellLabel("Nascimento")}</tr>
-  <tr>${cellValue(a.nome)}${cellValue(aluno?.birth ? new Date(aluno.birth).toLocaleDateString("pt-BR") : "")}</tr>
-  ${a.pcd ? `<tr>${cellLabel("PCD")}${cellLabel("Período Avaliativo")}</tr><tr>${cellValue(a.pcd)}${cellValue(`${bimestreNum}º bimestre`)}</tr>` : ""}
-</table>`;
-
-          const kpisTable = `
-<table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 14pt;">
-  <tr>
-    <td width="33%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
-      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Avaliado</div>
-      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${pctPreenchido}%</div>
-    </td>
-    <td width="33%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
-      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Desempenho</div>
-      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${pctDesempenho}%</div>
-    </td>
-    <td width="34%" style="padding:8px 10px;border:1px solid ${BORDER};background:${SOFT};font-family:${bodyFont};text-align:center;">
-      <div style="font-size:9pt;font-weight:bold;color:${ACCENT};text-transform:uppercase;letter-spacing:1px;">Bimestre</div>
-      <div style="font-family:${titleFont};font-size:14pt;color:${INK};font-weight:bold;">${bimestreNum}º</div>
-    </td>
-  </tr>
+  ${identRows.join("\n")}
 </table>`;
 
           const sectionTitle = (t: string) =>
@@ -1767,9 +1758,6 @@ ${linhasArea}
   </div>
   ${sectionTitle("Identificação")}
   ${ident}
-  ${sectionTitle("Dados do(a) Estudante")}
-  ${dadosEstudante}
-  ${kpisTable}
   ${obs}
   ${parecerWord}
   ${areasWord}
