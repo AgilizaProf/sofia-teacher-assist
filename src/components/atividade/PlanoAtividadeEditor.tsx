@@ -1334,7 +1334,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         )}
 
         {missing.length > 0 && (
-          <div className="atv-error">
+          <div className="atv-error" id="atv-missing-banner">
             <AlertTriangle size={14} />
             <span>
               Antes de salvar, preencha:{" "}
