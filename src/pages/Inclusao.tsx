@@ -286,6 +286,14 @@ const css = `
 .inc-a4 ul{font-size:12.5px;line-height:1.7;padding-left:22px;margin-bottom:8px;font-family:'Inter',sans-serif;}
 
 @media(max-width:720px){.inc-app{grid-template-columns:1fr;}}
+@media(max-width:480px){
+  .kpis{grid-template-columns:1fr;}
+  .list-grid{grid-template-columns:1fr;gap:10px;}
+  .plan-hero{padding:16px;}
+  .plan-hero h3{font-size:18px;}
+  .inc-a4{padding:16px !important;}
+  input,select,textarea{font-size:16px !important;}
+}
 
 /* PLAN tab */
 .plan-hero{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;margin-bottom:14px;}

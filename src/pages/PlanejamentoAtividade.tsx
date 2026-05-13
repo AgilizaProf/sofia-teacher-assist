@@ -21,6 +21,15 @@ const css = `
 .pa-root{font-family:'Inter',-apple-system,sans-serif;background:#F6F7FB;color:#0F172A;min-height:100vh;}
 .pa-root *{box-sizing:border-box;}
 .pa-app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+@media(max-width:900px){.pa-app{grid-template-columns:1fr;}}
+@media(max-width:480px){
+  .pa-hero{margin:14px 12px 0;padding:18px 16px;border-radius:14px;}
+  .pa-hero h1{font-size:22px;}
+  .pa-hero p{font-size:13px;}
+  .pa-grid{margin:14px 12px 60px;gap:12px;}
+  .pa-card{padding:14px;}
+  .pa-input,.pa-select,.pa-text{font-size:16px;}
+}
 .pa-main{display:flex;flex-direction:column;min-width:0;}
 .pa-back{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#64748B;font-weight:600;background:none;border:none;cursor:pointer;padding:6px 0;text-decoration:none;}
 .pa-back:hover{color:#FF7A45;}

@@ -335,6 +335,12 @@ const css = `
 .pl-badge-novo{animation:pl-blink 1s ease-in-out 3;}
 
 @media(max-width:880px){.pl-app{grid-template-columns:1fr;}}
+@media(max-width:480px){
+  .pl-tabbar{margin:14px 12px 0;grid-template-columns:repeat(2,minmax(0,1fr));}
+  .pl-workspace{padding:14px 12px 80px;}
+  .pl-hero{padding:16px;}
+  .pl-hero h1{font-size:20px;}
+}
 `;
 
 type MKey = "m1" | "m2" | "m3" | "m4" | "m5" | "m6" | "atv" | "pcd" | "trilhas";
