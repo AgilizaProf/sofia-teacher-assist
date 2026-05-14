@@ -7,7 +7,7 @@ import { useSofia } from "./SofiaProvider";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 
 const css = `
-.sofia-fab{position:fixed;right:24px;bottom:24px;z-index:50;width:56px;height:56px;border:none;border-radius:50%;cursor:pointer;
+.sofia-fab{position:fixed;right:max(16px, env(safe-area-inset-right));bottom:max(20px, env(safe-area-inset-bottom));z-index:60;width:56px;height:56px;border:none;border-radius:50%;cursor:pointer;
   background:var(--sofia-gradient);color:var(--sofia-on-dark);
   display:grid;place-items:center;
   box-shadow:var(--sofia-shadow-fab);transition:transform .18s, box-shadow .18s;}
