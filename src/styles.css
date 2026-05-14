@@ -429,6 +429,31 @@ button[aria-label="Dispensar"] > * {
     padding: 18px 16px !important;
   }
   .ssg-hero-cta { margin-left: 0 !important; width: 100% !important; justify-content: center !important; }
+  .ssg-hero-title,
+  .ssg-hero-desc { min-width: 0 !important; overflow-wrap: break-word !important; word-break: normal !important; }
+
+  /* C — rel-hero (Pareceres) CTAs full-width e texto sem cortar */
+  .rel-hero { padding: clamp(16px, 4vw, 22px) !important; }
+  .rel-hero h1 { font-size: clamp(20px, 5.5vw, 26px) !important; word-break: normal !important; overflow-wrap: break-word !important; min-width: 0 !important; }
+  .rel-hero p { min-width: 0 !important; overflow-wrap: break-word !important; }
+  .rel-hero-cta {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .rel-hero-cta > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    justify-content: center !important;
+  }
+}
+
+/* C — telas muito estreitas: CTAs do rel-hero empilham */
+@media (max-width: 380px) {
+  .rel-hero-cta { grid-template-columns: 1fr !important; }
+  .ssg-hero-cta { font-size: 12px !important; padding: 10px 12px !important; }
 
   /* E — Tabs com scroll horizontal suave */
   .rel-tabs,
