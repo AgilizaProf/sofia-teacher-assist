@@ -100,6 +100,9 @@ function RootComponent() {
   useEffect(() => { installPlatformTelemetry(); }, []);
   const loc = useLocation();
   useEffect(() => { trackPageVisit(loc.pathname); }, [loc.pathname]);
+  useEffect(() => {
+    if (typeof window !== "undefined") window.scrollTo(0, 0);
+  }, [loc.pathname]);
 
   useReducedMotion();
   const { ready, authed, isPublicRoute } = useAuthGuard();

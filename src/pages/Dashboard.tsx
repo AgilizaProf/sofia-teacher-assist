@@ -300,13 +300,14 @@ const css = `
 @media(max-width:900px){.ap-app{grid-template-columns:1fr;}.ap-sidebar{display:none;}.ap-main{padding:18px;}}
 @media(max-width:560px){.hero{padding:20px 18px;}.hero-title{font-size:26px;}.hero-metric-value{font-size:42px;}.today-focus{flex-direction:column;align-items:flex-start;}.today-focus-action{width:100%;justify-content:center;}.card-head{align-items:flex-start;}.filter-pills{width:100%;}}
 @media(max-width:480px){
-  .ap-main{padding:14px 12px 36px;max-width:100%;}
+  .ap-main{padding:14px 12px 100px;max-width:100%;}
   .hero{padding:18px 16px;border-radius:16px;gap:16px;}
-  .hero-title{font-size:22px;line-height:1.25;}
+  .ap-root .hero-title{font-size:clamp(20px,5.5vw,26px);line-height:1.25;word-break:normal;overflow-wrap:break-word;hyphens:none;}
   .hero-sub{font-size:13px;margin-bottom:16px;}
   .hero-metric{padding:16px;}
   .hero-metric-value{font-size:36px;}
-  .hero-cta,.hero-cta-ghost{width:100%;justify-content:center;}
+  .hero-cta-row{display:flex;flex-wrap:wrap;gap:10px;width:100%;}
+  .hero-cta,.hero-cta-ghost{width:100%;max-width:100%;justify-content:center;white-space:normal;flex:1 1 auto;min-width:0;}
   .stats{grid-template-columns:1fr;gap:10px;}
   .school-row{grid-template-columns:1fr;}
   .grid-2{gap:12px;}
