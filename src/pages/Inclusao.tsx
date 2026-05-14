@@ -20,6 +20,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
+import { useTurmas } from "@/hooks/useTurmas";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
 import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusaoVisualizarModal";
