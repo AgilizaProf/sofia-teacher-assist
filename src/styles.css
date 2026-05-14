@@ -347,14 +347,17 @@ button[aria-label="Dispensar"] > * {
    D (FAB clearance), E (tabs scroll horizontal).
    ============================================================ */
 
-/* D — FAB + sino clearance: respiro inferior em todos os layouts ≤820px */
+/* D — FAB + sino clearance: respiro inferior global ≤820px (safe-area aware) */
 @media (max-width: 820px) {
   .ap-main,
   .pl-workspace,
   .inc-a4,
   .pa-app,
-  .ag-main {
-    padding-bottom: 110px !important;
+  .ag-main,
+  .rel-main,
+  .rel-page,
+  main {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom)) !important;
   }
 }
 
