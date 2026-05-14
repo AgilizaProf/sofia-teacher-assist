@@ -130,18 +130,18 @@ const css = `
 .ag-up-title{font-family:'Fraunces',serif;font-size:15px;font-weight:700;letter-spacing:-.3px;color:var(--text);}
 .ag-up-link{font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;}
 .ag-up-list{padding:6px 0;}
-.ag-up-item{padding:11px 16px;display:flex;gap:11px;cursor:pointer;transition:.12s;border-left:3px solid transparent;}
+.ag-up-item{padding:11px 16px;display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;cursor:pointer;transition:.12s;border-left:3px solid transparent;}
 .ag-up-item:hover{background:#fafbfd;border-left-color:var(--accent);}
-.ag-up-day{flex-shrink:0;width:42px;text-align:center;padding-top:1px;}
-.ag-up-day-num{font-family:'Fraunces',serif;font-size:18px;font-weight:800;line-height:1;letter-spacing:-.5px;color:var(--text);}
-.ag-up-day-mo{font-size:9.5px;font-weight:700;color:var(--text-mute);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
-.ag-up-body{flex:1;min-width:0;}
+.ag-up-day{width:56px;text-align:center;padding-top:1px;}
+.ag-up-day-num{font-family:'Fraunces',serif;font-size:20px;font-weight:800;line-height:1;letter-spacing:-.5px;color:var(--text);}
+.ag-up-day-mo{font-size:10px;font-weight:700;color:var(--text-mute);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+.ag-up-body{min-width:0;}
 .ag-up-tag{display:inline-block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:1px 6px;border-radius:4px;margin-bottom:3px;}
 .ag-up-tag.eval{background:#FEF3C7;color:#92400E;}
 .ag-up-tag.report{background:#D1FAE5;color:#065F46;}
 .ag-up-tag.meeting{background:#FFF1E8;color:#C2410C;}
 .ag-up-tag.pcd{background:#EDE9FE;color:#5B21B6;}
-.ag-up-name{font-size:13px;font-weight:600;line-height:1.35;color:var(--text);}
+.ag-up-name{font-size:13px;font-weight:600;line-height:1.35;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;}
 .ag-up-meta{font-size:11px;color:var(--text-mute);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .ag-up-meta .mdot{width:3px;height:3px;border-radius:50%;background:#cdd4e0;}
 .ag-up-prep{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--success);margin-top:5px;background:rgba(16,185,129,.08);padding:2px 6px;border-radius:4px;border:1px solid rgba(16,185,129,.18);}
