@@ -1330,7 +1330,7 @@ export function Dashboard() {
                         >
                           <div style={{
                             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                            minWidth: 38, padding: "4px 0", borderRadius: 8,
+                            width: 56, flexShrink: 0, padding: "6px 0", borderRadius: 8,
                             background: "#fff", border: "1px solid var(--border)",
                           }}>
                             <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: 14, color: "var(--primary)", lineHeight: 1 }}>{dd}</div>
@@ -1361,7 +1361,11 @@ export function Dashboard() {
                                 <span style={{ fontSize: 11, color: "var(--text-soft)", fontWeight: 600 }}>{ev.time}</span>
                               )}
                             </div>
-                            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div style={{
+                              fontSize: 12.5, fontWeight: 700, color: "var(--primary)",
+                              display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const,
+                              overflow: "hidden", overflowWrap: "anywhere", lineHeight: 1.3,
+                            }}>
                               {ev.title}
                             </div>
                           </div>
