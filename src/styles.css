@@ -448,12 +448,6 @@ button[aria-label="Dispensar"] > * {
     white-space: normal !important;
     justify-content: center !important;
   }
-}
-
-/* C — telas muito estreitas: CTAs do rel-hero empilham */
-@media (max-width: 380px) {
-  .rel-hero-cta { grid-template-columns: 1fr !important; }
-  .ssg-hero-cta { font-size: 12px !important; padding: 10px 12px !important; }
 
   /* E — Tabs com scroll horizontal suave */
   .rel-tabs,
@@ -470,6 +464,12 @@ button[aria-label="Dispensar"] > * {
     flex: 0 0 auto !important;
     white-space: nowrap !important;
   }
+}
+
+/* C — telas muito estreitas: CTAs empilham */
+@media (max-width: 380px) {
+  .rel-hero-cta { grid-template-columns: 1fr !important; }
+  .ssg-hero-cta { font-size: 12px !important; padding: 10px 12px !important; }
 }
 
 /* A — Forms 2-col em telas estreitas: regra para tablet pequeno também */
