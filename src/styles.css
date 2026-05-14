@@ -456,10 +456,10 @@ button[aria-label="Dispensar"] > * {
 @media (min-width: 481px) and (max-width: 820px) {
   /* Drawer não ocupa a tela inteira em tablet */
   .mtb-drawer { width: min(360px, 86vw) !important; }
-  /* Mais respiro lateral nas áreas principais */
-  .ap-main { padding: 20px 24px 56px !important; }
-  .pl-workspace { padding: 20px 24px 100px !important; }
-  .inc-a4 { padding: 28px 32px !important; }
+  /* Mais respiro lateral nas áreas principais (com clearance pro FAB) */
+  .ap-main { padding: 20px 24px calc(110px + env(safe-area-inset-bottom)) !important; }
+  .pl-workspace { padding: 20px 24px calc(110px + env(safe-area-inset-bottom)) !important; }
+  .inc-a4 { padding: 28px 32px calc(110px + env(safe-area-inset-bottom)) !important; }
   /* Hero com padding mais confortável */
   .hero, .plan-hero, .pl-hero { padding: 24px 28px !important; }
   /* Gaps maiores entre cards */
