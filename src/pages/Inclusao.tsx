@@ -20,6 +20,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
+import { useTurmas } from "@/hooks/useTurmas";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
 import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusaoVisualizarModal";
@@ -1302,7 +1303,13 @@ ${corpo}
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, tab: t }) as never, replace: true });
   };
 
-  const turmasUnicas = Array.from(new Set(students.map((s) => s.turma).filter(Boolean))).sort();
+  const { turmas: turmasCadastradas } = useTurmas();
+  const turmasUnicas = Array.from(
+    new Set([
+      ...turmasCadastradas.map((t) => t.name).filter(Boolean),
+      ...students.map((s) => s.turma).filter(Boolean),
+    ])
+  ).sort();
   const diagsUnicos = Array.from(new Set(students.map((s) => s.diag).filter(Boolean))).sort();
   const filtered = students.filter((s) => {
     if (turmaFilter.length > 0 && !turmaFilter.includes(s.turma)) return false;
@@ -3036,7 +3043,20 @@ ${corpo}
               </select>
             </label>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Turma
-              <input value={nsTurma} onChange={(e) => setNsTurma(e.target.value)} style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }} placeholder="Ex.: 2º Ano A" />
+              <input
+                value={nsTurma}
+                onChange={(e) => setNsTurma(e.target.value)}
+                list="inc-turmas-cadastradas"
+                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4 }}
+                placeholder={turmasCadastradas.length > 0 ? "Selecione ou digite uma turma" : "Ex.: 2º Ano A"}
+              />
+              <datalist id="inc-turmas-cadastradas">
+                {turmasCadastradas.map((t) => (
+                  <option key={t.id} value={t.name}>
+                    {[t.school, t.grade, t.shift].filter(Boolean).join(" · ")}
+                  </option>
+                ))}
+              </datalist>
             </label>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Diagnóstico / CID
               <select

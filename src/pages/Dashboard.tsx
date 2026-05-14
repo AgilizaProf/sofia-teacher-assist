@@ -1523,9 +1523,12 @@ export function Dashboard() {
               });
               form.reset();
               setClassOpen(false);
+              toast.success("Turma cadastrada", { description: name });
             } catch (err) {
               console.error("[Dashboard] erro ao criar turma:", err);
-              toast.error("Não foi possível salvar a turma. Tente novamente.");
+              toast.error("Não foi possível salvar a turma", {
+                description: (err as Error)?.message ?? "Tente novamente em alguns instantes.",
+              });
             }
           }}>
             <div className="school-field">

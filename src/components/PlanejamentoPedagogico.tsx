@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { useUser } from "@/lib/mockData";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { useTurmas } from "@/hooks/useTurmas";
 
 const NAVY = "#1a2744";
 const BORDER = "#d6d6d6";
@@ -10,7 +11,6 @@ const titleFont = "'Fraunces', Georgia, 'Times New Roman', serif";
 const bodyFont = "'Inter', Arial, Helvetica, sans-serif";
 
 type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
-type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
 
 type PlanejamentoDoc = {
   escola: string;
@@ -162,7 +162,7 @@ function PageShell({ pageNumber, children }: { pageNumber: number; children: Rea
 export default function PlanejamentoPedagogico() {
   const user = useUser();
   const [schools] = usePersistentState<DashSchool[]>("dash_schools", []);
-  const [classes] = usePersistentState<DashClass[]>("dash_classes", []);
+  const { turmas: classes } = useTurmas();
   const [doc, setDoc] = usePersistentState<PlanejamentoDoc>("planejamento_pedagogico_doc", EMPTY);
 
   const today = useMemo(() => new Date().toLocaleDateString("pt-BR"), []);
