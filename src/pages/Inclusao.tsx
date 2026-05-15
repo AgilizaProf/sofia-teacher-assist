@@ -1068,8 +1068,9 @@ ${corpo}
   const anamneseResumo = useMemo(() => {
     if (!selectedId) return "";
     const data = anamByStudent[selectedId];
-    if (!data) return "";
-    return data
+    const obsGeral = (anamObsGeralByStudent[selectedId] || "").trim();
+    if (!data && !obsGeral) return "";
+    const eixosTxt = (data || [])
       .map((e) => {
         const itens = e.items
           .filter((i) => i.s !== "naoObservado")
@@ -1081,7 +1082,11 @@ ${corpo}
       })
       .filter(Boolean)
       .join("\n");
-  }, [selectedId, anamByStudent]);
+    const partes: string[] = [];
+    if (eixosTxt) partes.push(eixosTxt);
+    if (obsGeral) partes.push(`Observações gerais do(a) professor(a):\n${obsGeral}`);
+    return partes.join("\n\n");
+  }, [selectedId, anamByStudent, anamObsGeralByStudent]);
 
   // Parecer descritivo gerado pela Sofia (por aluno)
   type Parecer = {
