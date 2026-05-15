@@ -810,7 +810,7 @@
           <label class="lead-label" for="leadName">Como podemos te chamar?</label>
           <div class="input-icon-wrap">
             <span class="icon">👩‍🏫</span>
-            <input type="text" id="leadName" class="lead-input" placeholder="Ex.: Professora Ana" autocomplete="given-name"/>
+            <input type="text" id="leadName" class="lead-input" placeholder="Ex.: Prof. Ana" autocomplete="given-name"/>
           </div>
           <div class="lead-error" id="errorName">Por favor, digite seu nome.</div>
         </div>
@@ -840,7 +840,7 @@
     <!-- TELA 1 — BOAS-VINDAS PERSONALIZADAS -->
     <section class="screen" id="screen-1">
       <div class="welcome-illu">🎉</div>
-      <h1 class="screen-title">Olá, <em id="greetName" class="greet-name">Professora!</em><br>Que bom <em>te ver aqui</em>.</h1>
+      <h1 class="screen-title">Olá, <em id="greetName" class="greet-name">Educador(a)!</em><br>Que bom <em>te ver aqui</em>.</h1>
       <p class="screen-sub">
         Em <strong>menos de 3 minutos</strong>, vou te mostrar — exatamente — o que a Sofia vai fazer pra você.
         Sem manual, sem academiquês.
@@ -860,7 +860,7 @@
       <span class="eyebrow">🎯 Escolha sua primeira vitória</span>
       <h1 class="screen-title">Por onde você quer <em>começar a brilhar?</em></h1>
       <p class="screen-sub">
-        Tudo no AgilizaProf é incrível — mas cada professora tem uma dor maior. Escolha por onde a Sofia começa hoje.
+        Tudo no AgilizaProf é incrível — mas cada educador(a) tem uma dor maior. Escolha por onde a Sofia começa hoje.
         (Você usa todos os recursos depois, no mesmo plano.)
       </p>
       <div class="pain-grid" id="painGrid">
@@ -1024,7 +1024,7 @@
     <!-- TELA 6 -->
     <section class="screen" id="screen-6">
       <span class="eyebrow">🔥 Sua semana grátis começa AGORA</span>
-      <h1 class="screen-title" id="titleStep6">Comece sua <em>semana grátis</em>, <span id="greetName2">Professora</span> — <em>começa hoje.</em></h1>
+      <h1 class="screen-title" id="titleStep6">Comece sua <em>semana grátis</em>, <span id="greetName2">Educador(a)</span> — <em>começa hoje.</em></h1>
       <p class="screen-sub" id="subStep6">
         Você tem <strong>14 dias completos sem cartão</strong> pra usar tudo. Mas o melhor jeito de começar é fazendo a primeira vitória <strong>agora</strong>, enquanto a clareza tá fresca.
       </p>
@@ -1260,7 +1260,7 @@
     return txt.trim();
   }
   function getFirstName(full){
-    if(!full) return 'Professora';
+    if(!full) return 'Educador(a)';
     return full.trim().split(/\s+/)[0];
   }
 
@@ -1355,7 +1355,7 @@
       currentStep++;
       updateUI();
     } else {
-      alert('🎉 Bem-vinda ao AgilizaProf, '+getFirstName(leadData.name)+'! Indo pro painel...');
+      alert('🎉 Bem-vindo(a) ao AgilizaProf, '+getFirstName(leadData.name)+'! Indo pro painel...');
     }
   }
   function goBack(){if(currentStep>0){currentStep--;updateUI();}}
