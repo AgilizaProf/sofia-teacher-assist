@@ -699,6 +699,13 @@ export function Inclusao() {
   const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
   const [anamByStudent, setAnamByStudent] = usePersistentState<Record<string, ReturnType<typeof buildBlankAnam>>>("inc_anam", {});
   const anamData = anamByStudent[studentKey] || buildBlankAnam();
+  // Observação geral da anamnese (texto livre por aluno) — usada pela Sofia ao montar pareceres/relatórios.
+  const [anamObsGeralByStudent, setAnamObsGeralByStudent] = usePersistentState<Record<string, string>>("inc_anam_obs_geral", {});
+  const anamObsGeral = anamObsGeralByStudent[studentKey] || "";
+  const setAnamObsGeral = (txt: string) => {
+    if (!studentKey || studentKey === "_none") return;
+    setAnamObsGeralByStudent((all) => ({ ...all, [studentKey]: txt }));
+  };
   // PEI persistido pelo PEIFormModal — mesmo storage key
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
   const [objetivosModalOpen, setObjetivosModalOpen] = useState(false);
@@ -1061,8 +1068,9 @@ ${corpo}
   const anamneseResumo = useMemo(() => {
     if (!selectedId) return "";
     const data = anamByStudent[selectedId];
-    if (!data) return "";
-    return data
+    const obsGeral = (anamObsGeralByStudent[selectedId] || "").trim();
+    if (!data && !obsGeral) return "";
+    const eixosTxt = (data || [])
       .map((e) => {
         const itens = e.items
           .filter((i) => i.s !== "naoObservado")
@@ -1074,7 +1082,11 @@ ${corpo}
       })
       .filter(Boolean)
       .join("\n");
-  }, [selectedId, anamByStudent]);
+    const partes: string[] = [];
+    if (eixosTxt) partes.push(eixosTxt);
+    if (obsGeral) partes.push(`Observações gerais do(a) professor(a):\n${obsGeral}`);
+    return partes.join("\n\n");
+  }, [selectedId, anamByStudent, anamObsGeralByStudent]);
 
   // Parecer descritivo gerado pela Sofia (por aluno)
   type Parecer = {
@@ -2141,6 +2153,20 @@ ${corpo}
                           </div>
                         );
                       })}
+                    </div>
+                    <div style={{ marginTop: 16, background:"#fff", border:"1px solid var(--border)", borderRadius:10, padding:"12px 14px", display:"flex", flexDirection:"column", gap:8 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                        <b style={{ fontSize: 13 }}>Observações gerais sobre o(a) aluno(a)</b>
+                        <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                          (a Sofia usa este texto ao gerar PEI, pareceres e relatórios)
+                        </span>
+                      </div>
+                      <textarea
+                        value={anamObsGeral}
+                        onChange={(ev) => setAnamObsGeral(ev.target.value)}
+                        placeholder="Descreva aqui contexto familiar, comportamentos recorrentes, avanços, dificuldades, hipóteses pedagógicas ou qualquer informação relevante que a Sofia deva considerar…"
+                        style={{ width:"100%", minHeight:120, padding:"10px 12px", border:"1px solid var(--border)", borderRadius:8, resize:"vertical", fontFamily:"inherit", fontSize:13, color:"var(--text)", background:"#fff" }}
+                      />
                     </div>
                   </div>
                 </div>
