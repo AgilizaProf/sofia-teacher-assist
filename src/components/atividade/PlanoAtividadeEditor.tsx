@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { logActivity } from "@/lib/activity/activityLog";
+import { formatTurmaGrade } from "@/lib/turmaGrade";
 import {
   printEditorial,
   editorialCover,
