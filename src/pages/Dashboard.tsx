@@ -1181,6 +1181,42 @@ export function Dashboard() {
                   <button className={`filter-pill ${filter==="reg"?"active":""}`} onClick={() => setFilter("reg")}>Regular <span className="count">{students.filter(s => !s.pcd || s.pcd === "nao").length}</span></button>
                 </div>
               </div>
+              {(() => {
+                const visible = students.filter((s) => {
+                  if (filter === "pcd") return s.pcd && s.pcd !== "nao";
+                  if (filter === "reg") return !s.pcd || s.pcd === "nao";
+                  return true;
+                });
+                const visibleIds = visible.map((s) => s.id).filter((id): id is string => !!id);
+                if (visibleIds.length === 0) return null;
+                const allSelected = visibleIds.every((id) => selectedStudentIds.has(id));
+                const someSelected = visibleIds.some((id) => selectedStudentIds.has(id));
+                return (
+                  <div className="bulk-toolbar">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={(el) => { if (el) el.indeterminate = !allSelected && someSelected; }}
+                        onChange={() => {
+                          setSelectedStudentIds((prev) => {
+                            const next = new Set(prev);
+                            if (allSelected) visibleIds.forEach((id) => next.delete(id));
+                            else visibleIds.forEach((id) => next.add(id));
+                            return next;
+                          });
+                        }}
+                      />
+                      Selecionar todos
+                    </label>
+                    <span style={{ marginLeft: "auto" }}>
+                      {selectedStudentIds.size > 0
+                        ? `${selectedStudentIds.size} selecionado${selectedStudentIds.size === 1 ? "" : "s"}`
+                        : "Nenhum selecionado"}
+                    </span>
+                  </div>
+                );
+              })()}
 
               {totalStudents === 0 && totalClasses === 0 ? (
                 <EmptyState
