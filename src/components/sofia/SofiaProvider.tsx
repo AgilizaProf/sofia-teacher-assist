@@ -201,7 +201,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   // registra um marcador invisível para a próxima pergunta.
   useEffect(() => {
     if (!conversationId) return;
-    const marker = `[professora navegou para ${routeName} — ${loc.pathname}]`;
+    const marker = `[educador(a) navegou para ${routeName} — ${loc.pathname}]`;
     if (marker === lastRouteMarker.current) return;
     lastRouteMarker.current = marker;
     pendingRouteMarker.current = marker;

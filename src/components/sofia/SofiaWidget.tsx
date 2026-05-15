@@ -243,7 +243,7 @@ export function SofiaWidget() {
                   {!alreadyGreeted && (
                     <h3>{greeting(hydrated)}{firstName ? `, ${firstName}` : ""} 👋</h3>
                   )}
-                  <p>Vamos juntas? Posso preparar um <span className="sofia-em">parecer em ~4 min</span>, um <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação inclusiva — escolha por onde começar.</p>
+                  <p>Vamos juntos(as)? Posso preparar um <span className="sofia-em">parecer em ~4 min</span>, um <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação inclusiva — escolha por onde começar.</p>
                   <div className="sofia-suggest">
                     {SUGGESTIONS.map((q) => (
                       <button key={q} className="sofia-sg-btn" onClick={() => s.send(q)}>
