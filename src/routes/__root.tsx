@@ -10,6 +10,7 @@ import { SofiaNotificationsWidget } from "@/components/sofia/SofiaNotificationsW
 import { SofiaAutoReminders } from "@/lib/sofia/autoReminders";
 import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
+import { RootErrorBoundary } from "@/components/RootErrorBoundary";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
@@ -79,6 +80,23 @@ export const Route = createRootRoute({
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
+  errorComponent: ({ error }) => {
+    console.error("[root errorComponent]", error);
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-semibold text-foreground">Ops! Algo deu errado.</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Tente novamente em alguns instantes.</p>
+          <button
+            onClick={() => { if (typeof window !== "undefined") window.location.reload(); }}
+            className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  },
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
@@ -111,33 +129,41 @@ function RootComponent() {
   const showSofia = ready && authed && !isPublicRoute;
   useAiBudgetWarnings();
   return (
-    <SofiaProvider>
+    <RootErrorBoundary>
+      {/* Ordem dos providers (externo → interno):
+          1. SofiaContextProvider     — contexto base (rota, turma, aluno)
+          2. SofiaUserDataProvider    — dados do usuário (depende do contexto base)
+          3. SofiaNotificationsProvider — notificações (depende do user data)
+          4. SofiaProvider            — chat Sofia (consome todos os anteriores)
+          Componentes filhos sempre dentro dos providers que eles consomem. */}
       <SofiaContextProvider>
         <SofiaUserDataProvider>
           <SofiaNotificationsProvider>
-            <MaintenanceBanner />
-            {showSofia && <MobileTopBar />}
-            <Outlet />
-            {showSofia && (
-              <>
-                <SofiaErrorBoundary area="o assistente Sofia" silent>
-                  <SofiaWidget />
-                </SofiaErrorBoundary>
-                <SofiaErrorBoundary area="as notificações da Sofia" silent>
-                  <SofiaNotificationsWidget />
-                </SofiaErrorBoundary>
-                <SofiaErrorBoundary area="os lembretes da Sofia" silent>
-                  <SofiaAutoReminders />
-                </SofiaErrorBoundary>
-                <SofiaErrorBoundary area="o balão da Sofia" silent>
-                  <SofiaSpeechBubble />
-                </SofiaErrorBoundary>
-              </>
-            )}
-            <Toaster position="top-right" richColors />
+            <SofiaProvider>
+              <MaintenanceBanner />
+              {showSofia && <MobileTopBar />}
+              <Outlet />
+              {showSofia && (
+                <>
+                  <SofiaErrorBoundary area="o assistente Sofia" silent>
+                    <SofiaWidget />
+                  </SofiaErrorBoundary>
+                  <SofiaErrorBoundary area="as notificações da Sofia" silent>
+                    <SofiaNotificationsWidget />
+                  </SofiaErrorBoundary>
+                  <SofiaErrorBoundary area="os lembretes da Sofia" silent>
+                    <SofiaAutoReminders />
+                  </SofiaErrorBoundary>
+                  <SofiaErrorBoundary area="o balão da Sofia" silent>
+                    <SofiaSpeechBubble />
+                  </SofiaErrorBoundary>
+                </>
+              )}
+              <Toaster position="top-right" richColors />
+            </SofiaProvider>
           </SofiaNotificationsProvider>
         </SofiaUserDataProvider>
       </SofiaContextProvider>
-    </SofiaProvider>
+    </RootErrorBoundary>
   );
 }
