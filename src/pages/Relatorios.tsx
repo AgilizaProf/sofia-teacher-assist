@@ -831,8 +831,8 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
       return { status: "todo", naoObservadas };
     };
     if (combinedStudents.length > 0) {
-      return combinedStudents.map((s, i): Item => {
-        const id = `al-${i}`;
+      return combinedStudents.map((s): Item => {
+        const id = s.id;
         const turma = s.classRef || "";
         const pcd = s.pcd && s.pcd !== "nao" ? s.pcd : "";
         const { status, naoObservadas } = deriveStatus(id, turma, pcd);
