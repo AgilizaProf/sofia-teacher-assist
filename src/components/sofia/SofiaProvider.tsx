@@ -384,3 +384,8 @@ export function useSofia() {
   if (!c) throw new Error("useSofia must be used within <SofiaProvider>");
   return c;
 }
+
+/** Versão tolerante: retorna null se for chamada fora do <SofiaProvider>. */
+export function useSofiaOptional() {
+  return useContext(Ctx);
+}

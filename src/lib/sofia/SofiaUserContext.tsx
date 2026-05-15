@@ -297,6 +297,11 @@ export function useSofiaUserData(): SofiaUserData {
   return c;
 }
 
+/** Versão tolerante: retorna null quando não há provider acima (SSR / boot). */
+export function useSofiaUserDataOptional(): SofiaUserData | null {
+  return useContext(Ctx);
+}
+
 /**
  * Helper para os consumidores (toasts/sugestões) checarem se devem
  * perguntar ao usuário em vez de inventar dados.
