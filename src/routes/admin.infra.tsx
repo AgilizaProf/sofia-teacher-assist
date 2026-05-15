@@ -28,7 +28,7 @@ function InfraPage() {
     <AdminLayout title="Monitor de infraestrutura" subtitle="Saúde do backend">
       <div className="ad-stat-grid" style={{marginBottom:18}}>
         <div className="ad-stat"><div className="ad-stat-label">Latência total</div><div className="ad-stat-val">{latency ?? "…"}<span style={{fontSize:14,color:"#6B7280"}}> ms</span></div><div className="ad-stat-hint">{TABLES.length} consultas paralelas</div></div>
-        <div className="ad-stat"><div className="ad-stat-label">Status</div><div className="ad-stat-val ad-stat-accent">Online</div><div className="ad-stat-hint">Lovable Cloud</div></div>
+        <div className="ad-stat"><div className="ad-stat-label">Status</div><div className="ad-stat-val ad-stat-accent">Online</div><div className="ad-stat-hint">AgilizaProf Cloud</div></div>
       </div>
       <div className="ad-card" style={{padding:0,overflow:"hidden"}}>
         <div style={{padding:"14px 16px",borderBottom:"1px solid #E5E9F2"}}><h3 style={{margin:0}}>Tabelas — contagem de linhas</h3></div>
