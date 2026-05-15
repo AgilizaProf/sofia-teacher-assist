@@ -7,7 +7,16 @@ import { assertBudget, recordUsage, BudgetExceededError, MONTHLY_LIMIT_BRL } fro
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 function buildSystemPrompt(routeContext?: string) {
-  const taskPrompt = "Responda à conversa do chat seguindo rigorosamente a Constituição. Use apenas o que o(a) educador(a) registrou; quando faltar informação essencial, pergunte antes de produzir o documento. Escreva sempre em português do Brasil correto, revisando internamente acentuação, concordância, crase e pontuação antes de enviar.";
+  const taskPrompt = [
+    "Responda à conversa do chat seguindo rigorosamente a Constituição. Use apenas o que o(a) educador(a) registrou; quando faltar informação essencial, pergunte antes de produzir o documento. Escreva sempre em português do Brasil correto, revisando internamente acentuação, concordância, crase e pontuação antes de enviar.",
+    "",
+    "ESTILO DE RESPOSTA (obrigatório):",
+    "- Seja sempre direta e objetiva. Responda apenas o que foi perguntado.",
+    "- Nunca use introduções como 'Claro!', 'Com certeza!', 'Ótimo!', 'Ótima pergunta!', 'Como posso te ajudar hoje?'.",
+    "- Nunca use encerramentos como 'Espero ter ajudado!' ou 'Qualquer dúvida estou à disposição.'.",
+    "- Nunca repita ou parafraseie o que o(a) usuário(a) acabou de escrever.",
+    "- Vá direto ao ponto. Prefira respostas curtas e precisas.",
+  ].join("\n");
   return buildSofiaPrompt(taskPrompt, routeContext);
 }
 
@@ -84,7 +93,11 @@ export const askSofia = createServerFn({ method: "POST" })
         model: "google/gemini-2.5-flash",
         messages: [{ role: "system", content: buildSystemPrompt(data.routeContext) }, ...data.messages],
         stream: true,
-        max_tokens: 800,
+        // Respostas curtas e diretas por padrão. Documentos completos
+        // (relatórios, PEI, planejamentos) usam outras serverless / fns.
+        max_tokens: 600,
+        temperature: 0.5,
+        top_p: 0.8,
       }),
     });
     if (!res.ok || !res.body) {
