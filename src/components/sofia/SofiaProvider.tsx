@@ -2,6 +2,8 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { askSofia, listSofiaConversations, getSofiaConversation } from "@/lib/sofia.functions";
+import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 
 export type SofiaMessage = {
   role: "user" | "assistant";
@@ -74,16 +76,36 @@ const Ctx = createContext<SofiaCtx | null>(null);
 
 function useRouteContext() {
   const loc = useLocation();
+  const sofia = useSofiaContext();
   return useMemo(() => {
     const p = loc.pathname;
-    if (p.startsWith("/inclusao")) return "Você está na tela Inclusão (PEI, anamnese, pareceres).";
-    if (p.startsWith("/planejamento")) return "Você está na tela Planejamento (planos de aula, BNCC).";
-    if (p.startsWith("/relatorios")) return "Você está na tela Relatórios.";
-    if (p.startsWith("/agenda")) return "Você está na Agenda escolar.";
-    if (p.startsWith("/assistente")) return "Você está na tela do Assistente IA (chat principal).";
-    if (p.startsWith("/configuracoes")) return "Você está nas Configurações.";
-    return "Você está na Página inicial (painel do(a) educador(a)).";
-  }, [loc.pathname]);
+    let tela = "Você está na Página inicial (painel do(a) educador(a)).";
+    if (p.startsWith("/inclusao")) tela = "Você está na tela Inclusão (PEI, anamnese, pareceres).";
+    else if (p.startsWith("/planejamento")) tela = "Você está na tela Planejamento (planos de aula, BNCC).";
+    else if (p.startsWith("/relatorios")) tela = "Você está na tela Relatórios.";
+    else if (p.startsWith("/agenda")) tela = "Você está na Agenda escolar.";
+    else if (p.startsWith("/assistente")) tela = "Você está na tela do Assistente IA (chat principal).";
+    else if (p.startsWith("/configuracoes")) tela = "Você está nas Configurações.";
+
+    const turma = sofia.entity.turma_atual;
+    const nivel = inferirNivelEnsino(turma?.ano) ?? inferirNivelEnsino(turma?.nome);
+    const linhas = [tela];
+    if (turma) {
+      linhas.push(`Turma atual: ${turma.nome}${turma.ano ? ` (${turma.ano})` : ""} — ${turma.total_alunos ?? 0} aluno(s).`);
+    } else {
+      linhas.push("Turma atual: NENHUMA selecionada.");
+    }
+    if (nivel) {
+      linhas.push(
+        `Nível de ensino da turma: ${nivel}. Adapte TODAS as suas respostas (atividades, estratégias, linguagem, sugestões de vídeos, relatórios e planejamentos) para esse público, conforme o bloco "ADAPTAÇÃO POR NÍVEL DE ENSINO" da sua Constituição.`,
+      );
+    } else {
+      linhas.push(
+        'Nível de ensino: NÃO INFORMADO. Antes de responder qualquer pedido pedagógico, pergunte: "Para te ajudar melhor, com qual nível de ensino você está trabalhando? 🧸 Educação Infantil  📚 Ensino Fundamental  🎓 Ensino Médio". Use a resposta para adaptar toda a conversa.',
+      );
+    }
+    return linhas.join("\n");
+  }, [loc.pathname, sofia.entity.turma_atual]);
 }
 
 function useRouteName() {
