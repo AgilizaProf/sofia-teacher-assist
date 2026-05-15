@@ -93,8 +93,17 @@ const ANOS_BY_ETAPA: Record<string, string[]> = {
 const COMPONENTES = [
   "Língua Portuguesa", "Matemática", "Ciências", "História", "Geografia",
   "Arte", "Educação Física", "Ensino Religioso", "Inglês",
-  "Campos de Experiência (EI)", "Projeto interdisciplinar",
+  "Projeto interdisciplinar",
 ];
+
+// Campos de Experiência oficiais da BNCC para Educação Infantil.
+const CAMPOS_EXPERIENCIA = [
+  "O eu, o outro e o nós",
+  "Corpo, gestos e movimentos",
+  "Traços, sons, cores e formas",
+  "Escuta, fala, pensamento e imaginação",
+  "Espaços, tempos, quantidades, relações e transformações",
+] as const;
 
 const TIPOS = ["Aula expositiva", "Atividade prática", "Jogo / lúdica", "Avaliação", "Projeto", "Saída pedagógica"] as const;
 const FOCO = ["Letramento", "Numeramento", "Socioemocional", "Pensamento científico", "Cultura e identidade"];
@@ -107,6 +116,9 @@ export function PlanejamentoAtividade() {
   const [etapa, setEtapa] = useState<string>("fund1");
   const [ano, setAno] = useState<string>("2º");
   const [componente, setComponente] = useState<string>("Língua Portuguesa");
+  const [camposExp, setCamposExp] = useState<Record<string, boolean>>({
+    [CAMPOS_EXPERIENCIA[0]]: true,
+  });
   const [tipo, setTipo] = useState<string>("Aula expositiva");
   const [duracao, setDuracao] = useState<string>("50");
   const [tema, setTema] = useState<string>("");
@@ -157,17 +169,31 @@ export function PlanejamentoAtividade() {
   };
 
   const anos = useMemo(() => ANOS_BY_ETAPA[etapa] || [], [etapa]);
+  const isEI = etapa === "infantil";
+  const camposSelecionados = useMemo(
+    () => CAMPOS_EXPERIENCIA.filter((c) => camposExp[c]),
+    [camposExp],
+  );
+  const toggleCampo = (k: string) => setCamposExp((s) => ({ ...s, [k]: !s[k] }));
 
   const toggleFoco = (k: string) => setFoco((s) => ({ ...s, [k]: !s[k] }));
 
   const buildPrompt = () => {
     const focos = Object.entries(foco).filter(([, v]) => v).map(([k]) => k).join(", ") || "—";
+    const componenteLabel = isEI
+      ? (camposSelecionados.length > 0 ? camposSelecionados.join(" + ") : "—")
+      : componente;
     return [
       `Gere um PLANO DE ATIVIDADE PEDAGÓGICA ALINHADA À BNCC com a estrutura abaixo.`,
       `\n## Contexto`,
       `- Etapa: ${ETAPAS.find((e) => e.k === etapa)?.label}`,
       `- Ano/Série: ${ano}`,
-      `- Componente curricular: ${componente}`,
+      isEI
+        ? `- Campo(s) de Experiência (BNCC – EI): ${componenteLabel}`
+        : `- Componente curricular: ${componenteLabel}`,
+      isEI
+        ? `- O planejamento é para Educação Infantil. Sugira atividades lúdicas, sensoriais e adequadas para crianças de ${ano}, alinhadas à BNCC e ao(s) Campo(s) de Experiência selecionado(s).`
+        : "",
       `- Tipo de atividade: ${tipo}`,
       `- Duração estimada: ${duracao} min`,
       turma ? `- Turma: ${turma}` : "",
@@ -180,7 +206,7 @@ export function PlanejamentoAtividade() {
       adapt ? `- Adaptações / observações de inclusão: ${adapt}` : "",
       `\n## Estrutura obrigatória da resposta`,
       `1. **Identificação** (componente, ano, tema, duração).`,
-      `2. **Habilidade(s) BNCC** — cite o(s) código(s) (ex.: EF02LP01) e descreva a habilidade na linguagem da BNCC.${etapa === "infantil" ? " Use Campos de Experiência e Direitos de Aprendizagem." : ""}`,
+      `2. **Habilidade(s) BNCC** — cite o(s) código(s) (ex.: EF02LP01) e descreva a habilidade na linguagem da BNCC.${isEI ? " Use os Campos de Experiência selecionados e os Direitos de Aprendizagem (conviver, brincar, participar, explorar, expressar, conhecer-se)." : ""}`,
       `3. **Objetivos de aprendizagem** (1 a 3, mensuráveis).`,
       `4. **Sequência didática** (introdução, desenvolvimento, fechamento) com tempos.`,
       `5. **Recursos e materiais.**`,
@@ -192,8 +218,16 @@ export function PlanejamentoAtividade() {
   };
 
   const onGerar = () => {
-    if (!componente || !ano) {
-      toast.error("Informe pelo menos o componente curricular e o ano.");
+    if (!ano) {
+      toast.error("Informe pelo menos o ano.");
+      return;
+    }
+    if (isEI && camposSelecionados.length === 0) {
+      toast.error("Selecione ao menos um Campo de Experiência.");
+      return;
+    }
+    if (!isEI && !componente) {
+      toast.error("Informe o componente curricular.");
       return;
     }
     sofia.openSofia({ prompt: buildPrompt(), send: true });
