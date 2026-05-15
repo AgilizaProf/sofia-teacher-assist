@@ -3304,14 +3304,9 @@ function InclusaoSuggestions({
   entityId: string;
   onAction?: (s: import("@/components/sofia/SofiaSuggestionCard").SofiaSuggestion) => void;
 }) {
-  const { suggestions } = useSofiaSuggestions("inclusao", entityId);
-  return (
-    <div className="sofia-card" style={{ padding: 0, background: "transparent", border: "none", boxShadow: "none" }}>
-      <SofiaErrorBoundary area="as sugestões da Sofia" silent>
-        <SofiaSuggestionList suggestions={suggestions} variant="inline" onAction={onAction} />
-      </SofiaErrorBoundary>
-    </div>
-  );
+  void entityId;
+  void onAction;
+  return null;
 }
 
 function FilterPopover({
