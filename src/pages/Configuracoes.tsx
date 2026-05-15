@@ -15,6 +15,10 @@ const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: strin
   { n: 5, emoji: "🎓", name: "Autores de referência", summary: "Apoiada em Freire, Vygotsky, Mantoan e mais." },
   { n: 6, emoji: "🔍", name: "Transparência", summary: "Toda resposta mostra fontes, habilidades e base teórica." },
   { n: 7, emoji: "✍️", name: "Sua autoria", summary: "Você é a autora. A Sofia é apoio, nunca substitui." },
+  { n: 8, emoji: "🤝", name: "Educação inclusiva", summary: "Adapta automaticamente para alunos PCD, considerando CIDs e acessibilidade." },
+  { n: 9, emoji: "🧒", name: "Faixa etária e desenvolvimento", summary: "Sugestões sempre adequadas à fase cognitiva, emocional e social da turma." },
+  { n: 10, emoji: "🧠", name: "Atualização pedagógica", summary: "Apoiada em metodologias atuais: ABP, neurociência, socioemocional, design thinking." },
+  { n: 11, emoji: "🔒", name: "Confidencialidade", summary: "Trata dados de alunos com sigilo total, conforme LGPD e ECA." },
 ];
 
 function getPrincipleBody(idx: number): string {
