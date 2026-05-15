@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from "react";
+import { AlunoCard } from "@/components/inclusao/AlunoCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
@@ -628,7 +630,7 @@ export function Inclusao() {
   const user = useUser();
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const { students: allStudents, create: createStudent } = useInclusaoStudents();
+  const { students: allStudents, create: createStudent, loading: studentsLoading } = useInclusaoStudents();
   // Filtro PCD: a página de Inclusão só lista alunos PCD.
   // Considera PCD quando o campo `pcd` está preenchido e diferente de "nao",
   // OU quando há CID cadastrado (cadastro feito pela própria Inclusão).
@@ -1298,11 +1300,11 @@ ${corpo}
     setView(safe);
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, view: v }) as never, replace: true });
   };
-  const openStudent = (id: string) => {
+  const openStudent = useCallback((id: string) => {
     setSelectedId(id);
     setView("detail");
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, view: "detail", aluno: id }) as never, replace: true });
-  };
+  }, [navigate]);
   const selected = students.find((s) => s.id === selectedId) || null;
 
   // ---- Sugestões proativas da Sofia (Tray) ----
@@ -1550,7 +1552,30 @@ ${corpo}
                   </div>
                 </div>
                 <div className="list-grid">
-                  {filtered.length === 0 && (
+                  {studentsLoading && allStudents.length === 0 ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <div key={`sk-${i}`} className="student-card" style={{ pointerEvents: "none" }}>
+                        <div className="sc-head">
+                          <Skeleton className="h-10 w-10 rounded-full" />
+                          <div className="sc-info" style={{ flex: 1 }}>
+                            <Skeleton className="h-3 w-32 mb-2" />
+                            <Skeleton className="h-3 w-20" />
+                          </div>
+                        </div>
+                        <div className="sc-tags">
+                          <Skeleton className="h-5 w-16" />
+                          <Skeleton className="h-5 w-12" />
+                          <Skeleton className="h-5 w-14" />
+                        </div>
+                        <div className="sc-stats">
+                          <Skeleton className="h-8" />
+                          <Skeleton className="h-8" />
+                          <Skeleton className="h-8" />
+                        </div>
+                      </div>
+                    ))
+                  ) : null}
+                  {!studentsLoading && filtered.length === 0 && (
                     <EmptyState
                       icon="🤝"
                       title={
@@ -1563,29 +1588,8 @@ ${corpo}
                       onCta={() => setNewStudentOpen(true)}
                     />
                   )}
-                  {filtered.map((s) => (
-                    <button
-                      key={s.id}
-                      className="student-card"
-                      onClick={() => openStudent(s.id)}
-                    >
-                      <div className="sc-head">
-                        <div className={"sc-avatar" + (s.featured ? " featured" : "")}>{s.initials}</div>
-                        <div className="sc-info"><b>{s.name}</b><span>{s.age} · {s.turma}</span></div>
-                      </div>
-                      <div className="sc-tags">
-                        <span className="sc-tag">{s.diag}</span>
-                        <span className="sc-tag muted">{s.cid}</span>
-                        <span className="sc-tag muted">{s.aee}</span>
-                      </div>
-                      <div className="sc-stats">
-                        <div><b>{s.anamnese}</b>Anamnese</div>
-                        <div><b>{s.registros}</b>Registros</div>
-                        <div style={{ color: s.trendTone === "ok" ? "var(--success)" : s.trendTone === "warn" ? "var(--warn)" : "var(--muted)" }}>
-                          <b>{s.trend}</b>Objetivos
-                        </div>
-                      </div>
-                    </button>
+                  {!studentsLoading && filtered.map((s) => (
+                    <AlunoCard key={s.id} student={s} onSelect={openStudent} />
                   ))}
                 </div>
               </>
