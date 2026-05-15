@@ -363,7 +363,7 @@ export function Dashboard() {
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
-  type DashStudent = { id: string; name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  type DashStudent = { id?: string; name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   const {
     students: dbStudents,
     create: createDbStudent,
