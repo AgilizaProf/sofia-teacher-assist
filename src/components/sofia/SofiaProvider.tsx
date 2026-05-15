@@ -225,7 +225,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       ? `${routeContext}\n${marker}`
       : routeContext;
     try {
-      const data = await askSofia({
+      const stream = await askSofia({
         data: {
           conversationId: conversationId ?? undefined,
           messages: next.map(({ role, content }) => ({ role, content })),
@@ -233,8 +233,37 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
           originRoute: loc.pathname,
         },
       });
-      setConversationId(data.conversationId);
-      setMessages((m) => [...m, { role: "assistant", content: data.content || "", issues: data.issues }]);
+      let assistantStarted = false;
+      let acc = "";
+      let finalConversationId: string | null = conversationId ?? null;
+      for await (const chunk of stream) {
+        if (chunk.type === "delta") {
+          if (!assistantStarted) {
+            assistantStarted = true;
+            setLoading(false);
+            setMessages((m) => [...m, { role: "assistant", content: "" }]);
+          }
+          acc += chunk.content;
+          setMessages((m) => {
+            const last = m[m.length - 1];
+            if (!last || last.role !== "assistant") return m;
+            return m.map((mm, i) => (i === m.length - 1 ? { ...mm, content: acc } : mm));
+          });
+        } else if (chunk.type === "done") {
+          finalConversationId = chunk.conversationId;
+          const finalContent = chunk.content || acc;
+          if (!assistantStarted) {
+            setMessages((m) => [...m, { role: "assistant", content: finalContent, issues: chunk.issues }]);
+          } else {
+            setMessages((m) => m.map((mm, i) => (
+              i === m.length - 1
+                ? { ...mm, content: finalContent, issues: chunk.issues }
+                : mm
+            )));
+          }
+        }
+      }
+      if (finalConversationId) setConversationId(finalConversationId);
       if (!open) setUnread((n) => n + 1);
       refreshConversations();
     } catch (err) {
