@@ -339,7 +339,7 @@ const css = `
   .school-modal-title{font-size:16px;}
   .school-modal-sub{font-size:11.5px;}
   .school-modal-body{padding:14px 16px;gap:10px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-  .school-modal-foot{padding:12px 16px;flex-direction:column-reverse;align-items:stretch;gap:8px;}
+  .school-modal-foot{margin:8px -16px -14px !important;padding:12px 16px calc(12px + env(safe-area-inset-bottom)) !important;flex-direction:column-reverse;align-items:stretch;gap:8px;position:sticky;bottom:calc(-14px - env(safe-area-inset-bottom));background:#fff;z-index:2;border-top:1px solid var(--border-soft);}
   .school-modal-foot button,.school-cancel,.ap-root .school-save{width:100%;margin:0 !important;justify-content:center;}
   .school-field input,.school-field select,.school-field textarea{font-size:16px !important;}
 }
