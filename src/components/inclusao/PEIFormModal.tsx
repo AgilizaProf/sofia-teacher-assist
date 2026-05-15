@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Save, Printer, Plus, Trash2, FileText, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -491,6 +491,17 @@ type Props = {
 };
 
 export function PEIFormModal({ open, onClose, aluno }: Props) {
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const t = window.setTimeout(() => {
+      const el = modalRef.current?.querySelector<HTMLElement>('input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])');
+      el?.focus();
+    }, 60);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => { window.clearTimeout(t); window.removeEventListener("keydown", onKey); };
+  }, [open, onClose]);
   const user = useUser();
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, PEIData>>("inc_pei", {});
   const dataAtual = aluno ? (peiByStudent[aluno.id] ?? blankPEI()) : blankPEI();
