@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Sparkles, Loader2, Check, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,6 +62,17 @@ function isoFromOffset(weeks: number): string {
 }
 
 export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSavedMany }: Props) {
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const t = window.setTimeout(() => {
+      const el = modalRef.current?.querySelector<HTMLElement>('button.pim-chip, input, select, textarea');
+      el?.focus();
+    }, 60);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => { window.clearTimeout(t); window.removeEventListener("keydown", onKey); };
+  }, [open, onClose]);
   const [periodo, setPeriodo] = useState<PeriodoKey>("bim");
   const [disciplinas, setDisciplinas] = useState<string[]>([]);
   const [porDisciplina, setPorDisciplina] = useState<number>(4);
