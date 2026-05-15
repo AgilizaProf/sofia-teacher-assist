@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { useUser } from "@/lib/mockData";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useTurmas } from "@/hooks/useTurmas";
+import { formatTurmaGrade } from "@/lib/turmaGrade";
 
 const NAVY = "#1a2744";
 const BORDER = "#d6d6d6";
