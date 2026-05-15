@@ -701,7 +701,24 @@ export function Relatorios() {
     const g = cls?.grade?.replace(/\D/g, "");
     return g && YEAR_OPTIONS.includes(g) ? g : "2";
   };
+  // EI por aluno: usa o grade da turma (ex.: "pre-2", "maternal-1").
+  const isEiAluno = (turma: string): boolean => {
+    if (isEi) return true; // perfil docente em EI: trata tudo como EI
+    const cls = dashClasses.find((c) => c.name === turma);
+    return isEiTurma(cls?.grade);
+  };
+  // Status (rubrica) adaptado por nível.
+  const statusListFor = (turma: string) =>
+    isEiAluno(turma) ? BNCC_STATUS_EI : BNCC_STATUS;
+  const statusLabel = (turma: string, k?: BnccStatus) =>
+    (statusListFor(turma).find((x) => x.k === k)?.label) || "Não observada";
+
   const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
+    if (isEiAluno(turma)) {
+      const base = EI_CAMPOS_EXPERIENCIA;
+      if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
+      return base;
+    }
     const base = bnccAreasFor(yearForAluno(id, turma));
     if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
     return base;
