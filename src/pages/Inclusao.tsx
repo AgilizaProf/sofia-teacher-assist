@@ -3064,20 +3064,58 @@ ${corpo}
                 ))}
               </datalist>
             </label>
-            <label style={{ fontSize: 12, fontWeight: 700 }}>Diagnóstico / CID
-              <select
-                value={nsCid}
-                onChange={(e) => setNsCid(e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, background: "#fff", fontFamily: "inherit", fontSize: 13 }}
-              >
-                <option value="nao_informado">Não informado</option>
-                {CID_OPTIONS.filter((o) => o.value !== "nao_informado").map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.cid && o.cid !== "—" ? `${o.label} · CID ${o.cid}` : o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>Diagnóstico / CID <span style={{ fontWeight: 400, color: "var(--muted)" }}>(pode adicionar mais de um)</span>
+              <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                <select
+                  value={nsCidPick}
+                  onChange={(e) => setNsCidPick(e.target.value)}
+                  style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, background: "#fff", fontFamily: "inherit", fontSize: 13 }}
+                >
+                  <option value="nao_informado">Selecione um CID…</option>
+                  {CID_OPTIONS.filter((o) => o.value !== "nao_informado" && !nsCids.includes(o.value)).map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.cid && o.cid !== "—" ? `${o.label} · CID ${o.cid}` : o.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (nsCidPick && nsCidPick !== "nao_informado" && !nsCids.includes(nsCidPick)) {
+                      setNsCids((prev) => [...prev, nsCidPick]);
+                      setNsCidPick("nao_informado");
+                    }
+                  }}
+                  disabled={!nsCidPick || nsCidPick === "nao_informado"}
+                  style={{ padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, background: "var(--cream, #fff5ec)", fontWeight: 700, fontSize: 12, cursor: nsCidPick && nsCidPick !== "nao_informado" ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}
+                >
+                  ＋ Adicionar
+                </button>
+              </div>
+              {nsCids.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                  {nsCids.map((v) => {
+                    const o = CID_OPTIONS.find((c) => c.value === v);
+                    if (!o) return null;
+                    const labelShort = o.label.split(" — ")[0];
+                    const code = o.cid && o.cid !== "—" ? ` · ${o.cid}` : "";
+                    return (
+                      <span key={v} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 8px 4px 10px", background: "var(--cream, #fff5ec)", border: "1px solid var(--border)", borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
+                        {labelShort}{code}
+                        <button
+                          type="button"
+                          aria-label={`Remover ${labelShort}`}
+                          onClick={() => setNsCids((prev) => prev.filter((x) => x !== v))}
+                          style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--muted)", fontSize: 14, lineHeight: 1, padding: 0 }}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <label style={{ fontSize: 12, fontWeight: 700 }}>AEE — frequência semanal <span style={{ fontWeight: 400, color: "var(--muted)" }}>(opcional)</span>
               <select
                 value={nsAeeDays}
