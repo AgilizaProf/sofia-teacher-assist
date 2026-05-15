@@ -177,6 +177,25 @@ const css = `
 .ag-form input:focus,.ag-form select:focus,.ag-form textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,69,.15);}
 .ag-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ag-panel-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);background:#fff;}
+.ag-mobile-daybar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);}
+.ag-mobile-day-label{flex:1;text-align:center;font-family:'Fraunces',serif;font-weight:700;font-size:16px;color:var(--text);text-transform:capitalize;}
+.ag-mobile-day-actions{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);}
+.ag-mobile-day-actions .ag-btn{flex:1;justify-content:center;}
+.ag-mobile-day-list{display:flex;flex-direction:column;gap:8px;padding:12px 14px calc(14px + env(safe-area-inset-bottom));}
+.ag-mobile-empty{padding:24px 12px;text-align:center;font-size:13px;color:var(--text-mute);border:1px dashed var(--border);border-radius:10px;background:#fafbff;}
+.ag-mobile-card{display:flex;align-items:stretch;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:left;font-family:inherit;color:var(--text);cursor:pointer;width:100%;border-left:4px solid var(--meeting);}
+.ag-mobile-card.meeting{border-left-color:var(--meeting);}
+.ag-mobile-card.eval{border-left-color:var(--eval);}
+.ag-mobile-card.report{border-left-color:var(--report);}
+.ag-mobile-card.plan{border-left-color:var(--plan);}
+.ag-mobile-card.pcd{border-left-color:var(--pcd);}
+.ag-mobile-card.personal{border-left-color:var(--personal);}
+.ag-mobile-card.holiday{border-left-color:var(--holiday);}
+.ag-mobile-card-time{min-width:54px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;}
+.ag-mobile-card-body{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
+.ag-mobile-card-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;}
+.ag-mobile-card-meta{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-mute);}
+.ag-mobile-card-tag{width:8px;height:8px;border-radius:2px;display:inline-block;}
 `;
 
 type Ev = { type: "holiday" | "meeting" | "eval" | "report" | "plan" | "pcd"; t: string; urgent?: boolean };
