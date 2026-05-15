@@ -96,8 +96,8 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const planAnual: PlanCard = {
     key: "anual",
     tag: "PLANO ANUAL",
-    title: "Créditos ilimitados por R$ 247/ano",
-    desc: "~9.000 créditos/ano · economize 41%.",
+    title: "Mais resultado. Menos tempo perdido.",
+    desc: "Créditos ilimitados por R$ 247/ano\nEquivale a só R$ 0,67/dia.",
     aria: "Ver oferta do plano anual",
     href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7798ddd616d8438a92b0e2bceaa20bab",
     cta: "Ver oferta",
@@ -212,7 +212,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
               {currentPlan.tag}
             </span>
             <h4>{currentPlan.title}</h4>
-            <p>{currentPlan.desc}</p>
+            <p style={{whiteSpace:"pre-line"}}>{currentPlan.desc}</p>
           </div>
           <div className="sb-plan-bottom">
             {currentPlan.href ? (
