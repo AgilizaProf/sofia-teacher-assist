@@ -318,6 +318,139 @@ const SUG: Record<Perfil, Partial<Record<SugKey, string[]>>> = {
   },
 };
 
+// Sugestões adicionais comuns a qualquer perfil — ampliam as opções rápidas.
+const EXTRA_COMUM: Partial<Record<SugKey, string[]>> = {
+  caracterizacao: [
+    "Histórico de intervenções pedagógicas anteriores",
+    "Boa relação com colegas em pequenos grupos",
+    "Apresenta períodos de desregulação emocional",
+    "Frequência escolar regular / irregular",
+    "Acompanhamento clínico em andamento",
+    "Demonstra interesse por temas práticos",
+  ],
+  habilidades: [
+    "Reconhece o próprio nome (oral e escrito)",
+    "Realiza contagem oral até 20",
+    "Compreende comandos simples de 1 a 2 passos",
+    "Copia palavras do quadro",
+    "Participa de rodas de conversa",
+    "Realiza tarefas de recorte e colagem com apoio",
+  ],
+  pontosForca: [
+    "Persistência diante de desafios",
+    "Cooperação com colegas",
+    "Boa coordenação motora ampla",
+    "Senso de humor e empatia",
+    "Curiosidade investigativa",
+    "Vínculo afetivo com a professora",
+  ],
+  necessidadesApoio: [
+    "Mediação individualizada em momentos-chave",
+    "Antecipação verbal de transições",
+    "Reforço positivo contingente",
+    "Ambiente com baixa estimulação visual/sonora",
+    "Apoio para regulação emocional",
+    "Adaptação do tempo de execução",
+  ],
+  objetivoTexto: [
+    "Ampliar autonomia em rotinas escolares",
+    "Desenvolver habilidades de leitura funcional",
+    "Resolver situações-problema do cotidiano",
+    "Participar de atividades em pequenos grupos",
+    "Expressar sentimentos com apoio de pranchas",
+    "Cumprir combinados de convivência",
+  ],
+  objetivoCriterios: [
+    "Em pelo menos 3 contextos diferentes",
+    "Com fade-out gradual da mediação",
+    "Avaliado por rubrica trimestral",
+    "Registrado em diário de bordo do(a) professor(a)",
+    "Sem necessidade de reforço externo",
+  ],
+  adaptCurric: [
+    "Conteúdos contextualizados ao interesse do aluno",
+    "Atividades com múltiplas formas de resposta (DUA)",
+    "Redução do volume de exercícios mantendo o objetivo",
+    "Material com linguagem simples e direta",
+    "Texto adaptado em frases curtas",
+  ],
+  adaptAval: [
+    "Avaliação contínua por evidências",
+    "Permitir resposta oral, escrita ou desenhada",
+    "Itens com apoio de imagem",
+    "Aplicação em momentos curtos e fracionados",
+    "Reforço da consigna individualmente",
+  ],
+  metodologias: [
+    "Desenho Universal para Aprendizagem (DUA)",
+    "Aprendizagem cooperativa entre pares",
+    "Ensino por projetos",
+    "Gamificação de tarefas",
+    "Sequências didáticas multissensoriais",
+    "Tutoria de pares",
+  ],
+  recursos: [
+    "Pictogramas e apoio visual",
+    "Material concreto manipulável",
+    "Tablet com apps educativos",
+    "Quadro de rotina",
+    "Cronômetro / timer visual",
+    "Caderno com pauta ampliada",
+  ],
+  formasAval: [
+    "Portfólio com produções do aluno",
+    "Rubrica descritiva por habilidade",
+    "Autoavaliação com apoio visual",
+    "Registro fotográfico/vídeo (com autorização)",
+    "Observação sistemática registrada em ficha",
+  ],
+  familiaPart: [
+    "Reuniões periódicas com a família",
+    "Caderno de comunicação diário",
+    "Compartilhamento de combinados de rotina",
+    "Participação em encontros pedagógicos",
+    "Devolutiva trimestral por escrito",
+  ],
+  acordosFam: [
+    "Manter rotina previsível em casa",
+    "Comunicar mudanças relevantes à escola",
+    "Reforçar autonomia em tarefas diárias",
+    "Limite saudável ao uso de telas",
+    "Acompanhamento regular nas terapias",
+  ],
+  equipeFuncao: [
+    "Professor(a) regente",
+    "Coordenação pedagógica",
+    "Professor(a) de AEE",
+    "Mediador(a) escolar",
+    "Psicólogo(a) escolar",
+    "Fonoaudiólogo(a)",
+    "Terapeuta ocupacional",
+    "Família / responsáveis",
+  ],
+};
+
+function mergeSug(
+  base: Partial<Record<SugKey, string[]>>,
+  extra: Partial<Record<SugKey, string[]>>,
+): Partial<Record<SugKey, string[]>> {
+  const out: Partial<Record<SugKey, string[]>> = {};
+  const keys = new Set<SugKey>([
+    ...(Object.keys(base) as SugKey[]),
+    ...(Object.keys(extra) as SugKey[]),
+  ]);
+  for (const k of keys) {
+    const seen = new Set<string>();
+    const merged: string[] = [];
+    for (const s of [...(base[k] || []), ...(extra[k] || [])]) {
+      const key = s.trim().toLowerCase();
+      if (!seen.has(key)) { seen.add(key); merged.push(s); }
+    }
+    out[k] = merged;
+  }
+  return out;
+}
+
 function SugChips({ items, onPick }: { items?: string[]; onPick: (s: string) => void }) {
   if (!items || items.length === 0) return null;
   return (
