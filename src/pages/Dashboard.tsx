@@ -363,16 +363,19 @@ export function Dashboard() {
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
-  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  type DashStudent = { id: string; name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   const {
     students: dbStudents,
     create: createDbStudent,
     update: updateDbStudent,
     remove: removeDbStudent,
+    bulkRemove: bulkRemoveDbStudents,
+    bulkAssignTurma: bulkAssignTurmaDbStudents,
   } = useInclusaoStudents();
   const students = useMemo<DashStudent[]>(
     () =>
       dbStudents.map((s) => ({
+        id: s.id,
         name: s.name,
         classRef: s.turma && s.turma !== "Sem turma" ? s.turma : "",
         birth: s.birth ?? "",
