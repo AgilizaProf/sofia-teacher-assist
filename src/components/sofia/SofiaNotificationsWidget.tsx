@@ -71,14 +71,24 @@ export function SofiaNotificationsWidget() {
     ctxParts.push(`Sequência didática: ${userData.sequencia.total === 0 ? "nenhuma em andamento" : `${userData.sequencia.done_count}/${userData.sequencia.total} etapas`}.`);
     ctxParts.push("Regra: responda apenas com base nesses dados; se faltar informação, pergunte à professora antes de inventar.");
     try {
-      const res = await askSofia({
+      const stream = await askSofia({
         data: {
           messages: [{ role: "user", content: text }],
           routeContext: ctxParts.join(" "),
           originRoute: typeof window !== "undefined" ? window.location.pathname : undefined,
         },
       });
-      setAnswer(res.content || "");
+      let acc = "";
+      let finalContent = "";
+      for await (const chunk of stream) {
+        if (chunk.type === "delta") {
+          acc += chunk.content;
+          setAnswer(acc);
+        } else if (chunk.type === "done") {
+          finalContent = chunk.content || acc;
+        }
+      }
+      setAnswer(finalContent || acc);
     } catch (err) {
       setAskError(err instanceof Error ? err.message : "Não consegui responder agora.");
     } finally {
