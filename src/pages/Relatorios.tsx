@@ -9,6 +9,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
+import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -329,6 +330,48 @@ const BNCC_STATUS: Array<{ k: BnccStatus; label: string; short: string; color: s
   { k: "ed", label: "Em desenvolvimento", short: "ED", color: "#E9A23B", bg: "#FCF1DC" },
   { k: "co", label: "Consolidada", short: "CO", color: "#16A36B", bg: "#E7F6EE" },
 ];
+// Mesma chave, rótulos adequados à Educação Infantil (sem linguagem comparativa/capacitista).
+const BNCC_STATUS_EI: Array<{ k: BnccStatus; label: string; short: string; color: string; bg: string }> = [
+  { k: "no", label: "Não observada", short: "NO", color: "#6B7280", bg: "#F3F4F6" },
+  { k: "na", label: "Em construção", short: "EC", color: "#6E5BE6", bg: "#EDEAFE" },
+  { k: "ed", label: "Desenvolvendo", short: "DE", color: "#E9A23B", bg: "#FCF1DC" },
+  { k: "co", label: "Consolidado", short: "CO", color: "#16A36B", bg: "#E7F6EE" },
+];
+
+// ===== Educação Infantil — Campos de Experiência + Direitos de Aprendizagem (BNCC) =====
+const EI_CAMPOS_EXPERIENCIA: BnccArea[] = [
+  { area: "O eu, o outro e o nós", comps: [
+    "Conviver com colegas e adultos respeitando diferenças",
+    "Brincar em grupo e participar de combinados coletivos",
+    "Expressar sentimentos, necessidades e opiniões",
+    "Demonstrar autonomia nas rotinas do dia a dia",
+  ]},
+  { area: "Corpo, gestos e movimentos", comps: [
+    "Explorar movimentos corporais em brincadeiras e jogos",
+    "Desenvolver coordenação motora ampla e fina",
+    "Cuidar do próprio corpo e da higiene com apoio",
+    "Vivenciar diferentes ritmos, sons e expressões corporais",
+  ]},
+  { area: "Traços, sons, cores e formas", comps: [
+    "Explorar materiais artísticos e produções gráficas",
+    "Apreciar e produzir música, dança e teatro",
+    "Manifestar curiosidade por cores, formas e texturas",
+  ]},
+  { area: "Escuta, fala, pensamento e imaginação", comps: [
+    "Participar de rodas de conversa e narrativas",
+    "Demonstrar interesse por livros, histórias e leitura compartilhada",
+    "Expressar ideias por meio da oralidade e do faz de conta",
+    "Reconhecer letras do próprio nome e da turma",
+  ]},
+  { area: "Espaços, tempos, quantidades, relações e transformações", comps: [
+    "Explorar elementos da natureza e fenômenos do cotidiano",
+    "Estabelecer relações de quantidade, ordem e medida",
+    "Reconhecer rotinas, sequências e marcações de tempo",
+    "Investigar causas e transformações com curiosidade",
+  ]},
+];
+
+const EI_DIREITOS_APRENDIZAGEM = "Conviver · Brincar · Participar · Explorar · Expressar · Conhecer-se";
 
 type BnccArea = { area: string; comps: string[] };
 // Comportamento e socialização — avaliado para todos os alunos, mesmo padrão das demais áreas
@@ -420,6 +463,10 @@ const BNCC_BY_YEAR: Record<string, BnccArea[]> = {
 const YEAR_OPTIONS = ["1","2","3","4","5","6","7","8","9"];
 function bnccAreasFor(year: string): BnccArea[] {
   return BNCC_BY_YEAR[year] || BNCC_BY_YEAR["2"];
+}
+
+function isEiTurma(grade?: string | null): boolean {
+  return isEducacaoInfantilGrade(grade || "");
 }
 
 export function Relatorios() {
