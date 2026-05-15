@@ -98,8 +98,9 @@ const Signature: React.FC<{ role: string }> = ({ role }) => (
 
 export const RelatorioPedagogico: React.FC = () => {
   return (
-    <div style={{ background: "#e9e9ec", minHeight: "100vh", padding: "24px 0" }}>
+    <div className="rel-pedag-root" style={{ background: "#e9e9ec", minHeight: "100vh", padding: "24px 0", overflowX: "auto" }}>
       <div
+        className="rel-pedag-page"
         style={{
           width: 794,
           margin: "0 auto",
@@ -302,6 +303,12 @@ export const RelatorioPedagogico: React.FC = () => {
         @media print {
           body { background: #fff !important; }
           @page { size: A4; margin: 0; }
+        }
+        @media (max-width: 820px){
+          .rel-pedag-root{-webkit-overflow-scrolling:touch;padding:12px 0 !important;}
+        }
+        @media (max-width: 480px){
+          .rel-pedag-page input,.rel-pedag-page textarea,.rel-pedag-page select{font-size:16px !important;}
         }
       `}</style>
     </div>
