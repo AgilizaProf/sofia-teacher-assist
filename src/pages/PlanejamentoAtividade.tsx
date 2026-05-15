@@ -316,10 +316,28 @@ export function PlanejamentoAtividade() {
 
               <div className="pa-row">
                 <div className="pa-field">
-                  <label>Componente curricular</label>
-                  <select className="pa-select" value={componente} onChange={(e) => setComponente(e.target.value)}>
-                    {COMPONENTES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <label>{isEI ? "Campo de Experiência" : "Componente curricular"}</label>
+                  {isEI ? (
+                    <>
+                      <div className="pa-pills">
+                        {CAMPOS_EXPERIENCIA.map((c) => (
+                          <button
+                            type="button"
+                            key={c}
+                            className={"pa-pill" + (camposExp[c] ? " on" : "")}
+                            onClick={() => toggleCampo(c)}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                      <span className="pa-help">Selecione um ou mais campos da BNCC para a Educação Infantil.</span>
+                    </>
+                  ) : (
+                    <select className="pa-select" value={componente} onChange={(e) => setComponente(e.target.value)}>
+                      {COMPONENTES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  )}
                 </div>
                 <div className="pa-field">
                   <label>Tipo de atividade</label>
