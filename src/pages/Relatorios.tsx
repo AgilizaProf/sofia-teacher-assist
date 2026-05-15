@@ -220,6 +220,20 @@ const css = `
   .rel-hero h1{font-size:28px;}
   .rel-page{padding:18px;}
 }
+@media (max-width:480px){
+  .rel-page{padding:14px 12px;}
+  .rel-hero h1{font-size:clamp(22px,6vw,26px);line-height:1.18;}
+  .rel-hero p,.rel-hero .sub{font-size:13px;}
+  .rel-kpis,.rel-grid{gap:10px;}
+  .rel-modal{padding:18px;border-radius:14px;max-height:92dvh;}
+  .rel-modal h3{font-size:18px;}
+  .rel-modal .rel-modal-meta{font-size:12px;}
+  .rel-modal-body{font-size:13.5px;padding:14px;}
+  .rel-modal-foot{flex-direction:column-reverse;align-items:stretch;gap:8px;}
+  .rel-modal-foot button{width:100%;justify-content:center;}
+  /* Evita zoom no iOS quando os inputs estão abaixo de 16px */
+  .rel-page input,.rel-page select,.rel-page textarea{font-size:16px;}
+}
 .kpi-tip-host{position:relative;}
 .kpi-tip{position:absolute;left:50%;top:calc(100% + 10px);transform:translate(-50%,4px);min-width:280px;max-width:320px;background:#0B1220;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;box-shadow:0 18px 40px -16px rgba(0,0,0,.6);font-size:12px;line-height:1.45;opacity:0;pointer-events:none;transition:opacity .18s ease, transform .18s ease;z-index:40;}
 .kpi-tip-host:hover .kpi-tip,.kpi-tip-host:focus-visible .kpi-tip,.kpi-tip-host:focus-within .kpi-tip{opacity:1;transform:translate(-50%,0);}
