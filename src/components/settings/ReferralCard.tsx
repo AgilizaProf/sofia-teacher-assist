@@ -94,7 +94,7 @@ export function ReferralCard() {
     if (typeof navigator !== "undefined" && "share" in navigator) {
       try {
         await (navigator as Navigator & { share: (d: ShareData) => Promise<void> }).share({
-          title: "Sofia para professoras",
+          title: "Sofia para educadores(as)",
           text,
           url: link,
         });
@@ -113,7 +113,7 @@ export function ReferralCard() {
       return;
     }
     if (!referredBy) {
-      toast.error("Você não foi indicada por ninguém.");
+      toast.error("Você não foi indicado(a) por ninguém.");
       return;
     }
     setBusy(true);
@@ -170,11 +170,11 @@ export function ReferralCard() {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <Gift size={20} color="#B8410E" />
         <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, margin: 0, color: "#1B2A4E" }}>
-          Convide outra professora e ganhe 1 mês grátis
+          Convide outro(a) educador(a) e ganhe 1 mês grátis
         </h3>
       </div>
       <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 14px" }}>
-        Ela também ganha. Quando a professora indicada fizer a 1ª compra, vocês duas recebem o bônus
+        Quem você indicar também ganha. Quando o(a) educador(a) indicado(a) fizer a 1ª compra, ambos(as) recebem o bônus
         após 7 dias de confirmação. Plano <b>anual</b>: <b>+30 dias</b>. Plano <b>mensal</b>: <b>+7 dias</b>.
       </p>
 
