@@ -231,7 +231,7 @@ function AgendaSofiaSide() {
         ) : (
           <>
             <div className="ag-stat-big">~2h <small>economizáveis</small></div>
-            <div className="ag-stat-desc" title="Potencial baseado em professoras com perfil parecido">Potencial estimado para esta semana.</div>
+            <div className="ag-stat-desc" title="Potencial baseado em educadores(as) com perfil parecido">Potencial estimado para esta semana.</div>
           </>
         )}
       </div>

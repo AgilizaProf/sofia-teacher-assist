@@ -1521,7 +1521,7 @@ export function Dashboard() {
           <div className="viral-strip">
             <div className="viral-icon">🎁</div>
             <div className="viral-content">
-              <div className="viral-title">Convide outra professora e <strong>ganhe 1 mês grátis</strong> · ela também ganha 30 dias</div>
+              <div className="viral-title">Convide outro(a) educador(a) e <strong>ganhe 1 mês grátis</strong> · quem você indicar também ganha 30 dias</div>
               <div className="viral-sub">Compartilhe seu link único com colegas que também sofrem com pareceres no fim do bimestre.</div>
             </div>
             <button className="viral-action">
