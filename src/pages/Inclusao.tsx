@@ -262,6 +262,21 @@ const css = `
 .inc-modal-foot{padding:14px 24px;border-top:1px solid var(--border);background:var(--bg);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .inc-modal-foot .legal{font-size:11.5px;color:var(--muted);flex:1;min-width:180px;}
 
+@media (max-width: 640px){
+  .inc-modal-overlay{padding:0;align-items:flex-end;}
+  .inc-modal{max-width:100% !important;max-height:100dvh;height:100dvh;border-radius:14px 14px 0 0;}
+  .inc-modal-head{padding:14px 16px;gap:10px;}
+  .inc-modal-head h2{font-size:17px;line-height:1.25;}
+  .inc-modal-body{padding:16px;}
+  .inc-modal-foot{padding:12px 16px;}
+  .inc-modal-body.plain > div[style*="flex-end"],
+  .inc-modal-body.plain > div:last-child{flex-direction:column-reverse !important;align-items:stretch !important;}
+  .inc-modal-body.plain > div:last-child > button{width:100%;justify-content:center;}
+  .inc-modal-body.plain > div > div[style*="display: flex"]{flex-wrap:wrap;}
+  .inc-modal-body.plain select,
+  .inc-modal-body.plain input{font-size:16px !important;}
+}
+
 .inc-tut-step{display:grid;grid-template-columns:36px 1fr;gap:14px;padding:14px;border:1px solid var(--border);border-radius:11px;background:linear-gradient(180deg,#fff,#FAFBFE);margin-bottom:8px;}
 .inc-tut-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:15px;}
 .inc-tut-step b{display:block;font-weight:700;font-size:14px;margin-bottom:2px;}
