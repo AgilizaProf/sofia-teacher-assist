@@ -7,6 +7,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { Header as AppHeader } from "@/components/Header";
 import { useAgenda } from "@/hooks/useAgenda";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 
 const css = `
