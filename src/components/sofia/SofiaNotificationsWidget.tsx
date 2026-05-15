@@ -69,7 +69,7 @@ export function SofiaNotificationsWidget() {
     }
     ctxParts.push(`Diário de bordo: ${userData.diario.entries.length} registros (mês: ${userData.diario.total_no_mes}/${userData.diario.meta_mes}).`);
     ctxParts.push(`Sequência didática: ${userData.sequencia.total === 0 ? "nenhuma em andamento" : `${userData.sequencia.done_count}/${userData.sequencia.total} etapas`}.`);
-    ctxParts.push("Regra: responda apenas com base nesses dados; se faltar informação, pergunte à professora antes de inventar.");
+    ctxParts.push("Regra: responda apenas com base nesses dados; se faltar informação, pergunte ao(à) educador(a) antes de inventar.");
     try {
       const stream = await askSofia({
         data: {

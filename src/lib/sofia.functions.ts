@@ -7,7 +7,7 @@ import { assertBudget, recordUsage, BudgetExceededError, MONTHLY_LIMIT_BRL } fro
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 function buildSystemPrompt(routeContext?: string) {
-  const taskPrompt = "Responda à conversa do chat seguindo rigorosamente a Constituição. Use apenas o que a professora registrou; quando faltar informação essencial, pergunte antes de produzir o documento.";
+  const taskPrompt = "Responda à conversa do chat seguindo rigorosamente a Constituição. Use apenas o que o(a) educador(a) registrou; quando faltar informação essencial, pergunte antes de produzir o documento.";
   return buildSofiaPrompt(taskPrompt, routeContext);
 }
 
