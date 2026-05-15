@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listAgendaEvents,
   createAgendaEvent,
@@ -8,54 +9,49 @@ import {
   type AgendaEventInput,
 } from "@/lib/db/agenda";
 
+const AGENDA_KEY = ["agenda_events"] as const;
+
 export function useAgenda() {
-  const [events, setEvents] = useState<AgendaEventUI[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await listAgendaEvents();
-      setEvents(list);
-    } catch (e) {
-      console.error("[useAgenda] erro ao listar:", e);
-      setError("Não foi possível carregar a agenda.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const query = useQuery({
+    queryKey: AGENDA_KEY,
+    queryFn: listAgendaEvents,
+    staleTime: 1000 * 60, // 1min
+  });
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const invalidate = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: AGENDA_KEY });
+  }, [qc]);
+
+  const createMut = useMutation({ mutationFn: createAgendaEvent, onSuccess: invalidate });
+  const updateMut = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<AgendaEventInput> }) =>
+      updateAgendaEvent(id, input),
+    onSuccess: invalidate,
+  });
+  const deleteMut = useMutation({ mutationFn: deleteAgendaEvent, onSuccess: invalidate });
 
   const create = useCallback(
-    async (input: AgendaEventInput) => {
-      const created = await createAgendaEvent(input);
-      await refresh();
-      return created;
-    },
-    [refresh],
+    (input: AgendaEventInput) => createMut.mutateAsync(input),
+    [createMut],
   );
-
   const update = useCallback(
-    async (id: string, input: Partial<AgendaEventInput>) => {
-      const updated = await updateAgendaEvent(id, input);
-      await refresh();
-      return updated;
-    },
-    [refresh],
+    (id: string, input: Partial<AgendaEventInput>) => updateMut.mutateAsync({ id, input }),
+    [updateMut],
   );
+  const remove = useCallback((id: string) => deleteMut.mutateAsync(id), [deleteMut]);
+  const refresh = useCallback(async () => {
+    await qc.invalidateQueries({ queryKey: AGENDA_KEY });
+  }, [qc]);
 
-  const remove = useCallback(
-    async (id: string) => {
-      await deleteAgendaEvent(id);
-      await refresh();
-    },
-    [refresh],
-  );
-
-  return { events, loading, error, refresh, create, update, remove };
+  return {
+    events: (query.data ?? []) as AgendaEventUI[],
+    loading: query.isLoading,
+    error: query.error ? "Não foi possível carregar a agenda." : null,
+    refresh,
+    create,
+    update,
+    remove,
+  };
 }

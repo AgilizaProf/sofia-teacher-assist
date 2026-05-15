@@ -1,57 +1,62 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listTurmas, createTurma, updateTurma, deleteTurma,
   type TurmaUI, type TurmaInput,
 } from "@/lib/db/turmas";
 
+const TURMAS_KEY = ["turmas"] as const;
+
 export function useTurmas() {
-  const [turmas, setTurmas] = useState<TurmaUI[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
 
+  const query = useQuery({
+    queryKey: TURMAS_KEY,
+    queryFn: listTurmas,
+    staleTime: 1000 * 60 * 5, // 5min — turmas mudam pouco
+  });
+
+  const invalidate = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: TURMAS_KEY });
+  }, [qc]);
+
+  const createMut = useMutation({
+    mutationFn: (input: TurmaInput) => createTurma(input),
+    onSuccess: invalidate,
+  });
+  const updateMut = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<TurmaInput> }) =>
+      updateTurma(id, input),
+    onSuccess: invalidate,
+  });
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteTurma(id),
+    onSuccess: invalidate,
+  });
+
+  const create = useCallback(
+    (input: TurmaInput) => createMut.mutateAsync(input),
+    [createMut],
+  );
+  const update = useCallback(
+    (id: string, input: Partial<TurmaInput>) => updateMut.mutateAsync({ id, input }),
+    [updateMut],
+  );
+  const remove = useCallback(
+    (id: string) => deleteMut.mutateAsync(id),
+    [deleteMut],
+  );
   const refresh = useCallback(async () => {
-    setLoading(true); setError(null);
-    try {
-      const list = await listTurmas();
-      setTurmas(list);
-    } catch (e) {
-      console.error("[useTurmas] erro ao listar:", e);
-      setError("Não foi possível carregar as turmas.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    await qc.invalidateQueries({ queryKey: TURMAS_KEY });
+  }, [qc]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
-
-  // Sincroniza instâncias do hook em diferentes telas: quando uma turma é
-  // criada/editada/removida em qualquer lugar, todas as instâncias refazem
-  // a busca para refletir o estado atual.
-  useEffect(() => {
-    const handler = () => { void refresh(); };
-    window.addEventListener("turmas:changed", handler);
-    return () => window.removeEventListener("turmas:changed", handler);
-  }, [refresh]);
-
-  const create = useCallback(async (input: TurmaInput) => {
-    const created = await createTurma(input);
-    await refresh();
-    if (typeof window !== "undefined") window.dispatchEvent(new Event("turmas:changed"));
-    return created;
-  }, [refresh]);
-
-  const update = useCallback(async (id: string, input: Partial<TurmaInput>) => {
-    const updated = await updateTurma(id, input);
-    await refresh();
-    if (typeof window !== "undefined") window.dispatchEvent(new Event("turmas:changed"));
-    return updated;
-  }, [refresh]);
-
-  const remove = useCallback(async (id: string) => {
-    await deleteTurma(id);
-    await refresh();
-    if (typeof window !== "undefined") window.dispatchEvent(new Event("turmas:changed"));
-  }, [refresh]);
-
-  return { turmas, loading, error, refresh, create, update, remove };
+  return {
+    turmas: (query.data ?? []) as TurmaUI[],
+    loading: query.isLoading,
+    error: query.error ? "Não foi possível carregar as turmas." : null,
+    refresh,
+    create,
+    update,
+    remove,
+  };
 }

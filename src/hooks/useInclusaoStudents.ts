@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listInclusaoStudents,
   createInclusaoStudent,
@@ -10,78 +11,61 @@ import {
   type StudentInput,
 } from "@/lib/db/inclusao";
 
+const STUDENTS_KEY = ["inclusao_students"] as const;
+
 export function useInclusaoStudents() {
-  const [students, setStudents] = useState<StudentUI[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await listInclusaoStudents();
-      const sorted = [...list].sort((a, b) =>
-        (a.name || "").localeCompare(b.name || "", "pt-BR", { sensitivity: "base" }),
-      );
-      setStudents(sorted);
-    } catch (e) {
-      console.error("[useInclusaoStudents] erro ao listar:", e);
-      setError("Não foi possível carregar a lista de alunos.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const query = useQuery({
+    queryKey: STUDENTS_KEY,
+    queryFn: listInclusaoStudents,
+    staleTime: 1000 * 60, // 1min
+  });
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const students = useMemo<StudentUI[]>(() => {
+    const list = query.data ?? [];
+    return [...list].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", "pt-BR", { sensitivity: "base" }),
+    );
+  }, [query.data]);
 
-  const create = useCallback(
-    async (input: StudentInput) => {
-      const created = await createInclusaoStudent(input);
-      await refresh();
-      return created;
-    },
-    [refresh],
-  );
+  const invalidate = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: STUDENTS_KEY });
+  }, [qc]);
 
+  const createMut = useMutation({ mutationFn: createInclusaoStudent, onSuccess: invalidate });
+  const updateMut = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<StudentInput> }) =>
+      updateInclusaoStudent(id, input),
+    onSuccess: invalidate,
+  });
+  const deleteMut = useMutation({ mutationFn: deleteInclusaoStudent, onSuccess: invalidate });
+  const bulkDelMut = useMutation({ mutationFn: bulkDeleteInclusaoStudents, onSuccess: invalidate });
+  const bulkAssignMut = useMutation({
+    mutationFn: ({ ids, turma }: { ids: string[]; turma: string }) =>
+      bulkAssignTurmaInclusao(ids, turma),
+    onSuccess: invalidate,
+  });
+
+  const create = useCallback((input: StudentInput) => createMut.mutateAsync(input), [createMut]);
   const update = useCallback(
-    async (id: string, input: Partial<StudentInput>) => {
-      const updated = await updateInclusaoStudent(id, input);
-      await refresh();
-      return updated;
-    },
-    [refresh],
+    (id: string, input: Partial<StudentInput>) => updateMut.mutateAsync({ id, input }),
+    [updateMut],
   );
-
-  const remove = useCallback(
-    async (id: string) => {
-      await deleteInclusaoStudent(id);
-      await refresh();
-    },
-    [refresh],
-  );
-
-  const bulkRemove = useCallback(
-    async (ids: string[]) => {
-      await bulkDeleteInclusaoStudents(ids);
-      await refresh();
-    },
-    [refresh],
-  );
-
+  const remove = useCallback((id: string) => deleteMut.mutateAsync(id), [deleteMut]);
+  const bulkRemove = useCallback((ids: string[]) => bulkDelMut.mutateAsync(ids), [bulkDelMut]);
   const bulkAssignTurma = useCallback(
-    async (ids: string[], turma: string) => {
-      await bulkAssignTurmaInclusao(ids, turma);
-      await refresh();
-    },
-    [refresh],
+    (ids: string[], turma: string) => bulkAssignMut.mutateAsync({ ids, turma }),
+    [bulkAssignMut],
   );
+  const refresh = useCallback(async () => {
+    await qc.invalidateQueries({ queryKey: STUDENTS_KEY });
+  }, [qc]);
 
   return {
     students,
-    loading,
-    error,
+    loading: query.isLoading,
+    error: query.error ? "Não foi possível carregar a lista de alunos." : null,
     refresh,
     create,
     update,
