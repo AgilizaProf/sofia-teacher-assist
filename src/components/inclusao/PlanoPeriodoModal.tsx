@@ -208,7 +208,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
 
   return (
     <div className="pim-overlay" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="pim-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="pim-modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <header className="pim-head">
           <div>
             <h3>Atividades do período · {aluno.name}</h3>
@@ -431,6 +431,16 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
           .pim-sec-body ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;}
           .pim-completo ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;}
           .pim-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--border);background:var(--bg);}
+          @media (max-width: 640px){
+            .pim-overlay{padding:0;align-items:flex-end;}
+            .pim-modal{width:100%;max-width:100%;max-height:100dvh;height:100dvh;border-radius:14px 14px 0 0;}
+            .pim-head{padding:14px 16px;}
+            .pim-head h3{font-size:16px;}
+            .pim-body{padding:14px 16px;-webkit-overflow-scrolling:touch;padding-bottom:calc(14px + env(safe-area-inset-bottom));}
+            .pim-body input,.pim-body select,.pim-body textarea{font-size:16px !important;}
+            .pim-foot{position:sticky;bottom:0;flex-direction:column-reverse;align-items:stretch;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:5;background:#fff;}
+            .pim-foot button{width:100%;justify-content:center;}
+          }
         `}</style>
       </div>
     </div>
