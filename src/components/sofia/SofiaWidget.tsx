@@ -61,10 +61,12 @@ const css = `
 .sofia-msg.assistant p:last-child{margin-bottom:0;}
 .sofia-msg.assistant ul,.sofia-msg.assistant ol{margin:6px 0 8px 18px;padding:0;}
 .sofia-msg.assistant code{background:#F4F6FB;padding:1px 5px;border-radius:4px;font-size:12px;}
-.sofia-typing{align-self:flex-start;display:flex;gap:4px;padding:10px 14px;background:var(--sofia-surface);border:1px solid var(--sofia-line);border-radius:14px;}
-.sofia-typing span{width:6px;height:6px;border-radius:50%;background:var(--sofia-primary);animation:sofiaBlink 1.2s infinite ease-in-out;}
-.sofia-typing span:nth-child(2){animation-delay:.2s;}
-.sofia-typing span:nth-child(3){animation-delay:.4s;}
+.sofia-typing{align-self:flex-start;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--sofia-surface);border:1px solid var(--sofia-line);border-radius:14px;color:var(--sofia-primary);font-size:12.5px;font-weight:500;}
+.sofia-typing-dots{display:inline-flex;gap:4px;align-items:center;}
+.sofia-typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--sofia-primary);animation:sofiaBlink 1.2s infinite ease-in-out;display:inline-block;}
+.sofia-typing-dots span:nth-child(2){animation-delay:.2s;}
+.sofia-typing-dots span:nth-child(3){animation-delay:.4s;}
+.sofia-typing-text{opacity:.85;}
 @keyframes sofiaBlink{0%,80%,100%{opacity:.3;transform:scale(.8);}40%{opacity:1;transform:scale(1);}}
 
 .sofia-conversations{padding:8px 16px 0;}
@@ -271,7 +273,10 @@ export function SofiaWidget() {
                 </>
               )}
               {s.loading && (
-                <div className="sofia-typing"><span /><span /><span /></div>
+                <div className="sofia-typing" aria-live="polite">
+                  <span className="sofia-typing-dots"><span /><span /><span /></span>
+                  <span className="sofia-typing-text">Pensando…</span>
+                </div>
               )}
             </div>
 

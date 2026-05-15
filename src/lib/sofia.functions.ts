@@ -27,7 +27,7 @@ export const askSofia = createServerFn({ method: "POST" })
       originRoute: typeof d.originRoute === "string" ? d.originRoute.slice(0, 200) : undefined,
     };
   })
-  .handler(async ({ data, context }) => {
+  .handler(async function* ({ data, context }) {
     const { supabase, userId } = context;
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY ausente.");
@@ -37,7 +37,8 @@ export const askSofia = createServerFn({ method: "POST" })
       await assertBudget(userId);
     } catch (e) {
       if (e instanceof BudgetExceededError) {
-        return {
+        yield {
+          type: "done" as const,
           conversationId: data.conversationId ?? null,
           content: `Você atingiu o limite mensal de uso da IA (R$ ${MONTHLY_LIMIT_BRL.toFixed(2)}). O contador zera no início do próximo mês.`,
           issues: null,
@@ -46,6 +47,7 @@ export const askSofia = createServerFn({ method: "POST" })
           usedBrl: e.usedBrl,
           limitBrl: e.limitBrl,
         };
+        return;
       }
       throw e;
     }
@@ -81,21 +83,64 @@ export const askSofia = createServerFn({ method: "POST" })
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "system", content: buildSystemPrompt(data.routeContext) }, ...data.messages],
+        stream: true,
+        max_tokens: 800,
       }),
     });
-    if (!res.ok) {
+    if (!res.ok || !res.body) {
       const t = await res.text();
       throw new Error(`Falha no AI Gateway (${res.status}): ${t.slice(0, 300)}`);
     }
-    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }>; usage?: { prompt_tokens?: number; completion_tokens?: number } };
-    const raw = json.choices?.[0]?.message?.content || "";
+
+    let raw = "";
+    let inputTokens = 0;
+    let outputTokens = 0;
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let streamDone = false;
+    while (!streamDone) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let nl: number;
+      while ((nl = buffer.indexOf("\n")) !== -1) {
+        let line = buffer.slice(0, nl);
+        buffer = buffer.slice(nl + 1);
+        if (line.endsWith("\r")) line = line.slice(0, -1);
+        if (!line || line.startsWith(":")) continue;
+        if (!line.startsWith("data: ")) continue;
+        const payload = line.slice(6).trim();
+        if (payload === "[DONE]") { streamDone = true; break; }
+        try {
+          const j = JSON.parse(payload) as {
+            choices?: Array<{ delta?: { content?: string } }>;
+            usage?: { prompt_tokens?: number; completion_tokens?: number };
+          };
+          const delta = j.choices?.[0]?.delta?.content;
+          if (delta) {
+            raw += delta;
+            yield { type: "delta" as const, content: delta };
+          }
+          if (j.usage) {
+            inputTokens = Number(j.usage.prompt_tokens ?? inputTokens);
+            outputTokens = Number(j.usage.completion_tokens ?? outputTokens);
+          }
+        } catch {
+          // partial JSON: rebuffer and wait for more
+          buffer = line + "\n" + buffer;
+          break;
+        }
+      }
+    }
+
     await recordUsage({
       userId,
       provider: "lovable",
       model: "google/gemini-2.5-flash",
       task: "chat",
-      inputTokens: Number(json.usage?.prompt_tokens ?? 0),
-      outputTokens: Number(json.usage?.completion_tokens ?? 0),
+      inputTokens,
+      outputTokens,
     });
     const { ok, issues, sanitized } = validateSofiaOutput(raw);
 
@@ -107,7 +152,13 @@ export const askSofia = createServerFn({ method: "POST" })
       issues: (issues && issues.length ? JSON.parse(JSON.stringify(issues)) : null) as never,
     }]);
 
-    return { conversationId, content: sanitized, issues, sanitizedApplied: !ok };
+    yield {
+      type: "done" as const,
+      conversationId,
+      content: sanitized,
+      issues,
+      sanitizedApplied: !ok,
+    };
   });
 
 export const listSofiaConversations = createServerFn({ method: "GET" })
