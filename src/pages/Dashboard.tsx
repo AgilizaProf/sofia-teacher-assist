@@ -2329,6 +2329,145 @@ export function Dashboard() {
           );
         })()}
       </div>
+
+      {selectedStudentIds.size > 0 && (
+        <div className="bulk-action-bar" role="toolbar" aria-label="Ações em massa de alunos">
+          <span className="bulk-count">
+            {selectedStudentIds.size} {selectedStudentIds.size === 1 ? "aluno selecionado" : "alunos selecionados"}
+          </span>
+          <button type="button" onClick={() => setBulkAssignOpen(true)} disabled={bulkBusy}>
+            🏫 Vincular à turma
+          </button>
+          <button type="button" className="danger" onClick={() => setBulkConfirmDelete(true)} disabled={bulkBusy}>
+            🗑 Excluir
+          </button>
+          <button type="button" className="ghost" onClick={clearStudentSelection} disabled={bulkBusy}>
+            Limpar
+          </button>
+        </div>
+      )}
+
+      <div className={`cmdk-overlay ${bulkConfirmDelete ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setBulkConfirmDelete(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Confirmar exclusão em massa">
+          <div className="school-modal-head">
+            <div className="school-modal-icon" style={{ background: "#FEE2E2", color: "#B91C1C" }}>
+              <Svg c={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Excluir alunos selecionados</div>
+              <div className="school-modal-sub">
+                Deseja excluir {selectedStudentIds.size} {selectedStudentIds.size === 1 ? "aluno" : "alunos"}? Essa ação não pode ser desfeita.
+              </div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setBulkConfirmDelete(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <div className="school-modal-foot" style={{ marginTop: 4 }}>
+            <button type="button" className="school-cancel" onClick={() => setBulkConfirmDelete(false)} disabled={bulkBusy}>Cancelar</button>
+            <button
+              type="button"
+              className="school-save"
+              style={{ background: "#DC2626", borderColor: "#DC2626" }}
+              disabled={bulkBusy}
+              onClick={async () => {
+                const ids = Array.from(selectedStudentIds);
+                if (ids.length === 0) { setBulkConfirmDelete(false); return; }
+                setBulkBusy(true);
+                try {
+                  await bulkRemoveDbStudents(ids);
+                  toast.success(`${ids.length} ${ids.length === 1 ? "aluno excluído" : "alunos excluídos"}`);
+                  clearStudentSelection();
+                  setBulkConfirmDelete(false);
+                } catch (err) {
+                  console.error("[Dashboard] erro ao excluir alunos em massa:", err);
+                  toast.error("Não foi possível excluir", {
+                    description: (err as Error)?.message ?? "Tente novamente.",
+                  });
+                } finally {
+                  setBulkBusy(false);
+                }
+              }}
+            >
+              {bulkBusy ? "Excluindo…" : "Excluir definitivamente"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className={`cmdk-overlay ${bulkAssignOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setBulkAssignOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Vincular alunos à turma">
+          <div className="school-modal-head">
+            <div className="school-modal-icon">
+              <Svg c={<><path d="M3 9l9-6 9 6"/><path d="M5 10v10h14V10"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Vincular à turma</div>
+              <div className="school-modal-sub">
+                {selectedStudentIds.size} {selectedStudentIds.size === 1 ? "aluno será vinculado" : "alunos serão vinculados"} à turma escolhida.
+              </div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setBulkAssignOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <div className="school-modal-body">
+            <div className="school-field">
+              <label htmlFor="bulk-turma-pick">Turma</label>
+              {classes.length === 0 ? (
+                <div style={{ fontSize: 12, color: "var(--text-soft)", padding: "6px 0" }}>
+                  Nenhuma turma cadastrada. Cadastre uma turma primeiro.
+                </div>
+              ) : (
+                <select
+                  id="bulk-turma-pick"
+                  value={bulkTurmaPick}
+                  onChange={(e) => setBulkTurmaPick(e.target.value)}
+                >
+                  <option value="">Selecione…</option>
+                  {classes.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name}{c.school ? ` · ${c.school}` : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
+          <div className="school-modal-foot">
+            <button type="button" className="school-cancel" onClick={() => setBulkAssignOpen(false)} disabled={bulkBusy}>Cancelar</button>
+            <button
+              type="button"
+              className="school-save"
+              disabled={bulkBusy || !bulkTurmaPick || classes.length === 0}
+              onClick={async () => {
+                const ids = Array.from(selectedStudentIds);
+                if (ids.length === 0 || !bulkTurmaPick) return;
+                setBulkBusy(true);
+                try {
+                  await bulkAssignTurmaDbStudents(ids, bulkTurmaPick);
+                  toast.success(`${ids.length} ${ids.length === 1 ? "aluno vinculado" : "alunos vinculados"}`, {
+                    description: `Turma: ${bulkTurmaPick}`,
+                  });
+                  clearStudentSelection();
+                  setBulkAssignOpen(false);
+                  setBulkTurmaPick("");
+                } catch (err) {
+                  console.error("[Dashboard] erro ao vincular turma em massa:", err);
+                  toast.error("Não foi possível vincular", {
+                    description: (err as Error)?.message ?? "Tente novamente.",
+                  });
+                } finally {
+                  setBulkBusy(false);
+                }
+              }}
+            >
+              {bulkBusy ? "Vinculando…" : "Vincular à turma"}
+              <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
