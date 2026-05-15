@@ -49,7 +49,8 @@ export async function listTurmas(): Promise<TurmaUI[]> {
   const { data, error } = await supabase
     .from("turmas")
     .select("*")
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(500);
   if (error) throw error;
   return (data ?? []).map((r) => rowToUI(r as TurmaRow));
 }

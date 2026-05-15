@@ -117,7 +117,8 @@ export async function listInclusaoStudents(): Promise<StudentUI[]> {
   const { data, error } = await supabase
     .from("alunos_inclusao")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(1000);
   if (error) throw error;
   return (data ?? []).map((r) => rowToUI(r as StudentRow));
 }
@@ -128,20 +129,15 @@ export async function createInclusaoStudent(
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) throw new Error("Usuário não autenticado");
-  // eslint-disable-next-line no-console
-  console.log("[inclusao.db] insert nova aluna", { userId, nome: input.name });
   const { data, error } = await supabase
     .from("alunos_inclusao")
     .insert({ ...uiToPayload(input), user_id: userId })
     .select()
     .single();
   if (error) {
-    // eslint-disable-next-line no-console
     console.error("[inclusao.db] erro no insert", error);
     throw error;
   }
-  // eslint-disable-next-line no-console
-  console.log("[inclusao.db] insert OK", { id: (data as StudentRow).id });
   return rowToUI(data as StudentRow);
 }
 
