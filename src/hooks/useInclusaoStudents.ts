@@ -20,7 +20,10 @@ export function useInclusaoStudents() {
     setError(null);
     try {
       const list = await listInclusaoStudents();
-      setStudents(list);
+      const sorted = [...list].sort((a, b) =>
+        (a.name || "").localeCompare(b.name || "", "pt-BR", { sensitivity: "base" }),
+      );
+      setStudents(sorted);
     } catch (e) {
       console.error("[useInclusaoStudents] erro ao listar:", e);
       setError("Não foi possível carregar a lista de alunos.");
