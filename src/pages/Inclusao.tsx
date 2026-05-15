@@ -605,7 +605,21 @@ export function Inclusao() {
   const user = useUser();
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const { students, create: createStudent } = useInclusaoStudents();
+  const { students: allStudents, create: createStudent } = useInclusaoStudents();
+  // Filtro PCD: a página de Inclusão só lista alunos PCD.
+  // Considera PCD quando o campo `pcd` está preenchido e diferente de "nao",
+  // OU quando há CID cadastrado (cadastro feito pela própria Inclusão).
+  const students = useMemo(
+    () =>
+      allStudents.filter((s) => {
+        const pcdFlag = (s.pcd ?? "").toString().trim().toLowerCase();
+        const isPcdByFlag = pcdFlag !== "" && pcdFlag !== "nao";
+        const cidVal = (s.cid ?? "").trim();
+        const hasCid = cidVal !== "" && cidVal !== "CID não informado";
+        return isPcdByFlag || hasCid;
+      }),
+    [allStudents],
+  );
   // Observação: o "espelho" dash_students no Dashboard NÃO é sincronizado
   // automaticamente para o banco — para evitar criar alunos sem ação
   // explícita do(a) professor(a). O cadastro em Inclusão é a fonte oficial.
