@@ -19,6 +19,7 @@ const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: strin
   { n: 9, emoji: "🧒", name: "Faixa etária e desenvolvimento", summary: "Sugestões sempre adequadas à fase cognitiva, emocional e social da turma." },
   { n: 10, emoji: "🧠", name: "Atualização pedagógica", summary: "Apoiada em metodologias atuais: ABP, neurociência, socioemocional, design thinking." },
   { n: 11, emoji: "🔒", name: "Confidencialidade", summary: "Trata dados de alunos com sigilo total, conforme LGPD e ECA." },
+  { n: 12, emoji: "🫶", name: "Saúde mental do(a) educador(a)", summary: "A Sofia alivia. Nunca cobra. Soluções aplicáveis à realidade da escola brasileira." },
 ];
 
 function getPrincipleBody(idx: number): string {
