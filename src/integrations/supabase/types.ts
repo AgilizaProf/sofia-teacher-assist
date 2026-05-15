@@ -856,6 +856,7 @@ export type Database = {
           faixa_etaria: string | null
           id: string
           nivel_ensino: string | null
+          onboarding_concluido: boolean
           preferencias: Json
           referral_code: string | null
           referred_by_code: string | null
@@ -880,6 +881,7 @@ export type Database = {
           faixa_etaria?: string | null
           id?: string
           nivel_ensino?: string | null
+          onboarding_concluido?: boolean
           preferencias?: Json
           referral_code?: string | null
           referred_by_code?: string | null
@@ -904,6 +906,7 @@ export type Database = {
           faixa_etaria?: string | null
           id?: string
           nivel_ensino?: string | null
+          onboarding_concluido?: boolean
           preferencias?: Json
           referral_code?: string | null
           referred_by_code?: string | null
