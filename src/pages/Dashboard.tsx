@@ -1673,7 +1673,17 @@ export function Dashboard() {
               <div className="school-field">
                 <label htmlFor="class-grade">Série / Ano</label>
                 <select id="class-grade" name="grade" defaultValue="2">
-                  {["1","2","3","4","5","6","7","8","9"].map((g) => <option key={g} value={g}>{g}º ano</option>)}
+                  <optgroup label="Educação Infantil">
+                    <option value="bercario-1">Berçário I (0–1 ano)</option>
+                    <option value="bercario-2">Berçário II (1–2 anos)</option>
+                    <option value="maternal-1">Maternal I (2–3 anos)</option>
+                    <option value="maternal-2">Maternal II (3–4 anos)</option>
+                    <option value="pre-1">Pré I (4–5 anos)</option>
+                    <option value="pre-2">Pré II (5–6 anos)</option>
+                  </optgroup>
+                  <optgroup label="Ensino Fundamental">
+                    {["1","2","3","4","5","6","7","8","9"].map((g) => <option key={g} value={g}>{g}º ano</option>)}
+                  </optgroup>
                 </select>
               </div>
               <div className="school-field">
@@ -1762,7 +1772,17 @@ export function Dashboard() {
                 <div className="school-field">
                   <label htmlFor="edit-class-grade">Série / Ano</label>
                   <select id="edit-class-grade" name="grade" defaultValue={classes[editingClassIdx].grade || "2"}>
-                    {["1","2","3","4","5","6","7","8","9"].map((g) => <option key={g} value={g}>{g}º ano</option>)}
+                    <optgroup label="Educação Infantil">
+                      <option value="bercario-1">Berçário I (0–1 ano)</option>
+                      <option value="bercario-2">Berçário II (1–2 anos)</option>
+                      <option value="maternal-1">Maternal I (2–3 anos)</option>
+                      <option value="maternal-2">Maternal II (3–4 anos)</option>
+                      <option value="pre-1">Pré I (4–5 anos)</option>
+                      <option value="pre-2">Pré II (5–6 anos)</option>
+                    </optgroup>
+                    <optgroup label="Ensino Fundamental">
+                      {["1","2","3","4","5","6","7","8","9"].map((g) => <option key={g} value={g}>{g}º ano</option>)}
+                    </optgroup>
                   </select>
                 </div>
                 <div className="school-field">
