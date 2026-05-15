@@ -1212,6 +1212,9 @@ export function Dashboard() {
                     return entries.map(([turma, list]) => {
                       const classMeta = classes.find((c) => c.name === turma);
                       const isCollapsed = !!collapsedClasses[turma];
+                      const groupIds = list.map((s) => s.id).filter((id): id is string => !!id);
+                      const allGroupSelected = groupIds.length > 0 && groupIds.every((id) => selectedStudentIds.has(id));
+                      const someGroupSelected = groupIds.some((id) => selectedStudentIds.has(id));
                       return (
                         <div key={turma} className="class-group">
                           <div
@@ -1223,6 +1226,29 @@ export function Dashboard() {
                             aria-expanded={!isCollapsed}
                             style={{ cursor: "pointer", userSelect: "none" }}
                           >
+                            {groupIds.length > 0 && (
+                              <label
+                                className="student-check"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ marginRight: 2 }}
+                                title={allGroupSelected ? "Desmarcar todos da turma" : "Selecionar todos da turma"}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={allGroupSelected}
+                                  ref={(el) => { if (el) el.indeterminate = !allGroupSelected && someGroupSelected; }}
+                                  onChange={() => {
+                                    setSelectedStudentIds((prev) => {
+                                      const next = new Set(prev);
+                                      if (allGroupSelected) groupIds.forEach((id) => next.delete(id));
+                                      else groupIds.forEach((id) => next.add(id));
+                                      return next;
+                                    });
+                                  }}
+                                  aria-label={`Selecionar todos os alunos da turma ${turma}`}
+                                />
+                              </label>
+                            )}
                             <div className="class-info">
                               <div className="class-name" style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                 <span style={{ display: "inline-block", transition: "transform .15s", transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
@@ -1258,14 +1284,26 @@ export function Dashboard() {
                             const avClass = `av-${(i % 3) + 1}`;
                             const realIndex = students.indexOf(s);
                             const isHighlighted = realIndex === highlightedStudentIdx;
+                            const sid = s.id;
+                            const isSelected = !!sid && selectedStudentIds.has(sid);
                             return (
-                              <button
-                                key={`${turma}-${i}`}
-                                type="button"
-                                className={`student${isHighlighted ? " sofia-highlight" : ""}`}
-                                onClick={() => setStudentDetail({ index: realIndex, student: s })}
-                                style={{ width: "100%", textAlign: "left", background: "transparent", cursor: "pointer", font: "inherit" }}
-                              >
+                              <div key={`${turma}-${i}`} className={`student-row${isSelected ? " is-selected" : ""}`}>
+                                {sid && (
+                                  <label className="student-check" title={isSelected ? "Desmarcar" : "Selecionar"}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => toggleStudentSelected(sid)}
+                                      aria-label={`Selecionar ${s.name}`}
+                                    />
+                                  </label>
+                                )}
+                                <button
+                                  type="button"
+                                  className={`student${isHighlighted ? " sofia-highlight" : ""}`}
+                                  onClick={() => setStudentDetail({ index: realIndex, student: s })}
+                                  style={{ textAlign: "left", background: "transparent", cursor: "pointer", font: "inherit" }}
+                                >
                                 <div className={`student-avatar ${avClass}`}>{initials}</div>
                                 <div className="student-info">
                                   <div className="student-name">
@@ -1281,7 +1319,8 @@ export function Dashboard() {
                                   )}
                                 </div>
                                 <Svg width={14} height={14} c={<polyline points="9 18 15 12 9 6"/>} />
-                              </button>
+                                </button>
+                              </div>
                             );
                           })}
                         </div>
