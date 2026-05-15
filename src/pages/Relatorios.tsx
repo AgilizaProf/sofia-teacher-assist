@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
@@ -454,6 +454,12 @@ export function Relatorios() {
   }, [routeSearch.focus]);
 
   type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  // Identidade estável por aluno — usada como CHAVE para todas as avaliações
+  // (BNCC, observações, parecer, ano de referência) persistidas em localStorage.
+  // CRÍTICO: jamais derivar este id de índices de array; sempre vincular ao
+  // registro do aluno (UUID do banco para alunos cadastrados em Inclusão,
+  // ou hash determinístico nome+nascimento para alunos legados em localStorage).
+  type DashStudentWithId = DashStudent & { id: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
   type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
   const [dashStudents, setDashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
@@ -462,28 +468,50 @@ export function Relatorios() {
 
   // Alunos cadastrados no banco (Inclusão) — entram automaticamente na lista de Relatórios.
   const { students: dbStudents } = useInclusaoStudents();
-  const combinedStudents = useMemo<DashStudent[]>(() => {
+  const combinedStudents = useMemo<DashStudentWithId[]>(() => {
     const seen = new Set<string>();
-    const out: DashStudent[] = [];
-    const push = (s: DashStudent) => {
+    const out: DashStudentWithId[] = [];
+    const slug = (s: string) =>
+      (s || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+    const push = (s: DashStudent, id: string) => {
       const key = s.name.trim().toLowerCase();
       if (!key || seen.has(key)) return;
       seen.add(key);
-      out.push(s);
+      out.push({ ...s, id });
     };
-    dashStudents.forEach(push);
+    // Alunos legados (localStorage) — id determinístico por nome + nascimento
+    // (ou createdAt como fallback). Estável independente de ordem/sort.
+    dashStudents.forEach((s) =>
+      push(s, `local:${slug(s.name)}:${s.birth || s.createdAt || "x"}`),
+    );
+    // Alunos do banco (Inclusão) — id é o UUID real, garantido único por usuário.
     dbStudents.forEach((s) =>
-      push({
-        name: s.name,
-        classRef: s.turma && s.turma !== "Sem turma" ? s.turma : "",
-        birth: s.birth ?? "",
-        pcd: s.diag || s.pcd || "nao",
-        notes: s.notes ?? "",
-        createdAt: s.createdAt,
-      }),
+      push(
+        {
+          name: s.name,
+          classRef: s.turma && s.turma !== "Sem turma" ? s.turma : "",
+          birth: s.birth ?? "",
+          pcd: s.diag || s.pcd || "nao",
+          notes: s.notes ?? "",
+          createdAt: s.createdAt,
+        },
+        `db:${s.id}`,
+      ),
     );
     return out;
   }, [dashStudents, dbStudents]);
+
+  // Lookup utilitário — sempre por id estável, nunca por nome.
+  // Garante que um aluno homônimo NUNCA receba dados de outro registro.
+  const getStudentById = useCallback(
+    (id: string) => combinedStudents.find((s) => s.id === id),
+    [combinedStudents],
+  );
 
   // Cadastro rápido de aluno (vincula a uma turma já criada)
   const [novoAlunoOpen, setNovoAlunoOpen] = useState(false);
@@ -565,7 +593,7 @@ export function Relatorios() {
         }).join("\n");
         return `${area.area}\n${itens}`;
       }).join("\n\n");
-      const aluno = dashStudents.find((s) => s.name === a.nome);
+      const aluno = getStudentById(a.id);
       const cls = dashClasses.find((c) => c.name === a.turma);
       const periodoLabel = `${bimestreNum}º bimestre · ${new Date().getFullYear()}`;
       const peiResumo = [
@@ -698,7 +726,7 @@ export function Relatorios() {
     const areas = areasFor(a.id, a.turma, a.pcd);
     const rub = getAlunoRubric(a.id);
     const dataStr = new Date().toLocaleDateString("pt-BR");
-    const aluno = dashStudents.find((s) => s.name === a.nome);
+    const aluno = getStudentById(a.id);
     const cls = dashClasses.find((c) => c.name === a.turma);
     const escola = dashSchools.find((s) => s.name === cls?.school);
     const parecerAluno = parecerByAluno[a.id] || null;
@@ -803,8 +831,8 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
       return { status: "todo", naoObservadas };
     };
     if (combinedStudents.length > 0) {
-      return combinedStudents.map((s, i): Item => {
-        const id = `al-${i}`;
+      return combinedStudents.map((s): Item => {
+        const id = s.id;
         const turma = s.classRef || "";
         const pcd = s.pcd && s.pcd !== "nao" ? s.pcd : "";
         const { status, naoObservadas } = deriveStatus(id, turma, pcd);
@@ -1593,7 +1621,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           : "";
         const buildReportHtml = () => {
           const dataStr = new Date().toLocaleDateString("pt-BR");
-          const aluno = dashStudents.find((s) => s.name === a.nome);
+          const aluno = getStudentById(a.id);
           const cls = dashClasses.find((c) => c.name === a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
           const bodyInner = `
@@ -1627,7 +1655,7 @@ ${parecerHtml}
           // (Georgia para títulos, Arial para corpo), HEX simples, sem grid
           // moderno nem Google Fonts. Layout em 2 colunas via <table>.
           const dataStr = new Date().toLocaleDateString("pt-BR");
-          const aluno = dashStudents.find((s) => s.name === a.nome);
+          const aluno = getStudentById(a.id);
           const cls = dashClasses.find((c) => c.name === a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
 
