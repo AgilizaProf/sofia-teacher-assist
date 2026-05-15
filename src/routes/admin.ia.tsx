@@ -165,53 +165,57 @@ function IaPage() {
 
       <div className="ad-card" style={{ padding: 0, overflow: "hidden", marginBottom: 18 }}>
         <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E9F2" }}><h3 style={{ margin: 0 }}>Gasto por modelo de IA</h3></div>
-        <table className="ad-table">
-          <thead><tr><th>Modelo</th><th>Provider</th><th>Chamadas</th><th>Usuários</th><th>Tokens in</th><th>Tokens out</th><th>Custo</th><th style={{ width: 200 }}>Participação</th></tr></thead>
-          <tbody>
-            {loading && <tr><td colSpan={8} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Carregando…</td></tr>}
-            {!loading && stats.models.length === 0 && <tr><td colSpan={8} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Sem chamadas neste mês.</td></tr>}
-            {stats.models.map((m) => (
-              <tr key={m.model}>
-                <td style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12 }}>{m.model}</td>
-                <td><span className="ad-badge ok">{m.provider}</span></td>
-                <td>{m.calls}</td>
-                <td>{m.users}</td>
-                <td>{m.inTok.toLocaleString("pt-BR")}</td>
-                <td>{m.outTok.toLocaleString("pt-BR")}</td>
-                <td style={{ fontWeight: 700 }}>{fmtBRL(m.brl)}</td>
-                <td>
-                  <div className="ad-bar"><div style={{ width: `${(m.share * 100).toFixed(1)}%` }} /></div>
-                  <div style={{ fontSize: 11, color: "#6B7280", marginTop: 3 }}>{(m.share * 100).toFixed(1)}%</div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="ad-table-wrap">
+          <table className="ad-table">
+            <thead><tr><th>Modelo</th><th>Provider</th><th>Chamadas</th><th>Usuários</th><th>Tokens in</th><th>Tokens out</th><th>Custo</th><th style={{ width: 200 }}>Participação</th></tr></thead>
+            <tbody>
+              {loading && <tr><td colSpan={8} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Carregando…</td></tr>}
+              {!loading && stats.models.length === 0 && <tr><td colSpan={8} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Sem chamadas neste mês.</td></tr>}
+              {stats.models.map((m) => (
+                <tr key={m.model}>
+                  <td style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12 }}>{m.model}</td>
+                  <td><span className="ad-badge ok">{m.provider}</span></td>
+                  <td>{m.calls}</td>
+                  <td>{m.users}</td>
+                  <td>{m.inTok.toLocaleString("pt-BR")}</td>
+                  <td>{m.outTok.toLocaleString("pt-BR")}</td>
+                  <td style={{ fontWeight: 700 }}>{fmtBRL(m.brl)}</td>
+                  <td>
+                    <div className="ad-bar"><div style={{ width: `${(m.share * 100).toFixed(1)}%` }} /></div>
+                    <div style={{ fontSize: 11, color: "#6B7280", marginTop: 3 }}>{(m.share * 100).toFixed(1)}%</div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="ad-card" style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E9F2" }}><h3 style={{ margin: 0 }}>Top usuários — gasto no mês</h3></div>
-        <table className="ad-table">
-          <thead><tr><th>Usuário</th><th>Chamadas</th><th>Custo</th><th style={{ width: 220 }}>% do limite</th></tr></thead>
-          <tbody>
-            {!loading && stats.topUsers.length === 0 && <tr><td colSpan={4} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Sem dados.</td></tr>}
-            {stats.topUsers.map((u) => {
-              const pct = Math.min(100, u.pctLimit * 100);
-              const color = pct >= 100 ? "err" : pct >= 80 ? "warn" : "ok";
-              return (
-                <tr key={u.user_id}>
-                  <td style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>{u.user_id.slice(0, 8)}…{u.user_id.slice(-4)}</td>
-                  <td>{u.calls}</td>
-                  <td style={{ fontWeight: 700 }}>{fmtBRL(u.brl)}</td>
-                  <td>
-                    <div className="ad-bar"><div style={{ width: `${pct.toFixed(1)}%`, background: pct >= 100 ? "#DC2626" : pct >= 80 ? "#F59E0B" : undefined }} /></div>
-                    <div style={{ fontSize: 11, marginTop: 3 }}><span className={"ad-badge " + color}>{pct.toFixed(1)}%</span></div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="ad-table-wrap">
+          <table className="ad-table">
+            <thead><tr><th>Usuário</th><th>Chamadas</th><th>Custo</th><th style={{ width: 220 }}>% do limite</th></tr></thead>
+            <tbody>
+              {!loading && stats.topUsers.length === 0 && <tr><td colSpan={4} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Sem dados.</td></tr>}
+              {stats.topUsers.map((u) => {
+                const pct = Math.min(100, u.pctLimit * 100);
+                const color = pct >= 100 ? "err" : pct >= 80 ? "warn" : "ok";
+                return (
+                  <tr key={u.user_id}>
+                    <td style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>{u.user_id.slice(0, 8)}…{u.user_id.slice(-4)}</td>
+                    <td>{u.calls}</td>
+                    <td style={{ fontWeight: 700 }}>{fmtBRL(u.brl)}</td>
+                    <td>
+                      <div className="ad-bar"><div style={{ width: `${pct.toFixed(1)}%`, background: pct >= 100 ? "#DC2626" : pct >= 80 ? "#F59E0B" : undefined }} /></div>
+                      <div style={{ fontSize: 11, marginTop: 3 }}><span className={"ad-badge " + color}>{pct.toFixed(1)}%</span></div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <style>{`@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.6)}100%{transform:scale(1)}}`}</style>

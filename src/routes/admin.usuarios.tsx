@@ -91,29 +91,31 @@ function UsersPage() {
         </div>
       </div>
       <div className="ad-card" style={{padding:0,overflow:"hidden"}}>
-        <table className="ad-table">
-          <thead><tr>
-            <th>Nome</th><th>E-mail</th><th>Telefone</th><th>Plano</th><th>Último acesso</th><th>Eventos (mês)</th><th></th>
-          </tr></thead>
-          <tbody>
-            {filtered.map(r => (
-              <tr key={r.user_id}>
-                <td style={{fontWeight:600}}>{r.display_name ?? "—"}</td>
-                <td>{r.email ?? "—"}</td>
-                <td>{r.telefone ?? "—"}</td>
-                <td>
-                  <span className={"ad-badge " + (r.plano === "pro" ? "pro" : "free")}>
-                    {r.plano === "pro" ? `PRO · ${r.ciclo ?? ""}` : "FREE"}
-                  </span>
-                </td>
-                <td>{r.last_seen ? new Date(r.last_seen).toLocaleString("pt-BR") : <span style={{color:"#9CA3AF"}}>nunca</span>}</td>
-                <td>{r.events_month}</td>
-                <td><button className="ad-btn ghost" onClick={() => setDrawer(r)}>Ver</button></td>
-              </tr>
-            ))}
-            {filtered.length === 0 && <tr><td colSpan={7} style={{textAlign:"center",padding:40,color:"#6B7280"}}>Nenhum resultado</td></tr>}
-          </tbody>
-        </table>
+        <div className="ad-table-wrap">
+          <table className="ad-table">
+            <thead><tr>
+              <th>Nome</th><th>E-mail</th><th>Telefone</th><th>Plano</th><th>Último acesso</th><th>Eventos (mês)</th><th></th>
+            </tr></thead>
+            <tbody>
+              {filtered.map(r => (
+                <tr key={r.user_id}>
+                  <td style={{fontWeight:600}}>{r.display_name ?? "—"}</td>
+                  <td>{r.email ?? "—"}</td>
+                  <td>{r.telefone ?? "—"}</td>
+                  <td>
+                    <span className={"ad-badge " + (r.plano === "pro" ? "pro" : "free")}>
+                      {r.plano === "pro" ? `PRO · ${r.ciclo ?? ""}` : "FREE"}
+                    </span>
+                  </td>
+                  <td>{r.last_seen ? new Date(r.last_seen).toLocaleString("pt-BR") : <span style={{color:"#9CA3AF"}}>nunca</span>}</td>
+                  <td>{r.events_month}</td>
+                  <td><button className="ad-btn ghost" onClick={() => setDrawer(r)}>Ver</button></td>
+                </tr>
+              ))}
+              {filtered.length === 0 && <tr><td colSpan={7} style={{textAlign:"center",padding:40,color:"#6B7280"}}>Nenhum resultado</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
       {drawer && <UserDrawer row={drawer} onClose={() => setDrawer(null)} />}
     </AdminLayout>

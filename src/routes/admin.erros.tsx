@@ -42,21 +42,23 @@ function ErrPage() {
         </div>
       </div>
       <div className="ad-card" style={{padding:0,overflow:"hidden"}}>
-        <table className="ad-table">
-          <thead><tr><th>Quando</th><th>Severidade</th><th>Mensagem</th><th>Rota</th><th></th></tr></thead>
-          <tbody>
-            {items.map(e => (
-              <tr key={e.id}>
-                <td>{new Date(e.created_at).toLocaleString("pt-BR")}</td>
-                <td><span className={"ad-badge " + (e.severity==="fatal"||e.severity==="error"?"err":e.severity==="warn"?"warn":"ok")}>{e.severity}</span></td>
-                <td style={{maxWidth:420,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.message}>{e.message}</td>
-                <td style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:"#6B7280"}}>{e.route ?? "—"}</td>
-                <td>{!e.resolved_at && <button className="ad-btn ghost" onClick={()=>resolve(e.id)}>Resolver</button>}</td>
-              </tr>
-            ))}
-            {items.length===0 && <tr><td colSpan={5} style={{textAlign:"center",padding:30,color:"#6B7280"}}>Nenhum erro</td></tr>}
-          </tbody>
-        </table>
+        <div className="ad-table-wrap">
+          <table className="ad-table">
+            <thead><tr><th>Quando</th><th>Severidade</th><th>Mensagem</th><th>Rota</th><th></th></tr></thead>
+            <tbody>
+              {items.map(e => (
+                <tr key={e.id}>
+                  <td>{new Date(e.created_at).toLocaleString("pt-BR")}</td>
+                  <td><span className={"ad-badge " + (e.severity==="fatal"||e.severity==="error"?"err":e.severity==="warn"?"warn":"ok")}>{e.severity}</span></td>
+                  <td style={{maxWidth:420,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={e.message}>{e.message}</td>
+                  <td style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:"#6B7280"}}>{e.route ?? "—"}</td>
+                  <td>{!e.resolved_at && <button className="ad-btn ghost" onClick={()=>resolve(e.id)}>Resolver</button>}</td>
+                </tr>
+              ))}
+              {items.length===0 && <tr><td colSpan={5} style={{textAlign:"center",padding:30,color:"#6B7280"}}>Nenhum erro</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </AdminLayout>
   );
