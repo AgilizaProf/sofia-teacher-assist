@@ -267,8 +267,10 @@ const css = `
   .inc-modal{max-width:100% !important;max-height:100dvh;height:100dvh;border-radius:14px 14px 0 0;}
   .inc-modal-head{padding:14px 16px;gap:10px;}
   .inc-modal-head h2{font-size:17px;line-height:1.25;}
-  .inc-modal-body{padding:16px;}
-  .inc-modal-foot{padding:12px 16px;}
+  .inc-modal-body{padding:16px;-webkit-overflow-scrolling:touch;padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+  .inc-modal-foot{padding:12px 16px calc(12px + env(safe-area-inset-bottom)) !important;flex-direction:column-reverse;align-items:stretch;gap:8px;position:sticky;bottom:0;background:#fff;z-index:5;border-top:1px solid var(--border);}
+  .inc-modal-foot .legal{display:none;}
+  .inc-modal-foot button,.inc-modal-foot .inc-btn-ghost,.inc-modal-foot .btn{width:100%;justify-content:center;margin:0 !important;}
   .inc-modal-body.plain > div[style*="flex-end"],
   .inc-modal-body.plain > div:last-child{flex-direction:column-reverse !important;align-items:stretch !important;}
   .inc-modal-body.plain > div:last-child > button{width:100%;justify-content:center;}
