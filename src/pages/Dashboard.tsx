@@ -439,6 +439,21 @@ export function Dashboard() {
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsedClasses, setCollapsedClasses] = useState<Record<string, boolean>>({});
   const [editingClassIdx, setEditingClassIdx] = useState<number | null>(null);
+  // Seleção em massa de alunos (Dashboard "Seus alunos")
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [bulkConfirmDelete, setBulkConfirmDelete] = useState(false);
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
+  const [bulkTurmaPick, setBulkTurmaPick] = useState<string>("");
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const clearStudentSelection = () => setSelectedStudentIds(new Set());
+  const toggleStudentSelected = (id: string) => {
+    setSelectedStudentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const totalSchools = baseSchools + schools.length;
   const totalClasses = baseClasses + classes.length;
   const totalStudents = baseStudents + students.length;
