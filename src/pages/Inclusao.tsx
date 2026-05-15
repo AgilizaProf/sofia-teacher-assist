@@ -2154,6 +2154,20 @@ ${corpo}
                         );
                       })}
                     </div>
+                    <div style={{ marginTop: 16, background:"#fff", border:"1px solid var(--border)", borderRadius:10, padding:"12px 14px", display:"flex", flexDirection:"column", gap:8 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                        <b style={{ fontSize: 13 }}>Observações gerais sobre o(a) aluno(a)</b>
+                        <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                          (a Sofia usa este texto ao gerar PEI, pareceres e relatórios)
+                        </span>
+                      </div>
+                      <textarea
+                        value={anamObsGeral}
+                        onChange={(ev) => setAnamObsGeral(ev.target.value)}
+                        placeholder="Descreva aqui contexto familiar, comportamentos recorrentes, avanços, dificuldades, hipóteses pedagógicas ou qualquer informação relevante que a Sofia deva considerar…"
+                        style={{ width:"100%", minHeight:120, padding:"10px 12px", border:"1px solid var(--border)", borderRadius:8, resize:"vertical", fontFamily:"inherit", fontSize:13, color:"var(--text)", background:"#fff" }}
+                      />
+                    </div>
                   </div>
                 </div>
 
