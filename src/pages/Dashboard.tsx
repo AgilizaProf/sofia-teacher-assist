@@ -458,6 +458,9 @@ export function Dashboard() {
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsedClasses, setCollapsedClasses] = useState<Record<string, boolean>>({});
   const [editingClassIdx, setEditingClassIdx] = useState<number | null>(null);
+  // Exclusão de turma (com confirmação em duas etapas)
+  const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
+  const [deletingClassBusy, setDeletingClassBusy] = useState(false);
   // Seleção em massa de alunos (Dashboard "Seus alunos")
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [bulkConfirmDelete, setBulkConfirmDelete] = useState(false);
@@ -1313,6 +1316,18 @@ export function Dashboard() {
                                 Editar
                               </button>
                             )}
+                            {classMeta && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setDeletingClassId(classMeta.id); }}
+                                aria-label={`Excluir turma ${turma}`}
+                                title="Excluir turma"
+                                style={{ marginLeft: 6, background: "transparent", border: "1px solid #FCA5A5", borderRadius: 6, padding: "3px 6px", cursor: "pointer", color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600 }}
+                              >
+                                <Svg width={12} height={12} c={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></>} />
+                                Excluir
+                              </button>
+                            )}
                           </div>
                           {!isCollapsed && list.map((s, i) => {
                             const initials = s.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
@@ -1804,18 +1819,10 @@ export function Dashboard() {
                   type="button"
                   className="school-cancel"
                   style={{ color: "#DC2626" }}
-                  onClick={async () => {
-                    if (!confirm("Excluir esta turma? Os alunos vinculados ficarão sem turma.")) return;
-                    const oldName = classes[editingClassIdx!].name;
+                  onClick={() => {
                     const turmaId = classes[editingClassIdx!].id;
-                    try {
-                      await removeTurmaDb(turmaId);
-                      await clearClassRefRipple(oldName);
-                      setEditingClassIdx(null);
-                    } catch (err) {
-                      console.error("[Dashboard] erro ao excluir turma:", err);
-                      toast.error("Não foi possível excluir a turma. Tente novamente.");
-                    }
+                    setEditingClassIdx(null);
+                    setDeletingClassId(turmaId);
                   }}
                 >Excluir</button>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -1830,6 +1837,79 @@ export function Dashboard() {
           </div>
         </div>
       )}
+
+      {deletingClassId !== null && (() => {
+        const turma = classes.find((c) => c.id === deletingClassId);
+        if (!turma) return null;
+        const linkedStudents = dbStudents.filter((s) => (s.turma ?? "") === turma.name);
+        const linkedIds = linkedStudents.map((s) => s.id).filter(Boolean) as string[];
+        const count = linkedStudents.length;
+        const close = () => { if (!deletingClassBusy) setDeletingClassId(null); };
+        return (
+          <div className="cmdk-overlay show" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
+            <div className="school-modal" role="dialog" aria-label="Excluir turma" aria-modal="true">
+              <div className="school-modal-head">
+                <div className="school-modal-icon" style={{ background: "#FEE2E2", color: "#DC2626" }}>
+                  <Svg c={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></>} />
+                </div>
+                <div>
+                  <div className="school-modal-title">Excluir turma</div>
+                  <div className="school-modal-sub">Esta ação é permanente e não pode ser desfeita.</div>
+                </div>
+                <button className="school-modal-close" aria-label="Fechar" onClick={close} disabled={deletingClassBusy}>
+                  <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+                </button>
+              </div>
+              <div className="school-modal-body" style={{ paddingTop: 4 }}>
+                <p style={{ fontSize: 14, color: "var(--text)", margin: "8px 0 12px" }}>
+                  ⚠️ Tem certeza que deseja excluir a turma <b>{turma.name}</b>?
+                </p>
+                {count > 0 ? (
+                  <div style={{ background: "#FEF3C7", border: "1px solid #FCD34D", borderRadius: 8, padding: "10px 12px", color: "#92400E", fontSize: 13, lineHeight: 1.5 }}>
+                    Esta ação também excluirá permanentemente <b>{count} aluno{count === 1 ? "" : "s"}</b> vinculado{count === 1 ? "" : "s"} a esta turma.
+                  </div>
+                ) : (
+                  <div style={{ background: "#F1F5F9", border: "1px solid var(--border, #E4E8F0)", borderRadius: 8, padding: "10px 12px", color: "var(--text-soft, #475569)", fontSize: 13 }}>
+                    Nenhum aluno está vinculado a esta turma.
+                  </div>
+                )}
+                <p style={{ fontSize: 12, color: "var(--text-soft, #6B7691)", margin: "12px 0 0" }}>
+                  Essa ação não pode ser desfeita.
+                </p>
+              </div>
+              <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0, justifyContent: "flex-end", gap: 8 }}>
+                <button type="button" className="school-cancel" onClick={close} disabled={deletingClassBusy}>
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="school-save"
+                  style={{ background: "#DC2626", borderColor: "#DC2626" }}
+                  disabled={deletingClassBusy}
+                  onClick={async () => {
+                    setDeletingClassBusy(true);
+                    try {
+                      if (linkedIds.length > 0) {
+                        await bulkRemoveDbStudents(linkedIds);
+                      }
+                      await removeTurmaDb(turma.id);
+                      setDeletingClassId(null);
+                      toast.success(count > 0 ? "Turma e alunos excluídos com sucesso." : "Turma excluída com sucesso.");
+                    } catch (err) {
+                      console.error("[Dashboard] erro ao excluir turma:", err);
+                      toast.error("Não foi possível excluir a turma. Tente novamente.");
+                    } finally {
+                      setDeletingClassBusy(false);
+                    }
+                  }}
+                >
+                  {deletingClassBusy ? "Excluindo…" : (count > 0 ? "Sim, excluir tudo" : "Sim, excluir turma")}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className={`cmdk-overlay ${studentOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setStudentOpen(false); }}>
         <div className="school-modal" role="dialog" aria-label="Cadastrar aluno">
