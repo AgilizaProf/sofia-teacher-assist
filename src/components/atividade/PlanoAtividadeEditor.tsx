@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { logActivity } from "@/lib/activity/activityLog";
+import { formatTurmaGrade } from "@/lib/turmaGrade";
 import {
   printEditorial,
   editorialCover,
@@ -245,17 +246,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     [turmasPerfil, turma],
   );
   const [anoFallback, setAnoFallback] = useState<string>(ANOS_FALLBACK[3]);
-  // c.grade vem como "1".."9" do cadastro de turmas — formata para "Nº ano EF".
-  const formatAno = (raw: string): string => {
-    const t = (raw || "").trim();
-    if (!t) return "";
-    if (/^\d+$/.test(t)) {
-      const n = parseInt(t, 10);
-      if (n >= 1 && n <= 9) return `${n}º ano EF`;
-    }
-    return t;
-  };
-  const anoTurma = formatAno(turmaInfo?.ano || "");
+  const anoTurma = formatTurmaGrade(turmaInfo?.ano || "");
   const anoEscolar = anoTurma || anoFallback;
 
   // Quando a turma muda, sincroniza o fallback com o ano da turma —
