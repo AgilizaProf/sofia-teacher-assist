@@ -504,6 +504,8 @@ export function Relatorios() {
   const [bnccByAluno, setBnccByAluno] = usePersistentState<Record<string, Record<string, BnccStatus>>>("rel_bncc", {});
   // Override de ano de referência por aluno (sobretudo PCD)
   const [yearOverride, setYearOverride] = usePersistentState<Record<string, string>>("rel_bncc_year", {});
+  // Observações livres do(a) professor(a) por aluno (persistido junto à avaliação BNCC)
+  const [bnccObsByAluno, setBnccObsByAluno] = usePersistentState<Record<string, string>>("rel_bncc_obs", {});
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
   const [verTodosHist, setVerTodosHist] = useState(false);
   const HIST_LIMIT = 5;
