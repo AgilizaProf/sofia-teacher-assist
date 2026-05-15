@@ -9,6 +9,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { useAgenda } from "@/hooks/useAgenda";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const css = `
 .ag-root{
