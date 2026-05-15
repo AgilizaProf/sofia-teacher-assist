@@ -572,6 +572,9 @@ export function Relatorios() {
         a.pcd ? `Condição/PCD: ${a.pcd}` : "",
         cls?.grade ? `Ano/Etapa: ${cls.grade}` : "",
         aluno?.notes ? `Observações: ${aluno.notes}` : "",
+        bnccObsByAluno[a.id]?.trim()
+          ? `Observações do professor sobre o aluno: ${bnccObsByAluno[a.id].trim()}`
+          : "",
         `Avaliação BNCC do bimestre por área:\n${linhas}`,
       ].filter(Boolean).join("\n");
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
