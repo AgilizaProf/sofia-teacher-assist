@@ -16,6 +16,7 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useAiBudgetWarnings } from "@/hooks/useAiBudgetWarnings";
 import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
 import { installPlatformTelemetry, trackPageVisit } from "@/lib/admin/track";
+import { syncOnboardingFlagIfPending } from "@/lib/onboarding";
 import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
 import { useLocation } from "@tanstack/react-router";
 import { MobileTopBar } from "@/components/MobileTopBar";
@@ -98,6 +99,7 @@ function RootComponent() {
   useEffect(() => { installHydrationTelemetry(); }, []);
   useEffect(() => { installServerFnAuthFetch(); }, []);
   useEffect(() => { installPlatformTelemetry(); }, []);
+  useEffect(() => { void syncOnboardingFlagIfPending(); }, []);
   const loc = useLocation();
   useEffect(() => { trackPageVisit(loc.pathname); }, [loc.pathname]);
   useEffect(() => {

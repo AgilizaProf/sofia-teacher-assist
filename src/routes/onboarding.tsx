@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { markOnboardingDone, shouldShowOnboarding } from "@/lib/onboarding";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -15,15 +17,45 @@ function OnboardingPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      if (localStorage.getItem("agp_onboarding_completed") === "1") {
-        window.location.replace("/");
-        return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (localStorage.getItem("agp_onboarding_completed") === "1") {
+          window.location.replace("/");
+          return;
+        }
+      } catch {
+        /* ignore */
       }
-    } catch (_) {
-      /* ignore */
+      try {
+        const { data } = await supabase.auth.getUser();
+        const uid = data.user?.id;
+        if (uid) {
+          const show = await shouldShowOnboarding(uid);
+          if (!show) {
+            window.location.replace("/");
+            return;
+          }
+        }
+      } catch {
+        /* ignore — fail open */
+      }
+      if (!cancelled) setReady(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Listen for completion signal from the iframe and persist to Supabase.
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      const d = e?.data;
+      if (d && typeof d === "object" && d.type === "agp_onboarding_done") {
+        // fire-and-forget; do not block iframe navigation
+        void markOnboardingDone();
+      }
     }
-    setReady(true);
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
   }, []);
 
   if (!ready) return null;

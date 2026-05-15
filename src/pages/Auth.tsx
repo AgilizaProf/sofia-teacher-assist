@@ -4,11 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
+import { shouldShowOnboarding } from "@/lib/onboarding";
 import logoImg from "@/assets/agilizaprof-logo.webp";
 
-function postLoginRoute(): "/" | "/onboarding" {
+async function postLoginRoute(): Promise<"/" | "/onboarding"> {
   try {
-    return localStorage.getItem("agp_onboarding_completed") === "1" ? "/" : "/onboarding";
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return "/";
+    const show = await shouldShowOnboarding(uid);
+    return show ? "/onboarding" : "/";
   } catch {
     return "/";
   }
@@ -32,8 +37,11 @@ export function AuthPage() {
 
   useEffect(() => {
     captureReferralFromUrl();
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        const to = await postLoginRoute();
+        navigate({ to });
+      }
     });
   }, [navigate]);
 
@@ -75,7 +83,7 @@ export function AuthPage() {
         } catch {
           /* ignore */
         }
-        navigate({ to: postLoginRoute() });
+        navigate({ to: await postLoginRoute() });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
@@ -92,7 +100,7 @@ export function AuthPage() {
       setPopupBlocked(true);
       return;
     }
-    if (!result.redirected) navigate({ to: postLoginRoute() });
+    if (!result.redirected) navigate({ to: await postLoginRoute() });
   };
 
   const apple = async () => {
@@ -103,7 +111,7 @@ export function AuthPage() {
       toast.error("Não foi possível entrar com a Apple.");
       return;
     }
-    if (!result.redirected) navigate({ to: postLoginRoute() });
+    if (!result.redirected) navigate({ to: await postLoginRoute() });
   };
 
   const sendReset = async (e: React.FormEvent) => {
