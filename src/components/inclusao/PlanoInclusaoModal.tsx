@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Sparkles, CheckCircle2, Loader2, Lightbulb, RefreshCw, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -260,6 +260,17 @@ type PlanoItem = {
 };
 
 export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSaved }: Props) {
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const t = window.setTimeout(() => {
+      const el = modalRef.current?.querySelector<HTMLElement>('input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), button.inc-btn-ghost, button.btn');
+      el?.focus();
+    }, 60);
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => { window.clearTimeout(t); window.removeEventListener("keydown", onKey); };
+  }, [open, onClose]);
   const [disciplinas, setDisciplinas] = useState<string[]>([]);
   const [tema, setTema] = useState("");
   const [duracao, setDuracao] = useState("45 min");
@@ -408,7 +419,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
 
   return (
     <div className={"inc-modal-overlay" + (open ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="inc-modal" style={{ maxWidth: 880 }}>
+      <div className="inc-modal" ref={modalRef} style={{ maxWidth: 880 }}>
         <div className="inc-modal-bar" />
         <div className="inc-modal-head">
           <h2>Gerar plano adaptado · {aluno.name.split(" ")[0]}</h2>
