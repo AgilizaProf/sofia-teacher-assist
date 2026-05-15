@@ -1819,18 +1819,10 @@ export function Dashboard() {
                   type="button"
                   className="school-cancel"
                   style={{ color: "#DC2626" }}
-                  onClick={async () => {
-                    if (!confirm("Excluir esta turma? Os alunos vinculados ficarão sem turma.")) return;
-                    const oldName = classes[editingClassIdx!].name;
+                  onClick={() => {
                     const turmaId = classes[editingClassIdx!].id;
-                    try {
-                      await removeTurmaDb(turmaId);
-                      await clearClassRefRipple(oldName);
-                      setEditingClassIdx(null);
-                    } catch (err) {
-                      console.error("[Dashboard] erro ao excluir turma:", err);
-                      toast.error("Não foi possível excluir a turma. Tente novamente.");
-                    }
+                    setEditingClassIdx(null);
+                    setDeletingClassId(turmaId);
                   }}
                 >Excluir</button>
                 <div style={{ display: "flex", gap: 8 }}>
