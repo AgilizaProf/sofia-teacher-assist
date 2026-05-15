@@ -393,6 +393,24 @@ export function Dashboard() {
   const { turmas: classes, create: createTurmaDb, update: updateTurmaDb, remove: removeTurmaDb } = useTurmas();
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
+
+  // Foco automático no primeiro campo + Esc para fechar (turma / aluno)
+  useEffect(() => {
+    if (!classOpen && !studentOpen && !schoolOpen) return;
+    const close = () => {
+      if (classOpen) setClassOpen(false);
+      if (studentOpen) setStudentOpen(false);
+      if (schoolOpen) setSchoolOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    window.addEventListener("keydown", onKey);
+    const t = window.setTimeout(() => {
+      const sel = '.cmdk-overlay.show .school-modal input:not([type="hidden"]), .cmdk-overlay.show .school-modal select, .cmdk-overlay.show .school-modal textarea';
+      const el = document.querySelector<HTMLElement>(sel);
+      el?.focus();
+    }, 60);
+    return () => { window.removeEventListener("keydown", onKey); window.clearTimeout(t); };
+  }, [classOpen, studentOpen, schoolOpen]);
   const [bulkMode, setBulkMode] = useState(false);
   const [submittingStudent, setSubmittingStudent] = useState(false);
   type DashStudent = { id?: string; name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
