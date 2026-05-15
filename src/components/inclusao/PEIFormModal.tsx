@@ -679,7 +679,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
         }
       }}
     >
-      <div className="inc-modal" style={{ maxWidth: 980 }}>
+      <div className="inc-modal" ref={modalRef} style={{ maxWidth: 980 }}>
         <div className="inc-modal-bar" />
         <div className="inc-modal-head">
           <div>
