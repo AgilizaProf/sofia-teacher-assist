@@ -643,6 +643,7 @@ export function Inclusao() {
   const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
   const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
+  const [savingStudent, setSavingStudent] = useState(false);
   const [query, setQuery] = useState("");
   const [turmaFilter, setTurmaFilter] = useState<string[]>([]);
   const [diagFilter, setDiagFilter] = useState<string[]>([]);
