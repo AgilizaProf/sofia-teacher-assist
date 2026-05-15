@@ -971,12 +971,8 @@ export function Dashboard() {
               ref={classesRef as unknown as React.Ref<HTMLButtonElement>}
               className={`stat school-clickable${highlight === "classes" ? " sofia-highlight" : ""}`}
               type="button"
-              onClick={() => {
-                if (totalClasses === 0) { setClassOpen(true); return; }
-                const turma = classes[0]?.name;
-                navigate({ to: "/relatorios", search: { tab: "all", focus: "turmas", ...(turma ? { turma } : {}) } });
-              }}
-              aria-label="Ver pareceres por turma"
+              onClick={() => setClassOpen(true)}
+              aria-label="Cadastrar nova turma"
               style={{ textAlign: "left" }}
             >
               <div className="stat-icon s2"><Svg c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} /></div>
@@ -985,11 +981,8 @@ export function Dashboard() {
             <button
               className="stat school-clickable"
               type="button"
-              onClick={() => {
-                if (totalStudents === 0) { setStudentOpen(true); return; }
-                navigate({ to: "/relatorios", search: { tab: "all", focus: "alunos", pcd: "todos" } });
-              }}
-              aria-label="Ver todos os alunos em Relatórios"
+              onClick={() => setStudentOpen(true)}
+              aria-label="Cadastrar novo aluno"
               style={{ textAlign: "left" }}
             >
               <div className="stat-icon s3"><Svg c={<><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></>} /></div>
