@@ -635,6 +635,8 @@ export function Relatorios() {
     periodoLabel?: string;
     formato?: "topicos" | "texto";
     geradoEm?: string;
+    tipo_relatorio?: "parecer_descritivo" | "relatorio_fundamental" | "relatorio_medio";
+    nivel_ensino?: string;
   };
   const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, ParecerNarrativo>>("rel_parecer", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
@@ -647,9 +649,10 @@ export function Relatorios() {
     try {
       const areas = areasFor(a.id, a.turma, a.pcd);
       const rub = getAlunoRubric(a.id);
+      const ei = isEiAluno(a.turma);
       const linhas = areas.map((area, ai) => {
         const itens = area.comps.map((c, ci) => {
-          const lbl = BNCC_STATUS.find((x) => x.k === rub[`${ai}.${ci}`])?.label || "Não observada";
+          const lbl = statusLabel(a.turma, rub[`${ai}.${ci}`]);
           return `  - ${c}: ${lbl}`;
         }).join("\n");
         return `${area.area}\n${itens}`;
@@ -657,14 +660,25 @@ export function Relatorios() {
       const aluno = getStudentById(a.id);
       const cls = dashClasses.find((c) => c.name === a.turma);
       const periodoLabel = `${bimestreNum}º bimestre · ${new Date().getFullYear()}`;
+      const gradeRaw = (cls?.grade || "").trim();
+      const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${a.turma}`);
+      const nivelEnsino = ei ? "Educação Infantil"
+        : isMedio ? "Ensino Médio" : "Ensino Fundamental";
+      const tipoRelatorio: ParecerNarrativo["tipo_relatorio"] = ei
+        ? "parecer_descritivo"
+        : isMedio ? "relatorio_medio" : "relatorio_fundamental";
+      const instrucoesEI = ei
+        ? `\n\nINSTRUÇÕES OBRIGATÓRIAS (Educação Infantil):\nGere um PARECER DESCRITIVO para criança da Educação Infantil. Use linguagem afetiva, humanizada e acessível à família. Cite os Campos de Experiência da BNCC Infantil trabalhados (${EI_CAMPOS_EXPERIENCIA.map(c => c.area).join("; ")}). Use os Direitos de Aprendizagem como base da avaliação (${EI_DIREITOS_APRENDIZAGEM}). NUNCA use linguagem comparativa entre crianças ou capacitista. Descreva o desenvolvimento de forma narrativa e individualizada, considerando as observações registradas pelo(a) educador(a). Prefira expressões como "está desenvolvendo", "demonstra interesse em", "avança em", "em construção" — nunca "não sabe", "não consegue", "fraco" ou similares.`
+        : "";
       const peiResumo = [
         a.pcd ? `Condição/PCD: ${a.pcd}` : "",
         cls?.grade ? `Ano/Etapa: ${cls.grade}` : "",
+        `Nível de ensino: ${nivelEnsino}`,
         aluno?.notes ? `Observações: ${aluno.notes}` : "",
         bnccObsByAluno[a.id]?.trim()
           ? `Observações do professor sobre o aluno: ${bnccObsByAluno[a.id].trim()}`
           : "",
-        `Avaliação BNCC do bimestre por área:\n${linhas}`,
+        `${ei ? "Observações por Campos de Experiência (BNCC Infantil)" : "Avaliação BNCC do bimestre por área"}:\n${linhas}${instrucoesEI}`,
       ].filter(Boolean).join("\n");
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
@@ -676,6 +690,8 @@ export function Relatorios() {
           anamneseResumo: "",
           peiResumo,
           registros: [],
+          nivel_ensino: nivelEnsino,
+          tipo_relatorio: tipoRelatorio,
         },
       });
       if (error) throw error;
@@ -684,9 +700,11 @@ export function Relatorios() {
         periodoLabel,
         formato: formatoParecer,
         geradoEm: new Date().toLocaleString("pt-BR"),
+        tipo_relatorio: tipoRelatorio,
+        nivel_ensino: nivelEnsino,
       };
       setParecerByAluno((all) => ({ ...all, [a.id]: parecer }));
-      toast.success("Parecer gerado pela Sofia.");
+      toast.success(ei ? "Parecer descritivo gerado pela Sofia." : "Parecer gerado pela Sofia.");
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Não foi possível gerar o parecer. ${msg}`);
