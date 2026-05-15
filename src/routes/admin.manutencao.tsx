@@ -47,25 +47,27 @@ function MaintPage() {
       </div>
 
       <div className="ad-card" style={{padding:0,overflow:"hidden"}}>
-        <table className="ad-table">
-          <thead><tr><th>Título</th><th>Início</th><th>Fim</th><th>Status</th><th>Bloqueio</th><th></th></tr></thead>
-          <tbody>
-            {list.map(w => {
-              const s = new Date(w.starts_at).getTime(), e = new Date(w.ends_at).getTime();
-              const status = now < s ? "Agendada" : now > e ? "Concluída" : "Em andamento";
-              const cls = status === "Em andamento" ? "warn" : status === "Agendada" ? "ok" : "free";
-              return <tr key={w.id}>
-                <td style={{fontWeight:600}}>{w.title}</td>
-                <td>{new Date(w.starts_at).toLocaleString("pt-BR")}</td>
-                <td>{new Date(w.ends_at).toLocaleString("pt-BR")}</td>
-                <td><span className={"ad-badge "+cls}>{status}</span></td>
-                <td>{w.block_access ? "Total" : "Apenas aviso"}</td>
-                <td><button className="ad-btn ghost" onClick={()=>del(w.id)}>Excluir</button></td>
-              </tr>;
-            })}
-            {list.length===0 && <tr><td colSpan={6} style={{textAlign:"center",padding:30,color:"#6B7280"}}>Sem janelas</td></tr>}
-          </tbody>
-        </table>
+        <div className="ad-table-wrap">
+          <table className="ad-table">
+            <thead><tr><th>Título</th><th>Início</th><th>Fim</th><th>Status</th><th>Bloqueio</th><th></th></tr></thead>
+            <tbody>
+              {list.map(w => {
+                const s = new Date(w.starts_at).getTime(), e = new Date(w.ends_at).getTime();
+                const status = now < s ? "Agendada" : now > e ? "Concluída" : "Em andamento";
+                const cls = status === "Em andamento" ? "warn" : status === "Agendada" ? "ok" : "free";
+                return <tr key={w.id}>
+                  <td style={{fontWeight:600}}>{w.title}</td>
+                  <td>{new Date(w.starts_at).toLocaleString("pt-BR")}</td>
+                  <td>{new Date(w.ends_at).toLocaleString("pt-BR")}</td>
+                  <td><span className={"ad-badge "+cls}>{status}</span></td>
+                  <td>{w.block_access ? "Total" : "Apenas aviso"}</td>
+                  <td><button className="ad-btn ghost" onClick={()=>del(w.id)}>Excluir</button></td>
+                </tr>;
+              })}
+              {list.length===0 && <tr><td colSpan={6} style={{textAlign:"center",padding:30,color:"#6B7280"}}>Sem janelas</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </AdminLayout>
   );

@@ -50,6 +50,8 @@ export function AdminLayout({ children, title, subtitle }: { children: ReactNode
         .ad-table th{text-align:left;padding:10px 12px;background:#F4F6FB;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #E5E9F2;}
         .ad-table td{padding:11px 12px;border-bottom:1px solid #F1F2F7;color:#1F2937;}
         .ad-table tr:hover td{background:#FAFBFE;}
+        .ad-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+        .ad-table-wrap .ad-table{min-width:680px;}
         .ad-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:100px;font-size:10.5px;font-weight:700;}
         .ad-badge.pro{background:linear-gradient(135deg,#FF7A45,#FFB07A);color:#fff;}
         .ad-badge.free{background:#E5E9F2;color:#475569;}

@@ -32,10 +32,12 @@ function InfraPage() {
       </div>
       <div className="ad-card" style={{padding:0,overflow:"hidden"}}>
         <div style={{padding:"14px 16px",borderBottom:"1px solid #E5E9F2"}}><h3 style={{margin:0}}>Tabelas — contagem de linhas</h3></div>
-        <table className="ad-table">
-          <thead><tr><th>Tabela</th><th>Linhas</th></tr></thead>
-          <tbody>{TABLES.map(t => <tr key={t}><td style={{fontFamily:"'JetBrains Mono',monospace"}}>{t}</td><td style={{fontWeight:700}}>{counts[t] ?? "…"}</td></tr>)}</tbody>
-        </table>
+        <div className="ad-table-wrap">
+          <table className="ad-table">
+            <thead><tr><th>Tabela</th><th>Linhas</th></tr></thead>
+            <tbody>{TABLES.map(t => <tr key={t}><td style={{fontFamily:"'JetBrains Mono',monospace"}}>{t}</td><td style={{fontWeight:700}}>{counts[t] ?? "…"}</td></tr>)}</tbody>
+          </table>
+        </div>
       </div>
     </AdminLayout>
   );

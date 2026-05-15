@@ -72,23 +72,25 @@ function ProPage() {
 
       <div className="ad-card" style={{padding:0,overflow:"hidden"}}>
         <div style={{padding:"14px 16px",borderBottom:"1px solid #E5E9F2"}}><h3 style={{margin:0}}>Histórico de concessões</h3></div>
-        <table className="ad-table">
-          <thead><tr><th>E-mail</th><th>Plano</th><th>Dias</th><th>Status</th><th>Validade</th><th>Quando</th><th></th></tr></thead>
-          <tbody>
-            {grants.map(g => (
-              <tr key={g.id}>
-                <td>{g.email}</td>
-                <td><span className="ad-badge pro">{g.ciclo}</span></td>
-                <td>{g.dias}</td>
-                <td><span className={"ad-badge " + (g.status === "applied" ? "ok" : g.status === "pending" ? "warn" : "free")}>{g.status}</span></td>
-                <td>{g.expires_at ? new Date(g.expires_at).toLocaleDateString("pt-BR") : "—"}</td>
-                <td>{new Date(g.created_at).toLocaleString("pt-BR")}</td>
-                <td>{g.status === "applied" && <button className="ad-btn ghost" onClick={() => revoke(g)}>Revogar</button>}</td>
-              </tr>
-            ))}
-            {grants.length === 0 && <tr><td colSpan={7} style={{textAlign:"center",padding:30,color:"#6B7280"}}>Nenhuma concessão ainda</td></tr>}
-          </tbody>
-        </table>
+        <div className="ad-table-wrap">
+          <table className="ad-table">
+            <thead><tr><th>E-mail</th><th>Plano</th><th>Dias</th><th>Status</th><th>Validade</th><th>Quando</th><th></th></tr></thead>
+            <tbody>
+              {grants.map(g => (
+                <tr key={g.id}>
+                  <td>{g.email}</td>
+                  <td><span className="ad-badge pro">{g.ciclo}</span></td>
+                  <td>{g.dias}</td>
+                  <td><span className={"ad-badge " + (g.status === "applied" ? "ok" : g.status === "pending" ? "warn" : "free")}>{g.status}</span></td>
+                  <td>{g.expires_at ? new Date(g.expires_at).toLocaleDateString("pt-BR") : "—"}</td>
+                  <td>{new Date(g.created_at).toLocaleString("pt-BR")}</td>
+                  <td>{g.status === "applied" && <button className="ad-btn ghost" onClick={() => revoke(g)}>Revogar</button>}</td>
+                </tr>
+              ))}
+              {grants.length === 0 && <tr><td colSpan={7} style={{textAlign:"center",padding:30,color:"#6B7280"}}>Nenhuma concessão ainda</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </AdminLayout>
   );

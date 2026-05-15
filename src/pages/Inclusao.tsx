@@ -311,6 +311,12 @@ const css = `
   .plan-hero h3{font-size:18px;}
   .inc-a4{padding:16px !important;}
   input,select,textarea{font-size:16px !important;}
+  .list-toolbar{flex-direction:column;align-items:stretch;gap:8px;}
+  .list-toolbar .list-search{max-width:100%;width:100%;}
+  .list-toolbar .list-filter,
+  .list-toolbar .list-actions{width:100%;}
+  .list-toolbar .list-actions{margin-left:0;}
+  .list-toolbar .list-actions > *{width:100%;justify-content:center;}
 }
 
 /* PLAN tab */
