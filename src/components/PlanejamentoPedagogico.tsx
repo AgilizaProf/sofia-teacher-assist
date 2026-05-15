@@ -168,7 +168,7 @@ export default function PlanejamentoPedagogico() {
   const today = useMemo(() => new Date().toLocaleDateString("pt-BR"), []);
   const firstSchool = schools[0]?.name || "";
   const firstClass = classes[0];
-  const turmaAuto = firstClass ? `${firstClass.name}${firstClass.grade ? ` · ${firstClass.grade}` : ""}` : "";
+  const turmaAuto = firstClass ? `${firstClass.name}${firstClass.grade ? ` · ${formatTurmaGrade(firstClass.grade)}` : ""}` : "";
   const escolaAuto = firstClass?.school || firstSchool;
 
   // Auto-preenchimento somente quando o campo está vazio (não sobrescreve edição do usuário).
