@@ -728,6 +728,16 @@ export function Agenda() {
 
           <div className="ag-content">
             <div className="ag-col-main">
+              {agendaLoading && events.length === 0 && (
+                <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
+                  <Skeleton className="h-20 w-full rounded-lg" />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+                    {Array.from({ length: 14 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 rounded-md" />
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="ag-radar">
                 <div className="ag-radar-card" onClick={() => openDayPanel(todayKey)}>
                   <span className="ag-radar-label">Hoje</span>
