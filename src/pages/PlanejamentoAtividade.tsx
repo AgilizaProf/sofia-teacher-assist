@@ -372,7 +372,7 @@ export function PlanejamentoAtividade() {
                           <button
                             type="button"
                             key={c}
-                            className={"pa-pill" + (camposExp[c] ? " on" : "")}
+                            className={"pa-pill" + (camposSelecionados.includes(c) ? " on" : "")}
                             onClick={() => toggleCampo(c)}
                           >
                             {c}
