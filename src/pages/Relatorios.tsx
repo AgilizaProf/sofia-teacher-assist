@@ -1413,14 +1413,24 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
         const cls = dashClasses.find((c) => c.name === turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
+        const ei = isEiAluno(turma);
+        const STATUS = ei ? BNCC_STATUS_EI : BNCC_STATUS;
+        const tituloModal = ei
+          ? `Avaliação por Campos de Experiência · ${nome}`
+          : `Avaliação BNCC · ${nome}`;
         return (
           <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setBnccOpen(null)}>
             <div className="rel-modal" style={{ maxWidth: 760, width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "18px 20px", borderBottom: "1px solid var(--line-soft)" }}>
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, fontSize: 18 }}>Avaliação BNCC · {nome}</h3>
+                  <h3 style={{ margin: 0, fontSize: 18 }}>{tituloModal}</h3>
                   <div style={{ fontSize: 12, color: "var(--text-soft)", marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <span>{turma || "Sem turma"} · {bimestreNum}º bimestre</span>
+                    {ei ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 99, background: "#EDEAFE", color: "#4338CA", fontWeight: 700 }}>
+                        Direitos de Aprendizagem: {EI_DIREITOS_APRENDIZAGEM}
+                      </span>
+                    ) : (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 99, background: "#F3F4F6", color: "var(--text)", fontWeight: 700 }}>
                       Ano de referência:
                       <select
@@ -1441,6 +1451,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                         >resetar</button>
                       )}
                     </span>
+                    )}
                     {isPcd && <span style={{ background: "#FDECEC", color: "#DC2626", fontWeight: 800, padding: "2px 8px", borderRadius: 99 }}>PCD</span>}
                   </div>
                 </div>
@@ -1456,7 +1467,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   <div style={{ width: `${pctPreenchido}%`, height: "100%", background: "linear-gradient(90deg,#FF6A2C,#FFB47A)", transition: "width .3s" }} />
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                  {BNCC_STATUS.map((s) => (
+                  {STATUS.map((s) => (
                     <span
                       key={s.k}
                       title={s.label}
@@ -1476,7 +1487,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                       <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-soft)", flex: 1 }}>{area.area}</div>
                       <div style={{ display: "inline-flex", gap: 4 }}>
                         <span style={{ fontSize: 10, color: "var(--text-soft)", alignSelf: "center", marginRight: 4 }}>Aplicar a todos:</span>
-                        {BNCC_STATUS.map((s) => (
+                        {STATUS.map((s) => (
                           <button
                             key={s.k}
                             type="button"
@@ -1501,7 +1512,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                           <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "1px solid var(--line-soft)", borderRadius: 10, background: "#fff" }}>
                             <div style={{ flex: 1, fontSize: 13, color: "var(--text)" }}>{comp}</div>
                             <div style={{ display: "inline-flex", gap: 4 }}>
-                              {BNCC_STATUS.map((s) => {
+                              {STATUS.map((s) => {
                                 const active = cur === s.k;
                                 return (
                                   <button
@@ -1537,17 +1548,19 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
 
               <div style={{ padding: "12px 20px 16px", borderTop: "1px solid var(--line-soft)", background: "#fff" }}>
                 <label style={{ display: "block", fontSize: 11, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--text-soft)", marginBottom: 6 }}>
-                  Observações sobre o aluno
+                  {ei ? "Observações sobre a criança" : "Observações sobre o aluno"}
                 </label>
                 <textarea
                   value={bnccObsByAluno[id] || ""}
                   onChange={(e) => setBnccObsByAluno((p) => ({ ...p, [id]: e.target.value }))}
                   rows={4}
-                  placeholder="Descreva aqui comportamentos, avanços, dificuldades ou qualquer informação relevante sobre o aluno…"
+                  placeholder={ei
+                    ? "Descreva o desenvolvimento da criança: interações com os colegas, autonomia, participação nas brincadeiras, linguagem, movimento, expressões artísticas e avanços observados no período…"
+                    : "Descreva avanços, dificuldades, comportamentos e informações relevantes sobre o aluno no período…"}
                   style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, resize: "vertical", fontFamily: "inherit", background: "#FAFAFB" }}
                 />
                 <div style={{ fontSize: 11, color: "var(--text-soft)", marginTop: 6 }}>
-                  Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o parecer.
+                  Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o {ei ? "parecer descritivo" : "parecer"}.
                 </div>
               </div>
 
@@ -1565,21 +1578,25 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                     onClick={() => {
                       const linhas = areas.flatMap((area, ai) => area.comps.map((c, ci) => {
                         const s = rub[`${ai}.${ci}`];
-                        const lbl = BNCC_STATUS.find((x) => x.k === s)?.label || "Não observada";
+                        const lbl = statusLabel(turma, s);
                         return `- (${area.area}) ${c}: ${lbl}`;
                       })).join("\n");
                       const obs = (bnccObsByAluno[id] || "").trim();
                       const obsBloco = obs
                         ? `\n\nObservações do professor sobre o aluno: ${obs}\nConsidere essas observações para personalizar o parecer, reforçar pontos positivos, sugerir estratégias para as dificuldades relatadas e tornar o texto fiel à realidade observada em sala.`
                         : "";
+                      const gradeLbl = cls?.grade ? (EI_GRADE_LABELS[cls.grade] || cls.grade) : "";
+                      const prompt = ei
+                        ? `Gere um PARECER DESCRITIVO bimestral para a criança ${nome} (${turma || "sem turma"}${gradeLbl ? " · " + gradeLbl : ""}), ${bimestreNum}º bimestre, Educação Infantil. Use linguagem afetiva, humanizada e acessível à família. Cite os Campos de Experiência da BNCC Infantil observados e baseie a avaliação nos Direitos de Aprendizagem (${EI_DIREITOS_APRENDIZAGEM}). NUNCA use linguagem comparativa entre crianças ou capacitista; prefira "está desenvolvendo", "demonstra interesse em", "avança em", "em construção". Descreva o desenvolvimento de forma narrativa e individualizada. Use estritamente esta rubrica por Campo de Experiência:\n${linhas}${obsBloco}`
+                        : `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC do ${year}º ano do Ensino Fundamental${isPcd && yearOverride[id] ? " (ano de referência ajustado para aluno PCD)" : ""}. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.${obsBloco}`;
                       sofia.openSofia({
-                        prompt: `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC do ${year}º ano do Ensino Fundamental${isPcd && yearOverride[id] ? " (ano de referência ajustado para aluno PCD)" : ""}. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.${obsBloco}`,
+                        prompt,
                         send: true,
                       });
                       setBnccOpen(null);
                     }}
                     style={{ background: "linear-gradient(135deg,#FF6A2C,#EA580C)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
-                  ><Sparkles size={13} /> Gerar parecer com a Sofia</button>
+                  ><Sparkles size={13} /> {ei ? "Gerar parecer descritivo com a Sofia" : "Gerar parecer com a Sofia"}</button>
                 </div>
               </div>
             </div>
