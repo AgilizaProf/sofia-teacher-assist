@@ -658,6 +658,18 @@ export function Inclusao() {
   const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
   const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
+
+  // Foco automático no primeiro campo + Esc para fechar o modal de cadastrar aluno
+  useEffect(() => {
+    if (!newStudentOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setNewStudentOpen(false); };
+    window.addEventListener("keydown", onKey);
+    const t = window.setTimeout(() => {
+      const el = document.querySelector<HTMLElement>('.inc-modal-overlay.open .inc-modal input:not([type="hidden"]), .inc-modal-overlay.open .inc-modal select, .inc-modal-overlay.open .inc-modal textarea');
+      el?.focus();
+    }, 60);
+    return () => { window.removeEventListener("keydown", onKey); window.clearTimeout(t); };
+  }, [newStudentOpen]);
   const [savingStudent, setSavingStudent] = useState(false);
   const [query, setQuery] = useState("");
   const [turmaFilter, setTurmaFilter] = useState<string[]>([]);

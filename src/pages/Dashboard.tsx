@@ -331,6 +331,19 @@ const css = `
   .grid-2{gap:12px;}
 }
 
+/* Modais (Cadastrar turma / Cadastrar aluno) — mobile */
+@media(max-width:640px){
+  .cmdk-overlay{padding:0 !important;align-items:flex-end !important;}
+  .school-modal{max-width:100% !important;max-height:92dvh;display:flex;flex-direction:column;border-radius:16px 16px 0 0;}
+  .school-modal-head{padding:14px 16px 10px;}
+  .school-modal-title{font-size:16px;}
+  .school-modal-sub{font-size:11.5px;}
+  .school-modal-body{padding:14px 16px;gap:10px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .school-modal-foot{padding:12px 16px;flex-direction:column-reverse;align-items:stretch;gap:8px;}
+  .school-modal-foot button,.school-cancel,.ap-root .school-save{width:100%;margin:0 !important;justify-content:center;}
+  .school-field input,.school-field select,.school-field textarea{font-size:16px !important;}
+}
+
 /* Highlight visual quando a Sofia abre uma seção via deep-link. */
 .sofia-highlight{position:relative;outline:2px solid var(--accent, #FF7A45);outline-offset:3px;border-radius:14px;animation:sofiaPulseHighlight 1.6s ease-out 1;box-shadow:0 0 0 6px rgba(255,122,69,.15);}
 @keyframes sofiaPulseHighlight{0%{box-shadow:0 0 0 0 rgba(255,122,69,.55);}100%{box-shadow:0 0 0 14px rgba(255,122,69,0);}}
@@ -380,6 +393,24 @@ export function Dashboard() {
   const { turmas: classes, create: createTurmaDb, update: updateTurmaDb, remove: removeTurmaDb } = useTurmas();
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
+
+  // Foco automático no primeiro campo + Esc para fechar (turma / aluno)
+  useEffect(() => {
+    if (!classOpen && !studentOpen && !schoolOpen) return;
+    const close = () => {
+      if (classOpen) setClassOpen(false);
+      if (studentOpen) setStudentOpen(false);
+      if (schoolOpen) setSchoolOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    window.addEventListener("keydown", onKey);
+    const t = window.setTimeout(() => {
+      const sel = '.cmdk-overlay.show .school-modal input:not([type="hidden"]), .cmdk-overlay.show .school-modal select, .cmdk-overlay.show .school-modal textarea';
+      const el = document.querySelector<HTMLElement>(sel);
+      el?.focus();
+    }, 60);
+    return () => { window.removeEventListener("keydown", onKey); window.clearTimeout(t); };
+  }, [classOpen, studentOpen, schoolOpen]);
   const [bulkMode, setBulkMode] = useState(false);
   const [submittingStudent, setSubmittingStudent] = useState(false);
   type DashStudent = { id?: string; name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
