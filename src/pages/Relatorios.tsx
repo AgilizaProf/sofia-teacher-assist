@@ -1411,6 +1411,22 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 ))}
               </div>
 
+              <div style={{ padding: "12px 20px 16px", borderTop: "1px solid var(--line-soft)", background: "#fff" }}>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--text-soft)", marginBottom: 6 }}>
+                  Observações sobre o aluno
+                </label>
+                <textarea
+                  value={bnccObsByAluno[id] || ""}
+                  onChange={(e) => setBnccObsByAluno((p) => ({ ...p, [id]: e.target.value }))}
+                  rows={4}
+                  placeholder="Descreva aqui comportamentos, avanços, dificuldades ou qualquer informação relevante sobre o aluno…"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, resize: "vertical", fontFamily: "inherit", background: "#FAFAFB" }}
+                />
+                <div style={{ fontSize: 11, color: "var(--text-soft)", marginTop: 6 }}>
+                  Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o parecer.
+                </div>
+              </div>
+
               <div style={{ display: "flex", gap: 8, justifyContent: "space-between", padding: "14px 20px", borderTop: "1px solid var(--line-soft)", background: "#fff" }}>
                 <button
                   onClick={() => { setBnccByAluno((p) => { const cp = { ...p }; delete cp[id]; return cp; }); }}
@@ -1428,8 +1444,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                         const lbl = BNCC_STATUS.find((x) => x.k === s)?.label || "Não observada";
                         return `- (${area.area}) ${c}: ${lbl}`;
                       })).join("\n");
+                      const obs = (bnccObsByAluno[id] || "").trim();
+                      const obsBloco = obs
+                        ? `\n\nObservações do professor sobre o aluno: ${obs}\nConsidere essas observações para personalizar o parecer, reforçar pontos positivos, sugerir estratégias para as dificuldades relatadas e tornar o texto fiel à realidade observada em sala.`
+                        : "";
                       sofia.openSofia({
-                        prompt: `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC do ${year}º ano do Ensino Fundamental${isPcd && yearOverride[id] ? " (ano de referência ajustado para aluno PCD)" : ""}. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.`,
+                        prompt: `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC do ${year}º ano do Ensino Fundamental${isPcd && yearOverride[id] ? " (ano de referência ajustado para aluno PCD)" : ""}. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.${obsBloco}`,
                         send: true,
                       });
                       setBnccOpen(null);
