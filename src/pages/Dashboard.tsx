@@ -458,6 +458,9 @@ export function Dashboard() {
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsedClasses, setCollapsedClasses] = useState<Record<string, boolean>>({});
   const [editingClassIdx, setEditingClassIdx] = useState<number | null>(null);
+  // Exclusão de turma (com confirmação em duas etapas)
+  const [deletingClassId, setDeletingClassId] = useState<string | null>(null);
+  const [deletingClassBusy, setDeletingClassBusy] = useState(false);
   // Seleção em massa de alunos (Dashboard "Seus alunos")
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [bulkConfirmDelete, setBulkConfirmDelete] = useState(false);
