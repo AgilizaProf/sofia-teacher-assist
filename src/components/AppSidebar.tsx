@@ -115,9 +115,9 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const planConvide: PlanCard = {
     key: "convide",
     tag: "GANHE DIAS GRÁTIS",
-    title: "Convide outra professora e ganhe 1 mês grátis",
-    desc: "Ela também ganha 30 dias.",
-    aria: "Convidar professora",
+    title: "Convide outro(a) educador(a) e ganhe 1 mês grátis",
+    desc: "Quem você indicar também ganha 30 dias.",
+    aria: "Convidar educador(a)",
     href: "/configuracoes#convide",
     cta: "Convidar",
   };
