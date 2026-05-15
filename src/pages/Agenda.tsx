@@ -608,6 +608,16 @@ export function Agenda() {
   const weekDays = useMemo(() => buildWeekGrid(cursor, todayKey), [cursor, todayKey]);
   const dayKey = dateKey(cursor);
   const dayHoliday = holidays.get(dayKey);
+  const isMobile = useIsMobile();
+  const mobileDayLabel = useMemo(() => {
+    const wd = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][cursor.getDay()];
+    return `${wd} ${String(cursor.getDate()).padStart(2,"0")}/${String(cursor.getMonth()+1).padStart(2,"0")}`;
+  }, [cursor]);
+  const shiftDay = (dir: 1 | -1) => {
+    const d = new Date(cursor);
+    d.setDate(d.getDate() + dir);
+    setCursor(d);
+  };
 
   return (
     <div className="ag-root">
