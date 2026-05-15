@@ -381,6 +381,7 @@ export function Dashboard() {
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
+  const [submittingStudent, setSubmittingStudent] = useState(false);
   type DashStudent = { id?: string; name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   const {
     students: dbStudents,
