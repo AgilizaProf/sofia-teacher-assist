@@ -614,7 +614,8 @@ export function Inclusao() {
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
   const [nsAnoEscolar, setNsAnoEscolar] = useState("");
-  const [nsCid, setNsCid] = useState("nao_informado");
+  const [nsCids, setNsCids] = useState<string[]>([]);
+  const [nsCidPick, setNsCidPick] = useState<string>("nao_informado");
   const [nsAeeDays, setNsAeeDays] = useState<string>("");
   const [nsMediadora, setNsMediadora] = useState<string>("");
   const [tab, setTab] = useState<TabKey>(search.tab || "hoje");
