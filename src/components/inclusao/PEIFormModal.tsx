@@ -321,7 +321,7 @@ const SUG: Record<Perfil, Partial<Record<SugKey, string[]>>> = {
 function SugChips({ items, onPick }: { items?: string[]; onPick: (s: string) => void }) {
   if (!items || items.length === 0) return null;
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6, alignItems: "center" }}>
       <span style={{ fontSize: 10, color: "var(--muted)", display: "inline-flex", alignItems: "center", gap: 3, fontWeight: 700 }}>
         <Wand2 size={10} /> Sugestões:
       </span>
