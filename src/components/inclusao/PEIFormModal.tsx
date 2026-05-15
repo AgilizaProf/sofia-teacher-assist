@@ -646,7 +646,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
   }, [draft]);
 
   const perfil = useMemo(() => detectarPerfil(aluno?.diag, aluno?.cid || draft.cid), [aluno?.diag, aluno?.cid, draft.cid]);
-  const sug = SUG[perfil] || SUG.generico;
+  const sug = useMemo(() => mergeSug(SUG[perfil] || SUG.generico, EXTRA_COMUM), [perfil]);
   const pickInto = <K extends keyof PEIData>(k: K) => (s: string) => {
     setDraft((d) => ({ ...d, [k]: append(String(d[k] || ""), s) as PEIData[K] }));
     setDirty(true);
