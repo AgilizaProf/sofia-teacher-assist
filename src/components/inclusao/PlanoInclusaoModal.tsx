@@ -419,7 +419,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
 
   return (
     <div className={"inc-modal-overlay" + (open ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="inc-modal" style={{ maxWidth: 880 }}>
+      <div className="inc-modal" ref={modalRef} style={{ maxWidth: 880 }}>
         <div className="inc-modal-bar" />
         <div className="inc-modal-head">
           <h2>Gerar plano adaptado · {aluno.name.split(" ")[0]}</h2>
