@@ -3172,7 +3172,9 @@ ${corpo}
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary bg-orange-400 text-orange-400">Salvar aluno</button>
+              <button type="submit" className="btn btn-primary bg-orange-400 text-orange-400" disabled={savingStudent} aria-busy={savingStudent}>
+                {savingStudent ? "Cadastrando…" : "Salvar aluno"}
+              </button>
             </div>
           </form>
         </div>
