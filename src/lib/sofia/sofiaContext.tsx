@@ -250,6 +250,11 @@ export function useSofiaContext(): SofiaContext {
   return c;
 }
 
+/** Versão tolerante: retorna null quando não há provider (ex.: SSR ou árvore acima do provider). */
+export function useSofiaContextOptional(): SofiaContext | null {
+  return useContext(Ctx);
+}
+
 export function notifySofiaMutation() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent("sofia:mutate"));
