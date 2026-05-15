@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { askSofia, listSofiaConversations, getSofiaConversation } from "@/lib/sofia.functions";
-import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { useSofiaContextOptional } from "@/lib/sofia/sofiaContext";
 import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 
 export type SofiaMessage = {
@@ -76,7 +76,7 @@ const Ctx = createContext<SofiaCtx | null>(null);
 
 function useRouteContext() {
   const loc = useLocation();
-  const sofia = useSofiaContext();
+  const sofia = useSofiaContextOptional();
   return useMemo(() => {
     const p = loc.pathname;
     let tela = "Você está na Página inicial (painel do(a) educador(a)).";
@@ -87,7 +87,7 @@ function useRouteContext() {
     else if (p.startsWith("/assistente")) tela = "Você está na tela do Assistente IA (chat principal).";
     else if (p.startsWith("/configuracoes")) tela = "Você está nas Configurações.";
 
-    const turma = sofia.entity.turma_atual;
+    const turma = sofia?.entity?.turma_atual;
     const nivel = inferirNivelEnsino(turma?.ano) ?? inferirNivelEnsino(turma?.nome);
     const linhas = [tela];
     if (turma) {
@@ -105,7 +105,7 @@ function useRouteContext() {
       );
     }
     return linhas.join("\n");
-  }, [loc.pathname, sofia.entity.turma_atual]);
+  }, [loc.pathname, sofia?.entity?.turma_atual]);
 }
 
 function useRouteName() {
