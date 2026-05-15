@@ -593,7 +593,7 @@ export function Relatorios() {
         }).join("\n");
         return `${area.area}\n${itens}`;
       }).join("\n\n");
-      const aluno = dashStudents.find((s) => s.name === a.nome);
+      const aluno = getStudentById(a.id);
       const cls = dashClasses.find((c) => c.name === a.turma);
       const periodoLabel = `${bimestreNum}º bimestre · ${new Date().getFullYear()}`;
       const peiResumo = [
@@ -726,7 +726,7 @@ export function Relatorios() {
     const areas = areasFor(a.id, a.turma, a.pcd);
     const rub = getAlunoRubric(a.id);
     const dataStr = new Date().toLocaleDateString("pt-BR");
-    const aluno = dashStudents.find((s) => s.name === a.nome);
+    const aluno = getStudentById(a.id);
     const cls = dashClasses.find((c) => c.name === a.turma);
     const escola = dashSchools.find((s) => s.name === cls?.school);
     const parecerAluno = parecerByAluno[a.id] || null;
@@ -1621,7 +1621,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           : "";
         const buildReportHtml = () => {
           const dataStr = new Date().toLocaleDateString("pt-BR");
-          const aluno = dashStudents.find((s) => s.name === a.nome);
+          const aluno = getStudentById(a.id);
           const cls = dashClasses.find((c) => c.name === a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
           const bodyInner = `
@@ -1655,7 +1655,7 @@ ${parecerHtml}
           // (Georgia para títulos, Arial para corpo), HEX simples, sem grid
           // moderno nem Google Fonts. Layout em 2 colunas via <table>.
           const dataStr = new Date().toLocaleDateString("pt-BR");
-          const aluno = dashStudents.find((s) => s.name === a.nome);
+          const aluno = getStudentById(a.id);
           const cls = dashClasses.find((c) => c.name === a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
 
