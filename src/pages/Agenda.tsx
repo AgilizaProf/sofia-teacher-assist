@@ -750,6 +750,54 @@ export function Agenda() {
                 Evento mudou? Arraste!
               </div>
               <div className="ag-cal-card">
+                {isMobile ? (
+                  <>
+                    <div className="ag-mobile-daybar">
+                      <button className="ag-cal-nav-btn" aria-label="Dia anterior" onClick={() => shiftDay(-1)}><ChevronLeft size={16} /></button>
+                      <div className="ag-mobile-day-label">{mobileDayLabel}</div>
+                      <button className="ag-cal-nav-btn" aria-label="Próximo dia" onClick={() => shiftDay(1)}><ChevronRight size={16} /></button>
+                    </div>
+                    <div className="ag-mobile-day-actions">
+                      <button className="ag-btn" onClick={goToday}>Hoje</button>
+                      <button className="ag-btn primary" onClick={() => openDayPanel(dayKey)}>
+                        <Plus size={14} /> Novo evento
+                      </button>
+                    </div>
+                    <div className="ag-mobile-day-list">
+                      {dayHoliday && (
+                        <div className="ag-mobile-card holiday">
+                          <div className="ag-mobile-card-time">Feriado</div>
+                          <div className="ag-mobile-card-title">{dayHoliday}</div>
+                        </div>
+                      )}
+                      {(eventsByDate.get(dayKey) || []).length === 0 && !dayHoliday ? (
+                        <div className="ag-mobile-empty">
+                          Nenhum evento cadastrado para este dia.
+                        </div>
+                      ) : (
+                        (eventsByDate.get(dayKey) || []).map((e) => (
+                          <button
+                            key={e.id}
+                            type="button"
+                            className={"ag-mobile-card " + e.type}
+                            onClick={() => { openDayPanel(dayKey); startEdit(e); }}
+                          >
+                            <div className="ag-mobile-card-time">{e.time || "—"}</div>
+                            <div className="ag-mobile-card-body">
+                              <div className="ag-mobile-card-title">{e.title}</div>
+                              <div className="ag-mobile-card-meta">
+                                <span className="ag-mobile-card-tag" style={{ background: TYPE_COLOR[e.type] }} />
+                                {TYPE_LABEL[e.type]}
+                                {e.notes ? ` · ${e.notes}` : ""}
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </>
+                ) : (
+                <>
                 <div className="ag-cal-head">
                   <div className="ag-cal-nav">
                     <button className="ag-cal-nav-btn" aria-label="Anterior" onClick={() => shift(-1)}><ChevronLeft size={14} /></button>
