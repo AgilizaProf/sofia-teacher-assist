@@ -5,6 +5,7 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { supabase } from "@/integrations/supabase/client";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { toast } from "sonner";
 
 /**
@@ -108,17 +109,29 @@ const CAMPOS_EXPERIENCIA = [
 const TIPOS = ["Aula expositiva", "Atividade prática", "Jogo / lúdica", "Avaliação", "Projeto", "Saída pedagógica"] as const;
 const FOCO = ["Letramento", "Numeramento", "Socioemocional", "Pensamento científico", "Cultura e identidade"];
 
+// Estrutura persistida do componente curricular do planejamento.
+// Mantém o tipo correto (disciplina | campo_experiencia) para que ao
+// recarregar saibamos qual seletor exibir e o que mandar para a Sofia.
+type ComponenteState =
+  | { tipo_componente: "disciplina"; componente: string }
+  | { tipo_componente: "campo_experiencia"; componente: string[] };
+
+const COMPONENTE_INITIAL: ComponenteState = {
+  tipo_componente: "disciplina",
+  componente: "Língua Portuguesa",
+};
+
 export function PlanejamentoAtividade() {
   const search = useSearch({ from: "/planejamento/atividade" });
   const navigate = useNavigate();
   const sofia = useSofia();
 
-  const [etapa, setEtapa] = useState<string>("fund1");
-  const [ano, setAno] = useState<string>("2º");
-  const [componente, setComponente] = useState<string>("Língua Portuguesa");
-  const [camposExp, setCamposExp] = useState<Record<string, boolean>>({
-    [CAMPOS_EXPERIENCIA[0]]: true,
-  });
+  const [etapa, setEtapa] = usePersistentState<string>("plan_atv_etapa", "fund1");
+  const [ano, setAno] = usePersistentState<string>("plan_atv_ano", "2º");
+  const [componenteState, setComponenteState] = usePersistentState<ComponenteState>(
+    "plan_atv_componente",
+    COMPONENTE_INITIAL,
+  );
   const [tipo, setTipo] = useState<string>("Aula expositiva");
   const [duracao, setDuracao] = useState<string>("50");
   const [tema, setTema] = useState<string>("");
@@ -170,11 +183,46 @@ export function PlanejamentoAtividade() {
 
   const anos = useMemo(() => ANOS_BY_ETAPA[etapa] || [], [etapa]);
   const isEI = etapa === "infantil";
-  const camposSelecionados = useMemo(
-    () => CAMPOS_EXPERIENCIA.filter((c) => camposExp[c]),
-    [camposExp],
-  );
-  const toggleCampo = (k: string) => setCamposExp((s) => ({ ...s, [k]: !s[k] }));
+
+  // Deriva os campos selecionados do estado persistido (apenas quando EI).
+  const camposSelecionados = useMemo<string[]>(() => {
+    if (componenteState.tipo_componente === "campo_experiencia") {
+      return componenteState.componente;
+    }
+    return [];
+  }, [componenteState]);
+
+  // Disciplina única (apenas quando NÃO for EI).
+  const componente = componenteState.tipo_componente === "disciplina"
+    ? componenteState.componente
+    : "";
+  const setComponente = (v: string) =>
+    setComponenteState({ tipo_componente: "disciplina", componente: v });
+
+  const toggleCampo = (k: string) => {
+    setComponenteState((prev) => {
+      const current = prev.tipo_componente === "campo_experiencia" ? prev.componente : [];
+      const next = current.includes(k) ? current.filter((c) => c !== k) : [...current, k];
+      return { tipo_componente: "campo_experiencia", componente: next };
+    });
+  };
+
+  // Sincroniza o tipo_componente quando a etapa muda (sem perder o que já estava
+  // salvo do outro modo: ao voltar de EI → Fund, restaura uma disciplina padrão).
+  useEffect(() => {
+    if (isEI && componenteState.tipo_componente !== "campo_experiencia") {
+      setComponenteState({
+        tipo_componente: "campo_experiencia",
+        componente: [CAMPOS_EXPERIENCIA[0]],
+      });
+    } else if (!isEI && componenteState.tipo_componente !== "disciplina") {
+      setComponenteState({
+        tipo_componente: "disciplina",
+        componente: "Língua Portuguesa",
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEI]);
 
   const toggleFoco = (k: string) => setFoco((s) => ({ ...s, [k]: !s[k] }));
 
@@ -324,7 +372,7 @@ export function PlanejamentoAtividade() {
                           <button
                             type="button"
                             key={c}
-                            className={"pa-pill" + (camposExp[c] ? " on" : "")}
+                            className={"pa-pill" + (camposSelecionados.includes(c) ? " on" : "")}
                             onClick={() => toggleCampo(c)}
                           >
                             {c}
