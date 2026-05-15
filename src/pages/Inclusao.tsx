@@ -1336,8 +1336,18 @@ ${corpo}
 
   const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (savingStudent) return;
     const name = nsName.trim();
     if (!name) return;
+    const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+    const turmaNorm = norm(nsTurma.trim() || "Sem turma");
+    const dup = allStudents.find(
+      (s) => norm(s.name) === norm(name) && norm(s.turma || "Sem turma") === turmaNorm,
+    );
+    if (dup) {
+      toast.error("Já existe um aluno cadastrado com esses dados.");
+      return;
+    }
     const initials = name.split(/\s+/).map((p) => p[0] || "").join("").slice(0, 2).toUpperCase();
     const cidOpts = nsCids
       .map((v) => CID_OPTIONS.find((o) => o.value === v))
@@ -1366,6 +1376,7 @@ ${corpo}
       trendTone: "muted",
     };
     try {
+      setSavingStudent(true);
       await createStudent(newStudent);
       setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCids([]); setNsCidPick("nao_informado");
       setNsAeeDays(""); setNsMediadora("");
@@ -1376,6 +1387,8 @@ ${corpo}
       toast.error("Não foi possível salvar o(a) aluno(a)", {
         description: (err as Error)?.message ?? "Tente novamente em alguns instantes.",
       });
+    } finally {
+      setSavingStudent(false);
     }
   };
 
