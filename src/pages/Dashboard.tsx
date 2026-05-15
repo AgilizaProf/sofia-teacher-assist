@@ -331,6 +331,19 @@ const css = `
   .grid-2{gap:12px;}
 }
 
+/* Modais (Cadastrar turma / Cadastrar aluno) — mobile */
+@media(max-width:640px){
+  .cmdk-overlay{padding:0 !important;align-items:flex-end !important;}
+  .school-modal{max-width:100% !important;max-height:92dvh;display:flex;flex-direction:column;border-radius:16px 16px 0 0;}
+  .school-modal-head{padding:14px 16px 10px;}
+  .school-modal-title{font-size:16px;}
+  .school-modal-sub{font-size:11.5px;}
+  .school-modal-body{padding:14px 16px;gap:10px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .school-modal-foot{padding:12px 16px;flex-direction:column-reverse;align-items:stretch;gap:8px;}
+  .school-modal-foot button,.school-cancel,.ap-root .school-save{width:100%;margin:0 !important;justify-content:center;}
+  .school-field input,.school-field select,.school-field textarea{font-size:16px !important;}
+}
+
 /* Highlight visual quando a Sofia abre uma seção via deep-link. */
 .sofia-highlight{position:relative;outline:2px solid var(--accent, #FF7A45);outline-offset:3px;border-radius:14px;animation:sofiaPulseHighlight 1.6s ease-out 1;box-shadow:0 0 0 6px rgba(255,122,69,.15);}
 @keyframes sofiaPulseHighlight{0%{box-shadow:0 0 0 0 rgba(255,122,69,.55);}100%{box-shadow:0 0 0 14px rgba(255,122,69,0);}}
