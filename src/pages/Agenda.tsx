@@ -9,6 +9,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { useAgenda } from "@/hooks/useAgenda";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const css = `
 .ag-root{
@@ -416,7 +417,7 @@ export function Agenda() {
   }, [nowTick]);
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
-  const { events: rawEvents, create, update, remove } = useAgenda();
+  const { events: rawEvents, create, update, remove, loading: agendaLoading } = useAgenda();
   const events = rawEvents as unknown as Event[];
   const [openDate, setOpenDate] = useState<string | null>(null);
   const ALL_TYPES: EventType[] = ["meeting", "eval", "report", "plan", "pcd", "personal"];
@@ -727,6 +728,16 @@ export function Agenda() {
 
           <div className="ag-content">
             <div className="ag-col-main">
+              {agendaLoading && events.length === 0 && (
+                <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
+                  <Skeleton className="h-20 w-full rounded-lg" />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+                    {Array.from({ length: 14 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 rounded-md" />
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="ag-radar">
                 <div className="ag-radar-card" onClick={() => openDayPanel(todayKey)}>
                   <span className="ag-radar-label">Hoje</span>

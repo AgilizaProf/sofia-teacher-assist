@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { SofiaProvider } from "@/components/sofia/SofiaProvider";
 import { SofiaWidget } from "@/components/sofia/SofiaWidget";
@@ -114,6 +115,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 1000 * 60, // 1min default
+            gcTime: 1000 * 60 * 30,
+            refetchOnWindowFocus: false,
+            retry: 1,
+          },
+        },
+      }),
+  );
   useEffect(() => { installHydrationTelemetry(); }, []);
   useEffect(() => { installServerFnAuthFetch(); }, []);
   useEffect(() => { installPlatformTelemetry(); }, []);
@@ -130,6 +144,7 @@ function RootComponent() {
   useAiBudgetWarnings();
   return (
     <RootErrorBoundary>
+      <QueryClientProvider client={queryClient}>
       {/* Ordem dos providers (externo → interno):
           1. SofiaContextProvider     — contexto base (rota, turma, aluno)
           2. SofiaUserDataProvider    — dados do usuário (depende do contexto base)
@@ -164,6 +179,7 @@ function RootComponent() {
           </SofiaNotificationsProvider>
         </SofiaUserDataProvider>
       </SofiaContextProvider>
+      </QueryClientProvider>
     </RootErrorBoundary>
   );
 }
