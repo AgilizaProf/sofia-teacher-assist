@@ -202,7 +202,7 @@ export default function PlanejamentoPedagogico() {
   };
 
   return (
-    <div style={{ background: "#eceae4", minHeight: "100vh", padding: "1px 0" }}>
+    <div className="planejamento-root" style={{ background: "#eceae4", minHeight: "100vh", padding: "1px 0", overflowX: "auto" }}>
       <style>{`
         @media print {
           @page { size: A4; margin: 0; }
@@ -220,6 +220,14 @@ export default function PlanejamentoPedagogico() {
         .planejamento-page textarea:focus {
           border-color: ${NAVY} !important;
           box-shadow: 0 0 0 2px rgba(26,39,68,.12);
+        }
+        @media (max-width: 820px){
+          .planejamento-root{-webkit-overflow-scrolling:touch;}
+          .planejamento-toolbar{width:auto !important;max-width:100%;margin:12px 12px 0 !important;flex-wrap:wrap;justify-content:stretch !important;}
+          .planejamento-toolbar > button{flex:1 1 140px;font-size:13px !important;padding:10px 12px !important;}
+        }
+        @media (max-width: 480px){
+          .planejamento-page input,.planejamento-page textarea,.planejamento-page select{font-size:16px !important;}
         }
       `}</style>
 
