@@ -643,6 +643,7 @@ export function Inclusao() {
   const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
   const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
+  const [savingStudent, setSavingStudent] = useState(false);
   const [query, setQuery] = useState("");
   const [turmaFilter, setTurmaFilter] = useState<string[]>([]);
   const [diagFilter, setDiagFilter] = useState<string[]>([]);
@@ -1336,8 +1337,18 @@ ${corpo}
 
   const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (savingStudent) return;
     const name = nsName.trim();
     if (!name) return;
+    const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+    const turmaNorm = norm(nsTurma.trim() || "Sem turma");
+    const dup = allStudents.find(
+      (s) => norm(s.name) === norm(name) && norm(s.turma || "Sem turma") === turmaNorm,
+    );
+    if (dup) {
+      toast.error("Já existe um aluno cadastrado com esses dados.");
+      return;
+    }
     const initials = name.split(/\s+/).map((p) => p[0] || "").join("").slice(0, 2).toUpperCase();
     const cidOpts = nsCids
       .map((v) => CID_OPTIONS.find((o) => o.value === v))
@@ -1366,6 +1377,7 @@ ${corpo}
       trendTone: "muted",
     };
     try {
+      setSavingStudent(true);
       await createStudent(newStudent);
       setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCids([]); setNsCidPick("nao_informado");
       setNsAeeDays(""); setNsMediadora("");
@@ -1376,6 +1388,8 @@ ${corpo}
       toast.error("Não foi possível salvar o(a) aluno(a)", {
         description: (err as Error)?.message ?? "Tente novamente em alguns instantes.",
       });
+    } finally {
+      setSavingStudent(false);
     }
   };
 
@@ -3158,7 +3172,9 @@ ${corpo}
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary bg-orange-400 text-orange-400">Salvar aluno</button>
+              <button type="submit" className="btn btn-primary bg-orange-400 text-orange-400" disabled={savingStudent} aria-busy={savingStudent}>
+                {savingStudent ? "Cadastrando…" : "Salvar aluno"}
+              </button>
             </div>
           </form>
         </div>
