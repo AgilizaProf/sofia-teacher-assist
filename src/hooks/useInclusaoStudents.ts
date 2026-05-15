@@ -4,6 +4,8 @@ import {
   createInclusaoStudent,
   updateInclusaoStudent,
   deleteInclusaoStudent,
+  bulkDeleteInclusaoStudents,
+  bulkAssignTurmaInclusao,
   type StudentUI,
   type StudentInput,
 } from "@/lib/db/inclusao";
@@ -57,5 +59,31 @@ export function useInclusaoStudents() {
     [refresh],
   );
 
-  return { students, loading, error, refresh, create, update, remove };
+  const bulkRemove = useCallback(
+    async (ids: string[]) => {
+      await bulkDeleteInclusaoStudents(ids);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  const bulkAssignTurma = useCallback(
+    async (ids: string[], turma: string) => {
+      await bulkAssignTurmaInclusao(ids, turma);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  return {
+    students,
+    loading,
+    error,
+    refresh,
+    create,
+    update,
+    remove,
+    bulkRemove,
+    bulkAssignTurma,
+  };
 }

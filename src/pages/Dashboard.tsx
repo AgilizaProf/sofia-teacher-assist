@@ -207,6 +207,24 @@ const css = `
 .class-count{font-size:10px;font-weight:700;color:var(--text-soft);background:#fff;border:1px solid var(--border);padding:2.5px 8px;border-radius:100px;}
 .student{display:flex;align-items:center;gap:11px;padding:9px 11px;margin-top:4px;border-radius:8px;transition:background .15s;border:1px solid transparent;}
 .student:hover{background:var(--bg-soft);border-color:var(--border-soft);}
+.student-row{display:flex;align-items:stretch;gap:6px;}
+.student-row .student{flex:1;min-width:0;}
+.student-row.is-selected .student{background:var(--accent-soft);border-color:var(--accent);}
+.student-check{display:flex;align-items:center;justify-content:center;padding:0 6px;cursor:pointer;border-radius:8px;border:1px solid transparent;transition:background .15s,border-color .15s;}
+.student-check:hover{background:var(--bg-soft);border-color:var(--border-soft);}
+.student-check input{width:16px;height:16px;cursor:pointer;accent-color:var(--accent);}
+.bulk-toolbar{display:flex;align-items:center;gap:10px;padding:8px 11px;margin-top:6px;background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:8px;font-size:12px;color:var(--text-soft);}
+.bulk-toolbar input{width:16px;height:16px;cursor:pointer;accent-color:var(--accent);}
+.bulk-toolbar label{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;color:var(--text);}
+.bulk-action-bar{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:55;display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0f172a;color:#fff;border-radius:14px;box-shadow:0 16px 40px rgba(15,23,42,.32);font-size:13px;font-weight:600;max-width:calc(100vw - 32px);flex-wrap:wrap;}
+.bulk-action-bar .bulk-count{background:rgba(255,255,255,.15);padding:4px 10px;border-radius:999px;font-size:12px;}
+.bulk-action-bar button{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;transition:background .15s,border-color .15s;}
+.bulk-action-bar button:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);}
+.bulk-action-bar button.danger{background:#dc2626;border-color:#dc2626;}
+.bulk-action-bar button.danger:hover{background:#b91c1c;border-color:#b91c1c;}
+.bulk-action-bar button.ghost{opacity:.85;}
+.bulk-action-bar button:disabled{opacity:.5;cursor:not-allowed;}
+@media (max-width:820px){.bulk-action-bar{font-size:12px;padding:9px 12px;gap:8px;}}
 .student-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#fff;flex-shrink:0;font-family:'Fraunces',serif;}
 .av-1{background:linear-gradient(135deg,#FF7A45,#FF9466);}
 .av-2{background:linear-gradient(135deg,#3B82F6,#60A5FA);}
@@ -363,16 +381,19 @@ export function Dashboard() {
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
-  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  type DashStudent = { id?: string; name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
   const {
     students: dbStudents,
     create: createDbStudent,
     update: updateDbStudent,
     remove: removeDbStudent,
+    bulkRemove: bulkRemoveDbStudents,
+    bulkAssignTurma: bulkAssignTurmaDbStudents,
   } = useInclusaoStudents();
   const students = useMemo<DashStudent[]>(
     () =>
       dbStudents.map((s) => ({
+        id: s.id,
         name: s.name,
         classRef: s.turma && s.turma !== "Sem turma" ? s.turma : "",
         birth: s.birth ?? "",
@@ -436,6 +457,21 @@ export function Dashboard() {
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsedClasses, setCollapsedClasses] = useState<Record<string, boolean>>({});
   const [editingClassIdx, setEditingClassIdx] = useState<number | null>(null);
+  // Seleção em massa de alunos (Dashboard "Seus alunos")
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [bulkConfirmDelete, setBulkConfirmDelete] = useState(false);
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
+  const [bulkTurmaPick, setBulkTurmaPick] = useState<string>("");
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const clearStudentSelection = () => setSelectedStudentIds(new Set());
+  const toggleStudentSelected = (id: string) => {
+    setSelectedStudentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const totalSchools = baseSchools + schools.length;
   const totalClasses = baseClasses + classes.length;
   const totalStudents = baseStudents + students.length;
@@ -1145,6 +1181,42 @@ export function Dashboard() {
                   <button className={`filter-pill ${filter==="reg"?"active":""}`} onClick={() => setFilter("reg")}>Regular <span className="count">{students.filter(s => !s.pcd || s.pcd === "nao").length}</span></button>
                 </div>
               </div>
+              {(() => {
+                const visible = students.filter((s) => {
+                  if (filter === "pcd") return s.pcd && s.pcd !== "nao";
+                  if (filter === "reg") return !s.pcd || s.pcd === "nao";
+                  return true;
+                });
+                const visibleIds = visible.map((s) => s.id).filter((id): id is string => !!id);
+                if (visibleIds.length === 0) return null;
+                const allSelected = visibleIds.every((id) => selectedStudentIds.has(id));
+                const someSelected = visibleIds.some((id) => selectedStudentIds.has(id));
+                return (
+                  <div className="bulk-toolbar">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={(el) => { if (el) el.indeterminate = !allSelected && someSelected; }}
+                        onChange={() => {
+                          setSelectedStudentIds((prev) => {
+                            const next = new Set(prev);
+                            if (allSelected) visibleIds.forEach((id) => next.delete(id));
+                            else visibleIds.forEach((id) => next.add(id));
+                            return next;
+                          });
+                        }}
+                      />
+                      Selecionar todos
+                    </label>
+                    <span style={{ marginLeft: "auto" }}>
+                      {selectedStudentIds.size > 0
+                        ? `${selectedStudentIds.size} selecionado${selectedStudentIds.size === 1 ? "" : "s"}`
+                        : "Nenhum selecionado"}
+                    </span>
+                  </div>
+                );
+              })()}
 
               {totalStudents === 0 && totalClasses === 0 ? (
                 <EmptyState
@@ -1176,6 +1248,9 @@ export function Dashboard() {
                     return entries.map(([turma, list]) => {
                       const classMeta = classes.find((c) => c.name === turma);
                       const isCollapsed = !!collapsedClasses[turma];
+                      const groupIds = list.map((s) => s.id).filter((id): id is string => !!id);
+                      const allGroupSelected = groupIds.length > 0 && groupIds.every((id) => selectedStudentIds.has(id));
+                      const someGroupSelected = groupIds.some((id) => selectedStudentIds.has(id));
                       return (
                         <div key={turma} className="class-group">
                           <div
@@ -1187,6 +1262,29 @@ export function Dashboard() {
                             aria-expanded={!isCollapsed}
                             style={{ cursor: "pointer", userSelect: "none" }}
                           >
+                            {groupIds.length > 0 && (
+                              <label
+                                className="student-check"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ marginRight: 2 }}
+                                title={allGroupSelected ? "Desmarcar todos da turma" : "Selecionar todos da turma"}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={allGroupSelected}
+                                  ref={(el) => { if (el) el.indeterminate = !allGroupSelected && someGroupSelected; }}
+                                  onChange={() => {
+                                    setSelectedStudentIds((prev) => {
+                                      const next = new Set(prev);
+                                      if (allGroupSelected) groupIds.forEach((id) => next.delete(id));
+                                      else groupIds.forEach((id) => next.add(id));
+                                      return next;
+                                    });
+                                  }}
+                                  aria-label={`Selecionar todos os alunos da turma ${turma}`}
+                                />
+                              </label>
+                            )}
                             <div className="class-info">
                               <div className="class-name" style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                 <span style={{ display: "inline-block", transition: "transform .15s", transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
@@ -1222,14 +1320,26 @@ export function Dashboard() {
                             const avClass = `av-${(i % 3) + 1}`;
                             const realIndex = students.indexOf(s);
                             const isHighlighted = realIndex === highlightedStudentIdx;
+                            const sid = s.id;
+                            const isSelected = !!sid && selectedStudentIds.has(sid);
                             return (
-                              <button
-                                key={`${turma}-${i}`}
-                                type="button"
-                                className={`student${isHighlighted ? " sofia-highlight" : ""}`}
-                                onClick={() => setStudentDetail({ index: realIndex, student: s })}
-                                style={{ width: "100%", textAlign: "left", background: "transparent", cursor: "pointer", font: "inherit" }}
-                              >
+                              <div key={`${turma}-${i}`} className={`student-row${isSelected ? " is-selected" : ""}`}>
+                                {sid && (
+                                  <label className="student-check" title={isSelected ? "Desmarcar" : "Selecionar"}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => toggleStudentSelected(sid)}
+                                      aria-label={`Selecionar ${s.name}`}
+                                    />
+                                  </label>
+                                )}
+                                <button
+                                  type="button"
+                                  className={`student${isHighlighted ? " sofia-highlight" : ""}`}
+                                  onClick={() => setStudentDetail({ index: realIndex, student: s })}
+                                  style={{ textAlign: "left", background: "transparent", cursor: "pointer", font: "inherit" }}
+                                >
                                 <div className={`student-avatar ${avClass}`}>{initials}</div>
                                 <div className="student-info">
                                   <div className="student-name">
@@ -1245,7 +1355,8 @@ export function Dashboard() {
                                   )}
                                 </div>
                                 <Svg width={14} height={14} c={<polyline points="9 18 15 12 9 6"/>} />
-                              </button>
+                                </button>
+                              </div>
                             );
                           })}
                         </div>
@@ -2217,6 +2328,145 @@ export function Dashboard() {
             </div>
           );
         })()}
+      </div>
+
+      {selectedStudentIds.size > 0 && (
+        <div className="bulk-action-bar" role="toolbar" aria-label="Ações em massa de alunos">
+          <span className="bulk-count">
+            {selectedStudentIds.size} {selectedStudentIds.size === 1 ? "aluno selecionado" : "alunos selecionados"}
+          </span>
+          <button type="button" onClick={() => setBulkAssignOpen(true)} disabled={bulkBusy}>
+            🏫 Vincular à turma
+          </button>
+          <button type="button" className="danger" onClick={() => setBulkConfirmDelete(true)} disabled={bulkBusy}>
+            🗑 Excluir
+          </button>
+          <button type="button" className="ghost" onClick={clearStudentSelection} disabled={bulkBusy}>
+            Limpar
+          </button>
+        </div>
+      )}
+
+      <div className={`cmdk-overlay ${bulkConfirmDelete ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setBulkConfirmDelete(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Confirmar exclusão em massa">
+          <div className="school-modal-head">
+            <div className="school-modal-icon" style={{ background: "#FEE2E2", color: "#B91C1C" }}>
+              <Svg c={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Excluir alunos selecionados</div>
+              <div className="school-modal-sub">
+                Deseja excluir {selectedStudentIds.size} {selectedStudentIds.size === 1 ? "aluno" : "alunos"}? Essa ação não pode ser desfeita.
+              </div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setBulkConfirmDelete(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <div className="school-modal-foot" style={{ marginTop: 4 }}>
+            <button type="button" className="school-cancel" onClick={() => setBulkConfirmDelete(false)} disabled={bulkBusy}>Cancelar</button>
+            <button
+              type="button"
+              className="school-save"
+              style={{ background: "#DC2626", borderColor: "#DC2626" }}
+              disabled={bulkBusy}
+              onClick={async () => {
+                const ids = Array.from(selectedStudentIds);
+                if (ids.length === 0) { setBulkConfirmDelete(false); return; }
+                setBulkBusy(true);
+                try {
+                  await bulkRemoveDbStudents(ids);
+                  toast.success(`${ids.length} ${ids.length === 1 ? "aluno excluído" : "alunos excluídos"}`);
+                  clearStudentSelection();
+                  setBulkConfirmDelete(false);
+                } catch (err) {
+                  console.error("[Dashboard] erro ao excluir alunos em massa:", err);
+                  toast.error("Não foi possível excluir", {
+                    description: (err as Error)?.message ?? "Tente novamente.",
+                  });
+                } finally {
+                  setBulkBusy(false);
+                }
+              }}
+            >
+              {bulkBusy ? "Excluindo…" : "Excluir definitivamente"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className={`cmdk-overlay ${bulkAssignOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setBulkAssignOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Vincular alunos à turma">
+          <div className="school-modal-head">
+            <div className="school-modal-icon">
+              <Svg c={<><path d="M3 9l9-6 9 6"/><path d="M5 10v10h14V10"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Vincular à turma</div>
+              <div className="school-modal-sub">
+                {selectedStudentIds.size} {selectedStudentIds.size === 1 ? "aluno será vinculado" : "alunos serão vinculados"} à turma escolhida.
+              </div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setBulkAssignOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+          <div className="school-modal-body">
+            <div className="school-field">
+              <label htmlFor="bulk-turma-pick">Turma</label>
+              {classes.length === 0 ? (
+                <div style={{ fontSize: 12, color: "var(--text-soft)", padding: "6px 0" }}>
+                  Nenhuma turma cadastrada. Cadastre uma turma primeiro.
+                </div>
+              ) : (
+                <select
+                  id="bulk-turma-pick"
+                  value={bulkTurmaPick}
+                  onChange={(e) => setBulkTurmaPick(e.target.value)}
+                >
+                  <option value="">Selecione…</option>
+                  {classes.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name}{c.school ? ` · ${c.school}` : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
+          <div className="school-modal-foot">
+            <button type="button" className="school-cancel" onClick={() => setBulkAssignOpen(false)} disabled={bulkBusy}>Cancelar</button>
+            <button
+              type="button"
+              className="school-save"
+              disabled={bulkBusy || !bulkTurmaPick || classes.length === 0}
+              onClick={async () => {
+                const ids = Array.from(selectedStudentIds);
+                if (ids.length === 0 || !bulkTurmaPick) return;
+                setBulkBusy(true);
+                try {
+                  await bulkAssignTurmaDbStudents(ids, bulkTurmaPick);
+                  toast.success(`${ids.length} ${ids.length === 1 ? "aluno vinculado" : "alunos vinculados"}`, {
+                    description: `Turma: ${bulkTurmaPick}`,
+                  });
+                  clearStudentSelection();
+                  setBulkAssignOpen(false);
+                  setBulkTurmaPick("");
+                } catch (err) {
+                  console.error("[Dashboard] erro ao vincular turma em massa:", err);
+                  toast.error("Não foi possível vincular", {
+                    description: (err as Error)?.message ?? "Tente novamente.",
+                  });
+                } finally {
+                  setBulkBusy(false);
+                }
+              }}
+            >
+              {bulkBusy ? "Vinculando…" : "Vincular à turma"}
+              <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
