@@ -105,8 +105,8 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   const planMensal: PlanCard = {
     key: "mensal",
     tag: "PLANO MENSAL",
-    title: "Créditos ilimitados por R$ 34,90/mês",
-    desc: "30 dias de acesso · cancele quando quiser.",
+    title: "O investimento diário que devolve horas da sua semana",
+    desc: "Só R$ 1,16 por dia",
     aria: "Ver oferta do plano mensal",
     href: "https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=e2da862aba6042019234b1840f2593ef",
     cta: "Ver oferta",
