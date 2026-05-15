@@ -1325,9 +1325,14 @@ ${corpo}
     const name = nsName.trim();
     if (!name) return;
     const initials = name.split(/\s+/).map((p) => p[0] || "").join("").slice(0, 2).toUpperCase();
-    const cidOpt = CID_OPTIONS.find((o) => o.value === nsCid);
-    const diagLabel = cidOpt && cidOpt.value !== "nao_informado" ? cidOpt.label.split(" — ")[0] : "Não informado";
-    const cidCode = cidOpt && cidOpt.cid && cidOpt.cid !== "—" ? `CID ${cidOpt.cid}` : "CID não informado";
+    const cidOpts = nsCids
+      .map((v) => CID_OPTIONS.find((o) => o.value === v))
+      .filter((o): o is (typeof CID_OPTIONS)[number] => !!o && o.value !== "nao_informado");
+    const diagLabel = cidOpts.length > 0
+      ? cidOpts.map((o) => o.label.split(" — ")[0]).join(" + ")
+      : "Não informado";
+    const cidCodes = cidOpts.map((o) => o.cid).filter((c) => c && c !== "—");
+    const cidCode = cidCodes.length > 0 ? `CID ${cidCodes.join(", ")}` : "CID não informado";
     const aeeLabel = nsAeeDays
       ? `AEE ${nsAeeDays}x/sem`
       : "AEE a definir";
@@ -1348,7 +1353,7 @@ ${corpo}
     };
     try {
       await createStudent(newStudent);
-      setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCid("nao_informado");
+      setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCids([]); setNsCidPick("nao_informado");
       setNsAeeDays(""); setNsMediadora("");
       setNewStudentOpen(false);
       toast.success("Aluno(a) cadastrado(a)", { description: name });
