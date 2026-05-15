@@ -1316,7 +1316,7 @@ ${corpo}
     proactiveSeen.current.add(key);
     const t = setTimeout(() => {
       sofia.pushProactive({
-        message: "Bem-vinda à Inclusão. Quer que eu te mostre quem precisa de atenção esta semana?",
+        message: "Bem-vindo(a) à Inclusão. Quer que eu te mostre quem precisa de atenção esta semana?",
         action: {
           label: "Ver prioridades da semana",
           prompt: "Quais alunos da Inclusão precisam de atenção esta semana? Liste em ordem de urgência.",

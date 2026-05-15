@@ -11,9 +11,9 @@ export const Route = createFileRoute("/")({
   }),
   head: () => ({
     meta: [
-      { title: "AgilizaProf — Painel da professora" },
+      { title: "AgilizaProf — Painel do(a) educador(a)" },
       { name: "description", content: "Assistente pedagógica com IA alinhada à BNCC. Pareceres, planos de aula e PEI em minutos." },
-      { property: "og:title", content: "AgilizaProf — Painel da professora" },
+      { property: "og:title", content: "AgilizaProf — Painel do(a) educador(a)" },
       { property: "og:description", content: "Economize 10 horas por semana com a Sofia, sua assistente pedagógica." },
     ],
   }),

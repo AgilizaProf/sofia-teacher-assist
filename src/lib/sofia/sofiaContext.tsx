@@ -82,8 +82,8 @@ function buildContext(account: MockAccount, route: RouteKey, alunoId: string | n
   }
   // free vazio
   const user: SofiaUser = {
-    nome: "Professora",
-    primeiro_nome: "Professora",
+    nome: "Educador(a)",
+    primeiro_nome: "Educador(a)",
     plano: "free",
     streak_dias: 0,
     horas_economizadas_mes: 0,
@@ -153,7 +153,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         (metaName && metaName.trim()) ||
         (data?.email && data.email.split("@")[0]) ||
         (fallbackEmail && fallbackEmail.split("@")[0]) ||
-        "Professora";
+        "Educador(a)";
       const primeiro = nome.split(" ")[0];
       setAuthUser({ nome, primeiro_nome: primeiro });
     }

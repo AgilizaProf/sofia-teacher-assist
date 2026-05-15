@@ -31,8 +31,8 @@ export function subscribeMockAccount(cb: (a: MockAccount) => void) {
 // IMPORTANTE: nada aqui aparece no JSX como string fixa; tudo passa por interpolação.
 export const PRO_DATASET = {
   user: {
-    nome: "Professora Demo",
-    primeiro_nome: "Professora",
+    nome: "Educador(a) Demo",
+    primeiro_nome: "Educador(a)",
     plano: "pro" as const,
     streak_dias: 12,
     horas_economizadas_mes: 14,

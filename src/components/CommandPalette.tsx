@@ -36,7 +36,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: "configuracoes", label: "Configurações", group: "Conta", icon: Settings, run: go("/configuracoes"), keywords: "perfil ajustes acessibilidade indicação convide" },
       { id: "novo-plano", label: "Novo plano de aula", group: "Ações", icon: BookOpen, run: go("/planejamento/atividade"), keywords: "criar gerar atividade" },
       { id: "novo-parecer", label: "Gerar parecer descritivo", group: "Ações", icon: FileText, run: go("/relatorios"), keywords: "bimestral bncc" },
-      { id: "indique", label: "Convidar professora (ganhe dias grátis)", group: "Ações", icon: Sparkles, run: go("/configuracoes"), keywords: "indicação referral convide" },
+      { id: "indique", label: "Convidar educador(a) (ganhe dias grátis)", group: "Ações", icon: Sparkles, run: go("/configuracoes"), keywords: "indicação referral convide" },
       {
         id: "logout",
         label: "Sair da conta",

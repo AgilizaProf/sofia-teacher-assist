@@ -18,7 +18,7 @@ function interp(template: string, ctx: SofiaContext): string {
 
 function saudacao(ctx: SofiaContext): string {
   const slot = ctx.temporal.periodo === "manha" ? "Bom dia" : ctx.temporal.periodo === "tarde" ? "Boa tarde" : "Boa noite";
-  const nome = ctx.user.primeiro_nome || "professora";
+  const nome = ctx.user.primeiro_nome || "educador(a)";
   return `${slot}, ${nome}`;
 }
 

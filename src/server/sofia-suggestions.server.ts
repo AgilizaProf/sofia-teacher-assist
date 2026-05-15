@@ -260,7 +260,7 @@ export async function maybePolishTitlesWithAI(
     const task = [
       "Reescreva cada título de sugestão mantendo o sentido original.",
       "Requisitos OBRIGATÓRIOS:",
-      "• Tom acolhedor de parceira da professora (nunca professoral).",
+      "• Tom acolhedor de parceiro(a) do(a) educador(a) (nunca professoral).",
       "• Máximo 80 caracteres por título.",
       "• Linguagem não-capacitista (Princípio 3 da Constituição).",
       "• Quando o título envolver plano, atividade, adaptação ou parecer, sinalizar alinhamento à BNCC de forma natural (ex.: 'alinhado à BNCC', 'na linha das habilidades da BNCC').",

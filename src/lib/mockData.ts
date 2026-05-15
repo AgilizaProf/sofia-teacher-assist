@@ -56,7 +56,7 @@ function buildUser(account: MockAccount): UserContext {
       creditsTotal: u.creditos_total,
     };
   }
-  const name = "Professora";
+  const name = "Educador(a)";
   return {
     name,
     initials: initialsFromName(name),

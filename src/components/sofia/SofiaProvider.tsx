@@ -82,7 +82,7 @@ function useRouteContext() {
     if (p.startsWith("/agenda")) return "Você está na Agenda escolar.";
     if (p.startsWith("/assistente")) return "Você está na tela do Assistente IA (chat principal).";
     if (p.startsWith("/configuracoes")) return "Você está nas Configurações.";
-    return "Você está na Página inicial (painel da professora).";
+    return "Você está na Página inicial (painel do(a) educador(a)).";
   }, [loc.pathname]);
 }
 
@@ -163,7 +163,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
           setTimeout(() => { refreshConversationsRef.current?.(); }, 0);
           const nome = (s.user.user_metadata?.display_name as string | undefined)
             || (s.user.user_metadata?.name as string | undefined)
-            || (s.user.email ? s.user.email.split("@")[0] : "professora");
+            || (s.user.email ? s.user.email.split("@")[0] : "educador(a)");
           setTimeout(() => {
             pushProactiveRef.current?.({
               id: "sofia-welcome",
