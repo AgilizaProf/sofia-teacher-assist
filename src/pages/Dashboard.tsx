@@ -2032,8 +2032,8 @@ export function Dashboard() {
             )}
             <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
               <button type="button" className="school-cancel" onClick={() => setStudentOpen(false)}>Cancelar</button>
-              <button type="submit" className="school-save">
-                {bulkMode ? "Salvar alunos" : "Salvar aluno"}
+              <button type="submit" className="school-save" disabled={submittingStudent} aria-busy={submittingStudent}>
+                {submittingStudent ? "Cadastrando…" : (bulkMode ? "Salvar alunos" : "Salvar aluno")}
                 <Svg width={14} height={14} c={<><polyline points="20 6 9 17 4 12"/></>} />
               </button>
             </div>
