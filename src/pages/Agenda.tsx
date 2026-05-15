@@ -7,6 +7,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { Header as AppHeader } from "@/components/Header";
 import { useAgenda } from "@/hooks/useAgenda";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 
 const css = `
@@ -176,6 +177,25 @@ const css = `
 .ag-form input:focus,.ag-form select:focus,.ag-form textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,69,.15);}
 .ag-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ag-panel-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);background:#fff;}
+.ag-mobile-daybar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);}
+.ag-mobile-day-label{flex:1;text-align:center;font-family:'Fraunces',serif;font-weight:700;font-size:16px;color:var(--text);text-transform:capitalize;}
+.ag-mobile-day-actions{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);}
+.ag-mobile-day-actions .ag-btn{flex:1;justify-content:center;}
+.ag-mobile-day-list{display:flex;flex-direction:column;gap:8px;padding:12px 14px calc(14px + env(safe-area-inset-bottom));}
+.ag-mobile-empty{padding:24px 12px;text-align:center;font-size:13px;color:var(--text-mute);border:1px dashed var(--border);border-radius:10px;background:#fafbff;}
+.ag-mobile-card{display:flex;align-items:stretch;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:left;font-family:inherit;color:var(--text);cursor:pointer;width:100%;border-left:4px solid var(--meeting);}
+.ag-mobile-card.meeting{border-left-color:var(--meeting);}
+.ag-mobile-card.eval{border-left-color:var(--eval);}
+.ag-mobile-card.report{border-left-color:var(--report);}
+.ag-mobile-card.plan{border-left-color:var(--plan);}
+.ag-mobile-card.pcd{border-left-color:var(--pcd);}
+.ag-mobile-card.personal{border-left-color:var(--personal);}
+.ag-mobile-card.holiday{border-left-color:var(--holiday);}
+.ag-mobile-card-time{min-width:54px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;}
+.ag-mobile-card-body{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
+.ag-mobile-card-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.3;}
+.ag-mobile-card-meta{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-mute);}
+.ag-mobile-card-tag{width:8px;height:8px;border-radius:2px;display:inline-block;}
 `;
 
 type Ev = { type: "holiday" | "meeting" | "eval" | "report" | "plan" | "pcd"; t: string; urgent?: boolean };
@@ -607,6 +627,16 @@ export function Agenda() {
   const weekDays = useMemo(() => buildWeekGrid(cursor, todayKey), [cursor, todayKey]);
   const dayKey = dateKey(cursor);
   const dayHoliday = holidays.get(dayKey);
+  const isMobile = useIsMobile();
+  const mobileDayLabel = useMemo(() => {
+    const wd = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][cursor.getDay()];
+    return `${wd} ${String(cursor.getDate()).padStart(2,"0")}/${String(cursor.getMonth()+1).padStart(2,"0")}`;
+  }, [cursor]);
+  const shiftDay = (dir: 1 | -1) => {
+    const d = new Date(cursor);
+    d.setDate(d.getDate() + dir);
+    setCursor(d);
+  };
 
   return (
     <div className="ag-root">
@@ -739,6 +769,54 @@ export function Agenda() {
                 Evento mudou? Arraste!
               </div>
               <div className="ag-cal-card">
+                {isMobile ? (
+                  <>
+                    <div className="ag-mobile-daybar">
+                      <button className="ag-cal-nav-btn" aria-label="Dia anterior" onClick={() => shiftDay(-1)}><ChevronLeft size={16} /></button>
+                      <div className="ag-mobile-day-label">{mobileDayLabel}</div>
+                      <button className="ag-cal-nav-btn" aria-label="Próximo dia" onClick={() => shiftDay(1)}><ChevronRight size={16} /></button>
+                    </div>
+                    <div className="ag-mobile-day-actions">
+                      <button className="ag-btn" onClick={goToday}>Hoje</button>
+                      <button className="ag-btn primary" onClick={() => openDayPanel(dayKey)}>
+                        <Plus size={14} /> Novo evento
+                      </button>
+                    </div>
+                    <div className="ag-mobile-day-list">
+                      {dayHoliday && (
+                        <div className="ag-mobile-card holiday">
+                          <div className="ag-mobile-card-time">Feriado</div>
+                          <div className="ag-mobile-card-title">{dayHoliday}</div>
+                        </div>
+                      )}
+                      {(eventsByDate.get(dayKey) || []).length === 0 && !dayHoliday ? (
+                        <div className="ag-mobile-empty">
+                          Nenhum evento cadastrado para este dia.
+                        </div>
+                      ) : (
+                        (eventsByDate.get(dayKey) || []).map((e) => (
+                          <button
+                            key={e.id}
+                            type="button"
+                            className={"ag-mobile-card " + e.type}
+                            onClick={() => { openDayPanel(dayKey); startEdit(e); }}
+                          >
+                            <div className="ag-mobile-card-time">{e.time || "—"}</div>
+                            <div className="ag-mobile-card-body">
+                              <div className="ag-mobile-card-title">{e.title}</div>
+                              <div className="ag-mobile-card-meta">
+                                <span className="ag-mobile-card-tag" style={{ background: TYPE_COLOR[e.type] }} />
+                                {TYPE_LABEL[e.type]}
+                                {e.notes ? ` · ${e.notes}` : ""}
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </>
+                ) : (
+                <>
                 <div className="ag-cal-head">
                   <div className="ag-cal-nav">
                     <button className="ag-cal-nav-btn" aria-label="Anterior" onClick={() => shift(-1)}><ChevronLeft size={14} /></button>
@@ -909,6 +987,8 @@ export function Agenda() {
                       );
                     })}
                   </div>
+                )}
+                </>
                 )}
               </div>
             </div>
