@@ -50,7 +50,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       estado: "propositiva-onboarding",
       saudacao: saudacao(ctx),
       texto: interp(
-        "Sua turma <em>{{entity.turma_atual.nome}}</em> está pronta. Vamos juntas cadastrar os primeiros alunos? Leva uns 4 minutos."
+        "Sua turma <em>{{entity.turma_atual.nome}}</em> está pronta. Vamos juntos(as) cadastrar os primeiros alunos? Leva uns 4 minutos."
       , ctx),
       acoes: [
         { label: "Cadastrar alunos", intent: "abrir_cadastro_alunos" },
@@ -78,7 +78,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       estado: "urgente-foco",
       saudacao: saudacao(ctx),
       texto: interp(
-        `Sua próxima aula de <em>{{dataState.proxima_aula.disciplina}}</em> com a <em>{{entity.turma_atual.nome}}</em> é em <em>{{dataState.proxima_aula.minutos_ate}} min</em>. Quer que eu adapte para ${pcd.nome} (${pcd.condicao}) agora? Vamos juntas?`
+        `Sua próxima aula de <em>{{dataState.proxima_aula.disciplina}}</em> com a <em>{{entity.turma_atual.nome}}</em> é em <em>{{dataState.proxima_aula.minutos_ate}} min</em>. Quer que eu adapte para ${pcd.nome} (${pcd.condicao}) agora? Vamos juntos(as)?`
       , ctx),
       acoes,
       contexto_chip: interp("vendo o planejamento da {{entity.turma_atual.nome}}", ctx),
@@ -94,7 +94,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       saudacao: saudacao(ctx),
       texto: interp(
         peiPendente
-          ? "Vi que o PEI de <em>{{entity.aluno_atual.primeiro_nome}}</em> ({{entity.aluno_atual.condicao_label}}) ainda está em <em>{{entity.aluno_atual.pei_status}}</em>. Vamos juntas finalizar agora? Leva uns 8 minutos."
+          ? "Vi que o PEI de <em>{{entity.aluno_atual.primeiro_nome}}</em> ({{entity.aluno_atual.condicao_label}}) ainda está em <em>{{entity.aluno_atual.pei_status}}</em>. Vamos juntos(as) finalizar agora? Leva uns 8 minutos."
           : "Estou olhando o PEI de <em>{{entity.aluno_atual.primeiro_nome}}</em> ({{entity.aluno_atual.condicao_label}}). {{entity.aluno_atual.adaptacoes_registradas}} adaptações registradas. Quer que eu sugira a próxima?"
         , ctx),
       acoes: peiPendente
@@ -116,7 +116,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       return {
         estado: "propositiva-onboarding",
         saudacao: saudacao(ctx),
-        texto: "Você ainda não tem alunos com laudo cadastrados. Vamos juntas cadastrar o primeiro? Leva uns 3 minutos.",
+        texto: "Você ainda não tem alunos com laudo cadastrados. Vamos juntos(as) cadastrar o primeiro? Leva uns 3 minutos.",
         acoes: [{ label: "Cadastrar PCD", intent: "abrir_cadastro_pcd" }],
         contexto_chip: "vendo a tela de Inclusão",
       };
@@ -137,7 +137,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       return {
         estado: "propositiva-onboarding",
         saudacao: saudacao(ctx),
-        texto: "Sem turma cadastrada eu não consigo planejar. Vamos juntas criar a primeira?",
+        texto: "Sem turma cadastrada eu não consigo planejar. Vamos juntos(as) criar a primeira?",
         acoes: [{ label: "Criar turma", intent: "abrir_cadastro_turma" }],
         contexto_chip: "vendo o planejamento",
       };
@@ -146,7 +146,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       estado: "parceira-fluxo",
       saudacao: saudacao(ctx),
       texto: interp(
-        "Estou olhando o planejamento da <em>{{entity.turma_atual.nome}}</em>. Quer que eu rascunhe a aula da próxima semana? Vamos juntas?"
+        "Estou olhando o planejamento da <em>{{entity.turma_atual.nome}}</em>. Quer que eu rascunhe a aula da próxima semana? Vamos juntos(as)?"
       , ctx),
       acoes: [
         { label: "Rascunhar aula", prompt: `Rascunhe um plano de aula para ${entity.turma_atual.nome} (${entity.turma_atual.ano}) para a próxima semana, alinhado à BNCC.` },
@@ -180,7 +180,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "urgente-foco",
       saudacao: saudacao(ctx),
-      texto: `Faltam <em>${t - f}</em> pareceres do bimestre. Vamos juntas começar pelos PCDs?`,
+      texto: `Faltam <em>${t - f}</em> pareceres do bimestre. Vamos juntos(as) começar pelos PCDs?`,
       acoes: [{ label: "Começar pelos PCDs", prompt: `Gere os pareceres pendentes dos alunos PCD do bimestre, um a um, em ordem de prioridade.` }],
       contexto_chip: `vendo seus pareceres do bimestre`,
     };
@@ -207,7 +207,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       return {
         estado: "acolhedora-onboarding",
         saudacao: saudacao(ctx),
-        texto: "Posso te ajudar mesmo sem alunos cadastrados — só que minhas sugestões ficam genéricas. Vamos juntas cadastrar a primeira turma?",
+        texto: "Posso te ajudar mesmo sem alunos cadastrados — só que minhas sugestões ficam genéricas. Vamos juntos(as) cadastrar a primeira turma?",
         acoes: [{ label: "Cadastrar turma", intent: "abrir_cadastro_turma" }],
         contexto_chip: null,
       };
@@ -243,7 +243,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       estado: "parceira-fluxo",
       saudacao: saudacao(ctx),
       texto: interp(
-        "Estou de olho na <em>{{entity.turma_atual.nome}}</em>. Vamos juntas o que primeiro: parecer, planejamento ou inclusão?"
+        "Estou de olho na <em>{{entity.turma_atual.nome}}</em>. Por onde vamos começar: parecer, planejamento ou inclusão?"
       , ctx),
       acoes: [
         { label: "Parecer", to: "/relatorios" },
