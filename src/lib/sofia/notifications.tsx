@@ -165,3 +165,8 @@ export function useSofiaNotifications(): Ctx {
   if (!c) throw new Error("useSofiaNotifications must be used within <SofiaNotificationsProvider>");
   return c;
 }
+
+/** Versão tolerante: retorna null se o provider ainda não está montado (SSR / boot). */
+export function useSofiaNotificationsOptional(): Ctx | null {
+  return useContext(NotifCtx);
+}
