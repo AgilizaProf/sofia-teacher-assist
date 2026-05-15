@@ -699,6 +699,13 @@ export function Inclusao() {
   const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
   const [anamByStudent, setAnamByStudent] = usePersistentState<Record<string, ReturnType<typeof buildBlankAnam>>>("inc_anam", {});
   const anamData = anamByStudent[studentKey] || buildBlankAnam();
+  // Observação geral da anamnese (texto livre por aluno) — usada pela Sofia ao montar pareceres/relatórios.
+  const [anamObsGeralByStudent, setAnamObsGeralByStudent] = usePersistentState<Record<string, string>>("inc_anam_obs_geral", {});
+  const anamObsGeral = anamObsGeralByStudent[studentKey] || "";
+  const setAnamObsGeral = (txt: string) => {
+    if (!studentKey || studentKey === "_none") return;
+    setAnamObsGeralByStudent((all) => ({ ...all, [studentKey]: txt }));
+  };
   // PEI persistido pelo PEIFormModal — mesmo storage key
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
   const [objetivosModalOpen, setObjetivosModalOpen] = useState(false);
