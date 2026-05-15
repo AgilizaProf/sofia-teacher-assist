@@ -1492,9 +1492,13 @@ ${corpo}
                   {filtered.length === 0 && (
                     <EmptyState
                       icon="🤝"
-                      title="Cadastre o primeiro aluno com necessidade educacional específica."
-                      description="A Sofia organiza PEI, anamnese, registros e relatórios para cada aluno PCD."
-                      ctaLabel="Novo aluno"
+                      title={
+                        allStudents.length === 0
+                          ? "Nenhum aluno PCD cadastrado ainda."
+                          : "Nenhum aluno PCD encontrado com os filtros atuais."
+                      }
+                      description="A página de Inclusão exibe apenas alunos marcados como PCD. A Sofia organiza PEI, anamnese, registros e relatórios para cada um."
+                      ctaLabel="Cadastrar aluno PCD"
                       onCta={() => setNewStudentOpen(true)}
                     />
                   )}
