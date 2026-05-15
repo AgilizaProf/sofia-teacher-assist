@@ -243,7 +243,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       estado: "parceira-fluxo",
       saudacao: saudacao(ctx),
       texto: interp(
-        "Estou de olho na <em>{{entity.turma_atual.nome}}</em>. Vamos juntos(as) o que primeiro: parecer, planejamento ou inclusão?"
+        "Estou de olho na <em>{{entity.turma_atual.nome}}</em>. Por onde vamos começar: parecer, planejamento ou inclusão?"
       , ctx),
       acoes: [
         { label: "Parecer", to: "/relatorios" },
