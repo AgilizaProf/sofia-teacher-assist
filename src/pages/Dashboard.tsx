@@ -1827,6 +1827,7 @@ export function Dashboard() {
           </div>
           <form className="school-modal-body" onSubmit={async (e) => {
             e.preventDefault();
+            if (submittingStudent) return;
             const fd = new FormData(e.currentTarget);
             const className = studentClassSel || String(fd.get("classRefManual") || "").trim();
             const schoolName = studentSchoolSel || (classes.find((c) => c.name === studentClassSel)?.school || "");
@@ -1835,34 +1836,58 @@ export function Dashboard() {
               : (schoolName || "");
             const pcd = String(fd.get("pcd") || "nao");
             const formEl = e.currentTarget as HTMLFormElement;
+            const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+            setSubmittingStudent(true);
             if (bulkMode) {
               const raw = String(fd.get("names") || "");
               const names = raw
                 .split(/[\n,;]+/)
                 .map((s) => s.trim())
                 .filter((s) => s.length > 0 && s.length <= 120);
-              if (names.length === 0) return;
+              if (names.length === 0) { setSubmittingStudent(false); return; }
+              const existingNames = new Set(students.map((s) => norm(s.name)));
+              const novos = names.filter((n) => !existingNames.has(norm(n)));
+              const duplicados = names.length - novos.length;
+              if (novos.length === 0) {
+                toast.error("Já existe(m) aluno(s) cadastrado(s) com esses nomes.");
+                setSubmittingStudent(false);
+                return;
+              }
               try {
-                for (const name of names) {
+                for (const name of novos) {
                   await createDbStudent(buildStudentInput({ name, classRef, birth: "", pcd, notes: "" }));
                 }
                 // Cada aluno em massa vale 1 min de tempo devolvido.
-                setBulkStudentsCount((n) => (Number.isFinite(n) ? n : 0) + names.length);
-                toast.success(`${names.length} aluno(s) cadastrado(s)`);
+                setBulkStudentsCount((n) => (Number.isFinite(n) ? n : 0) + novos.length);
+                toast.success(
+                  duplicados > 0
+                    ? `${novos.length} aluno(s) cadastrado(s) · ${duplicados} já existia(m)`
+                    : `${novos.length} aluno(s) cadastrado(s)`,
+                );
               } catch (err) {
                 console.error("[Dashboard] erro no cadastro em massa:", err);
                 toast.error("Não foi possível cadastrar todos os alunos. Tente novamente.");
+                setSubmittingStudent(false);
                 return;
               }
             } else {
               const name = String(fd.get("name") || "").trim();
-              if (!name) return;
+              if (!name) { setSubmittingStudent(false); return; }
+              const birth = String(fd.get("birth") || "");
+              const dup = students.find(
+                (s) => norm(s.name) === norm(name) && (s.birth || "") === birth,
+              );
+              if (dup) {
+                toast.error("Já existe um aluno cadastrado com esses dados.");
+                setSubmittingStudent(false);
+                return;
+              }
               try {
                 await createDbStudent(
                   buildStudentInput({
                     name,
                     classRef,
-                    birth: String(fd.get("birth") || ""),
+                    birth,
                     pcd,
                     notes: String(fd.get("notes") || ""),
                   }),
@@ -1871,12 +1896,14 @@ export function Dashboard() {
               } catch (err) {
                 console.error("[Dashboard] erro ao cadastrar aluno:", err);
                 toast.error("Não foi possível cadastrar. Tente novamente.");
+                setSubmittingStudent(false);
                 return;
               }
             }
             formEl.reset();
             setStudentClassSel(""); setStudentSchoolSel("");
             setStudentOpen(false);
+            setSubmittingStudent(false);
           }}>
             <div className="school-mode" role="tablist" aria-label="Modo de cadastro">
               <button type="button" role="tab" aria-selected={!bulkMode} className={!bulkMode ? "active" : ""} onClick={() => setBulkMode(false)}>Individual</button>
