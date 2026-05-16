@@ -685,11 +685,15 @@ export function Inclusao() {
     setNsName(s.name || "");
     setNsTurma(s.turma && s.turma !== "Sem turma" ? s.turma : "");
     setNsAnoEscolar(s.anoEscolar || "");
-    // Reconstroi nsCids a partir de "CID F84.0, F71"
-    const cidStr = (s.cid || "").replace(/^CID\s*/i, "").trim();
-    const codes = cidStr && cidStr !== "não informado"
-      ? cidStr.split(/[,;]/).map((c) => c.trim()).filter(Boolean)
-      : [];
+    // Reconstroi nsCids: prioriza o array dedicado `cids`; cai para
+    // o parsing do texto legado "CID F84.0, F71" se vazio.
+    let codes: string[] = Array.isArray(s.cids) ? s.cids.filter(Boolean) : [];
+    if (codes.length === 0) {
+      const cidStr = (s.cid || "").replace(/^CID\s*/i, "").trim();
+      codes = cidStr && cidStr.toLowerCase() !== "não informado" && cidStr !== "—"
+        ? cidStr.split(/[,;]/).map((c) => c.trim()).filter(Boolean)
+        : [];
+    }
     const matched = codes
       .map((code) => CID_OPTIONS.find((o) => o.cid === code)?.value)
       .filter((v): v is string => Boolean(v));
