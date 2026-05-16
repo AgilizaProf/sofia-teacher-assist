@@ -2,6 +2,7 @@
 // Gemini 1.5/2.5 Flash via Lovable AI Gateway -> respostas rápidas.
 // Claude 3.5 Haiku via API direta da Anthropic -> produção de documentos.
 import { isBudgetExceeded, recordUsage, MONTHLY_LIMIT_BRL } from "./ai-budget.ts";
+import { withConstitution } from "./sofia-constitution.ts";
 
 export const MODELOS = {
   RAPIDO: "google/gemini-2.5-flash",
@@ -80,6 +81,11 @@ export type CallAIResult = {
 export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
   const route = rotear(args.tipo);
 
+  // CONSTITUIÇÃO INVIOLÁVEL: prepend automático em TODAS as chamadas de IA.
+  // Garante que os 14 princípios + regras gerais cheguem ao modelo, sem
+  // depender de cada edge function lembrar de incluí-los.
+  const systemPrompt = withConstitution(args.system);
+
   // Checagem de orçamento ANTES da chamada (evita gastar se já estourou).
   if (args.userId) {
     const b = await isBudgetExceeded(args.userId);
@@ -108,7 +114,7 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
       body: JSON.stringify({
         model: route.model,
         messages: [
-          { role: "system", content: args.system },
+          { role: "system", content: systemPrompt },
           { role: "user", content: args.user },
         ],
         ...(args.json ? { response_format: { type: "json_object" } } : {}),
@@ -147,7 +153,7 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     body: JSON.stringify({
       model: route.model,
       max_tokens: args.maxTokens ?? 4096,
-      system: args.system,
+      system: systemPrompt,
       messages: [{ role: "user", content: userMsg }],
     }),
   });

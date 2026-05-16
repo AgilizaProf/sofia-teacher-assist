@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { userIdFromAuthHeader, isBudgetExceeded, recordUsage, MONTHLY_LIMIT_BRL } from "../_shared/ai-budget.ts";
+import { withConstitution } from "../_shared/sofia-constitution.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -362,7 +363,7 @@ serve(async (req) => {
 
     async function callAI(extraUserMsg?: string) {
       const messages: Array<{ role: string; content: string }> = [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: withConstitution(systemPrompt) },
         { role: "user", content: userPrompt },
       ];
       if (extraUserMsg) messages.push({ role: "user", content: extraUserMsg });
