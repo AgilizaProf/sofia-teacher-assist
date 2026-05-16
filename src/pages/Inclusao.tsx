@@ -16,6 +16,11 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
+import {
+  printAnamneseDocument,
+  downloadAnamneseDocx,
+  type AnamneseData,
+} from "@/lib/print/anamnesePrint";
 import { useUser } from "@/lib/mockData";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
