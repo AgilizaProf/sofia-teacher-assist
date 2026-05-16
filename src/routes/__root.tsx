@@ -115,6 +115,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RealtimeSyncMount() {
+  useRealtimeSync();
+  return null;
+}
+
 function RootComponent() {
   const [queryClient] = useState(
     () =>
