@@ -13,7 +13,7 @@ import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
-  MessageSquare, Download, Copy, X, ClipboardList, UserPlus,
+  MessageSquare, Download, Copy, X, ClipboardList, UserPlus, RefreshCw, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -2047,6 +2047,31 @@ ${parecerHtml}
                         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
                           <button className="rel-btn-card" onClick={() => { setParecerDraft({ ...parecerAluno }); setEditandoParecer(true); }}>
                             <Edit3 size={13} /> Editar texto
+                          </button>
+                          <button
+                            className="rel-btn-card"
+                            disabled={gerando}
+                            onClick={() => handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
+                            title="Gerar novamente com a Sofia substituindo o parecer atual"
+                          >
+                            <RefreshCw size={13} /> {gerando ? "Refazendo…" : "Refazer com a Sofia"}
+                          </button>
+                          <button
+                            className="rel-btn-card"
+                            style={{ color: "#B91C1C", borderColor: "#FECACA" }}
+                            onClick={() => {
+                              if (!confirm(`Excluir o parecer de ${a.nome}? Esta ação não pode ser desfeita.`)) return;
+                              setParecerByAluno((all) => {
+                                const next = { ...all };
+                                delete next[a.id];
+                                return next;
+                              });
+                              setEditandoParecer(false);
+                              setParecerDraft(null);
+                              toast.success("Parecer excluído.");
+                            }}
+                          >
+                            <Trash2 size={13} /> Excluir parecer
                           </button>
                           <button className="rel-btn-card" onClick={() => {
                             const p = parecerAluno;
