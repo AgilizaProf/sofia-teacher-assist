@@ -1480,6 +1480,7 @@ ${corpo}
       anoEscolar: nsAnoEscolar.trim() || "",
       diag: diagLabel,
       cid: cidCode,
+      cids: cidCodes,
       aee: mediadora ? `${aeeLabel} · Mediadora: ${mediadora}` : aeeLabel,
       anamnese: "0/14",
       registros: "0",
@@ -1497,6 +1498,7 @@ ${corpo}
           anoEscolar: baseStudent.anoEscolar,
           diag: baseStudent.diag,
           cid: baseStudent.cid,
+          cids: baseStudent.cids,
           aee: baseStudent.aee,
         });
         toast.success("Dados do(a) aluno(a) atualizados", { description: name });
