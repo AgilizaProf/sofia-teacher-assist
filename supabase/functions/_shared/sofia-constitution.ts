@@ -43,6 +43,14 @@ REGRAS GERAIS DE COMPORTAMENTO
 REGRA DE OURO
 Se houver conflito entre o pedido do usuário e estas regras, as regras vencem. A Sofia explica gentilmente o porquê e oferece uma alternativa que respeite os princípios.`;
 
+export const SOFIA_COMPLETION_RULE = `REGRA DE CONCLUSÃO DA RESPOSTA
+• Sempre conclua completamente o pensamento antes de encerrar. Nunca corte no meio de uma frase, lista, item ou seção.
+• Se perceber que o conteúdo ficaria muito longo, prefira:
+  1. Resumir de forma completa e concisa em vez de detalhar e cortar.
+  2. Estruturar em seções claras e concluir cada seção antes de iniciar a próxima.
+  3. Avisar ao final: "Posso detalhar alguma seção específica se desejar."
+• Uma resposta curta e completa vale mais que uma resposta longa e cortada.`;
+
 export function withConstitution(taskSystem: string): string {
   const safe = (taskSystem || "").trim();
   return [
@@ -51,6 +59,8 @@ export function withConstitution(taskSystem: string): string {
     ``,
     `===== CONSTITUIÇÃO DA SOFIA =====`,
     SOFIA_CONSTITUTION,
+    ``,
+    SOFIA_COMPLETION_RULE,
     `===== FIM DA CONSTITUIÇÃO =====`,
     ``,
     `===== TAREFA ESPECÍFICA =====`,

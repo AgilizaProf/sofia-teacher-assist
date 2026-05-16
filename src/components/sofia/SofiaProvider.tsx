@@ -9,6 +9,8 @@ export type SofiaMessage = {
   role: "user" | "assistant";
   content: string;
   issues?: Array<{ term: string; suggestion: string; principle: string }> | null;
+  /** true quando a resposta foi cortada por limite de tokens. */
+  truncated?: boolean;
 };
 
 export type SofiaConversationSummary = {
@@ -274,12 +276,13 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
         } else if (chunk.type === "done") {
           finalConversationId = chunk.conversationId;
           const finalContent = chunk.content || acc;
+          const wasTruncated = Boolean((chunk as { truncated?: boolean }).truncated);
           if (!assistantStarted) {
-            setMessages((m) => [...m, { role: "assistant", content: finalContent, issues: chunk.issues }]);
+            setMessages((m) => [...m, { role: "assistant", content: finalContent, issues: chunk.issues, truncated: wasTruncated }]);
           } else {
             setMessages((m) => m.map((mm, i) => (
               i === m.length - 1
-                ? { ...mm, content: finalContent, issues: chunk.issues }
+                ? { ...mm, content: finalContent, issues: chunk.issues, truncated: wasTruncated }
                 : mm
             )));
           }
