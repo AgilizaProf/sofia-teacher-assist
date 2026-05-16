@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 // Testes de integração que interceptam globalThis.fetch e garantem que
 // TODA chamada feita por `callAI` (Gemini via Lovable Gateway e Claude via
 // Anthropic) carrega a Constituição completa no campo `system`.
@@ -65,7 +66,7 @@ function installFetchMock(handler: (url: string, init: RequestInit) => Response)
 }
 
 Deno.test("callAI (Lovable/Gemini): envia constituição completa no system message", async () => {
-  let captured: { url: string; body: any } | null = null;
+  let captured: { url: string; body: any } = { url: "", body: null };
   const restore = installFetchMock((url, init) => {
     captured = { url, body: JSON.parse(String(init.body)) };
     return new Response(
@@ -84,10 +85,10 @@ Deno.test("callAI (Lovable/Gemini): envia constituição completa no system mess
       user: "Olá",
     });
     assert(r.ok, `callAI falhou: ${r.error ?? ""}`);
-    assert(captured, "fetch não foi interceptado");
-    assertEquals(captured!.url, "https://ai.gateway.lovable.dev/v1/chat/completions");
+    assert(captured.body, "fetch não foi interceptado");
+    assertEquals(captured.url, "https://ai.gateway.lovable.dev/v1/chat/completions");
 
-    const sysMsg = captured!.body.messages.find((m: any) => m.role === "system");
+    const sysMsg = captured.body.messages.find((m: any) => m.role === "system");
     assert(sysMsg, "Mensagem system ausente no payload do Gateway");
     assertConstitutionPresent(sysMsg.content, "Lovable/Gemini");
     // E a tarefa específica também segue presente.
@@ -98,7 +99,7 @@ Deno.test("callAI (Lovable/Gemini): envia constituição completa no system mess
 });
 
 Deno.test("callAI (Anthropic/Haiku): envia constituição completa no campo system", async () => {
-  let captured: { url: string; body: any } | null = null;
+  let captured: { url: string; body: any } = { url: "", body: null };
   const restore = installFetchMock((url, init) => {
     captured = { url, body: JSON.parse(String(init.body)) };
     return new Response(
@@ -117,17 +118,17 @@ Deno.test("callAI (Anthropic/Haiku): envia constituição completa no campo syst
       user: "Aluno X, 5 anos.",
     });
     assert(r.ok, `callAI falhou: ${r.error ?? ""}`);
-    assert(captured, "fetch não foi interceptado");
-    assertEquals(captured!.url, "https://api.anthropic.com/v1/messages");
+    assert(captured.body, "fetch não foi interceptado");
+    assertEquals(captured.url, "https://api.anthropic.com/v1/messages");
 
-    const sys = captured!.body.system;
+    const sys = captured.body.system;
     assert(typeof sys === "string" && sys.length > 0, "Campo system ausente no payload Anthropic");
     assertConstitutionPresent(sys, "Anthropic/Haiku");
     assertStringIncludes(sys, "Tarefa: gere um parecer descritivo do aluno.");
 
     // O Anthropic recebe o user separado — confirma que constituição NÃO está
     // misturada com a mensagem do usuário (poderia ser truncada por contexto).
-    const userMsg = captured!.body.messages[0];
+    const userMsg = captured.body.messages[0];
     assertEquals(userMsg.role, "user");
     assert(
       !userMsg.content.includes("CONSTITUIÇÃO DA SOFIA"),
