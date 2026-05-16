@@ -18,6 +18,8 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { PlanoAtividadeEditor } from "@/components/atividade/PlanoAtividadeEditor";
 import { TrilhasPanel } from "@/components/trilhas/TrilhasPanel";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
+import { useTurmas } from "@/hooks/useTurmas";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const css = `
 .pl-root{
