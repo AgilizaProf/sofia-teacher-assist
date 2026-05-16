@@ -1164,6 +1164,9 @@ ${corpo}
     periodoLabel?: string;
     formato?: "topicos" | "texto";
     geradoEm?: string;
+    peiReferenciaId?: string;
+    peiAtualizadoEm?: string;
+    peiConsiderado?: boolean;
   };
   const [parecerByStudent, setParecerByStudent] = usePersistentState<Record<string, Parecer>>("inc_parecer", {});
   const [gerandoParecer, setGerandoParecer] = useState(false);
@@ -1223,24 +1226,33 @@ ${corpo}
       const objs = (Array.isArray(pei.objetivos) ? pei.objetivos : []) as Array<{ texto?: string; status?: string; prazo?: string; criterios?: string }>;
       const PRAZO: Record<string, string> = { curto: "curto prazo", medio: "médio prazo", longo: "longo prazo" };
       const STATUS: Record<string, string> = { nao_iniciado: "não iniciado", em_andamento: "em andamento", atingido: "atingido", revisar: "revisar" };
-      const linhasObj = objs
-        .filter((o) => (o.texto || "").trim())
+      const objsValidos = objs.filter((o) => (o.texto || "").trim());
+      const linhasObj = objsValidos
         .map((o, i) => `  ${i + 1}. ${o.texto} — status: ${STATUS[o.status || ""] || o.status || "—"}${o.prazo ? ` (${PRAZO[o.prazo] || o.prazo})` : ""}${o.criterios ? ` · critérios: ${o.criterios}` : ""}`)
         .join("\n");
+      const consolidadas = objsValidos.filter((o) => o.status === "atingido").map((o) => `- ${o.texto}`).join("\n");
+      const emDesenvolvimento = objsValidos.filter((o) => o.status === "em_andamento" || o.status === "revisar").map((o) => `- ${o.texto}`).join("\n");
       const partes: string[] = [];
       if (pei.diagnostico || pei.cid) partes.push(`Diagnóstico: ${(pei.diagnostico as string) || "—"}${pei.cid ? ` (CID ${pei.cid})` : ""}`);
       if (pei.caracterizacao) partes.push(`Caracterização: ${pei.caracterizacao}`);
       if (pei.habilidadesDesenvolvidas) partes.push(`Habilidades já desenvolvidas: ${pei.habilidadesDesenvolvidas}`);
       if (pei.pontosForca) partes.push(`Potencialidades: ${pei.pontosForca}`);
       if (pei.necessidadesApoio) partes.push(`Necessidades de apoio: ${pei.necessidadesApoio}`);
-      if (linhasObj) partes.push(`Objetivos do PEI:\n${linhasObj}`);
+      if (linhasObj) partes.push(`📋 Objetivos pedagógicos definidos no PEI:\n${linhasObj}`);
+      if (emDesenvolvimento) partes.push(`⚡ Habilidades em desenvolvimento:\n${emDesenvolvimento}`);
+      if (consolidadas) partes.push(`✅ Habilidades já consolidadas:\n${consolidadas}`);
       if (pei.adaptacoesCurriculares) partes.push(`Adaptações curriculares: ${pei.adaptacoesCurriculares}`);
       if (pei.adaptacoesAvaliativas) partes.push(`Adaptações avaliativas: ${pei.adaptacoesAvaliativas}`);
-      if (pei.metodologias) partes.push(`Metodologias: ${pei.metodologias}`);
-      if (pei.recursosApoio) partes.push(`Recursos de apoio: ${pei.recursosApoio}`);
+      if (pei.metodologias) partes.push(`🌈 Estratégias de ensino / metodologias: ${pei.metodologias}`);
+      if (pei.recursosApoio) partes.push(`📈 Recursos e apoios necessários: ${pei.recursosApoio}`);
       if (pei.formasAvaliacao) partes.push(`Formas de avaliação: ${pei.formasAvaliacao}`);
       if (pei.familiaParticipacao) partes.push(`Família/participação: ${pei.familiaParticipacao}`);
       const peiResumo = partes.join("\n");
+      const peiAtualizadoEm = typeof pei.atualizadoEm === "string" && pei.atualizadoEm
+        ? new Date(pei.atualizadoEm).toLocaleString("pt-BR")
+        : "";
+      const temPei = Boolean(peiResumo);
+      const peiReferenciaId = temPei ? `${selected.id}::${(pei.atualizadoEm as string) || "sem-data"}` : "";
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
           aluno: selected.name,
@@ -1250,6 +1262,7 @@ ${corpo}
           formato: relFormato,
           anamneseResumo,
           peiResumo,
+          peiAtualizadoEm,
           registros: regs,
           anoEscolar: selected.anoEscolar || "",
           anoReferenciaPedagogico: selected.anoReferenciaPedagogico || "",
@@ -1265,9 +1278,12 @@ ${corpo}
         periodoLabel: relIntervalo.label,
         formato: relFormato,
         geradoEm: new Date().toLocaleString("pt-BR"),
+        peiConsiderado: temPei,
+        peiReferenciaId,
+        peiAtualizadoEm,
       };
       setParecerByStudent((all) => ({ ...all, [selected.id]: parecer }));
-      toast.success("Parecer gerado pela Sofia.");
+      toast.success(temPei ? "Parecer gerado · PEI do aluno considerado." : "Parecer gerado (sem PEI cadastrado).");
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Não foi possível gerar o parecer. ${msg}`);
@@ -1654,6 +1670,27 @@ ${corpo}
                       <span className="tag"><b>Turma:</b> {selected.turma}</span>
                       <span className="tag"><b>{selected.cid}</b></span>
                       <span className="tag"><b>{selected.aee}</b></span>
+                      {(() => {
+                        const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+                        const objsArr = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as unknown[];
+                        const temPEI = Boolean(
+                          objsArr.length || peiSel.caracterizacao || peiSel.habilidadesDesenvolvidas ||
+                          peiSel.adaptacoesCurriculares || peiSel.metodologias
+                        );
+                        if (!temPEI) return null;
+                        const at = typeof peiSel.atualizadoEm === "string" && peiSel.atualizadoEm
+                          ? new Date(peiSel.atualizadoEm).toLocaleDateString("pt-BR")
+                          : "";
+                        return (
+                          <span
+                            className="tag"
+                            style={{ background: "#ECFDF5", borderColor: "#A7F3D0", color: "#065F46" }}
+                            title="Plano Educacional Individualizado salvo — será usado pela Sofia ao gerar relatórios"
+                          >
+                            📋 <b>PEI ativo</b>{at ? ` — atualizado em ${at}` : ""}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="hero-r">
@@ -2686,6 +2723,19 @@ ${corpo}
                                 Preencha pelo menos uma fonte (anamnese, PEI ou registros) para gerar o parecer.
                               </p>
                             )}
+                            {!temPEI && items.some((i) => i.ok) && (
+                              <p style={{ fontSize: 11.5, color: "#B45309", margin: "4px 0 0", display: "flex", alignItems: "center", gap: 6 }}>
+                                ⚠️ Este aluno não possui PEI salvo. O relatório será gerado com base na anamnese e nos registros disponíveis.{" "}
+                                <button type="button" className="inc-btn-ghost" style={{ padding: "2px 8px", fontSize: 11 }} onClick={() => setPeiOpen(true)}>
+                                  Criar PEI antes
+                                </button>
+                              </p>
+                            )}
+                            {temPEI && (
+                              <p style={{ fontSize: 11.5, color: "#065F46", margin: "4px 0 0" }}>
+                                📋 PEI do aluno será considerado pela Sofia ao gerar este relatório.
+                              </p>
+                            )}
                           </div>
                         );
                       })()}
@@ -2738,6 +2788,16 @@ ${corpo}
                               {parecerAtual.periodoLabel ? `${parecerAtual.periodoLabel} · ` : ""}Gerado em {parecerAtual.geradoEm}
                             </span>
                           </div>
+                          {parecerAtual.peiConsiderado ? (
+                            <div style={{ fontSize: 11.5, color: "#065F46", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 6, padding: "6px 10px" }}>
+                              ✅ PEI do aluno considerado na geração deste relatório
+                              {parecerAtual.peiAtualizadoEm ? ` (versão de ${parecerAtual.peiAtualizadoEm})` : ""}.
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: 11.5, color: "#92400E", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 6, padding: "6px 10px" }}>
+                              ⚠️ Gerado sem PEI cadastrado — para um relatório mais preciso, cadastre o PEI do aluno.
+                            </div>
+                          )}
                           {parecerAtual.formato === "texto" && parecerAtual.texto ? (
                             <div style={{ fontSize: 13, lineHeight: 1.6, textAlign: "justify" }}>
                               {parecerAtual.texto.split(/\n+/).map((p, i) => <p key={i} style={{ margin: "0 0 8px" }}>{p}</p>)}
