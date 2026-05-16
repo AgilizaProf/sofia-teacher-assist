@@ -2723,6 +2723,19 @@ ${corpo}
                                 Preencha pelo menos uma fonte (anamnese, PEI ou registros) para gerar o parecer.
                               </p>
                             )}
+                            {!temPEI && items.some((i) => i.ok) && (
+                              <p style={{ fontSize: 11.5, color: "#B45309", margin: "4px 0 0", display: "flex", alignItems: "center", gap: 6 }}>
+                                ⚠️ Este aluno não possui PEI salvo. O relatório será gerado com base na anamnese e nos registros disponíveis.{" "}
+                                <button type="button" className="inc-btn-ghost" style={{ padding: "2px 8px", fontSize: 11 }} onClick={() => setPeiOpen(true)}>
+                                  Criar PEI antes
+                                </button>
+                              </p>
+                            )}
+                            {temPEI && (
+                              <p style={{ fontSize: 11.5, color: "#065F46", margin: "4px 0 0" }}>
+                                📋 PEI do aluno será considerado pela Sofia ao gerar este relatório.
+                              </p>
+                            )}
                           </div>
                         );
                       })()}
