@@ -219,11 +219,18 @@ function getTemaSugestoes(disciplinas: string[], ano?: string): string[] {
 
 function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: string[]; onPick: (t: string) => void; label?: string }) {
   if (!items.length) return null;
+  const [open, setOpen] = useState(false);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8, padding: "8px 10px", background: "var(--bg)", borderRadius: 8, border: "1px dashed var(--border)" }}>
-      <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-        💡 {label} · clique para inserir
-      </span>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: 0, padding: 0, cursor: "pointer", fontSize: 10.5, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", textAlign: "left" }}
+      >
+        <Lightbulb size={12} /> {label} {open ? "▾" : "▸"}
+      </button>
+      {open && (
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {items.map((t) => (
           <button
@@ -244,6 +251,7 @@ function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: stri
           </button>
         ))}
       </div>
+      )}
     </div>
   );
 }
