@@ -1115,6 +1115,9 @@ export function Planejamento() {
   // Lê das mesmas chaves persistentes (`dash_classes`/`dash_students`) via
   // SofiaUserContext, para que toda aba do Planejamento use as turmas reais.
   const sofiaUser = useSofiaUserData();
+  // Flag de carregamento das turmas (Supabase) — usada para exibir skeletons
+  // enquanto a lista chega, evitando o "salto" de empty-state → conteúdo.
+  const { loading: turmasLoading } = useTurmas();
   const TURMAS = useMemo(() => {
     return sofiaUser.turmas.map((t) => {
       const pcdCount = sofiaUser.alunosPCDPorTurma[t.nome]?.length ?? 0;
