@@ -167,6 +167,15 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [historico, setHistorico] = usePersistentState<PlanoSalvo[]>(
     `plan_atividade_${modo}_hist_v1`, [],
   );
+  // IDs dos planos selecionados no histórico para impressão em lote.
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const toggleSelecionado = (id: string) => {
+    setSelecionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   // Sugestões favoritas, agrupadas por tema (chave normalizada).
   const [favoritas, setFavoritas] = usePersistentState<Record<string, Sugestao[]>>(
