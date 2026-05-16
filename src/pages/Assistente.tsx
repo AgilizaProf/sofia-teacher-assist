@@ -375,6 +375,14 @@ export function Assistente() {
   const turmaSelecionada = selectedTurma ? turmasInfo.find((t) => t.name === selectedTurma) : null;
   const messages = sofia.messages;
   const loading = sofia.loading;
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const handleQuickOption = (opt: string) => {
+    if (isFreeTextOption(opt)) {
+      setTimeout(() => composerRef.current?.focus(), 0);
+      return;
+    }
+    sofia.send(opt);
+  };
 
   // ---------- Sugestões dinâmicas com base em contexto real ----------
   type Sugestao = {
@@ -643,9 +651,12 @@ export function Assistente() {
               )}
               {messages.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
-                  {messages.map((m, i) => (
+                  {messages.map((m, i) => {
+                    const parsed = m.role === "assistant" ? parseQuickOptions(m.content) : null;
+                    const isLastAssistant = m.role === "assistant" && i === messages.length - 1;
+                    return (
+                    <React.Fragment key={i}>
                     <div
-                      key={i}
                       style={{
                         alignSelf: m.role === "user" ? "flex-end" : "flex-start",
                         maxWidth: "85%",
@@ -662,7 +673,7 @@ export function Assistente() {
                       {m.role === "assistant" ? (
                         <>
                           <div className="prose prose-sm max-w-none">
-                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                            <ReactMarkdown>{parsed?.clean ?? m.content}</ReactMarkdown>
                           </div>
                           {m.issues && m.issues.length > 0 && (
                             <div style={{ marginTop: 10, padding: "8px 10px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, fontSize: 12, color: "#7C2D12" }}>
@@ -689,7 +700,24 @@ export function Assistente() {
                         <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
                       )}
                     </div>
-                  ))}
+                    {isLastAssistant && !loading && parsed && parsed.options.length > 0 && (
+                      <div className="sf-quick" role="group" aria-label="Respostas rápidas">
+                        {parsed.options.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            className="sf-quick-btn"
+                            onClick={() => handleQuickOption(opt)}
+                          >
+                            <span className="sf-quick-ico">👆</span>
+                            <span>{opt}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    </React.Fragment>
+                    );
+                  })}
                   {loading && (
                     <div style={{ alignSelf: "flex-start", color: "var(--muted)", fontSize: 13, padding: "8px 12px" }}>
                       Sofia está pensando…
@@ -773,6 +801,7 @@ export function Assistente() {
               <div className="composer-wrap">
                 <div className="composer">
                   <textarea
+                    ref={composerRef}
                     value={sofia.draft}
                     onChange={(e) => sofia.setDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
