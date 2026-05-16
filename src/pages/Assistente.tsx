@@ -293,20 +293,8 @@ const css = `
 
 @media(max-width:1100px){.ai-app{grid-template-columns:240px 1fr 240px;}.ai-app.collapsed{grid-template-columns:240px 1fr 56px;}}
 @media(min-width:1101px){
-  .ai-app,.ai-app.collapsed{grid-template-columns:240px 1fr 320px;}
-  .history.collapsed{overflow:auto;}
-  .history.collapsed .history-head{flex-direction:row;gap:8px;padding:14px 16px;align-items:center;}
-  .history.collapsed .history-actions{flex-direction:row;gap:6px;margin-left:auto;}
-  .history.collapsed .history-title,
-  .history.collapsed .history-search,
-  .history.collapsed .history-section,
-  .history.collapsed .history-list,
-  .history.collapsed .plan,
-  .history.collapsed .empty-today,
-  .history.collapsed .btn-new span{display:revert;}
-  .history.collapsed .btn-new{padding:6px 10px;width:auto;height:auto;}
-  .history .btn-collapse{display:none;}
-  .history-head{cursor:default !important;}
+  .ai-app{grid-template-columns:240px 1fr 320px;}
+  .ai-app.collapsed{grid-template-columns:240px 1fr 56px;}
 }
 @media(max-width:820px){
   .ai-app{grid-template-columns:1fr 240px;}
