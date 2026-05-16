@@ -2,6 +2,7 @@ import { useCallback, type ReactNode } from "react";
 import type {
   DiaPlanejamento, DocumentoPlanejamento, ObjetivoItem,
 } from "@/lib/documentos/types";
+import { tituloDocumento } from "@/lib/documentos/types";
 import { formatarDataBR } from "@/lib/documentos/builders";
 import { formatarFraseLegal } from "@/lib/documentos/leis";
 
@@ -84,7 +85,7 @@ export function DocumentoPreview({ doc, editable = false, onChange }: Props): Re
   return (
     <div className="documento-wrap documento-print-root">
       <div className="documento">
-        <h1>PLANEJAMENTO</h1>
+        <h1>{tituloDocumento(doc)}</h1>
         <div className="doc-periodo">
           {formatarDataBR(doc.dataInicio)} a {formatarDataBR(doc.dataFim)}
         </div>
@@ -161,10 +162,19 @@ export function DocumentoPreview({ doc, editable = false, onChange }: Props): Re
           <div style={{ marginTop: 24 }}><b>Assinatura da Coordenação Pedagógica:</b></div>
           <div className="linha" />
           <div className="legenda">Nome completo / Data</div>
+
+          {doc.tipo === "pcd" ? (
+            <>
+              <div style={{ marginTop: 24 }}><b>Ciente do(a) Responsável:</b></div>
+              <div className="linha" />
+              <div className="legenda">Nome completo / Data</div>
+            </>
+          ) : null}
         </div>
 
+        <hr className="doc-rodape-sep" />
         <div className="doc-rodape">
-          {formatarFraseLegal(doc.leis)}
+          Documento gerado com apoio do AgilizaProf em consonância com {formatarFraseLegal(doc.leis)}
         </div>
       </div>
     </div>
