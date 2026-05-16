@@ -490,6 +490,42 @@ const ANAM_STATUS_LABEL: Record<AnamStatus, string> = {
   consolidado: "Consolidado", desenvolvimento: "Em desenvolvimento", naoAlcancado: "Não alcançado", naoObservado: "Não observado",
 };
 
+/** Converte os eixos da Anamnese (estrutura interna do app) em
+ *  `AnamneseData` para o gerador de documento padronizado (PDF/Word). */
+function buildAnamneseDocData(
+  student: Student | undefined | null,
+  anamData: Array<{ l: string; items: Array<{ d: string; s: AnamStatus }>; obs: string }>,
+  mode: "completo" | "preenchido",
+): AnamneseData {
+  const secoesCustom = anamData
+    .map((e) => {
+      const items = mode === "completo"
+        ? e.items
+        : e.items.filter((i) => i.s !== "naoObservado");
+      const obs = (e.obs || "").trim();
+      if (mode === "preenchido" && items.length === 0 && !obs) return null;
+      const linhasItens = items.map((it) => `• ${ANAM_STATUS_LABEL[it.s]}: ${it.d}`);
+      const corpoItens = linhasItens.length > 0
+        ? linhasItens.join("\n")
+        : (mode === "completo" ? "Nenhum descritor avaliado." : "");
+      const corpoObs = obs ? `\nObservações: ${obs}` : "";
+      return { titulo: e.l, conteudo: (corpoItens + corpoObs).trim() || "—" };
+    })
+    .filter((s): s is { titulo: string; conteudo: string } => s !== null);
+
+  return {
+    identificacao: {
+      nomeAluno: student?.name || "",
+      idade: student?.age || "",
+      turma: student?.turma || "",
+      anoReferencia: student?.anoEscolar || "",
+      diagnosticoCid: [student?.diag, student?.cid].filter(Boolean).join(" · "),
+      dataPreenchimento: new Date().toISOString().slice(0, 10),
+    },
+    secoesCustom,
+  };
+}
+
 const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus }> }> = [
   { l: "Ano de Referência", items: [
     { d: "Reconhece o ano/etapa em que está matriculado", s: "naoObservado" },
