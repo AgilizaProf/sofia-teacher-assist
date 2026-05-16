@@ -13,7 +13,7 @@
  * apenas reformata o documento final.
  */
 
-import { AREAS_AVALIACAO, buildPEIContext, type PEIData } from "@/components/inclusao/PEIFormModal";
+import { buildPEIContext, type PEIData } from "@/components/inclusao/PEIFormModal";
 
 function escHtml(s: unknown): string {
   return String(s ?? "")
@@ -122,9 +122,6 @@ function buildCorpo(pei: Partial<PEIData>): string {
     partes.push(`<section class="doc-secao"><h2>${escHtml(title)}</h2>${html}</section>`);
   }
 
-  // Avaliação pedagógica — usa AREAS_AVALIACAO para evitar warning de import não usado
-  // (mantém compatibilidade com a estrutura existente).
-  void AREAS_AVALIACAO;
   return partes.join("\n");
 }
 
