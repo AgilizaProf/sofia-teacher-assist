@@ -291,8 +291,13 @@ const css = `
 .history.collapsed .btn-new{padding:6px;width:32px;height:32px;justify-content:center;}
 .history.collapsed .btn-collapse svg{transform:rotate(180deg);}
 
-@media(max-width:1100px){.ai-app{grid-template-columns:240px 1fr 260px;}.ai-app.collapsed{grid-template-columns:240px 1fr 56px;}}
+@media(max-width:1100px){.ai-app{grid-template-columns:240px 1fr 240px;}.ai-app.collapsed{grid-template-columns:240px 1fr 56px;}}
 @media(max-width:820px){
+  .ai-app{grid-template-columns:1fr 240px;}
+  .ai-app.collapsed{grid-template-columns:1fr 56px;}
+  .convo{padding:32px 16px 16px;}
+}
+@media(max-width:640px){
   .ai-app,.ai-app.collapsed{grid-template-columns:1fr;}
   .greet{font-size:30px;}
   .hist-mobile-btn{display:inline-flex !important;}
