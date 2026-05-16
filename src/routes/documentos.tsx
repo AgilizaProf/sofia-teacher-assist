@@ -29,7 +29,7 @@ function DocumentosPage() {
   return (
     <div className="pl-app" style={{ display: "grid", gridTemplateColumns: "240px 1fr", minHeight: "100vh" }}>
       <style>{sidebarCss}</style>
-      <AppSidebar />
+      <AppSidebar active="documents" />
       <div className="pl-main" style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
         <AppHeader />
         <main className="p-6 max-w-5xl w-full mx-auto">
