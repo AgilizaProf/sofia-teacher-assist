@@ -2858,7 +2858,19 @@ export function Planejamento() {
 
                 <div className="pl-layout">
                   <div>
-                    {TURMAS.length === 0 ? (
+                    {turmasLoading && TURMAS.length === 0 ? (
+                      <div className="pl-week">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div key={`sk-day-${i}`} className="pl-day">
+                            <div className="pl-day-head">
+                              <Skeleton className="h-4 w-16" />
+                            </div>
+                            <Skeleton className="h-16 w-full mt-2" />
+                            <Skeleton className="h-16 w-full mt-2" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : TURMAS.length === 0 ? (
                       <EmptyState
                         icon="🗓️"
                         title="Cadastre uma turma para começar a planejar a semana."
@@ -2949,7 +2961,18 @@ export function Planejamento() {
                     <div className="pl-panel">
                       <h3><Copy size={14} /> Replicar em turmas</h3>
                       <p className="lead">A semana ficou boa? Aplique em <b>1 clique</b> nas outras turmas. Sofia adapta automaticamente datas e PCDs.</p>
-                      {TURMAS.length === 0 && (
+                      {turmasLoading && TURMAS.length === 0 ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                          <div key={`sk-trow-${i}`} className="pl-trow" style={{ pointerEvents: "none" }}>
+                            <Skeleton className="h-4 w-4 rounded" />
+                            <span className="info" style={{ flex: 1 }}>
+                              <Skeleton className="h-3 w-32 mb-2" />
+                              <Skeleton className="h-3 w-20" />
+                            </span>
+                            <Skeleton className="h-4 w-12" />
+                          </div>
+                        ))
+                      ) : TURMAS.length === 0 && (
                         <EmptyState icon="👩‍🏫" title="Sem turmas cadastradas." description="Cadastre turmas para replicar planos rapidamente." />
                       )}
                       {TURMAS.map((t) => {
