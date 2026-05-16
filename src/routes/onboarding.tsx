@@ -20,14 +20,6 @@ function OnboardingPage() {
     let cancelled = false;
     (async () => {
       try {
-        if (localStorage.getItem("agp_onboarding_completed") === "1") {
-          window.location.replace("/");
-          return;
-        }
-      } catch {
-        /* ignore */
-      }
-      try {
         const { data } = await supabase.auth.getUser();
         const uid = data.user?.id;
         if (uid) {
