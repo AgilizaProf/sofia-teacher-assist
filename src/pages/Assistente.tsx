@@ -292,7 +292,26 @@ const css = `
 .history.collapsed .btn-collapse svg{transform:rotate(180deg);}
 
 @media(max-width:1100px){.ai-app{grid-template-columns:72px 1fr 280px;}.ai-app.collapsed{grid-template-columns:72px 1fr 56px;}}
-@media(max-width:820px){.ai-app,.ai-app.collapsed{grid-template-columns:1fr;}.history{display:none;}.greet{font-size:30px;}}
+@media(max-width:820px){
+  .ai-app,.ai-app.collapsed{grid-template-columns:1fr;}
+  .greet{font-size:30px;}
+  .hist-mobile-btn{display:inline-flex !important;}
+  .history{
+    position:fixed;top:0;right:0;height:100dvh;width:min(360px,88vw);
+    z-index:210;transform:translateX(100%);transition:transform .25s ease;
+    box-shadow:-12px 0 32px rgba(15,27,54,.18);border-left:1px solid rgba(17,24,39,.08);
+    display:flex;flex-direction:column;
+  }
+  .history.mobile-open{transform:translateX(0);}
+  .history-mobile-backdrop{
+    position:fixed;inset:0;background:rgba(15,27,54,.45);z-index:205;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;
+  }
+  .history-mobile-backdrop.show{opacity:1;pointer-events:auto;}
+}
+.hist-mobile-btn{display:none;align-items:center;gap:6px;background:#fff;
+  border:1px solid var(--line-soft);border-radius:999px;padding:6px 12px;
+  font-size:12px;font-weight:700;color:var(--text-soft);cursor:pointer;}
 `;
 
 type TaskTab = "Mais usadas" | "Inclusão" | "Avaliação" | "Tudo";
