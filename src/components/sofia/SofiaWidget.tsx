@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useHydrated } from "@/hooks/useHydrated";
 import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2, AlertTriangle, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "@tanstack/react-router";
 import { useSofia } from "./SofiaProvider";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { parseQuickOptions, isFreeTextOption } from "@/lib/sofia/quickOptions";
 
 const css = `
 .sofia-fab{position:fixed;right:max(16px, env(safe-area-inset-right));bottom:max(20px, env(safe-area-inset-bottom));z-index:60;width:56px;height:56px;border:none;border-radius:50%;cursor:pointer;
@@ -61,6 +62,10 @@ const css = `
 .sofia-msg.assistant p:last-child{margin-bottom:0;}
 .sofia-msg.assistant ul,.sofia-msg.assistant ol{margin:6px 0 8px 18px;padding:0;}
 .sofia-msg.assistant code{background:#F4F6FB;padding:1px 5px;border-radius:4px;font-size:12px;}
+.sofia-quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-self:flex-start;max-width:88%;}
+.sofia-quick-btn{min-height:36px;padding:8px 12px;border-radius:999px;border:1px solid var(--sofia-line);background:#fff;color:var(--sofia-ink);font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1.1;transition:all .15s ease;}
+.sofia-quick-btn:hover{border-color:var(--sofia-primary);background:var(--sofia-primary-soft);color:var(--sofia-primary);}
+.sofia-quick-btn:active{transform:translateY(1px);}
 .sofia-typing{align-self:flex-start;display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--sofia-surface);border:1px solid var(--sofia-line);border-radius:14px;color:var(--sofia-primary);font-size:12.5px;font-weight:500;}
 .sofia-typing-dots{display:inline-flex;gap:4px;align-items:center;}
 .sofia-typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--sofia-primary);animation:sofiaBlink 1.2s infinite ease-in-out;display:inline-block;}
@@ -112,6 +117,7 @@ export function SofiaWidget() {
   const s = useSofia();
   const navigate = useNavigate();
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const taRef = useRef<HTMLTextAreaElement | null>(null);
   const hydrated = useHydrated();
   const sofiaCtx = useSofiaContext();
   const firstName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || "").trim();
@@ -265,11 +271,38 @@ export function SofiaWidget() {
                       Ver {s.messages.length - 6} mensagens anteriores na conversa completa →
                     </button>
                   )}
-                  {s.messages.slice(-6).map((m, i) => (
-                    <div key={i} className={"sofia-msg " + m.role}>
-                      {m.role === "assistant" ? <ReactMarkdown>{m.content}</ReactMarkdown> : m.content}
-                    </div>
-                  ))}
+                  {s.messages.slice(-6).map((m, i, arr) => {
+                    if (m.role !== "assistant") {
+                      return <div key={i} className="sofia-msg user">{m.content}</div>;
+                    }
+                    const { clean, options } = parseQuickOptions(m.content);
+                    const isLast = i === arr.length - 1;
+                    return (
+                      <React.Fragment key={i}>
+                        <div className="sofia-msg assistant"><ReactMarkdown>{clean}</ReactMarkdown></div>
+                        {isLast && !s.loading && options.length > 0 && (
+                          <div className="sofia-quick" role="group" aria-label="Respostas rápidas">
+                            {options.map((opt) => (
+                              <button
+                                key={opt}
+                                type="button"
+                                className="sofia-quick-btn"
+                                onClick={() => {
+                                  if (isFreeTextOption(opt)) {
+                                    setTimeout(() => taRef.current?.focus(), 0);
+                                  } else {
+                                    s.send(opt);
+                                  }
+                                }}
+                              >
+                                👆 {opt}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </>
               )}
               {s.loading && (
@@ -282,6 +315,7 @@ export function SofiaWidget() {
 
             <div className="sofia-composer">
               <textarea
+                ref={taRef}
                 value={s.draft}
                 onChange={(e) => s.setDraft(e.target.value)}
                 onKeyDown={onKey}
