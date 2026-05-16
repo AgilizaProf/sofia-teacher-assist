@@ -142,13 +142,18 @@ export function TrilhasPanel() {
     const disciplinaStr = !multiplas
       ? discsAll[0]
       : interdisciplinar
-        ? `Interdisciplinar (${discsAll.join(", ")})`
+        ? (isEI
+            ? `Interdisciplinar — Ed. Infantil (${discsAll.join(", ")})`
+            : `Interdisciplinar (${discsAll.join(", ")})`)
         : discsAll.join(" + ");
+    const eiPrefix = isEI
+      ? `ETAPA: Educação Infantil (${form.ano}). Use EXCLUSIVAMENTE os Campos de Experiência da BNCC (NÃO use disciplinas do Ensino Fundamental). Trabalhe com Objetivos de Aprendizagem e Desenvolvimento (códigos EI01/EI02/EI03), interações, brincadeiras, eixos estruturantes e práticas adequadas à faixa etária. Não cite componentes como "Matemática", "Português", "Ciências" — substitua pelos campos correspondentes.\n\n`
+      : "";
     const contextoFinal = !multiplas
-      ? form.contexto
+      ? `${eiPrefix}${form.contexto}`
       : interdisciplinar
-        ? `${form.contexto ? form.contexto + "\n\n" : ""}Tratar como TRILHA INTERDISCIPLINAR: integre ${discsAll.join(", ")} em torno de um tema único, com habilidades BNCC de cada componente articuladas semana a semana.`
-        : `${form.contexto ? form.contexto + "\n\n" : ""}NÃO interdisciplinar: gere conteúdo SEPARADO para cada um dos componentes a seguir, mantendo identidade própria de cada disciplina/campo de experiência (${discsAll.join(", ")}). Para cada semana, indique claramente a qual componente pertence e suas habilidades BNCC específicas.`;
+        ? `${eiPrefix}${form.contexto ? form.contexto + "\n\n" : ""}Tratar como TRILHA INTERDISCIPLINAR: integre ${discsAll.join(", ")} em torno de um tema único, com habilidades BNCC de cada componente articuladas semana a semana.`
+        : `${eiPrefix}${form.contexto ? form.contexto + "\n\n" : ""}NÃO interdisciplinar: gere conteúdo SEPARADO para cada um dos componentes a seguir, mantendo identidade própria de cada ${isEI ? "campo de experiência" : "disciplina"} (${discsAll.join(", ")}). Para cada semana, indique claramente a qual componente pertence e suas habilidades BNCC específicas.`;
     setError(null); setLoading(true);
     try {
       const { data: u } = await supabase.auth.getUser();
