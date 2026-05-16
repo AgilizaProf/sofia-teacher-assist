@@ -839,6 +839,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={{ ...labelCss, marginTop: 10 }}>Objetivos do AEE</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.objetivosAEE} onChange={(e) => set("objetivosAEE", e.target.value)}
                   placeholder="O que é trabalhado no Atendimento Educacional Especializado..." />
+                <PEISuggestions fieldKey="objetivosAEE" onPick={(t) => set("objetivosAEE", appendText(draft.objetivosAEE, t))} />
                 <div style={{ marginTop: 12 }}>
                   <label style={labelCss}>Possui profissional de apoio em sala?</label>
                   <CheckGroup multi={false} options={["Sim", "Não"]} value={draft.temProfissionalApoio} onChange={(v) => set("temProfissionalApoio", v as string)} />
@@ -848,6 +849,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                     <label style={{ ...labelCss, marginTop: 10 }}>Função do profissional de apoio</label>
                     <textarea style={{ ...inputCss, minHeight: 50 }} value={draft.funcaoProfissionalApoio} onChange={(e) => set("funcaoProfissionalApoio", e.target.value)}
                       placeholder="O que o profissional de apoio realiza em sala..." />
+                    <PEISuggestions fieldKey="funcaoProfissionalApoio" onPick={(t) => set("funcaoProfissionalApoio", appendText(draft.funcaoProfissionalApoio, t))} />
                   </>
                 )}
               </div>
@@ -856,9 +858,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={labelCss}>Como a família pode apoiar em casa</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.comoFamiliaApoia} onChange={(e) => set("comoFamiliaApoia", e.target.value)}
                   placeholder="Orientações para a família continuar o trabalho em casa..." />
+                <PEISuggestions fieldKey="comoFamiliaApoia" onPick={(t) => set("comoFamiliaApoia", appendText(draft.comoFamiliaApoia, t))} />
                 <label style={{ ...labelCss, marginTop: 10 }}>Combinados entre escola e família</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.combinadosFamilia} onChange={(e) => set("combinadosFamilia", e.target.value)}
                   placeholder="Acordos estabelecidos para garantir consistência..." />
+                <PEISuggestions fieldKey="combinadosFamilia" onPick={(t) => set("combinadosFamilia", appendText(draft.combinadosFamilia, t))} />
                 <div style={{ marginTop: 12 }}>
                   <label style={labelCss}>Frequência de reuniões de acompanhamento</label>
                   <CheckGroup multi={false} options={["Mensal", "Bimestral", "Trimestral", "Semestral", "Sob demanda"]}
@@ -885,6 +889,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
               <label style={{ ...labelCss, marginTop: 12 }}>Critérios para atualização do plano</label>
               <textarea style={{ ...inputCss, minHeight: 80 }} value={draft.criteriosAtualizacao} onChange={(e) => set("criteriosAtualizacao", e.target.value)}
                 placeholder="O que deve acontecer para o PEI ser revisado antes da data prevista..." />
+              <PEISuggestions fieldKey="criteriosAtualizacao" onPick={(t) => set("criteriosAtualizacao", appendText(draft.criteriosAtualizacao, t))} />
             </div>
           )}
 
