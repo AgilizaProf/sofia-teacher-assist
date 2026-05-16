@@ -77,6 +77,17 @@ const DISCIPLINAS = [
   "Arte", "Educação Física", "Inglês", "Ensino Religioso", "Interdisciplinar",
 ];
 
+// Campos de Experiência da BNCC (Educação Infantil). Substituem as
+// disciplinas tradicionais quando a turma/ano é de Ed. Infantil.
+const DISCIPLINAS_EI = [
+  "O eu, o outro e o nós",
+  "Corpo, gestos e movimentos",
+  "Traços, sons, cores e formas",
+  "Escuta, fala, pensamento e imaginação",
+  "Espaços, tempos, quantidades, relações e transformações",
+  "Interdisciplinar",
+];
+
 const DURACOES = ["30 min", "45 min", "1h", "1h30"];
 const TIPOS = ["Individual", "Em dupla", "Em grupo", "Livre"];
 
