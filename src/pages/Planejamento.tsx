@@ -1881,6 +1881,7 @@ export function Planejamento() {
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
   const [m6PatternDismissedKey, setM6PatternDismissedKey] = usePersistentState<string>("plan_m6_pattern_dismissed_key", "");
   const [m6EditingId, setM6EditingId] = useState<string | null>(null);
+  const [m6QuickOpen, setM6QuickOpen] = useState<boolean>(false);
   // Sugestão "Próxima aula" que a Sofia gera após salvar um diário novo.
   type M6NextSuggestion = {
     entryId: string;
@@ -3852,10 +3853,15 @@ export function Planejamento() {
                     />
                     {m6Emoji && M6_QUICK_BY_EMOJI[m6Emoji] && (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, alignItems: "center" }}>
-                        <span style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginRight: 4 }}>
-                          <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Sugestões rápidas:
-                        </span>
-                        {M6_QUICK_BY_EMOJI[m6Emoji].map((s) => (
+                        <button
+                          type="button"
+                          onClick={() => setM6QuickOpen((v) => !v)}
+                          aria-expanded={m6QuickOpen}
+                          style={{ background: "transparent", border: 0, padding: 0, cursor: "pointer", fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginRight: 4 }}
+                        >
+                          <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Sugestões rápidas {m6QuickOpen ? "▾" : "▸"}
+                        </button>
+                        {m6QuickOpen && M6_QUICK_BY_EMOJI[m6Emoji].map((s) => (
                           <button
                             key={s}
                             type="button"
