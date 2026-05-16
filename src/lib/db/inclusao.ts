@@ -11,6 +11,13 @@ export type StudentUI = {
   cid: string;
   aee: string;
   anoEscolar?: string;
+  /**
+   * Ano de Referência Pedagógico — pode diferir do ano de matrícula
+   * (`anoEscolar`). Todas as gerações da Sofia devem respeitar este valor.
+   * Persistido na coluna `ano_referencia_pedagogico` da tabela
+   * `alunos_inclusao` (e replicado em `data` para compatibilidade).
+   */
+  anoReferenciaPedagogico?: string;
   featured?: boolean;
   anamnese: string;
   registros: string;
@@ -42,6 +49,7 @@ type StudentRow = {
   data: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  ano_referencia_pedagogico?: string | null;
 };
 
 function deriveInitials(name: string): string {
@@ -76,6 +84,9 @@ function rowToUI(r: StudentRow): StudentUI {
     cid: r.cid ?? "",
     aee: r.aee ?? "",
     anoEscolar: (extra.anoEscolar as string) ?? undefined,
+    anoReferenciaPedagogico:
+      (r.ano_referencia_pedagogico ?? undefined) ||
+      ((extra.anoReferenciaPedagogico as string) ?? undefined),
     featured: (extra.featured as boolean) ?? undefined,
     anamnese: (extra.anamnese as string) ?? "0/14",
     registros: (extra.registros as string) ?? "0",
@@ -97,10 +108,12 @@ function uiToPayload(input: StudentInput) {
     cid: input.cid || null,
     aee: input.aee || null,
     observacoes: input.notes ?? null,
+    ano_referencia_pedagogico: input.anoReferenciaPedagogico ?? null,
     data: {
       initials: input.initials,
       age: input.age,
       anoEscolar: input.anoEscolar ?? null,
+      anoReferenciaPedagogico: input.anoReferenciaPedagogico ?? null,
       featured: input.featured ?? false,
       anamnese: input.anamnese,
       registros: input.registros,
