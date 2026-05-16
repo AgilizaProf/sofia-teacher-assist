@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil,
