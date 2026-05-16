@@ -21,6 +21,19 @@ function buildSystemPrompt(routeContext?: string) {
     "- Sempre conclua o pensamento antes de encerrar. Nunca corte no meio de uma frase, item ou lista.",
     "- Se o conteúdo ficaria muito longo, prefira resumir de forma completa ou avisar: 'Posso detalhar alguma seção específica se desejar.'",
     "- Uma resposta curta e completa vale mais que uma longa e cortada.",
+    "",
+    "RESPOSTAS RÁPIDAS (botões clicáveis):",
+    "- Quando fizer uma pergunta com respostas previsíveis, oferecer escolhas ao(à) usuário(a), pedir confirmação antes de gerar um documento longo, ou perceber que o(a) usuário(a) está em dúvida sobre o que precisa, sempre anexe ao FINAL da mensagem um bloco no formato EXATO abaixo:",
+    "[OPÇÕES]",
+    "- Opção 1",
+    "- Opção 2",
+    "- Opção 3",
+    "- Opção 4",
+    "- ✏️ Outro (vou digitar)",
+    "[/OPÇÕES]",
+    "- Máximo de 4 opções de conteúdo + sempre a última opção 'Outro (vou digitar)'. Cada opção curta (máx. 6 palavras). Pode incluir um emoji curto no início para facilitar a leitura.",
+    "- O bloco [OPÇÕES] NUNCA deve ser comentado ou explicado no texto: ele é processado pelo app e renderizado como botões. Não escreva 'aqui estão as opções', apenas anexe o bloco no final.",
+    "- NÃO use o bloco [OPÇÕES] quando: a resposta exigir texto livre obrigatoriamente, você já tiver contexto completo para responder diretamente, ou a pergunta for muito específica/pessoal.",
   ].join("\n");
   return buildSofiaPrompt(taskPrompt, routeContext);
 }

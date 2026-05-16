@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil,
@@ -16,6 +16,7 @@ import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
 import { Header as AppHeader } from "@/components/Header";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { parseQuickOptions, isFreeTextOption } from "@/lib/sofia/quickOptions";
 
 function CtxChipGroup({ options, value, onToggle }: { options: string[]; value: string[]; onToggle: (v: string) => void }) {
   const [adding, setAdding] = useState(false);
@@ -218,6 +219,11 @@ const css = `
 .send:hover{opacity:1;}
 .composer-hint{display:flex;justify-content:space-between;color:var(--muted);font-size:11.5px;margin-top:8px;padding:0 4px;flex-wrap:wrap;gap:8px;}
 .kbd{font-size:10px;border:1px solid var(--line-soft);padding:2px 6px;border-radius:6px;background:#fff;color:#5b6478;}
+.sf-quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-self:flex-start;max-width:85%;}
+.sf-quick-btn{min-height:44px;padding:10px 14px;border-radius:999px;border:1px solid var(--line-soft);background:#FFF7F1;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;line-height:1.1;transition:all .15s ease;font-family:inherit;box-shadow:0 1px 0 rgba(17,24,39,.04);}
+.sf-quick-btn:hover{border-color:var(--accent);background:#FFE7D6;color:var(--accent);transform:translateY(-1px);box-shadow:0 6px 14px -8px rgba(255,106,44,.45);}
+.sf-quick-btn:active{transform:translateY(0);}
+.sf-quick-ico{opacity:.7;font-size:13px;}
 
 /* Tasks block */
 .tasks-wrap{margin-top:28px;}
@@ -369,6 +375,14 @@ export function Assistente() {
   const turmaSelecionada = selectedTurma ? turmasInfo.find((t) => t.name === selectedTurma) : null;
   const messages = sofia.messages;
   const loading = sofia.loading;
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const handleQuickOption = (opt: string) => {
+    if (isFreeTextOption(opt)) {
+      setTimeout(() => composerRef.current?.focus(), 0);
+      return;
+    }
+    sofia.send(opt);
+  };
 
   // ---------- Sugestões dinâmicas com base em contexto real ----------
   type Sugestao = {
@@ -637,9 +651,12 @@ export function Assistente() {
               )}
               {messages.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
-                  {messages.map((m, i) => (
+                  {messages.map((m, i) => {
+                    const parsed = m.role === "assistant" ? parseQuickOptions(m.content) : null;
+                    const isLastAssistant = m.role === "assistant" && i === messages.length - 1;
+                    return (
+                    <React.Fragment key={i}>
                     <div
-                      key={i}
                       style={{
                         alignSelf: m.role === "user" ? "flex-end" : "flex-start",
                         maxWidth: "85%",
@@ -656,7 +673,7 @@ export function Assistente() {
                       {m.role === "assistant" ? (
                         <>
                           <div className="prose prose-sm max-w-none">
-                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                            <ReactMarkdown>{parsed?.clean ?? m.content}</ReactMarkdown>
                           </div>
                           {m.issues && m.issues.length > 0 && (
                             <div style={{ marginTop: 10, padding: "8px 10px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, fontSize: 12, color: "#7C2D12" }}>
@@ -683,7 +700,24 @@ export function Assistente() {
                         <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
                       )}
                     </div>
-                  ))}
+                    {isLastAssistant && !loading && parsed && parsed.options.length > 0 && (
+                      <div className="sf-quick" role="group" aria-label="Respostas rápidas">
+                        {parsed.options.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            className="sf-quick-btn"
+                            onClick={() => handleQuickOption(opt)}
+                          >
+                            <span className="sf-quick-ico">👆</span>
+                            <span>{opt}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    </React.Fragment>
+                    );
+                  })}
                   {loading && (
                     <div style={{ alignSelf: "flex-start", color: "var(--muted)", fontSize: 13, padding: "8px 12px" }}>
                       Sofia está pensando…
@@ -767,6 +801,7 @@ export function Assistente() {
               <div className="composer-wrap">
                 <div className="composer">
                   <textarea
+                    ref={composerRef}
                     value={sofia.draft}
                     onChange={(e) => sofia.setDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
