@@ -229,8 +229,19 @@ export function SofiaWidget() {
               </div>
             )}
 
-            <div className="sofia-context">
-              <MessageSquare size={12} /> <b>Contexto:</b> {s.routeContext}
+            <div className={"sofia-context" + (ctxCollapsed ? " collapsed" : "")}>
+              <MessageSquare size={12} /> <b>Contexto:</b>
+              <span className="sofia-context-text">{s.routeContext}</span>
+              <button
+                type="button"
+                className="sofia-context-toggle"
+                title={ctxCollapsed ? "Mostrar contexto" : "Recolher contexto"}
+                aria-label={ctxCollapsed ? "Mostrar contexto" : "Recolher contexto"}
+                aria-expanded={!ctxCollapsed}
+                onClick={() => setCtxCollapsed((v) => !v)}
+              >
+                {ctxCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+              </button>
             </div>
 
             {s.messages.length === 0 && s.conversations.length > 0 && (
