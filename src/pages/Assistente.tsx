@@ -333,6 +333,8 @@ const css = `
 .hist-mobile-btn{display:none;align-items:center;gap:6px;background:#fff;
   border:1px solid var(--line-soft);border-radius:999px;padding:6px 12px;
   font-size:12px;font-weight:700;color:var(--text-soft);cursor:pointer;}
+.history-mobile-backdrop{position:fixed;inset:0;background:rgba(15,27,54,.45);z-index:205;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+.history-mobile-backdrop.show{opacity:1;pointer-events:auto;}
 `;
 
 type TaskTab = "Mais usadas" | "Inclusão" | "Avaliação" | "Tudo";
