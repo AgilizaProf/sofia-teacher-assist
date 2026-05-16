@@ -340,7 +340,7 @@ export function Assistente() {
   const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long", timeZone: "America/Sao_Paulo" }).toUpperCase();
   const proxima = ctx.dataState.proxima_aula;
   const pcdComAula = isPro && proxima && proxima.minutos_ate <= 180 && ctx.entity.todos_alunos_pcd[0] ? ctx.entity.todos_alunos_pcd[0] : null;
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileHistOpen, setMobileHistOpen] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
