@@ -125,11 +125,7 @@ export function SofiaWidget() {
   const sofiaCtx = useSofiaContext();
   const firstName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || "").trim();
   const [alreadyGreeted, setAlreadyGreeted] = useState<boolean>(false);
-  const [collapsed, setCollapsed] = useState<boolean>(true);
-
-  useEffect(() => {
-    if (s.open) setCollapsed(true);
-  }, [s.open]);
+  const [ctxCollapsed, setCtxCollapsed] = useState<boolean>(true);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -190,8 +186,8 @@ export function SofiaWidget() {
       )}
       {s.open && (
         <>
-          {!collapsed && <div className="sofia-overlay" onClick={() => s.setOpen(false)} />}
-          <aside className={"sofia-drawer" + (collapsed ? " collapsed" : "")} role="dialog" aria-label="Sofia">
+          <div className="sofia-overlay" onClick={() => s.setOpen(false)} />
+          <aside className="sofia-drawer" role="dialog" aria-label="Sofia">
             <header className="sofia-head">
               <div className="sofia-avatar-token sofia-avatar-token--md">
                 <Sparkles size={18} />
@@ -202,14 +198,6 @@ export function SofiaWidget() {
               </div>
               <div className="sofia-head-actions">
                 <button className="sofia-head-btn" title="Nova conversa" onClick={s.startNew}><Plus size={16} /></button>
-                <button
-                  className="sofia-head-btn"
-                  title={collapsed ? "Expandir" : "Recolher"}
-                  aria-label={collapsed ? "Expandir mini-chat" : "Recolher mini-chat"}
-                  onClick={() => setCollapsed((v) => !v)}
-                >
-                  {collapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
                 <button className="sofia-head-btn" title="Fechar" onClick={() => s.setOpen(false)}><X size={16} /></button>
               </div>
             </header>
