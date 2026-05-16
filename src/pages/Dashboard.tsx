@@ -18,6 +18,7 @@ import { useActivityFeed, relativeTime, type ActivityType } from "@/lib/activity
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { Header as AppHeader } from "@/components/Header";
+import { RealtimeStatusBadge } from "@/components/RealtimeStatusBadge";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useTurmas } from "@/hooks/useTurmas";
 import { useAgenda } from "@/hooks/useAgenda";
@@ -963,9 +964,10 @@ export function Dashboard() {
               </div>
             </div>
             <div className="hero-metric">
-              <div className="hero-metric-tag">
+              <div className="hero-metric-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <Svg strokeWidth={2.5} c={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />
-                Tempo devolvido a você
+                <span>Tempo devolvido a você</span>
+                <RealtimeStatusBadge />
               </div>
               <div
                 className={`hero-tier-badge ${currentTier.tone}`}
