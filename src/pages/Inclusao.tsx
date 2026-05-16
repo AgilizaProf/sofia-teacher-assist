@@ -16,6 +16,11 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
+import {
+  printAnamneseDocument,
+  downloadAnamneseDocx,
+  type AnamneseData,
+} from "@/lib/print/anamnesePrint";
 import { useUser } from "@/lib/mockData";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
@@ -484,6 +489,42 @@ const ANAM_STATUS_VALUE: Record<AnamStatus, number> = {
 const ANAM_STATUS_LABEL: Record<AnamStatus, string> = {
   consolidado: "Consolidado", desenvolvimento: "Em desenvolvimento", naoAlcancado: "Não alcançado", naoObservado: "Não observado",
 };
+
+/** Converte os eixos da Anamnese (estrutura interna do app) em
+ *  `AnamneseData` para o gerador de documento padronizado (PDF/Word). */
+function buildAnamneseDocData(
+  student: Student | undefined | null,
+  anamData: Array<{ l: string; items: Array<{ d: string; s: AnamStatus }>; obs: string }>,
+  mode: "completo" | "preenchido",
+): AnamneseData {
+  const secoesCustom = anamData
+    .map((e) => {
+      const items = mode === "completo"
+        ? e.items
+        : e.items.filter((i) => i.s !== "naoObservado");
+      const obs = (e.obs || "").trim();
+      if (mode === "preenchido" && items.length === 0 && !obs) return null;
+      const linhasItens = items.map((it) => `• ${ANAM_STATUS_LABEL[it.s]}: ${it.d}`);
+      const corpoItens = linhasItens.length > 0
+        ? linhasItens.join("\n")
+        : (mode === "completo" ? "Nenhum descritor avaliado." : "");
+      const corpoObs = obs ? `\nObservações: ${obs}` : "";
+      return { titulo: e.l, conteudo: (corpoItens + corpoObs).trim() || "—" };
+    })
+    .filter((s): s is { titulo: string; conteudo: string } => s !== null);
+
+  return {
+    identificacao: {
+      nomeAluno: student?.name || "",
+      idade: student?.age || "",
+      turma: student?.turma || "",
+      anoReferencia: student?.anoEscolar || "",
+      diagnosticoCid: [student?.diag, student?.cid].filter(Boolean).join(" · "),
+      dataPreenchimento: new Date().toISOString().slice(0, 10),
+    },
+    secoesCustom,
+  };
+}
 
 const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus }> }> = [
   { l: "Ano de Referência", items: [
@@ -3393,7 +3434,20 @@ ${corpo}
           <div className="inc-modal-foot">
             <span className="legal">{anamPrintMode === "completo" ? "Mostrando todos os eixos (inclusive não preenchidos)." : "Mostrando apenas o que foi preenchido."}</span>
             <button className="inc-btn-ghost" onClick={() => setAnamPrintOpen(false)}>Fechar</button>
-            <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => window.print()}><Printer size={14} /> Imprimir / PDF</button>
+            <button
+              className="btn btn-secondary"
+              onClick={async () => {
+                const data = buildAnamneseDocData(selected, anamData, anamPrintMode);
+                await downloadAnamneseDocx(data);
+              }}
+            ><FileText size={14} /> Word (.docx)</button>
+            <button
+              className="btn btn-primary bg-orange-400 text-orange-400"
+              onClick={() => {
+                const data = buildAnamneseDocData(selected, anamData, anamPrintMode);
+                printAnamneseDocument(data);
+              }}
+            ><Printer size={14} /> Imprimir / PDF</button>
           </div>
         </div>
       </div>

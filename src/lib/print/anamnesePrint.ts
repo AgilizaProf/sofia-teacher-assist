@@ -55,7 +55,12 @@ export interface AnamneseSecoes {
 
 export interface AnamneseData {
   identificacao: AnamneseIdentificacao;
-  secoes: AnamneseSecoes;
+  /** Seções fixas no padrão da especificação original. */
+  secoes?: AnamneseSecoes;
+  /** Alternativa flexível: lista ordenada de seções (título + conteúdo).
+   *  Quando fornecida, substitui `secoes`. Permite reaproveitar a
+   *  formatação visual com qualquer estrutura de anamnese existente. */
+  secoesCustom?: Array<{ titulo: string; conteudo: string }>;
 }
 
 const SECOES_ORDEM: Array<[keyof AnamneseSecoes, string]> = [
@@ -150,6 +155,18 @@ function buildCorpoHtml(secoes: AnamneseSecoes): string {
         .map((line) => `<p>${escHtml(line)}</p>`)
         .join("");
       return `<section class="doc-secao"><h2>${escHtml(titulo)}</h2>${paragrafos}</section>`;
+    })
+    .join("\n");
+}
+
+function buildCorpoCustomHtml(secoes: Array<{ titulo: string; conteudo: string }>): string {
+  return secoes
+    .map(({ titulo, conteudo }) => {
+      const paragrafos = valOrDash(conteudo)
+        .split(/\n+/)
+        .map((line) => `<p>${escHtml(line)}</p>`)
+        .join("");
+      return `<section class="doc-secao"><h2>${escHtml(titulo.toUpperCase())}</h2>${paragrafos}</section>`;
     })
     .join("\n");
 }
@@ -255,7 +272,9 @@ body{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12pt;line-heigh
 `;
 
   const ident = buildIdentificacaoHtml(identificacao);
-  const corpo = buildCorpoHtml(secoes);
+  const corpo = data.secoesCustom && data.secoesCustom.length > 0
+    ? buildCorpoCustomHtml(data.secoesCustom)
+    : buildCorpoHtml(secoes ?? {});
   const assinaturas = buildAssinaturasHtml();
   const rodape = buildRodapeHtml(identificacao.diagnosticoCid || "");
 
@@ -402,8 +421,14 @@ export async function exportAnamneseDocx(data: AnamneseData): Promise<Blob> {
   }
 
   // Seções
-  for (const [k, titulo] of SECOES_ORDEM) {
-    children.push(...secaoDocx(titulo, valOrDash(secoes[k])));
+  if (data.secoesCustom && data.secoesCustom.length > 0) {
+    for (const sec of data.secoesCustom) {
+      children.push(...secaoDocx(sec.titulo.toUpperCase(), valOrDash(sec.conteudo)));
+    }
+  } else {
+    for (const [k, titulo] of SECOES_ORDEM) {
+      children.push(...secaoDocx(titulo, valOrDash((secoes ?? {})[k])));
+    }
   }
 
   // Declaração + assinaturas (mantidas juntas o quanto possível)
