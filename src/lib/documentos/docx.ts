@@ -3,6 +3,7 @@ import {
   Packer, Paragraph, TabStopPosition, TabStopType, TextRun,
 } from "docx";
 import type { DocumentoPlanejamento, DiaPlanejamento, ObjetivoItem } from "./types";
+import { tituloDocumento } from "./types";
 import { formatarDataBR } from "./builders";
 import { formatarFraseLegal } from "./leis";
 
@@ -98,7 +99,7 @@ export async function exportarDocx(doc: DocumentoPlanejamento): Promise<void> {
   corpo.push(new Paragraph({
     alignment: AlignmentType.CENTER,
     heading: HeadingLevel.TITLE,
-    children: [new TextRun({ text: "PLANEJAMENTO", bold: true, size: 56, font: FRAUNCES })],
+    children: [new TextRun({ text: tituloDocumento(doc), bold: true, size: 56, font: FRAUNCES })],
     spacing: { after: 120 },
   }));
   corpo.push(paragraph([run(`${inicio} a ${fim}`)], { align: AlignmentType.CENTER, spacingAfter: 200 }));
@@ -117,9 +118,15 @@ export async function exportarDocx(doc: DocumentoPlanejamento): Promise<void> {
   corpo.push(paragraph([run("_____________________________________")], { align: AlignmentType.LEFT, spacingAfter: 40 }));
   corpo.push(paragraph([run("Nome completo / Data")], { align: AlignmentType.LEFT, spacingAfter: 360 }));
 
+  if (doc.tipo === "pcd") {
+    corpo.push(paragraph([run("Ciente do(a) Responsável:", { bold: true })], { align: AlignmentType.LEFT, spacingAfter: 400 }));
+    corpo.push(paragraph([run("_____________________________________")], { align: AlignmentType.LEFT, spacingAfter: 40 }));
+    corpo.push(paragraph([run("Nome completo / Data")], { align: AlignmentType.LEFT, spacingAfter: 360 }));
+  }
+
   corpo.push(paragraph(
-    [new TextRun({ text: formatarFraseLegal(doc.leis), size: 20, font: ARIAL, color: "555555", italics: true })],
-    { align: AlignmentType.CENTER, spacingAfter: 0 },
+    [new TextRun({ text: formatarFraseLegal(doc.leis), size: 20, font: ARIAL, color: "666666" })],
+    { align: AlignmentType.CENTER, spacingAfter: 0, borderTop: true },
   ));
 
   const cmToTwips = (cm: number) => Math.round((cm / 2.54) * 1440);
