@@ -739,8 +739,7 @@ export function Inclusao() {
   const [regByStudent, setRegByStudent] = usePersistentState<Record<string, RegItem[]>>("inc_reg", {});
   const [regFilter, setRegFilter] = useState<"todos" | RegCat>("todos");
   const [regModalOpen, setRegModalOpen] = useState(false);
-  const [nrCat, setNrCat] = useState<RegCat>("ped");
-  const [nrBody, setNrBody] = useState("");
+  const [nrBodies, setNrBodies] = useState<Record<RegCat, string>>({ ped: "", com: "", sen: "", fam: "" });
   const REG_CAT_LABEL: Record<RegCat, string> = { ped: "Pedagógico", com: "Comportamental", sen: "Sensorial", fam: "Família" };
   const REG_QUICK: Record<RegCat, string[]> = {
     ped: [
@@ -768,15 +767,29 @@ export function Inclusao() {
       "Família solicitou orientações sobre rotina em casa.",
     ],
   };
+  const toggleQuick = (cat: RegCat, s: string) => {
+    setNrBodies((prev) => {
+      const cur = prev[cat] || "";
+      // split por ". " mantendo conteúdo livre digitado
+      const parts = cur.split(/\.\s+/).map((p) => p.replace(/\.$/, "").trim()).filter(Boolean);
+      const has = parts.includes(s.replace(/\.$/, "").trim());
+      const next = has
+        ? parts.filter((p) => p !== s.replace(/\.$/, "").trim())
+        : [...parts, s.replace(/\.$/, "").trim()];
+      return { ...prev, [cat]: next.length ? next.join(". ") + "." : "" };
+    });
+  };
   const handleSaveReg = (e: React.FormEvent) => {
     e.preventDefault();
-    const body = nrBody.trim();
-    if (!body || !studentKey || studentKey === "_none") return;
+    if (!studentKey || studentKey === "_none") return;
+    const cats = (["ped", "com", "sen", "fam"] as RegCat[]).filter((c) => (nrBodies[c] || "").trim());
+    if (cats.length === 0) return;
     const now = new Date();
     const when = now.toLocaleDateString("pt-BR") + " · " + now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    const item: RegItem = { id: `r_${Date.now()}`, when, who: "Você", cat: nrCat, body };
-    setRegByStudent((all) => ({ ...all, [studentKey]: [item, ...(all[studentKey] || [])] }));
-    setNrBody(""); setNrCat("ped"); setRegModalOpen(false);
+    const items: RegItem[] = cats.map((c, i) => ({ id: `r_${Date.now()}_${i}`, when, who: "Você", cat: c, body: nrBodies[c].trim() }));
+    setRegByStudent((all) => ({ ...all, [studentKey]: [...items, ...(all[studentKey] || [])] }));
+    setNrBodies({ ped: "", com: "", sen: "", fam: "" });
+    setRegModalOpen(false);
   };
   const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
   const studentKey = selectedId || "_none";
