@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { useUser } from "@/lib/mockData";
+import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
 
 type Aluno = {
   id: string;
