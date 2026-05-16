@@ -657,7 +657,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                   <textarea value={atual.observacoes} onChange={(e) => patchAtual({ observacoes: e.target.value })} rows={3} placeholder="Anote o que aconteceu, ajustes, próximos passos"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
                   <ChipRow
-                    items={getObservacoesSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    items={getObservacoesSugestoes(atual.disciplina, anoEfetivo)}
                     onPick={(t) => patchAtual({ observacoes: atual.observacoes ? atual.observacoes + " " + t : t })}
                     label={`Observações · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
                   />
