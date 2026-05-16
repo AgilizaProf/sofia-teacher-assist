@@ -223,6 +223,19 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
           <div>
             <h3>Atividades do período · {aluno.name}</h3>
             <span className="pim-sub">Sofia gera várias atividades alinhadas ao PEI e à BNCC</span>
+            <div className="pim-meta">
+              <span className="pim-meta-item">
+                <b>Ano escolar:</b> {aluno.anoEscolar?.trim() || <i>não informado</i>}
+              </span>
+              {aluno.anoReferenciaPedagogico?.trim() && (
+                <span className="pim-meta-item">
+                  <b>Ano de referência:</b> {aluno.anoReferenciaPedagogico}
+                </span>
+              )}
+              <span className="pim-meta-item">
+                <b>Condição:</b> {condicaoLabel || <i>não informada</i>}
+              </span>
+            </div>
           </div>
           <button className="pim-x" onClick={onClose}><X size={16} /></button>
         </header>
