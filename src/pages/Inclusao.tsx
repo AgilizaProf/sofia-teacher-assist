@@ -3541,53 +3541,58 @@ ${corpo}
             <button className="inc-modal-close" onClick={() => setRegModalOpen(false)} aria-label="Fechar"><X size={16} /></button>
           </div>
           <form className="inc-modal-body plain" onSubmit={handleSaveReg} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Tipo de registro</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {(["ped","com","sen","fam"] as RegCat[]).map(k => (
-                  <button
-                    type="button"
-                    key={k}
-                    onClick={() => {
-                      if (k === nrCat) return;
-                      // Se a descrição atual é composta apenas por opções rápidas do tipo anterior, limpa.
-                      const prevQuick = REG_QUICK[nrCat];
-                      const onlyPrev = nrBody.trim() && prevQuick.some(s => nrBody.includes(s)) &&
-                        nrBody.split(/\.\s*/).every(part => !part.trim() || prevQuick.some(s => s.includes(part.trim())));
-                      if (onlyPrev) setNrBody("");
-                      setNrCat(k);
-                    }}
-                    className={"reg-filter" + (nrCat === k ? " active" : "")}
-                  >{REG_CAT_LABEL[k]}</button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Opções rápidas · {REG_CAT_LABEL[nrCat]}</div>
-              <div key={nrCat} style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {REG_QUICK[nrCat].map(s => (
-                  <button
-                    type="button"
-                    key={s}
-                    onClick={() => setNrBody(prev => prev.trim() ? prev.trim() + (prev.trim().endsWith(".") ? " " : ". ") + s : s)}
-                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "#fff", fontSize: 12, cursor: "pointer", textAlign: "left" }}
-                  >+ {s}</button>
-                ))}
-              </div>
-            </div>
-            <label style={{ fontSize: 12, fontWeight: 700 }}>Descrição
-              <textarea
-                required
-                value={nrBody}
-                onChange={(e) => setNrBody(e.target.value)}
-                rows={5}
-                placeholder="Descreva o registro…"
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 8, marginTop: 4, fontFamily: "inherit", fontSize: 13, resize: "vertical" }}
-              />
-            </label>
+            <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
+              Marque opções e/ou escreva em quantas categorias quiser. Ao salvar, cada categoria preenchida vira um registro próprio.
+            </p>
+            {(["ped","com","sen","fam"] as RegCat[]).map((k) => {
+              const body = nrBodies[k] || "";
+              const norm = body.split(/\.\s+/).map((p) => p.replace(/\.$/, "").trim()).filter(Boolean);
+              return (
+                <div key={k} style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 12, background: "#fff", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <b style={{ fontSize: 13 }}>{REG_CAT_LABEL[k]}</b>
+                    {body.trim() && <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700 }}>● selecionado</span>}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {REG_QUICK[k].map((s) => {
+                      const sel = norm.includes(s.replace(/\.$/, "").trim());
+                      return (
+                        <button
+                          type="button"
+                          key={s}
+                          onClick={() => toggleQuick(k, s)}
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: 8,
+                            border: sel ? "1px solid var(--accent)" : "1px solid var(--border)",
+                            background: sel ? "var(--accent)" : "#fff",
+                            color: sel ? "#fff" : "var(--text)",
+                            fontSize: 12,
+                            cursor: "pointer",
+                            textAlign: "left",
+                            fontWeight: sel ? 600 : 400,
+                          }}
+                        >{sel ? "✓ " : "+ "}{s}</button>
+                      );
+                    })}
+                  </div>
+                  <textarea
+                    value={body}
+                    onChange={(e) => setNrBodies((prev) => ({ ...prev, [k]: e.target.value }))}
+                    rows={2}
+                    placeholder={`Descrição livre para ${REG_CAT_LABEL[k]} (opcional)…`}
+                    style={{ width: "100%", padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 12.5, resize: "vertical" }}
+                  />
+                </div>
+              );
+            })}
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={() => setRegModalOpen(false)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary bg-orange-400 text-orange-400"><Plus size={14} /> Salvar registro</button>
+              <button
+                type="submit"
+                className="btn btn-primary bg-orange-400 text-orange-400"
+                disabled={!(["ped","com","sen","fam"] as RegCat[]).some((c) => (nrBodies[c] || "").trim())}
+              ><Plus size={14} /> Salvar registros</button>
             </div>
           </form>
         </div>
