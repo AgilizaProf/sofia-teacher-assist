@@ -948,7 +948,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   const earnedMinutes =
     dashSchools.length * 10 +
     dashClasses.length * 20 +
-    dashStudents.length * 5 +
+    dbStudents.length * 5 +
     (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 30;
   const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
   const animatedMin = useAnimatedNumber(totalSavedMin, 900);
@@ -1178,7 +1178,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   <li><span>Baseline semanal</span><b>{user.hoursSavedWeek}h {String(user.minutesSavedWeek).padStart(2,"0")}min</b></li>
                   <li><span>Escolas cadastradas · {dashSchools.length} × 10min</span><b>{dashSchools.length * 10}min</b></li>
                   <li><span>Turmas cadastradas · {dashClasses.length} × 20min</span><b>{dashClasses.length * 20}min</b></li>
-                  <li><span>Alunos cadastrados · {dashStudents.length} × 5min</span><b>{dashStudents.length * 5}min</b></li>
+                  <li><span>Alunos cadastrados · {dbStudents.length} × 5min</span><b>{dbStudents.length * 5}min</b></li>
                   <li><span>Documentos finalizados · {(user.documentsGenerated || finalizados)} × 30min</span><b>{(user.documentsGenerated || finalizados) * 30}min</b></li>
                 </ul>
                 <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
