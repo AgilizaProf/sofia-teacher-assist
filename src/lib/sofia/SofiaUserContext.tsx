@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
-import { useTurmas } from "@/hooks/useTurmas";
+import { useDashClasses, useDashStudents } from "@/hooks/useDashLegacyData";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SofiaUserContext (Fase 1)
@@ -18,15 +18,6 @@ import { useTurmas } from "@/hooks/useTurmas";
 
 // ----- Shapes brutos lidos das mesmas chaves usadas pelas telas -----
 type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
-type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
-type DashStudent = {
-  name: string;
-  classRef: string;
-  birth: string;
-  pcd: string;       // "" | "nao" | código CID
-  notes: string;
-  createdAt?: string;
-};
 type AgendaEvent = {
   id?: string;
   date: string;      // YYYY-MM-DD
@@ -136,18 +127,14 @@ function calcAge(birth: string): number | null {
 }
 
 export function SofiaUserDataProvider({ children }: { children: React.ReactNode }) {
-  // Lê das MESMAS chaves usadas em Dashboard / Agenda / Planejamento.
-  // usePersistentState já hidrata via Supabase (app_snapshots, RLS por user_id).
+  // Fonte única de verdade: tabelas `turmas` e `alunos_inclusao` do Supabase.
+  // Os hooks `useDashClasses`/`useDashStudents` adaptam o formato para o
+  // mesmo shape que as telas usavam quando liam de `dash_classes`/
+  // `dash_students` no localStorage.
   const [schools] = usePersistentState<DashSchool[]>("dash_schools", []);
-  const [classes] = usePersistentState<DashClass[]>("dash_classes", []);
-  const [students] = usePersistentState<DashStudent[]>("dash_students", []);
+  const classes = useDashClasses();
+  const students = useDashStudents();
   const [agendaEvents] = usePersistentState<AgendaEvent[]>("agenda_events", []);
-
-  // Turmas vindas da tabela `turmas` no Supabase (cadastro novo no Dashboard).
-  // Mescladas com `dash_classes` (legado em app_snapshots) para que o seletor
-  // do Planejamento veja qualquer turma cadastrada — independentemente de
-  // qual fluxo a criou.
-  const { turmas: turmasDb } = useTurmas();
 
   // Planejamento
   const [m1Tema] = usePersistentState<string>("plan_m1_tema", "");
@@ -167,20 +154,7 @@ export function SofiaUserDataProvider({ children }: { children: React.ReactNode 
 
   const value = useMemo<SofiaUserData>(() => {
     // ── Turmas ─────────────────────────────────────────────────────────────
-    // Mescla `dash_classes` (legado) + `turmas` (Supabase) deduplicando por nome.
-    const mergedClasses: DashClass[] = [...classes];
-    for (const t of turmasDb) {
-      if (!mergedClasses.some((c) => c.name.trim().toLowerCase() === t.name.trim().toLowerCase())) {
-        mergedClasses.push({
-          name: t.name,
-          school: t.school,
-          grade: t.grade,
-          shift: t.shift,
-          students: t.students,
-        });
-      }
-    }
-    const turmas: SofiaTurmaInfo[] = mergedClasses.map((c) => {
+    const turmas: SofiaTurmaInfo[] = classes.map((c) => {
       const totalDecl = parseInt(c.students, 10);
       const cadastrados = students.filter((s) => s.classRef === c.name).length;
       return {
@@ -293,7 +267,6 @@ export function SofiaUserDataProvider({ children }: { children: React.ReactNode 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     classes,
-    turmasDb,
     students,
     agendaEvents,
     m1Tema,

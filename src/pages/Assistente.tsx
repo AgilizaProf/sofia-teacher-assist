@@ -17,6 +17,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { parseQuickOptions, isFreeTextOption } from "@/lib/sofia/quickOptions";
+import { useDashClasses, useDashStudents, type LegacyDashStudent } from "@/hooks/useDashLegacyData";
 
 function CtxChipGroup({ options, value, onToggle }: { options: string[]; value: string[]; onToggle: (v: string) => void }) {
   const [adding, setAdding] = useState(false);
@@ -351,10 +352,9 @@ export function Assistente() {
   const OPT_BIMESTRE = ["1º bimestre","2º bimestre","3º bimestre","4º bimestre","1º trimestre","2º trimestre","3º trimestre","Recuperação"];
   const OPT_DURACAO = ["30 min","45 min","50 min","60 min","90 min","2 aulas geminadas"];
 
-  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
-  type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
-  const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
-  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const dashClasses = useDashClasses();
+  const dashStudents = useDashStudents();
+  type DashStudent = LegacyDashStudent;
 
   // Agrupa alunos por turma e identifica PCDs
   const turmasInfo = useMemo(() => {

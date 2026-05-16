@@ -9,6 +9,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { useDashStudents } from "@/hooks/useDashLegacyData";
 
 export type ActivityType =
   | "parecer"
@@ -52,7 +53,6 @@ export function logActivity(entry: Omit<ActivityEntry, "id" | "ts"> & { id?: str
   }
 }
 
-type DashStudent = { name: string; classRef?: string; createdAt?: string };
 type AgendaEvent = { id: string; date: string; title: string; type?: string };
 
 /**
@@ -61,7 +61,7 @@ type AgendaEvent = { id: string; date: string; title: string; type?: string };
  */
 export function useActivityFeed() {
   const [logged] = usePersistentState<ActivityEntry[]>("activity_log", []);
-  const [students] = usePersistentState<DashStudent[]>("dash_students", []);
+  const students = useDashStudents();
   const [events] = usePersistentState<AgendaEvent[]>("agenda_events", []);
   const [tick, setTick] = useState(0);
 
@@ -79,7 +79,7 @@ export function useActivityFeed() {
 
   return useMemo(() => {
     const safeLogged: ActivityEntry[] = Array.isArray(logged) ? logged : [];
-    const safeStudents: DashStudent[] = Array.isArray(students) ? students : [];
+    const safeStudents = Array.isArray(students) ? students : [];
     const safeEvents: AgendaEvent[] = Array.isArray(events) ? events : [];
 
     const derived: ActivityEntry[] = [];

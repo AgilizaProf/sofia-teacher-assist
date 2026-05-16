@@ -9,6 +9,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
+import { useDashClasses } from "@/hooks/useDashLegacyData";
 import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
@@ -523,34 +524,21 @@ export function Relatorios() {
   type DashStudentWithId = DashStudent & { id: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
   type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
-  const [dashStudents, setDashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
-  const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
+  const dashClasses: DashClass[] = useDashClasses();
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
   // Alunos cadastrados no banco (Inclusão) — entram automaticamente na lista de Relatórios.
-  const { students: dbStudents, update: updateDbStudent } = useInclusaoStudents();
+  const { students: dbStudents, update: updateDbStudent, create: createDbStudent } = useInclusaoStudents();
   const combinedStudents = useMemo<DashStudentWithId[]>(() => {
     const seen = new Set<string>();
     const out: DashStudentWithId[] = [];
-    const slug = (s: string) =>
-      (s || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
     const push = (s: DashStudent, id: string) => {
       const key = s.name.trim().toLowerCase();
       if (!key || seen.has(key)) return;
       seen.add(key);
       out.push({ ...s, id });
     };
-    // Alunos legados (localStorage) — id determinístico por nome + nascimento
-    // (ou createdAt como fallback). Estável independente de ordem/sort.
-    dashStudents.forEach((s) =>
-      push(s, `local:${slug(s.name)}:${s.birth || s.createdAt || "x"}`),
-    );
-    // Alunos do banco (Inclusão) — id é o UUID real, garantido único por usuário.
+    // Alunos do banco (Inclusão) — fonte única de verdade.
     dbStudents.forEach((s) =>
       push(
         {
@@ -565,7 +553,7 @@ export function Relatorios() {
       ),
     );
     return out;
-  }, [dashStudents, dbStudents]);
+  }, [dbStudents]);
 
   // Lookup utilitário — sempre por id estável, nunca por nome.
   // Garante que um aluno homônimo NUNCA receba dados de outro registro.
@@ -624,24 +612,32 @@ export function Relatorios() {
           })
           .catch((err: unknown) => toast.error(`Não foi possível atualizar. ${err instanceof Error ? err.message : ""}`));
       } else {
-        // Local — localiza pelo nome+nascimento originais e substitui.
-        setDashStudents((cur) =>
-          cur.map((s) =>
-            s.name.trim().toLowerCase() === editAluno.originalName.trim().toLowerCase() &&
-            (s.birth || "") === editAluno.originalBirth
-              ? { ...s, ...novoAluno, name: nome }
-              : s,
-          ),
-        );
-        toast.success(`Dados de ${nome} atualizados.`);
-        fecharModalAluno();
-        setAlunoModal((m) => (m && m.id === editAluno.id ? { ...m, nome, turma: novoAluno.classRef || m.turma, pcd: novoAluno.pcd } : m));
+        toast.error("Aluno legado não encontrado no banco. Recadastre-o.");
       }
       return;
     }
-    setDashStudents((cur) => [...cur, { ...novoAluno, name: nome, createdAt: new Date().toISOString() }]);
-    fecharModalAluno();
-    toast.success(`${nome} cadastrado(a) com sucesso.`);
+    createDbStudent({
+      name: nome,
+      initials:
+        nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0] ?? "").join("").toUpperCase() || "AL",
+      age: "—",
+      turma: novoAluno.classRef || "Sem turma",
+      diag: novoAluno.pcd && novoAluno.pcd !== "nao" ? novoAluno.pcd : "",
+      cid: "",
+      aee: "",
+      anamnese: "0/14",
+      registros: "0",
+      trend: "—",
+      trendTone: "muted",
+      birth: novoAluno.birth || undefined,
+      notes: novoAluno.notes || undefined,
+      pcd: novoAluno.pcd || undefined,
+    })
+      .then(() => {
+        fecharModalAluno();
+        toast.success(`${nome} cadastrado(a) com sucesso.`);
+      })
+      .catch((err: unknown) => toast.error(`Não foi possível cadastrar. ${err instanceof Error ? err.message : ""}`));
   };
 
   // Rubrica BNCC por aluno (persistido)
@@ -952,7 +948,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   const earnedMinutes =
     dashSchools.length * 10 +
     dashClasses.length * 20 +
-    dashStudents.length * 5 +
+    dbStudents.length * 5 +
     (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 30;
   const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
   const animatedMin = useAnimatedNumber(totalSavedMin, 900);
@@ -1182,7 +1178,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   <li><span>Baseline semanal</span><b>{user.hoursSavedWeek}h {String(user.minutesSavedWeek).padStart(2,"0")}min</b></li>
                   <li><span>Escolas cadastradas · {dashSchools.length} × 10min</span><b>{dashSchools.length * 10}min</b></li>
                   <li><span>Turmas cadastradas · {dashClasses.length} × 20min</span><b>{dashClasses.length * 20}min</b></li>
-                  <li><span>Alunos cadastrados · {dashStudents.length} × 5min</span><b>{dashStudents.length * 5}min</b></li>
+                  <li><span>Alunos cadastrados · {dbStudents.length} × 5min</span><b>{dbStudents.length * 5}min</b></li>
                   <li><span>Documentos finalizados · {(user.documentsGenerated || finalizados)} × 30min</span><b>{(user.documentsGenerated || finalizados) * 30}min</b></li>
                 </ul>
                 <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
