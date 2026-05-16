@@ -16,6 +16,7 @@ import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useAiBudgetWarnings } from "@/hooks/useAiBudgetWarnings";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
 import { installPlatformTelemetry, trackPageVisit } from "@/lib/admin/track";
 import { syncOnboardingFlagIfPending } from "@/lib/onboarding";
@@ -114,6 +115,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RealtimeSyncMount() {
+  useRealtimeSync();
+  return null;
+}
+
 function RootComponent() {
   const [queryClient] = useState(
     () =>
@@ -145,6 +151,7 @@ function RootComponent() {
   return (
     <RootErrorBoundary>
       <QueryClientProvider client={queryClient}>
+        <RealtimeSyncMount />
       {/* Ordem dos providers (externo → interno):
           1. SofiaContextProvider     — contexto base (rota, turma, aluno)
           2. SofiaUserDataProvider    — dados do usuário (depende do contexto base)
