@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Sparkles, CheckCircle2, Loader2, Lightbulb, RefreshCw, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { buildAnoReferenciaPromptBlock, isAnoReferenciaDivergente } from "@/lib/inclusao/anoReferencia";
 
 export type PlanoInclusao = {
   id: string;
@@ -31,6 +32,7 @@ type Aluno = {
   diag?: string;
   cid?: string;
   anoEscolar?: string;
+  anoReferenciaPedagogico?: string;
   turma?: string;
 };
 
