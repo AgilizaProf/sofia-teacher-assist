@@ -76,10 +76,46 @@ export type CallAIResult = {
   blocked?: boolean;
   usedBrl?: number;
   limitBrl?: number;
+  /** true quando a resposta foi cortada por limite de tokens. */
+  truncated?: boolean;
+  /** Motivo de parada bruto retornado pelo provedor. */
+  finishReason?: string;
 };
+
+// Limites de tokens por tipo de tarefa.
+// Curtas (chat), médias (atividades/estratégias), longas (pareceres/relatórios),
+// muito longas (documentos institucionais completos).
+const TOKEN_LIMITS: Record<SofiaTaskType, number> = {
+  // curtas
+  chat: 1000,
+  sugestoes: 1000,
+  chips: 1000,
+  saudacao: 1000,
+  atalhos: 1000,
+  diario_analise: 1000,
+  padroes: 1000,
+  // médias
+  trilha_progressao: 2000,
+  trilha_defasagem: 2000,
+  trilha_semana: 2000,
+  roteiro_ei: 2000,
+  // longas
+  parecer: 4000,
+  relatorio_bimestral: 4000,
+  trilha_relatorio: 4000,
+  trilha_geracao: 4000,
+  // muito longas
+  pei: 8000,
+  pdi: 8000,
+};
+
+export function maxTokensFor(tipo: SofiaTaskType): number {
+  return TOKEN_LIMITS[tipo] ?? 2000;
+}
 
 export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
   const route = rotear(args.tipo);
+  const maxTokens = args.maxTokens ?? maxTokensFor(args.tipo);
 
   // CONSTITUIÇÃO INVIOLÁVEL: prepend automático em TODAS as chamadas de IA.
   // Garante que os 14 princípios + regras gerais cheguem ao modelo, sem
@@ -117,6 +153,7 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
           { role: "system", content: systemPrompt },
           { role: "user", content: args.user },
         ],
+        max_tokens: maxTokens,
         ...(args.json ? { response_format: { type: "json_object" } } : {}),
       }),
     });
@@ -126,13 +163,15 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     }
     const data = await resp.json();
     const text = data?.choices?.[0]?.message?.content || "";
+    const finishReason: string = data?.choices?.[0]?.finish_reason || "";
+    const truncated = finishReason === "length" || finishReason === "MAX_TOKENS";
     const inTok = Number(data?.usage?.prompt_tokens ?? 0);
     const outTok = Number(data?.usage?.completion_tokens ?? 0);
     let costBrl = 0;
     if (args.userId) {
       costBrl = await recordUsage({ userId: args.userId, provider: "lovable", model: route.model, task: args.tipo, inputTokens: inTok, outputTokens: outTok });
     }
-    return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, ...route };
+    return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, truncated, finishReason, ...route };
   }
 
   // Anthropic provider (Claude 3.5 Haiku)
@@ -152,7 +191,7 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     },
     body: JSON.stringify({
       model: route.model,
-      max_tokens: args.maxTokens ?? 4096,
+      max_tokens: maxTokens,
       system: systemPrompt,
       messages: [{ role: "user", content: userMsg }],
     }),
@@ -163,6 +202,8 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
   }
   const data = await resp.json();
   let text: string = data?.content?.[0]?.text || "";
+  const stopReason: string = data?.stop_reason || "";
+  const truncated = stopReason === "max_tokens";
   if (args.json) {
     // Strip code fences and isolate JSON object.
     text = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "");
@@ -176,7 +217,7 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
   if (args.userId) {
     costBrl = await recordUsage({ userId: args.userId, provider: "anthropic", model: route.model, task: args.tipo, inputTokens: inTok, outputTokens: outTok });
   }
-  return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, ...route };
+  return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, truncated, finishReason: stopReason, ...route };
 }
 
 export const corsHeaders = {
