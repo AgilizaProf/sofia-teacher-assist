@@ -4,7 +4,7 @@ import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil,
   FileText, Send, User, Sparkles, ArrowRight,
   Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
-  GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock,
+  GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock, ChevronUp, ChevronDown,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import ReactMarkdown from "react-markdown";
@@ -313,6 +313,16 @@ export function Assistente() {
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
   const [ctxOpen, setCtxOpen] = useState(false);
+  // Permite recolher a barra de contexto para liberar espaço vertical no chat.
+  // Persiste em localStorage para respeitar a preferência entre sessões.
+  const [ctxCollapsed, setCtxCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("assistente_ctx_collapsed") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("assistente_ctx_collapsed", ctxCollapsed ? "1" : "0");
+  }, [ctxCollapsed]);
   const [observacoes, setObservacoes] = usePersistentState<string>("assist_ctx_obs", "");
   const [selectedTurma, setSelectedTurma] = usePersistentState<string | null>("assist_ctx_turma", null);
   // Novos campos de contexto, todos persistidos para a Sofia "lembrar".
@@ -578,11 +588,33 @@ export function Assistente() {
             }
           />
 
-          <div className="ai-context">
-            <span className="ctx-label">Contexto ativo:</span>
-            <SofiaActiveChip />
-            <button className="edit-context" aria-label="Editar contexto" onClick={() => setCtxOpen(true)}><Pencil size={13} /> Editar contexto</button>
-          </div>
+          {ctxCollapsed ? (
+            <div className="ai-context" style={{ padding: "6px 22px" }}>
+              <span className="ctx-label">Contexto ativo</span>
+              <button
+                onClick={() => setCtxCollapsed(false)}
+                aria-label="Mostrar contexto"
+                title="Mostrar contexto"
+                style={{ marginLeft: "auto", background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 999, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: "var(--text-soft)", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}
+              >
+                <ChevronDown size={13} /> Mostrar
+              </button>
+            </div>
+          ) : (
+            <div className="ai-context">
+              <span className="ctx-label">Contexto ativo:</span>
+              <SofiaActiveChip />
+              <button className="edit-context" aria-label="Editar contexto" onClick={() => setCtxOpen(true)}><Pencil size={13} /> Editar contexto</button>
+              <button
+                onClick={() => setCtxCollapsed(true)}
+                aria-label="Recolher contexto"
+                title="Recolher contexto"
+                style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 999, padding: "6px 10px", fontSize: 11, fontWeight: 700, color: "var(--text-soft)", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}
+              >
+                <ChevronUp size={13} /> Recolher
+              </button>
+            </div>
+          )}
 
           <div className="convo">
             <div className="convo-inner" ref={scrollRef}>
