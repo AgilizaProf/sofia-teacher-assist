@@ -528,7 +528,7 @@ export function Relatorios() {
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
   // Alunos cadastrados no banco (Inclusão) — entram automaticamente na lista de Relatórios.
-  const { students: dbStudents } = useInclusaoStudents();
+  const { students: dbStudents, update: updateDbStudent } = useInclusaoStudents();
   const combinedStudents = useMemo<DashStudentWithId[]>(() => {
     const seen = new Set<string>();
     const out: DashStudentWithId[] = [];
@@ -577,15 +577,70 @@ export function Relatorios() {
   // Cadastro rápido de aluno (vincula a uma turma já criada)
   const [novoAlunoOpen, setNovoAlunoOpen] = useState(false);
   const [novoAluno, setNovoAluno] = useState<DashStudent>({ name: "", classRef: "", birth: "", pcd: "nao", notes: "" });
+  // Quando preenchido, o modal opera em modo "editar dados" do aluno selecionado.
+  // Guarda o id estável (local:* ou db:*) e os dados originais para localizar
+  // o registro correto ao salvar.
+  const [editAluno, setEditAluno] = useState<{ id: string; originalName: string; originalBirth: string } | null>(null);
   const abrirNovoAluno = () => {
+    setEditAluno(null);
     setNovoAluno({ name: "", classRef: dashClasses[0]?.name || "", birth: "", pcd: "nao", notes: "" });
     setNovoAlunoOpen(true);
+  };
+  const abrirEditarAluno = (id: string) => {
+    const s = getStudentById(id);
+    if (!s) { toast.error("Aluno não encontrado."); return; }
+    setEditAluno({ id, originalName: s.name, originalBirth: s.birth || "" });
+    setNovoAluno({
+      name: s.name,
+      classRef: s.classRef || "",
+      birth: s.birth || "",
+      pcd: s.pcd || "nao",
+      notes: s.notes || "",
+    });
+    setNovoAlunoOpen(true);
+  };
+  const fecharModalAluno = () => {
+    setNovoAlunoOpen(false);
+    setEditAluno(null);
   };
   const salvarNovoAluno = () => {
     const nome = novoAluno.name.trim();
     if (!nome) { toast.error("Informe o nome do(a) aluno(a)."); return; }
+    if (editAluno) {
+      if (editAluno.id.startsWith("db:")) {
+        const dbId = editAluno.id.slice(3);
+        updateDbStudent(dbId, {
+          name: nome,
+          turma: novoAluno.classRef || "Sem turma",
+          birth: novoAluno.birth || undefined,
+          notes: novoAluno.notes || undefined,
+          pcd: novoAluno.pcd || undefined,
+          diag: novoAluno.pcd && novoAluno.pcd !== "nao" ? novoAluno.pcd : "",
+        })
+          .then(() => {
+            toast.success(`Dados de ${nome} atualizados.`);
+            fecharModalAluno();
+            setAlunoModal((m) => (m && m.id === editAluno.id ? { ...m, nome, turma: novoAluno.classRef || m.turma, pcd: novoAluno.pcd } : m));
+          })
+          .catch((err: unknown) => toast.error(`Não foi possível atualizar. ${err instanceof Error ? err.message : ""}`));
+      } else {
+        // Local — localiza pelo nome+nascimento originais e substitui.
+        setDashStudents((cur) =>
+          cur.map((s) =>
+            s.name.trim().toLowerCase() === editAluno.originalName.trim().toLowerCase() &&
+            (s.birth || "") === editAluno.originalBirth
+              ? { ...s, ...novoAluno, name: nome }
+              : s,
+          ),
+        );
+        toast.success(`Dados de ${nome} atualizados.`);
+        fecharModalAluno();
+        setAlunoModal((m) => (m && m.id === editAluno.id ? { ...m, nome, turma: novoAluno.classRef || m.turma, pcd: novoAluno.pcd } : m));
+      }
+      return;
+    }
     setDashStudents((cur) => [...cur, { ...novoAluno, name: nome, createdAt: new Date().toISOString() }]);
-    setNovoAlunoOpen(false);
+    fecharModalAluno();
     toast.success(`${nome} cadastrado(a) com sucesso.`);
   };
 
