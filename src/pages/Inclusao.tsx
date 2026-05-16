@@ -23,6 +23,11 @@ import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useTurmas } from "@/hooks/useTurmas";
+import {
+  ANO_REFERENCIA_GROUPS,
+  buildAnoReferenciaPromptBlock,
+  isAnoReferenciaDivergente,
+} from "@/lib/inclusao/anoReferencia";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
 import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusaoVisualizarModal";
@@ -630,7 +635,12 @@ export function Inclusao() {
   const user = useUser();
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const { students: allStudents, create: createStudent, loading: studentsLoading } = useInclusaoStudents();
+  const {
+    students: allStudents,
+    create: createStudent,
+    update: updateStudent,
+    loading: studentsLoading,
+  } = useInclusaoStudents();
   // Filtro PCD: a página de Inclusão só lista alunos PCD.
   // Considera PCD quando o campo `pcd` está preenchido e diferente de "nao",
   // OU quando há CID cadastrado (cadastro feito pela própria Inclusão).
@@ -742,6 +752,25 @@ export function Inclusao() {
   const setAnamObsGeral = (txt: string) => {
     if (!studentKey || studentKey === "_none") return;
     setAnamObsGeralByStudent((all) => ({ ...all, [studentKey]: txt }));
+  };
+  // Atualiza o "Ano de referência pedagógico" do aluno selecionado.
+  // Persistido na coluna `ano_referencia_pedagogico` (e replicado em `data`).
+  const setAnoReferenciaPedagogico = async (value: string) => {
+    if (!selected) return;
+    const novo = value || undefined;
+    try {
+      await updateStudent(selected.id, { anoReferenciaPedagogico: novo });
+      toast.success(
+        novo
+          ? `Ano de referência: ${novo}`
+          : "Ano de referência removido",
+      );
+    } catch (e) {
+      toast.error(
+        "Não foi possível salvar o ano de referência. " +
+        (e instanceof Error ? e.message : ""),
+      );
+    }
   };
   // PEI persistido pelo PEIFormModal — mesmo storage key
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
@@ -1222,6 +1251,12 @@ ${corpo}
           anamneseResumo,
           peiResumo,
           registros: regs,
+          anoEscolar: selected.anoEscolar || "",
+          anoReferenciaPedagogico: selected.anoReferenciaPedagogico || "",
+          anoReferenciaInstrucao: buildAnoReferenciaPromptBlock(
+            selected.anoEscolar,
+            selected.anoReferenciaPedagogico,
+          ),
         },
       });
       if (error) throw error;
@@ -1604,6 +1639,18 @@ ${corpo}
                     <div className="tag-row">
                       <span className="diagnostic"><span className="pulse" />{selected.diag}</span>
                       {selected.anoEscolar && <span className="tag"><b>Ano escolar:</b> {selected.anoEscolar}</span>}
+                      {selected.anoReferenciaPedagogico && (
+                        <span
+                          className="tag"
+                          style={{ background: "#FFF7ED", borderColor: "#FED7AA", color: "#9A3412" }}
+                          title="Ano usado pela Sofia ao gerar conteúdos pedagógicos"
+                        >
+                          📚 <b>Ano de referência:</b> {selected.anoReferenciaPedagogico}
+                          {isAnoReferenciaDivergente(selected.anoEscolar, selected.anoReferenciaPedagogico) && (
+                            <span style={{ marginLeft: 6 }}>⚠️</span>
+                          )}
+                        </span>
+                      )}
                       <span className="tag"><b>Turma:</b> {selected.turma}</span>
                       <span className="tag"><b>{selected.cid}</b></span>
                       <span className="tag"><b>{selected.aee}</b></span>
@@ -2108,6 +2155,97 @@ ${corpo}
                       <button className="btn btn-primary bg-orange-400 text-orange-400"><Sparkles size={14} /> Sugerir com a Sofia</button>
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
+                    {/* Ano de Referência Pedagógico — define o parâmetro
+                        pedagógico real do aluno, que pode diferir do ano de
+                        matrícula. A Sofia respeita este valor em toda geração
+                        de conteúdo (atividades, adaptações, pareceres, PEI). */}
+                    {selected && (() => {
+                      const ref = selected.anoReferenciaPedagogico || "";
+                      const divergente = isAnoReferenciaDivergente(
+                        selected.anoEscolar,
+                        ref,
+                      );
+                      return (
+                        <div
+                          style={{
+                            marginTop: 10,
+                            background: "#fff",
+                            border: "1px solid var(--border)",
+                            borderRadius: 10,
+                            padding: "12px 14px",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 6,
+                          }}
+                        >
+                          <label
+                            htmlFor="ano-ref-pedagogico"
+                            style={{ fontSize: 13, fontWeight: 700 }}
+                          >
+                            📚 Ano de Referência Pedagógico
+                          </label>
+                          <select
+                            id="ano-ref-pedagogico"
+                            value={ref}
+                            onChange={(e) =>
+                              setAnoReferenciaPedagogico(e.target.value)
+                            }
+                            style={{
+                              padding: "8px 10px",
+                              border: "1px solid var(--border)",
+                              borderRadius: 8,
+                              fontSize: 13,
+                              background: "#fff",
+                              maxWidth: 460,
+                            }}
+                          >
+                            <option value="">Selecione…</option>
+                            {ANO_REFERENCIA_GROUPS.map((g) => (
+                              <optgroup
+                                key={g.label}
+                                label={`${g.emoji} ${g.label.toUpperCase()}`}
+                              >
+                                {g.options.map((o) => (
+                                  <option key={o} value={o}>{o}</option>
+                                ))}
+                              </optgroup>
+                            ))}
+                          </select>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: 11.5,
+                              color: "var(--muted)",
+                            }}
+                          >
+                            O ano de referência indica o nível pedagógico em
+                            que o aluno se encontra — pode ser diferente do
+                            ano escolar em que está matriculado. A Sofia usa
+                            este valor ao gerar atividades, adaptações,
+                            planejamentos, pareceres e PEI.
+                          </p>
+                          {divergente && (
+                            <div
+                              style={{
+                                marginTop: 4,
+                                fontSize: 11.5,
+                                color: "#9A3412",
+                                background: "#FFF7ED",
+                                border: "1px solid #FED7AA",
+                                borderRadius: 8,
+                                padding: "6px 10px",
+                              }}
+                            >
+                              ⚠️ Ano de referência diferente do ano de
+                              matrícula
+                              {selected.anoEscolar
+                                ? ` (matriculado em ${selected.anoEscolar})`
+                                : ""}.
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     <p style={{ color: "var(--muted)", fontSize: 13 }}>Clique em cada eixo para abrir os descritores e marcar o status: <b>Não observado</b>, <b>Não alcançado</b>, <b>Em desenvolvimento</b> ou <b>Consolidado</b>. As barras se atualizam automaticamente.</p>
                     <div className="anam-list">
                       {anamData.map((e, ei) => {
