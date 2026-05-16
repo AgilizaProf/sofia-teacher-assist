@@ -596,6 +596,13 @@ export function Relatorios() {
   // Observações livres do(a) professor(a) por aluno (persistido junto à avaliação BNCC)
   const [bnccObsByAluno, setBnccObsByAluno] = usePersistentState<Record<string, string>>("rel_bncc_obs", {});
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
+  // Estado de expansão do campo de observações no modal BNCC.
+  // Começa sempre recolhido (Set vazio) para liberar espaço visual.
+  const [bnccObsExpanded, setBnccObsExpanded] = useState<Set<string>>(new Set());
+  // Sempre que o modal abre para outro aluno, garantimos início recolhido.
+  useEffect(() => {
+    if (bnccOpen) setBnccObsExpanded(new Set());
+  }, [bnccOpen?.id]);
   const [verTodosHist, setVerTodosHist] = useState(false);
   const HIST_LIMIT = 5;
 
