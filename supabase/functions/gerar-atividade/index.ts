@@ -361,8 +361,10 @@ serve(async (req) => {
     const toolName = useOpcoes ? "sugerir_opcoes_aula" : "criar_plano_atividade";
 
     async function callAI(extraUserMsg?: string) {
+      // Constituição inviolável injetada server-side em TODA chamada à IA.
+      const { withConstitution } = await import("../_shared/sofia-constitution.ts");
       const messages: Array<{ role: string; content: string }> = [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: withConstitution(systemPrompt) },
         { role: "user", content: userPrompt },
       ];
       if (extraUserMsg) messages.push({ role: "user", content: extraUserMsg });
