@@ -427,6 +427,7 @@ type Props = {
 
 export function PEIFormModal({ open, onClose, aluno }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  useKeyboardAwareModal(modalRef, open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
