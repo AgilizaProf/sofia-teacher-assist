@@ -129,7 +129,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
 
           {c.plano === "free" && !c.loading && (
             <div className="cp-upgrade">
-              🔒 Upgrade para ter 19.500 créditos anuais + bônus em janeiro, junho e novembro.
+              🔒 Upgrade para ter 18.000 créditos anuais + bônus de 500 créditos em janeiro, junho e novembro.
             </div>
           )}
         </div>
