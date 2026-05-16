@@ -549,7 +549,7 @@ const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus
   ]},
   { l: "Contexto Familiar", items: [
     { d: "Família participa de reuniões bimestrais", s: "naoObservado" },
-    { d: "Mãe acompanha tarefas em casa", s: "naoObservado" },
+    { d: "O responsável acompanha tarefas em casa", s: "naoObservado" },
     { d: "Comunicação família-escola via agenda diária", s: "naoObservado" },
   ]},
   { l: "Observações", items: [
