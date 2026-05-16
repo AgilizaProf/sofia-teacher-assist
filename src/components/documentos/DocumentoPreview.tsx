@@ -174,7 +174,7 @@ export function DocumentoPreview({ doc, editable = false, onChange }: Props): Re
 
         <hr className="doc-rodape-sep" />
         <div className="doc-rodape">
-          Documento gerado com apoio do AgilizaProf em consonância com {formatarFraseLegal(doc.leis)}
+          {formatarFraseLegal(doc.leis)}
         </div>
       </div>
     </div>
