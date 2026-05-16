@@ -10,6 +10,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
+import { buildCidsPromptBlock } from "@/lib/inclusao/cidPrompt";
 import { toast } from "sonner";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
@@ -455,7 +456,7 @@ type ViewKey = "list" | "detail";
 
 type Student = {
   id: string; name: string; initials: string; age: string; turma: string;
-  diag: string; cid: string; aee: string; anoEscolar?: string; featured?: boolean;
+  diag: string; cid: string; cids?: string[]; aee: string; anoEscolar?: string; featured?: boolean;
   anamnese: string; registros: string; trend: string; trendTone: "ok" | "warn" | "muted";
 };
 
@@ -685,11 +686,15 @@ export function Inclusao() {
     setNsName(s.name || "");
     setNsTurma(s.turma && s.turma !== "Sem turma" ? s.turma : "");
     setNsAnoEscolar(s.anoEscolar || "");
-    // Reconstroi nsCids a partir de "CID F84.0, F71"
-    const cidStr = (s.cid || "").replace(/^CID\s*/i, "").trim();
-    const codes = cidStr && cidStr !== "não informado"
-      ? cidStr.split(/[,;]/).map((c) => c.trim()).filter(Boolean)
-      : [];
+    // Reconstroi nsCids: prioriza o array dedicado `cids`; cai para
+    // o parsing do texto legado "CID F84.0, F71" se vazio.
+    let codes: string[] = Array.isArray(s.cids) ? s.cids.filter(Boolean) : [];
+    if (codes.length === 0) {
+      const cidStr = (s.cid || "").replace(/^CID\s*/i, "").trim();
+      codes = cidStr && cidStr.toLowerCase() !== "não informado" && cidStr !== "—"
+        ? cidStr.split(/[,;]/).map((c) => c.trim()).filter(Boolean)
+        : [];
+    }
     const matched = codes
       .map((code) => CID_OPTIONS.find((o) => o.cid === code)?.value)
       .filter((v): v is string => Boolean(v));
@@ -1368,6 +1373,27 @@ ${corpo}
   }, [navigate]);
   const selected = students.find((s) => s.id === selectedId) || null;
 
+  /**
+   * Garante que TODOS os CIDs do(a) aluno(a) selecionado(a) sejam enviados
+   * para a Sofia em qualquer interação, evitando que ela considere apenas
+   * o primeiro diagnóstico (ou ignore comorbidades).
+   */
+  const openSofiaForSelected = useCallback(
+    (opts: { prompt: string; context?: string }) => {
+      if (!selected) {
+        sofia.openSofia(opts);
+        return;
+      }
+      const cidBlock = buildCidsPromptBlock(selected.cids, selected.cid);
+      const baseCtx = opts.context ?? "";
+      const ctx = cidBlock
+        ? (baseCtx ? `${baseCtx}\n\n${cidBlock}` : cidBlock)
+        : baseCtx || undefined;
+      sofia.openSofia({ prompt: opts.prompt, context: ctx });
+    },
+    [selected, sofia],
+  );
+
   // ---- Sugestões proativas da Sofia (Tray) ----
   // Dispara apenas uma vez por aluno por sessão para não virar ruído.
   const proactiveSeen = useRef<Set<string>>(new Set());
@@ -1480,6 +1506,7 @@ ${corpo}
       anoEscolar: nsAnoEscolar.trim() || "",
       diag: diagLabel,
       cid: cidCode,
+      cids: cidCodes,
       aee: mediadora ? `${aeeLabel} · Mediadora: ${mediadora}` : aeeLabel,
       anamnese: "0/14",
       registros: "0",
@@ -1497,6 +1524,7 @@ ${corpo}
           anoEscolar: baseStudent.anoEscolar,
           diag: baseStudent.diag,
           cid: baseStudent.cid,
+          cids: baseStudent.cids,
           aee: baseStudent.aee,
         });
         toast.success("Dados do(a) aluno(a) atualizados", { description: name });
@@ -1718,7 +1746,7 @@ ${corpo}
                   <div className="hero-r">
                     <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> Ver PEI completo</button>
                     <button className="btn btn-secondary" onClick={() => abrirEditarAluno(selected)} title="Editar nome, turma, ano escolar, CIDs e AEE"><Pencil size={14} /> Editar dados</button>
-                     <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => sofia.openSofia({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> Adaptar aula de hoje</button>
+                     <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => openSofiaForSelected({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> Adaptar aula de hoje</button>
                   </div>
                 </div>
 
@@ -2013,7 +2041,7 @@ ${corpo}
                          onAction={(s) => {
                            if (s.id === "inc-adapt" || s.id.startsWith("rule-adapt-")) {
                              setActiveTab("plan");
-                             sofia.openSofia({
+                             openSofiaForSelected({
                                prompt: s.prompt.replace(/este aluno/gi, selected.name),
                                context: s.context,
                              });
@@ -2029,7 +2057,7 @@ ${corpo}
                              handleGerarParecer();
                              return;
                            }
-                           sofia.openSofia({ prompt: s.prompt, context: s.context });
+                           openSofiaForSelected({ prompt: s.prompt, context: s.context });
                          }}
                        />
 
