@@ -10,6 +10,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
+import { buildCidsPromptBlock } from "@/lib/inclusao/cidPrompt";
 import { toast } from "sonner";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
