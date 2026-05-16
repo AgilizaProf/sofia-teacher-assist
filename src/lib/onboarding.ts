@@ -1,7 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const LS_KEY = "agp_onboarding_completed";
-
 /** Returns true if the onboarding should be shown for this user. */
 export async function shouldShowOnboarding(userId: string): Promise<boolean> {
   try {
@@ -18,13 +16,8 @@ export async function shouldShowOnboarding(userId: string): Promise<boolean> {
   }
 }
 
-/** Marks onboarding as concluded for the current user (Supabase + localStorage cache). */
+/** Marks onboarding as concluded for the current user (Supabase only). */
 export async function markOnboardingDone(): Promise<void> {
-  try {
-    localStorage.setItem(LS_KEY, "1");
-  } catch {
-    /* ignore */
-  }
   try {
     const { data } = await supabase.auth.getUser();
     const uid = data.user?.id;
@@ -38,26 +31,7 @@ export async function markOnboardingDone(): Promise<void> {
   }
 }
 
-/** Sync helper: if local cache says done but DB might not yet, push it. */
+/** Deprecated: onboarding state is now Supabase-only. Kept as no-op for compat. */
 export async function syncOnboardingFlagIfPending(): Promise<void> {
-  try {
-    if (typeof window === "undefined") return;
-    if (localStorage.getItem(LS_KEY) !== "1") return;
-    const { data } = await supabase.auth.getUser();
-    const uid = data.user?.id;
-    if (!uid) return;
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("onboarding_concluido")
-      .eq("user_id", uid)
-      .maybeSingle();
-    if (prof && prof.onboarding_concluido === false) {
-      await supabase
-        .from("profiles")
-        .update({ onboarding_concluido: true })
-        .eq("user_id", uid);
-    }
-  } catch {
-    /* ignore */
-  }
+  // no-op: kept for backward compatibility with existing callers
 }

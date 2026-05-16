@@ -3,6 +3,7 @@ import { X, Sparkles, CheckCircle2, Loader2, Lightbulb, RefreshCw, Check } from 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { buildAnoReferenciaPromptBlock, isAnoReferenciaDivergente } from "@/lib/inclusao/anoReferencia";
+import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
 
 export type PlanoInclusao = {
   id: string;
@@ -271,6 +272,7 @@ type PlanoItem = {
 
 export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSaved }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  useKeyboardAwareModal(modalRef, open);
   useEffect(() => {
     if (!open) return;
     const t = window.setTimeout(() => {

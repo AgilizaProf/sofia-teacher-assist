@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { useUser } from "@/lib/mockData";
+import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
 
 type Aluno = {
   id: string;
@@ -426,6 +427,7 @@ type Props = {
 
 export function PEIFormModal({ open, onClose, aluno }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  useKeyboardAwareModal(modalRef, open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
