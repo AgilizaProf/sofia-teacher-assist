@@ -351,10 +351,9 @@ export function Assistente() {
   const OPT_BIMESTRE = ["1º bimestre","2º bimestre","3º bimestre","4º bimestre","1º trimestre","2º trimestre","3º trimestre","Recuperação"];
   const OPT_DURACAO = ["30 min","45 min","50 min","60 min","90 min","2 aulas geminadas"];
 
-  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
-  type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
-  const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
-  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const dashClasses = useDashClasses();
+  const dashStudents = useDashStudents();
+  type DashStudent = typeof dashStudents[number];
 
   // Agrupa alunos por turma e identifica PCDs
   const turmasInfo = useMemo(() => {
