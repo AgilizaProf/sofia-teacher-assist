@@ -16,6 +16,11 @@ function buildSystemPrompt(routeContext?: string) {
     "- Nunca use encerramentos como 'Espero ter ajudado!' ou 'Qualquer dúvida estou à disposição.'.",
     "- Nunca repita ou parafraseie o que o(a) usuário(a) acabou de escrever.",
     "- Vá direto ao ponto. Prefira respostas curtas e precisas.",
+    "",
+    "REGRA DE CONCLUSÃO:",
+    "- Sempre conclua o pensamento antes de encerrar. Nunca corte no meio de uma frase, item ou lista.",
+    "- Se o conteúdo ficaria muito longo, prefira resumir de forma completa ou avisar: 'Posso detalhar alguma seção específica se desejar.'",
+    "- Uma resposta curta e completa vale mais que uma longa e cortada.",
   ].join("\n");
   return buildSofiaPrompt(taskPrompt, routeContext);
 }
@@ -93,9 +98,9 @@ export const askSofia = createServerFn({ method: "POST" })
         model: "google/gemini-2.5-flash",
         messages: [{ role: "system", content: buildSystemPrompt(data.routeContext) }, ...data.messages],
         stream: true,
-        // Respostas curtas e diretas por padrão. Documentos completos
-        // (relatórios, PEI, planejamentos) usam outras serverless / fns.
-        max_tokens: 600,
+        // Chat curto: 1000 tokens. Documentos completos (relatórios, PEI,
+        // planejamentos) usam outras serverless functions com limites maiores.
+        max_tokens: 1000,
         temperature: 0.5,
         top_p: 0.8,
       }),
@@ -108,6 +113,7 @@ export const askSofia = createServerFn({ method: "POST" })
     let raw = "";
     let inputTokens = 0;
     let outputTokens = 0;
+    let finishReason = "";
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -127,7 +133,7 @@ export const askSofia = createServerFn({ method: "POST" })
         if (payload === "[DONE]") { streamDone = true; break; }
         try {
           const j = JSON.parse(payload) as {
-            choices?: Array<{ delta?: { content?: string } }>;
+            choices?: Array<{ delta?: { content?: string }; finish_reason?: string }>;
             usage?: { prompt_tokens?: number; completion_tokens?: number };
           };
           const delta = j.choices?.[0]?.delta?.content;
@@ -135,6 +141,8 @@ export const askSofia = createServerFn({ method: "POST" })
             raw += delta;
             yield { type: "delta" as const, content: delta };
           }
+          const fr = j.choices?.[0]?.finish_reason;
+          if (fr) finishReason = fr;
           if (j.usage) {
             inputTokens = Number(j.usage.prompt_tokens ?? inputTokens);
             outputTokens = Number(j.usage.completion_tokens ?? outputTokens);
@@ -171,6 +179,8 @@ export const askSofia = createServerFn({ method: "POST" })
       content: sanitized,
       issues,
       sanitizedApplied: !ok,
+      truncated: finishReason === "length" || finishReason === "MAX_TOKENS",
+      finishReason,
     };
   });
 
