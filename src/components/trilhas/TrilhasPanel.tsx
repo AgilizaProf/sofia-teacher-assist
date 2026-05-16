@@ -309,10 +309,10 @@ export function TrilhasPanel() {
         </div>
         <div style={{ marginTop: 12 }}>
           <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 6 }}>
-            Disciplinas <span style={{ color: "var(--ink-2)" }}>· selecione uma ou mais (interdisciplinar)</span>
+            {componenteLabel} <span style={{ color: "var(--ink-2)" }}>· {componenteHintInter}</span>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {DISCIPLINAS_COMUNS.map((d) => {
+            {disciplinasOpts.map((d) => {
               const active = form.disciplinas.includes(d);
               return (
                 <button
@@ -340,7 +340,7 @@ export function TrilhasPanel() {
             })}
           </div>
           <input
-            placeholder="Outras disciplinas (separe por vírgula)"
+            placeholder={isEI ? "Outros campos/eixos (separe por vírgula)" : "Outras disciplinas (separe por vírgula)"}
             value={form.disciplinaCustom}
             onChange={(e) => setForm({ ...form, disciplinaCustom: e.target.value })}
             style={{ ...inputStyle, marginTop: 8, width: "100%" }}
@@ -354,7 +354,7 @@ export function TrilhasPanel() {
               />
               <span>
                 Tratar como <strong>interdisciplinar</strong> (tema único integrando os componentes).
-                <span style={{ color: "var(--muted)" }}> Desmarque para gerar conteúdo separado por disciplina/campo de experiência.</span>
+                <span style={{ color: "var(--muted)" }}> Desmarque para gerar conteúdo separado por {isEI ? "campo de experiência" : "disciplina"}.</span>
               </span>
             </label>
           )}
