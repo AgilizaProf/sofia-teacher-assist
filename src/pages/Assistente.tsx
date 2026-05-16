@@ -17,6 +17,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { parseQuickOptions, isFreeTextOption } from "@/lib/sofia/quickOptions";
+import { useDashClasses, useDashStudents, type LegacyDashStudent } from "@/hooks/useDashLegacyData";
 
 function CtxChipGroup({ options, value, onToggle }: { options: string[]; value: string[]; onToggle: (v: string) => void }) {
   const [adding, setAdding] = useState(false);
