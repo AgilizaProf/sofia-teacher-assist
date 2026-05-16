@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHydrated } from "@/hooks/useHydrated";
-import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2, AlertTriangle, RefreshCw } from "lucide-react";
+import { Sparkles, X, Send, Plus, MessageSquare, ChevronRight, Maximize2, AlertTriangle, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "@tanstack/react-router";
 import { useSofia } from "./SofiaProvider";
@@ -29,6 +29,14 @@ const css = `
 @keyframes sofiaFade{from{opacity:0;}to{opacity:1;}}
 .sofia-drawer{position:fixed;right:0;top:0;bottom:0;width:400px;max-width:100vw;background:var(--sofia-surface-2);z-index:70;display:flex;flex-direction:column;
   box-shadow:-30px 0 60px -20px rgba(11,18,32,.35);font-family:var(--sofia-font-body);color:var(--sofia-ink);animation:sofiaSlide .25s cubic-bezier(.2,.8,.2,1);}
+.sofia-drawer.collapsed{top:auto;bottom:0;height:auto;max-height:none;border-top-left-radius:14px;border-top-right-radius:14px;overflow:hidden;}
+.sofia-drawer.collapsed .sofia-expand,
+.sofia-drawer.collapsed .sofia-context,
+.sofia-drawer.collapsed .sofia-body,
+.sofia-drawer.collapsed .sofia-conversations,
+.sofia-drawer.collapsed .sofia-composer,
+.sofia-drawer.collapsed .sofia-boot-error{display:none;}
+.sofia-drawer.collapsed .sofia-head{border-top-left-radius:14px;border-top-right-radius:14px;}
 @media(max-width:640px){.sofia-drawer{width:100vw;}.sofia-bubble{right:24px;bottom:88px;}}
 @keyframes sofiaSlide{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
 .sofia-head{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--sofia-dark);color:var(--sofia-on-dark);}
