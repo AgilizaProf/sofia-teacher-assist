@@ -1117,6 +1117,108 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     showToast("📄 Documento aberto para impressão / PDF");
   };
 
+  /**
+   * Gera as "partes" editoriais de um plano salvo (mesmo layout do
+   * `exportarPDF` individual) para ser concatenado na impressão em lote.
+   */
+  const partesDoPlanoSalvo = (s: PlanoSalvo): string => {
+    const p = s.plano;
+    const titulo = p.titulo || s.titulo || "Plano de atividade";
+    const meta = [
+      { label: "Ano escolar", value: s.ano || "—" },
+      { label: "Disciplina", value: s.disciplina || "—" },
+      { label: "Turma", value: s.turma || "—" },
+      { label: "Modo", value: s.modo === "pcd" ? "Atividade PCD" : "Regular" },
+      { label: "Salvo em", value: new Date(s.salvoEm).toLocaleDateString("pt-BR") },
+    ];
+    const partes: string[] = [];
+    partes.push(
+      editorialCover({
+        title: titulo,
+        overline: s.modo === "pcd"
+          ? "PLANO DE ATIVIDADE PCD • AGILIZAPROF"
+          : "PLANO DE ATIVIDADE • AGILIZAPROF",
+        subtitle: `${s.disciplina}${s.ano ? ` · ${s.ano}` : ""}${s.turma ? ` · ${s.turma}` : ""}`,
+      }),
+    );
+    partes.push(editorialSection("Identificação"));
+    partes.push(editorialFieldsGrid(meta));
+    if (p.objetivo) {
+      partes.push(editorialSection("Objetivo"));
+      partes.push(editorialLongField(p.objetivo));
+    }
+    partes.push(editorialSection("Descrição da atividade"));
+    partes.push(editorialLongField([
+      p.abertura ? `Abertura\n${p.abertura}` : "",
+      p.desenvolvimento ? `Desenvolvimento\n${p.desenvolvimento}` : "",
+      p.fechamento ? `Fechamento\n${p.fechamento}` : "",
+    ].filter(Boolean).join("\n\n")));
+    if (p.habilidades.length > 0) {
+      partes.push(editorialSection("Habilidades BNCC"));
+      partes.push(editorialLongField(
+        p.habilidades.map((h) => {
+          const cod = h.codigo?.trim();
+          const desc = h.descricao?.trim();
+          if (cod && desc) return `• ${cod} — ${desc}`;
+          return `• ${cod || desc || "—"}`;
+        }).join("\n"),
+      ));
+    }
+    if ((p.contribuicoesInter ?? []).length > 0) {
+      partes.push(editorialSection("Contribuição por disciplina (interdisciplinar)"));
+      partes.push(editorialLongField(
+        p.contribuicoesInter!.map((c) => `• ${c.disciplina}: ${c.contribuicao}`).join("\n"),
+      ));
+    }
+    if (p.adaptacoes.length > 0) {
+      partes.push(editorialSection("Adaptações PCD"));
+      partes.push(editorialLongField(
+        p.adaptacoes.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
+      ));
+    }
+    if (p.sugestoes.length > 0) {
+      partes.push(editorialSection("Sugestões da Sofia"));
+      partes.push(editorialLongField(
+        p.sugestoes.map((x) => `• ${x.titulo} — ${x.descricao}`).join("\n"),
+      ));
+    }
+    if (p.materiais.length > 0) {
+      partes.push(editorialSection("Materiais necessários"));
+      partes.push(editorialLongField(p.materiais.map((m) => `☐ ${m}`).join("\n")));
+    }
+    return partes.join("\n");
+  };
+
+  /**
+   * Imprime todas as atividades selecionadas no histórico em um único
+   * documento, separadas por quebra de página.
+   */
+  const imprimirSelecionadas = () => {
+    const lista = historico.filter((p) => selecionados.has(p.id));
+    if (lista.length === 0) {
+      showToast("Selecione ao menos uma atividade no histórico.");
+      return;
+    }
+    const pageBreak = `<div style="page-break-before:always;break-before:page;"></div>`;
+    const corpo = lista.map(partesDoPlanoSalvo).join(`\n${pageBreak}\n`);
+    printEditorial(
+      `${lista.length} atividades · AgilizaProf`,
+      corpo,
+      {
+        docType: "planejamento",
+        docLabel: modo === "pcd"
+          ? "PLANOS DE ATIVIDADE PCD"
+          : "PLANOS DE ATIVIDADE",
+      },
+    );
+    logActivity({
+      type: "exportacao",
+      description: `Impressão em lote: ${lista.length} atividade(s)`,
+      detail: lista.map((p) => p.titulo).join(" | "),
+    });
+    showToast(`📄 ${lista.length} atividade(s) abertas para impressão / PDF`);
+  };
+
   /* ─────────── Render ─────────── */
 
   return (
