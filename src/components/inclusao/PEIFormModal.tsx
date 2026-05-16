@@ -784,6 +784,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   <div key={c.k} style={{ marginBottom: 10 }}>
                     <label style={labelCss}>{c.l}</label>
                     <textarea style={{ ...inputCss, minHeight: 60 }} value={draft[c.k] as string} onChange={(e) => set(c.k, e.target.value)} placeholder={c.ph} />
+                    <PEISuggestions fieldKey={c.k} onPick={(t) => set(c.k, appendText(draft[c.k] as string, t))} />
                   </div>
                 ))}
               </div>
@@ -792,6 +793,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={labelCss}>Estratégias específicas por área</label>
                 <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.estrategiasArea} onChange={(e) => set("estrategiasArea", e.target.value)}
                   placeholder="Estratégias que funcionam para cada componente curricular ou campo de experiência..." />
+                <PEISuggestions fieldKey="estrategiasArea" onPick={(t) => set("estrategiasArea", appendText(draft.estrategiasArea, t))} />
                 <div style={{ marginTop: 12 }}>
                   <label style={labelCss}>Recursos pedagógicos necessários (múltipla escolha)</label>
                   <CheckGroup multi
@@ -802,6 +804,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={{ ...labelCss, marginTop: 12 }}>Estratégias para inclusão coletiva</label>
                 <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.estrategiasInclusaoColetiva} onChange={(e) => set("estrategiasInclusaoColetiva", e.target.value)}
                   placeholder="Como incluir o aluno nas atividades da turma toda..." />
+                <PEISuggestions fieldKey="estrategiasInclusaoColetiva" onPick={(t) => set("estrategiasInclusaoColetiva", appendText(draft.estrategiasInclusaoColetiva, t))} />
               </div>
             </>
           )}
