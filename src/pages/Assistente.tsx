@@ -588,11 +588,33 @@ export function Assistente() {
             }
           />
 
-          <div className="ai-context">
-            <span className="ctx-label">Contexto ativo:</span>
-            <SofiaActiveChip />
-            <button className="edit-context" aria-label="Editar contexto" onClick={() => setCtxOpen(true)}><Pencil size={13} /> Editar contexto</button>
-          </div>
+          {ctxCollapsed ? (
+            <div className="ai-context" style={{ padding: "6px 22px" }}>
+              <span className="ctx-label">Contexto ativo</span>
+              <button
+                onClick={() => setCtxCollapsed(false)}
+                aria-label="Mostrar contexto"
+                title="Mostrar contexto"
+                style={{ marginLeft: "auto", background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 999, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: "var(--text-soft)", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}
+              >
+                <ChevronDown size={13} /> Mostrar
+              </button>
+            </div>
+          ) : (
+            <div className="ai-context">
+              <span className="ctx-label">Contexto ativo:</span>
+              <SofiaActiveChip />
+              <button className="edit-context" aria-label="Editar contexto" onClick={() => setCtxOpen(true)}><Pencil size={13} /> Editar contexto</button>
+              <button
+                onClick={() => setCtxCollapsed(true)}
+                aria-label="Recolher contexto"
+                title="Recolher contexto"
+                style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 999, padding: "6px 10px", fontSize: 11, fontWeight: 700, color: "var(--text-soft)", display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}
+              >
+                <ChevronUp size={13} /> Recolher
+              </button>
+            </div>
+          )}
 
           <div className="convo">
             <div className="convo-inner" ref={scrollRef}>
