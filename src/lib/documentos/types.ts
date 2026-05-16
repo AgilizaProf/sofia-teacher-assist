@@ -27,6 +27,8 @@ export type DocumentoPlanejamento = {
   escola: string;
   turmaId?: string | null;
   turmaNome: string;
+  /** Texto livre do nível/série (ex.: "Educação Infantil", "5º ano"). */
+  nivelTexto?: string | null;
   professor: string;
   dataInicio: string; // YYYY-MM-DD
   dataFim: string;    // YYYY-MM-DD
@@ -34,3 +36,13 @@ export type DocumentoPlanejamento = {
   dias: DiaPlanejamento[];
   leis: string[];
 };
+
+/** Retorna o título do documento conforme contexto (EI / Fund-Médio / PCD). */
+export function tituloDocumento(doc: Pick<DocumentoPlanejamento, "tipo" | "nivelTexto">): string {
+  if (doc.tipo === "pcd") return "RELATÓRIO DE INCLUSÃO";
+  const nivel = (doc.nivelTexto ?? "").toLowerCase();
+  if (/(infantil|creche|pr[eé]\s*-?\s*escola|maternal|bercário|berc[áa]rio)/.test(nivel)) {
+    return "PARECER DESCRITIVO";
+  }
+  return "RELATÓRIO DE DESEMPENHO";
+}
