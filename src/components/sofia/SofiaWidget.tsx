@@ -29,14 +29,6 @@ const css = `
 @keyframes sofiaFade{from{opacity:0;}to{opacity:1;}}
 .sofia-drawer{position:fixed;right:0;top:0;bottom:0;width:400px;max-width:100vw;background:var(--sofia-surface-2);z-index:70;display:flex;flex-direction:column;
   box-shadow:-30px 0 60px -20px rgba(11,18,32,.35);font-family:var(--sofia-font-body);color:var(--sofia-ink);animation:sofiaSlide .25s cubic-bezier(.2,.8,.2,1);}
-.sofia-drawer.collapsed{top:auto;bottom:0;height:auto;max-height:none;border-top-left-radius:14px;border-top-right-radius:14px;overflow:hidden;}
-.sofia-drawer.collapsed .sofia-expand,
-.sofia-drawer.collapsed .sofia-context,
-.sofia-drawer.collapsed .sofia-body,
-.sofia-drawer.collapsed .sofia-conversations,
-.sofia-drawer.collapsed .sofia-composer,
-.sofia-drawer.collapsed .sofia-boot-error{display:none;}
-.sofia-drawer.collapsed .sofia-head{border-top-left-radius:14px;border-top-right-radius:14px;}
 @media(max-width:640px){.sofia-drawer{width:100vw;}.sofia-bubble{right:24px;bottom:88px;}}
 @keyframes sofiaSlide{from{transform:translateX(40px);opacity:0;}to{transform:translateX(0);opacity:1;}}
 .sofia-head{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--sofia-dark);color:var(--sofia-on-dark);}
@@ -53,6 +45,9 @@ const css = `
 
 .sofia-context{padding:8px 16px;background:var(--sofia-surface);border-bottom:1px solid var(--sofia-line);font-size:11.5px;color:var(--sofia-ink-soft);display:flex;align-items:center;gap:6px;}
 .sofia-context b{color:var(--sofia-ink);font-weight:700;}
+.sofia-context-toggle{margin-left:auto;background:transparent;border:1px solid var(--sofia-line);border-radius:6px;width:24px;height:24px;display:grid;place-items:center;cursor:pointer;color:var(--sofia-ink-soft);}
+.sofia-context-toggle:hover{border-color:var(--sofia-primary);color:var(--sofia-primary);}
+.sofia-context.collapsed .sofia-context-text{display:none;}
 
 .sofia-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
 .sofia-empty{text-align:center;padding:24px 8px;color:var(--sofia-ink-soft);}
@@ -130,11 +125,7 @@ export function SofiaWidget() {
   const sofiaCtx = useSofiaContext();
   const firstName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || "").trim();
   const [alreadyGreeted, setAlreadyGreeted] = useState<boolean>(false);
-  const [collapsed, setCollapsed] = useState<boolean>(true);
-
-  useEffect(() => {
-    if (s.open) setCollapsed(true);
-  }, [s.open]);
+  const [ctxCollapsed, setCtxCollapsed] = useState<boolean>(true);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -195,8 +186,8 @@ export function SofiaWidget() {
       )}
       {s.open && (
         <>
-          {!collapsed && <div className="sofia-overlay" onClick={() => s.setOpen(false)} />}
-          <aside className={"sofia-drawer" + (collapsed ? " collapsed" : "")} role="dialog" aria-label="Sofia">
+          <div className="sofia-overlay" onClick={() => s.setOpen(false)} />
+          <aside className="sofia-drawer" role="dialog" aria-label="Sofia">
             <header className="sofia-head">
               <div className="sofia-avatar-token sofia-avatar-token--md">
                 <Sparkles size={18} />
@@ -207,14 +198,6 @@ export function SofiaWidget() {
               </div>
               <div className="sofia-head-actions">
                 <button className="sofia-head-btn" title="Nova conversa" onClick={s.startNew}><Plus size={16} /></button>
-                <button
-                  className="sofia-head-btn"
-                  title={collapsed ? "Expandir" : "Recolher"}
-                  aria-label={collapsed ? "Expandir mini-chat" : "Recolher mini-chat"}
-                  onClick={() => setCollapsed((v) => !v)}
-                >
-                  {collapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
                 <button className="sofia-head-btn" title="Fechar" onClick={() => s.setOpen(false)}><X size={16} /></button>
               </div>
             </header>
@@ -246,8 +229,19 @@ export function SofiaWidget() {
               </div>
             )}
 
-            <div className="sofia-context">
-              <MessageSquare size={12} /> <b>Contexto:</b> {s.routeContext}
+            <div className={"sofia-context" + (ctxCollapsed ? " collapsed" : "")}>
+              <MessageSquare size={12} /> <b>Contexto:</b>
+              <span className="sofia-context-text">{s.routeContext}</span>
+              <button
+                type="button"
+                className="sofia-context-toggle"
+                title={ctxCollapsed ? "Mostrar contexto" : "Recolher contexto"}
+                aria-label={ctxCollapsed ? "Mostrar contexto" : "Recolher contexto"}
+                aria-expanded={!ctxCollapsed}
+                onClick={() => setCtxCollapsed((v) => !v)}
+              >
+                {ctxCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+              </button>
             </div>
 
             {s.messages.length === 0 && s.conversations.length > 0 && (
