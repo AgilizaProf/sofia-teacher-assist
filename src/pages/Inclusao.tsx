@@ -1251,6 +1251,12 @@ ${corpo}
           anamneseResumo,
           peiResumo,
           registros: regs,
+          anoEscolar: selected.anoEscolar || "",
+          anoReferenciaPedagogico: selected.anoReferenciaPedagogico || "",
+          anoReferenciaInstrucao: buildAnoReferenciaPromptBlock(
+            selected.anoEscolar,
+            selected.anoReferenciaPedagogico,
+          ),
         },
       });
       if (error) throw error;
