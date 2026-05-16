@@ -1373,6 +1373,27 @@ ${corpo}
   }, [navigate]);
   const selected = students.find((s) => s.id === selectedId) || null;
 
+  /**
+   * Garante que TODOS os CIDs do(a) aluno(a) selecionado(a) sejam enviados
+   * para a Sofia em qualquer interação, evitando que ela considere apenas
+   * o primeiro diagnóstico (ou ignore comorbidades).
+   */
+  const openSofiaForSelected = useCallback(
+    (opts: { prompt: string; context?: string }) => {
+      if (!selected) {
+        sofia.openSofia(opts);
+        return;
+      }
+      const cidBlock = buildCidsPromptBlock(selected.cids, selected.cid);
+      const baseCtx = opts.context ?? "";
+      const ctx = cidBlock
+        ? (baseCtx ? `${baseCtx}\n\n${cidBlock}` : cidBlock)
+        : baseCtx || undefined;
+      sofia.openSofia({ prompt: opts.prompt, context: ctx });
+    },
+    [selected, sofia],
+  );
+
   // ---- Sugestões proativas da Sofia (Tray) ----
   // Dispara apenas uma vez por aluno por sessão para não virar ruído.
   const proactiveSeen = useRef<Set<string>>(new Set());
