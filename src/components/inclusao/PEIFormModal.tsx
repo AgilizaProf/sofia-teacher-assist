@@ -646,9 +646,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={labelCss}>Potencialidades e pontos fortes</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.potencialidades} onChange={(e) => set("potencialidades", e.target.value)}
                   placeholder="O que o aluno já faz bem, seus talentos e habilidades desenvolvidas..." />
+                <PEISuggestions fieldKey="potencialidades" onPick={(t) => set("potencialidades", appendText(draft.potencialidades, t))} />
                 <label style={{ ...labelCss, marginTop: 10 }}>Interesses e motivações</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.interessesMotivacoes} onChange={(e) => set("interessesMotivacoes", e.target.value)}
                   placeholder="O que engaja e motiva o aluno, temas favoritos, atividades preferidas..." />
+                <PEISuggestions fieldKey="interessesMotivacoes" onPick={(t) => set("interessesMotivacoes", appendText(draft.interessesMotivacoes, t))} />
 
                 <div style={{ marginTop: 12 }}>
                   <label style={labelCss}>Estilo de aprendizagem (múltipla escolha)</label>
@@ -677,10 +679,12 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={{ ...labelCss, marginTop: 12 }}>Comportamentos relevantes em sala</label>
                 <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.comportamentosRelevantes} onChange={(e) => set("comportamentosRelevantes", e.target.value)}
                   placeholder="Desregulações, gatilhos, estratégias que funcionam, rotinas necessárias..." />
+                <PEISuggestions fieldKey="comportamentosRelevantes" onPick={(t) => set("comportamentosRelevantes", appendText(draft.comportamentosRelevantes, t))} />
 
                 <label style={{ ...labelCss, marginTop: 10 }}>Como lidar com crises ou desregulação</label>
                 <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.comoLidarCrises} onChange={(e) => set("comoLidarCrises", e.target.value)}
                   placeholder="O que fazer: estratégias que funcionam, o que evitar, quem acionar..." />
+                <PEISuggestions fieldKey="comoLidarCrises" onPick={(t) => set("comoLidarCrises", appendText(draft.comoLidarCrises, t))} />
               </div>
 
               <div style={sectionCss}>
@@ -688,12 +692,15 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={labelCss}>Percurso escolar anterior</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.percursoEscolar} onChange={(e) => set("percursoEscolar", e.target.value)}
                   placeholder="Escolas anteriores, experiências relevantes, anos repetidos, atendimentos já realizados..." />
+                <PEISuggestions fieldKey="percursoEscolar" onPick={(t) => set("percursoEscolar", appendText(draft.percursoEscolar, t))} />
                 <label style={{ ...labelCss, marginTop: 10 }}>Atendimentos externos em andamento</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.atendimentosExternos} onChange={(e) => set("atendimentosExternos", e.target.value)}
                   placeholder="Terapias, clínicas, especialistas que acompanham o aluno atualmente..." />
+                <PEISuggestions fieldKey="atendimentosExternos" onPick={(t) => set("atendimentosExternos", appendText(draft.atendimentosExternos, t))} />
                 <label style={{ ...labelCss, marginTop: 10 }}>Resultados de intervenções anteriores</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.resultadosIntervencoes} onChange={(e) => set("resultadosIntervencoes", e.target.value)}
                   placeholder="O que já foi tentado e os resultados observados..." />
+                <PEISuggestions fieldKey="resultadosIntervencoes" onPick={(t) => set("resultadosIntervencoes", appendText(draft.resultadosIntervencoes, t))} />
               </div>
             </>
           )}
