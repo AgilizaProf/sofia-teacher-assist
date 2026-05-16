@@ -1476,7 +1476,7 @@ ${corpo}
     const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
     const turmaNorm = norm(nsTurma.trim() || "Sem turma");
     const dup = allStudents.find(
-      (s) => norm(s.name) === norm(name) && norm(s.turma || "Sem turma") === turmaNorm,
+      (s) => norm(s.name) === norm(name) && norm(s.turma || "Sem turma") === turmaNorm && s.id !== editingStudentId,
     );
     if (dup) {
       toast.error("Já existe um aluno cadastrado com esses dados.");
@@ -1495,7 +1495,7 @@ ${corpo}
       ? `AEE ${nsAeeDays}x/sem`
       : "AEE a definir";
     const mediadora = nsMediadora.trim();
-    const newStudent: Omit<Student, "id"> = {
+    const baseStudent: Omit<Student, "id"> = {
       name,
       initials: initials || "AL",
       age: "—",
@@ -1511,11 +1511,23 @@ ${corpo}
     };
     try {
       setSavingStudent(true);
-      await createStudent(newStudent);
-      setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCids([]); setNsCidPick("nao_informado");
-      setNsAeeDays(""); setNsMediadora("");
-      setNewStudentOpen(false);
-      toast.success("Aluno(a) cadastrado(a)", { description: name });
+      if (editingStudentId) {
+        // Em edição, preserva campos calculados (anamnese, registros, trend, etc.)
+        await updateStudent(editingStudentId, {
+          name: baseStudent.name,
+          initials: baseStudent.initials,
+          turma: baseStudent.turma,
+          anoEscolar: baseStudent.anoEscolar,
+          diag: baseStudent.diag,
+          cid: baseStudent.cid,
+          aee: baseStudent.aee,
+        });
+        toast.success("Dados do(a) aluno(a) atualizados", { description: name });
+      } else {
+        await createStudent(baseStudent);
+        toast.success("Aluno(a) cadastrado(a)", { description: name });
+      }
+      fecharModalAluno();
     } catch (err) {
       console.error("[Inclusao] erro ao salvar aluno:", err);
       toast.error("Não foi possível salvar o(a) aluno(a)", {
