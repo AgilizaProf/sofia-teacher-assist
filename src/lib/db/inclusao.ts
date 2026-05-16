@@ -9,6 +9,10 @@ export type StudentUI = {
   turma: string;
   diag: string;
   cid: string;
+  /** Lista de códigos CID (CID-10/11). Fonte de verdade para múltiplos
+   * diagnósticos. O campo `cid` (string) é mantido por compatibilidade
+   * com a exibição "CID F84.0, F71". */
+  cids?: string[];
   aee: string;
   anoEscolar?: string;
   /**
@@ -46,6 +50,7 @@ type StudentRow = {
   aee: string | null;
   nivel_suporte: string | null;
   cid: string | null;
+  cids: string[] | null;
   data: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
@@ -82,6 +87,7 @@ function rowToUI(r: StudentRow): StudentUI {
     turma: r.turma ?? "Sem turma",
     diag: r.condicao ?? "",
     cid: r.cid ?? "",
+    cids: Array.isArray(r.cids) ? r.cids.filter((c) => !!c && c.trim() !== "") : [],
     aee: r.aee ?? "",
     anoEscolar: (extra.anoEscolar as string) ?? undefined,
     anoReferenciaPedagogico:
@@ -100,12 +106,16 @@ function rowToUI(r: StudentRow): StudentUI {
 }
 
 function uiToPayload(input: StudentInput) {
+  const cidsArr = Array.isArray(input.cids)
+    ? input.cids.map((c) => c.trim()).filter((c) => c.length > 0)
+    : [];
   return {
     nome: input.name,
     idade: parseIdade(input.age),
     turma: input.turma || null,
     condicao: input.diag || null,
     cid: input.cid || null,
+    cids: cidsArr,
     aee: input.aee || null,
     observacoes: input.notes ?? null,
     ano_referencia_pedagogico: input.anoReferenciaPedagogico ?? null,
