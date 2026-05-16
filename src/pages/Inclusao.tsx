@@ -1670,6 +1670,27 @@ ${corpo}
                       <span className="tag"><b>Turma:</b> {selected.turma}</span>
                       <span className="tag"><b>{selected.cid}</b></span>
                       <span className="tag"><b>{selected.aee}</b></span>
+                      {(() => {
+                        const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+                        const objsArr = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as unknown[];
+                        const temPEI = Boolean(
+                          objsArr.length || peiSel.caracterizacao || peiSel.habilidadesDesenvolvidas ||
+                          peiSel.adaptacoesCurriculares || peiSel.metodologias
+                        );
+                        if (!temPEI) return null;
+                        const at = typeof peiSel.atualizadoEm === "string" && peiSel.atualizadoEm
+                          ? new Date(peiSel.atualizadoEm).toLocaleDateString("pt-BR")
+                          : "";
+                        return (
+                          <span
+                            className="tag"
+                            style={{ background: "#ECFDF5", borderColor: "#A7F3D0", color: "#065F46" }}
+                            title="Plano Educacional Individualizado salvo — será usado pela Sofia ao gerar relatórios"
+                          >
+                            📋 <b>PEI ativo</b>{at ? ` — atualizado em ${at}` : ""}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="hero-r">
