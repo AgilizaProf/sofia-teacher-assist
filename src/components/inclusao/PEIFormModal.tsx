@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Save, Printer, Plus, Trash2, FileText, Sparkles, Wand2 } from "lucide-react";
+import { X, Save, Printer, Plus, Trash2, Sparkles, Wand2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
@@ -24,40 +24,109 @@ export type Objetivo = {
   criterios: string;
 };
 
+export type MetaCurta = {
+  id: string;
+  meta: string;
+  indicador: string;
+  area: string; // cognitiva | social | motora | comunicacao | autonomia
+};
+
+export type AreaAvaliacao =
+  | "leitura_escrita" | "raciocinio_logico" | "motor_fino" | "motor_grosso"
+  | "linguagem_oral" | "atencao" | "memoria" | "socializacao";
+
+export const AREAS_AVALIACAO: { key: AreaAvaliacao; label: string }[] = [
+  { key: "leitura_escrita", label: "Leitura e escrita" },
+  { key: "raciocinio_logico", label: "Raciocínio lógico-matemático" },
+  { key: "motor_fino", label: "Desenvolvimento motor fino" },
+  { key: "motor_grosso", label: "Desenvolvimento motor grosso" },
+  { key: "linguagem_oral", label: "Linguagem oral e comunicação" },
+  { key: "atencao", label: "Atenção e concentração" },
+  { key: "memoria", label: "Memória" },
+  { key: "socializacao", label: "Socialização" },
+];
+
+export const NIVEIS_AVALIACAO = [
+  "Não iniciado", "Em introdução", "Em desenvolvimento", "Consolidando", "Consolidado",
+] as const;
+
 export type PEIData = {
-  // 1. Identificação
+  // 1. Identificação e contexto
   protocolo: string;
   vigencia: { inicio: string; fim: string };
   escola: string;
   serie: string;
-  // 2. Diagnóstico / caracterização
+  dataNascimento: string;
   diagnostico: string;
   cid: string;
   laudoData: string;
   laudoProf: string;
+  responsavelNome: string;
+  responsavelContato: string;
+  dataInicioPEI: string;
+  profissionaisEnvolvidos: string[];
+  // 2. Perfil
+  potencialidades: string;
+  interessesMotivacoes: string;
+  estiloAprendizagem: string[];
+  formaComunicacao: string[];
+  nivelAutonomia: string;
+  nivelInteracaoSocial: string;
+  comportamentosRelevantes: string;
+  comoLidarCrises: string;
+  // 3. Histórico
+  percursoEscolar: string;
+  atendimentosExternos: string;
+  resultadosIntervencoes: string;
+  // 4. Avaliação pedagógica
+  avaliacaoPedagogica: Partial<Record<AreaAvaliacao, { nivel: string; obs: string }>>;
+  // 5. Objetivos e metas
+  objetivosLongoPrazo: string;
+  metasCurtoPrazo: MetaCurta[];
+  objetivos: Objetivo[]; // legado
+  // 6. Adaptações
+  adaptacoesConteudo: string;
+  adaptacoesMetodologicas: string;
+  adaptacoesAvaliacao: string;
+  adaptacoesTempo: string;
+  adaptacoesEspaco: string;
+  // 7. Estratégias
+  estrategiasArea: string;
+  recursosPedagogicos: string[];
+  recursosPedagogicosOutro: string;
+  estrategiasInclusaoColetiva: string;
+  // 8. Tecnologia assistiva
+  recursosCAA: string[];
+  softwaresAplicativos: string;
+  adaptacoesFisicasMateriais: string;
+  // 9. Apoios e serviços
+  frequenciaAEE: string;
+  objetivosAEE: string;
+  temProfissionalApoio: string;
+  funcaoProfissionalApoio: string;
+  // 10. Família
+  comoFamiliaApoia: string;
+  combinadosFamilia: string;
+  frequenciaReunioes: string;
+  // 11. Revisão
+  dataRevisao: string;
+  responsavelRevisao: string;
+  criteriosAtualizacao: string;
+  // Legado mantido para back-compat
   caracterizacao: string;
-  // 3. Habilidades já desenvolvidas
   habilidadesDesenvolvidas: string;
   pontosForca: string;
   necessidadesApoio: string;
-  // 4. Objetivos
-  objetivos: Objetivo[];
-  // 5. Estratégias e adaptações
   adaptacoesCurriculares: string;
   adaptacoesAvaliativas: string;
-  recursosApoio: string;
   metodologias: string;
-  // 6. Avaliação
+  recursosApoio: string;
   formasAvaliacao: string;
   periodicidadeRevisao: string;
-  // 7. Equipe responsável
-  equipe: { nome: string; funcao: string }[];
-  // 8. Família e participação
   familiaParticipacao: string;
   acordosFamilia: string;
-  // Assinaturas
+  equipe: { nome: string; funcao: string }[];
   assinaturas: { professorRegente: string; coordenacao: string; aee: string; familia: string };
-  // Histórico
   atualizadoEm: string;
 };
 
@@ -67,29 +136,200 @@ function blankPEI(): PEIData {
     vigencia: { inicio: "", fim: "" },
     escola: "",
     serie: "",
+    dataNascimento: "",
     diagnostico: "",
     cid: "",
     laudoData: "",
     laudoProf: "",
+    responsavelNome: "",
+    responsavelContato: "",
+    dataInicioPEI: "",
+    profissionaisEnvolvidos: [],
+    potencialidades: "",
+    interessesMotivacoes: "",
+    estiloAprendizagem: [],
+    formaComunicacao: [],
+    nivelAutonomia: "",
+    nivelInteracaoSocial: "",
+    comportamentosRelevantes: "",
+    comoLidarCrises: "",
+    percursoEscolar: "",
+    atendimentosExternos: "",
+    resultadosIntervencoes: "",
+    avaliacaoPedagogica: {},
+    objetivosLongoPrazo: "",
+    metasCurtoPrazo: [],
+    objetivos: [],
+    adaptacoesConteudo: "",
+    adaptacoesMetodologicas: "",
+    adaptacoesAvaliacao: "",
+    adaptacoesTempo: "",
+    adaptacoesEspaco: "",
+    estrategiasArea: "",
+    recursosPedagogicos: [],
+    recursosPedagogicosOutro: "",
+    estrategiasInclusaoColetiva: "",
+    recursosCAA: [],
+    softwaresAplicativos: "",
+    adaptacoesFisicasMateriais: "",
+    frequenciaAEE: "",
+    objetivosAEE: "",
+    temProfissionalApoio: "",
+    funcaoProfissionalApoio: "",
+    comoFamiliaApoia: "",
+    combinadosFamilia: "",
+    frequenciaReunioes: "",
+    dataRevisao: "",
+    responsavelRevisao: "",
+    criteriosAtualizacao: "",
     caracterizacao: "",
     habilidadesDesenvolvidas: "",
     pontosForca: "",
     necessidadesApoio: "",
-    objetivos: [],
     adaptacoesCurriculares: "",
     adaptacoesAvaliativas: "",
-    recursosApoio: "",
     metodologias: "",
+    recursosApoio: "",
     formasAvaliacao: "",
     periodicidadeRevisao: "Bimestral",
-    equipe: [],
     familiaParticipacao: "",
     acordosFamilia: "",
+    equipe: [],
     assinaturas: { professorRegente: "", coordenacao: "", aee: "", familia: "" },
     atualizadoEm: "",
   };
 }
 
+// ============== Builder de contexto p/ Sofia — só campos preenchidos ==============
+export function buildPEIContext(pei: Partial<PEIData> | null | undefined): string {
+  if (!pei) return "";
+  const s = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()) : []);
+  const sections: string[] = [];
+
+  // 1. Identificação
+  const ident: string[] = [];
+  if (s(pei.diagnostico) || s(pei.cid)) ident.push(`Diagnóstico: ${s(pei.diagnostico) || "—"}${s(pei.cid) ? ` (CID ${s(pei.cid)})` : ""}`);
+  if (s(pei.laudoData)) ident.push(`Data do laudo: ${s(pei.laudoData)}`);
+  if (s(pei.laudoProf)) ident.push(`Profissional do laudo: ${s(pei.laudoProf)}`);
+  if (s(pei.responsavelNome)) ident.push(`Responsável legal: ${s(pei.responsavelNome)}`);
+  if (s(pei.responsavelContato)) ident.push(`Contato da família: ${s(pei.responsavelContato)}`);
+  if (s(pei.escola)) ident.push(`Escola: ${s(pei.escola)}`);
+  if (s(pei.serie)) ident.push(`Turma: ${s(pei.serie)}`);
+  if (s(pei.dataInicioPEI)) ident.push(`Início do PEI: ${s(pei.dataInicioPEI)}`);
+  if (s(pei.vigencia?.fim)) ident.push(`Vigência até: ${s(pei.vigencia?.fim)}`);
+  if (arr(pei.profissionaisEnvolvidos).length) ident.push(`Profissionais envolvidos: ${arr(pei.profissionaisEnvolvidos).join(", ")}`);
+  if (ident.length) sections.push("IDENTIFICAÇÃO:\n" + ident.join("\n"));
+
+  // 2. Perfil
+  const perfil: string[] = [];
+  if (s(pei.potencialidades)) perfil.push(`Potencialidades e pontos fortes: ${s(pei.potencialidades)}`);
+  if (s(pei.interessesMotivacoes)) perfil.push(`Interesses e motivações: ${s(pei.interessesMotivacoes)}`);
+  if (arr(pei.estiloAprendizagem).length) perfil.push(`Estilo de aprendizagem: ${arr(pei.estiloAprendizagem).join(", ")}`);
+  if (arr(pei.formaComunicacao).length) perfil.push(`Forma de comunicação: ${arr(pei.formaComunicacao).join(", ")}`);
+  if (s(pei.nivelAutonomia)) perfil.push(`Nível de autonomia: ${s(pei.nivelAutonomia)}`);
+  if (s(pei.nivelInteracaoSocial)) perfil.push(`Nível de interação social: ${s(pei.nivelInteracaoSocial)}`);
+  if (s(pei.comportamentosRelevantes)) perfil.push(`Comportamentos relevantes em sala: ${s(pei.comportamentosRelevantes)}`);
+  if (s(pei.comoLidarCrises)) perfil.push(`Como lidar com crises/desregulação: ${s(pei.comoLidarCrises)}`);
+  // legado
+  if (s(pei.caracterizacao)) perfil.push(`Caracterização: ${s(pei.caracterizacao)}`);
+  if (s(pei.habilidadesDesenvolvidas)) perfil.push(`Habilidades já desenvolvidas: ${s(pei.habilidadesDesenvolvidas)}`);
+  if (s(pei.pontosForca)) perfil.push(`Pontos de força: ${s(pei.pontosForca)}`);
+  if (s(pei.necessidadesApoio)) perfil.push(`Necessidades de apoio: ${s(pei.necessidadesApoio)}`);
+  if (perfil.length) sections.push("PERFIL DO ALUNO:\n" + perfil.join("\n"));
+
+  // 3. Histórico
+  const hist: string[] = [];
+  if (s(pei.percursoEscolar)) hist.push(`Percurso escolar: ${s(pei.percursoEscolar)}`);
+  if (s(pei.atendimentosExternos)) hist.push(`Atendimentos externos: ${s(pei.atendimentosExternos)}`);
+  if (s(pei.resultadosIntervencoes)) hist.push(`Resultados de intervenções anteriores: ${s(pei.resultadosIntervencoes)}`);
+  if (hist.length) sections.push("HISTÓRICO ESCOLAR:\n" + hist.join("\n"));
+
+  // 4. Avaliação pedagógica
+  const avalLinhas: string[] = [];
+  const av = pei.avaliacaoPedagogica || {};
+  for (const a of AREAS_AVALIACAO) {
+    const entry = av[a.key];
+    if (entry && (s(entry.nivel) || s(entry.obs))) {
+      avalLinhas.push(`- ${a.label}: ${s(entry.nivel) || "—"}${s(entry.obs) ? ` (${s(entry.obs)})` : ""}`);
+    }
+  }
+  if (avalLinhas.length) sections.push("AVALIAÇÃO PEDAGÓGICA INICIAL:\n" + avalLinhas.join("\n"));
+
+  // 5. Objetivos e metas
+  const objSec: string[] = [];
+  if (s(pei.objetivosLongoPrazo)) objSec.push(`Objetivos de longo prazo: ${s(pei.objetivosLongoPrazo)}`);
+  const metas = Array.isArray(pei.metasCurtoPrazo) ? pei.metasCurtoPrazo.filter((m) => s(m?.meta)) : [];
+  if (metas.length) {
+    objSec.push("Metas de curto prazo:\n" + metas.map((m, i) => `  ${i + 1}. [${s(m.area) || "Geral"}] ${s(m.meta)}${s(m.indicador) ? ` · Indicador: ${s(m.indicador)}` : ""}`).join("\n"));
+  }
+  const objsLeg = Array.isArray(pei.objetivos) ? pei.objetivos.filter((o) => s(o?.texto)) : [];
+  if (objsLeg.length) {
+    const PRAZO: Record<string, string> = { curto: "curto", medio: "médio", longo: "longo" };
+    const STATUS: Record<string, string> = { nao_iniciado: "não iniciado", em_andamento: "em andamento", atingido: "atingido", revisar: "revisar" };
+    objSec.push("Objetivos pedagógicos:\n" + objsLeg.map((o, i) => `  ${i + 1}. ${s(o.texto)} — status: ${STATUS[o.status || ""] || "—"}${o.prazo ? ` (${PRAZO[o.prazo] || o.prazo} prazo)` : ""}${s(o.criterios) ? ` · critérios: ${s(o.criterios)}` : ""}`).join("\n"));
+  }
+  if (objSec.length) sections.push("OBJETIVOS E METAS:\n" + objSec.join("\n"));
+
+  // 6. Adaptações
+  const adapt: string[] = [];
+  if (s(pei.adaptacoesConteudo)) adapt.push(`Adaptações de conteúdo: ${s(pei.adaptacoesConteudo)}`);
+  if (s(pei.adaptacoesMetodologicas)) adapt.push(`Adaptações metodológicas: ${s(pei.adaptacoesMetodologicas)}`);
+  if (s(pei.adaptacoesAvaliacao)) adapt.push(`Adaptações de avaliação: ${s(pei.adaptacoesAvaliacao)}`);
+  if (s(pei.adaptacoesTempo)) adapt.push(`Adaptações de tempo: ${s(pei.adaptacoesTempo)}`);
+  if (s(pei.adaptacoesEspaco)) adapt.push(`Adaptações de espaço: ${s(pei.adaptacoesEspaco)}`);
+  if (s(pei.adaptacoesCurriculares)) adapt.push(`Adaptações curriculares (geral): ${s(pei.adaptacoesCurriculares)}`);
+  if (s(pei.adaptacoesAvaliativas)) adapt.push(`Adaptações avaliativas (geral): ${s(pei.adaptacoesAvaliativas)}`);
+  if (adapt.length) sections.push("ADAPTAÇÕES CURRICULARES:\n" + adapt.join("\n"));
+
+  // 7. Estratégias
+  const estr: string[] = [];
+  if (s(pei.estrategiasArea)) estr.push(`Estratégias por área: ${s(pei.estrategiasArea)}`);
+  const recs = arr(pei.recursosPedagogicos);
+  if (recs.length) estr.push(`Recursos pedagógicos: ${recs.join(", ")}${s(pei.recursosPedagogicosOutro) ? `, ${s(pei.recursosPedagogicosOutro)}` : ""}`);
+  if (s(pei.estrategiasInclusaoColetiva)) estr.push(`Estratégias para inclusão coletiva: ${s(pei.estrategiasInclusaoColetiva)}`);
+  if (s(pei.metodologias)) estr.push(`Metodologias: ${s(pei.metodologias)}`);
+  if (s(pei.recursosApoio)) estr.push(`Recursos de apoio: ${s(pei.recursosApoio)}`);
+  if (estr.length) sections.push("ESTRATÉGIAS PEDAGÓGICAS:\n" + estr.join("\n"));
+
+  // 8. Tecnologia assistiva
+  const ta: string[] = [];
+  if (arr(pei.recursosCAA).length) ta.push(`Recursos de CAA em uso: ${arr(pei.recursosCAA).join(", ")}`);
+  if (s(pei.softwaresAplicativos)) ta.push(`Softwares e aplicativos de apoio: ${s(pei.softwaresAplicativos)}`);
+  if (s(pei.adaptacoesFisicasMateriais)) ta.push(`Adaptações físicas de materiais: ${s(pei.adaptacoesFisicasMateriais)}`);
+  if (ta.length) sections.push("TECNOLOGIA ASSISTIVA:\n" + ta.join("\n"));
+
+  // 9. Apoios
+  const ap: string[] = [];
+  if (s(pei.frequenciaAEE)) ap.push(`Frequência no AEE: ${s(pei.frequenciaAEE)}`);
+  if (s(pei.objetivosAEE)) ap.push(`Objetivos do AEE: ${s(pei.objetivosAEE)}`);
+  if (s(pei.temProfissionalApoio)) ap.push(`Profissional de apoio em sala: ${s(pei.temProfissionalApoio)}`);
+  if (s(pei.temProfissionalApoio).toLowerCase() === "sim" && s(pei.funcaoProfissionalApoio))
+    ap.push(`Função do profissional de apoio: ${s(pei.funcaoProfissionalApoio)}`);
+  if (ap.length) sections.push("APOIOS E SERVIÇOS:\n" + ap.join("\n"));
+
+  // 10. Família
+  const fam: string[] = [];
+  if (s(pei.comoFamiliaApoia)) fam.push(`Como a família apoia em casa: ${s(pei.comoFamiliaApoia)}`);
+  if (s(pei.combinadosFamilia)) fam.push(`Combinados escola-família: ${s(pei.combinadosFamilia)}`);
+  if (s(pei.frequenciaReunioes)) fam.push(`Frequência de reuniões: ${s(pei.frequenciaReunioes)}`);
+  if (s(pei.familiaParticipacao)) fam.push(`Participação da família (geral): ${s(pei.familiaParticipacao)}`);
+  if (s(pei.acordosFamilia)) fam.push(`Acordos com a família: ${s(pei.acordosFamilia)}`);
+  if (fam.length) sections.push("PARTICIPAÇÃO DA FAMÍLIA:\n" + fam.join("\n"));
+
+  // 11. Revisão
+  const rev: string[] = [];
+  if (s(pei.dataRevisao)) rev.push(`Data prevista para revisão: ${s(pei.dataRevisao)}`);
+  if (s(pei.responsavelRevisao)) rev.push(`Responsável pela revisão: ${s(pei.responsavelRevisao)}`);
+  if (s(pei.criteriosAtualizacao)) rev.push(`Critérios para atualização: ${s(pei.criteriosAtualizacao)}`);
+  if (s(pei.periodicidadeRevisao)) rev.push(`Periodicidade: ${s(pei.periodicidadeRevisao)}`);
+  if (rev.length) sections.push("REVISÃO DO PEI:\n" + rev.join("\n"));
+
+  if (sections.length === 0) return "";
+  return "PEI DO ALUNO:\n" + sections.join("\n\n");
+}
+
+// ============== CSS helpers ==============
 const inputCss: React.CSSProperties = {
   width: "100%", padding: "8px 10px", borderRadius: 8,
   border: "1px solid var(--border)", fontSize: 13, fontFamily: "inherit",
@@ -112,376 +352,70 @@ const sectionBadge: React.CSSProperties = {
   background: "var(--accent-soft)", color: "#B8410E",
 };
 
-// ============ Sugestões por transtorno/deficiência ============
-type Perfil =
-  | "tea" | "tdah" | "dislexia" | "discalculia" | "di"
-  | "down" | "dv" | "da" | "df" | "ah" | "generico";
-
-function detectarPerfil(diag?: string, cid?: string): Perfil {
-  const s = `${diag || ""} ${cid || ""}`.toLowerCase();
-  if (/tea|autis|f84/.test(s)) return "tea";
-  if (/tdah|déficit de atenção|deficit de atencao|f90/.test(s)) return "tdah";
-  if (/dislex|f81\.0/.test(s)) return "dislexia";
-  if (/discalcul|f81\.2/.test(s)) return "discalculia";
-  if (/down|t21|q90/.test(s)) return "down";
-  if (/intelect|\bdi\b|f7[01239]/.test(s)) return "di";
-  if (/visual|baixa visão|cego|h54/.test(s)) return "dv";
-  if (/auditiv|surd|h90/.test(s)) return "da";
-  if (/física|fisica|cadeirante|paralisia|motor/.test(s)) return "df";
-  if (/altas habilidades|superdota|ah\/sd/.test(s)) return "ah";
-  return "generico";
-}
-
-type SugKey =
-  | "caracterizacao" | "habilidades" | "pontosForca" | "necessidadesApoio"
-  | "objetivoTexto" | "objetivoCriterios"
-  | "adaptCurric" | "adaptAval" | "metodologias" | "recursos"
-  | "formasAval" | "familiaPart" | "acordosFam"
-  | "equipeFuncao";
-
-const SUG: Record<Perfil, Partial<Record<SugKey, string[]>>> = {
-  tea: {
-    caracterizacao: ["Dificuldade na interação social recíproca", "Padrões restritos e repetitivos de comportamento", "Hipersensibilidade auditiva a sons altos", "Apego intenso a rotina previsível"],
-    habilidades: ["Reconhece rotina visual", "Identifica letras e números", "Memória visual acima da média", "Segue instruções de 1 passo"],
-    pontosForca: ["Interesse intenso por temas específicos", "Boa memória visual", "Atenção a detalhes", "Habilidade com tecnologia"],
-    necessidadesApoio: ["Antecipação de mudanças na rotina", "Apoio na comunicação social", "Regulação sensorial (fones, cantinho da calma)", "Mediação em interações com pares"],
-    objetivoTexto: ["Iniciar e manter interação com par por 5 minutos", "Ampliar repertório alimentar com 3 novos itens", "Comunicar necessidades básicas via PECS/fala", "Tolerar mudanças de rotina anunciadas com pictogramas"],
-    objetivoCriterios: ["Em 4 de 5 oportunidades observadas", "Com mediação visual em 80% das tentativas", "Registro em 3 sessões consecutivas"],
-    adaptCurric: ["Conteúdos com apoio visual e instruções segmentadas", "Priorização de habilidades funcionais e de comunicação", "Recortes da BNCC com foco em rotina e autocuidado"],
-    adaptAval: ["Avaliação por observação e portfólio", "Tempo estendido e ambiente de baixa estimulação", "Itens com pictograma + texto"],
-    metodologias: ["TEACCH (ensino estruturado)", "PECS / comunicação alternativa", "ABA com reforço positivo", "Histórias sociais e roteiros visuais"],
-    recursos: ["Pictogramas e agenda visual", "Fones abafadores", "Cantinho da calma com objetos sensoriais", "Timer visual"],
-    formasAval: ["Registro de evidências em portfólio", "Rubrica de habilidades sociais e comunicação", "Vídeo curto de evidência (com autorização)"],
-    familiaPart: ["Caderno de comunicação diário", "Reuniões mensais com equipe multi", "Alinhamento com terapeutas (TO, fono, psicologia)"],
-    acordosFam: ["Manter rotinas de sono e alimentação", "Comunicar previamente ausências/mudanças", "Protocolo de crise compartilhado"],
-    equipeFuncao: ["Mediador(a) de inclusão", "Terapeuta ocupacional", "Fonoaudiólogo(a)", "Psicólogo(a) ABA"],
-  },
-  tdah: {
-    caracterizacao: ["Desatenção em tarefas longas", "Hiperatividade motora em sala", "Impulsividade nas respostas", "Dificuldade em organizar materiais e tempo"],
-    habilidades: ["Boa oralidade e criatividade", "Resolve tarefas curtas com sucesso", "Engaja-se em atividades de movimento"],
-    pontosForca: ["Criatividade", "Energia e entusiasmo", "Pensamento divergente", "Boa memória para temas de interesse"],
-    necessidadesApoio: ["Quebrar tarefas em etapas curtas", "Lembretes visuais e timer", "Pausas ativas a cada 15 minutos", "Reforço imediato e específico"],
-    objetivoTexto: ["Concluir tarefa em 4 etapas com checklist", "Permanecer na atividade por 15 min com pausas", "Organizar material escolar antes da saída"],
-    objetivoCriterios: ["Em 4 de 5 dias da semana", "Com no máximo 1 lembrete do adulto", "Registro semanal em rubrica"],
-    adaptCurric: ["Tarefas segmentadas com checklist", "Redução de cópia, foco no essencial", "Conteúdos com apoio multimodal"],
-    adaptAval: ["Tempo estendido e fracionamento", "Prova com menos itens por página", "Leitura do enunciado em voz alta"],
-    metodologias: ["Ensino explícito de funções executivas", "Economia de fichas / reforço positivo", "Pausas ativas e movimento estruturado"],
-    recursos: ["Timer visual", "Checklist e agenda", "Almofada / faixa elástica na cadeira", "Fone para foco"],
-    formasAval: ["Rubrica de autorregulação", "Autoavaliação semanal", "Registro de tempo em tarefa"],
-    familiaPart: ["Agenda compartilhada de tarefas", "Reuniões quinzenais", "Alinhamento com neuropediatria/psicologia"],
-    acordosFam: ["Rotina de estudos em casa", "Sono regular", "Combinados sobre uso de telas"],
-    equipeFuncao: ["Psicopedagogo(a)", "Psicólogo(a)", "Neuropediatra (referência)"],
-  },
-  dislexia: {
-    caracterizacao: ["Dificuldade na decodificação leitora", "Trocas e omissões fonológicas", "Leitura lenta e silabada", "Dificuldade em soletrar"],
-    habilidades: ["Boa compreensão oral", "Raciocínio lógico preservado", "Vocabulário adequado à idade"],
-    pontosForca: ["Pensamento visual", "Criatividade narrativa oral", "Boa memória de longo prazo para histórias"],
-    necessidadesApoio: ["Consciência fonológica explícita", "Leitura compartilhada e mediada", "Materiais com fonte ampliada e espaçada", "Tempo estendido na leitura"],
-    objetivoTexto: ["Ler 20 palavras CV/CVC com autonomia", "Segmentar e contar fonemas em palavras de 3-4 letras", "Produzir frase de 5 palavras com apoio"],
-    objetivoCriterios: ["80% de acerto em 3 sessões", "Com apoio do alfabeto móvel", "Registro em ficha de leitura"],
-    adaptCurric: ["Priorização da consciência fonológica", "Textos curtos com vocabulário controlado", "Suporte de áudio para textos longos"],
-    adaptAval: ["Leitura do enunciado em voz alta", "Avaliação oral complementar", "Tempo estendido e ortografia não pontuada"],
-    metodologias: ["Método fônico estruturado (Orton-Gillingham)", "Multissensorial (visual + auditivo + tátil)", "Leitura compartilhada e repetida"],
-    recursos: ["Texto-para-fala / audiolivro", "Fonte OpenDyslexic, espaçamento ampliado", "Marcador de linha", "Alfabeto móvel"],
-    formasAval: ["Avaliação oral", "Portfólio de leitura", "Rubrica fonológica"],
-    familiaPart: ["Leitura diária em casa (10 min)", "Reuniões bimestrais", "Alinhamento com fonoaudiologia"],
-    acordosFam: ["Não cobrar ortografia em tarefas livres", "Valorizar produção oral", "Manter rotina de leitura prazerosa"],
-    equipeFuncao: ["Fonoaudiólogo(a)", "Psicopedagogo(a)", "Professor(a) de AEE"],
-  },
-  discalculia: {
-    caracterizacao: ["Dificuldade no senso numérico", "Trocas em fatos básicos da adição/subtração", "Dificuldade em sequência e valor posicional"],
-    habilidades: ["Reconhece numerais até 20", "Faz contagem 1 a 1 com material concreto"],
-    pontosForca: ["Boa expressão verbal", "Engaja-se com jogos manipulativos"],
-    necessidadesApoio: ["Material concreto sempre disponível", "Tabelas de apoio (fatos, valor posicional)", "Tempo estendido em cálculo"],
-    objetivoTexto: ["Resolver adições até 20 com material dourado", "Reconhecer valor posicional até a centena", "Resolver problema simples com 1 operação"],
-    objetivoCriterios: ["80% de acerto com apoio concreto", "Em 3 sessões consecutivas"],
-    adaptCurric: ["Uso permanente de material concreto", "Tabela de fatos disponível na avaliação", "Problemas com enunciado curto e ilustrado"],
-    adaptAval: ["Calculadora ou tabela de fatos liberada", "Tempo estendido", "Avaliação oral do raciocínio"],
-    metodologias: ["Método CPA (Concreto-Pictórico-Abstrato)", "Singapura", "Numicon, ábaco, material dourado"],
-    recursos: ["Material dourado", "Numicon / ábaco", "Tabela de fatos", "Reta numérica"],
-    formasAval: ["Observação de raciocínio com material", "Portfólio de problemas", "Entrevista clínica (Piaget)"],
-    familiaPart: ["Jogos matemáticos em casa", "Reuniões bimestrais"],
-    acordosFam: ["Evitar cobrança de cálculo mental sem apoio", "Valorizar o processo e não só o resultado"],
-    equipeFuncao: ["Psicopedagogo(a)", "Professor(a) de AEE"],
-  },
-  di: {
-    caracterizacao: ["Atraso global no desenvolvimento", "Necessidade de mais tempo para internalizar conteúdos", "Funcionalidade preservada com apoio"],
-    habilidades: ["Realiza autocuidado com supervisão", "Reconhece o próprio nome", "Segue rotinas conhecidas"],
-    pontosForca: ["Afetividade", "Engajamento em tarefas práticas", "Interesse por música/arte"],
-    necessidadesApoio: ["Instrução repetida e modelada", "Apoio visual permanente", "Generalização em contextos variados"],
-    objetivoTexto: ["Reconhecer e escrever o próprio nome", "Identificar números de 1 a 10 com material concreto", "Realizar autocuidado (banheiro/lanche) com autonomia"],
-    objetivoCriterios: ["Em 4 de 5 oportunidades", "Com modelagem inicial e desfade gradual"],
-    adaptCurric: ["Currículo funcional com habilidades de vida diária", "Recortes da BNCC priorizando comunicação e autonomia"],
-    adaptAval: ["Avaliação por observação e registro", "Tarefas com apoio visual e modelo", "Ênfase no processo"],
-    metodologias: ["Ensino estruturado (TEACCH)", "Modelagem + desvanecimento de pistas", "Aprendizagem cooperativa com tutoria de pares"],
-    recursos: ["Pictogramas", "Material concreto manipulável", "Vídeos-modelo curtos"],
-    formasAval: ["Portfólio com fotos", "Rubrica de funcionalidade", "Observação direta"],
-    familiaPart: ["Treino de habilidades de vida em casa", "Reuniões mensais"],
-    acordosFam: ["Reforçar autonomia nas tarefas diárias", "Manter rotina previsível"],
-    equipeFuncao: ["Mediador(a)", "Terapeuta ocupacional", "Professor(a) de AEE"],
-  },
-  down: {
-    caracterizacao: ["Hipotonia muscular leve", "Atraso na linguagem expressiva", "Boa memória visual e imitação"],
-    habilidades: ["Imita gestos e ações", "Reconhece familiares e rotina"],
-    pontosForca: ["Sociabilidade", "Memória visual", "Engajamento em música e dança"],
-    necessidadesApoio: ["Estímulo à linguagem oral", "Atividades de motricidade fina", "Instruções curtas e visuais"],
-    objetivoTexto: ["Ampliar vocabulário expressivo (50 palavras)", "Realizar pinça digital em atividades de recorte", "Reconhecer letras do próprio nome"],
-    objetivoCriterios: ["Em 4 de 5 sessões", "Com apoio visual e modelagem"],
-    adaptCurric: ["Foco em comunicação e funcionalidade", "Atividades concretas e contextualizadas"],
-    adaptAval: ["Avaliação por observação", "Tarefas com apoio visual"],
-    metodologias: ["Método das Boquinhas (alfabetização)", "PODD / comunicação alternativa", "Multissensorial"],
-    recursos: ["Pranchas de comunicação", "Material concreto", "Apoio visual constante"],
-    formasAval: ["Portfólio", "Registro de evidências em vídeo"],
-    familiaPart: ["Estimulação da linguagem em casa", "Acompanhamento com equipe multi"],
-    acordosFam: ["Frequência regular nas terapias", "Comunicação semanal com a escola"],
-    equipeFuncao: ["Fonoaudiólogo(a)", "Terapeuta ocupacional", "Fisioterapeuta"],
-  },
-  dv: {
-    caracterizacao: ["Baixa visão / cegueira", "Necessita material em alto contraste ou Braille", "Boa percepção auditiva e tátil"],
-    habilidades: ["Orienta-se em ambientes conhecidos", "Reconhece objetos pelo tato"],
-    pontosForca: ["Memória auditiva", "Atenção sustentada à fala", "Discriminação tátil"],
-    necessidadesApoio: ["Material ampliado / Braille / áudio", "Descrição verbal de imagens", "Mobilidade orientada no ambiente"],
-    objetivoTexto: ["Ler texto em fonte ampliada/Braille com fluência", "Locomover-se com autonomia em rotas escolares", "Usar leitor de tela em tarefas digitais"],
-    objetivoCriterios: ["Com tempo estendido", "Em 80% das tentativas"],
-    adaptCurric: ["Materiais transcritos para Braille / ampliados", "Descrição verbal sistemática de imagens", "Atividades táteis e sonoras"],
-    adaptAval: ["Provas em Braille / ampliadas / áudio", "Tempo estendido (até 50%)", "Ledor(a) quando necessário"],
-    metodologias: ["Sorobã", "Braille / Reglete", "Tecnologia assistiva (NVDA, DOSVOX)"],
-    recursos: ["Lupa eletrônica", "Sorobã", "Reglete e punção", "Leitor de tela"],
-    formasAval: ["Avaliação oral e tátil", "Portfólio em formato acessível"],
-    familiaPart: ["Treino de orientação e mobilidade em casa", "Reuniões mensais"],
-    acordosFam: ["Manter materiais acessíveis em casa", "Estimular autonomia"],
-    equipeFuncao: ["Professor(a) de AEE com Braille", "Instrutor(a) de orientação e mobilidade"],
-  },
-  da: {
-    caracterizacao: ["Surdez / deficiência auditiva", "Comunicação prioritária em Libras", "Português como L2"],
-    habilidades: ["Comunica-se em Libras com fluência", "Boa percepção visual"],
-    pontosForca: ["Memória visual", "Expressividade gestual", "Atenção visual"],
-    necessidadesApoio: ["Intérprete de Libras", "Material visual e legendado", "Português escrito como L2"],
-    objetivoTexto: ["Produzir narrativa em Libras com início, meio e fim", "Ler e compreender texto curto em português", "Escrever frase em português com apoio visual"],
-    objetivoCriterios: ["Com mediação do intérprete", "Em 4 de 5 produções"],
-    adaptCurric: ["Bilíngue Libras–Português escrito", "Conteúdos com forte apoio visual", "Glossários ilustrados"],
-    adaptAval: ["Prova em Libras (vídeo)", "Avaliação visual e escrita", "Tempo estendido"],
-    metodologias: ["Educação Bilíngue (Libras L1, Português L2)", "Pedagogia visual"],
-    recursos: ["Intérprete de Libras", "Vídeos legendados", "Glossário visual"],
-    formasAval: ["Vídeo de produção em Libras", "Portfólio bilíngue"],
-    familiaPart: ["Estimular Libras em família", "Participar de cursos de Libras"],
-    acordosFam: ["Comunicação acessível em casa", "Frequência ao AEE bilíngue"],
-    equipeFuncao: ["Intérprete de Libras", "Professor(a) bilíngue", "Fonoaudiólogo(a)"],
-  },
-  df: {
-    caracterizacao: ["Deficiência física / motora", "Mobilidade reduzida", "Funções cognitivas preservadas"],
-    habilidades: ["Acompanha o conteúdo cognitivamente", "Comunica-se com clareza"],
-    pontosForca: ["Raciocínio preservado", "Persistência", "Boa expressão verbal"],
-    necessidadesApoio: ["Acessibilidade arquitetônica", "Mobiliário adaptado", "Tecnologia assistiva para escrita"],
-    objetivoTexto: ["Registrar atividades com tecnologia assistiva", "Participar de atividades coletivas com adaptação", "Realizar autocuidado com adaptações"],
-    objetivoCriterios: ["Em 100% das aulas", "Com recurso assistivo disponível"],
-    adaptCurric: ["Substituir registro escrito por digital quando necessário", "Atividades adaptadas para participação plena"],
-    adaptAval: ["Prova digital / oral", "Tempo estendido", "Ledor(a) ou escriba"],
-    metodologias: ["Desenho Universal para Aprendizagem (DUA)", "Tecnologia assistiva", "Aprendizagem cooperativa"],
-    recursos: ["Engrossador de lápis", "Teclado adaptado", "Notebook / tablet", "Plano inclinado"],
-    formasAval: ["Avaliação digital", "Registro em vídeo/áudio"],
-    familiaPart: ["Acompanhamento fisioterápico", "Reuniões mensais"],
-    acordosFam: ["Manter equipamentos em uso", "Estimular autonomia"],
-    equipeFuncao: ["Fisioterapeuta", "Terapeuta ocupacional", "Cuidador(a)"],
-  },
-  ah: {
-    caracterizacao: ["Altas habilidades / superdotação", "Avanço em área específica", "Possível assincronia (cognitivo > socioemocional)"],
-    habilidades: ["Domina conteúdos do ano em aprofundamento", "Resolve problemas complexos"],
-    pontosForca: ["Curiosidade intelectual", "Criatividade", "Liderança"],
-    necessidadesApoio: ["Enriquecimento curricular", "Mentoria em área de interesse", "Apoio socioemocional"],
-    objetivoTexto: ["Desenvolver projeto de aprofundamento em área de interesse", "Apresentar produção autoral à turma", "Participar de atividade de enriquecimento extraclasse"],
-    objetivoCriterios: ["Entrega bimestral", "Avaliação por rubrica de projeto"],
-    adaptCurric: ["Compactação curricular do já dominado", "Aprofundamento e ampliação", "Projetos investigativos"],
-    adaptAval: ["Avaliação por projeto e produção autoral", "Rubrica avançada"],
-    metodologias: ["Modelo Triádico de Renzulli", "Aprendizagem por projetos (PBL)", "Mentoria"],
-    recursos: ["Acesso a biblioteca/laboratório", "Mentor(a) externo(a)", "Materiais de aprofundamento"],
-    formasAval: ["Portfólio de projetos", "Apresentação pública", "Rubrica de criatividade e profundidade"],
-    familiaPart: ["Apoiar projetos em casa", "Buscar atividades de enriquecimento"],
-    acordosFam: ["Equilibrar desafio acadêmico e socioemocional", "Estimular convivência com pares de interesse"],
-    equipeFuncao: ["Professor(a) de sala de recursos AH/SD", "Mentor(a) de área", "Psicólogo(a) escolar"],
-  },
-  generico: {
-    caracterizacao: ["Descrever histórico escolar relevante", "Intervenções já realizadas", "Preferências e barreiras observadas"],
-    habilidades: ["Listar habilidades já consolidadas", "Indicar nível de leitura/escrita/cálculo"],
-    pontosForca: ["Interesses e talentos", "Recursos pessoais e familiares"],
-    necessidadesApoio: ["Tipos de apoio (pedagógico, sensorial, comunicação)", "Frequência do apoio necessário"],
-    objetivoTexto: ["Definir meta observável e mensurável"],
-    objetivoCriterios: ["80% de acerto em 3 sessões consecutivas"],
-    adaptCurric: ["Recortes da BNCC priorizados"],
-    adaptAval: ["Tempo estendido", "Leitura em voz alta", "Redução de itens"],
-    metodologias: ["DUA", "Ensino explícito", "Aprendizagem cooperativa"],
-    recursos: ["Material concreto", "Apoio visual", "Tecnologia assistiva"],
-    formasAval: ["Observação", "Portfólio", "Rubrica"],
-    familiaPart: ["Reuniões periódicas", "Comunicação contínua"],
-    acordosFam: ["Combinados de rotina", "Protocolo de comunicação"],
-    equipeFuncao: ["Professor(a) regente", "Coordenação", "AEE"],
-  },
-};
-
-// Sugestões adicionais comuns a qualquer perfil — ampliam as opções rápidas.
-const EXTRA_COMUM: Partial<Record<SugKey, string[]>> = {
-  caracterizacao: [
-    "Histórico de intervenções pedagógicas anteriores",
-    "Boa relação com colegas em pequenos grupos",
-    "Apresenta períodos de desregulação emocional",
-    "Frequência escolar regular / irregular",
-    "Acompanhamento clínico em andamento",
-    "Demonstra interesse por temas práticos",
-  ],
-  habilidades: [
-    "Reconhece o próprio nome (oral e escrito)",
-    "Realiza contagem oral até 20",
-    "Compreende comandos simples de 1 a 2 passos",
-    "Copia palavras do quadro",
-    "Participa de rodas de conversa",
-    "Realiza tarefas de recorte e colagem com apoio",
-  ],
-  pontosForca: [
-    "Persistência diante de desafios",
-    "Cooperação com colegas",
-    "Boa coordenação motora ampla",
-    "Senso de humor e empatia",
-    "Curiosidade investigativa",
-    "Vínculo afetivo com a professora",
-  ],
-  necessidadesApoio: [
-    "Mediação individualizada em momentos-chave",
-    "Antecipação verbal de transições",
-    "Reforço positivo contingente",
-    "Ambiente com baixa estimulação visual/sonora",
-    "Apoio para regulação emocional",
-    "Adaptação do tempo de execução",
-  ],
-  objetivoTexto: [
-    "Ampliar autonomia em rotinas escolares",
-    "Desenvolver habilidades de leitura funcional",
-    "Resolver situações-problema do cotidiano",
-    "Participar de atividades em pequenos grupos",
-    "Expressar sentimentos com apoio de pranchas",
-    "Cumprir combinados de convivência",
-  ],
-  objetivoCriterios: [
-    "Em pelo menos 3 contextos diferentes",
-    "Com fade-out gradual da mediação",
-    "Avaliado por rubrica trimestral",
-    "Registrado em diário de bordo do(a) professor(a)",
-    "Sem necessidade de reforço externo",
-  ],
-  adaptCurric: [
-    "Conteúdos contextualizados ao interesse do aluno",
-    "Atividades com múltiplas formas de resposta (DUA)",
-    "Redução do volume de exercícios mantendo o objetivo",
-    "Material com linguagem simples e direta",
-    "Texto adaptado em frases curtas",
-  ],
-  adaptAval: [
-    "Avaliação contínua por evidências",
-    "Permitir resposta oral, escrita ou desenhada",
-    "Itens com apoio de imagem",
-    "Aplicação em momentos curtos e fracionados",
-    "Reforço da consigna individualmente",
-  ],
-  metodologias: [
-    "Desenho Universal para Aprendizagem (DUA)",
-    "Aprendizagem cooperativa entre pares",
-    "Ensino por projetos",
-    "Gamificação de tarefas",
-    "Sequências didáticas multissensoriais",
-    "Tutoria de pares",
-  ],
-  recursos: [
-    "Pictogramas e apoio visual",
-    "Material concreto manipulável",
-    "Tablet com apps educativos",
-    "Quadro de rotina",
-    "Cronômetro / timer visual",
-    "Caderno com pauta ampliada",
-  ],
-  formasAval: [
-    "Portfólio com produções do aluno",
-    "Rubrica descritiva por habilidade",
-    "Autoavaliação com apoio visual",
-    "Registro fotográfico/vídeo (com autorização)",
-    "Observação sistemática registrada em ficha",
-  ],
-  familiaPart: [
-    "Reuniões periódicas com a família",
-    "Caderno de comunicação diário",
-    "Compartilhamento de combinados de rotina",
-    "Participação em encontros pedagógicos",
-    "Devolutiva trimestral por escrito",
-  ],
-  acordosFam: [
-    "Manter rotina previsível em casa",
-    "Comunicar mudanças relevantes à escola",
-    "Reforçar autonomia em tarefas diárias",
-    "Limite saudável ao uso de telas",
-    "Acompanhamento regular nas terapias",
-  ],
-  equipeFuncao: [
-    "Professor(a) regente",
-    "Coordenação pedagógica",
-    "Professor(a) de AEE",
-    "Mediador(a) escolar",
-    "Psicólogo(a) escolar",
-    "Fonoaudiólogo(a)",
-    "Terapeuta ocupacional",
-    "Família / responsáveis",
-  ],
-};
-
-function mergeSug(
-  base: Partial<Record<SugKey, string[]>>,
-  extra: Partial<Record<SugKey, string[]>>,
-): Partial<Record<SugKey, string[]>> {
-  const out: Partial<Record<SugKey, string[]>> = {};
-  const keys = new Set<SugKey>([
-    ...(Object.keys(base) as SugKey[]),
-    ...(Object.keys(extra) as SugKey[]),
-  ]);
-  for (const k of keys) {
-    const seen = new Set<string>();
-    const merged: string[] = [];
-    for (const s of [...(base[k] || []), ...(extra[k] || [])]) {
-      const key = s.trim().toLowerCase();
-      if (!seen.has(key)) { seen.add(key); merged.push(s); }
-    }
-    out[k] = merged;
-  }
-  return out;
-}
-
-function SugChips({ items, onPick }: { items?: string[]; onPick: (s: string) => void }) {
-  if (!items || items.length === 0) return null;
+function CheckGroup({
+  options, value, onChange, multi = true,
+}: { options: string[]; value: string[] | string; onChange: (v: string[] | string) => void; multi?: boolean }) {
+  const selected = multi ? (Array.isArray(value) ? value : []) : [];
+  const single = !multi && typeof value === "string" ? value : "";
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6, alignItems: "center" }}>
-      <span style={{ fontSize: 10, color: "var(--muted)", display: "inline-flex", alignItems: "center", gap: 3, fontWeight: 700 }}>
-        <Wand2 size={10} /> Sugestões:
-      </span>
-      {items.map((s, i) => (
-        <button
-          key={i}
-          type="button"
-          onClick={() => onPick(s)}
-          style={{
-            fontSize: 11, padding: "3px 8px", borderRadius: 999,
-            border: "1px solid var(--border)", background: "#FFF7F2",
-            color: "#B8410E", cursor: "pointer", fontWeight: 600,
-          }}
-          title="Clique para inserir no campo"
-        >
-          + {s}
-        </button>
-      ))}
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {options.map((opt) => {
+        const isOn = multi ? selected.includes(opt) : single === opt;
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => {
+              if (multi) {
+                const arr = selected.includes(opt) ? selected.filter((x) => x !== opt) : [...selected, opt];
+                onChange(arr);
+              } else {
+                onChange(single === opt ? "" : opt);
+              }
+            }}
+            style={{
+              fontSize: 12, padding: "5px 10px", borderRadius: 999,
+              border: `1px solid ${isOn ? "var(--accent)" : "var(--border)"}`,
+              background: isOn ? "var(--accent-soft)" : "#fff",
+              color: isOn ? "#B8410E" : "var(--text)",
+              fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            {isOn ? "✓ " : ""}{opt}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-function append(prev: string, add: string): string {
-  const t = (prev || "").trim();
-  if (!t) return add;
-  if (t.includes(add)) return t;
-  return t.endsWith(".") || t.endsWith(";") ? `${t} ${add}` : `${t}; ${add}`;
+// ============== Tabs ==============
+type TabKey = "ident" | "perfil" | "aval" | "objetivos" | "adapt" | "ta" | "familia" | "revisao";
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "ident", label: "📋 Identificação" },
+  { key: "perfil", label: "👤 Perfil" },
+  { key: "aval", label: "📚 Avaliação" },
+  { key: "objetivos", label: "🎯 Objetivos" },
+  { key: "adapt", label: "🔧 Adaptações" },
+  { key: "ta", label: "📱 Tec. Assistiva" },
+  { key: "familia", label: "🤝 Apoios e Família" },
+  { key: "revisao", label: "📅 Revisão" },
+];
+
+// preenchimento por aba (para indicador 6/8 etc.)
+function tabPreenchida(t: TabKey, d: PEIData): boolean {
+  const has = (v?: string) => Boolean(v && v.trim().length > 1);
+  const ar = (v?: string[]) => Array.isArray(v) && v.length > 0;
+  switch (t) {
+    case "ident": return has(d.escola) || has(d.diagnostico) || has(d.cid) || has(d.responsavelNome) || ar(d.profissionaisEnvolvidos) || has(d.dataInicioPEI);
+    case "perfil": return has(d.potencialidades) || has(d.interessesMotivacoes) || ar(d.estiloAprendizagem) || ar(d.formaComunicacao) || has(d.nivelAutonomia) || has(d.nivelInteracaoSocial) || has(d.comportamentosRelevantes) || has(d.comoLidarCrises) || has(d.percursoEscolar) || has(d.atendimentosExternos) || has(d.resultadosIntervencoes);
+    case "aval": return Object.values(d.avaliacaoPedagogica || {}).some((v) => v && (has(v.nivel) || has(v.obs)));
+    case "objetivos": return has(d.objetivosLongoPrazo) || (d.metasCurtoPrazo || []).some((m) => has(m.meta)) || (d.objetivos || []).some((o) => has(o.texto));
+    case "adapt": return has(d.adaptacoesConteudo) || has(d.adaptacoesMetodologicas) || has(d.adaptacoesAvaliacao) || has(d.adaptacoesTempo) || has(d.adaptacoesEspaco) || has(d.estrategiasArea) || ar(d.recursosPedagogicos) || has(d.estrategiasInclusaoColetiva);
+    case "ta": return ar(d.recursosCAA) || has(d.softwaresAplicativos) || has(d.adaptacoesFisicasMateriais);
+    case "familia": return has(d.frequenciaAEE) || has(d.objetivosAEE) || has(d.temProfissionalApoio) || has(d.comoFamiliaApoia) || has(d.combinadosFamilia) || has(d.frequenciaReunioes);
+    case "revisao": return has(d.dataRevisao) || has(d.responsavelRevisao) || has(d.criteriosAtualizacao);
+  }
 }
 
 type Props = {
@@ -494,474 +428,457 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!open) return;
-    const t = window.setTimeout(() => {
-      const el = modalRef.current?.querySelector<HTMLElement>('input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])');
-      el?.focus();
-    }, 60);
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
-    return () => { window.clearTimeout(t); window.removeEventListener("keydown", onKey); };
+    return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+
   const user = useUser();
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, PEIData>>("inc_pei", {});
-  const dataAtual = aluno ? (peiByStudent[aluno.id] ?? blankPEI()) : blankPEI();
-  const [draft, setDraft] = useState<PEIData>(dataAtual);
-  const [dirty, setDirty] = useState(false);
+  const [draft, setDraft] = useState<PEIData>(blankPEI());
+  const [tab, setTab] = useState<TabKey>("ident");
+  const [savedAt, setSavedAt] = useState<string>("");
+  const autosaveTimer = useRef<number | null>(null);
 
+  // hidratação ao abrir
   useEffect(() => {
     if (open && aluno) {
       const existing = peiByStudent[aluno.id];
       if (existing) {
-        setDraft(existing);
+        setDraft({ ...blankPEI(), ...existing });
+        setSavedAt(existing.atualizadoEm || "");
       } else {
         const seed = blankPEI();
         seed.diagnostico = aluno.diag || "";
         seed.cid = aluno.cid || "";
         seed.serie = aluno.anoEscolar || "";
         setDraft(seed);
+        setSavedAt("");
       }
-      setDirty(false);
+      setTab("ident");
     }
+     
   }, [open, aluno?.id]);
+
+  // autosave (debounced)
+  useEffect(() => {
+    if (!open || !aluno) return;
+    if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = window.setTimeout(() => {
+      const upd = { ...draft, atualizadoEm: new Date().toISOString() };
+      setPeiByStudent((prev) => ({ ...prev, [aluno.id]: upd }));
+      setSavedAt(upd.atualizadoEm);
+    }, 800);
+    return () => { if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current); };
+     
+  }, [draft, open, aluno?.id]);
 
   const set = <K extends keyof PEIData>(k: K, v: PEIData[K]) => {
     setDraft((d) => ({ ...d, [k]: v }));
-    setDirty(true);
   };
 
-  const updObjetivo = (id: string, patch: Partial<Objetivo>) => {
-    setDraft((d) => ({ ...d, objetivos: d.objetivos.map((o) => (o.id === id ? { ...o, ...patch } : o)) }));
-    setDirty(true);
+  const updMeta = (id: string, patch: Partial<MetaCurta>) => {
+    setDraft((d) => ({ ...d, metasCurtoPrazo: d.metasCurtoPrazo.map((m) => m.id === id ? { ...m, ...patch } : m) }));
   };
-  const addObjetivo = () => {
-    setDraft((d) => ({
-      ...d,
-      objetivos: [
-        ...d.objetivos,
-        { id: Math.random().toString(36).slice(2, 8), texto: "", prazo: "curto", status: "nao_iniciado", criterios: "" },
-      ],
-    }));
-    setDirty(true);
-  };
-  const delObjetivo = (id: string) => {
-    setDraft((d) => ({ ...d, objetivos: d.objetivos.filter((o) => o.id !== id) }));
-    setDirty(true);
-  };
+  const addMeta = () => setDraft((d) => ({
+    ...d,
+    metasCurtoPrazo: [...d.metasCurtoPrazo, { id: Math.random().toString(36).slice(2, 8), meta: "", indicador: "", area: "Cognitiva/Pedagógica" }],
+  }));
+  const delMeta = (id: string) => setDraft((d) => ({ ...d, metasCurtoPrazo: d.metasCurtoPrazo.filter((m) => m.id !== id) }));
 
-  const addEquipe = () => {
-    setDraft((d) => ({ ...d, equipe: [...d.equipe, { nome: "", funcao: "" }] }));
-    setDirty(true);
-  };
-  const updEquipe = (idx: number, patch: Partial<{ nome: string; funcao: string }>) => {
-    setDraft((d) => ({ ...d, equipe: d.equipe.map((e, i) => (i === idx ? { ...e, ...patch } : e)) }));
-    setDirty(true);
-  };
-  const delEquipe = (idx: number) => {
-    setDraft((d) => ({ ...d, equipe: d.equipe.filter((_, i) => i !== idx) }));
-    setDirty(true);
+  const setAval = (area: AreaAvaliacao, patch: { nivel?: string; obs?: string }) => {
+    setDraft((d) => {
+      const cur = d.avaliacaoPedagogica[area] || { nivel: "", obs: "" };
+      return { ...d, avaliacaoPedagogica: { ...d.avaliacaoPedagogica, [area]: { ...cur, ...patch } } };
+    });
   };
 
   const salvar = () => {
     if (!aluno) return;
     const upd = { ...draft, atualizadoEm: new Date().toISOString() };
     setPeiByStudent((prev) => ({ ...prev, [aluno.id]: upd }));
-    setDraft(upd);
-    setDirty(false);
+    setSavedAt(upd.atualizadoEm);
     toast.success("PEI salvo · Lei 14.254/2021");
   };
 
+  const totalPreenchidas = useMemo(() => TABS.filter((t) => tabPreenchida(t.key, draft)).length, [draft]);
+
   const imprimir = () => {
-    if (dirty) salvar();
     const w = window.open("", "_blank");
     if (!w) return;
-    const esc = (s: string) =>
-      String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
-    const obj = draft.objetivos.map((o, i) =>
-      `<li><b>#${i + 1} (${o.prazo === "curto" ? "Curto prazo" : o.prazo === "medio" ? "Médio prazo" : "Longo prazo"})</b> — ${esc(o.texto)}<br/><i>Critérios:</i> ${esc(o.criterios || "—")} · <i>Status:</i> ${esc(o.status)}</li>`,
-    ).join("");
-    const eq = draft.equipe.map((e) => `<li>${esc(e.nome)} — ${esc(e.funcao)}</li>`).join("");
+    const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+    const ctx = buildPEIContext(draft).replace(/\n/g, "<br/>");
     const extraCss = `
       h1{font-size:16pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
-      h2{font-size:12pt;margin:14pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
       .meta{font-size:11pt;color:#6B7691;margin-bottom:10pt;}
-      .ident{display:grid;grid-template-columns:1fr 1fr;gap:4pt 16pt;margin-bottom:10pt;}
-      ul{margin:0;padding-left:14pt;}
       .legal{margin-top:16pt;font-size:10pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
-      .sig{margin-top:18pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
-      .sig div{border-top:1px solid #333;padding-top:4pt;font-size:11pt;text-align:center;}
-      .toolbar{position:fixed;top:8px;right:8px;}
     `;
     const inner = `
-      <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
+      <div><button onclick="window.print()">Imprimir</button></div>
       <h1>Plano Educacional Individualizado (PEI)</h1>
-      <div class="meta">Protocolo ${esc(draft.protocolo)} · Vigência ${esc(draft.vigencia.inicio || "—")} a ${esc(draft.vigencia.fim || "—")} · Lei 14.254/2021</div>
-      <h2>1. Identificação do educando</h2>
-      <div class="ident">
-        <span><b>Nome:</b> ${esc(aluno?.name || "—")}</span>
-        <span><b>Idade:</b> ${esc(String(aluno?.idade ?? "—"))}</span>
-        <span><b>Escola:</b> ${esc(draft.escola || "—")}</span>
-        <span><b>Turma/Ano:</b> ${esc(draft.serie || aluno?.anoEscolar || "—")}</span>
-        <span><b>Diagnóstico:</b> ${esc(draft.diagnostico || "—")}</span>
-        <span><b>CID:</b> ${esc(draft.cid || "—")}</span>
-        <span><b>Laudo:</b> ${esc(draft.laudoProf || "—")} · ${esc(draft.laudoData || "—")}</span>
-        <span><b>AEE:</b> ${esc(aluno?.aee || "—")}</span>
-      </div>
-      <h2>2. Caracterização e histórico</h2>
-      <p>${esc(draft.caracterizacao || "—")}</p>
-      <h2>3. Habilidades já desenvolvidas</h2>
-      <p><b>Habilidades:</b> ${esc(draft.habilidadesDesenvolvidas || "—")}</p>
-      <p><b>Potencialidades:</b> ${esc(draft.pontosForca || "—")}</p>
-      <p><b>Necessidades de apoio:</b> ${esc(draft.necessidadesApoio || "—")}</p>
-      <h2>4. Objetivos pedagógicos individualizados</h2>
-      <ul>${obj || "<li>—</li>"}</ul>
-      <h2>5. Estratégias pedagógicas e adaptações</h2>
-      <p><b>Adaptações curriculares:</b> ${esc(draft.adaptacoesCurriculares || "—")}</p>
-      <p><b>Adaptações avaliativas:</b> ${esc(draft.adaptacoesAvaliativas || "—")}</p>
-      <p><b>Metodologias:</b> ${esc(draft.metodologias || "—")}</p>
-      <p><b>Recursos de apoio:</b> ${esc(draft.recursosApoio || "—")}</p>
-      <h2>6. Avaliação contínua</h2>
-      <p><b>Formas de avaliação:</b> ${esc(draft.formasAvaliacao || "—")}</p>
-      <p><b>Periodicidade de revisão:</b> ${esc(draft.periodicidadeRevisao || "—")}</p>
-      <h2>7. Equipe responsável</h2>
-      <ul>${eq || "<li>—</li>"}</ul>
-      <h2>8. Participação da família</h2>
-      <p>${esc(draft.familiaParticipacao || "—")}</p>
-      <p><b>Acordos:</b> ${esc(draft.acordosFamilia || "—")}</p>
-      <div class="sig">
-        <div>${esc(draft.assinaturas.professorRegente || "Professor(a) regente")}</div>
-        <div>${esc(draft.assinaturas.coordenacao || "Coordenação pedagógica")}</div>
-        <div>${esc(draft.assinaturas.aee || "Profissional do AEE")}</div>
-        <div>${esc(draft.assinaturas.familia || "Família / responsável")}</div>
-      </div>
-      <div class="legal">Documento elaborado conforme a <b>Lei nº 14.254/2021</b>, que dispõe sobre o acompanhamento integral para educandos com dislexia, TDAH e outros transtornos de aprendizagem, e em consonância com a <b>Lei nº 13.146/2015</b> (LBI), <b>Lei nº 12.764/2012</b> (PNPDTEA) e a <b>BNCC</b>.</div>
+      <div class="meta">Protocolo ${esc(draft.protocolo)} · Aluno: ${esc(aluno?.name || "—")}</div>
+      <div style="font-size:12pt;line-height:1.55;">${ctx || "<p>—</p>"}</div>
+      <div class="legal">Documento conforme <b>Lei 14.254/2021</b>, <b>Lei 13.146/2015</b>, <b>Lei 12.764/2012</b> e BNCC.</div>
     `;
     w.document.write(wrapStandardPrintHtml(`PEI · ${esc(aluno?.name || "")}`, inner, {
-      extraCss,
-      professorNome: user.name,
-      docType: "pei",
+      extraCss, professorNome: user.name, docType: "pei",
     }));
     w.document.close();
     setTimeout(() => w.focus(), 200);
   };
 
-  const eixosPreenchidos = useMemo(() => {
-    const camposCheck: Array<keyof PEIData> = [
-      "diagnostico", "caracterizacao", "habilidadesDesenvolvidas",
-      "adaptacoesCurriculares", "formasAvaliacao", "familiaParticipacao",
-    ];
-    let n = 0;
-    camposCheck.forEach((k) => { if (String(draft[k] || "").trim().length > 5) n++; });
-    if (draft.objetivos.length > 0) n++;
-    if (draft.equipe.length > 0) n++;
-    return n;
-  }, [draft]);
-
-  const perfil = useMemo(() => detectarPerfil(aluno?.diag, aluno?.cid || draft.cid), [aluno?.diag, aluno?.cid, draft.cid]);
-  const sug = useMemo(() => mergeSug(SUG[perfil] || SUG.generico, EXTRA_COMUM), [perfil]);
-  const pickInto = <K extends keyof PEIData>(k: K) => (s: string) => {
-    setDraft((d) => ({ ...d, [k]: append(String(d[k] || ""), s) as PEIData[K] }));
-    setDirty(true);
-  };
-  const pickAssinatura = (k: keyof PEIData["assinaturas"]) => (s: string) => {
-    setDraft((d) => ({ ...d, assinaturas: { ...d.assinaturas, [k]: append(String(d.assinaturas[k] || ""), s) } }));
-    setDirty(true);
-  };
-
   if (!open) return null;
 
   return (
-    <div
-      className="inc-modal-overlay open"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          if (dirty && !window.confirm("Há alterações não salvas. Fechar mesmo assim?")) return;
-          onClose();
-        }
-      }}
-    >
+    <div className="inc-modal-overlay open" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="inc-modal" ref={modalRef} style={{ maxWidth: 980 }}>
         <div className="inc-modal-bar" />
         <div className="inc-modal-head">
           <div>
             <h2>Plano Educacional Individualizado{aluno ? ` · ${aluno.name}` : ""}</h2>
             <span className="meta" style={{ display: "block", marginTop: 4 }}>
-              Protocolo {draft.protocolo} · Lei 14.254/2021 · {eixosPreenchidos}/8 eixos preenchidos
-              {dirty && <span style={{ color: "var(--accent)", fontWeight: 700 }}> · alterações não salvas</span>}
+              Protocolo {draft.protocolo} · Lei 14.254/2021 · <b>{totalPreenchidas} de {TABS.length} seções preenchidas</b>
+              {savedAt && <span style={{ color: "var(--success)", marginLeft: 8 }}> · <CheckCircle2 size={11} style={{ verticalAlign: -1 }} /> salvo automaticamente</span>}
             </span>
           </div>
           <button className="inc-modal-close" onClick={onClose} aria-label="Fechar"><X size={16} /></button>
         </div>
 
+        {/* Tabs */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "8px 14px", borderBottom: "1px solid var(--border)", background: "#fff" }}>
+          {TABS.map((t) => {
+            const filled = tabPreenchida(t.key, draft);
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                style={{
+                  fontSize: 12, padding: "6px 11px", borderRadius: 8,
+                  border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
+                  background: active ? "var(--accent-soft)" : (filled ? "#F0FDF4" : "#fff"),
+                  color: active ? "#B8410E" : "var(--text)",
+                  fontWeight: 700, cursor: "pointer",
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                }}
+              >
+                {t.label}{filled && <CheckCircle2 size={11} color={active ? "#B8410E" : "#16A34A"} />}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="inc-modal-body" style={{ background: "var(--bg)" }}>
-          {/* 1. Identificação */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}><span style={sectionBadge}>1</span>Identificação do educando</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div>
-                <label style={labelCss}>Nome</label>
-                <input style={inputCss} value={aluno?.name || ""} disabled />
-              </div>
-              <div>
-                <label style={labelCss}>Idade</label>
-                <input style={inputCss} value={String(aluno?.idade ?? "")} disabled />
-              </div>
-              <div>
-                <label style={labelCss}>Escola</label>
-                <input style={inputCss} value={draft.escola} onChange={(e) => set("escola", e.target.value)} placeholder="Nome da escola" />
-              </div>
-              <div>
-                <label style={labelCss}>Turma · ano de referência</label>
-                <input style={inputCss} value={draft.serie} onChange={(e) => set("serie", e.target.value)} placeholder="Ex.: 2º Ano A" />
-              </div>
-              <div>
-                <label style={labelCss}>Vigência (início)</label>
-                <input type="date" style={inputCss} value={draft.vigencia.inicio} onChange={(e) => set("vigencia", { ...draft.vigencia, inicio: e.target.value })} />
-              </div>
-              <div>
-                <label style={labelCss}>Vigência (fim)</label>
-                <input type="date" style={inputCss} value={draft.vigencia.fim} onChange={(e) => set("vigencia", { ...draft.vigencia, fim: e.target.value })} />
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Diagnóstico */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}><span style={sectionBadge}>2</span>Diagnóstico e caracterização</div>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10, marginBottom: 10 }}>
-              <div>
-                <label style={labelCss}>Diagnóstico clínico</label>
-                <input style={inputCss} value={draft.diagnostico} onChange={(e) => set("diagnostico", e.target.value)} placeholder="Ex.: TEA Nível 1" />
-              </div>
-              <div>
-                <label style={labelCss}>CID</label>
-                <input style={inputCss} value={draft.cid} onChange={(e) => set("cid", e.target.value)} placeholder="Ex.: F84.0" />
-              </div>
-              <div>
-                <label style={labelCss}>Profissional responsável pelo laudo</label>
-                <input style={inputCss} value={draft.laudoProf} onChange={(e) => set("laudoProf", e.target.value)} placeholder="Ex.: Dra. Ana Lima — CRM 12345" />
-              </div>
-              <div>
-                <label style={labelCss}>Data do laudo</label>
-                <input type="date" style={inputCss} value={draft.laudoData} onChange={(e) => set("laudoData", e.target.value)} />
-              </div>
-            </div>
-            <label style={labelCss}>Caracterização e histórico pedagógico</label>
-            <textarea style={{ ...inputCss, minHeight: 80, resize: "vertical" }}
-              value={draft.caracterizacao}
-              onChange={(e) => set("caracterizacao", e.target.value)}
-              placeholder="Descreva o histórico escolar, comportamento em sala, intervenções já realizadas, preferências e barreiras observadas." />
-            <SugChips items={sug.caracterizacao} onPick={pickInto("caracterizacao")} />
-          </div>
-
-          {/* 3. Habilidades */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}><span style={sectionBadge}>3</span>Habilidades já desenvolvidas e potencialidades</div>
-            <label style={labelCss}>Habilidades já desenvolvidas</label>
-            <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical", marginBottom: 10 }}
-              value={draft.habilidadesDesenvolvidas}
-              onChange={(e) => set("habilidadesDesenvolvidas", e.target.value)}
-              placeholder="Ex.: Reconhece o alfabeto, lê palavras CV com mediação, conta até 50 com material concreto." />
-            <SugChips items={sug.habilidades} onPick={pickInto("habilidadesDesenvolvidas")} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div>
-                <label style={labelCss}>Potencialidades / interesses</label>
-                <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical" }}
-                  value={draft.pontosForca}
-                  onChange={(e) => set("pontosForca", e.target.value)}
-                  placeholder="Interesses, talentos, recursos pessoais e apoios da família." />
-                <SugChips items={sug.pontosForca} onPick={pickInto("pontosForca")} />
-              </div>
-              <div>
-                <label style={labelCss}>Necessidades de apoio</label>
-                <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical" }}
-                  value={draft.necessidadesApoio}
-                  onChange={(e) => set("necessidadesApoio", e.target.value)}
-                  placeholder="Sensorial, comunicação, motor, atenção, organização." />
-                <SugChips items={sug.necessidadesApoio} onPick={pickInto("necessidadesApoio")} />
-              </div>
-            </div>
-          </div>
-
-          {/* 4. Objetivos */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}>
-              <span style={sectionBadge}>4</span>Objetivos pedagógicos individualizados
-              <button onClick={addObjetivo} className="inc-btn-ghost" style={{ marginLeft: "auto" }}>
-                <Plus size={12} /> Adicionar objetivo
-              </button>
-            </div>
-            {draft.objetivos.length === 0 && (
-              <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>Nenhum objetivo cadastrado. Acrescente metas mensuráveis (curto, médio e longo prazo).</p>
-            )}
-            {draft.objetivos.map((o, i) => (
-              <div key={o.id} style={{ border: "1px dashed var(--border)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-                  <span style={{ ...sectionBadge, background: "#E9F0FF", color: "#1F4FB8" }}>#{i + 1}</span>
-                  <select value={o.prazo} onChange={(e) => updObjetivo(o.id, { prazo: e.target.value as Objetivo["prazo"] })}
-                    style={{ ...inputCss, width: "auto" }}>
-                    <option value="curto">Curto prazo</option>
-                    <option value="medio">Médio prazo</option>
-                    <option value="longo">Longo prazo</option>
-                  </select>
-                  <select value={o.status} onChange={(e) => updObjetivo(o.id, { status: e.target.value as Objetivo["status"] })}
-                    style={{ ...inputCss, width: "auto" }}>
-                    <option value="nao_iniciado">Não iniciado</option>
-                    <option value="em_andamento">Em andamento</option>
-                    <option value="atingido">Atingido</option>
-                    <option value="revisar">Revisar</option>
-                  </select>
-                  <button onClick={() => delObjetivo(o.id)} style={{ marginLeft: "auto", background: "transparent", border: "none", color: "#C62B2B", cursor: "pointer" }} aria-label="Remover">
-                    <Trash2 size={14} />
-                  </button>
+          {/* TAB IDENT */}
+          {tab === "ident" && (
+            <div style={sectionCss}>
+              <div style={sectionTitleCss}><span style={sectionBadge}>1</span>Identificação e contexto</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={labelCss}>Nome completo</label>
+                  <input style={inputCss} value={aluno?.name || ""} disabled />
                 </div>
-                <label style={labelCss}>Objetivo</label>
-                <textarea style={{ ...inputCss, minHeight: 50, resize: "vertical", marginBottom: 6 }}
-                  value={o.texto} onChange={(e) => updObjetivo(o.id, { texto: e.target.value })}
-                  placeholder="Ex.: Ler 20 palavras com encontro consonantal com mediação visual." />
-                <SugChips items={sug.objetivoTexto} onPick={(s) => updObjetivo(o.id, { texto: append(o.texto, s) })} />
-                <label style={labelCss}>Critérios de avaliação</label>
-                <input style={inputCss} value={o.criterios} onChange={(e) => updObjetivo(o.id, { criterios: e.target.value })}
-                  placeholder="Ex.: 80% de acerto em 3 sessões consecutivas." />
-                <SugChips items={sug.objetivoCriterios} onPick={(s) => updObjetivo(o.id, { criterios: append(o.criterios, s) })} />
+                <div>
+                  <label style={labelCss}>Data de nascimento</label>
+                  <input type="date" style={inputCss} value={draft.dataNascimento} onChange={(e) => set("dataNascimento", e.target.value)} />
+                </div>
+                <div>
+                  <label style={labelCss}>Diagnóstico</label>
+                  <input style={inputCss} value={draft.diagnostico} onChange={(e) => set("diagnostico", e.target.value)} placeholder="Ex.: TEA Nível 1" />
+                </div>
+                <div>
+                  <label style={labelCss}>CID</label>
+                  <input style={inputCss} value={draft.cid} onChange={(e) => set("cid", e.target.value)} placeholder="Ex.: F84.0" />
+                </div>
+                <div>
+                  <label style={labelCss}>Data do laudo médico</label>
+                  <input type="date" style={inputCss} value={draft.laudoData} onChange={(e) => set("laudoData", e.target.value)} />
+                </div>
+                <div>
+                  <label style={labelCss}>Profissional responsável pelo laudo</label>
+                  <input style={inputCss} value={draft.laudoProf} onChange={(e) => set("laudoProf", e.target.value)} placeholder="Ex.: Dra. Ana — CRM 12345" />
+                </div>
+                <div>
+                  <label style={labelCss}>Responsável legal</label>
+                  <input style={inputCss} value={draft.responsavelNome} onChange={(e) => set("responsavelNome", e.target.value)} placeholder="Nome do responsável" />
+                </div>
+                <div>
+                  <label style={labelCss}>Contato da família</label>
+                  <input style={inputCss} value={draft.responsavelContato} onChange={(e) => set("responsavelContato", e.target.value)} placeholder="Telefone / email" />
+                </div>
+                <div>
+                  <label style={labelCss}>Escola</label>
+                  <input style={inputCss} value={draft.escola} onChange={(e) => set("escola", e.target.value)} placeholder="Nome da escola" />
+                </div>
+                <div>
+                  <label style={labelCss}>Turma · ano de referência pedagógico</label>
+                  <input style={inputCss} value={draft.serie} onChange={(e) => set("serie", e.target.value)} placeholder="Ex.: 2º Ano A" />
+                </div>
+                <div>
+                  <label style={labelCss}>Data de início do PEI</label>
+                  <input type="date" style={inputCss} value={draft.dataInicioPEI} onChange={(e) => set("dataInicioPEI", e.target.value)} />
+                </div>
+                <div>
+                  <label style={labelCss}>Vigência do PEI (até)</label>
+                  <input type="date" style={inputCss} value={draft.vigencia.fim} onChange={(e) => set("vigencia", { ...draft.vigencia, fim: e.target.value })} />
+                </div>
               </div>
-            ))}
-          </div>
-
-          {/* 5. Estratégias */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}><span style={sectionBadge}>5</span>Estratégias pedagógicas e adaptações</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div>
-                <label style={labelCss}>Adaptações curriculares</label>
-                <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical" }}
-                  value={draft.adaptacoesCurriculares} onChange={(e) => set("adaptacoesCurriculares", e.target.value)}
-                  placeholder="Conteúdos priorizados, ajustes de complexidade, recortes da BNCC." />
-                <SugChips items={sug.adaptCurric} onPick={pickInto("adaptacoesCurriculares")} />
-              </div>
-              <div>
-                <label style={labelCss}>Adaptações avaliativas</label>
-                <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical" }}
-                  value={draft.adaptacoesAvaliativas} onChange={(e) => set("adaptacoesAvaliativas", e.target.value)}
-                  placeholder="Ex.: tempo estendido, prova oral, redução de itens, leitura em voz alta." />
-                <SugChips items={sug.adaptAval} onPick={pickInto("adaptacoesAvaliativas")} />
-              </div>
-              <div>
-                <label style={labelCss}>Metodologias e estratégias</label>
-                <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical" }}
-                  value={draft.metodologias} onChange={(e) => set("metodologias", e.target.value)}
-                  placeholder="DUA, TEACCH, PECS, rotina visual, ensino estruturado, mediação por pares." />
-                <SugChips items={sug.metodologias} onPick={pickInto("metodologias")} />
-              </div>
-              <div>
-                <label style={labelCss}>Recursos de apoio</label>
-                <textarea style={{ ...inputCss, minHeight: 70, resize: "vertical" }}
-                  value={draft.recursosApoio} onChange={(e) => set("recursosApoio", e.target.value)}
-                  placeholder="Pictogramas, fones abafadores, material concreto, tecnologia assistiva, mediadora." />
-                <SugChips items={sug.recursos} onPick={pickInto("recursosApoio")} />
-              </div>
-            </div>
-          </div>
-
-          {/* 6. Avaliação */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}><span style={sectionBadge}>6</span>Avaliação contínua e revisão</div>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
-              <div>
-                <label style={labelCss}>Formas de avaliação</label>
-                <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical" }}
-                  value={draft.formasAvaliacao} onChange={(e) => set("formasAvaliacao", e.target.value)}
-                  placeholder="Observação, portfólio, rubrica, registro de evidências, autoavaliação." />
-                <SugChips items={sug.formasAval} onPick={pickInto("formasAvaliacao")} />
-              </div>
-              <div>
-                <label style={labelCss}>Periodicidade de revisão</label>
-                <select style={inputCss} value={draft.periodicidadeRevisao} onChange={(e) => set("periodicidadeRevisao", e.target.value)}>
-                  <option>Bimestral</option>
-                  <option>Trimestral</option>
-                  <option>Semestral</option>
-                  <option>Anual</option>
-                </select>
+              <div style={{ marginTop: 12 }}>
+                <label style={labelCss}>Profissionais envolvidos no PEI</label>
+                <CheckGroup
+                  multi
+                  options={["Professor(a) regente", "AEE", "Psicólogo(a)", "Fonoaudiólogo(a)", "Terapeuta ocupacional", "Mediador(a)", "Coordenação pedagógica", "Outros"]}
+                  value={draft.profissionaisEnvolvidos}
+                  onChange={(v) => set("profissionaisEnvolvidos", v as string[])}
+                />
               </div>
             </div>
-          </div>
+          )}
 
-          {/* 7. Equipe */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}>
-              <span style={sectionBadge}>7</span>Equipe responsável
-              <button onClick={addEquipe} className="inc-btn-ghost" style={{ marginLeft: "auto" }}>
-                <Plus size={12} /> Adicionar membro
-              </button>
+          {/* TAB PERFIL */}
+          {tab === "perfil" && (
+            <>
+              <div style={sectionCss}>
+                <div style={sectionTitleCss}><span style={sectionBadge}>2</span>Perfil do aluno</div>
+                <label style={labelCss}>Potencialidades e pontos fortes</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.potencialidades} onChange={(e) => set("potencialidades", e.target.value)}
+                  placeholder="O que o aluno já faz bem, seus talentos e habilidades desenvolvidas..." />
+                <label style={{ ...labelCss, marginTop: 10 }}>Interesses e motivações</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.interessesMotivacoes} onChange={(e) => set("interessesMotivacoes", e.target.value)}
+                  placeholder="O que engaja e motiva o aluno, temas favoritos, atividades preferidas..." />
+
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelCss}>Estilo de aprendizagem (múltipla escolha)</label>
+                  <CheckGroup multi options={["Visual", "Auditivo", "Cinestésico", "Leitura/Escrita", "Misto"]}
+                    value={draft.estiloAprendizagem} onChange={(v) => set("estiloAprendizagem", v as string[])} />
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelCss}>Forma de comunicação predominante (múltipla escolha)</label>
+                  <CheckGroup multi options={["Verbal oral", "CAA", "Gestos e sinais", "LIBRAS", "Escrita", "Pictogramas"]}
+                    value={draft.formaComunicacao} onChange={(v) => set("formaComunicacao", v as string[])} />
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelCss}>Nível de autonomia nas atividades</label>
+                  <CheckGroup multi={false} options={["Totalmente dependente", "Dependente com apoio parcial", "Semi-independente", "Independente com supervisão", "Totalmente independente"]}
+                    value={draft.nivelAutonomia} onChange={(v) => set("nivelAutonomia", v as string)} />
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelCss}>Nível de interação social</label>
+                  <CheckGroup multi={false} options={["Não interage com colegas", "Interage com apoio do adulto", "Interage com 1 ou 2 colegas", "Interage em pequenos grupos", "Interage com toda a turma"]}
+                    value={draft.nivelInteracaoSocial} onChange={(v) => set("nivelInteracaoSocial", v as string)} />
+                </div>
+
+                <label style={{ ...labelCss, marginTop: 12 }}>Comportamentos relevantes em sala</label>
+                <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.comportamentosRelevantes} onChange={(e) => set("comportamentosRelevantes", e.target.value)}
+                  placeholder="Desregulações, gatilhos, estratégias que funcionam, rotinas necessárias..." />
+
+                <label style={{ ...labelCss, marginTop: 10 }}>Como lidar com crises ou desregulação</label>
+                <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.comoLidarCrises} onChange={(e) => set("comoLidarCrises", e.target.value)}
+                  placeholder="O que fazer: estratégias que funcionam, o que evitar, quem acionar..." />
+              </div>
+
+              <div style={sectionCss}>
+                <div style={sectionTitleCss}><span style={sectionBadge}>3</span>Histórico escolar</div>
+                <label style={labelCss}>Percurso escolar anterior</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.percursoEscolar} onChange={(e) => set("percursoEscolar", e.target.value)}
+                  placeholder="Escolas anteriores, experiências relevantes, anos repetidos, atendimentos já realizados..." />
+                <label style={{ ...labelCss, marginTop: 10 }}>Atendimentos externos em andamento</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.atendimentosExternos} onChange={(e) => set("atendimentosExternos", e.target.value)}
+                  placeholder="Terapias, clínicas, especialistas que acompanham o aluno atualmente..." />
+                <label style={{ ...labelCss, marginTop: 10 }}>Resultados de intervenções anteriores</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.resultadosIntervencoes} onChange={(e) => set("resultadosIntervencoes", e.target.value)}
+                  placeholder="O que já foi tentado e os resultados observados..." />
+              </div>
+            </>
+          )}
+
+          {/* TAB AVAL */}
+          {tab === "aval" && (
+            <div style={sectionCss}>
+              <div style={sectionTitleCss}><span style={sectionBadge}>4</span>Avaliação pedagógica inicial</div>
+              {AREAS_AVALIACAO.map((a) => {
+                const v = draft.avaliacaoPedagogica[a.key] || { nivel: "", obs: "" };
+                return (
+                  <div key={a.key} style={{ border: "1px dashed var(--border)", borderRadius: 10, padding: 10, marginBottom: 8 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>{a.label}</div>
+                    <CheckGroup multi={false} options={[...NIVEIS_AVALIACAO]} value={v.nivel} onChange={(x) => setAval(a.key, { nivel: x as string })} />
+                    <textarea style={{ ...inputCss, minHeight: 48, marginTop: 8 }} value={v.obs}
+                      onChange={(e) => setAval(a.key, { obs: e.target.value })}
+                      placeholder="Observações sobre esta área (opcional)" />
+                  </div>
+                );
+              })}
             </div>
-            {draft.equipe.length === 0 && (
-              <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>Inclua professor(a) regente, coordenação, AEE, terapeutas e mediadores.</p>
-            )}
-            {draft.equipe.map((m, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 2fr auto", gap: 8, marginBottom: 6 }}>
-                <input style={inputCss} value={m.nome} onChange={(e) => updEquipe(i, { nome: e.target.value })} placeholder="Nome" />
-                <input style={inputCss} value={m.funcao} onChange={(e) => updEquipe(i, { funcao: e.target.value })} placeholder="Função (ex.: Profa. regente, AEE, Fono)" />
-                <button onClick={() => delEquipe(i)} style={{ background: "transparent", border: "none", color: "#C62B2B", cursor: "pointer" }} aria-label="Remover"><Trash2 size={14} /></button>
-              </div>
-            ))}
-            {draft.equipe.length > 0 && (
-              <SugChips items={sug.equipeFuncao} onPick={(s) => {
-                const idx = draft.equipe.length - 1;
-                updEquipe(idx, { funcao: s });
-              }} />
-            )}
-          </div>
+          )}
 
-          {/* 8. Família */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}><span style={sectionBadge}>8</span>Participação da família</div>
-            <label style={labelCss}>Como a família participa do processo</label>
-            <textarea style={{ ...inputCss, minHeight: 60, resize: "vertical", marginBottom: 10 }}
-              value={draft.familiaParticipacao} onChange={(e) => set("familiaParticipacao", e.target.value)}
-              placeholder="Reuniões, comunicação semanal, apoio em rotinas, encaminhamentos terapêuticos." />
-            <SugChips items={sug.familiaPart} onPick={pickInto("familiaParticipacao")} />
-            <label style={labelCss}>Acordos firmados com a família</label>
-            <textarea style={{ ...inputCss, minHeight: 50, resize: "vertical" }}
-              value={draft.acordosFamilia} onChange={(e) => set("acordosFamilia", e.target.value)}
-              placeholder="Compromissos de ambas as partes, frequência de devolutivas, protocolo de crise." />
-            <SugChips items={sug.acordosFam} onPick={pickInto("acordosFamilia")} />
-          </div>
+          {/* TAB OBJETIVOS */}
+          {tab === "objetivos" && (
+            <div style={sectionCss}>
+              <div style={sectionTitleCss}><span style={sectionBadge}>5</span>Objetivos e metas</div>
+              <label style={labelCss}>Objetivos de longo prazo (ano letivo)</label>
+              <textarea style={{ ...inputCss, minHeight: 80 }} value={draft.objetivosLongoPrazo} onChange={(e) => set("objetivosLongoPrazo", e.target.value)}
+                placeholder="O que se espera que o aluno desenvolva até o final do ano letivo..." />
 
-          {/* Assinaturas */}
-          <div style={sectionCss}>
-            <div style={sectionTitleCss}><Sparkles size={14} /> Assinaturas (impressão)</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div>
-                <label style={labelCss}>Professor(a) regente</label>
-                <input style={inputCss} value={draft.assinaturas.professorRegente}
-                  onChange={(e) => set("assinaturas", { ...draft.assinaturas, professorRegente: e.target.value })} placeholder="Nome completo" />
+              <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: 13 }}>Metas de curto prazo com indicadores</div>
+                <button onClick={addMeta} className="inc-btn-ghost" style={{ marginLeft: "auto" }}>
+                  <Plus size={12} /> Adicionar meta
+                </button>
               </div>
-              <div>
-                <label style={labelCss}>Coordenação pedagógica</label>
-                <input style={inputCss} value={draft.assinaturas.coordenacao}
-                  onChange={(e) => set("assinaturas", { ...draft.assinaturas, coordenacao: e.target.value })} placeholder="Nome completo" />
-              </div>
-              <div>
-                <label style={labelCss}>Profissional do AEE</label>
-                <input style={inputCss} value={draft.assinaturas.aee}
-                  onChange={(e) => set("assinaturas", { ...draft.assinaturas, aee: e.target.value })} placeholder="Nome completo" />
-              </div>
-              <div>
-                <label style={labelCss}>Família / responsável</label>
-                <input style={inputCss} value={draft.assinaturas.familia}
-                  onChange={(e) => set("assinaturas", { ...draft.assinaturas, familia: e.target.value })} placeholder="Nome completo" />
-              </div>
+              {draft.metasCurtoPrazo.length === 0 && (
+                <p style={{ fontSize: 12, color: "var(--muted)", margin: "6px 0 0" }}>Nenhuma meta cadastrada.</p>
+              )}
+              {draft.metasCurtoPrazo.map((m, i) => (
+                <div key={m.id} style={{ border: "1px dashed var(--border)", borderRadius: 10, padding: 10, marginTop: 8 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ ...sectionBadge, background: "#E9F0FF", color: "#1F4FB8" }}>#{i + 1}</span>
+                    <select value={m.area} onChange={(e) => updMeta(m.id, { area: e.target.value })} style={{ ...inputCss, width: "auto" }}>
+                      <option>Cognitiva/Pedagógica</option>
+                      <option>Social e emocional</option>
+                      <option>Motora</option>
+                      <option>Comunicação e linguagem</option>
+                      <option>Autonomia e independência</option>
+                    </select>
+                    <button onClick={() => delMeta(m.id)} style={{ marginLeft: "auto", background: "transparent", border: "none", color: "#C62B2B", cursor: "pointer" }}><Trash2 size={14} /></button>
+                  </div>
+                  <label style={labelCss}>Meta</label>
+                  <textarea style={{ ...inputCss, minHeight: 50, marginBottom: 6 }} value={m.meta} onChange={(e) => updMeta(m.id, { meta: e.target.value })}
+                    placeholder="O que se quer alcançar..." />
+                  <label style={labelCss}>Como saber que foi atingida (indicador)</label>
+                  <input style={inputCss} value={m.indicador} onChange={(e) => updMeta(m.id, { indicador: e.target.value })}
+                    placeholder="Critério observável para considerar a meta atingida" />
+                </div>
+              ))}
             </div>
-          </div>
+          )}
+
+          {/* TAB ADAPT */}
+          {tab === "adapt" && (
+            <>
+              <div style={sectionCss}>
+                <div style={sectionTitleCss}><span style={sectionBadge}>6</span>Adaptações curriculares</div>
+                {[
+                  { k: "adaptacoesConteudo" as const, l: "Adaptações de conteúdo", ph: "O que será ensinado de forma diferente ou simplificada..." },
+                  { k: "adaptacoesMetodologicas" as const, l: "Adaptações metodológicas", ph: "Como o conteúdo será ensinado: material concreto, visual, sequências menores..." },
+                  { k: "adaptacoesAvaliacao" as const, l: "Adaptações de avaliação", ph: "Prova oral, portfólio, observação, prazo estendido..." },
+                  { k: "adaptacoesTempo" as const, l: "Adaptações de tempo", ph: "Tempo extra necessário para atividades, provas e tarefas..." },
+                  { k: "adaptacoesEspaco" as const, l: "Adaptações de espaço", ph: "Posicionamento na sala, ambiente adaptado, iluminação, nível de ruído..." },
+                ].map((c) => (
+                  <div key={c.k} style={{ marginBottom: 10 }}>
+                    <label style={labelCss}>{c.l}</label>
+                    <textarea style={{ ...inputCss, minHeight: 60 }} value={draft[c.k] as string} onChange={(e) => set(c.k, e.target.value)} placeholder={c.ph} />
+                  </div>
+                ))}
+              </div>
+              <div style={sectionCss}>
+                <div style={sectionTitleCss}><span style={sectionBadge}>7</span>Estratégias pedagógicas</div>
+                <label style={labelCss}>Estratégias específicas por área</label>
+                <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.estrategiasArea} onChange={(e) => set("estrategiasArea", e.target.value)}
+                  placeholder="Estratégias que funcionam para cada componente curricular ou campo de experiência..." />
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelCss}>Recursos pedagógicos necessários (múltipla escolha)</label>
+                  <CheckGroup multi
+                    options={["Material concreto e manipulável", "Recursos visuais e pictogramas", "Tecnologia assistiva", "Jogos pedagógicos", "Música e movimento", "Rotina visual estruturada", "Temporizador visual", "Espaço de autorregulação"]}
+                    value={draft.recursosPedagogicos} onChange={(v) => set("recursosPedagogicos", v as string[])} />
+                  <input style={{ ...inputCss, marginTop: 8 }} value={draft.recursosPedagogicosOutro} onChange={(e) => set("recursosPedagogicosOutro", e.target.value)} placeholder="Outro recurso (opcional)" />
+                </div>
+                <label style={{ ...labelCss, marginTop: 12 }}>Estratégias para inclusão coletiva</label>
+                <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.estrategiasInclusaoColetiva} onChange={(e) => set("estrategiasInclusaoColetiva", e.target.value)}
+                  placeholder="Como incluir o aluno nas atividades da turma toda..." />
+              </div>
+            </>
+          )}
+
+          {/* TAB TA */}
+          {tab === "ta" && (
+            <div style={sectionCss}>
+              <div style={sectionTitleCss}><span style={sectionBadge}>8</span>Tecnologia assistiva</div>
+              <label style={labelCss}>Recursos de CAA em uso (múltipla escolha)</label>
+              <CheckGroup multi
+                options={["Pranchas de comunicação", "Aplicativo de CAA (Livox, LetMeTalk)", "PECS", "Símbolos gráficos (PCS, Arasaac)", "Não utiliza CAA"]}
+                value={draft.recursosCAA} onChange={(v) => set("recursosCAA", v as string[])} />
+              <label style={{ ...labelCss, marginTop: 12 }}>Softwares e aplicativos de apoio</label>
+              <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.softwaresAplicativos} onChange={(e) => set("softwaresAplicativos", e.target.value)}
+                placeholder="Apps e ferramentas digitais que auxiliam o aprendizado..." />
+              <label style={{ ...labelCss, marginTop: 10 }}>Adaptações físicas de materiais</label>
+              <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.adaptacoesFisicasMateriais} onChange={(e) => set("adaptacoesFisicasMateriais", e.target.value)}
+                placeholder="Lápis adaptado, tesoura adaptada, engrossador, etc..." />
+            </div>
+          )}
+
+          {/* TAB FAMILIA */}
+          {tab === "familia" && (
+            <>
+              <div style={sectionCss}>
+                <div style={sectionTitleCss}><span style={sectionBadge}>9</span>Apoios e serviços</div>
+                <label style={labelCss}>Frequência no AEE</label>
+                <CheckGroup multi={false} options={["Não frequenta AEE", "1x por semana", "2x por semana", "Diariamente", "Outro"]}
+                  value={draft.frequenciaAEE} onChange={(v) => set("frequenciaAEE", v as string)} />
+                <label style={{ ...labelCss, marginTop: 10 }}>Objetivos do AEE</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.objetivosAEE} onChange={(e) => set("objetivosAEE", e.target.value)}
+                  placeholder="O que é trabalhado no Atendimento Educacional Especializado..." />
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelCss}>Possui profissional de apoio em sala?</label>
+                  <CheckGroup multi={false} options={["Sim", "Não"]} value={draft.temProfissionalApoio} onChange={(v) => set("temProfissionalApoio", v as string)} />
+                </div>
+                {draft.temProfissionalApoio === "Sim" && (
+                  <>
+                    <label style={{ ...labelCss, marginTop: 10 }}>Função do profissional de apoio</label>
+                    <textarea style={{ ...inputCss, minHeight: 50 }} value={draft.funcaoProfissionalApoio} onChange={(e) => set("funcaoProfissionalApoio", e.target.value)}
+                      placeholder="O que o profissional de apoio realiza em sala..." />
+                  </>
+                )}
+              </div>
+              <div style={sectionCss}>
+                <div style={sectionTitleCss}><span style={sectionBadge}>10</span>Participação da família</div>
+                <label style={labelCss}>Como a família pode apoiar em casa</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.comoFamiliaApoia} onChange={(e) => set("comoFamiliaApoia", e.target.value)}
+                  placeholder="Orientações para a família continuar o trabalho em casa..." />
+                <label style={{ ...labelCss, marginTop: 10 }}>Combinados entre escola e família</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.combinadosFamilia} onChange={(e) => set("combinadosFamilia", e.target.value)}
+                  placeholder="Acordos estabelecidos para garantir consistência..." />
+                <div style={{ marginTop: 12 }}>
+                  <label style={labelCss}>Frequência de reuniões de acompanhamento</label>
+                  <CheckGroup multi={false} options={["Mensal", "Bimestral", "Trimestral", "Semestral", "Sob demanda"]}
+                    value={draft.frequenciaReunioes} onChange={(v) => set("frequenciaReunioes", v as string)} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB REVISÃO */}
+          {tab === "revisao" && (
+            <div style={sectionCss}>
+              <div style={sectionTitleCss}><span style={sectionBadge}>11</span>Avaliação e revisão do PEI</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={labelCss}>Data prevista para revisão</label>
+                  <input type="date" style={inputCss} value={draft.dataRevisao} onChange={(e) => set("dataRevisao", e.target.value)} />
+                </div>
+                <div>
+                  <label style={labelCss}>Responsável pela revisão</label>
+                  <input style={inputCss} value={draft.responsavelRevisao} onChange={(e) => set("responsavelRevisao", e.target.value)} placeholder="Nome do responsável" />
+                </div>
+              </div>
+              <label style={{ ...labelCss, marginTop: 12 }}>Critérios para atualização do plano</label>
+              <textarea style={{ ...inputCss, minHeight: 80 }} value={draft.criteriosAtualizacao} onChange={(e) => set("criteriosAtualizacao", e.target.value)}
+                placeholder="O que deve acontecer para o PEI ser revisado antes da data prevista..." />
+            </div>
+          )}
 
           <p style={{ fontSize: 11, color: "var(--muted)", textAlign: "center", margin: "10px 0 0" }}>
-            Conforme <b>Lei 14.254/2021</b> · <b>Lei 13.146/2015 (LBI)</b> · <b>Lei 12.764/2012 (PNPDTEA)</b> · BNCC.
+            <Sparkles size={11} style={{ verticalAlign: -1 }} /> Apenas seções preenchidas serão enviadas no prompt da Sofia. ·{" "}
+            <Wand2 size={11} style={{ verticalAlign: -1 }} /> Salvamento automático ativo.
           </p>
         </div>
 
         <div className="inc-modal-foot">
-          <span className="legal">{dirty ? "Alterações pendentes" : draft.atualizadoEm ? `Salvo em ${new Date(draft.atualizadoEm).toLocaleString("pt-BR")}` : "Não salvo ainda"}</span>
+          <span className="legal">{savedAt ? `Salvo em ${new Date(savedAt).toLocaleString("pt-BR")}` : "Não salvo ainda"}</span>
           <button className="inc-btn-ghost" onClick={imprimir}><Printer size={14} /> Imprimir / PDF</button>
-          <button className="btn btn-primary" onClick={salvar} disabled={!dirty}>
+          <button className="btn btn-primary" onClick={salvar}>
             <Save size={14} /> Salvar PEI
           </button>
         </div>
@@ -969,5 +886,3 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
     </div>
   );
 }
-
-export { FileText };
