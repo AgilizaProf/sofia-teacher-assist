@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Save, Printer, Plus, Trash2, Sparkles, Wand2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
-import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { useUser } from "@/lib/mockData";
+import { printPEIDocument } from "@/lib/print/peiPrint";
 import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
 import { PEISuggestions, appendText } from "./PEISuggestions";
 
@@ -507,27 +507,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
   const totalPreenchidas = useMemo(() => TABS.filter((t) => tabPreenchida(t.key, draft)).length, [draft]);
 
   const imprimir = () => {
-    const w = window.open("", "_blank");
-    if (!w) return;
-    const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
-    const ctx = buildPEIContext(draft).replace(/\n/g, "<br/>");
-    const extraCss = `
-      h1{font-size:16pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
-      .meta{font-size:11pt;color:#6B7691;margin-bottom:10pt;}
-      .legal{margin-top:16pt;font-size:10pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
-    `;
-    const inner = `
-      <div><button onclick="window.print()">Imprimir</button></div>
-      <h1>Plano Educacional Individualizado (PEI)</h1>
-      <div class="meta">Protocolo ${esc(draft.protocolo)} · Aluno: ${esc(aluno?.name || "—")}</div>
-      <div style="font-size:12pt;line-height:1.55;">${ctx || "<p>—</p>"}</div>
-      <div class="legal">Documento conforme <b>Lei 14.254/2021</b>, <b>Lei 13.146/2015</b>, <b>Lei 12.764/2012</b> e BNCC.</div>
-    `;
-    w.document.write(wrapStandardPrintHtml(`PEI · ${esc(aluno?.name || "")}`, inner, {
-      extraCss, professorNome: user.name, docType: "pei",
-    }));
-    w.document.close();
-    setTimeout(() => w.focus(), 200);
+    printPEIDocument({
+      pei: draft,
+      alunoName: aluno?.name || "",
+      professorNome: user.name,
+    });
   };
 
   if (!open) return null;
