@@ -596,6 +596,13 @@ export function Relatorios() {
   // Observações livres do(a) professor(a) por aluno (persistido junto à avaliação BNCC)
   const [bnccObsByAluno, setBnccObsByAluno] = usePersistentState<Record<string, string>>("rel_bncc_obs", {});
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
+  // Estado de expansão do campo de observações no modal BNCC.
+  // Começa sempre recolhido (Set vazio) para liberar espaço visual.
+  const [bnccObsExpanded, setBnccObsExpanded] = useState<Set<string>>(new Set());
+  // Sempre que o modal abre para outro aluno, garantimos início recolhido.
+  useEffect(() => {
+    if (bnccOpen) setBnccObsExpanded(new Set());
+  }, [bnccOpen?.id]);
   const [verTodosHist, setVerTodosHist] = useState(false);
   const HIST_LIMIT = 5;
 
@@ -1547,21 +1554,49 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               </div>
 
               <div style={{ padding: "12px 20px 16px", borderTop: "1px solid var(--line-soft)", background: "#fff" }}>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--text-soft)", marginBottom: 6 }}>
-                  {ei ? "Observações sobre a criança" : "Observações sobre o aluno"}
-                </label>
-                <textarea
-                  value={bnccObsByAluno[id] || ""}
-                  onChange={(e) => setBnccObsByAluno((p) => ({ ...p, [id]: e.target.value }))}
-                  rows={4}
-                  placeholder={ei
-                    ? "Descreva o desenvolvimento da criança: interações com os colegas, autonomia, participação nas brincadeiras, linguagem, movimento, expressões artísticas e avanços observados no período…"
-                    : "Descreva avanços, dificuldades, comportamentos e informações relevantes sobre o aluno no período…"}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, resize: "vertical", fontFamily: "inherit", background: "#FAFAFB" }}
-                />
-                <div style={{ fontSize: 11, color: "var(--text-soft)", marginTop: 6 }}>
-                  Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o {ei ? "parecer descritivo" : "parecer"}.
-                </div>
+                {(() => {
+                  const obsOpen = bnccObsExpanded.has(id);
+                  const obsVal = bnccObsByAluno[id] || "";
+                  const obsCount = obsVal.trim().length;
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setBnccObsExpanded((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(id)) next.delete(id); else next.add(id);
+                          return next;
+                        })}
+                        aria-expanded={obsOpen}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "transparent", border: 0, padding: 0, cursor: "pointer", marginBottom: obsOpen ? 6 : 0 }}
+                      >
+                        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--text-soft)" }}>
+                          {ei ? "Observações sobre a criança" : "Observações sobre o aluno"}
+                          {obsCount > 0 && (
+                            <span style={{ marginLeft: 8, color: "#EA580C", textTransform: "none", letterSpacing: 0, fontWeight: 700 }}>· preenchido</span>
+                          )}
+                        </span>
+                        <ChevronDown size={16} style={{ color: "var(--text-soft)", transform: obsOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .15s" }} />
+                      </button>
+                      {obsOpen && (
+                        <>
+                          <textarea
+                            value={obsVal}
+                            onChange={(e) => setBnccObsByAluno((p) => ({ ...p, [id]: e.target.value }))}
+                            rows={4}
+                            placeholder={ei
+                              ? "Descreva o desenvolvimento da criança: interações com os colegas, autonomia, participação nas brincadeiras, linguagem, movimento, expressões artísticas e avanços observados no período…"
+                              : "Descreva avanços, dificuldades, comportamentos e informações relevantes sobre o aluno no período…"}
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, resize: "vertical", fontFamily: "inherit", background: "#FAFAFB" }}
+                          />
+                          <div style={{ fontSize: 11, color: "var(--text-soft)", marginTop: 6 }}>
+                            Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o {ei ? "parecer descritivo" : "parecer"}.
+                          </div>
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               <div style={{ display: "flex", gap: 8, justifyContent: "space-between", padding: "14px 20px", borderTop: "1px solid var(--line-soft)", background: "#fff" }}>
