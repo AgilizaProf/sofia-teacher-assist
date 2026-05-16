@@ -537,8 +537,7 @@ export function Dashboard() {
   }, [atvHistRegular, atvHistPcd, incPlans, m6Entries]);
   const documentsGenerated = Math.max(user.documentsGenerated, generatedDocsCount);
   // Tempo devolvido — regras de produto:
-  //   • Aluno cadastrado individualmente: NÃO conta.
-  //   • Aluno cadastrado em massa: 1 min por aluno.
+  //   • Cada aluno vinculado a uma turma: 1 min (individual ou em massa).
   //   • Cada planejamento de aula: 60 min × quantidade.
   //   • Cada relatório/parecer escrito: 40 min × quantidade.
   //   • Cada PEI: 300 min (5 h) × quantidade.
@@ -556,8 +555,13 @@ export function Dashboard() {
   // Pareceres finalizados: usamos o counter mock (`user.documentsGenerated`)
   // como proxy do que foi escrito de fato em Relatórios.
   const reportsCount = Math.max(0, user.documentsGenerated);
+  // Conta todos os alunos efetivamente vinculados a uma turma.
+  const studentsWithClassCount = useMemo(
+    () => students.filter((s) => (s.classRef || "").trim().length > 0).length,
+    [students],
+  );
   const earnedMinutes =
-    bulkStudentsCount * 1 +
+    Math.max(studentsWithClassCount, bulkStudentsCount) * 1 +
     lessonPlansCount * 60 +
     reportsCount * 40 +
     peiCount * 300;
