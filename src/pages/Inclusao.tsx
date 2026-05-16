@@ -1226,24 +1226,33 @@ ${corpo}
       const objs = (Array.isArray(pei.objetivos) ? pei.objetivos : []) as Array<{ texto?: string; status?: string; prazo?: string; criterios?: string }>;
       const PRAZO: Record<string, string> = { curto: "curto prazo", medio: "médio prazo", longo: "longo prazo" };
       const STATUS: Record<string, string> = { nao_iniciado: "não iniciado", em_andamento: "em andamento", atingido: "atingido", revisar: "revisar" };
-      const linhasObj = objs
-        .filter((o) => (o.texto || "").trim())
+      const objsValidos = objs.filter((o) => (o.texto || "").trim());
+      const linhasObj = objsValidos
         .map((o, i) => `  ${i + 1}. ${o.texto} — status: ${STATUS[o.status || ""] || o.status || "—"}${o.prazo ? ` (${PRAZO[o.prazo] || o.prazo})` : ""}${o.criterios ? ` · critérios: ${o.criterios}` : ""}`)
         .join("\n");
+      const consolidadas = objsValidos.filter((o) => o.status === "atingido").map((o) => `- ${o.texto}`).join("\n");
+      const emDesenvolvimento = objsValidos.filter((o) => o.status === "em_andamento" || o.status === "revisar").map((o) => `- ${o.texto}`).join("\n");
       const partes: string[] = [];
       if (pei.diagnostico || pei.cid) partes.push(`Diagnóstico: ${(pei.diagnostico as string) || "—"}${pei.cid ? ` (CID ${pei.cid})` : ""}`);
       if (pei.caracterizacao) partes.push(`Caracterização: ${pei.caracterizacao}`);
       if (pei.habilidadesDesenvolvidas) partes.push(`Habilidades já desenvolvidas: ${pei.habilidadesDesenvolvidas}`);
       if (pei.pontosForca) partes.push(`Potencialidades: ${pei.pontosForca}`);
       if (pei.necessidadesApoio) partes.push(`Necessidades de apoio: ${pei.necessidadesApoio}`);
-      if (linhasObj) partes.push(`Objetivos do PEI:\n${linhasObj}`);
+      if (linhasObj) partes.push(`📋 Objetivos pedagógicos definidos no PEI:\n${linhasObj}`);
+      if (emDesenvolvimento) partes.push(`⚡ Habilidades em desenvolvimento:\n${emDesenvolvimento}`);
+      if (consolidadas) partes.push(`✅ Habilidades já consolidadas:\n${consolidadas}`);
       if (pei.adaptacoesCurriculares) partes.push(`Adaptações curriculares: ${pei.adaptacoesCurriculares}`);
       if (pei.adaptacoesAvaliativas) partes.push(`Adaptações avaliativas: ${pei.adaptacoesAvaliativas}`);
-      if (pei.metodologias) partes.push(`Metodologias: ${pei.metodologias}`);
-      if (pei.recursosApoio) partes.push(`Recursos de apoio: ${pei.recursosApoio}`);
+      if (pei.metodologias) partes.push(`🌈 Estratégias de ensino / metodologias: ${pei.metodologias}`);
+      if (pei.recursosApoio) partes.push(`📈 Recursos e apoios necessários: ${pei.recursosApoio}`);
       if (pei.formasAvaliacao) partes.push(`Formas de avaliação: ${pei.formasAvaliacao}`);
       if (pei.familiaParticipacao) partes.push(`Família/participação: ${pei.familiaParticipacao}`);
       const peiResumo = partes.join("\n");
+      const peiAtualizadoEm = typeof pei.atualizadoEm === "string" && pei.atualizadoEm
+        ? new Date(pei.atualizadoEm).toLocaleString("pt-BR")
+        : "";
+      const temPei = Boolean(peiResumo);
+      const peiReferenciaId = temPei ? `${selected.id}::${(pei.atualizadoEm as string) || "sem-data"}` : "";
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
           aluno: selected.name,
@@ -1253,6 +1262,7 @@ ${corpo}
           formato: relFormato,
           anamneseResumo,
           peiResumo,
+          peiAtualizadoEm,
           registros: regs,
           anoEscolar: selected.anoEscolar || "",
           anoReferenciaPedagogico: selected.anoReferenciaPedagogico || "",
@@ -1268,9 +1278,12 @@ ${corpo}
         periodoLabel: relIntervalo.label,
         formato: relFormato,
         geradoEm: new Date().toLocaleString("pt-BR"),
+        peiConsiderado: temPei,
+        peiReferenciaId,
+        peiAtualizadoEm,
       };
       setParecerByStudent((all) => ({ ...all, [selected.id]: parecer }));
-      toast.success("Parecer gerado pela Sofia.");
+      toast.success(temPei ? "Parecer gerado · PEI do aluno considerado." : "Parecer gerado (sem PEI cadastrado).");
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Não foi possível gerar o parecer. ${msg}`);
