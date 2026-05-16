@@ -914,7 +914,7 @@ export function Assistente() {
               <button
                 key={c.id}
                 className="h-item"
-                onClick={() => sofia.loadConversation(c.id)}
+                onClick={() => pickConversation(c.id)}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
@@ -929,7 +929,7 @@ export function Assistente() {
               <button
                 key={c.id}
                 className="h-item"
-                onClick={() => sofia.loadConversation(c.id)}
+                onClick={() => pickConversation(c.id)}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
@@ -944,7 +944,7 @@ export function Assistente() {
               <button
                 key={c.id}
                 className="h-item"
-                onClick={() => sofia.loadConversation(c.id)}
+                onClick={() => pickConversation(c.id)}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
