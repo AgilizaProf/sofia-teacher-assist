@@ -612,24 +612,32 @@ export function Relatorios() {
           })
           .catch((err: unknown) => toast.error(`Não foi possível atualizar. ${err instanceof Error ? err.message : ""}`));
       } else {
-        // Local — localiza pelo nome+nascimento originais e substitui.
-        setDashStudents((cur) =>
-          cur.map((s) =>
-            s.name.trim().toLowerCase() === editAluno.originalName.trim().toLowerCase() &&
-            (s.birth || "") === editAluno.originalBirth
-              ? { ...s, ...novoAluno, name: nome }
-              : s,
-          ),
-        );
-        toast.success(`Dados de ${nome} atualizados.`);
-        fecharModalAluno();
-        setAlunoModal((m) => (m && m.id === editAluno.id ? { ...m, nome, turma: novoAluno.classRef || m.turma, pcd: novoAluno.pcd } : m));
+        toast.error("Aluno legado não encontrado no banco. Recadastre-o.");
       }
       return;
     }
-    setDashStudents((cur) => [...cur, { ...novoAluno, name: nome, createdAt: new Date().toISOString() }]);
-    fecharModalAluno();
-    toast.success(`${nome} cadastrado(a) com sucesso.`);
+    createDbStudent({
+      name: nome,
+      initials:
+        nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0] ?? "").join("").toUpperCase() || "AL",
+      age: "—",
+      turma: novoAluno.classRef || "Sem turma",
+      diag: novoAluno.pcd && novoAluno.pcd !== "nao" ? novoAluno.pcd : "",
+      cid: "",
+      aee: "",
+      anamnese: "0/14",
+      registros: "0",
+      trend: "—",
+      trendTone: "muted",
+      birth: novoAluno.birth || undefined,
+      notes: novoAluno.notes || undefined,
+      pcd: novoAluno.pcd || undefined,
+    })
+      .then(() => {
+        fecharModalAluno();
+        toast.success(`${nome} cadastrado(a) com sucesso.`);
+      })
+      .catch((err: unknown) => toast.error(`Não foi possível cadastrar. ${err instanceof Error ? err.message : ""}`));
   };
 
   // Rubrica BNCC por aluno (persistido)
