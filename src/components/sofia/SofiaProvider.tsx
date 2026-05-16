@@ -9,6 +9,8 @@ export type SofiaMessage = {
   role: "user" | "assistant";
   content: string;
   issues?: Array<{ term: string; suggestion: string; principle: string }> | null;
+  /** true quando a resposta foi cortada por limite de tokens. */
+  truncated?: boolean;
 };
 
 export type SofiaConversationSummary = {
