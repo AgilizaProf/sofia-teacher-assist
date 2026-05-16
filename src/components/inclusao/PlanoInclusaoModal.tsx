@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { X, Sparkles, CheckCircle2, Loader2, Lightbulb, RefreshCw, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { buildAnoReferenciaPromptBlock, isAnoReferenciaDivergente } from "@/lib/inclusao/anoReferencia";
 
 export type PlanoInclusao = {
   id: string;
@@ -31,6 +32,7 @@ type Aluno = {
   diag?: string;
   cid?: string;
   anoEscolar?: string;
+  anoReferenciaPedagogico?: string;
   turma?: string;
 };
 
@@ -304,12 +306,17 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
     return parts.join(" · ");
   }, [aluno]);
 
-  const isEI = isEducacaoInfantil(aluno?.anoEscolar);
+  // Ano pedagógico efetivo: o ano de referência pedagógico, quando informado,
+  // prevalece sobre o ano de matrícula em todas as decisões da Sofia.
+  const anoEfetivo = (aluno?.anoReferenciaPedagogico || aluno?.anoEscolar || "").trim();
+  const anoRefDivergente = !!aluno?.anoReferenciaPedagogico
+    && isAnoReferenciaDivergente(aluno?.anoEscolar, aluno?.anoReferenciaPedagogico);
+  const isEI = isEducacaoInfantil(anoEfetivo);
   const opcoesDisciplinas = isEI ? CAMPOS_EI : DISCIPLINAS_EF;
   const labelDisciplina = isEI ? "Campos de experiência" : "Disciplinas";
   const temaSugestoes = useMemo(
-    () => getTemaSugestoes(disciplinas, aluno?.anoEscolar),
-    [disciplinas, aluno?.anoEscolar],
+    () => getTemaSugestoes(disciplinas, anoEfetivo),
+    [disciplinas, anoEfetivo],
   );
 
   function toggleDisciplina(d: string) {
@@ -322,10 +329,16 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
       condicaoLabel ? `Condição: ${condicaoLabel}` : "",
       anamneseResumo ? `Anamnese (resumo):\n${anamneseResumo}` : "Anamnese ainda não preenchida — gere assim mesmo, considerando práticas inclusivas gerais para a condição informada.",
     ].filter(Boolean).join("\n\n");
+    const anoReferenciaInstrucao = buildAnoReferenciaPromptBlock(
+      aluno.anoEscolar,
+      aluno.anoReferenciaPedagogico,
+    );
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: {
         modo: "pcd",
         anoEscolar: aluno.anoEscolar || "",
+        anoReferenciaPedagogico: aluno.anoReferenciaPedagogico || "",
+        anoReferenciaInstrucao,
         turma: aluno.turma || "",
         disciplina: interdisciplinar ? "" : disciplina,
         disciplinasInter: interdisciplinar ? disciplinas : [],
@@ -432,7 +445,11 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
         <div className="inc-modal-head">
           <h2>Gerar plano adaptado · {aluno.name.split(" ")[0]}</h2>
           <span className="meta">
-            {aluno.anoEscolar || "Ano não informado"}<br />
+            {aluno.anoEscolar || "Ano não informado"}
+            {anoRefDivergente && aluno.anoReferenciaPedagogico
+              ? ` · 📚 Referência: ${aluno.anoReferenciaPedagogico}`
+              : ""}
+            <br />
             {condicaoLabel || "Condição não informada"}
           </span>
           <button className="inc-modal-close" onClick={onClose} aria-label="Fechar"><X size={16} /></button>
@@ -513,7 +530,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                 <ChipRow
                   items={temaSugestoes}
                   onPick={(t) => setTema(t)}
-                  label={`Sugestões para ${aluno.anoEscolar || "este aluno"}${disciplinas[0] ? ` · ${disciplinas[0]}` : ""}`}
+                  label={`Sugestões para ${anoEfetivo || "este aluno"}${anoRefDivergente ? " (referência)" : ""}${disciplinas[0] ? ` · ${disciplinas[0]}` : ""}`}
                 />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
@@ -526,7 +543,12 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
               <div style={{ background: "var(--accent-soft)", border: "1px solid #FFD4B8", color: "#B8410E", borderRadius: 8, padding: "10px 12px", fontSize: 12, display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <Lightbulb size={14} style={{ marginTop: 2, flexShrink: 0 }} />
                 <span>
-                  A Sofia vai considerar <b>{aluno.anoEscolar || "ano não informado"}</b>, <b>{condicaoLabel || "perfil singular"}</b> e a anamnese ({anamneseResumo ? "preenchida" : "ainda em branco"}).
+                  A Sofia vai considerar{" "}
+                  <b>
+                    {anoRefDivergente && aluno.anoReferenciaPedagogico
+                      ? `${aluno.anoReferenciaPedagogico} (referência pedagógica · matrícula ${aluno.anoEscolar || "—"})`
+                      : (anoEfetivo || "ano não informado")}
+                  </b>, <b>{condicaoLabel || "perfil singular"}</b> e a anamnese ({anamneseResumo ? "preenchida" : "ainda em branco"}).
                   Campos faltantes não impedem a geração.
                 </span>
               </div>
@@ -613,7 +635,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                   <textarea value={atual.metodologia} onChange={(e) => patchAtual({ metodologia: e.target.value })} rows={3} placeholder="Como você vai conduzir a aula com este aluno"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
                   <ChipRow
-                    items={getMetodologiaSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    items={getMetodologiaSugestoes(atual.disciplina, anoEfetivo)}
                     onPick={(t) => patchAtual({ metodologia: atual.metodologia ? atual.metodologia + " " + t : t })}
                     label={`Metodologia · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
                   />
@@ -624,7 +646,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                   <textarea value={atual.avaliacao} onChange={(e) => patchAtual({ avaliacao: e.target.value })} rows={3} placeholder="Como você vai avaliar este aluno"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
                   <ChipRow
-                    items={getAvaliacaoSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    items={getAvaliacaoSugestoes(atual.disciplina, anoEfetivo)}
                     onPick={(t) => patchAtual({ avaliacao: atual.avaliacao ? atual.avaliacao + " " + t : t })}
                     label={`Avaliação · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
                   />
@@ -635,7 +657,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                   <textarea value={atual.observacoes} onChange={(e) => patchAtual({ observacoes: e.target.value })} rows={3} placeholder="Anote o que aconteceu, ajustes, próximos passos"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
                   <ChipRow
-                    items={getObservacoesSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    items={getObservacoesSugestoes(atual.disciplina, anoEfetivo)}
                     onPick={(t) => patchAtual({ observacoes: atual.observacoes ? atual.observacoes + " " + t : t })}
                     label={`Observações · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
                   />

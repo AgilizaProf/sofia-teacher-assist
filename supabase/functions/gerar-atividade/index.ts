@@ -32,6 +32,8 @@ serve(async (req) => {
     const {
       modo = "regular",
       anoEscolar = "",
+      anoReferenciaPedagogico = "",
+      anoReferenciaInstrucao = "",
       disciplina = "",
       tema = "",
       turma = "",
@@ -48,6 +50,11 @@ serve(async (req) => {
       alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string } | null,
       diarioBordo = [] as Array<{ emoji?: string; titulo?: string; texto?: string; tags?: string[]; data?: string; turma?: string; atividadeTitulo?: string }>,
     } = body || {};
+
+    // Ano efetivo usado para BNCC/prompt: quando há ano de referência
+    // pedagógico, ele PREVALECE sobre o ano de matrícula em todo o pipeline
+    // (sugestões, validação BNCC, complexidade, linguagem).
+    const anoPedagogico = (anoReferenciaPedagogico || "").trim() || anoEscolar;
 
     const KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!KEY) {
@@ -125,7 +132,11 @@ serve(async (req) => {
             + "engajamento, e estratégias inclusivas explícitas."
           : "Atividade regular para a turma toda"
       }`,
-      `Ano escolar: ${anoEscolar || "não informado"}`,
+      `Ano escolar (matrícula): ${anoEscolar || "não informado"}`,
+      anoReferenciaPedagogico
+        ? `Ano de referência pedagógico: ${anoReferenciaPedagogico} (USE ESTE ano como parâmetro pedagógico para tema, linguagem, complexidade e habilidades BNCC).`
+        : "",
+      anoReferenciaInstrucao || "",
       `Turma: ${turma || "não informada"}`,
       `Disciplina: ${disciplina || "livre escolha do(a) docente"}`,
       modo === "pcd" && alunoFoco
@@ -441,12 +452,12 @@ serve(async (req) => {
       Array.isArray(disciplinasInter) && disciplinasInter.length > 0
         ? disciplinasInter
         : disciplina ? [disciplina] : [];
-    const validation = validarHabilidadesBNCC(parsed.habilidades, anoEscolar, disciplinasParaValidar);
+    const validation = validarHabilidadesBNCC(parsed.habilidades, anoPedagogico, disciplinasParaValidar);
 
     if (!validation.ok && validation.invalidos.length > 0) {
       console.warn("BNCC inválidos, tentando regenerar:", validation.invalidos);
       const feedback =
-        `As seguintes habilidades BNCC NÃO são válidas para o ano "${anoEscolar}" ` +
+        `As seguintes habilidades BNCC NÃO são válidas para o ano "${anoPedagogico}" ` +
         `e disciplina(s) "${disciplinasParaValidar.join(", ") || "—"}": ` +
         validation.invalidos.map((i) => `${i.codigo} (motivo: ${i.motivo})`).join("; ") +
         `. Regenere o plano completo SUBSTITUINDO essas habilidades por códigos BNCC ` +
@@ -456,7 +467,7 @@ serve(async (req) => {
       if (resp2.ok) {
         const parsed2 = await parseResp(resp2);
         if (parsed2) {
-          const v2 = validarHabilidadesBNCC(parsed2.habilidades, anoEscolar, disciplinasParaValidar);
+          const v2 = validarHabilidadesBNCC(parsed2.habilidades, anoPedagogico, disciplinasParaValidar);
           if (v2.ok) {
             parsed = parsed2;
           } else {
@@ -469,7 +480,7 @@ serve(async (req) => {
               habilidades: validos,
               bnccAviso: validos.length === 0
                 ? "Não foi possível validar habilidades BNCC para este ano/disciplina. Revise manualmente."
-                : `Algumas habilidades BNCC foram removidas por não serem compatíveis com ${anoEscolar}.`,
+                : `Algumas habilidades BNCC foram removidas por não serem compatíveis com ${anoPedagogico}.`,
             };
           }
         }

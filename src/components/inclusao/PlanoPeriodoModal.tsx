@@ -3,6 +3,7 @@ import { X, Sparkles, Loader2, Check, ChevronDown, ChevronRight } from "lucide-r
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { PlanoInclusao } from "./PlanoInclusaoModal";
+import { buildAnoReferenciaPromptBlock } from "@/lib/inclusao/anoReferencia";
 
 type Aluno = {
   id: string;
@@ -10,6 +11,7 @@ type Aluno = {
   diag?: string;
   cid?: string;
   anoEscolar?: string;
+  anoReferenciaPedagogico?: string;
   turma?: string;
 };
 
@@ -92,7 +94,9 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
     }
   }, [open, aluno?.id]);
 
-  const isEI = isEducacaoInfantil(aluno?.anoEscolar);
+  // Ano de referência pedagógico prevalece sobre o ano de matrícula.
+  const anoEfetivo = (aluno?.anoReferenciaPedagogico || aluno?.anoEscolar || "").trim();
+  const isEI = isEducacaoInfantil(anoEfetivo);
   const opcoes = isEI ? CAMPOS_EI : DISCIPLINAS_EF;
   const labelDisciplina = isEI ? "Campos de experiência" : "Disciplinas";
   const condicaoLabel = useMemo(() => {
@@ -114,10 +118,16 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
         : "Anamnese ainda não preenchida — gere com práticas inclusivas gerais para a condição informada.",
       `Esta é a atividade ${semana} de ${totalSemanas} de uma sequência. Garanta progressão de complexidade em relação às anteriores.`,
     ].filter(Boolean).join("\n\n");
+    const anoReferenciaInstrucao = buildAnoReferenciaPromptBlock(
+      aluno.anoEscolar,
+      aluno.anoReferenciaPedagogico,
+    );
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: {
         modo: "pcd",
         anoEscolar: aluno.anoEscolar || "",
+        anoReferenciaPedagogico: aluno.anoReferenciaPedagogico || "",
+        anoReferenciaInstrucao,
         turma: aluno.turma || "",
         disciplina,
         tema,
