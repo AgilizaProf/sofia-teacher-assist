@@ -16,6 +16,8 @@ serve(async (req) => {
       periodo = "Bimestral",
       anamneseResumo = "",
       peiResumo = "",
+      peiAtualizadoEm = "",
+      peiAnteriorResumo = "",
       registros = [] as Registro[],
       formato = "topicos", // "topicos" | "texto"
       intervalo = "",
@@ -30,9 +32,13 @@ serve(async (req) => {
       .join("\n");
 
     const refBlock = (anoReferenciaInstrucao || "").trim();
+    const temPei = Boolean((peiResumo || "").trim());
+    const peiRules = temPei
+      ? `\n\nINTEGRAÇÃO COM O PEI (regras invioláveis):\n- O aluno POSSUI um Plano Educacional Individualizado (PEI) — utilize-o como referência principal.\n- Compare o desempenho atual do aluno (registros do período) com os OBJETIVOS, METAS e ADAPTAÇÕES definidos no PEI.\n- Para cada objetivo do PEI, indique quando possível se está: (a) ATINGIDO, (b) EM DESENVOLVIMENTO ou (c) PRECISA DE MAIS ATENÇÃO, sempre citando evidências dos registros.\n- NUNCA contradiga adaptações curriculares, avaliativas, metodologias ou recursos já definidos no PEI. Reforce-os.\n- Use a mesma terminologia e linguagem do PEI para manter consistência entre os documentos.\n- Se o desenvolvimento indicar necessidade de ajuste em alguma meta, sugira de forma DISCRETA usando o marcador: "(Sugestão a avaliar com a equipe pedagógica: considerar atualizar a meta X do PEI)".\n- Mostre a EVOLUÇÃO do aluno em relação ao plano pedagógico já definido.${peiAnteriorResumo ? "\n- Há PEI anterior disponível — descreva brevemente a evolução entre os dois períodos." : ""}`
+      : "";
     const sys = `Você é a Sofia, assistente pedagógica especializada em educação inclusiva (Lei 14.254/2021 e BNCC). Gere um parecer descritivo individual, narrativo, em tom profissional e empático, baseado APENAS nos dados reais fornecidos (anamnese, PEI e registros do período). Não invente fatos, datas ou objetivos não citados. Se faltar informação em algum eixo, indique brevemente. Devolva JSON estrito.${
       refBlock ? `\n\nANO DE REFERÊNCIA PEDAGÓGICO (regra inviolável): ${refBlock}` : ""
-    }`;
+    }${peiRules}`;
 
     const user = `Aluno(a): ${aluno || "—"}
 Diagnóstico/CID: ${diagnostico || "não informado"}
@@ -43,8 +49,9 @@ Ano de referência pedagógico: ${anoReferenciaPedagogico || "(não definido —
 Anamnese (resumo dos eixos):
 ${anamneseResumo || "(sem dados de anamnese)"}
 
-PEI (resumo):
-${peiResumo || "(sem PEI cadastrado)"}
+PEI (resumo${peiAtualizadoEm ? ` · atualizado em ${peiAtualizadoEm}` : ""}):
+${peiResumo || "(sem PEI cadastrado — gere o parecer com base em anamnese e registros)"}
+${peiAnteriorResumo ? `\nPEI ANTERIOR (para comparar evolução):\n${peiAnteriorResumo}\n` : ""}
 
 Intervalo considerado: ${intervalo || periodo}
 Registros do diário no período (${(registros as Registro[]).length}):
