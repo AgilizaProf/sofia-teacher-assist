@@ -1829,6 +1829,50 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             />
           </div>
         </div>
+        {historico.length > 0 && (
+          <div
+            className="atv-hist-bulk"
+            style={{
+              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+              padding: "8px 12px", borderBottom: "1px solid var(--line-soft,#eee)",
+              fontSize: 12,
+            }}
+          >
+            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={filtrados.length > 0 && filtrados.every((p) => selecionados.has(p.id))}
+                onChange={(e) => {
+                  setSelecionados((prev) => {
+                    const next = new Set(prev);
+                    if (e.target.checked) filtrados.forEach((p) => next.add(p.id));
+                    else filtrados.forEach((p) => next.delete(p.id));
+                    return next;
+                  });
+                }}
+              />
+              Selecionar todas {busca ? "(filtradas)" : ""}
+            </label>
+            <span style={{ color: "var(--muted,#888)" }}>
+              {selecionados.size} selecionada(s)
+            </span>
+            <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+              {selecionados.size > 0 && (
+                <button className="atv-btn ghost" onClick={() => setSelecionados(new Set())}>
+                  Limpar
+                </button>
+              )}
+              <button
+                className="atv-btn primary"
+                onClick={imprimirSelecionadas}
+                disabled={selecionados.size === 0}
+                title="Abre um único documento com todas as atividades selecionadas"
+              >
+                <Printer size={12} /> Imprimir selecionadas
+              </button>
+            </div>
+          </div>
+        )}
         {filtrados.length === 0 ? (
           <p className="atv-muted" style={{ padding: 12 }}>
             {historico.length === 0
@@ -1839,6 +1883,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           <ul className="atv-hist-list">
             {filtrados.map((p) => (
               <li key={p.id} className="atv-hist-item">
+                <input
+                  type="checkbox"
+                  checked={selecionados.has(p.id)}
+                  onChange={() => toggleSelecionado(p.id)}
+                  aria-label={`Selecionar ${p.titulo}`}
+                  style={{ margin: "0 6px 0 10px", flexShrink: 0 }}
+                />
                 <button className="atv-hist-main" onClick={() => carregarPlano(p)}>
                   <span className={`atv-hist-badge ${p.modo}`}>
                     {p.modo === "pcd" ? "PCD" : "REG"}
