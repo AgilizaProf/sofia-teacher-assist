@@ -1,99 +1,167 @@
-## Dashboard Administrativa — AgilizaProf
 
-Painel de administração completo, protegido por role `admin`, mantendo a identidade visual do app (azul-noite #1B2A4E + laranja #FF7A45, fontes Fraunces/Inter).
+# Gerador de Documentos de Planejamento
 
-### 1. Backend (migração única)
+Adicionar gerador + preview + exportação (Imprimir/PDF e Word) **dentro das páginas existentes**, montando o conteúdo a partir do que já está cadastrado (sem chamar IA). Salvar histórico no Supabase.
 
-Novas tabelas + RLS:
+## 1. Arquitetura compartilhada (núcleo reaproveitável)
 
-- **`app_role` (enum)**: `admin`, `user`.
-- **`user_roles`** (`user_id`, `role`) + função `has_role(uuid, app_role)` SECURITY DEFINER (padrão anti-recursão).
-- **`subscriptions`** — `user_id`, `plano` (`free|pro`), `ciclo` (`mensal|anual|cortesia`), `status` (`active|canceled|expired`), `started_at`, `current_period_end`, `source` (`stripe|admin_grant|signup`), `granted_by`. Trigger preenche assinatura `free` ao criar profile.
-- **`pro_grants`** — log de concessões manuais por admin (e-mail, plano, ciclo, expira_em, motivo).
-- **`maintenance_windows`** — `starts_at`, `ends_at`, `title`, `message`, `block_access` (bool), `created_by`.
-- **`platform_errors`** — `user_id?`, `route`, `message`, `stack`, `severity` (`info|warn|error|fatal`), `metadata jsonb`, `resolved_at`.
-- **`activity_events`** — `user_id`, `event_type` (ex: `doc_generated`, `pei_created`, `parecer_gerado`, `login`, `page_view`), `route`, `metadata`.
-- **`page_visits`** — `session_id`, `user_id?`, `route`, `referrer`, `device_type` (`mobile|tablet|desktop`), `os`, `browser`, `viewport_w`, `viewport_h`, `is_login_page` (bool), `created_at`. Inserções via cliente público (RLS permite INSERT anônimo, SELECT só admin).
-
-Todas as tabelas: RLS habilitado. Usuário comum vê apenas o que é seu (quando aplicável); admin (`has_role(auth.uid(),'admin')`) vê e gerencia tudo.
-
-Função RPC `admin_grant_pro(_email, _ciclo, _dias)` SECURITY DEFINER que: valida admin, encontra `user_id` por e-mail em `profiles`, cria/atualiza `subscriptions` e registra em `pro_grants`. Se o e-mail não existir, salva grant pendente que é aplicado no próximo signup (via trigger em `handle_new_user`).
-
-### 2. Tracking client-side (leve)
-
-- `src/lib/admin/track.ts`: `trackPageVisit()` (UA parser inline → device/os/browser), `trackEvent(type, meta)`, `reportError(err, ctx)`.
-- Hook em `__root.tsx` registra `page_visit` em cada navegação e captura `window.onerror` / `unhandledrejection` → `platform_errors`.
-- Pontos-chave já existentes (gerar parecer, gerar PEI, gerar atividade) recebem `trackEvent('doc_generated', {tipo})`.
-- Banner de manutenção: hook lê `maintenance_windows` ativa; se `block_access=true`, mostra tela cheia bloqueando rotas (exceto `/admin` e `/auth`).
-
-### 3. Rotas admin (`/_admin/*`, guarda role)
-
-`src/routes/_admin.tsx` — `beforeLoad` valida sessão + `has_role admin`, senão redireciona `/`.
-
-```text
-/admin                 -> Visão geral
-/admin/usuarios        -> Lista de usuários (busca, filtros)
-/admin/usuarios/$id    -> Detalhe (atividade, plano, último acesso)
-/admin/pro             -> Gestão Pro (conceder acesso por e-mail, histórico)
-/admin/manutencao      -> Janelas de manutenção (CRUD + agendar)
-/admin/atividades      -> Stream + médias
-/admin/conversao       -> Funil login → cadastro, dispositivos, top routes
-/admin/erros           -> Lista de erros, filtro severidade, marcar resolvido
-/admin/infra           -> Monitor (latência média de queries, contagem por tabela, status Lovable Cloud)
+```
+src/lib/documentos/
+  types.ts            # DocumentoPlanejamento, DiaPlanejamento, etc.
+  builders.ts         # monta DocumentoPlanejamento a partir de dados do app
+  leis.ts             # decide quais leis citar (LDB/LBI/TEA/TDAH/BNCC EI ou EF)
+  docx.ts             # exportarDocx(doc)
+  print.ts            # imprimirDocumento() = window.print() escopado
+src/components/documentos/
+  DocumentoDialog.tsx # Dialog com formulário (escola/turma/professor/datas/modo) + preview + botões de export
+  DocumentoPreview.tsx# WYSIWYG (mesmo HTML usado no print)
+  DocumentoHistorico.tsx # Sheet listando docs salvos por turma/período
+src/styles/documento.css # @page 2cm, borda, fontes
 ```
 
-### 4. Visão geral (cards + gráficos)
+`DocumentoDialog` é genérico: recebe `tipo: 'atividades'|'pcd'|'trilhas'|'sofia'` + dados de origem (atividades do período, alunos PCD, trilha, sugestões da Sofia) e devolve um documento pronto.
 
-- Total usuários, ativos 7d/30d (distinct user em `activity_events`).
-- Média de docs gerados por usuário (mês corrente).
-- Assinantes Pro mensal vs anual vs free (donut).
-- **Modalidade mais usada**: ranking de `event_type` no mês (barras horizontais).
-- MRR estimado (mensal × 47 + anual × 247/12, valores configuráveis).
-- Próxima manutenção agendada (se houver).
+## 2. Onde aparece (reaproveitando páginas existentes)
 
-### 5. Tela Usuários
+Adicionar botão **"📄 Gerar Documento"** que abre o `DocumentoDialog`:
 
-Tabela com: avatar, nome (`profiles.display_name`), e-mail, telefone, último acesso (max `activity_events.created_at`), plano (badge), eventos no mês.
-Filtros: plano, ativo/inativo, busca por nome/email.
-Linha → drawer com timeline de atividades, devices usados, créditos consumidos.
+- **`src/pages/Planejamento.tsx`** (aba M6/Atividades): tipo `atividades` — usa atividades já planejadas no período escolhido.
+- **`src/pages/PlanejamentoEi.tsx` / Inclusão (`src/pages/Inclusao.tsx` ou `PeiPdi.tsx`)**: tipo `pcd` — pega alunos da turma + CIDs/PEI cadastrados.
+- **`src/components/trilhas/TrilhasPanel.tsx`**: tipo `trilhas` — usa a trilha semestral já carregada.
+- **`src/pages/Assistente.tsx`**: tipo `sofia` — usa as últimas sugestões/foco do dia da Sofia.
 
-### 6. Gestão Pro
+Cada chamador passa apenas os dados; o Dialog cuida de tudo o resto.
 
-Form: e-mail + ciclo (mensal/anual/cortesia) + duração (dias). Botão "Conceder acesso" chama `admin_grant_pro`.
-Lista histórico (`pro_grants`) com revogar.
+## 3. Formulário no Dialog
 
-### 7. Manutenção
+Campos (todos obrigatórios para habilitar "Gerar preview"):
+- Nome da Escola — `Input` (default: perfil do professor, se existir)
+- Turma — `Select` via `useTurmas()` (já selecionada se chamada veio de uma turma)
+- Nome do(a) Professor(a) — `Input` (default: `profiles.display_name`)
+- Data início / Data fim — shadcn DatePicker
+- Modo — `RadioGroup` Completo | Simplificado
 
-Form: título, mensagem, início, fim, "bloquear acesso durante a janela" (toggle).
-Lista das janelas (passadas/atuais/futuras). Atual exibe banner global no app inteiro para todos os usuários.
+## 4. Builders (sem IA)
 
-### 8. Atividades
+`builders.ts` expõe `buildDocumento(tipo, ctx)`:
+- **atividades**: itera dias úteis do período, para cada dia agrupa atividades da turma vindas de `agenda`/planejamento (`useAgenda`/dados M6), preenche `atividades`, `objetivos` (texto + código BNCC já cadastrado na atividade), `materiais`.
+- **pcd**: para cada dia/aluno PCD, gera bloco a partir do PEI (objetivos do PEI viram `objetivos`, adaptações viram `atividades`/`materiais`).
+- **trilhas**: usa semanas da trilha já gerada, cada semana = um bloco com `data` da semana.
+- **sofia**: usa cards de sugestão/foco do dia armazenados (`useSofiaSuggestions`, `useFocoDoDia`) como "atividades sugeridas".
 
-Stream em tempo real (Supabase Realtime em `activity_events`). Agregados: docs/usuário/dia, top eventos, top usuários ativos.
+Quando faltar dado para um dia, renderiza placeholder `—` em vez de chamar IA.
 
-### 9. Conversão
+## 5. Decisão de leis (`leis.ts`)
 
-- Visitantes únicos em `/auth` (login page) por dia.
-- Visitantes únicos no app.
-- Cadastros (novos `profiles`).
-- Taxa = cadastros ÷ visitantes /auth.
-- Breakdown por device_type, OS, browser (donuts).
+`escolherLeis({ tipo, nivel, cidsAlunos })` retorna lista de strings prontas:
+- Sempre: `Lei 9.394/1996 (LDB)`
+- PCD: `+ Lei 13.146/2015 (LBI)`; se algum CID começa com F84 → `+ Lei 12.764/2012 (TEA)`; se F90/F81 → `+ Lei 14.254/2021`
+- BNCC: EI → `Resolução CNE/CP 2/2017`; EF/EM → `Resolução CNE/CP 4/2018` (nível vem da turma via `lib/sofia/nivelEnsino.ts`)
 
-### 10. Erros / Infra
+Renderizado no rodapé: `"Documento gerado com apoio do AgilizaProf em consonância com <lista unida por ' e '>."`
 
-- Lista paginada de `platform_errors` por severidade.
-- Botão "Resolvido" marca `resolved_at`.
-- Infra: status do Lovable Cloud (`cloud_status` exibido), contagem de linhas por tabela, últimas migrações (server fn lê `pg_stat_user_tables`).
+## 6. Preview WYSIWYG e CSS (`documento.css`)
 
-### Detalhes técnicos
+```css
+@page { size: A4; margin: 2cm; }
+.documento {
+  border: 1px solid #000;
+  padding: 2cm; /* aplicado só na tela; no print, @page cuida das margens */
+  font: 12px/1.4 Arial, sans-serif;
+  text-align: justify;
+  color: #000; background: #fff;
+}
+.documento h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 28px;
+  text-align: center;
+  margin: 0 0 8px;
+}
+.documento .periodo { text-align: center; margin-bottom: 16px; }
+.documento .meta { text-align: left; }
+.documento .meta b { font-weight: 700; }
+.documento .dia { border-top: 1px solid #000; padding-top: 12px; margin-top: 12px; }
+.documento .dia h2 { font-size: 12px; font-weight: 700; margin: 0 0 6px; text-align: left; }
+.documento .simplificado li {
+  display: flex; justify-content: space-between; gap: 8px;
+  list-style: none;
+}
+.documento .simplificado li .leader { flex: 1; border-bottom: 1px dotted #000; margin: 0 6px; height: .8em; }
+.documento footer { margin-top: 24px; font-size: 10px; color: #555; text-align: center; }
+.documento .assinaturas { margin-top: 24px; font-size: 12px; color: #000; text-align: left; }
+@media print {
+  body * { visibility: hidden; }
+  .documento, .documento * { visibility: visible; }
+  .documento { position: absolute; inset: 0; border: 1px solid #000; padding: 0; }
+  .semana-break { page-break-before: always; }
+}
+```
 
-- Tudo via `createServerFn` + `requireSupabaseAuth` para queries admin (checa role no handler).
-- Charts com `recharts` (já presente via shadcn `chart.tsx`).
-- Realtime ligado em `activity_events`, `platform_errors`, `subscriptions`.
-- Estilo: cards `rounded-2xl border bg-card`, headers com Fraunces, dados Inter, accents laranja `#FF7A45`. Sidebar admin paralela à do app, com ícone "Voltar para o app".
-- Navegação: novo item "Admin" só aparece na sidebar principal se `has_role admin`.
+Importar fonte no `index.html`:
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&display=swap" rel="stylesheet">
+```
 
-### O que NÃO entra agora (avisar ao usuário)
+`DocumentoPreview` aceita `editable?: boolean`. Quando true, cada texto usa `contentEditable` e dispara `onChange(patch)` com debounce para auto-save.
 
-- Integração Stripe real (subscriptions são mantidas manualmente / via grants); plano automático por pagamento fica para depois.
-- Geo/IP por país requer serviço externo — fica fora do MVP.
+## 7. Exportação
+
+- **Imprimir / Salvar como PDF**: `imprimirDocumento()` aplica classe `printing` no body e chama `window.print()`. CSS `@media print` já cuida do layout.
+- **Exportar Word (.docx)**: `bun add docx`. `docx.ts` constrói `Document` com:
+  - Section properties: margem 2cm (`margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 }` em twips), `borders: { pageBorders: { ... }, pageBorderTop/Left/Right/Bottom: { style: SINGLE, size: 6, color: "000000", space: 24 } }`.
+  - Título em Fraunces (com fallback "Times New Roman") 28pt, bold, centralizado.
+  - Corpo em Arial 12pt, justificado.
+  - Dias separados por parágrafo com `border: { top: { style: SINGLE, size: 6, color: "000000" } }`.
+  - Rodapé com assinaturas e frase legal.
+  - Quebra de página por semana (`pageBreakBefore`).
+  - Download via `Packer.toBlob` + `URL.createObjectURL`.
+
+(Não vamos gerar PDF "real" via lib — `window.print()` já cobre PDF; isso ficou definido na resposta.)
+
+## 8. Persistência (Supabase)
+
+Migration:
+```sql
+create table public.documentos_planejamento (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  turma_id uuid,
+  tipo text not null check (tipo in ('atividades','pcd','trilhas','sofia')),
+  escola text,
+  professor text,
+  data_inicio date not null,
+  data_fim date not null,
+  modo text not null check (modo in ('completo','simplificado')),
+  conteudo jsonb not null,   -- DocumentoPlanejamento serializado
+  leis text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.documentos_planejamento enable row level security;
+create policy "owner select" on public.documentos_planejamento for select using (auth.uid() = user_id);
+create policy "owner insert" on public.documentos_planejamento for insert with check (auth.uid() = user_id);
+create policy "owner update" on public.documentos_planejamento for update using (auth.uid() = user_id);
+create policy "owner delete" on public.documentos_planejamento for delete using (auth.uid() = user_id);
+create trigger documentos_planejamento_updated_at
+  before update on public.documentos_planejamento
+  for each row execute function public.update_updated_at_column();
+create index on public.documentos_planejamento (user_id, turma_id, data_inicio);
+```
+
+Acesso via `src/lib/db/documentos.ts` (cliente Supabase direto, padrão das outras tabelas do projeto): `listDocumentos({ turmaId? })`, `saveDocumento(doc)`, `updateDocumento(id, patch)`, `deleteDocumento(id)`.
+
+`DocumentoDialog` salva ao gerar preview pela primeira vez e a cada edição (debounce 800 ms).
+
+`DocumentoHistorico` (Sheet acionado no header do Dialog) lista por turma + período, permite reabrir um documento salvo.
+
+## 9. Etapas de implementação
+
+1. Migration `documentos_planejamento` + RLS + trigger.
+2. `bun add docx`. Adicionar Fraunces no `index.html`. Criar `documento.css` e importar em `src/styles.css`.
+3. `lib/documentos/{types,leis,builders,docx,print}.ts` + `lib/db/documentos.ts`.
+4. `components/documentos/{DocumentoPreview,DocumentoDialog,DocumentoHistorico}.tsx`.
+5. Plugar botão "📄 Gerar Documento" em: Planejamento (M6), Inclusão/PEI, TrilhasPanel, Assistente — passando o `tipo` e os dados de origem.
+6. Verificar print (layout, borda, fonte) e export DOCX (abrir no Word/Google Docs).
+
