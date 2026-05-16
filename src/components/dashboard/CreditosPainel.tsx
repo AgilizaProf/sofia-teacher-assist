@@ -30,8 +30,8 @@ const css = `
 .cp-hist-more{margin-top:8px;font-size:11px;color:var(--accent-deep,#E85F2C);font-weight:700;background:none;border:none;padding:0;text-align:left;cursor:pointer;}
 .cp-upgrade{margin-top:8px;padding:8px 10px;background:linear-gradient(135deg,#FFF1E8,#FFE4D1);border-radius:8px;font-size:11px;color:var(--accent-deep,#E85F2C);font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .cp-upgrade-text{flex:1;min-width:0;}
-.cp-upgrade-btn{background:var(--accent,#FF7A45);color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;}
-.cp-upgrade-btn:hover{background:var(--accent-deep,#E85F2C);}
+.cp-upgrade-btn{background:var(--accent,#FF7A45);color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;}
+.cp-upgrade-btn:hover{background:var(--accent-deep,#E85F2C);color:#fff !important;}
 .cp-banner{margin-bottom:10px;padding:8px 12px;border-radius:10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;flex-wrap:wrap;}
 .cp-banner.warn{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;}
 .cp-banner.danger{background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;}
