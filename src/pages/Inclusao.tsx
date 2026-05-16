@@ -3380,12 +3380,12 @@ ${corpo}
       </div>
 
       {/* Cadastrar aluno */}
-      <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setNewStudentOpen(false); }}>
+      <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) fecharModalAluno(); }}>
         <div className="inc-modal" style={{ maxWidth: 560 }}>
           <div className="inc-modal-bar" />
           <div className="inc-modal-head">
-            <h2>Cadastrar novo aluno</h2>
-            <button className="inc-modal-close" onClick={() => setNewStudentOpen(false)} aria-label="Fechar"><X size={16} /></button>
+            <h2>{editingStudentId ? "Editar dados do aluno" : "Cadastrar novo aluno"}</h2>
+            <button className="inc-modal-close" onClick={fecharModalAluno} aria-label="Fechar"><X size={16} /></button>
           </div>
           <form className="inc-modal-body plain" onSubmit={handleSaveStudent} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Nome completo
