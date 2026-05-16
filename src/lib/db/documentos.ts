@@ -66,7 +66,7 @@ export async function saveDocumento(doc: DocumentoPlanejamento): Promise<Documen
     data_inicio: doc.dataInicio,
     data_fim: doc.dataFim,
     modo: doc.modo,
-    conteudo: doc as unknown as Record<string, unknown>,
+    conteudo: JSON.parse(JSON.stringify(doc)) as never,
     leis: doc.leis,
   };
 
