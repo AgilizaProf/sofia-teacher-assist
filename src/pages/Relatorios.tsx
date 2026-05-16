@@ -9,6 +9,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
+import { useDashClasses } from "@/hooks/useDashLegacyData";
 import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
@@ -523,34 +524,21 @@ export function Relatorios() {
   type DashStudentWithId = DashStudent & { id: string };
   type DashClass = { name: string; school: string; grade: string; shift: string; students: string };
   type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
-  const [dashStudents, setDashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
-  const [dashClasses] = usePersistentState<DashClass[]>("dash_classes", []);
+  const dashClasses: DashClass[] = useDashClasses();
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
   // Alunos cadastrados no banco (Inclusão) — entram automaticamente na lista de Relatórios.
-  const { students: dbStudents, update: updateDbStudent } = useInclusaoStudents();
+  const { students: dbStudents, update: updateDbStudent, create: createDbStudent } = useInclusaoStudents();
   const combinedStudents = useMemo<DashStudentWithId[]>(() => {
     const seen = new Set<string>();
     const out: DashStudentWithId[] = [];
-    const slug = (s: string) =>
-      (s || "")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
     const push = (s: DashStudent, id: string) => {
       const key = s.name.trim().toLowerCase();
       if (!key || seen.has(key)) return;
       seen.add(key);
       out.push({ ...s, id });
     };
-    // Alunos legados (localStorage) — id determinístico por nome + nascimento
-    // (ou createdAt como fallback). Estável independente de ordem/sort.
-    dashStudents.forEach((s) =>
-      push(s, `local:${slug(s.name)}:${s.birth || s.createdAt || "x"}`),
-    );
-    // Alunos do banco (Inclusão) — id é o UUID real, garantido único por usuário.
+    // Alunos do banco (Inclusão) — fonte única de verdade.
     dbStudents.forEach((s) =>
       push(
         {
@@ -565,7 +553,7 @@ export function Relatorios() {
       ),
     );
     return out;
-  }, [dashStudents, dbStudents]);
+  }, [dbStudents]);
 
   // Lookup utilitário — sempre por id estável, nunca por nome.
   // Garante que um aluno homônimo NUNCA receba dados de outro registro.
