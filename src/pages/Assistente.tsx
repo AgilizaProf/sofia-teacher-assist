@@ -665,6 +665,19 @@ export function Assistente() {
                               ))}
                             </div>
                           )}
+                          {m.truncated && i === messages.length - 1 && (
+                            <div style={{ marginTop: 10, padding: "8px 10px", background: "#FEF3C7", border: "1px solid #FCD34D", borderRadius: 8, fontSize: 12, color: "#78350F", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <span>⚠️ A resposta foi muito longa e precisou ser dividida. Deseja continuar?</span>
+                              <button
+                                type="button"
+                                onClick={() => sofia.send("Continue de onde parou, sem repetir o que já foi dito.")}
+                                disabled={loading}
+                                style={{ background: "#92400E", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer" }}
+                              >
+                                Continuar
+                              </button>
+                            </div>
+                          )}
                         </>
                       ) : (
                         <div style={{ whiteSpace: "pre-wrap" }}>{m.content}</div>
