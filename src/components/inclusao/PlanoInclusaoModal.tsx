@@ -306,12 +306,17 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
     return parts.join(" · ");
   }, [aluno]);
 
-  const isEI = isEducacaoInfantil(aluno?.anoEscolar);
+  // Ano pedagógico efetivo: o ano de referência pedagógico, quando informado,
+  // prevalece sobre o ano de matrícula em todas as decisões da Sofia.
+  const anoEfetivo = (aluno?.anoReferenciaPedagogico || aluno?.anoEscolar || "").trim();
+  const anoRefDivergente = !!aluno?.anoReferenciaPedagogico
+    && isAnoReferenciaDivergente(aluno?.anoEscolar, aluno?.anoReferenciaPedagogico);
+  const isEI = isEducacaoInfantil(anoEfetivo);
   const opcoesDisciplinas = isEI ? CAMPOS_EI : DISCIPLINAS_EF;
   const labelDisciplina = isEI ? "Campos de experiência" : "Disciplinas";
   const temaSugestoes = useMemo(
-    () => getTemaSugestoes(disciplinas, aluno?.anoEscolar),
-    [disciplinas, aluno?.anoEscolar],
+    () => getTemaSugestoes(disciplinas, anoEfetivo),
+    [disciplinas, anoEfetivo],
   );
 
   function toggleDisciplina(d: string) {
@@ -324,10 +329,16 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
       condicaoLabel ? `Condição: ${condicaoLabel}` : "",
       anamneseResumo ? `Anamnese (resumo):\n${anamneseResumo}` : "Anamnese ainda não preenchida — gere assim mesmo, considerando práticas inclusivas gerais para a condição informada.",
     ].filter(Boolean).join("\n\n");
+    const anoReferenciaInstrucao = buildAnoReferenciaPromptBlock(
+      aluno.anoEscolar,
+      aluno.anoReferenciaPedagogico,
+    );
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: {
         modo: "pcd",
         anoEscolar: aluno.anoEscolar || "",
+        anoReferenciaPedagogico: aluno.anoReferenciaPedagogico || "",
+        anoReferenciaInstrucao,
         turma: aluno.turma || "",
         disciplina: interdisciplinar ? "" : disciplina,
         disciplinasInter: interdisciplinar ? disciplinas : [],
