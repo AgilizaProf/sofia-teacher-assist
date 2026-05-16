@@ -316,6 +316,54 @@ export type Database = {
           },
         ]
       }
+      documentos_planejamento: {
+        Row: {
+          conteudo: Json
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          escola: string | null
+          id: string
+          leis: string[]
+          modo: string
+          professor: string | null
+          tipo: string
+          turma_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conteudo: Json
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          escola?: string | null
+          id?: string
+          leis?: string[]
+          modo: string
+          professor?: string | null
+          tipo: string
+          turma_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: Json
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          escola?: string | null
+          id?: string
+          leis?: string[]
+          modo?: string
+          professor?: string | null
+          tipo?: string
+          turma_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       maintenance_windows: {
         Row: {
           block_access: boolean
