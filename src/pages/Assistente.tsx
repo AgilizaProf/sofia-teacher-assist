@@ -354,7 +354,7 @@ export function Assistente() {
 
   const dashClasses = useDashClasses();
   const dashStudents = useDashStudents();
-  type DashStudent = typeof dashStudents[number];
+  type DashStudent = LegacyDashStudent;
 
   // Agrupa alunos por turma e identifica PCDs
   const turmasInfo = useMemo(() => {
