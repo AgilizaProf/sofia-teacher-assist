@@ -445,7 +445,11 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
         <div className="inc-modal-head">
           <h2>Gerar plano adaptado · {aluno.name.split(" ")[0]}</h2>
           <span className="meta">
-            {aluno.anoEscolar || "Ano não informado"}<br />
+            {aluno.anoEscolar || "Ano não informado"}
+            {anoRefDivergente && aluno.anoReferenciaPedagogico
+              ? ` · 📚 Referência: ${aluno.anoReferenciaPedagogico}`
+              : ""}
+            <br />
             {condicaoLabel || "Condição não informada"}
           </span>
           <button className="inc-modal-close" onClick={onClose} aria-label="Fechar"><X size={16} /></button>
