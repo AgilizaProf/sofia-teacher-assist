@@ -616,6 +616,13 @@ export function Assistente() {
           <AppHeader
             actions={
               <>
+                <button
+                  className="hist-mobile-btn"
+                  aria-label="Abrir histórico"
+                  onClick={() => setMobileHistOpen(true)}
+                >
+                  <FileText size={14} /> Histórico
+                </button>
                 <button className="ah-icon" aria-label="Compartilhar"><Share2 size={16} /></button>
                 <button className="ah-icon" aria-label="Ajuda"><HelpCircle size={16} /></button>
               </>
