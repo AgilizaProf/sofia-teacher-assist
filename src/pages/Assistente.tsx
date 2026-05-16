@@ -857,7 +857,12 @@ export function Assistente() {
           </div>
         </section>
 
-        <aside className={"history" + (collapsed ? " collapsed" : "")}>
+        <div
+          className={"history-mobile-backdrop" + (mobileHistOpen ? " show" : "")}
+          onClick={() => setMobileHistOpen(false)}
+          aria-hidden={!mobileHistOpen}
+        />
+        <aside className={"history" + (collapsed ? " collapsed" : "") + (mobileHistOpen ? " mobile-open" : "")}>
           <div
             className="history-head"
             onClick={() => setCollapsed((v) => !v)}
