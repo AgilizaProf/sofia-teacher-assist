@@ -96,6 +96,26 @@ export function TrilhasPanel() {
   const [gerandoSemana, setGerandoSemana] = useState<string | null>(null);
   const [planoAberto, setPlanoAberto] = useState<string | null>(null);
 
+  // Detecta se o ano selecionado é Educação Infantil para alinhar a UI
+  // (campos de experiência da BNCC) e o prompt enviado para a Sofia.
+  const isEI = /educa[çc][ãa]o infantil|creche|pr[ée]-escola/i.test(form.ano);
+  const disciplinasOpts = isEI ? CAMPOS_EI : DISCIPLINAS_COMUNS;
+  const componenteLabel = isEI ? "Campos de experiência" : "Disciplinas";
+  const componenteHintInter = isEI
+    ? "selecione um ou mais (BNCC · Ed. Infantil)"
+    : "selecione uma ou mais (interdisciplinar)";
+
+  // Ao trocar para/de EI, descarta seleções que não pertencem ao novo modo
+  // para evitar misturar disciplinas do EF com campos de experiência.
+  useEffect(() => {
+    setForm((f) => {
+      const filtradas = f.disciplinas.filter((d) => disciplinasOpts.includes(d));
+      if (filtradas.length === f.disciplinas.length) return f;
+      return { ...f, disciplinas: filtradas };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEI]);
+
   const carregar = async () => {
     const { data } = await supabase.from("trilhas").select("*").order("created_at", { ascending: false });
     setTrilhas((data as Trilha[]) || []);
