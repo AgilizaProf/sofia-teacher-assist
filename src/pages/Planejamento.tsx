@@ -1881,6 +1881,7 @@ export function Planejamento() {
   const [m6ReportOpen, setM6ReportOpen] = useState(false);
   const [m6PatternDismissedKey, setM6PatternDismissedKey] = usePersistentState<string>("plan_m6_pattern_dismissed_key", "");
   const [m6EditingId, setM6EditingId] = useState<string | null>(null);
+  const [m6QuickOpen, setM6QuickOpen] = useState<boolean>(false);
   // Sugestão "Próxima aula" que a Sofia gera após salvar um diário novo.
   type M6NextSuggestion = {
     entryId: string;
