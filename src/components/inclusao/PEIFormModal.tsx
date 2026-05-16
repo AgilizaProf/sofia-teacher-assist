@@ -732,6 +732,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
               <label style={labelCss}>Objetivos de longo prazo (ano letivo)</label>
               <textarea style={{ ...inputCss, minHeight: 80 }} value={draft.objetivosLongoPrazo} onChange={(e) => set("objetivosLongoPrazo", e.target.value)}
                 placeholder="O que se espera que o aluno desenvolva até o final do ano letivo..." />
+              <PEISuggestions fieldKey="objetivosLongoPrazo" onPick={(t) => set("objetivosLongoPrazo", appendText(draft.objetivosLongoPrazo, t))} />
 
               <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ fontWeight: 700, fontSize: 13 }}>Metas de curto prazo com indicadores</div>
@@ -758,9 +759,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   <label style={labelCss}>Meta</label>
                   <textarea style={{ ...inputCss, minHeight: 50, marginBottom: 6 }} value={m.meta} onChange={(e) => updMeta(m.id, { meta: e.target.value })}
                     placeholder="O que se quer alcançar..." />
+                  <PEISuggestions fieldKey="meta_texto" onPick={(t) => updMeta(m.id, { meta: appendText(m.meta, t) })} />
                   <label style={labelCss}>Como saber que foi atingida (indicador)</label>
                   <input style={inputCss} value={m.indicador} onChange={(e) => updMeta(m.id, { indicador: e.target.value })}
                     placeholder="Critério observável para considerar a meta atingida" />
+                  <PEISuggestions fieldKey="meta_indicador" onPick={(t) => updMeta(m.id, { indicador: appendText(m.indicador, t) })} />
                 </div>
               ))}
             </div>
