@@ -19,6 +19,9 @@ serve(async (req) => {
       registros = [] as Registro[],
       formato = "topicos", // "topicos" | "texto"
       intervalo = "",
+      anoEscolar = "",
+      anoReferenciaPedagogico = "",
+      anoReferenciaInstrucao = "",
     } = body || {};
 
     const linhas = (registros as Registro[])
@@ -26,11 +29,16 @@ serve(async (req) => {
       .map((r) => `- [${r.when || "—"}] (${r.cat || "ped"}) ${r.body || ""}`)
       .join("\n");
 
-    const sys = `Você é a Sofia, assistente pedagógica especializada em educação inclusiva (Lei 14.254/2021 e BNCC). Gere um parecer descritivo individual, narrativo, em tom profissional e empático, baseado APENAS nos dados reais fornecidos (anamnese, PEI e registros do período). Não invente fatos, datas ou objetivos não citados. Se faltar informação em algum eixo, indique brevemente. Devolva JSON estrito.`;
+    const refBlock = (anoReferenciaInstrucao || "").trim();
+    const sys = `Você é a Sofia, assistente pedagógica especializada em educação inclusiva (Lei 14.254/2021 e BNCC). Gere um parecer descritivo individual, narrativo, em tom profissional e empático, baseado APENAS nos dados reais fornecidos (anamnese, PEI e registros do período). Não invente fatos, datas ou objetivos não citados. Se faltar informação em algum eixo, indique brevemente. Devolva JSON estrito.${
+      refBlock ? `\n\nANO DE REFERÊNCIA PEDAGÓGICO (regra inviolável): ${refBlock}` : ""
+    }`;
 
     const user = `Aluno(a): ${aluno || "—"}
 Diagnóstico/CID: ${diagnostico || "não informado"}
 Período do parecer: ${periodo}
+Ano de matrícula: ${anoEscolar || "não informado"}
+Ano de referência pedagógico: ${anoReferenciaPedagogico || "(não definido — usar ano de matrícula)"}
 
 Anamnese (resumo dos eixos):
 ${anamneseResumo || "(sem dados de anamnese)"}
