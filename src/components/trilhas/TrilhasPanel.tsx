@@ -9,6 +9,16 @@ const DISCIPLINAS_COMUNS = [
   "Arte", "Educação Física", "Inglês", "Ensino Religioso",
 ];
 
+// Campos de experiência da BNCC para Educação Infantil. Substituem as
+// disciplinas tradicionais quando a turma/ano é de Ed. Infantil.
+const CAMPOS_EI = [
+  "O eu, o outro e o nós",
+  "Corpo, gestos e movimentos",
+  "Traços, sons, cores e formas",
+  "Escuta, fala, pensamento e imaginação",
+  "Espaços, tempos, quantidades, relações e transformações",
+];
+
 const ANOS_ESCOLARES = [
   "Educação Infantil — Creche (0 a 3 anos)",
   "Educação Infantil — Pré-escola (4 e 5 anos)",
@@ -86,6 +96,26 @@ export function TrilhasPanel() {
   const [gerandoSemana, setGerandoSemana] = useState<string | null>(null);
   const [planoAberto, setPlanoAberto] = useState<string | null>(null);
 
+  // Detecta se o ano selecionado é Educação Infantil para alinhar a UI
+  // (campos de experiência da BNCC) e o prompt enviado para a Sofia.
+  const isEI = /educa[çc][ãa]o infantil|creche|pr[ée]-escola/i.test(form.ano);
+  const disciplinasOpts = isEI ? CAMPOS_EI : DISCIPLINAS_COMUNS;
+  const componenteLabel = isEI ? "Campos de experiência" : "Disciplinas";
+  const componenteHintInter = isEI
+    ? "selecione um ou mais (BNCC · Ed. Infantil)"
+    : "selecione uma ou mais (interdisciplinar)";
+
+  // Ao trocar para/de EI, descarta seleções que não pertencem ao novo modo
+  // para evitar misturar disciplinas do EF com campos de experiência.
+  useEffect(() => {
+    setForm((f) => {
+      const filtradas = f.disciplinas.filter((d) => disciplinasOpts.includes(d));
+      if (filtradas.length === f.disciplinas.length) return f;
+      return { ...f, disciplinas: filtradas };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEI]);
+
   const carregar = async () => {
     const { data } = await supabase.from("trilhas").select("*").order("created_at", { ascending: false });
     setTrilhas((data as Trilha[]) || []);
@@ -112,13 +142,18 @@ export function TrilhasPanel() {
     const disciplinaStr = !multiplas
       ? discsAll[0]
       : interdisciplinar
-        ? `Interdisciplinar (${discsAll.join(", ")})`
+        ? (isEI
+            ? `Interdisciplinar — Ed. Infantil (${discsAll.join(", ")})`
+            : `Interdisciplinar (${discsAll.join(", ")})`)
         : discsAll.join(" + ");
+    const eiPrefix = isEI
+      ? `ETAPA: Educação Infantil (${form.ano}). Use EXCLUSIVAMENTE os Campos de Experiência da BNCC (NÃO use disciplinas do Ensino Fundamental). Trabalhe com Objetivos de Aprendizagem e Desenvolvimento (códigos EI01/EI02/EI03), interações, brincadeiras, eixos estruturantes e práticas adequadas à faixa etária. Não cite componentes como "Matemática", "Português", "Ciências" — substitua pelos campos correspondentes.\n\n`
+      : "";
     const contextoFinal = !multiplas
-      ? form.contexto
+      ? `${eiPrefix}${form.contexto}`
       : interdisciplinar
-        ? `${form.contexto ? form.contexto + "\n\n" : ""}Tratar como TRILHA INTERDISCIPLINAR: integre ${discsAll.join(", ")} em torno de um tema único, com habilidades BNCC de cada componente articuladas semana a semana.`
-        : `${form.contexto ? form.contexto + "\n\n" : ""}NÃO interdisciplinar: gere conteúdo SEPARADO para cada um dos componentes a seguir, mantendo identidade própria de cada disciplina/campo de experiência (${discsAll.join(", ")}). Para cada semana, indique claramente a qual componente pertence e suas habilidades BNCC específicas.`;
+        ? `${eiPrefix}${form.contexto ? form.contexto + "\n\n" : ""}Tratar como TRILHA INTERDISCIPLINAR: integre ${discsAll.join(", ")} em torno de um tema único, com habilidades BNCC de cada componente articuladas semana a semana.`
+        : `${eiPrefix}${form.contexto ? form.contexto + "\n\n" : ""}NÃO interdisciplinar: gere conteúdo SEPARADO para cada um dos componentes a seguir, mantendo identidade própria de cada ${isEI ? "campo de experiência" : "disciplina"} (${discsAll.join(", ")}). Para cada semana, indique claramente a qual componente pertence e suas habilidades BNCC específicas.`;
     setError(null); setLoading(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -274,10 +309,10 @@ export function TrilhasPanel() {
         </div>
         <div style={{ marginTop: 12 }}>
           <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 6 }}>
-            Disciplinas <span style={{ color: "var(--ink-2)" }}>· selecione uma ou mais (interdisciplinar)</span>
+            {componenteLabel} <span style={{ color: "var(--ink-2)" }}>· {componenteHintInter}</span>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {DISCIPLINAS_COMUNS.map((d) => {
+            {disciplinasOpts.map((d) => {
               const active = form.disciplinas.includes(d);
               return (
                 <button
@@ -305,7 +340,7 @@ export function TrilhasPanel() {
             })}
           </div>
           <input
-            placeholder="Outras disciplinas (separe por vírgula)"
+            placeholder={isEI ? "Outros campos/eixos (separe por vírgula)" : "Outras disciplinas (separe por vírgula)"}
             value={form.disciplinaCustom}
             onChange={(e) => setForm({ ...form, disciplinaCustom: e.target.value })}
             style={{ ...inputStyle, marginTop: 8, width: "100%" }}
@@ -319,7 +354,7 @@ export function TrilhasPanel() {
               />
               <span>
                 Tratar como <strong>interdisciplinar</strong> (tema único integrando os componentes).
-                <span style={{ color: "var(--muted)" }}> Desmarque para gerar conteúdo separado por disciplina/campo de experiência.</span>
+                <span style={{ color: "var(--muted)" }}> Desmarque para gerar conteúdo separado por {isEI ? "campo de experiência" : "disciplina"}.</span>
               </span>
             </label>
           )}
