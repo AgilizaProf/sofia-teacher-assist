@@ -15,7 +15,6 @@ import { RootErrorBoundary } from "@/components/RootErrorBoundary";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { useAiBudgetWarnings } from "@/hooks/useAiBudgetWarnings";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
 import { installPlatformTelemetry, trackPageVisit } from "@/lib/admin/track";
@@ -147,7 +146,6 @@ function RootComponent() {
   useReducedMotion();
   const { ready, authed, isPublicRoute } = useAuthGuard();
   const showSofia = ready && authed && !isPublicRoute;
-  useAiBudgetWarnings();
   return (
     <RootErrorBoundary>
       <QueryClientProvider client={queryClient}>

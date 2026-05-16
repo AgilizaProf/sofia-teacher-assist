@@ -1,167 +1,84 @@
+## Resumo
 
-# Gerador de Documentos de Planejamento
+Substituo totalmente o controle por custo em R$ (ai_usage + useAiBudgetWarnings + aiBudget.server) por um sistema de créditos visível ao usuário. Aplicação on-demand no primeiro acesso do mês/ano. Sem tocar na landing page (você atualiza).
 
-Adicionar gerador + preview + exportação (Imprimir/PDF e Word) **dentro das páginas existentes**, montando o conteúdo a partir do que já está cadastrado (sem chamar IA). Salvar histórico no Supabase.
+## Regras
 
-## 1. Arquitetura compartilhada (núcleo reaproveitável)
+- **Pro anual** (`plano='pro'`, `ciclo='anual'`): 18.000 base anuais + bônus de 500 em jan/jun/nov → 19.500/ano. Renova na data de `started_at`.
+- **Pro mensal** (`plano='pro'`, `ciclo='mensal'`) e **trial**: 1.500/mês, sem acúmulo, reinicia todo mês.
+- **Free** (`plano='free'`): 300/mês, sem acúmulo.
 
-```
-src/lib/documentos/
-  types.ts            # DocumentoPlanejamento, DiaPlanejamento, etc.
-  builders.ts         # monta DocumentoPlanejamento a partir de dados do app
-  leis.ts             # decide quais leis citar (LDB/LBI/TEA/TDAH/BNCC EI ou EF)
-  docx.ts             # exportarDocx(doc)
-  print.ts            # imprimirDocumento() = window.print() escopado
-src/components/documentos/
-  DocumentoDialog.tsx # Dialog com formulário (escola/turma/professor/datas/modo) + preview + botões de export
-  DocumentoPreview.tsx# WYSIWYG (mesmo HTML usado no print)
-  DocumentoHistorico.tsx # Sheet listando docs salvos por turma/período
-src/styles/documento.css # @page 2cm, borda, fontes
-```
+> Premissa do trial: durante os 14 dias o usuário fica em `pro/mensal`. Se houver outra marcação de trial em produção, me diga e eu ajusto a função `getCreditsPolicy`.
 
-`DocumentoDialog` é genérico: recebe `tipo: 'atividades'|'pcd'|'trilhas'|'sofia'` + dados de origem (atividades do período, alunos PCD, trilha, sugestões da Sofia) e devolve um documento pronto.
+## Migração de banco
 
-## 2. Onde aparece (reaproveitando páginas existentes)
+Nova tabela `creditos_usuario` (1 linha por user) com `creditos_totais`, `creditos_utilizados`, `ano_referencia`, `mes_referencia`, `data_renovacao`, `ultimo_bonus_mes`, `plano_snapshot`. `creditos_disponiveis` exposto como coluna gerada.
 
-Adicionar botão **"📄 Gerar Documento"** que abre o `DocumentoDialog`:
+Nova tabela `creditos_historico` com `tipo` ('uso'|'bonus'|'renovacao'|'compra'|'reset_mensal'), `quantidade` (assinado), `descricao`, `saldo_apos`, `created_at`. Índice por `(user_id, created_at desc)`.
 
-- **`src/pages/Planejamento.tsx`** (aba M6/Atividades): tipo `atividades` — usa atividades já planejadas no período escolhido.
-- **`src/pages/PlanejamentoEi.tsx` / Inclusão (`src/pages/Inclusao.tsx` ou `PeiPdi.tsx`)**: tipo `pcd` — pega alunos da turma + CIDs/PEI cadastrados.
-- **`src/components/trilhas/TrilhasPanel.tsx`**: tipo `trilhas` — usa a trilha semestral já carregada.
-- **`src/pages/Assistente.tsx`**: tipo `sofia` — usa as últimas sugestões/foco do dia da Sofia.
+RLS: usuário lê o próprio; escrita só via service role (server fns).
 
-Cada chamador passa apenas os dados; o Dialog cuida de tudo o resto.
+Função SQL `consumir_creditos(_user_id, _quantidade, _descricao)` — atômica, retorna saldo novo, falha se insuficiente. Realtime habilitado em `creditos_usuario`.
 
-## 3. Formulário no Dialog
+Remover tabela `ai_usage` e função `ai_month_usage_brl`.
 
-Campos (todos obrigatórios para habilitar "Gerar preview"):
-- Nome da Escola — `Input` (default: perfil do professor, se existir)
-- Turma — `Select` via `useTurmas()` (já selecionada se chamada veio de uma turma)
-- Nome do(a) Professor(a) — `Input` (default: `profiles.display_name`)
-- Data início / Data fim — shadcn DatePicker
-- Modo — `RadioGroup` Completo | Simplificado
+## Server functions (em `src/lib/creditos.functions.ts`)
 
-## 4. Builders (sem IA)
+- `garantirCreditos()` — chamada no boot: calcula política do plano, aplica renovação anual (se passou aniversário), reset mensal (free/mensal), bônus do mês (jan/jun/nov) se ainda não aplicado. Idempotente.
+- `consumirCreditos({ tipo, descricao, quantidade })` — wrapper sobre a RPC, registra histórico.
+- `listarHistorico({ limit })`.
 
-`builders.ts` expõe `buildDocumento(tipo, ctx)`:
-- **atividades**: itera dias úteis do período, para cada dia agrupa atividades da turma vindas de `agenda`/planejamento (`useAgenda`/dados M6), preenche `atividades`, `objetivos` (texto + código BNCC já cadastrado na atividade), `materiais`.
-- **pcd**: para cada dia/aluno PCD, gera bloco a partir do PEI (objetivos do PEI viram `objetivos`, adaptações viram `atividades`/`materiais`).
-- **trilhas**: usa semanas da trilha já gerada, cada semana = um bloco com `data` da semana.
-- **sofia**: usa cards de sugestão/foco do dia armazenados (`useSofiaSuggestions`, `useFocoDoDia`) como "atividades sugeridas".
+Acumulador interno do chat Sofia: contador em `app_snapshots` (key `sofia_msg_counter`) ou simples — a cada 100 msgs chama `consumirCreditos(100, "Chat Sofia (100 mensagens)")`.
 
-Quando faltar dado para um dia, renderiza placeholder `—` em vez de chamar IA.
+Pontos de cobrança APÓS sucesso:
+- Parecer descritivo → 100
+- Relatório de inclusão → 100
+- PEI completo → 200
+- Plano de aula → 100
+- Adaptação PCD → 100
+- Anamnese → 100
+- Exportação PDF/Word → 0
 
-## 5. Decisão de leis (`leis.ts`)
+## UI
 
-`escolherLeis({ tipo, nivel, cidsAlunos })` retorna lista de strings prontas:
-- Sempre: `Lei 9.394/1996 (LDB)`
-- PCD: `+ Lei 13.146/2015 (LBI)`; se algum CID começa com F84 → `+ Lei 12.764/2012 (TEA)`; se F90/F81 → `+ Lei 14.254/2021`
-- BNCC: EI → `Resolução CNE/CP 2/2017`; EF/EM → `Resolução CNE/CP 4/2018` (nível vem da turma via `lib/sofia/nivelEnsino.ts`)
+Componente `<CreditosPainel />` no `Dashboard.tsx` (e mobile, mesmo componente responsivo):
+- Saldo em destaque, barra de progresso (verde/amarelo/vermelho conforme %).
+- Total anual/mensal, utilizados, próximo bônus (data + valor) — só para anual.
+- Mensagem contextual conforme faixa (>50/20-50/<20/<5%).
+- Bloco "Últimas movimentações" (5 itens) com link "Ver completo".
+- Free: card de upgrade.
 
-Renderizado no rodapé: `"Documento gerado com apoio do AgilizaProf em consonância com <lista unida por ' e '>."`
+Banner global no topo do dashboard:
+- ≤20%: amarelo "Você está com X% dos créditos restantes."
+- ≤5%: vermelho "Créditos quase esgotados" com botão "Adicionar créditos" → modal "+500 por R$ 9,90" (placeholder, sem checkout).
 
-## 6. Preview WYSIWYG e CSS (`documento.css`)
+Subscription realtime em `creditos_usuario` filtrada por `user_id` — atualiza tela em qualquer device. Toast quando `ultimo_bonus_mes` mudar: "🎁 Seus 500 créditos bônus de [mês] foram adicionados!".
 
-```css
-@page { size: A4; margin: 2cm; }
-.documento {
-  border: 1px solid #000;
-  padding: 2cm; /* aplicado só na tela; no print, @page cuida das margens */
-  font: 12px/1.4 Arial, sans-serif;
-  text-align: justify;
-  color: #000; background: #fff;
-}
-.documento h1 {
-  font-family: 'Fraunces', serif;
-  font-weight: 700;
-  font-size: 28px;
-  text-align: center;
-  margin: 0 0 8px;
-}
-.documento .periodo { text-align: center; margin-bottom: 16px; }
-.documento .meta { text-align: left; }
-.documento .meta b { font-weight: 700; }
-.documento .dia { border-top: 1px solid #000; padding-top: 12px; margin-top: 12px; }
-.documento .dia h2 { font-size: 12px; font-weight: 700; margin: 0 0 6px; text-align: left; }
-.documento .simplificado li {
-  display: flex; justify-content: space-between; gap: 8px;
-  list-style: none;
-}
-.documento .simplificado li .leader { flex: 1; border-bottom: 1px dotted #000; margin: 0 6px; height: .8em; }
-.documento footer { margin-top: 24px; font-size: 10px; color: #555; text-align: center; }
-.documento .assinaturas { margin-top: 24px; font-size: 12px; color: #000; text-align: left; }
-@media print {
-  body * { visibility: hidden; }
-  .documento, .documento * { visibility: visible; }
-  .documento { position: absolute; inset: 0; border: 1px solid #000; padding: 0; }
-  .semana-break { page-break-before: always; }
-}
+## Remoções
+
+- `src/hooks/useAiBudgetWarnings.ts`
+- `src/lib/aiBudget.server.ts`
+- `supabase/functions/_shared/ai-budget.ts` (e referências dentro das edge functions — substituir por chamada à RPC `consumir_creditos`)
+- Tabela `ai_usage` e RPC `ai_month_usage_brl`.
+
+## Fora de escopo (você confirmou)
+
+- Landing page — você atualiza.
+- Checkout do pacote extra de R$ 9,90 — fica como placeholder no modal.
+
+## Diagrama de fluxo
+
+```text
+boot do app
+  └─ garantirCreditos()
+       ├─ aniversário do plano passou? → renova totais, zera utilizados, registra 'renovacao'
+       ├─ mês mudou e plano não-anual? → reset, registra 'reset_mensal'
+       └─ mês ∈ {1,6,11} e anual e ultimo_bonus_mes ≠ mês atual? → +500, toast, 'bonus'
+
+consumo
+  RPC consumir_creditos (atômica)
+    └─ trigger insere em creditos_historico
+         └─ realtime push → painel atualiza em todos os devices
 ```
 
-Importar fonte no `index.html`:
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&display=swap" rel="stylesheet">
-```
-
-`DocumentoPreview` aceita `editable?: boolean`. Quando true, cada texto usa `contentEditable` e dispara `onChange(patch)` com debounce para auto-save.
-
-## 7. Exportação
-
-- **Imprimir / Salvar como PDF**: `imprimirDocumento()` aplica classe `printing` no body e chama `window.print()`. CSS `@media print` já cuida do layout.
-- **Exportar Word (.docx)**: `bun add docx`. `docx.ts` constrói `Document` com:
-  - Section properties: margem 2cm (`margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 }` em twips), `borders: { pageBorders: { ... }, pageBorderTop/Left/Right/Bottom: { style: SINGLE, size: 6, color: "000000", space: 24 } }`.
-  - Título em Fraunces (com fallback "Times New Roman") 28pt, bold, centralizado.
-  - Corpo em Arial 12pt, justificado.
-  - Dias separados por parágrafo com `border: { top: { style: SINGLE, size: 6, color: "000000" } }`.
-  - Rodapé com assinaturas e frase legal.
-  - Quebra de página por semana (`pageBreakBefore`).
-  - Download via `Packer.toBlob` + `URL.createObjectURL`.
-
-(Não vamos gerar PDF "real" via lib — `window.print()` já cobre PDF; isso ficou definido na resposta.)
-
-## 8. Persistência (Supabase)
-
-Migration:
-```sql
-create table public.documentos_planejamento (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null,
-  turma_id uuid,
-  tipo text not null check (tipo in ('atividades','pcd','trilhas','sofia')),
-  escola text,
-  professor text,
-  data_inicio date not null,
-  data_fim date not null,
-  modo text not null check (modo in ('completo','simplificado')),
-  conteudo jsonb not null,   -- DocumentoPlanejamento serializado
-  leis text[] not null default '{}',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-alter table public.documentos_planejamento enable row level security;
-create policy "owner select" on public.documentos_planejamento for select using (auth.uid() = user_id);
-create policy "owner insert" on public.documentos_planejamento for insert with check (auth.uid() = user_id);
-create policy "owner update" on public.documentos_planejamento for update using (auth.uid() = user_id);
-create policy "owner delete" on public.documentos_planejamento for delete using (auth.uid() = user_id);
-create trigger documentos_planejamento_updated_at
-  before update on public.documentos_planejamento
-  for each row execute function public.update_updated_at_column();
-create index on public.documentos_planejamento (user_id, turma_id, data_inicio);
-```
-
-Acesso via `src/lib/db/documentos.ts` (cliente Supabase direto, padrão das outras tabelas do projeto): `listDocumentos({ turmaId? })`, `saveDocumento(doc)`, `updateDocumento(id, patch)`, `deleteDocumento(id)`.
-
-`DocumentoDialog` salva ao gerar preview pela primeira vez e a cada edição (debounce 800 ms).
-
-`DocumentoHistorico` (Sheet acionado no header do Dialog) lista por turma + período, permite reabrir um documento salvo.
-
-## 9. Etapas de implementação
-
-1. Migration `documentos_planejamento` + RLS + trigger.
-2. `bun add docx`. Adicionar Fraunces no `index.html`. Criar `documento.css` e importar em `src/styles.css`.
-3. `lib/documentos/{types,leis,builders,docx,print}.ts` + `lib/db/documentos.ts`.
-4. `components/documentos/{DocumentoPreview,DocumentoDialog,DocumentoHistorico}.tsx`.
-5. Plugar botão "📄 Gerar Documento" em: Planejamento (M6), Inclusão/PEI, TrilhasPanel, Assistente — passando o `tipo` e os dados de origem.
-6. Verificar print (layout, borda, fonte) e export DOCX (abrir no Word/Google Docs).
-
+Aprovo e parto para implementação?
