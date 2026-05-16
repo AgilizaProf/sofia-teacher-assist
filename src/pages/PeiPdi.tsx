@@ -27,12 +27,14 @@ type PeiRow = {
   versao: number;
   status: string;
   gerado_em: string;
-  perfil_aluno: PeiData["perfil_aluno"];
-  objetivos_longo: PeiData["objetivos_longo"];
-  objetivos_curto: PeiData["objetivos_curto"];
-  estrategias: PeiData["estrategias"];
-  avaliacao: PeiData["avaliacao"];
-  responsaveis: PeiData["responsaveis"];
+  // Heavy JSONB fields are fetched on demand in `abrirVersao` para evitar
+  // baixar todos os PEIs com todo o conteúdo só para listá-los.
+  perfil_aluno?: PeiData["perfil_aluno"];
+  objetivos_longo?: PeiData["objetivos_longo"];
+  objetivos_curto?: PeiData["objetivos_curto"];
+  estrategias?: PeiData["estrategias"];
+  avaliacao?: PeiData["avaliacao"];
+  responsaveis?: PeiData["responsaveis"];
 };
 
 const BIMESTRES = ["1º bimestre", "2º bimestre", "3º bimestre", "4º bimestre", "1º semestre", "2º semestre"];
@@ -81,7 +83,8 @@ export function PeiPdi() {
     setLoadingList(true);
     const { data, error } = await supabase
       .from("pei_pdi")
-      .select("id,aluno_client_id,aluno_nome,bimestre,versao,status,gerado_em,perfil_aluno,objetivos_longo,objetivos_curto,estrategias,avaliacao,responsaveis")
+      // Lista: apenas campos exibidos nos cards (sem JSONB pesado).
+      .select("id,aluno_client_id,aluno_nome,bimestre,versao,status,gerado_em")
       .order("gerado_em", { ascending: false })
       .limit(50);
     setLoadingList(false);
@@ -265,18 +268,25 @@ export function PeiPdi() {
     loadVersions();
   };
 
-  const abrirVersao = (row: PeiRow) => {
+  const abrirVersao = async (row: PeiRow) => {
     setAlunoId(row.aluno_client_id);
     setBimestre(row.bimestre);
     setVersao(row.versao);
     setCurrentId(row.id);
+    // Busca sob demanda apenas o conteúdo JSONB desta versão específica.
+    const { data: full, error } = await supabase
+      .from("pei_pdi")
+      .select("perfil_aluno,objetivos_longo,objetivos_curto,estrategias,avaliacao,responsaveis")
+      .eq("id", row.id)
+      .single();
+    if (error || !full) { toast.error("Falha ao abrir PEI"); return; }
     setPei({
-      perfil_aluno: { ...emptyPei.perfil_aluno, ...row.perfil_aluno },
-      objetivos_longo: row.objetivos_longo || [],
-      objetivos_curto: row.objetivos_curto || [],
-      estrategias: { ...emptyPei.estrategias, ...row.estrategias },
-      avaliacao: { ...emptyPei.avaliacao, ...row.avaliacao },
-      responsaveis: { ...emptyPei.responsaveis, ...row.responsaveis },
+      perfil_aluno: { ...emptyPei.perfil_aluno, ...(full.perfil_aluno as PeiData["perfil_aluno"]) },
+      objetivos_longo: (full.objetivos_longo as PeiData["objetivos_longo"]) || [],
+      objetivos_curto: (full.objetivos_curto as PeiData["objetivos_curto"]) || [],
+      estrategias: { ...emptyPei.estrategias, ...(full.estrategias as PeiData["estrategias"]) },
+      avaliacao: { ...emptyPei.avaliacao, ...(full.avaliacao as PeiData["avaliacao"]) },
+      responsaveis: { ...emptyPei.responsaveis, ...(full.responsaveis as PeiData["responsaveis"]) },
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
