@@ -1746,7 +1746,7 @@ ${corpo}
                   <div className="hero-r">
                     <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> Ver PEI completo</button>
                     <button className="btn btn-secondary" onClick={() => abrirEditarAluno(selected)} title="Editar nome, turma, ano escolar, CIDs e AEE"><Pencil size={14} /> Editar dados</button>
-                     <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => sofia.openSofia({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> Adaptar aula de hoje</button>
+                     <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => openSofiaForSelected({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> Adaptar aula de hoje</button>
                   </div>
                 </div>
 
@@ -2041,7 +2041,7 @@ ${corpo}
                          onAction={(s) => {
                            if (s.id === "inc-adapt" || s.id.startsWith("rule-adapt-")) {
                              setActiveTab("plan");
-                             sofia.openSofia({
+                             openSofiaForSelected({
                                prompt: s.prompt.replace(/este aluno/gi, selected.name),
                                context: s.context,
                              });
@@ -2057,7 +2057,7 @@ ${corpo}
                              handleGerarParecer();
                              return;
                            }
-                           sofia.openSofia({ prompt: s.prompt, context: s.context });
+                           openSofiaForSelected({ prompt: s.prompt, context: s.context });
                          }}
                        />
 
