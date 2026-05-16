@@ -2788,6 +2788,16 @@ ${corpo}
                               {parecerAtual.periodoLabel ? `${parecerAtual.periodoLabel} · ` : ""}Gerado em {parecerAtual.geradoEm}
                             </span>
                           </div>
+                          {parecerAtual.peiConsiderado ? (
+                            <div style={{ fontSize: 11.5, color: "#065F46", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: 6, padding: "6px 10px" }}>
+                              ✅ PEI do aluno considerado na geração deste relatório
+                              {parecerAtual.peiAtualizadoEm ? ` (versão de ${parecerAtual.peiAtualizadoEm})` : ""}.
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: 11.5, color: "#92400E", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 6, padding: "6px 10px" }}>
+                              ⚠️ Gerado sem PEI cadastrado — para um relatório mais preciso, cadastre o PEI do aluno.
+                            </div>
+                          )}
                           {parecerAtual.formato === "texto" && parecerAtual.texto ? (
                             <div style={{ fontSize: 13, lineHeight: 1.6, textAlign: "justify" }}>
                               {parecerAtual.texto.split(/\n+/).map((p, i) => <p key={i} style={{ margin: "0 0 8px" }}>{p}</p>)}
