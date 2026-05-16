@@ -1914,10 +1914,35 @@ ${corpo}
                   <div className="section">
                     <div className="section-head">
                       <h3>Linha do tempo pedagógica</h3>
-                      <button className="more" onClick={() => setActiveTab("reg")}>Todos os 0 registros →</button>
+                      <button className="more" onClick={() => setActiveTab("reg")}>Todos os {studentRegs.length} registros →</button>
                     </div>
                     <div className="tl">
-                      <p style={{ color: "var(--muted)", fontSize: 12.5 }}>Nenhum registro ainda. Os eventos pedagógicos de {selected.name.split(" ")[0]} aparecerão aqui.</p>
+                      {studentRegs.length === 0 ? (
+                        <p style={{ color: "var(--muted)", fontSize: 12.5 }}>Nenhum registro ainda. Os eventos pedagógicos de {selected.name.split(" ")[0]} aparecerão aqui.</p>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {studentRegs.slice(0, 5).map((r) => (
+                            <div key={r.id} className="reg-item">
+                              <div className="reg-item-head">
+                                <span className="reg-when">{r.when}</span>
+                                <span className="reg-author">· {r.who}</span>
+                                <span className={"reg-cat " + r.cat}>{REG_CAT_LABEL[r.cat]}</span>
+                              </div>
+                              <div className="reg-body">{r.body}</div>
+                            </div>
+                          ))}
+                          {studentRegs.length > 5 && (
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              style={{ alignSelf: "flex-start", fontSize: 12 }}
+                              onClick={() => setActiveTab("reg")}
+                            >
+                              Ver todos os {studentRegs.length} registros
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                     </div>
