@@ -678,11 +678,44 @@ export function Inclusao() {
   const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
   const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+
+  const abrirEditarAluno = (s: typeof allStudents[number]) => {
+    setEditingStudentId(s.id);
+    setNsName(s.name || "");
+    setNsTurma(s.turma && s.turma !== "Sem turma" ? s.turma : "");
+    setNsAnoEscolar(s.anoEscolar || "");
+    // Reconstroi nsCids a partir de "CID F84.0, F71"
+    const cidStr = (s.cid || "").replace(/^CID\s*/i, "").trim();
+    const codes = cidStr && cidStr !== "não informado"
+      ? cidStr.split(/[,;]/).map((c) => c.trim()).filter(Boolean)
+      : [];
+    const matched = codes
+      .map((code) => CID_OPTIONS.find((o) => o.cid === code)?.value)
+      .filter((v): v is string => Boolean(v));
+    setNsCids(matched);
+    setNsCidPick("nao_informado");
+    // Reconstroi AEE e mediadora a partir de "AEE 2x/sem · Mediadora: Maria"
+    const aeeStr = s.aee || "";
+    const days = aeeStr.match(/AEE\s*(\d)x\/sem/i)?.[1] || "";
+    const med = aeeStr.match(/Mediadora:\s*(.+?)$/i)?.[1]?.trim() || "";
+    setNsAeeDays(days);
+    setNsMediadora(med);
+    setNewStudentOpen(true);
+  };
+
+  const fecharModalAluno = () => {
+    setNewStudentOpen(false);
+    setEditingStudentId(null);
+    setNsName(""); setNsTurma(""); setNsAnoEscolar("");
+    setNsCids([]); setNsCidPick("nao_informado");
+    setNsAeeDays(""); setNsMediadora("");
+  };
 
   // Foco automático no primeiro campo + Esc para fechar o modal de cadastrar aluno
   useEffect(() => {
     if (!newStudentOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setNewStudentOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") fecharModalAluno(); };
     window.addEventListener("keydown", onKey);
     const t = window.setTimeout(() => {
       const el = document.querySelector<HTMLElement>('.inc-modal-overlay.open .inc-modal input:not([type="hidden"]), .inc-modal-overlay.open .inc-modal select, .inc-modal-overlay.open .inc-modal textarea');
@@ -1443,7 +1476,7 @@ ${corpo}
     const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
     const turmaNorm = norm(nsTurma.trim() || "Sem turma");
     const dup = allStudents.find(
-      (s) => norm(s.name) === norm(name) && norm(s.turma || "Sem turma") === turmaNorm,
+      (s) => norm(s.name) === norm(name) && norm(s.turma || "Sem turma") === turmaNorm && s.id !== editingStudentId,
     );
     if (dup) {
       toast.error("Já existe um aluno cadastrado com esses dados.");
@@ -1462,7 +1495,7 @@ ${corpo}
       ? `AEE ${nsAeeDays}x/sem`
       : "AEE a definir";
     const mediadora = nsMediadora.trim();
-    const newStudent: Omit<Student, "id"> = {
+    const baseStudent: Omit<Student, "id"> = {
       name,
       initials: initials || "AL",
       age: "—",
@@ -1478,11 +1511,23 @@ ${corpo}
     };
     try {
       setSavingStudent(true);
-      await createStudent(newStudent);
-      setNsName(""); setNsTurma(""); setNsAnoEscolar(""); setNsCids([]); setNsCidPick("nao_informado");
-      setNsAeeDays(""); setNsMediadora("");
-      setNewStudentOpen(false);
-      toast.success("Aluno(a) cadastrado(a)", { description: name });
+      if (editingStudentId) {
+        // Em edição, preserva campos calculados (anamnese, registros, trend, etc.)
+        await updateStudent(editingStudentId, {
+          name: baseStudent.name,
+          initials: baseStudent.initials,
+          turma: baseStudent.turma,
+          anoEscolar: baseStudent.anoEscolar,
+          diag: baseStudent.diag,
+          cid: baseStudent.cid,
+          aee: baseStudent.aee,
+        });
+        toast.success("Dados do(a) aluno(a) atualizados", { description: name });
+      } else {
+        await createStudent(baseStudent);
+        toast.success("Aluno(a) cadastrado(a)", { description: name });
+      }
+      fecharModalAluno();
     } catch (err) {
       console.error("[Inclusao] erro ao salvar aluno:", err);
       toast.error("Não foi possível salvar o(a) aluno(a)", {
@@ -1695,6 +1740,7 @@ ${corpo}
                   </div>
                   <div className="hero-r">
                     <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> Ver PEI completo</button>
+                    <button className="btn btn-secondary" onClick={() => abrirEditarAluno(selected)} title="Editar nome, turma, ano escolar, CIDs e AEE"><Pencil size={14} /> Editar dados</button>
                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => sofia.openSofia({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> Adaptar aula de hoje</button>
                   </div>
                 </div>
@@ -3335,12 +3381,12 @@ ${corpo}
       </div>
 
       {/* Cadastrar aluno */}
-      <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) setNewStudentOpen(false); }}>
+      <div className={"inc-modal-overlay" + (newStudentOpen ? " open" : "")} onClick={(e) => { if (e.target === e.currentTarget) fecharModalAluno(); }}>
         <div className="inc-modal" style={{ maxWidth: 560 }}>
           <div className="inc-modal-bar" />
           <div className="inc-modal-head">
-            <h2>Cadastrar novo aluno</h2>
-            <button className="inc-modal-close" onClick={() => setNewStudentOpen(false)} aria-label="Fechar"><X size={16} /></button>
+            <h2>{editingStudentId ? "Editar dados do aluno" : "Cadastrar novo aluno"}</h2>
+            <button className="inc-modal-close" onClick={fecharModalAluno} aria-label="Fechar"><X size={16} /></button>
           </div>
           <form className="inc-modal-body plain" onSubmit={handleSaveStudent} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <label style={{ fontSize: 12, fontWeight: 700 }}>Nome completo
@@ -3459,9 +3505,9 @@ ${corpo}
               />
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
-              <button type="button" className="inc-btn-ghost" onClick={() => setNewStudentOpen(false)}>Cancelar</button>
+              <button type="button" className="inc-btn-ghost" onClick={fecharModalAluno}>Cancelar</button>
               <button type="submit" className="btn btn-primary bg-orange-400 text-orange-400" disabled={savingStudent} aria-busy={savingStudent}>
-                {savingStudent ? "Cadastrando…" : "Salvar aluno"}
+                {savingStudent ? "Salvando…" : (editingStudentId ? "Salvar alterações" : "Salvar aluno")}
               </button>
             </div>
           </form>

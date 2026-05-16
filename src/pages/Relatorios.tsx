@@ -528,7 +528,7 @@ export function Relatorios() {
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
   // Alunos cadastrados no banco (Inclusão) — entram automaticamente na lista de Relatórios.
-  const { students: dbStudents } = useInclusaoStudents();
+  const { students: dbStudents, update: updateDbStudent } = useInclusaoStudents();
   const combinedStudents = useMemo<DashStudentWithId[]>(() => {
     const seen = new Set<string>();
     const out: DashStudentWithId[] = [];
@@ -577,15 +577,70 @@ export function Relatorios() {
   // Cadastro rápido de aluno (vincula a uma turma já criada)
   const [novoAlunoOpen, setNovoAlunoOpen] = useState(false);
   const [novoAluno, setNovoAluno] = useState<DashStudent>({ name: "", classRef: "", birth: "", pcd: "nao", notes: "" });
+  // Quando preenchido, o modal opera em modo "editar dados" do aluno selecionado.
+  // Guarda o id estável (local:* ou db:*) e os dados originais para localizar
+  // o registro correto ao salvar.
+  const [editAluno, setEditAluno] = useState<{ id: string; originalName: string; originalBirth: string } | null>(null);
   const abrirNovoAluno = () => {
+    setEditAluno(null);
     setNovoAluno({ name: "", classRef: dashClasses[0]?.name || "", birth: "", pcd: "nao", notes: "" });
     setNovoAlunoOpen(true);
+  };
+  const abrirEditarAluno = (id: string) => {
+    const s = getStudentById(id);
+    if (!s) { toast.error("Aluno não encontrado."); return; }
+    setEditAluno({ id, originalName: s.name, originalBirth: s.birth || "" });
+    setNovoAluno({
+      name: s.name,
+      classRef: s.classRef || "",
+      birth: s.birth || "",
+      pcd: s.pcd || "nao",
+      notes: s.notes || "",
+    });
+    setNovoAlunoOpen(true);
+  };
+  const fecharModalAluno = () => {
+    setNovoAlunoOpen(false);
+    setEditAluno(null);
   };
   const salvarNovoAluno = () => {
     const nome = novoAluno.name.trim();
     if (!nome) { toast.error("Informe o nome do(a) aluno(a)."); return; }
+    if (editAluno) {
+      if (editAluno.id.startsWith("db:")) {
+        const dbId = editAluno.id.slice(3);
+        updateDbStudent(dbId, {
+          name: nome,
+          turma: novoAluno.classRef || "Sem turma",
+          birth: novoAluno.birth || undefined,
+          notes: novoAluno.notes || undefined,
+          pcd: novoAluno.pcd || undefined,
+          diag: novoAluno.pcd && novoAluno.pcd !== "nao" ? novoAluno.pcd : "",
+        })
+          .then(() => {
+            toast.success(`Dados de ${nome} atualizados.`);
+            fecharModalAluno();
+            setAlunoModal((m) => (m && m.id === editAluno.id ? { ...m, nome, turma: novoAluno.classRef || m.turma, pcd: novoAluno.pcd } : m));
+          })
+          .catch((err: unknown) => toast.error(`Não foi possível atualizar. ${err instanceof Error ? err.message : ""}`));
+      } else {
+        // Local — localiza pelo nome+nascimento originais e substitui.
+        setDashStudents((cur) =>
+          cur.map((s) =>
+            s.name.trim().toLowerCase() === editAluno.originalName.trim().toLowerCase() &&
+            (s.birth || "") === editAluno.originalBirth
+              ? { ...s, ...novoAluno, name: nome }
+              : s,
+          ),
+        );
+        toast.success(`Dados de ${nome} atualizados.`);
+        fecharModalAluno();
+        setAlunoModal((m) => (m && m.id === editAluno.id ? { ...m, nome, turma: novoAluno.classRef || m.turma, pcd: novoAluno.pcd } : m));
+      }
+      return;
+    }
     setDashStudents((cur) => [...cur, { ...novoAluno, name: nome, createdAt: new Date().toISOString() }]);
-    setNovoAlunoOpen(false);
+    fecharModalAluno();
     toast.success(`${nome} cadastrado(a) com sucesso.`);
   };
 
@@ -1640,16 +1695,16 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
       })()}
       {novoAlunoOpen && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setNovoAlunoOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) fecharModalAluno(); }}
           style={{ position: "fixed", inset: 0, background: "rgba(15,27,54,.55)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 480, boxShadow: "0 20px 60px rgba(0,0,0,.25)", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line-soft)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "var(--primary-dark)" }}>Cadastrar aluno</h3>
-                <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)" }}>Vincule o(a) aluno(a) a uma turma já cadastrada.</p>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "var(--primary-dark)" }}>{editAluno ? "Editar dados do aluno" : "Cadastrar aluno"}</h3>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)" }}>{editAluno ? "Atualize nome, turma, nascimento, PCD e observações." : "Vincule o(a) aluno(a) a uma turma já cadastrada."}</p>
               </div>
-              <button onClick={() => setNovoAlunoOpen(false)} aria-label="Fechar" style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--muted)" }}><X size={18} /></button>
+              <button onClick={fecharModalAluno} aria-label="Fechar" style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--muted)" }}><X size={18} /></button>
             </div>
             <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
@@ -1724,9 +1779,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               </label>
             </div>
             <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line-soft)", display: "flex", gap: 8, justifyContent: "flex-end", background: "#FAFAFB" }}>
-              <button onClick={() => setNovoAlunoOpen(false)} style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancelar</button>
+              <button onClick={fecharModalAluno} style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancelar</button>
               <button onClick={salvarNovoAluno} style={{ background: "var(--primary-dark)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <UserPlus size={13} /> Cadastrar
+                <UserPlus size={13} /> {editAluno ? "Salvar alterações" : "Cadastrar"}
               </button>
             </div>
           </div>
@@ -1957,7 +2012,16 @@ ${parecerHtml}
                     {a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · PCD: ${a.pcd}` : ""}
                   </div>
                 </div>
-                <button onClick={() => setAlunoModal(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <button
+                    onClick={() => { setAlunoModal(null); abrirEditarAluno(a.id); }}
+                    title="Editar dados do aluno"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "var(--primary-dark)" }}
+                  >
+                    <Edit3 size={13} /> Editar dados
+                  </button>
+                  <button onClick={() => setAlunoModal(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+                </div>
               </div>
               <div style={{ marginTop: 14 }} className="rel-modal-body">
                 <p style={{ margin: 0 }}>{descricao}</p>
