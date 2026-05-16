@@ -820,9 +820,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
               <label style={{ ...labelCss, marginTop: 12 }}>Softwares e aplicativos de apoio</label>
               <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.softwaresAplicativos} onChange={(e) => set("softwaresAplicativos", e.target.value)}
                 placeholder="Apps e ferramentas digitais que auxiliam o aprendizado..." />
+              <PEISuggestions fieldKey="softwaresAplicativos" onPick={(t) => set("softwaresAplicativos", appendText(draft.softwaresAplicativos, t))} />
               <label style={{ ...labelCss, marginTop: 10 }}>Adaptações físicas de materiais</label>
               <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.adaptacoesFisicasMateriais} onChange={(e) => set("adaptacoesFisicasMateriais", e.target.value)}
                 placeholder="Lápis adaptado, tesoura adaptada, engrossador, etc..." />
+              <PEISuggestions fieldKey="adaptacoesFisicasMateriais" onPick={(t) => set("adaptacoesFisicasMateriais", appendText(draft.adaptacoesFisicasMateriais, t))} />
             </div>
           )}
 
