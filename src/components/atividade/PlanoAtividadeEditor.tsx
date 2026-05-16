@@ -260,6 +260,27 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const anoTurma = formatTurmaGrade(turmaInfo?.ano || "");
   const anoEscolar = anoTurma || anoFallback;
 
+  // Detecta Educação Infantil pelo ano (vindo da turma ou do fallback) e
+  // troca a lista de "Disciplinas" pelos Campos de Experiência da BNCC.
+  const isEI = useMemo(
+    () => /\(EI\)/.test(anoEscolar) || /educa[cç][aã]o\s+infantil/i.test(anoEscolar),
+    [anoEscolar],
+  );
+  const disciplinasOpts = isEI ? DISCIPLINAS_EI : DISCIPLINAS;
+  const disciplinaLabel = isEI ? "Campo de Experiência" : "Disciplina";
+  const interLabel = isEI ? "Campos a integrar" : "Disciplinas a integrar";
+
+  // Quando alterna entre EI ↔ EF/EM, garante que a disciplina selecionada
+  // pertença à lista atual; senão, recai para a primeira opção válida.
+  useEffect(() => {
+    if (!disciplinasOpts.includes(disciplina)) {
+      setDisciplina(disciplinasOpts[0]);
+    }
+    // Também limpa seleções interdisciplinares incompatíveis.
+    setDisciplinasInter((cur) => cur.filter((d) => disciplinasOpts.includes(d)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEI]);
+
   // Quando a turma muda, sincroniza o fallback com o ano da turma —
   // assim, ao desmarcar a turma, o ano permanece coerente.
   useEffect(() => {
