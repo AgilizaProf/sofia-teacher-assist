@@ -154,6 +154,7 @@ export type Database = {
           aee: string | null
           ano_referencia_pedagogico: string | null
           cid: string | null
+          cids: string[]
           client_id: string | null
           condicao: string | null
           created_at: string
@@ -173,6 +174,7 @@ export type Database = {
           aee?: string | null
           ano_referencia_pedagogico?: string | null
           cid?: string | null
+          cids?: string[]
           client_id?: string | null
           condicao?: string | null
           created_at?: string
@@ -192,6 +194,7 @@ export type Database = {
           aee?: string | null
           ano_referencia_pedagogico?: string | null
           cid?: string | null
+          cids?: string[]
           client_id?: string | null
           condicao?: string | null
           created_at?: string
