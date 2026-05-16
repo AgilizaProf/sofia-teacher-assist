@@ -678,11 +678,44 @@ export function Inclusao() {
   const [anamPrintMode, setAnamPrintMode] = useState<"completo" | "preenchido">("completo");
   const [sugOpenFor, setSugOpenFor] = useState<string | null>(null);
   const [newStudentOpen, setNewStudentOpen] = useState(false);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+
+  const abrirEditarAluno = (s: typeof allStudents[number]) => {
+    setEditingStudentId(s.id);
+    setNsName(s.name || "");
+    setNsTurma(s.turma && s.turma !== "Sem turma" ? s.turma : "");
+    setNsAnoEscolar(s.anoEscolar || "");
+    // Reconstroi nsCids a partir de "CID F84.0, F71"
+    const cidStr = (s.cid || "").replace(/^CID\s*/i, "").trim();
+    const codes = cidStr && cidStr !== "não informado"
+      ? cidStr.split(/[,;]/).map((c) => c.trim()).filter(Boolean)
+      : [];
+    const matched = codes
+      .map((code) => CID_OPTIONS.find((o) => o.cid === code)?.value)
+      .filter((v): v is string => Boolean(v));
+    setNsCids(matched);
+    setNsCidPick("nao_informado");
+    // Reconstroi AEE e mediadora a partir de "AEE 2x/sem · Mediadora: Maria"
+    const aeeStr = s.aee || "";
+    const days = aeeStr.match(/AEE\s*(\d)x\/sem/i)?.[1] || "";
+    const med = aeeStr.match(/Mediadora:\s*(.+?)$/i)?.[1]?.trim() || "";
+    setNsAeeDays(days);
+    setNsMediadora(med);
+    setNewStudentOpen(true);
+  };
+
+  const fecharModalAluno = () => {
+    setNewStudentOpen(false);
+    setEditingStudentId(null);
+    setNsName(""); setNsTurma(""); setNsAnoEscolar("");
+    setNsCids([]); setNsCidPick("nao_informado");
+    setNsAeeDays(""); setNsMediadora("");
+  };
 
   // Foco automático no primeiro campo + Esc para fechar o modal de cadastrar aluno
   useEffect(() => {
     if (!newStudentOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setNewStudentOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") fecharModalAluno(); };
     window.addEventListener("keydown", onKey);
     const t = window.setTimeout(() => {
       const el = document.querySelector<HTMLElement>('.inc-modal-overlay.open .inc-modal input:not([type="hidden"]), .inc-modal-overlay.open .inc-modal select, .inc-modal-overlay.open .inc-modal textarea');
