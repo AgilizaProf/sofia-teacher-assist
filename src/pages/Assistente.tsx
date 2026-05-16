@@ -313,6 +313,16 @@ export function Assistente() {
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
   const [ctxOpen, setCtxOpen] = useState(false);
+  // Permite recolher a barra de contexto para liberar espaço vertical no chat.
+  // Persiste em localStorage para respeitar a preferência entre sessões.
+  const [ctxCollapsed, setCtxCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("assistente_ctx_collapsed") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("assistente_ctx_collapsed", ctxCollapsed ? "1" : "0");
+  }, [ctxCollapsed]);
   const [observacoes, setObservacoes] = usePersistentState<string>("assist_ctx_obs", "");
   const [selectedTurma, setSelectedTurma] = usePersistentState<string | null>("assist_ctx_turma", null);
   // Novos campos de contexto, todos persistidos para a Sofia "lembrar".
