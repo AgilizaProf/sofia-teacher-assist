@@ -753,6 +753,25 @@ export function Inclusao() {
     if (!studentKey || studentKey === "_none") return;
     setAnamObsGeralByStudent((all) => ({ ...all, [studentKey]: txt }));
   };
+  // Atualiza o "Ano de referência pedagógico" do aluno selecionado.
+  // Persistido na coluna `ano_referencia_pedagogico` (e replicado em `data`).
+  const setAnoReferenciaPedagogico = async (value: string) => {
+    if (!selected) return;
+    const novo = value || undefined;
+    try {
+      await updateStudent(selected.id, { anoReferenciaPedagogico: novo });
+      toast.success(
+        novo
+          ? `Ano de referência: ${novo}`
+          : "Ano de referência removido",
+      );
+    } catch (e) {
+      toast.error(
+        "Não foi possível salvar o ano de referência. " +
+        (e instanceof Error ? e.message : ""),
+      );
+    }
+  };
   // PEI persistido pelo PEIFormModal — mesmo storage key
   const [peiByStudent, setPeiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
   const [objetivosModalOpen, setObjetivosModalOpen] = useState(false);
