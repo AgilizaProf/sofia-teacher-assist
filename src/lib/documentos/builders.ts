@@ -136,6 +136,7 @@ export function buildDocumento(args: {
     escola: args.escola,
     turmaId: args.turmaId ?? null,
     turmaNome: args.turmaNome,
+    nivelTexto: args.nivelTexto ?? null,
     professor: args.professor,
     dataInicio: args.dataInicio,
     dataFim: args.dataFim,
