@@ -2012,7 +2012,16 @@ ${parecerHtml}
                     {a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · PCD: ${a.pcd}` : ""}
                   </div>
                 </div>
-                <button onClick={() => setAlunoModal(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <button
+                    onClick={() => { setAlunoModal(null); abrirEditarAluno(a.id); }}
+                    title="Editar dados do aluno"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "var(--primary-dark)" }}
+                  >
+                    <Edit3 size={13} /> Editar dados
+                  </button>
+                  <button onClick={() => setAlunoModal(null)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+                </div>
               </div>
               <div style={{ marginTop: 14 }} className="rel-modal-body">
                 <p style={{ margin: 0 }}>{descricao}</p>
