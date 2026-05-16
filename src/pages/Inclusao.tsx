@@ -1164,6 +1164,9 @@ ${corpo}
     periodoLabel?: string;
     formato?: "topicos" | "texto";
     geradoEm?: string;
+    peiReferenciaId?: string;
+    peiAtualizadoEm?: string;
+    peiConsiderado?: boolean;
   };
   const [parecerByStudent, setParecerByStudent] = usePersistentState<Record<string, Parecer>>("inc_parecer", {});
   const [gerandoParecer, setGerandoParecer] = useState(false);
