@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { userIdFromAuthHeader, isBudgetExceeded, recordUsage, MONTHLY_LIMIT_BRL } from "../_shared/ai-budget.ts";
+import { withConstitution } from "../_shared/sofia-constitution.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -361,8 +362,6 @@ serve(async (req) => {
     const toolName = useOpcoes ? "sugerir_opcoes_aula" : "criar_plano_atividade";
 
     async function callAI(extraUserMsg?: string) {
-      // Constituição inviolável injetada server-side em TODA chamada à IA.
-      const { withConstitution } = await import("../_shared/sofia-constitution.ts");
       const messages: Array<{ role: string; content: string }> = [
         { role: "system", content: withConstitution(systemPrompt) },
         { role: "user", content: userPrompt },
