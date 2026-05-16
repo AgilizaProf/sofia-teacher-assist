@@ -20,8 +20,13 @@ serve(async (req) => {
       alunos_pcd = [] as Array<{ nome: string; condicao?: string }>,
     } = body || {};
 
-    const sys = `Você é a Sofia, assistente pedagógica do AgilizaProf. Gere planos semanais encadeados, baseados na BNCC, em linguagem não-capacitista. Não invente alunos nem códigos BNCC. Devolva JSON estrito.`;
-    const user = `Gere o plano completo da SEMANA ${semana} dentro da trilha semestral.
+    const anoStr = String(ano || "").toLowerCase();
+    const isEdInfantil = /infantil|berç|maternal|pré[\s-]?(i|ii|escola)|creche|g[1-5]\b/.test(anoStr);
+
+    const sys = isEdInfantil
+      ? `Você é a Sofia, assistente pedagógica do AgilizaProf. Gere planos semanais encadeados para EDUCAÇÃO INFANTIL, baseados EXCLUSIVAMENTE nos Campos de Experiência da BNCC (códigos EI0X__##). NÃO use disciplinas do Ensino Fundamental (Matemática/Português/etc.). Foque em interações, brincadeiras e eixos estruturantes. Linguagem não-capacitista. Devolva JSON estrito.`
+      : `Você é a Sofia, assistente pedagógica do AgilizaProf. Gere planos semanais encadeados, baseados na BNCC, em linguagem não-capacitista. Não invente alunos nem códigos BNCC. Devolva JSON estrito.`;
+    const user = `Gere o plano completo da SEMANA ${semana} dentro da trilha semestral.${isEdInfantil ? "\n\nIMPORTANTE: turma de EDUCAÇÃO INFANTIL — use APENAS Campos de Experiência da BNCC e códigos EI0X__## em habilidade_bncc. Estruture o dia em rodas, brincadeiras e explorações." : ""}
 
 CONTEXTO DA TRILHA
 Tema central: ${tema_central}
