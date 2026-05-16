@@ -23,6 +23,11 @@ import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useTurmas } from "@/hooks/useTurmas";
+import {
+  ANO_REFERENCIA_GROUPS,
+  buildAnoReferenciaPromptBlock,
+  isAnoReferenciaDivergente,
+} from "@/lib/inclusao/anoReferencia";
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
 import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusaoVisualizarModal";
@@ -630,7 +635,12 @@ export function Inclusao() {
   const user = useUser();
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
   const navigate = useNavigate({ from: "/inclusao" });
-  const { students: allStudents, create: createStudent, loading: studentsLoading } = useInclusaoStudents();
+  const {
+    students: allStudents,
+    create: createStudent,
+    update: updateStudent,
+    loading: studentsLoading,
+  } = useInclusaoStudents();
   // Filtro PCD: a página de Inclusão só lista alunos PCD.
   // Considera PCD quando o campo `pcd` está preenchido e diferente de "nao",
   // OU quando há CID cadastrado (cadastro feito pela própria Inclusão).
