@@ -2,6 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 @import "./styles/sofia-tokens.css";
+@import "./styles/documento.css";
 
 /* Modal close buttons: ensure clicks never get intercepted by inner icons. */
 .inc-modal-close,
