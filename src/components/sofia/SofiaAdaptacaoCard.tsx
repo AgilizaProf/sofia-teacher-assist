@@ -5,6 +5,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofia } from "./SofiaProvider";
 import { useHydrated } from "@/hooks/useHydrated";
 import { CID_OPTIONS } from "@/lib/cidsBR";
+import { useDashStudents } from "@/hooks/useDashLegacyData";
 
 type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
 type Variant = "port" | "mat" | "aval" | "esc" | "ci";
@@ -87,7 +88,7 @@ export function SofiaAdaptacaoCard({ showEmptyFallback = false }: { showEmptyFal
   const hydrated = useHydrated();
   const navigate = useNavigate();
   const sofia = useSofia();
-  const [dashStudents] = usePersistentState<DashStudent[]>("dash_students", []);
+  const dashStudents = useDashStudents();
   const [week] = usePersistentState<Week>("plan_week", EMPTY_WEEK);
   const [adaptDone] = usePersistentState<Record<string, string[]>>("inc_adapt_done", {});
 
