@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { askSofia, listSofiaConversations, getSofiaConversation } from "@/lib/sofia.functions";
 import { useSofiaContextOptional } from "@/lib/sofia/sofiaContext";
 import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
+import { reportError } from "@/lib/admin/track";
 
 export type SofiaMessage = {
   role: "user" | "assistant";
@@ -294,6 +295,18 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
       setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);
+      // Telemetria: registra a falha em platform_errors sem expor conteúdo
+      // de alunos, mensagens do usuário ou contexto sensível.
+      void reportError(`[sofia.chat] ${msg}`, {
+        stack: err instanceof Error ? err.stack : undefined,
+        severity: "error",
+        metadata: {
+          task: "sofia.chat",
+          origin_route: loc.pathname,
+          had_conversation: Boolean(conversationId),
+          error_name: err instanceof Error ? err.name : "unknown",
+        },
+      });
     } finally {
       setLoading(false);
     }

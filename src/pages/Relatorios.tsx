@@ -10,6 +10,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useDashClasses } from "@/hooks/useDashLegacyData";
+import { Skeleton } from "@/components/ui/skeleton";
 import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
@@ -528,7 +529,7 @@ export function Relatorios() {
   const [dashSchools] = usePersistentState<DashSchool[]>("dash_schools", []);
 
   // Alunos cadastrados no banco (Inclusão) — entram automaticamente na lista de Relatórios.
-  const { students: dbStudents, update: updateDbStudent, create: createDbStudent } = useInclusaoStudents();
+  const { students: dbStudents, update: updateDbStudent, create: createDbStudent, loading: studentsLoading } = useInclusaoStudents();
   const combinedStudents = useMemo<DashStudentWithId[]>(() => {
     const seen = new Set<string>();
     const out: DashStudentWithId[] = [];
@@ -1260,7 +1261,23 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
 
           {/* Cards grid */}
           <div className="rel-grid">
-            {filtered.length === 0 && alunosFiltered.length === 0 && (
+            {studentsLoading && combinedStudents.length === 0 ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <article key={`sk-${i}`} className="rel-card" style={{ pointerEvents: "none" }}>
+                  <div className="rel-card-head">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="rel-stu" style={{ flex: 1 }}>
+                      <Skeleton className="h-3 w-32 mb-2" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-4 w-24 mt-2" />
+                  <Skeleton className="h-2 w-full mt-3" />
+                  <Skeleton className="h-2 w-2/3 mt-2" />
+                </article>
+              ))
+            ) : null}
+            {!studentsLoading && filtered.length === 0 && alunosFiltered.length === 0 && (
               <EmptyState
                 icon="📝"
                 title="Nenhum parecer gerado ainda."
@@ -1270,7 +1287,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               />
             )}
 
-            {alunosFiltered.map((a) => (
+            {!studentsLoading && alunosFiltered.map((a) => (
               <article
                 key={a.id}
                 className="rel-card"

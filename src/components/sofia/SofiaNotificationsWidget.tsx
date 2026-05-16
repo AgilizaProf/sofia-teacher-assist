@@ -10,6 +10,7 @@ import { useSofiaNotifications, type SofiaNotifAction, type SofiaNotifCategory, 
 import { useSofia } from "./SofiaProvider";
 import { askSofia } from "@/lib/sofia.functions";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
+import { reportError } from "@/lib/admin/track";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Widget flutuante de notificações da Sofia.
@@ -91,6 +92,16 @@ export function SofiaNotificationsWidget() {
       setAnswer(finalContent || acc);
     } catch (err) {
       setAskError(err instanceof Error ? err.message : "Não consegui responder agora.");
+      // Telemetria: registra erro do stream em platform_errors sem expor
+      // pergunta do educador nem dados de aluno.
+      void reportError(`[sofia.notif] ${err instanceof Error ? err.message : "unknown"}`, {
+        stack: err instanceof Error ? err.stack : undefined,
+        severity: "error",
+        metadata: {
+          task: "sofia.notifications",
+          error_name: err instanceof Error ? err.name : "unknown",
+        },
+      });
     } finally {
       setAsking(false);
     }
