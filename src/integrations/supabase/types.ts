@@ -266,6 +266,81 @@ export type Database = {
         }
         Relationships: []
       }
+      creditos_historico: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          quantidade: number
+          saldo_apos: number
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          quantidade: number
+          saldo_apos: number
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          quantidade?: number
+          saldo_apos?: number
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creditos_usuario: {
+        Row: {
+          ano_referencia: number
+          ciclo_snapshot: string | null
+          created_at: string
+          creditos_totais: number
+          creditos_utilizados: number
+          data_renovacao: string
+          mes_referencia: number
+          plano_snapshot: string
+          ultimo_bonus_ano: number | null
+          ultimo_bonus_mes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ano_referencia: number
+          ciclo_snapshot?: string | null
+          created_at?: string
+          creditos_totais?: number
+          creditos_utilizados?: number
+          data_renovacao?: string
+          mes_referencia: number
+          plano_snapshot?: string
+          ultimo_bonus_ano?: number | null
+          ultimo_bonus_mes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ano_referencia?: number
+          ciclo_snapshot?: string | null
+          created_at?: string
+          creditos_totais?: number
+          creditos_utilizados?: number
+          data_renovacao?: string
+          mes_referencia?: number
+          plano_snapshot?: string
+          ultimo_bonus_ano?: number | null
+          ultimo_bonus_mes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       defasagens: {
         Row: {
           aluno_id: string | null
@@ -1461,8 +1536,23 @@ export type Database = {
       }
       admin_revoke_pro: { Args: { _user_id: string }; Returns: undefined }
       ai_month_usage_brl: { Args: { _user_id: string }; Returns: number }
+      aplicar_bonus_credito: {
+        Args: {
+          _ano: number
+          _descricao: string
+          _mes: number
+          _quantidade: number
+          _user_id: string
+        }
+        Returns: Json
+      }
       cleanup_old_sofia_conversations: { Args: never; Returns: undefined }
+      consumir_creditos: {
+        Args: { _descricao: string; _quantidade: number; _user_id: string }
+        Returns: Json
+      }
       ensure_referral_code: { Args: { _uid: string }; Returns: string }
+      garantir_creditos_usuario: { Args: { _user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
