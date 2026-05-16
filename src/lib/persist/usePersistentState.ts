@@ -149,7 +149,27 @@ export function usePersistentState<T>(key: string, initial: T) {
         pullRemote(uid);
       }
     });
-    return () => { mounted = false; sub.subscription.unsubscribe(); };
+    // Realtime: re-pull this key when another device updates app_snapshots.
+    const onSnapChange = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ key?: string }>).detail;
+      if (!detail || detail.key !== key) return;
+      const uid = userIdRef.current;
+      if (!uid) return;
+      // Suspende a proteção userTouched para permitir overwrite remoto recente.
+      userTouchedRef.current = false;
+      hydratedRef.current = false;
+      void pullRemote(uid);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("aprof:snapshot-changed", onSnapChange);
+    }
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+      if (typeof window !== "undefined") {
+        window.removeEventListener("aprof:snapshot-changed", onSnapChange);
+      }
+    };
   }, [pullRemote]);
 
   // Push on state change (only after hydration to avoid clobbering remote).
