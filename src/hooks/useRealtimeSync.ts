@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -37,17 +37,44 @@ const TABLE_TO_QUERY_KEY: Record<string, readonly unknown[] | null> = {
   app_snapshots: null,
 };
 
+export type RealtimeStatus = "connecting" | "live" | "fallback";
+
+let realtimeStatus: RealtimeStatus = "connecting";
+const statusListeners = new Set<() => void>();
+function setStatus(next: RealtimeStatus) {
+  if (realtimeStatus === next) return;
+  realtimeStatus = next;
+  statusListeners.forEach((fn) => fn());
+}
+
+/** Subscribe to the realtime sync status (live / fallback / connecting). */
+export function useRealtimeStatus(): RealtimeStatus {
+  return useSyncExternalStore(
+    (cb) => {
+      statusListeners.add(cb);
+      return () => statusListeners.delete(cb);
+    },
+    () => realtimeStatus,
+    () => "connecting" as RealtimeStatus,
+  );
+}
+
 export function useRealtimeSync() {
   const qc = useQueryClient();
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
     async function setup() {
       const { data } = await supabase.auth.getSession();
       const uid = data.session?.user?.id;
       if (!uid || cancelled) return;
+      setStatus("connecting");
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      // If we never reach SUBSCRIBED within 8s, declare fallback mode.
+      fallbackTimer = setTimeout(() => setStatus("fallback"), 8000);
 
       channel = supabase.channel(`rt-user-${uid}`);
 
@@ -76,7 +103,14 @@ export function useRealtimeSync() {
         );
       }
 
-      channel.subscribe();
+      channel.subscribe((state) => {
+        if (state === "SUBSCRIBED") {
+          if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+          setStatus("live");
+        } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
+          setStatus("fallback");
+        }
+      });
     }
 
     void setup();
@@ -103,6 +137,7 @@ export function useRealtimeSync() {
 
     return () => {
       cancelled = true;
+      if (fallbackTimer) clearTimeout(fallbackTimer);
       if (channel) void supabase.removeChannel(channel);
       sub.subscription.unsubscribe();
       if (typeof document !== "undefined") {
