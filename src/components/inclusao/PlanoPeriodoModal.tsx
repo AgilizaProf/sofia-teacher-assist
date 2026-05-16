@@ -223,6 +223,19 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
           <div>
             <h3>Atividades do período · {aluno.name}</h3>
             <span className="pim-sub">Sofia gera várias atividades alinhadas ao PEI e à BNCC</span>
+            <div className="pim-meta">
+              <span className="pim-meta-item">
+                <b>Ano escolar:</b> {aluno.anoEscolar?.trim() || <i>não informado</i>}
+              </span>
+              {aluno.anoReferenciaPedagogico?.trim() && (
+                <span className="pim-meta-item">
+                  <b>Ano de referência:</b> {aluno.anoReferenciaPedagogico}
+                </span>
+              )}
+              <span className="pim-meta-item">
+                <b>Condição:</b> {condicaoLabel || <i>não informada</i>}
+              </span>
+            </div>
           </div>
           <button className="pim-x" onClick={onClose}><X size={16} /></button>
         </header>
@@ -404,6 +417,9 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSave
           .pim-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);}
           .pim-head h3{font-family:'Fraunces',serif;font-weight:700;font-size:18px;margin:0;}
           .pim-sub{font-size:12px;color:var(--muted);}
+          .pim-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:#1B2A4E;}
+          .pim-meta-item{background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px;}
+          .pim-meta-item b{font-weight:700;color:var(--muted);margin-right:4px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
           .pim-x{background:transparent;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:6px;}
           .pim-x:hover{background:var(--bg);color:#1B2A4E;}
           .pim-body{padding:18px 22px;overflow:auto;display:flex;flex-direction:column;gap:14px;}
