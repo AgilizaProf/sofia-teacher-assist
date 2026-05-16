@@ -16,6 +16,7 @@ import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
 import { Header as AppHeader } from "@/components/Header";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { parseQuickOptions, isFreeTextOption } from "@/lib/sofia/quickOptions";
 
 function CtxChipGroup({ options, value, onToggle }: { options: string[]; value: string[]; onToggle: (v: string) => void }) {
   const [adding, setAdding] = useState(false);
@@ -218,6 +219,11 @@ const css = `
 .send:hover{opacity:1;}
 .composer-hint{display:flex;justify-content:space-between;color:var(--muted);font-size:11.5px;margin-top:8px;padding:0 4px;flex-wrap:wrap;gap:8px;}
 .kbd{font-size:10px;border:1px solid var(--line-soft);padding:2px 6px;border-radius:6px;background:#fff;color:#5b6478;}
+.sf-quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-self:flex-start;max-width:85%;}
+.sf-quick-btn{min-height:44px;padding:10px 14px;border-radius:999px;border:1px solid var(--line-soft);background:#FFF7F1;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;line-height:1.1;transition:all .15s ease;font-family:inherit;box-shadow:0 1px 0 rgba(17,24,39,.04);}
+.sf-quick-btn:hover{border-color:var(--accent);background:#FFE7D6;color:var(--accent);transform:translateY(-1px);box-shadow:0 6px 14px -8px rgba(255,106,44,.45);}
+.sf-quick-btn:active{transform:translateY(0);}
+.sf-quick-ico{opacity:.7;font-size:13px;}
 
 /* Tasks block */
 .tasks-wrap{margin-top:28px;}
