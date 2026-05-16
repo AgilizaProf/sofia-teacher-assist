@@ -1145,9 +1145,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           </div>
 
           <div className="atv-field">
-            <label>Disciplina</label>
+            <label>{disciplinaLabel}</label>
             <select value={disciplina} onChange={(e) => setDisciplina(e.target.value)}>
-              {DISCIPLINAS.map((d) => <option key={d} value={d}>{d}</option>)}
+              {disciplinasOpts.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
 
@@ -1178,9 +1178,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         {disciplina === "Interdisciplinar" && (
           <div className="atv-inter">
             <div className="atv-inter-head">
-              <span className="atv-inter-label">Disciplinas a integrar</span>
+              <span className="atv-inter-label">{interLabel}</span>
               <span className="atv-inter-hint">
-                Marque 2 ou mais. Sofia vai articular as áreas em uma única atividade.
+                {isEI
+                  ? "Marque 2 ou mais Campos de Experiência. A Sofia vai articulá-los em uma única vivência."
+                  : "Marque 2 ou mais. Sofia vai articular as áreas em uma única atividade."}
               </span>
               {disciplinasInter.length > 0 && (
                 <button
@@ -1193,7 +1195,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
               )}
             </div>
             <div className="atv-inter-chips">
-              {DISCIPLINAS.filter((d) => d !== "Interdisciplinar").map((d) => {
+              {disciplinasOpts.filter((d) => d !== "Interdisciplinar").map((d) => {
                 const sel = disciplinasInter.includes(d);
                 return (
                   <button
@@ -1214,7 +1216,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             </div>
             {disciplinasInter.length === 1 && (
               <p className="atv-inter-warn">
-                Escolha pelo menos mais uma disciplina para gerar uma atividade interdisciplinar.
+                {isEI
+                  ? "Escolha pelo menos mais um Campo de Experiência para integrar."
+                  : "Escolha pelo menos mais uma disciplina para gerar uma atividade interdisciplinar."}
               </p>
             )}
           </div>
