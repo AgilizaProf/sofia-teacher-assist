@@ -530,7 +530,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                 <ChipRow
                   items={temaSugestoes}
                   onPick={(t) => setTema(t)}
-                  label={`Sugestões para ${aluno.anoEscolar || "este aluno"}${disciplinas[0] ? ` · ${disciplinas[0]}` : ""}`}
+                  label={`Sugestões para ${anoEfetivo || "este aluno"}${anoRefDivergente ? " (referência)" : ""}${disciplinas[0] ? ` · ${disciplinas[0]}` : ""}`}
                 />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>
@@ -543,7 +543,12 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
               <div style={{ background: "var(--accent-soft)", border: "1px solid #FFD4B8", color: "#B8410E", borderRadius: 8, padding: "10px 12px", fontSize: 12, display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <Lightbulb size={14} style={{ marginTop: 2, flexShrink: 0 }} />
                 <span>
-                  A Sofia vai considerar <b>{aluno.anoEscolar || "ano não informado"}</b>, <b>{condicaoLabel || "perfil singular"}</b> e a anamnese ({anamneseResumo ? "preenchida" : "ainda em branco"}).
+                  A Sofia vai considerar{" "}
+                  <b>
+                    {anoRefDivergente && aluno.anoReferenciaPedagogico
+                      ? `${aluno.anoReferenciaPedagogico} (referência pedagógica · matrícula ${aluno.anoEscolar || "—"})`
+                      : (anoEfetivo || "ano não informado")}
+                  </b>, <b>{condicaoLabel || "perfil singular"}</b> e a anamnese ({anamneseResumo ? "preenchida" : "ainda em branco"}).
                   Campos faltantes não impedem a geração.
                 </span>
               </div>
@@ -630,7 +635,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                   <textarea value={atual.metodologia} onChange={(e) => patchAtual({ metodologia: e.target.value })} rows={3} placeholder="Como você vai conduzir a aula com este aluno"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
                   <ChipRow
-                    items={getMetodologiaSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    items={getMetodologiaSugestoes(atual.disciplina, anoEfetivo)}
                     onPick={(t) => patchAtual({ metodologia: atual.metodologia ? atual.metodologia + " " + t : t })}
                     label={`Metodologia · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
                   />
@@ -641,7 +646,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
                   <textarea value={atual.avaliacao} onChange={(e) => patchAtual({ avaliacao: e.target.value })} rows={3} placeholder="Como você vai avaliar este aluno"
                     style={{ padding: "9px 11px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13, color: "var(--text)", textTransform: "none", letterSpacing: 0, resize: "vertical" }} />
                   <ChipRow
-                    items={getAvaliacaoSugestoes(atual.disciplina, aluno.anoEscolar)}
+                    items={getAvaliacaoSugestoes(atual.disciplina, anoEfetivo)}
                     onPick={(t) => patchAtual({ avaliacao: atual.avaliacao ? atual.avaliacao + " " + t : t })}
                     label={`Avaliação · ${disciplinaPrimaria(atual.disciplina) || "geral"}`}
                   />
