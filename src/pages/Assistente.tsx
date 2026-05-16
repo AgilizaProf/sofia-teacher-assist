@@ -576,7 +576,8 @@ export function Assistente() {
   // Carrega lista de conversas ao montar
   useEffect(() => { sofia.refreshConversations(); }, [sofia.refreshConversations]);
 
-  const handleNew = () => { sofia.startNew(); };
+  const handleNew = () => { sofia.startNew(); setMobileHistOpen(false); };
+  const pickConversation = (id: string) => { sofia.loadConversation(id); setMobileHistOpen(false); };
 
   const sendMessage = (raw?: string) => {
     const content = (raw ?? sofia.draft).trim();
