@@ -152,6 +152,7 @@ export type Database = {
       alunos_inclusao: {
         Row: {
           aee: string | null
+          ano_referencia_pedagogico: string | null
           cid: string | null
           client_id: string | null
           condicao: string | null
@@ -170,6 +171,7 @@ export type Database = {
         }
         Insert: {
           aee?: string | null
+          ano_referencia_pedagogico?: string | null
           cid?: string | null
           client_id?: string | null
           condicao?: string | null
@@ -188,6 +190,7 @@ export type Database = {
         }
         Update: {
           aee?: string | null
+          ano_referencia_pedagogico?: string | null
           cid?: string | null
           client_id?: string | null
           condicao?: string | null
