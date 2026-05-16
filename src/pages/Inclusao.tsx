@@ -1633,6 +1633,18 @@ ${corpo}
                     <div className="tag-row">
                       <span className="diagnostic"><span className="pulse" />{selected.diag}</span>
                       {selected.anoEscolar && <span className="tag"><b>Ano escolar:</b> {selected.anoEscolar}</span>}
+                      {selected.anoReferenciaPedagogico && (
+                        <span
+                          className="tag"
+                          style={{ background: "#FFF7ED", borderColor: "#FED7AA", color: "#9A3412" }}
+                          title="Ano usado pela Sofia ao gerar conteúdos pedagógicos"
+                        >
+                          📚 <b>Ano de referência:</b> {selected.anoReferenciaPedagogico}
+                          {isAnoReferenciaDivergente(selected.anoEscolar, selected.anoReferenciaPedagogico) && (
+                            <span style={{ marginLeft: 6 }}>⚠️</span>
+                          )}
+                        </span>
+                      )}
                       <span className="tag"><b>Turma:</b> {selected.turma}</span>
                       <span className="tag"><b>{selected.cid}</b></span>
                       <span className="tag"><b>{selected.aee}</b></span>
