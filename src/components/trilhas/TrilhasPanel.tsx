@@ -9,6 +9,16 @@ const DISCIPLINAS_COMUNS = [
   "Arte", "Educação Física", "Inglês", "Ensino Religioso",
 ];
 
+// Campos de experiência da BNCC para Educação Infantil. Substituem as
+// disciplinas tradicionais quando a turma/ano é de Ed. Infantil.
+const CAMPOS_EI = [
+  "O eu, o outro e o nós",
+  "Corpo, gestos e movimentos",
+  "Traços, sons, cores e formas",
+  "Escuta, fala, pensamento e imaginação",
+  "Espaços, tempos, quantidades, relações e transformações",
+];
+
 const ANOS_ESCOLARES = [
   "Educação Infantil — Creche (0 a 3 anos)",
   "Educação Infantil — Pré-escola (4 e 5 anos)",
