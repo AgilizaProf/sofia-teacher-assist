@@ -1695,16 +1695,16 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
       })()}
       {novoAlunoOpen && (
         <div
-          onClick={(e) => { if (e.target === e.currentTarget) setNovoAlunoOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) fecharModalAluno(); }}
           style={{ position: "fixed", inset: 0, background: "rgba(15,27,54,.55)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 480, boxShadow: "0 20px 60px rgba(0,0,0,.25)", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line-soft)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "var(--primary-dark)" }}>Cadastrar aluno</h3>
-                <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)" }}>Vincule o(a) aluno(a) a uma turma já cadastrada.</p>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "var(--primary-dark)" }}>{editAluno ? "Editar dados do aluno" : "Cadastrar aluno"}</h3>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted)" }}>{editAluno ? "Atualize nome, turma, nascimento, PCD e observações." : "Vincule o(a) aluno(a) a uma turma já cadastrada."}</p>
               </div>
-              <button onClick={() => setNovoAlunoOpen(false)} aria-label="Fechar" style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--muted)" }}><X size={18} /></button>
+              <button onClick={fecharModalAluno} aria-label="Fechar" style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--muted)" }}><X size={18} /></button>
             </div>
             <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
@@ -1779,9 +1779,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               </label>
             </div>
             <div style={{ padding: "12px 20px", borderTop: "1px solid var(--line-soft)", display: "flex", gap: 8, justifyContent: "flex-end", background: "#FAFAFB" }}>
-              <button onClick={() => setNovoAlunoOpen(false)} style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancelar</button>
+              <button onClick={fecharModalAluno} style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Cancelar</button>
               <button onClick={salvarNovoAluno} style={{ background: "var(--primary-dark)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <UserPlus size={13} /> Cadastrar
+                <UserPlus size={13} /> {editAluno ? "Salvar alterações" : "Cadastrar"}
               </button>
             </div>
           </div>
