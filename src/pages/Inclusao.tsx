@@ -3398,7 +3398,20 @@ ${corpo}
           <div className="inc-modal-foot">
             <span className="legal">{anamPrintMode === "completo" ? "Mostrando todos os eixos (inclusive não preenchidos)." : "Mostrando apenas o que foi preenchido."}</span>
             <button className="inc-btn-ghost" onClick={() => setAnamPrintOpen(false)}>Fechar</button>
-            <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => window.print()}><Printer size={14} /> Imprimir / PDF</button>
+            <button
+              className="btn btn-secondary"
+              onClick={async () => {
+                const data = buildAnamneseDocData(selected, anamData, anamPrintMode);
+                await downloadAnamneseDocx(data);
+              }}
+            ><FileText size={14} /> Word (.docx)</button>
+            <button
+              className="btn btn-primary bg-orange-400 text-orange-400"
+              onClick={() => {
+                const data = buildAnamneseDocData(selected, anamData, anamPrintMode);
+                printAnamneseDocument(data);
+              }}
+            ><Printer size={14} /> Imprimir / PDF</button>
           </div>
         </div>
       </div>
