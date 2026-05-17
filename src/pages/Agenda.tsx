@@ -207,7 +207,7 @@ const MONTHS_PT = [
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
 ];
 
-function AgendaSofiaSide() {
+function AgendaSofiaSide({ onImportM4, m4Count }: { onImportM4: () => void; m4Count: number }) {
   const ctx = useSofiaContext();
   const sofia = useSofia();
   const mes = MONTHS_PT[new Date().getMonth()].toLowerCase();
@@ -234,12 +234,24 @@ function AgendaSofiaSide() {
                 <span className="ag-sofia-action-ic">📅</span>
                 <b>Importar do calendário da escola</b>
               </button>
+              <button className="ag-sofia-action" onClick={onImportM4}>
+                <span className="ag-sofia-action-ic">🗂️</span>
+                <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
+              </button>
             </div>
           </>
         ) : (
-          <div className="ag-sofia-msg">
-            Você tem <b>{eventos}</b> evento(s) este mês. Quer que eu destaque os que precisam de preparação?
-          </div>
+          <>
+            <div className="ag-sofia-msg">
+              Você tem <b>{eventos}</b> evento(s) este mês. Quer que eu destaque os que precisam de preparação?
+            </div>
+            <div className="ag-sofia-actions">
+              <button className="ag-sofia-action" onClick={onImportM4}>
+                <span className="ag-sofia-action-ic">🗂️</span>
+                <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
+              </button>
+            </div>
+          </>
         )}
       </div>
       <div className="ag-stat-card">
