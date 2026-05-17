@@ -54,7 +54,9 @@ function leisAplicaveis(cid: string): string[] {
 }
 
 function row(label: string, value: string): string {
-  return `<div class="ident-row"><b>${escHtml(label)}:</b> ${escHtml(value || "—")}</div>`;
+  const v = (value ?? "").trim();
+  if (!v) return ""; // não renderiza itens não preenchidos
+  return `<div class="ident-row"><b>${escHtml(label)}:</b> ${escHtml(v)}</div>`;
 }
 
 function buildIdentificacao(pei: Partial<PEIData>, alunoName: string, professorNome: string): string {
@@ -62,12 +64,20 @@ function buildIdentificacao(pei: Partial<PEIData>, alunoName: string, professorN
     ? pei.profissionaisEnvolvidos.filter(Boolean).join(", ")
     : "";
   const diag = [pei.diagnostico, pei.cid ? `CID ${pei.cid}` : ""].filter(Boolean).join(" · ");
-  const vig = `${fmtDateBR(pei.vigencia?.inicio)} a ${fmtDateBR(pei.vigencia?.fim)}`;
+  // fmtDateBR retorna "—" para datas vazias — normaliza para string vazia
+  // para que o `row()` consiga omitir os campos não preenchidos.
+  const d = (iso?: string | null) => {
+    const f = fmtDateBR(iso);
+    return f === "—" ? "" : f;
+  };
+  const vIni = d(pei.vigencia?.inicio);
+  const vFim = d(pei.vigencia?.fim);
+  const vig = vIni || vFim ? `${vIni || "—"} a ${vFim || "—"}` : "";
   return [
     row("Nome do(a) Aluno(a)", alunoName),
-    row("Data de Nascimento", fmtDateBR(pei.dataNascimento)),
+    row("Data de Nascimento", d(pei.dataNascimento)),
     row("Diagnóstico(s)/CID(s)", diag),
-    row("Data do Laudo", fmtDateBR(pei.laudoData)),
+    row("Data do Laudo", d(pei.laudoData)),
     row("Profissional Responsável", pei.laudoProf || ""),
     row("Nome do(a) Responsável Legal", pei.responsavelNome || ""),
     row("Contato da Família", pei.responsavelContato || ""),
@@ -75,9 +85,9 @@ function buildIdentificacao(pei: Partial<PEIData>, alunoName: string, professorN
     row("Turma", pei.serie || ""),
     row("Nome do(a) Professor(a)", professorNome || ""),
     row("Profissionais Envolvidos", profs),
-    row("Data de Início do PEI", fmtDateBR(pei.dataInicioPEI)),
+    row("Data de Início do PEI", d(pei.dataInicioPEI)),
     row("Vigência", vig),
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 /**
