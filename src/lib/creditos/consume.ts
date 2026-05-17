@@ -30,17 +30,22 @@ export async function consumirCreditos(
   return { ok: true, saldo };
 }
 
-// Contador de mensagens do chat Sofia. A cada 100 mensagens enviadas,
-// desconta 100 créditos em bloco.
-const CHAT_COUNTER_KEY = "agp:sofia_msg_counter:v1";
+// Contador de mensagens do chat Sofia.
+// A cada 10 mensagens enviadas pelo usuário, desconta 1 crédito.
+const CHAT_COUNTER_KEY = "agp:sofia_msg_counter:v2";
+const CHAT_MSGS_POR_BLOCO = 10;
+const CHAT_CUSTO_BLOCO = 1;
 
 export async function registrarMensagemSofia(): Promise<void> {
   if (typeof localStorage === "undefined") return;
   const cur = Number(localStorage.getItem(CHAT_COUNTER_KEY) ?? 0);
   const next = cur + 1;
-  if (next >= 100) {
+  if (next >= CHAT_MSGS_POR_BLOCO) {
     localStorage.setItem(CHAT_COUNTER_KEY, "0");
-    const r = await consumirCreditos(100, "Chat Sofia (100 mensagens)");
+    const r = await consumirCreditos(
+      CHAT_CUSTO_BLOCO,
+      `Chat Sofia (${CHAT_MSGS_POR_BLOCO} mensagens)`,
+    );
     if (!r.ok && r.motivo === "insuficiente") {
       toast.warning("Créditos insuficientes para o bloco do chat.");
     }
