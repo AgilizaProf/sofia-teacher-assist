@@ -127,7 +127,21 @@ function buildCorpo(pei: Partial<PEIData>): string {
     const title = RENAME[rawTitle.toUpperCase()] || rawTitle.toUpperCase();
     const linhas = body.split(/\n+/).map((l) => l.trim()).filter(Boolean);
     if (linhas.length === 0) continue; // pula seções sem conteúdo
-    const html = linhas.map((line) => `<p>${escHtml(line)}</p>`).join("");
+    // Cada linha vem como "Rótulo: resposta" (ou listas indentadas "  1. ...").
+    // Renderiza o rótulo em negrito e a resposta sem negrito.
+    const html = linhas.map((line) => {
+      // preserva indentação de listas
+      const indentMatch = /^(\s+)(.*)$/.exec(line);
+      const indent = indentMatch ? indentMatch[1].replace(/ /g, "&nbsp;") : "";
+      const content = indentMatch ? indentMatch[2] : line;
+      const colonIdx = content.indexOf(":");
+      if (colonIdx > 0 && colonIdx < 120) {
+        const label = content.slice(0, colonIdx);
+        const rest = content.slice(colonIdx + 1).trimStart();
+        return `<p>${indent}<b>${escHtml(label)}:</b>${rest ? " " + escHtml(rest) : ""}</p>`;
+      }
+      return `<p>${indent}${escHtml(content)}</p>`;
+    }).join("");
     partes.push(`<section class="doc-secao"><h2>${escHtml(title)}</h2>${html}</section>`);
   }
 
