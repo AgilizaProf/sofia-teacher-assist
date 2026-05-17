@@ -56,7 +56,9 @@ function leisAplicaveis(cid: string): string[] {
 function row(label: string, value: string): string {
   const v = (value ?? "").trim();
   if (!v) return ""; // não renderiza itens não preenchidos
-  return `<div class="ident-row"><b>${escHtml(label)}:</b> ${escHtml(v)}</div>`;
+  let val = v.replace(/\s*\(\s*([^()]*?)\s*\)/g, " — $1").trim();
+  if (!/[.!?…:;]$/.test(val)) val += ".";
+  return `<div class="ident-row"><b>${escHtml(label)}:</b> ${escHtml(val)}</div>`;
 }
 
 function buildIdentificacao(pei: Partial<PEIData>, alunoName: string, professorNome: string): string {
