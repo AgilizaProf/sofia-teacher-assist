@@ -541,6 +541,83 @@ export function Agenda() {
   // Drag and drop: arrastar evento para outro dia
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
+
+  // ---- Importar atividades agendadas (M4) ----------------------------------
+  type M4ImportItem = { date: string; evt: M4UserEvt; selected: boolean };
+  const [m4ImportOpen, setM4ImportOpen] = useState(false);
+  const [m4Items, setM4Items] = useState<M4ImportItem[]>([]);
+  const [m4Importing, setM4Importing] = useState(false);
+  const [m4Tick, setM4Tick] = useState(0);
+  const m4Pending = useMemo(() => {
+    void m4Tick;
+    const store = readM4Store();
+    const imported = readM4Imported();
+    let n = 0;
+    for (const arr of Object.values(store)) {
+      for (const ev of arr) if (!imported.has(ev.id)) n++;
+    }
+    return n;
+  }, [m4Tick, events.length]);
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === M4_STORE_KEY || e.key === M4_IMPORTED_KEY) setM4Tick((n) => n + 1);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+  const openM4Import = () => {
+    const store = readM4Store();
+    const imported = readM4Imported();
+    const items: M4ImportItem[] = [];
+    for (const [date, arr] of Object.entries(store)) {
+      for (const evt of arr) {
+        if (imported.has(evt.id)) continue;
+        items.push({ date, evt, selected: true });
+      }
+    }
+    items.sort((a, b) => a.date.localeCompare(b.date));
+    setM4Items(items);
+    setM4ImportOpen(true);
+  };
+  const toggleM4Item = (idx: number) =>
+    setM4Items((arr) => arr.map((it, i) => (i === idx ? { ...it, selected: !it.selected } : it)));
+  const setAllM4 = (val: boolean) =>
+    setM4Items((arr) => arr.map((it) => ({ ...it, selected: val })));
+  const confirmM4Import = async () => {
+    const toImport = m4Items.filter((it) => it.selected);
+    if (toImport.length === 0) { setM4ImportOpen(false); return; }
+    setM4Importing(true);
+    const imported = readM4Imported();
+    let ok = 0;
+    for (const it of toImport) {
+      const evType: EventType = it.evt.cat === "aval" ? "eval" : "plan";
+      const notesParts: string[] = [];
+      if (it.evt.turma) notesParts.push(`Turma: ${it.evt.turma}`);
+      if (it.evt.disciplina) notesParts.push(it.evt.disciplina);
+      if (it.evt.minutos) notesParts.push(`${it.evt.minutos} min`);
+      if (it.evt.meta) notesParts.push(it.evt.meta);
+      try {
+        await create({
+          date: it.date,
+          title: it.evt.title,
+          time: "",
+          type: evType,
+          notes: notesParts.join(" · "),
+        });
+        imported.add(it.evt.id);
+        ok++;
+      } catch (e) {
+        console.error("[Agenda] falha ao importar M4:", e);
+      }
+    }
+    writeM4Imported(imported);
+    setM4Importing(false);
+    setM4ImportOpen(false);
+    setM4Tick((n) => n + 1);
+    if (ok > 0) toast.success(`${ok} atividade(s) trazida(s) do calendário M4 para a agenda.`);
+    else toast.error("Não foi possível importar as atividades.");
+  };
+
   const onDragStartEvent = (e: React.DragEvent, id: string) => {
     setDraggedId(id);
     e.dataTransfer.effectAllowed = "move";
