@@ -2058,7 +2058,7 @@ ${corpo}
                   {(() => {
                     const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
                     const objs = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as Array<{ id: string; texto: string; status: string; prazo?: string }>;
-                    const atingidos = objs.filter((o) => o.status === "atingido").length;
+                    const atingidos = objs.filter((o) => o.status === "realizado" || o.status === "atingido").length;
                     return (
                       <button
                         type="button"
@@ -2067,7 +2067,7 @@ ${corpo}
                         style={{ textAlign: "left", cursor: "pointer", border: "1px solid var(--border)", background: "#fff" }}
                         title="Abrir lista de objetivos do PEI"
                       >
-                        <div className="kpi-label">Objetivos PEI atingidos</div>
+                        <div className="kpi-label">Objetivos do PEI realizados</div>
                         <div className="kpi-value">{atingidos}<span className="small"> /{objs.length}</span></div>
                         <div className="kpi-sub">
                           {objs.length === 0 ? "defina objetivos no PEI" : `clique para revisar status`}
@@ -3527,15 +3527,14 @@ ${corpo}
 
       {selected && (() => {
         const STATUS_OPTS: Array<{ v: string; l: string; color: string }> = [
-          { v: "nao_iniciado", l: "Não iniciado", color: "#6B7280" },
-          { v: "em_andamento", l: "Em andamento", color: "#1E40AF" },
-          { v: "atingido", l: "Atingido", color: "#166534" },
-          { v: "revisar", l: "Revisar", color: "#B45309" },
+          { v: "a_fazer", l: "A fazer", color: "#6B7280" },
+          { v: "em_construcao", l: "Em construção", color: "#B45309" },
+          { v: "realizado", l: "Realizado", color: "#166534" },
         ];
         const PRAZO_LBL: Record<string, string> = { curto: "Curto prazo", medio: "Médio prazo", longo: "Longo prazo" };
         const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
         const objs = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as Array<{ id: string; texto: string; status: string; prazo?: string; criterios?: string }>;
-        const atingidos = objs.filter((o) => o.status === "atingido").length;
+        const atingidos = objs.filter((o) => o.status === "realizado" || o.status === "atingido").length;
         const setStatus = (id: string, status: string) => {
           setPeiByStudent((all) => {
             const cur = (all[selected.id] || {}) as Record<string, unknown>;
@@ -3555,7 +3554,7 @@ ${corpo}
                 <div>
                   <h2>Objetivos do PEI · {selected.name}</h2>
                   <span className="meta" style={{ display: "block", marginTop: 4 }}>
-                    {atingidos} de {objs.length} atingido(s) · Lei 14.254/2021
+                    {atingidos} de {objs.length} realizado(s) · Lei 14.254/2021
                   </span>
                 </div>
                 <button className="inc-modal-close" onClick={() => setObjetivosModalOpen(false)} aria-label="Fechar"><X size={16} /></button>
