@@ -3663,6 +3663,7 @@ export function Planejamento() {
                     <button className="pl-btn ghost" onClick={() => m4ChangeMonth(-1)}><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost" onClick={() => { const n = new Date(); setM4Month({ y: n.getFullYear(), m: n.getMonth() }); setM4SelectedDay(n.getDate()); }}>Hoje</button>
                     <button className="pl-btn ghost" onClick={() => m4ChangeMonth(1)}>Próximo <ChevronRight size={14} /></button>
+                    <button className="pl-btn" onClick={m4Print} title="Imprimir calendário"><Printer size={14} /> Imprimir</button>
                   </div>
                 </div>
                 <div className="pl-layers-bar">
@@ -3679,7 +3680,7 @@ export function Planejamento() {
                     </button>
                   ))}
                 </div>
-                <div style={{ marginTop: 12, padding: 12, background: "#fff", border: "1px solid var(--line)", borderRadius: 12 }}>
+                <div ref={m4PrintRef} style={{ marginTop: 12, padding: 12, background: "#fff", border: "1px solid var(--line)", borderRadius: 12 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
                     {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
                       <div key={d} style={{ fontSize: 11, fontWeight: 700, letterSpacing: .4, textTransform: "uppercase", color: "var(--muted)", textAlign: "center", padding: "6px 0" }}>{d}</div>
