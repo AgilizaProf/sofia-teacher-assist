@@ -857,54 +857,6 @@ export type Database = {
         }
         Relationships: []
       }
-      planejamento_documentos: {
-        Row: {
-          conteudo_json: Json
-          created_at: string
-          data_fim: string
-          data_ini: string
-          escola: string
-          id: string
-          leis: string[]
-          modo: string
-          professor: string
-          tab: string
-          turma: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          conteudo_json: Json
-          created_at?: string
-          data_fim: string
-          data_ini: string
-          escola: string
-          id?: string
-          leis?: string[]
-          modo: string
-          professor: string
-          tab: string
-          turma: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          conteudo_json?: Json
-          created_at?: string
-          data_fim?: string
-          data_ini?: string
-          escola?: string
-          id?: string
-          leis?: string[]
-          modo?: string
-          professor?: string
-          tab?: string
-          turma?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       planos_aula: {
         Row: {
           client_id: string | null
