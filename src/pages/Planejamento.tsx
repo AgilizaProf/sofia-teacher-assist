@@ -6,7 +6,7 @@ import { useEiMode } from "@/lib/ei/useEiMode";
 import {
   Sparkles, Plus, ChevronLeft, ChevronRight, RefreshCw, Check,
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
-  Link2, MessageSquare, Send, Layers, BookOpen, Smile, Frown, ArrowRight, ArrowDownUp, Download,
+  Link2, MessageSquare, Send, Layers, BookOpen, Smile, Frown, ArrowRight, ArrowDownUp, Download, Printer,
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
@@ -1674,6 +1674,28 @@ export function Planejamento() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [m4SelectedDay, setM4SelectedDay] = usePersistentState<number | null>("plan_m4_selected_day", null);
+  const m4PrintRef = useRef<HTMLDivElement | null>(null);
+  const m4Print = () => {
+    const node = m4PrintRef.current;
+    if (!node) { window.print(); return; }
+    const w = window.open("", "_blank", "width=1024,height=768");
+    if (!w) { window.print(); return; }
+    const title = `Calendário — ${m4Label}`;
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+      <style>
+        *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:24px;color:#111}
+        h1{font-size:18px;margin:0 0 12px}
+        button{display:none !important}
+        .pl-layers-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;font-size:11px;color:#555}
+        .pl-lay{border:1px solid #ddd;border-radius:999px;padding:2px 8px}
+        @page{size:A4 landscape;margin:12mm}
+      </style></head><body>
+      <h1>${title}</h1>${node.outerHTML}
+      <script>window.onload=()=>{setTimeout(()=>{window.print();},200)}<\/script>
+      </body></html>`);
+    w.document.close();
+  };
 
   // Eventos agendados pela professora a partir das abas Atividades / Atividades PCD.
   // Mesma chave gravada em src/components/atividade/PlanoAtividadeEditor.tsx.
@@ -3641,6 +3663,7 @@ export function Planejamento() {
                     <button className="pl-btn ghost" onClick={() => m4ChangeMonth(-1)}><ChevronLeft size={14} /> Anterior</button>
                     <button className="pl-btn ghost" onClick={() => { const n = new Date(); setM4Month({ y: n.getFullYear(), m: n.getMonth() }); setM4SelectedDay(n.getDate()); }}>Hoje</button>
                     <button className="pl-btn ghost" onClick={() => m4ChangeMonth(1)}>Próximo <ChevronRight size={14} /></button>
+                    <button className="pl-btn" onClick={m4Print} title="Imprimir calendário"><Printer size={14} /> Imprimir</button>
                   </div>
                 </div>
                 <div className="pl-layers-bar">
@@ -3657,7 +3680,7 @@ export function Planejamento() {
                     </button>
                   ))}
                 </div>
-                <div style={{ marginTop: 12, padding: 12, background: "#fff", border: "1px solid var(--line)", borderRadius: 12 }}>
+                <div ref={m4PrintRef} style={{ marginTop: 12, padding: 12, background: "#fff", border: "1px solid var(--line)", borderRadius: 12 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
                     {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
                       <div key={d} style={{ fontSize: 11, fontWeight: 700, letterSpacing: .4, textTransform: "uppercase", color: "var(--muted)", textAlign: "center", padding: "6px 0" }}>{d}</div>
