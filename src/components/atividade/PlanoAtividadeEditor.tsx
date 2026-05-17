@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { logActivity } from "@/lib/activity/activityLog";
+import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 import { formatTurmaGrade } from "@/lib/turmaGrade";
 import {
   printEditorial,
@@ -399,6 +401,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     }
     const novo = data?.plano as PlanoAtividade | undefined;
     if (!novo) { setErro("Sofia não retornou um plano válido."); return null; }
+    void consumirCreditos(CUSTOS.plano_aula, "Plano de aula BNCC");
     return novo;
   };
 
