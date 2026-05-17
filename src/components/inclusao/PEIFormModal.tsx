@@ -480,12 +480,29 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
     setDraft((d) => ({ ...d, [k]: v }));
   };
 
-  // Detecta se o aluno é da Educação Infantil a partir da série/turma informada.
-  const isEI = (() => {
+  // Detecta etapa escolar a partir da série/turma informada.
+  const etapa: "ei" | "fund1" | "fund2" | "em" | undefined = (() => {
     const t = `${draft.serie || ""} ${aluno?.anoEscolar || ""}`.toLowerCase();
-    return /(infantil|bercário|berçario|berc[aá]rio|maternal|pr[eé]\b|pr[eé]-escola|jardim|g[1-5]\b|creche)/.test(t);
+    if (/(infantil|bercário|berçario|berc[aá]rio|maternal|pr[eé]\b|pr[eé]-escola|jardim|g[1-5]\b|creche)/.test(t)) return "ei";
+    if (/(ensino\s*m[eé]dio|\bem\b|1[ºo°]?\s*(ano|s[eé]rie)\s*em|2[ºo°]?\s*(ano|s[eé]rie)\s*em|3[ºo°]?\s*(ano|s[eé]rie)\s*em)/.test(t)) return "em";
+    const m = t.match(/(\d{1,2})\s*[ºo°]?\s*ano/);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (n >= 1 && n <= 5) return "fund1";
+      if (n >= 6 && n <= 9) return "fund2";
+    }
+    if (/fundamental\s*i\b|anos\s*iniciais/.test(t)) return "fund1";
+    if (/fundamental\s*ii\b|anos\s*finais/.test(t)) return "fund2";
+    return undefined;
   })();
-  const eiPrefix = isEI ? "ei:" : undefined;
+  const isEI = etapa === "ei";
+  const etapaPrefix = etapa ? `${etapa}:` : undefined;
+  const etapaLabel: Record<NonNullable<typeof etapa>, string> = {
+    ei: "Ed. Infantil",
+    fund1: "Fund. I",
+    fund2: "Fund. II",
+    em: "Ens. Médio",
+  };
 
   const updMeta = (id: string, patch: Partial<MetaCurta>) => {
     setDraft((d) => ({ ...d, metasCurtoPrazo: d.metasCurtoPrazo.map((m) => m.id === id ? { ...m, ...patch } : m) }));
@@ -637,11 +654,11 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={labelCss}>Potencialidades e pontos fortes</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.potencialidades} onChange={(e) => set("potencialidades", e.target.value)}
                   placeholder="O que o aluno já faz bem, seus talentos e habilidades desenvolvidas..." />
-                <PEISuggestions fieldKey="potencialidades" prefix={eiPrefix} onPick={(t) => set("potencialidades", appendText(draft.potencialidades, t))} />
+                <PEISuggestions fieldKey="potencialidades" prefix={etapaPrefix} onPick={(t) => set("potencialidades", appendText(draft.potencialidades, t))} />
                 <label style={{ ...labelCss, marginTop: 10 }}>Interesses e motivações</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.interessesMotivacoes} onChange={(e) => set("interessesMotivacoes", e.target.value)}
                   placeholder="O que engaja e motiva o aluno, temas favoritos, atividades preferidas..." />
-                <PEISuggestions fieldKey="interessesMotivacoes" prefix={eiPrefix} onPick={(t) => set("interessesMotivacoes", appendText(draft.interessesMotivacoes, t))} />
+                <PEISuggestions fieldKey="interessesMotivacoes" prefix={etapaPrefix} onPick={(t) => set("interessesMotivacoes", appendText(draft.interessesMotivacoes, t))} />
 
                 <div style={{ marginTop: 12 }}>
                   <label style={labelCss}>Estilo de aprendizagem (múltipla escolha)</label>
@@ -723,7 +740,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
               <label style={labelCss}>Objetivos de longo prazo (ano letivo)</label>
               <textarea style={{ ...inputCss, minHeight: 80 }} value={draft.objetivosLongoPrazo} onChange={(e) => set("objetivosLongoPrazo", e.target.value)}
                 placeholder="O que se espera que o aluno desenvolva até o final do ano letivo..." />
-              <PEISuggestions fieldKey="objetivosLongoPrazo" prefix={eiPrefix} onPick={(t) => set("objetivosLongoPrazo", appendText(draft.objetivosLongoPrazo, t))} />
+              <PEISuggestions fieldKey="objetivosLongoPrazo" prefix={etapaPrefix} onPick={(t) => set("objetivosLongoPrazo", appendText(draft.objetivosLongoPrazo, t))} />
 
               <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ fontWeight: 700, fontSize: 13 }}>Metas de curto prazo com indicadores</div>
@@ -750,7 +767,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   <label style={labelCss}>Meta</label>
                   <textarea style={{ ...inputCss, minHeight: 50, marginBottom: 6 }} value={m.meta} onChange={(e) => updMeta(m.id, { meta: e.target.value })}
                     placeholder="O que se quer alcançar..." />
-                  <PEISuggestions fieldKey={`meta_texto:${m.area}`} fallbackKey="meta_texto" prefix={eiPrefix} label={`Sugestões — ${m.area}${isEI ? " · Ed. Infantil" : ""}`} onPick={(t) => updMeta(m.id, { meta: appendText(m.meta, t) })} />
+                  <PEISuggestions fieldKey={`meta_texto:${m.area}`} fallbackKey="meta_texto" prefix={etapaPrefix} label={`Sugestões — ${m.area}${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => updMeta(m.id, { meta: appendText(m.meta, t) })} />
                   <label style={labelCss}>Como saber que foi atingida (indicador)</label>
                   <input style={inputCss} value={m.indicador} onChange={(e) => updMeta(m.id, { indicador: e.target.value })}
                     placeholder="Critério observável para considerar a meta atingida" />
@@ -774,8 +791,8 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 ].map((c) => (
                   <div key={c.k} style={{ marginBottom: 10 }}>
                     <label style={labelCss}>{c.l}</label>
-                    <textarea style={{ ...inputCss, minHeight: 60 }} value={draft[c.k] as string} onChange={(e) => set(c.k, e.target.value)} placeholder={c.ph} />
-                    <PEISuggestions fieldKey={c.k} onPick={(t) => set(c.k, appendText(draft[c.k] as string, t))} />
+                     <textarea style={{ ...inputCss, minHeight: 60 }} value={draft[c.k] as string} onChange={(e) => set(c.k, e.target.value)} placeholder={c.ph} />
+                    <PEISuggestions fieldKey={c.k} prefix={etapaPrefix} label={`Sugestões rápidas${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => set(c.k, appendText(draft[c.k] as string, t))} />
                   </div>
                 ))}
               </div>
@@ -784,7 +801,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={labelCss}>Estratégias específicas por área</label>
                 <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.estrategiasArea} onChange={(e) => set("estrategiasArea", e.target.value)}
                   placeholder="Estratégias que funcionam para cada componente curricular ou campo de experiência..." />
-                <PEISuggestions fieldKey="estrategiasArea" onPick={(t) => set("estrategiasArea", appendText(draft.estrategiasArea, t))} />
+                <PEISuggestions fieldKey="estrategiasArea" prefix={etapaPrefix} label={`Sugestões rápidas${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => set("estrategiasArea", appendText(draft.estrategiasArea, t))} />
                 <div style={{ marginTop: 12 }}>
                   <label style={labelCss}>Recursos pedagógicos necessários (múltipla escolha)</label>
                   <CheckGroup multi
@@ -795,7 +812,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={{ ...labelCss, marginTop: 12 }}>Estratégias para inclusão coletiva</label>
                 <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.estrategiasInclusaoColetiva} onChange={(e) => set("estrategiasInclusaoColetiva", e.target.value)}
                   placeholder="Como incluir o aluno nas atividades da turma toda..." />
-                <PEISuggestions fieldKey="estrategiasInclusaoColetiva" onPick={(t) => set("estrategiasInclusaoColetiva", appendText(draft.estrategiasInclusaoColetiva, t))} />
+                <PEISuggestions fieldKey="estrategiasInclusaoColetiva" prefix={etapaPrefix} label={`Sugestões rápidas${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => set("estrategiasInclusaoColetiva", appendText(draft.estrategiasInclusaoColetiva, t))} />
               </div>
             </>
           )}
@@ -830,7 +847,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={{ ...labelCss, marginTop: 10 }}>Objetivos do AEE</label>
                 <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.objetivosAEE} onChange={(e) => set("objetivosAEE", e.target.value)}
                   placeholder="O que é trabalhado no Atendimento Educacional Especializado..." />
-                <PEISuggestions fieldKey="objetivosAEE" prefix={eiPrefix} onPick={(t) => set("objetivosAEE", appendText(draft.objetivosAEE, t))} />
+                <PEISuggestions fieldKey="objetivosAEE" prefix={etapaPrefix} onPick={(t) => set("objetivosAEE", appendText(draft.objetivosAEE, t))} />
                 <div style={{ marginTop: 12 }}>
                   <label style={labelCss}>Possui profissional de apoio em sala?</label>
                   <CheckGroup multi={false} options={["Sim", "Não"]} value={draft.temProfissionalApoio} onChange={(v) => set("temProfissionalApoio", v as string)} />
