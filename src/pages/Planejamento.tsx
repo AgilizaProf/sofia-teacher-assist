@@ -3044,6 +3044,23 @@ export function Planejamento() {
                   </div>
                 </div>
 
+                {m1Stats.atividades > 0 && !m1Generating && (
+                  <div
+                    role="status"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      margin: "8px 0 12px", padding: "10px 14px",
+                      borderRadius: 10, border: "1px solid var(--line)",
+                      background: "rgba(255,191,77,.10)", color: "var(--ink-1)",
+                      fontSize: 13.5, fontWeight: 500,
+                    }}
+                  >
+                    <Lightbulb size={16} style={{ color: "#B45309", flex: "0 0 auto" }} />
+                    <span>
+                      A Sofia gerou as atividades da semana. <b>Clique em cada atividade</b> para ver e ajustar os detalhes (etapas, materiais, BNCC e adaptações).
+                    </span>
+                  </div>
+                )}
                 <div className="pl-m1">
                   <div className="pl-cal-card">
                     <div className="pl-cal-head">
