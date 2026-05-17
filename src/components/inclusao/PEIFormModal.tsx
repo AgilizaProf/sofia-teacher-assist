@@ -480,6 +480,13 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
     setDraft((d) => ({ ...d, [k]: v }));
   };
 
+  // Detecta se o aluno é da Educação Infantil a partir da série/turma informada.
+  const isEI = (() => {
+    const t = `${draft.serie || ""} ${aluno?.anoEscolar || ""}`.toLowerCase();
+    return /(infantil|bercário|berçario|berc[aá]rio|maternal|pr[eé]\b|pr[eé]-escola|jardim|g[1-5]\b|creche)/.test(t);
+  })();
+  const eiPrefix = isEI ? "ei:" : undefined;
+
   const updMeta = (id: string, patch: Partial<MetaCurta>) => {
     setDraft((d) => ({ ...d, metasCurtoPrazo: d.metasCurtoPrazo.map((m) => m.id === id ? { ...m, ...patch } : m) }));
   };
