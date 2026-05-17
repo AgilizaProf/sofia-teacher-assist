@@ -1464,12 +1464,35 @@ ${corpo}
     const eixosPreench = (anamByStudent[selected.id] || []).filter(
       (e) => e.items.some((i) => i.s !== "naoObservado") || (e.obs && e.obs.trim())
     ).length;
+    const totalEixosAnam = (anamByStudent[selected.id] || []).length;
+    const anamCompletaPro = totalEixosAnam > 0 && eixosPreench >= totalEixosAnam;
+    const peiObj = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+    const peiKeysPro = [
+      "diagnostico", "caracterizacao", "habilidadesDesenvolvidas",
+      "adaptacoesCurriculares", "formasAvaliacao", "familiaParticipacao",
+    ];
+    let peiFilledPro = 0;
+    peiKeysPro.forEach((k) => { if (String(peiObj[k] || "").trim().length > 5) peiFilledPro++; });
+    if (Array.isArray(peiObj.objetivos) && (peiObj.objetivos as unknown[]).length > 0) peiFilledPro++;
+    if (Array.isArray(peiObj.equipe) && (peiObj.equipe as unknown[]).length > 0) peiFilledPro++;
+    const peiCompletoPro = peiFilledPro >= 8;
     let message: string;
     let actionLabel = `Adaptar para ${firstName}`;
     let actionPrompt = `Adapte uma atividade para ${selected.name}${selected.diag ? ` (${selected.diag})` : ""}.`;
     if (proxima && proxima.minutos_ate <= 180) {
       message = `Tô vendo o perfil do(a) ${firstName}. Próxima aula em ${proxima.minutos_ate}min (${proxima.disciplina}). Adapto agora?`;
       actionPrompt = `Adapte a aula de ${proxima.disciplina} (${proxima.bncc_codigo || "BNCC"}) para ${selected.name}${selected.diag ? ` (${selected.diag})` : ""}. Sugira 3 ajustes práticos com tempo estimado.`;
+    } else if (anamCompletaPro && peiCompletoPro) {
+      message = `Perfil do(a) ${firstName} está completo (Anamnese e PEI 8/8). Quer que eu gere uma adaptação para a próxima aula?`;
+      actionLabel = "Sugerir adaptação";
+    } else if (peiCompletoPro && !anamCompletaPro) {
+      message = `PEI do(a) ${firstName} está pronto. Falta concluir a Anamnese (${eixosPreench}/${totalEixosAnam}) para refinar as adaptações. Continuamos?`;
+      actionLabel = "Continuar Anamnese";
+      actionPrompt = `Vamos continuar a Anamnese de ${selected.name} do ponto onde paramos.`;
+    } else if (anamCompletaPro && !peiCompletoPro) {
+      message = `Anamnese do(a) ${firstName} concluída. Faltam ${8 - peiFilledPro} eixo${8 - peiFilledPro > 1 ? "s" : ""} do PEI — vamos formalizar agora?`;
+      actionLabel = "Abrir PEI";
+      actionPrompt = `Vamos preencher os eixos restantes do PEI de ${selected.name}.`;
     } else if (eixosPreench >= 4) {
       message = `Já dá pra eu sugerir uma adaptação simples pra próxima aula do(a) ${firstName}. Continuar Anamnese ou gerar adaptação agora?`;
       actionLabel = "Sugerir adaptação";
@@ -1488,7 +1511,7 @@ ${corpo}
       });
     }, 800);
     return () => clearTimeout(t);
-  }, [view, selected, sofia, sofiaCtx, anamByStudent]);
+  }, [view, selected, sofia, sofiaCtx, anamByStudent, peiByStudent]);
 
   useEffect(() => {
     if (view !== "list") return;
@@ -1913,6 +1936,8 @@ ${corpo}
                       const peiPct = Math.round((peiFilled / 8) * 100);
                       const anamPct = Math.round((eixosPreenchidos / Math.max(totalEixos, 1)) * 100);
                       const ultimoReg = (regByStudent[selected.id] || [])[0];
+                      const anamCompleta = eixosPreenchidos >= totalEixos && totalEixos > 0;
+                      const peiCompleto = peiFilled >= 8;
 
                       // Estágio 0 — sem nada
                       if (eixosPreenchidos === 0 && peiFilled === 0 && totalRegs === 0) {
@@ -1936,8 +1961,8 @@ ${corpo}
                         );
                       }
 
-                      // Estágio 1 — Anamnese em andamento (ainda incompleta) e sem PEI
-                      if (eixosPreenchidos < totalEixos && peiFilled < 4) {
+                      // Estágio 1 — Anamnese em andamento (ainda incompleta) e PEI ainda fraco
+                      if (!anamCompleta && peiFilled < 4) {
                         const restantes = totalEixos - eixosPreenchidos;
                         return (
                           <>
@@ -1961,8 +1986,31 @@ ${corpo}
                         );
                       }
 
-                      // Estágio 2 — Anamnese ≥50%/completa, PEI ainda fraco (<4)
-                      if (peiFilled < 4) {
+                      // Estágio 1b — PEI completo mas Anamnese ainda incompleta
+                      if (!anamCompleta && peiCompleto) {
+                        const restantes = totalEixos - eixosPreenchidos;
+                        return (
+                          <>
+                            <div className="ac-head">
+                              <div className="sofia">S</div>
+                              <div className="ac-head-txt">
+                                <b>PEI 8/8 · falta concluir a Anamnese</b>
+                                <span>Anamnese {anamPct}% · PEI 100% · {totalRegs} registro{totalRegs !== 1 ? "s" : ""}</span>
+                              </div>
+                              <span className="ac-tag" style={{ background: "#FEF3C7", color: "#92400E" }}>Quase lá</span>
+                            </div>
+                            <h2 className="ac-title">Falta{restantes > 1 ? "m" : ""} <em>{restantes} eixo{restantes > 1 ? "s" : ""}</em> da Anamnese para refinar as adaptações</h2>
+                            <p className="ac-body">O PEI de {firstName} está completo. Concluir a Anamnese me dá a linha de base para sugerir adaptações ainda mais precisas.</p>
+                            <div className="ac-cta">
+                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("anam")}>Concluir Anamnese <ChevronRight size={14} /></button>
+                              <button className="btn-ghost-dark" onClick={() => setActiveTab("plan")}>Adaptar atividade</button>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      // Estágio 2 — Anamnese completa, PEI ainda fraco (<4)
+                      if (anamCompleta && peiFilled < 4) {
                         return (
                           <>
                             <div className="ac-head">
@@ -1983,15 +2031,15 @@ ${corpo}
                         );
                       }
 
-                      // Estágio 3 — PEI parcial (4-7/8)
-                      if (peiFilled < 8) {
+                      // Estágio 3 — PEI parcial (4-7/8), independente da Anamnese
+                      if (!peiCompleto) {
                         return (
                           <>
                             <div className="ac-head">
                               <div className="sofia">S</div>
                               <div className="ac-head-txt">
                                 <b>PEI quase completo · {peiPct}%</b>
-                                <span>{peiFilled} de 8 eixos · {totalRegs} registro{totalRegs !== 1 ? "s" : ""} pedagógico{totalRegs !== 1 ? "s" : ""}</span>
+                                <span>{peiFilled} de 8 eixos · Anamnese {anamPct}% · {totalRegs} registro{totalRegs !== 1 ? "s" : ""}</span>
                               </div>
                               <span className="ac-tag" style={{ background: "#DBEAFE", color: "#1E40AF" }}>Avançando</span>
                             </div>
@@ -2008,7 +2056,7 @@ ${corpo}
                         );
                       }
 
-                      // Estágio 4 — Tudo completo: foco em evolução + adaptações
+                      // Estágio 4 — Anamnese 100% e PEI 8/8: foco em evolução + adaptações
                       return (
                         <>
                           <div className="ac-head">
