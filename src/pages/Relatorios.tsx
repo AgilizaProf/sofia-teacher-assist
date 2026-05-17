@@ -502,6 +502,19 @@ export function Relatorios() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [preview, setPreview] = useState<Parecer | null>(null);
 
+  // Fecha qualquer dropdown da barra de filtros ao clicar fora.
+  useEffect(() => {
+    if (!openDropdown) return;
+    const onDocClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (t.closest('.rel-pill') || t.closest('.rel-dropdown')) return;
+      setOpenDropdown(null);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [openDropdown]);
+
   const [filterTurma, setFilterTurma] = useState(routeSearch.turma ?? "Todas");
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState(routeSearch.pcd === "apenas" ? "Apenas PCD" : "Todos");
