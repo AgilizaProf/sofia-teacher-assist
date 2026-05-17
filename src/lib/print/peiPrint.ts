@@ -262,11 +262,11 @@ body{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12pt;line-heigh
 }
 
 @media print{
-  @page{size:A4;margin:2cm;}
+  @page{size:A4;margin:1cm;}
   body{background:#fff;}
   .toolbar{display:none !important;}
   .documento{
-    width:auto;min-height:0;margin:0;padding:0;
+    width:auto;min-height:0;margin:0;padding:1cm;
     border:1px solid #000;box-shadow:none;
   }
   *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
