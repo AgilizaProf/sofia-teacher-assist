@@ -1065,9 +1065,15 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
 
   const Dropdown = ({ id, options, value, onChange }: { id: string; options: string[]; value: string; onChange: (v: string) => void }) =>
     openDropdown === id ? (
-      <div className="rel-dropdown" role="menu">
+      <div className="rel-dropdown" role="menu" onClick={(e) => e.stopPropagation()}>
         {options.map((o) => (
-          <button key={o} onClick={() => { onChange(o); setOpenDropdown(null); }}>{o}</button>
+          <button
+            key={o}
+            type="button"
+            aria-checked={value === o}
+            role="menuitemradio"
+            onClick={(e) => { e.stopPropagation(); onChange(o); setOpenDropdown(null); }}
+          >{o}</button>
         ))}
       </div>
     ) : null;
@@ -1248,21 +1254,45 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               })}
             </div>
             <div className="rel-divider" />
-            <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")} aria-haspopup="menu">
+            <div
+              className="rel-pill"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
+              aria-expanded={openDropdown === "turma"}
+              onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "turma" ? null : "turma"); } }}
+            >
               <Calendar size={13} /> Turma · {filterTurma} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="turma" value={filterTurma} onChange={setFilterTurma}
                 options={["Todas", ...dashClasses.map((c) => c.name)]} />
-            </button>
-            <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "bim" ? null : "bim")} aria-haspopup="menu">
+            </div>
+            <div
+              className="rel-pill"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
+              aria-expanded={openDropdown === "bim"}
+              onClick={() => setOpenDropdown(openDropdown === "bim" ? null : "bim")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "bim" ? null : "bim"); } }}
+            >
               <Calendar size={13} /> Bimestre · {filterBimestre} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="bim" value={filterBimestre} onChange={setFilterBimestre}
                 options={["1º", "2º", "3º", "4º"]} />
-            </button>
-            <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "pcd" ? null : "pcd")} aria-haspopup="menu">
+            </div>
+            <div
+              className="rel-pill"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
+              aria-expanded={openDropdown === "pcd"}
+              onClick={() => setOpenDropdown(openDropdown === "pcd" ? null : "pcd")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "pcd" ? null : "pcd"); } }}
+            >
               <Filter size={13} /> {filterPcd === "Todos" ? "PCD" : `PCD · ${filterPcd}`} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="pcd" value={filterPcd} onChange={setFilterPcd}
                 options={["Todos", "Apenas PCD"]} />
-            </button>
+            </div>
             <div className="rel-search-mini">
               <Search size={13} color="#7a8194" />
               <input placeholder="Buscar aluno..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar aluno" />
