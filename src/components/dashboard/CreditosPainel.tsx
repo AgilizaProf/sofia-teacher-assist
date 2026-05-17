@@ -1,6 +1,18 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCreditos, useHistoricoCreditos, type MovimentacaoCredito } from "@/lib/creditos/useCreditos";
-import { corDaBarra, mensagemContextual, MESES_PT_LONGO, proximoBonus } from "@/lib/creditos/policy";
+import {
+  CREDITOS_ANUAIS_TOTAL,
+  ECONOMIA_ANUAL,
+  MESES_PT_LONGO,
+  MP_ANUAL_URL,
+  PRECO_ANUAL,
+  PRECO_MENSAL,
+  corDaBarra,
+  diasAteRenovacaoMensal,
+  isMesPico,
+  mensagemContextual,
+  proximoBonus,
+} from "@/lib/creditos/policy";
 
 const css = `
 .cp-card{background:#fff;border:1px solid var(--border, #E4E8F0);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow-sm, 0 1px 2px rgba(27,42,78,.04));display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:14px;}
@@ -32,6 +44,23 @@ const css = `
 .cp-upgrade-text{flex:1;min-width:0;}
 .cp-upgrade-btn{background:var(--accent,#FF7A45);color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;}
 .cp-upgrade-btn:hover{background:var(--accent-deep,#E85F2C);color:#fff !important;}
+.cp-renew{margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:#EEF6FF;color:#1E40AF;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;}
+.cp-compare{margin-top:10px;padding:10px;background:linear-gradient(135deg,#F8FAFF,#EEF1F8);border:1px dashed var(--border,#E4E8F0);border-radius:10px;font-size:11px;color:var(--text,#1B2A4E);}
+.cp-compare h5{margin:0 0 6px;font-size:10px;font-weight:700;color:var(--text-soft,#5B6B82);text-transform:uppercase;letter-spacing:.06em;}
+.cp-compare-row{display:flex;justify-content:space-between;margin:2px 0;}
+.cp-compare-row strong{font-weight:700;}
+.cp-compare-eco{margin-top:6px;color:#059669;font-weight:700;}
+.cp-compare-cta{margin-top:8px;display:inline-block;background:var(--accent,#FF7A45);color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer;border:none;}
+.cp-compare-cta:hover{background:var(--accent-deep,#E85F2C);}
+.cp-peak{margin-bottom:10px;padding:10px 12px;border-radius:10px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:12px;display:flex;align-items:flex-start;gap:10px;}
+.cp-peak-body{flex:1;line-height:1.45;}
+.cp-peak-body strong{font-weight:700;}
+.cp-peak a{color:#92400E;text-decoration:underline;font-weight:700;}
+.cp-peak-close{background:transparent;border:none;color:#92400E;font-size:16px;cursor:pointer;line-height:1;padding:0 2px;}
+.cp-upgrade-mod{margin-top:10px;padding:10px 12px;background:linear-gradient(135deg,#F0F9FF,#E0F2FE);border-radius:10px;font-size:11px;color:#075985;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.cp-upgrade-mod .cp-upgrade-text{flex:1;min-width:0;}
+.cp-modal-list{margin:8px 0 14px;padding:0 0 0 18px;font-size:13px;color:var(--text,#1B2A4E);line-height:1.55;}
+.cp-modal-eco{background:#ECFDF5;color:#065F46;padding:8px 10px;border-radius:8px;font-weight:700;font-size:13px;margin-bottom:12px;}
 .cp-banner{margin-bottom:10px;padding:8px 12px;border-radius:10px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;flex-wrap:wrap;}
 .cp-banner.warn{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;}
 .cp-banner.danger{background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;}
@@ -68,6 +97,8 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
   const c = useCreditos();
   const { items } = useHistoricoCreditos(5);
   const [showModal, setShowModal] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [peakDismissed, setPeakDismissed] = useState(false);
 
   const pct = c.totais > 0 ? Math.round((c.disponiveis / c.totais) * 100) : 0;
   const cor = corDaBarra(pct);
@@ -80,14 +111,48 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
     return { mes: MESES_PT_LONGO[p.mes - 1], ano: p.ano };
   }, [c.plano]);
 
-  const escopo = c.plano === "anual" ? "no ano letivo" : c.plano === "mensal" ? "este mês" : "este mês (grátis)";
+  const escopo =
+    c.plano === "anual" ? "no ano letivo"
+    : c.plano === "mensal" ? "este mês"
+    : "este mês (grátis)";
+
+  const diasRenov = useMemo(() => diasAteRenovacaoMensal(), [c.ano_referencia, c.mes_referencia]);
+  const mesPico = useMemo(() => isMesPico(), []);
+  const mesAtualNome = MESES_PT_LONGO[new Date().getMonth()];
+
+  // dismiss do banner de pico — por mês
+  const peakKey = useMemo(() => `cred_peak_dismiss:${new Date().getFullYear()}-${new Date().getMonth() + 1}`, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setPeakDismissed(!!window.localStorage.getItem(peakKey));
+  }, [peakKey]);
+  function dismissPeak() {
+    setPeakDismissed(true);
+    try { window.localStorage.setItem(peakKey, "1"); } catch {}
+  }
 
   const showBanner = !c.loading && c.totais > 0 && (pct <= 20);
   const bannerLevel: "warn" | "danger" = pct <= 5 ? "danger" : "warn";
+  const showPeakBanner = !c.loading && c.plano === "mensal" && mesPico && !peakDismissed;
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
+
+      {showPeakBanner && (
+        <div className="cp-peak" role="note">
+          <span>📅</span>
+          <div className="cp-peak-body">
+            <strong>Mês de maior uso pedagógico.</strong> Seus créditos podem acabar antes do previsto.
+            <br />
+            No <strong>plano anual</strong> você receberia <strong>+500 créditos bônus agora</strong>, além de 19.500 créditos no ano.{" "}
+            <a href="#" onClick={(e) => { e.preventDefault(); setShowUpgrade(true); }}>
+              Fazer upgrade para o anual →
+            </a>
+          </div>
+          <button className="cp-peak-close" aria-label="Dispensar aviso" onClick={dismissPeak}>×</button>
+        </div>
+      )}
 
       {showBanner && (
         <div className={`cp-banner ${bannerLevel}`} role="alert">
@@ -106,6 +171,8 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
         <div>
           <div className="cp-head">
             <span className="dot" /> ⚡ Seus créditos
+            {c.plano === "mensal" && <span style={{ marginLeft: 6, fontWeight: 600, color: "#5B6B82", textTransform: "none", letterSpacing: 0 }}>— Mensal</span>}
+            {c.plano === "anual" && <span style={{ marginLeft: 6, fontWeight: 600, color: "#5B6B82", textTransform: "none", letterSpacing: 0 }}>— Anual</span>}
           </div>
           <div className="cp-saldo">
             {c.loading ? "…" : c.disponiveis.toLocaleString("pt-BR")}
@@ -130,15 +197,40 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             </div>
           )}
 
+          {c.plano === "mensal" && (
+            <div className="cp-renew">
+              🔄 Renovam em {diasRenov} dia{diasRenov === 1 ? "" : "s"}
+            </div>
+          )}
+
+          {c.plano === "mensal" && !c.loading && (
+            <>
+              <div className="cp-upgrade-mod">
+                <span className="cp-upgrade-text">
+                  💡 No plano anual você teria <strong>{CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos</strong> + bônus em janeiro, junho e novembro.
+                  Economize <strong>R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
+                </span>
+                <button className="cp-upgrade-btn" onClick={() => setShowUpgrade(true)}>
+                  Ver oferta
+                </button>
+              </div>
+
+              <div className="cp-compare">
+                <h5>📊 Plano Mensal vs Anual</h5>
+                <div className="cp-compare-row"><span>Mensal</span><strong>1.500/mês</strong></div>
+                <div className="cp-compare-row"><span>Anual</span><strong>1.625/mês + bônus</strong></div>
+                <div className="cp-compare-eco">Economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</div>
+                <button className="cp-compare-cta" onClick={() => setShowUpgrade(true)}>
+                  Mudar para anual →
+                </button>
+              </div>
+            </>
+          )}
+
           {c.plano === "free" && !c.loading && (
             <div className="cp-upgrade">
               <span className="cp-upgrade-text">🔒 Upgrade para ter 18.000 créditos anuais + bônus de 500 créditos em janeiro, junho e novembro.</span>
-              <a
-                className="cp-upgrade-btn"
-                href="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=7798ddd616d8438a92b0e2bceaa20bab"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a className="cp-upgrade-btn" href={MP_ANUAL_URL} target="_blank" rel="noopener noreferrer">
                 Ver oferta
               </a>
             </div>
@@ -146,13 +238,18 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
         </div>
 
         <div className="cp-hist">
-          <h4>📋 Últimas movimentações</h4>
+          <h4>📋 {c.plano === "mensal" ? "Este mês" : "Últimas movimentações"}</h4>
           {items.length === 0 ? (
             <p className="cp-hist-empty">Sem movimentações ainda. Use a Sofia para começar!</p>
           ) : (
             <ul className="cp-hist-list">
               {items.map((m) => (<HistItem key={m.id} m={m} />))}
             </ul>
+          )}
+          {c.plano === "mensal" && c.utilizados > 0 && (
+            <div style={{ marginTop: 8, fontSize: 11, color: "#5B6B82" }}>
+              Total usado: <strong style={{ color: "#1B2A4E" }}>{c.utilizados.toLocaleString("pt-BR")} créditos</strong>
+            </div>
           )}
           {onSeeAll && (
             <button className="cp-hist-more" onClick={onSeeAll}>Ver histórico completo →</button>
@@ -174,6 +271,41 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
               <button className="primary" onClick={() => { setShowModal(false); }}>
                 Em breve
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUpgrade && (
+        <div className="cp-modal-bg" onClick={() => setShowUpgrade(false)}>
+          <div className="cp-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>💡 Mude para o Plano Anual</h3>
+            <p>
+              Você paga hoje: <strong>R$ {PRECO_MENSAL.toFixed(2).replace(".", ",")}/mês</strong>
+              {" "}= <strong>R$ {(PRECO_MENSAL * 12).toFixed(2).replace(".", ",")}/ano</strong>.<br />
+              No anual você paga apenas <strong>R$ {PRECO_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
+            </p>
+            <div className="cp-modal-eco">
+              🎉 Sua economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano
+            </div>
+            <ul className="cp-modal-list">
+              <li>+ {CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos por ano</li>
+              <li>+ Bônus de 500 créditos em janeiro, junho e novembro</li>
+              <li>+ Nunca trava nos picos pedagógicos</li>
+              <li>+ Créditos já usados no mês são preservados na migração</li>
+            </ul>
+            <div className="cp-modal-actions">
+              <button className="ghost" onClick={() => setShowUpgrade(false)}>Continuar no mensal</button>
+              <a
+                className="primary"
+                href={MP_ANUAL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}
+                onClick={() => setShowUpgrade(false)}
+              >
+                Mudar para anual agora →
+              </a>
             </div>
           </div>
         </div>
