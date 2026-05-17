@@ -54,17 +54,32 @@ export function Configuracoes() {
   return (
     <div style={{ minHeight: "100vh", background: "#F4F6FB", color: "#1B2A4E", fontFamily: "'Inter',-apple-system,sans-serif" }}>
       <style dangerouslySetInnerHTML={{ __html: sidebarCss }} />
-      <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", minHeight: "100vh" }}>
+      <style>{`
+        .cfg-grid { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+        .cfg-pad { padding: 24px 36px 0; width: 100%; max-width: 100%; }
+        .cfg-pad-b { padding: 16px 36px 32px; width: 100%; max-width: 100%; }
+        @media (max-width: 900px) {
+          .cfg-grid { grid-template-columns: 1fr; }
+          .cfg-pad { padding: 20px 20px 0; }
+          .cfg-pad-b { padding: 14px 20px 28px; }
+        }
+        @media (max-width: 560px) {
+          .cfg-pad { padding: 16px 14px 0; }
+          .cfg-pad-b { padding: 12px 14px 24px; }
+          .cfg-section { padding: 18px !important; }
+        }
+      `}</style>
+      <div className="cfg-grid">
         <AppSidebar active="settings" />
-        <main style={{ width: "100%" }}>
+        <main style={{ width: "100%", minWidth: 0 }}>
           <AppHeader />
-          <div style={{ padding: "24px 36px 0", maxWidth: 920 }}>
+          <div className="cfg-pad">
             <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 700, margin: 0 }}>Configurações</h1>
             <p style={{ color: "#6B7691", fontSize: 14, marginTop: 4 }}>Ajustes da sua conta e princípios da Sofia.</p>
           </div>
-          <div style={{ padding: "16px 36px 32px", maxWidth: 920 }}>
+          <div className="cfg-pad-b">
 
-          <section aria-labelledby="perfil-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
+          <section className="cfg-section" aria-labelledby="perfil-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <h2 id="perfil-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
                 👤 Meu perfil
@@ -81,7 +96,7 @@ export function Configuracoes() {
             <ReferralCard />
           </section>
 
-          <section aria-labelledby="acessibilidade-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
+          <section className="cfg-section" aria-labelledby="acessibilidade-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <h2 id="acessibilidade-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
                 ♿ Acessibilidade
@@ -140,7 +155,7 @@ export function Configuracoes() {
             </div>)}
           </section>
 
-          <section aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
+          <section className="cfg-section" aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <Shield size={20} color="#FF7A45" />
               <h2 id="principios-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
