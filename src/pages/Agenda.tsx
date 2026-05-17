@@ -259,14 +259,6 @@ function AgendaSofiaSide({ onImportM4, m4Count }: { onImportM4: () => void; m4Co
               Sua agenda de <b>{mes}</b> tá em branco. Posso já preencher os marcos do mês: reunião pedagógica, fechamento do bimestre, conselho de classe e feriados. 30 segundos.
             </div>
             <div className="ag-sofia-actions">
-              <button className="ag-sofia-action" onClick={() => sofia.openSofia({ prompt: `Preencha minha agenda de ${mes} com os marcos típicos do bimestre brasileiro.`, send: false })}>
-                <span className="ag-sofia-action-ic"><Sparkles size={13} color="#FF7A45" /></span>
-                <b>Preencher agenda de {mes}</b>
-              </button>
-              <button className="ag-sofia-action" onClick={() => sofia.openSofia({ prompt: "Como importar o calendário escolar?", send: false })}>
-                <span className="ag-sofia-action-ic">📅</span>
-                <b>Importar do calendário da escola</b>
-              </button>
               <button className="ag-sofia-action" onClick={onImportM4}>
                 <span className="ag-sofia-action-ic">🗂️</span>
                 <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
