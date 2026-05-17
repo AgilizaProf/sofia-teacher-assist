@@ -1459,7 +1459,12 @@ ${corpo}
   // Período / formato do relatório IA
   type RelTipo = "bimestre" | "trimestre" | "semestre" | "anual";
   const [relTipo, setRelTipo] = useState<RelTipo>("bimestre");
-  const [relNumero, setRelNumero] = useState<number>(1);
+  // Default: período atual (bimestre vigente) baseado no mês corrente,
+  // para que registros recém-criados caiam no intervalo automaticamente.
+  const [relNumero, setRelNumero] = useState<number>(() => {
+    const m = new Date().getMonth(); // 0-based
+    return Math.min(4, Math.floor(m / 3) + 1);
+  });
   const [relAno, setRelAno] = useState<number>(new Date().getFullYear());
   const [relFormato, setRelFormato] = useState<"topicos" | "texto">("topicos");
 
@@ -1502,9 +1507,18 @@ ${corpo}
     if (!selected) return;
     setGerandoParecer(true);
     try {
-      const regs = regsDoPeriodo.map((r) => ({
+      // Usa registros do período; se vazio, faz fallback para TODOS os
+      // registros do aluno para garantir que a Sofia tenha contexto real
+      // mesmo quando o período padrão não cobre as datas dos registros.
+      const todosRegs = regByStudent[selected.id] || [];
+      const usarTodos = regsDoPeriodo.length === 0 && todosRegs.length > 0;
+      const fonteRegs = usarTodos ? todosRegs : regsDoPeriodo;
+      const regs = fonteRegs.map((r) => ({
         when: r.when, cat: r.cat, body: r.body,
       }));
+      const intervaloLabel = usarTodos
+        ? `${relIntervalo.inicio.toLocaleDateString("pt-BR")} a ${relIntervalo.fim.toLocaleDateString("pt-BR")} (sem registros no período — considerando todos os registros disponíveis do aluno)`
+        : `${relIntervalo.inicio.toLocaleDateString("pt-BR")} a ${relIntervalo.fim.toLocaleDateString("pt-BR")}`;
       // Resumo do PEI real do aluno (não dos planos de aula)
       const pei = (peiByStudent[selected.id] || {}) as Partial<PEIData>;
       // Apenas campos preenchidos pelo educador são enviados — campos vazios nunca vão ao prompt da Sofia
@@ -1519,7 +1533,7 @@ ${corpo}
           aluno: selected.name,
           diagnostico: selected.diag || "",
           periodo: relIntervalo.label,
-          intervalo: `${relIntervalo.inicio.toLocaleDateString("pt-BR")} a ${relIntervalo.fim.toLocaleDateString("pt-BR")}`,
+          intervalo: intervaloLabel,
           formato: relFormato,
           anamneseResumo,
           peiResumo,
@@ -1544,7 +1558,11 @@ ${corpo}
         peiAtualizadoEm,
       };
       setParecerByStudent((all) => ({ ...all, [selected.id]: parecer }));
-      toast.success(temPei ? "Parecer gerado · PEI do aluno considerado." : "Parecer gerado (sem PEI cadastrado).");
+      const partesToast: string[] = ["Parecer gerado"];
+      partesToast.push(temPei ? "PEI considerado" : "sem PEI cadastrado");
+      partesToast.push(`${regs.length} registro${regs.length === 1 ? "" : "s"}${usarTodos ? " (todos disponíveis)" : ""}`);
+      if (anamneseResumo) partesToast.push("anamnese considerada");
+      toast.success(partesToast.join(" · "));
       void consumirCreditos(CUSTOS.relatorio_inclusao, descricaoDoc("Relatório de inclusão", selected?.name));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
