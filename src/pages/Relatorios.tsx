@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
+import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
 
 const css = `
 .rel-root{
@@ -1239,6 +1240,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               >
                 <Download size={13} /> Imprimir vários
               </button>
+              <GerarRelatorioButton label="Editor de Relatório" />
               <button
                 className="rel-pill"
                 onClick={abrirNovoAluno}

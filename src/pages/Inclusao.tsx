@@ -18,6 +18,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
+import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
 import {
   printAnamneseDocument,
   downloadAnamneseDocx,
@@ -3154,6 +3155,13 @@ ${corpo}
                           <button className="inc-btn-ghost" onClick={imprimirParecer}>
                             <Printer size={14} /> Imprimir / PDF
                           </button>
+                        )}
+                        {selected && (
+                          <GerarRelatorioButton
+                            defaultAlunoClientId={selected.id}
+                            forcarTipo="pcd"
+                            label="Novo editor de Relatório"
+                          />
                         )}
                       </div>
                       {parecerAtual && (
