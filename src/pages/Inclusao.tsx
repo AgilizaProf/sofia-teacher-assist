@@ -2058,7 +2058,7 @@ ${corpo}
                   {(() => {
                     const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
                     const objs = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as Array<{ id: string; texto: string; status: string; prazo?: string }>;
-                    const atingidos = objs.filter((o) => o.status === "atingido").length;
+                    const atingidos = objs.filter((o) => o.status === "realizado" || o.status === "atingido").length;
                     return (
                       <button
                         type="button"
@@ -2067,7 +2067,7 @@ ${corpo}
                         style={{ textAlign: "left", cursor: "pointer", border: "1px solid var(--border)", background: "#fff" }}
                         title="Abrir lista de objetivos do PEI"
                       >
-                        <div className="kpi-label">Objetivos PEI atingidos</div>
+                        <div className="kpi-label">Objetivos do PEI realizados</div>
                         <div className="kpi-value">{atingidos}<span className="small"> /{objs.length}</span></div>
                         <div className="kpi-sub">
                           {objs.length === 0 ? "defina objetivos no PEI" : `clique para revisar status`}
@@ -3554,7 +3554,7 @@ ${corpo}
                 <div>
                   <h2>Objetivos do PEI · {selected.name}</h2>
                   <span className="meta" style={{ display: "block", marginTop: 4 }}>
-                    {atingidos} de {objs.length} atingido(s) · Lei 14.254/2021
+                    {atingidos} de {objs.length} realizado(s) · Lei 14.254/2021
                   </span>
                 </div>
                 <button className="inc-modal-close" onClick={() => setObjetivosModalOpen(false)} aria-label="Fechar"><X size={16} /></button>
