@@ -11,6 +11,39 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// ---- Integração M4 → Agenda --------------------------------------------------
+// Eventos do calendário M4 (Planejamento) são persistidos em localStorage sob
+// "plan_m4_user_events" como Record<dataISO, M4UserEvt[]>. Marcamos os ids já
+// importados em "agenda_m4_imported_v1" para não duplicar.
+type M4UserEvt = {
+  id: string;
+  cat: "aulas" | "aval";
+  title: string;
+  meta?: string;
+  source: "atv" | "pcd";
+  turma?: string;
+  disciplina?: string;
+  minutos?: number;
+};
+type M4UserStore = Record<string, M4UserEvt[]>;
+const M4_STORE_KEY = "plan_m4_user_events";
+const M4_IMPORTED_KEY = "agenda_m4_imported_v1";
+function readM4Store(): M4UserStore {
+  try {
+    const raw = localStorage.getItem(M4_STORE_KEY);
+    return raw ? (JSON.parse(raw) as M4UserStore) : {};
+  } catch { return {}; }
+}
+function readM4Imported(): Set<string> {
+  try {
+    const raw = localStorage.getItem(M4_IMPORTED_KEY);
+    return new Set<string>(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch { return new Set(); }
+}
+function writeM4Imported(set: Set<string>) {
+  try { localStorage.setItem(M4_IMPORTED_KEY, JSON.stringify([...set])); } catch { /* noop */ }
+}
+
 const css = `
 .ag-root{
   --primary:#1B2A4E;--primary-dark:#0F1B36;--primary-deep:#0a1226;
@@ -207,7 +240,7 @@ const MONTHS_PT = [
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
 ];
 
-function AgendaSofiaSide() {
+function AgendaSofiaSide({ onImportM4, m4Count }: { onImportM4: () => void; m4Count: number }) {
   const ctx = useSofiaContext();
   const sofia = useSofia();
   const mes = MONTHS_PT[new Date().getMonth()].toLowerCase();
@@ -234,12 +267,24 @@ function AgendaSofiaSide() {
                 <span className="ag-sofia-action-ic">📅</span>
                 <b>Importar do calendário da escola</b>
               </button>
+              <button className="ag-sofia-action" onClick={onImportM4}>
+                <span className="ag-sofia-action-ic">🗂️</span>
+                <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
+              </button>
             </div>
           </>
         ) : (
-          <div className="ag-sofia-msg">
-            Você tem <b>{eventos}</b> evento(s) este mês. Quer que eu destaque os que precisam de preparação?
-          </div>
+          <>
+            <div className="ag-sofia-msg">
+              Você tem <b>{eventos}</b> evento(s) este mês. Quer que eu destaque os que precisam de preparação?
+            </div>
+            <div className="ag-sofia-actions">
+              <button className="ag-sofia-action" onClick={onImportM4}>
+                <span className="ag-sofia-action-ic">🗂️</span>
+                <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
+              </button>
+            </div>
+          </>
         )}
       </div>
       <div className="ag-stat-card">
@@ -496,6 +541,83 @@ export function Agenda() {
   // Drag and drop: arrastar evento para outro dia
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
+
+  // ---- Importar atividades agendadas (M4) ----------------------------------
+  type M4ImportItem = { date: string; evt: M4UserEvt; selected: boolean };
+  const [m4ImportOpen, setM4ImportOpen] = useState(false);
+  const [m4Items, setM4Items] = useState<M4ImportItem[]>([]);
+  const [m4Importing, setM4Importing] = useState(false);
+  const [m4Tick, setM4Tick] = useState(0);
+  const m4Pending = useMemo(() => {
+    void m4Tick;
+    const store = readM4Store();
+    const imported = readM4Imported();
+    let n = 0;
+    for (const arr of Object.values(store)) {
+      for (const ev of arr) if (!imported.has(ev.id)) n++;
+    }
+    return n;
+  }, [m4Tick, events.length]);
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === M4_STORE_KEY || e.key === M4_IMPORTED_KEY) setM4Tick((n) => n + 1);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+  const openM4Import = () => {
+    const store = readM4Store();
+    const imported = readM4Imported();
+    const items: M4ImportItem[] = [];
+    for (const [date, arr] of Object.entries(store)) {
+      for (const evt of arr) {
+        if (imported.has(evt.id)) continue;
+        items.push({ date, evt, selected: true });
+      }
+    }
+    items.sort((a, b) => a.date.localeCompare(b.date));
+    setM4Items(items);
+    setM4ImportOpen(true);
+  };
+  const toggleM4Item = (idx: number) =>
+    setM4Items((arr) => arr.map((it, i) => (i === idx ? { ...it, selected: !it.selected } : it)));
+  const setAllM4 = (val: boolean) =>
+    setM4Items((arr) => arr.map((it) => ({ ...it, selected: val })));
+  const confirmM4Import = async () => {
+    const toImport = m4Items.filter((it) => it.selected);
+    if (toImport.length === 0) { setM4ImportOpen(false); return; }
+    setM4Importing(true);
+    const imported = readM4Imported();
+    let ok = 0;
+    for (const it of toImport) {
+      const evType: EventType = it.evt.cat === "aval" ? "eval" : "plan";
+      const notesParts: string[] = [];
+      if (it.evt.turma) notesParts.push(`Turma: ${it.evt.turma}`);
+      if (it.evt.disciplina) notesParts.push(it.evt.disciplina);
+      if (it.evt.minutos) notesParts.push(`${it.evt.minutos} min`);
+      if (it.evt.meta) notesParts.push(it.evt.meta);
+      try {
+        await create({
+          date: it.date,
+          title: it.evt.title,
+          time: "",
+          type: evType,
+          notes: notesParts.join(" · "),
+        });
+        imported.add(it.evt.id);
+        ok++;
+      } catch (e) {
+        console.error("[Agenda] falha ao importar M4:", e);
+      }
+    }
+    writeM4Imported(imported);
+    setM4Importing(false);
+    setM4ImportOpen(false);
+    setM4Tick((n) => n + 1);
+    if (ok > 0) toast.success(`${ok} atividade(s) trazida(s) do calendário M4 para a agenda.`);
+    else toast.error("Não foi possível importar as atividades.");
+  };
+
   const onDragStartEvent = (e: React.DragEvent, id: string) => {
     setDraggedId(id);
     e.dataTransfer.effectAllowed = "move";
@@ -1005,7 +1127,7 @@ export function Agenda() {
             </div>
 
             <div className="ag-col-side">
-              <AgendaSofiaSide />
+              <AgendaSofiaSide onImportM4={openM4Import} m4Count={m4Pending} />
 
               <div className="ag-up-card">
                 <div className="ag-up-head">
@@ -1236,6 +1358,76 @@ export function Agenda() {
                       </div>
                     );
                   })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {m4ImportOpen && (
+          <div className="ag-overlay" onClick={() => !m4Importing && setM4ImportOpen(false)}>
+            <div className="ag-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="ag-panel-head">
+                <div style={{ minWidth: 0 }}>
+                  <div className="ag-panel-title">Atividades agendadas (M4)</div>
+                  <div className="ag-panel-sub">
+                    {m4Items.length === 0
+                      ? "Nada novo para importar — todas as atividades já estão na agenda."
+                      : `Selecione o que a Sofia deve trazer para a agenda (${m4Items.filter((i) => i.selected).length}/${m4Items.length}).`}
+                  </div>
+                </div>
+                <button className="ag-panel-close" onClick={() => !m4Importing && setM4ImportOpen(false)} aria-label="Fechar"><X size={16} /></button>
+              </div>
+              <div className="ag-panel-body">
+                {m4Items.length === 0 ? (
+                  <div className="ag-empty">
+                    Use o módulo de Atividades (M1/M2) para agendar planos no calendário M4.
+                    Quando agendar, eles aparecerão aqui para importar para a Agenda Escolar.
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="ag-btn" onClick={() => setAllM4(true)} disabled={m4Importing}>Selecionar todas</button>
+                      <button className="ag-btn" onClick={() => setAllM4(false)} disabled={m4Importing}>Limpar</button>
+                    </div>
+                    {m4Items.map((it, idx) => {
+                      const [, mm, dd] = it.date.split("-");
+                      const evType: EventType = it.evt.cat === "aval" ? "eval" : "plan";
+                      return (
+                        <label key={`${it.date}-${it.evt.id}`} className="ag-panel-event" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={it.selected}
+                            onChange={() => toggleM4Item(idx)}
+                            disabled={m4Importing}
+                            style={{ marginTop: 4 }}
+                          />
+                          <span className="ev-dot" style={{ background: TYPE_COLOR[evType] }} />
+                          <div className="ev-body">
+                            <div className="ev-title">{it.evt.title}</div>
+                            <div className="ev-meta">
+                              <span>{dd}/{mm}</span>
+                              <span className="mdot" />
+                              <span>{TYPE_LABEL[evType]}</span>
+                              {it.evt.turma && (<><span className="mdot" /><span>{it.evt.turma}</span></>)}
+                              {it.evt.disciplina && (<><span className="mdot" /><span>{it.evt.disciplina}</span></>)}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+              <div className="ag-panel-foot">
+                <button className="ag-btn" onClick={() => setM4ImportOpen(false)} disabled={m4Importing}>Fechar</button>
+                {m4Items.length > 0 && (
+                  <button
+                    className="ag-btn primary"
+                    onClick={confirmM4Import}
+                    disabled={m4Importing || m4Items.every((i) => !i.selected)}
+                  >
+                    <Plus size={14} /> {m4Importing ? "Trazendo…" : "Trazer para a agenda"}
+                  </button>
                 )}
               </div>
             </div>
