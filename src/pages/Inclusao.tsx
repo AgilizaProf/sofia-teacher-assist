@@ -2402,19 +2402,31 @@ ${corpo}
                             const p = eixoPct(e.items);
                             return { v: `${p}%`, t: p >= 80 ? "ok" : p >= 40 ? "warn" : "warn" };
                           };
-                          const linhas: Array<{ l: string; v: string; t: "" | "warn" | "ok" }> = [
+                          const baseLinhas: Array<{ l: string; v: string; t: "" | "warn" | "ok" }> = [
                             { l: "Ano escolar", v: selected.anoEscolar || "Não informado", t: "" },
                             { l: "Turma", v: selected.turma, t: "" },
                             { l: "Diagnóstico", v: selected.diag, t: "" },
                             { l: "CID", v: selected.cid, t: "" },
                             { l: "AEE / Mediação", v: selected.aee, t: "" },
                             { l: "Anamnese", v: `${eixosPreenchidos}/${anamData.length} eixos`, t: eixosPreenchidos === 0 ? "warn" : eixosPreenchidos >= anamData.length / 2 ? "ok" : "warn" },
-                            { l: "Desempenho acadêmico", ...pillFor("Desempenho Acadêmico") },
-                            { l: "Aspectos pedagógicos", ...pillFor("Aspectos Pedagógicos") },
-                            { l: "Interações sociais", ...pillFor("Interações Sociais") },
-                            { l: "Autonomia", ...pillFor("Autonomia") },
-                            { l: "Emoção / Autorregulação", ...pillFor("Emoção") },
                           ];
+                          const linhas: Array<{ l: string; v: string; t: "" | "warn" | "ok" }> = anamUsesEI
+                            ? [
+                                ...baseLinhas,
+                                { l: "Linguagem e expressão", ...pillFor("Escuta, fala, pensamento e imaginação") },
+                                { l: "Quantidades e relações", ...pillFor("Espaços, tempos, quantidades e relações") },
+                                { l: "Eu, outro e nós", ...pillFor("O eu, o outro e o nós") },
+                                { l: "Autonomia e cuidados de si", ...pillFor("Autonomia e cuidados de si") },
+                                { l: "Emoção e autorregulação", ...pillFor("Emoção e autorregulação") },
+                              ]
+                            : [
+                                ...baseLinhas,
+                                { l: "Desempenho acadêmico", ...pillFor("Desempenho Acadêmico") },
+                                { l: "Aspectos pedagógicos", ...pillFor("Aspectos Pedagógicos") },
+                                { l: "Interações sociais", ...pillFor("Interações Sociais") },
+                                { l: "Autonomia", ...pillFor("Autonomia") },
+                                { l: "Emoção / Autorregulação", ...pillFor("Emoção") },
+                              ];
                           return linhas.map((r) => (
                             <div className="ctx-row" key={r.l}>
                               <span className="lbl">{r.l}</span>
