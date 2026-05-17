@@ -5,6 +5,7 @@ import { askSofia, listSofiaConversations, getSofiaConversation } from "@/lib/so
 import { useSofiaContextOptional } from "@/lib/sofia/sofiaContext";
 import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 import { reportError } from "@/lib/admin/track";
+import { registrarMensagemSofia } from "@/lib/creditos/consume";
 
 export type SofiaMessage = {
   role: "user" | "assistant";
@@ -292,6 +293,8 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       if (finalConversationId) setConversationId(finalConversationId);
       if (!open) setUnread((n) => n + 1);
       refreshConversations();
+      // Cobrança em bloco: 1 crédito a cada 10 mensagens enviadas pelo usuário.
+      void registrarMensagemSofia();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
       setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);

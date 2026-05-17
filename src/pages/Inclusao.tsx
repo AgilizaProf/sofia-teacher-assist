@@ -12,6 +12,8 @@ import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { buildCidsPromptBlock } from "@/lib/inclusao/cidPrompt";
 import { toast } from "sonner";
+import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
@@ -1353,6 +1355,7 @@ ${corpo}
       };
       setParecerByStudent((all) => ({ ...all, [selected.id]: parecer }));
       toast.success(temPei ? "Parecer gerado · PEI do aluno considerado." : "Parecer gerado (sem PEI cadastrado).");
+      void consumirCreditos(CUSTOS.relatorio_inclusao, descricaoDoc("Relatório de inclusão", selected?.name));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Não foi possível gerar o parecer. ${msg}`);

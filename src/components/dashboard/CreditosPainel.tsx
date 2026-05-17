@@ -73,6 +73,14 @@ const css = `
 .cp-modal-actions button{padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;border:none;}
 .cp-modal-actions .ghost{background:#F4F6FB;color:var(--text,#1B2A4E);}
 .cp-modal-actions .primary{background:var(--accent,#FF7A45);color:#fff;}
+.cp-tabela{margin-top:10px;border:1px solid var(--border,#E4E8F0);border-radius:10px;overflow:hidden;background:#fff;}
+.cp-tabela-h{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#F8FAFF;font-size:11px;font-weight:700;color:var(--text-soft,#5B6B82);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;border:none;width:100%;}
+.cp-tabela-h:hover{background:#EEF1F8;}
+.cp-tabela ul{list-style:none;margin:0;padding:6px 0;}
+.cp-tabela li{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:12px;color:var(--text,#1B2A4E);border-top:1px solid var(--border-soft,#EEF1F6);}
+.cp-tabela li:first-child{border-top:none;}
+.cp-tabela li .preco{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:var(--accent-deep,#E85F2C);white-space:nowrap;margin-left:10px;}
+.cp-tabela li .preco.free{color:#059669;}
 @media(max-width:760px){
   .cp-card{grid-template-columns:1fr;gap:10px;padding:12px;border-radius:10px;}
   .cp-hist{border-left:none;border-top:1px solid var(--border-soft,#EEF1F6);padding-left:0;padding-top:10px;}
@@ -80,6 +88,20 @@ const css = `
   .cp-totalrow{font-size:10px;}
 }
 `;
+
+type TabelaItem = { icone: string; nome: string; custo: string; free?: boolean };
+const TABELA_CREDITOS: TabelaItem[] = [
+  { icone: "💬", nome: "Mensagem da Sofia (chat)", custo: "1 crédito a cada 10 mensagens" },
+  { icone: "✍️", nome: "Parecer descritivo completo", custo: "5 créditos" },
+  { icone: "📘", nome: "Plano de aula BNCC", custo: "5 créditos" },
+  { icone: "🎗️", nome: "Adaptação inclusiva (PCD)", custo: "5 créditos" },
+  { icone: "📊", nome: "Relatório de inclusão", custo: "5 créditos" },
+  { icone: "📅", nome: "Planejamento semanal", custo: "5 créditos" },
+  { icone: "📋", nome: "Anamnese", custo: "5 créditos" },
+  { icone: "📄", nome: "PEI completo", custo: "5 créditos" },
+  { icone: "🗓️", nome: "Trilha semestral", custo: "10 créditos" },
+  { icone: "📄", nome: "Exportar PDF / Word", custo: "Grátis", free: true },
+];
 
 function HistItem({ m }: { m: MovimentacaoCredito }) {
   const pos = m.quantidade >= 0;
@@ -99,6 +121,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
   const [showModal, setShowModal] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [peakDismissed, setPeakDismissed] = useState(false);
+  const [showTabela, setShowTabela] = useState(false);
 
   const pct = c.totais > 0 ? Math.round((c.disponiveis / c.totais) * 100) : 0;
   const cor = corDaBarra(pct);
@@ -254,6 +277,27 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
           {onSeeAll && (
             <button className="cp-hist-more" onClick={onSeeAll}>Ver histórico completo →</button>
           )}
+
+          <div className="cp-tabela" aria-label="Tabela de créditos por ação">
+            <button
+              className="cp-tabela-h"
+              onClick={() => setShowTabela((v) => !v)}
+              aria-expanded={showTabela}
+            >
+              <span>📋 Tabela de consumo por ação</span>
+              <span>{showTabela ? "▾" : "▸"}</span>
+            </button>
+            {showTabela && (
+              <ul>
+                {TABELA_CREDITOS.map((t) => (
+                  <li key={t.nome}>
+                    <span><span aria-hidden>{t.icone}</span> {t.nome}</span>
+                    <span className={`preco${t.free ? " free" : ""}`}>{t.custo}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
 
@@ -264,7 +308,8 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             <p>
               Que tal um reforço? Por <strong>R$ 9,90</strong> você adiciona
               <strong> +500 créditos</strong> imediatamente à sua conta — o suficiente
-              para 5 pareceres, 5 planos de aula ou 2 PEIs completos + 1 anamnese.
+              para até <strong>100 documentos</strong> (parecer, plano de aula, PEI, anamnese
+              ou adaptação PCD a 5 créditos cada) ou <strong>50 trilhas semestrais</strong>.
             </p>
             <div className="cp-modal-actions">
               <button className="ghost" onClick={() => setShowModal(false)}>Agora não</button>

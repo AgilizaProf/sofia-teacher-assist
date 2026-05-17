@@ -3,6 +3,8 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Printer, Download, Edit3, Save, X } from "lucide-react";
 import { useTurmas } from "@/hooks/useTurmas";
+import { consumirCreditos } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 
 const DISCIPLINAS_COMUNS = [
   "Português", "Matemática", "Ciências", "História", "Geografia",
@@ -205,6 +207,7 @@ export function TrilhasPanel() {
       await carregar();
       setSelected(trilhaRow!.id);
       setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", interdisciplinar: true, semestre: "1º semestre", contexto: "" });
+      void consumirCreditos(CUSTOS.trilha_semestral, `Trilha semestral · ${tema.titulo || form.semestre}`);
     } catch (e) {
       setError((e as Error).message || "Não consegui gerar a trilha agora. Tente em instantes.");
     } finally {
@@ -248,6 +251,7 @@ export function TrilhasPanel() {
       const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilha.id).order("semana");
       setSemanas((novas as Semana[]) || []);
       setPlanoAberto(s.id);
+      void consumirCreditos(CUSTOS.planejamento_semanal, `Planejamento semanal · Semana ${s.semana}`);
     } catch (e) {
       alert((e as Error).message || "Não consegui gerar o plano agora.");
     } finally {

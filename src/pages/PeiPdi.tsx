@@ -4,6 +4,8 @@ import { ArrowLeft, Sparkles, Save, Loader2, FileText, ChevronDown, ChevronUp, P
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 
 type Student = {
   id: string; name: string; turma?: string; anoEscolar?: string;
@@ -197,6 +199,7 @@ export function PeiPdi() {
         .reduce((m, v) => Math.max(m, v.versao), 0) + 1;
       setVersao(next);
       toast.success("PEI gerado pela Sofia");
+      void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
     } catch (e) {
       const msg = (e as Error).message || "Falha ao gerar PEI";
       console.error("[PEI] erro final:", e);
@@ -223,6 +226,7 @@ export function PeiPdi() {
           });
           setCurrentId(null);
           toast.success("PEI gerado pela Sofia (em 2 partes)");
+          void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
           return;
         } catch (e2) {
           console.error("[PEI] split também falhou:", e2);
