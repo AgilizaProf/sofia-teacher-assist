@@ -11,6 +11,39 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// ---- Integração M4 → Agenda --------------------------------------------------
+// Eventos do calendário M4 (Planejamento) são persistidos em localStorage sob
+// "plan_m4_user_events" como Record<dataISO, M4UserEvt[]>. Marcamos os ids já
+// importados em "agenda_m4_imported_v1" para não duplicar.
+type M4UserEvt = {
+  id: string;
+  cat: "aulas" | "aval";
+  title: string;
+  meta?: string;
+  source: "atv" | "pcd";
+  turma?: string;
+  disciplina?: string;
+  minutos?: number;
+};
+type M4UserStore = Record<string, M4UserEvt[]>;
+const M4_STORE_KEY = "plan_m4_user_events";
+const M4_IMPORTED_KEY = "agenda_m4_imported_v1";
+function readM4Store(): M4UserStore {
+  try {
+    const raw = localStorage.getItem(M4_STORE_KEY);
+    return raw ? (JSON.parse(raw) as M4UserStore) : {};
+  } catch { return {}; }
+}
+function readM4Imported(): Set<string> {
+  try {
+    const raw = localStorage.getItem(M4_IMPORTED_KEY);
+    return new Set<string>(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch { return new Set(); }
+}
+function writeM4Imported(set: Set<string>) {
+  try { localStorage.setItem(M4_IMPORTED_KEY, JSON.stringify([...set])); } catch { /* noop */ }
+}
+
 const css = `
 .ag-root{
   --primary:#1B2A4E;--primary-dark:#0F1B36;--primary-deep:#0a1226;
