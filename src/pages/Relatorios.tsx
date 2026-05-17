@@ -116,7 +116,7 @@ const css = `
 .rel-sec-actions{display:flex;gap:8px;align-items:center;}
 
 .rel-filters{background:#fff;border:1px solid var(--line-soft);border-radius:14px;padding:10px 12px;
-  display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-card);flex-wrap:nowrap;overflow-x:auto;}
+  display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-card);flex-wrap:wrap;}
 .rel-tabs{display:flex;gap:4px;background:#F1EFE8;padding:4px;border-radius:10px;}
 .rel-tab{padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;color:#5b6478;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
 .rel-tab.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.06);}
@@ -124,17 +124,24 @@ const css = `
 .rel-tab.active .count{background:rgba(255,106,44,.12);color:var(--accent);}
 .rel-divider{width:1px;height:22px;background:var(--line-soft);flex:none;}
 .rel-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
-  border:1px solid var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);position:relative;white-space:nowrap;flex:none;}
+  border:1px solid var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);position:relative;white-space:nowrap;flex:none;cursor:pointer;user-select:none;}
 .rel-pill:hover{border-color:#cfd4e1;}
+.rel-pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .rel-search-mini{margin-left:auto;display:flex;align-items:center;gap:8px;background:#F8F6F0;border:1px solid var(--line-soft);
-  padding:6px 10px;border-radius:10px;min-width:180px;flex:0 1 220px;}
+  padding:6px 10px;border-radius:10px;min-width:160px;flex:1 1 200px;}
 .rel-search-mini input{border:0;outline:0;background:transparent;font-size:12.5px;width:100%;min-width:0;}
 .rel-dropdown{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--line-soft);border-radius:10px;
   box-shadow:0 10px 30px -10px rgba(17,24,39,.24);min-width:180px;padding:6px;z-index:60;max-height:280px;overflow-y:auto;}
 .rel-pill[aria-haspopup="menu"]{z-index:1;}
 .rel-pill[aria-haspopup="menu"]:focus-within,.rel-pill[aria-haspopup="menu"]:hover{z-index:60;}
-.rel-dropdown button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:6px;font-size:12.5px;color:var(--text);}
+.rel-dropdown button{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:6px;font-size:12.5px;color:var(--text);background:transparent;border:0;cursor:pointer;}
 .rel-dropdown button:hover{background:#F4F2EC;}
+@media (max-width: 720px){
+  .rel-filters{padding:10px;gap:6px;}
+  .rel-tabs{flex-wrap:wrap;}
+  .rel-divider{display:none;}
+  .rel-search-mini{margin-left:0;flex:1 1 100%;}
+}
 
 .rel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:14px;}
 .rel-card{background:#fff;border:1px solid var(--line-soft);border-radius:16px;padding:18px;
@@ -494,6 +501,19 @@ export function Relatorios() {
   const [search, setSearch] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [preview, setPreview] = useState<Parecer | null>(null);
+
+  // Fecha qualquer dropdown da barra de filtros ao clicar fora.
+  useEffect(() => {
+    if (!openDropdown) return;
+    const onDocClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      if (t.closest('.rel-pill') || t.closest('.rel-dropdown')) return;
+      setOpenDropdown(null);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [openDropdown]);
 
   const [filterTurma, setFilterTurma] = useState(routeSearch.turma ?? "Todas");
   const [filterBimestre, setFilterBimestre] = useState("1º");
@@ -1058,9 +1078,15 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
 
   const Dropdown = ({ id, options, value, onChange }: { id: string; options: string[]; value: string; onChange: (v: string) => void }) =>
     openDropdown === id ? (
-      <div className="rel-dropdown" role="menu">
+      <div className="rel-dropdown" role="menu" onClick={(e) => e.stopPropagation()}>
         {options.map((o) => (
-          <button key={o} onClick={() => { onChange(o); setOpenDropdown(null); }}>{o}</button>
+          <button
+            key={o}
+            type="button"
+            aria-checked={value === o}
+            role="menuitemradio"
+            onClick={(e) => { e.stopPropagation(); onChange(o); setOpenDropdown(null); }}
+          >{o}</button>
         ))}
       </div>
     ) : null;
@@ -1241,21 +1267,45 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               })}
             </div>
             <div className="rel-divider" />
-            <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")} aria-haspopup="menu">
+            <div
+              className="rel-pill"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
+              aria-expanded={openDropdown === "turma"}
+              onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "turma" ? null : "turma"); } }}
+            >
               <Calendar size={13} /> Turma · {filterTurma} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="turma" value={filterTurma} onChange={setFilterTurma}
                 options={["Todas", ...dashClasses.map((c) => c.name)]} />
-            </button>
-            <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "bim" ? null : "bim")} aria-haspopup="menu">
+            </div>
+            <div
+              className="rel-pill"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
+              aria-expanded={openDropdown === "bim"}
+              onClick={() => setOpenDropdown(openDropdown === "bim" ? null : "bim")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "bim" ? null : "bim"); } }}
+            >
               <Calendar size={13} /> Bimestre · {filterBimestre} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="bim" value={filterBimestre} onChange={setFilterBimestre}
                 options={["1º", "2º", "3º", "4º"]} />
-            </button>
-            <button className="rel-pill" onClick={() => setOpenDropdown(openDropdown === "pcd" ? null : "pcd")} aria-haspopup="menu">
+            </div>
+            <div
+              className="rel-pill"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
+              aria-expanded={openDropdown === "pcd"}
+              onClick={() => setOpenDropdown(openDropdown === "pcd" ? null : "pcd")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "pcd" ? null : "pcd"); } }}
+            >
               <Filter size={13} /> {filterPcd === "Todos" ? "PCD" : `PCD · ${filterPcd}`} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="pcd" value={filterPcd} onChange={setFilterPcd}
                 options={["Todos", "Apenas PCD"]} />
-            </button>
+            </div>
             <div className="rel-search-mini">
               <Search size={13} color="#7a8194" />
               <input placeholder="Buscar aluno..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar aluno" />
