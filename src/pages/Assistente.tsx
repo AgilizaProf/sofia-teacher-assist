@@ -671,23 +671,6 @@ export function Assistente() {
 
           <div className="convo">
             <div className="convo-inner" ref={scrollRef}>
-              {pcdComAula && proxima && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ background: "linear-gradient(135deg,#1E1B2E 0%,#15131F 100%)", border: "1px solid #2A2438", borderRadius: 16, padding: "18px 20px", color: "#fff", boxShadow: "0 14px 36px rgba(15,13,30,.28)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#F97316,#EA580C)", display: "grid", placeItems: "center", color: "#fff" }}><Sparkles size={16} /></div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#F97316", letterSpacing: ".04em", textTransform: "uppercase" }}>✨ Foco de hoje · sugerido pela IA</div>
-                    </div>
-                    <div style={{ fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,.95)", fontWeight: 500, marginBottom: 6 }}>
-                      <b>{pcdComAula.nome}</b> ({pcdComAula.condicao}) precisa de uma atividade adaptada para a aula de <b>{proxima.disciplina}</b> de hoje. A próxima aula dele(a) é em <span style={{ color: "#FDBA74", fontWeight: 700 }}>~{proxima.minutos_ate}min</span>. Quer que eu adapte agora?
-                    </div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,.55)", marginBottom: 14 }}>~<b style={{ color: "#FDBA74" }}>2 minutos</b> para gerar · baseado no laudo já cadastrado</div>
-                    <button onClick={() => sofia.openSofia({ prompt: `Adapte a aula de ${proxima.disciplina} (${proxima.bncc_codigo || "BNCC"}) para ${pcdComAula.nome} (${pcdComAula.condicao}). Sugira 3 ajustes práticos com tempo estimado.`, send: false })} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg,#F97316,#EA580C)", color: "#fff", border: 0, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-                      Adaptar agora <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              )}
               {messages.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}>
                   {messages.map((m, i) => {
