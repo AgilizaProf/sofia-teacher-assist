@@ -18,6 +18,7 @@ import {
   editorialFieldsGrid,
   editorialLongField,
 } from "@/lib/print/editorialPrint";
+import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
@@ -1268,6 +1269,12 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
       {/* ────── Toolbar de geração ────── */}
       <div className="atv-toolbar">
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <GerarDocumentoButton
+            tipo={modo === "pcd" ? "pcd" : "atividades"}
+            label="Exportar planejamento"
+          />
+        </div>
         <div className="atv-toolbar-row">
           <div className="atv-field">
             <label>Turma <span className="atv-opt">(opcional)</span></label>
