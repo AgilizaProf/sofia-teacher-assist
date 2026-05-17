@@ -1674,6 +1674,28 @@ export function Planejamento() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [m4SelectedDay, setM4SelectedDay] = usePersistentState<number | null>("plan_m4_selected_day", null);
+  const m4PrintRef = useRef<HTMLDivElement | null>(null);
+  const m4Print = () => {
+    const node = m4PrintRef.current;
+    if (!node) { window.print(); return; }
+    const w = window.open("", "_blank", "width=1024,height=768");
+    if (!w) { window.print(); return; }
+    const title = `Calendário — ${m4Label}`;
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${title}</title>
+      <style>
+        *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:24px;color:#111}
+        h1{font-size:18px;margin:0 0 12px}
+        button{display:none !important}
+        .pl-layers-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;font-size:11px;color:#555}
+        .pl-lay{border:1px solid #ddd;border-radius:999px;padding:2px 8px}
+        @page{size:A4 landscape;margin:12mm}
+      </style></head><body>
+      <h1>${title}</h1>${node.outerHTML}
+      <script>window.onload=()=>{setTimeout(()=>{window.print();},200)}<\/script>
+      </body></html>`);
+    w.document.close();
+  };
 
   // Eventos agendados pela professora a partir das abas Atividades / Atividades PCD.
   // Mesma chave gravada em src/components/atividade/PlanoAtividadeEditor.tsx.
