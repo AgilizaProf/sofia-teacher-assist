@@ -281,6 +281,188 @@ export const PEI_SUGGESTIONS: Record<string, string[]> = {
     "Lavar as mãos seguindo a sequência visual da rotina.",
     "Beber água na garrafinha sem auxílio.",
   ],
+
+  // ===== Adaptações — Educação Infantil =====
+  "ei:adaptacoesConteudo": [
+    "Trabalhar campos de experiência da BNCC por meio do brincar.",
+    "Priorizar conteúdos sensoriais, corporais e da rotina diária.",
+    "Reduzir tempo de exposição a atividades dirigidas (5–10 min).",
+    "Apresentar o mesmo conceito em múltiplas linguagens (música, corpo, artes).",
+  ],
+  "ei:adaptacoesMetodologicas": [
+    "Usar histórias, fantoches e dedoches para introduzir conceitos.",
+    "Apoiar a rotina com painel visual (chegada, roda, lanche, parque, saída).",
+    "Oferecer modelagem do adulto antes de qualquer demanda.",
+    "Trabalhar em pequenos grupos ou duplas para reduzir estímulos.",
+    "Antecipar transições com música ou objeto de referência.",
+  ],
+  "ei:adaptacoesAvaliacao": [
+    "Avaliar pela observação contínua e registro fotográfico das vivências.",
+    "Construir portfólio com produções e falas do(a) aluno(a).",
+    "Usar rubrica simples baseada nos campos de experiência da BNCC.",
+    "Evitar avaliações formais; priorizar registros narrativos.",
+  ],
+  "ei:adaptacoesTempo": [
+    "Reduzir tempo das atividades dirigidas para 5–10 minutos.",
+    "Permitir pausas sensoriais entre uma atividade e outra.",
+    "Respeitar o ritmo da criança nas trocas, alimentação e higiene.",
+  ],
+  "ei:adaptacoesEspaco": [
+    "Garantir cantinho calmo com almofadas e materiais sensoriais.",
+    "Organizar a sala com cantos temáticos (leitura, casinha, blocos).",
+    "Demarcar visualmente lugares de cada criança e materiais.",
+    "Reduzir poluição visual nas paredes próximas ao painel da rotina.",
+  ],
+  "ei:estrategiasArea": [
+    "Eu e o outro: rodas de conversa curtas com mediação afetiva.",
+    "Corpo, gestos e movimentos: circuitos motores com apoio visual.",
+    "Traços, sons, cores e formas: artes com materiais sensoriais variados.",
+    "Escuta, fala, pensamento e imaginação: leitura compartilhada diária.",
+    "Espaços, tempos, quantidades, relações: brincadeiras com materiais concretos.",
+  ],
+  "ei:estrategiasInclusaoColetiva": [
+    "Brincadeiras cooperativas em vez de competitivas.",
+    "Pares-tutor com rodízio nas brincadeiras dirigidas.",
+    "Combinados da turma também em formato visual com pictogramas.",
+    "Histórias que abordem diversidade e diferenças.",
+  ],
+
+  // ===== Adaptações — Fundamental I (1º a 5º ano) =====
+  "fund1:adaptacoesConteudo": [
+    "Garantir consolidação da alfabetização antes de avançar para textos longos.",
+    "Reduzir quantidade de exercícios mantendo o objetivo de aprendizagem.",
+    "Trabalhar fatos básicos das operações com material dourado e ábaco.",
+    "Priorizar leitura e produção de textos do cotidiano (bilhete, lista, receita).",
+    "Retomar conteúdos de anos anteriores quando necessário.",
+  ],
+  "fund1:adaptacoesMetodologicas": [
+    "Dividir tarefas longas em etapas curtas com checklist visual.",
+    "Usar material concreto em todas as introduções de matemática.",
+    "Aplicar leitura compartilhada antes da leitura individual.",
+    "Modelar a resolução de problemas em voz alta antes da prática.",
+    "Usar jogos pedagógicos para fixar conceitos.",
+  ],
+  "fund1:adaptacoesAvaliacao": [
+    "Permitir prova oral quando a escrita for barreira.",
+    "Reduzir número de questões mantendo as principais habilidades.",
+    "Oferecer apoio na leitura dos enunciados quando solicitado.",
+    "Avaliar por meio de portfólio e observação contínua.",
+    "Usar provas com fontes ampliadas e mais espaço para resposta.",
+  ],
+  "fund1:adaptacoesTempo": [
+    "Conceder tempo adicional de 50% em provas e tarefas.",
+    "Permitir pausas a cada 15–20 minutos de atividade.",
+    "Dividir avaliações longas em mais de um dia.",
+  ],
+  "fund1:adaptacoesEspaco": [
+    "Posicionar próximo(a) ao quadro e à professora.",
+    "Sentar longe de portas e janelas para reduzir distração.",
+    "Disponibilizar canto calmo na sala para autorregulação.",
+  ],
+  "fund1:estrategiasArea": [
+    "Português: leitura em voz alta com modelo do adulto antes da leitura individual.",
+    "Matemática: uso de material dourado e ábaco em todas as operações.",
+    "Ciências: experimentação concreta antes da sistematização escrita.",
+    "História/Geografia: linha do tempo visual e mapas táteis.",
+    "Arte: oferecer pinça/engrossador para o manuseio de materiais finos.",
+  ],
+  "fund1:estrategiasInclusaoColetiva": [
+    "Tutoria entre pares com rodízio quinzenal.",
+    "Trabalhos em duplas heterogêneas com função definida para cada um.",
+    "Combinados da turma também em formato visual.",
+    "Atividades cooperativas em vez de competitivas.",
+  ],
+
+  // ===== Adaptações — Fundamental II (6º a 9º ano) =====
+  "fund2:adaptacoesConteudo": [
+    "Identificar conteúdos essenciais por componente e priorizá-los.",
+    "Reduzir quantidade de exercícios mantendo o nível de complexidade central.",
+    "Oferecer materiais de apoio (resumos, mapas mentais, glossários).",
+    "Trabalhar gêneros textuais funcionais para a vida adulta.",
+    "Retomar pré-requisitos do conteúdo quando necessário.",
+  ],
+  "fund2:adaptacoesMetodologicas": [
+    "Antecipar a aula com roteiro escrito da sequência didática.",
+    "Usar mapas mentais e organizadores gráficos antes da escrita extensa.",
+    "Aplicar metodologias ativas em pequenos grupos com papéis definidos.",
+    "Reduzir cópia do quadro; oferecer material impresso ou digital.",
+    "Usar recursos audiovisuais e simulações para conceitos abstratos.",
+  ],
+  "fund2:adaptacoesAvaliacao": [
+    "Reduzir número de questões mantendo as habilidades essenciais.",
+    "Permitir avaliações em formatos alternativos (oral, seminário, vídeo).",
+    "Oferecer consulta a glossário ou caderno em parte da prova.",
+    "Avaliar produção em etapas, com devolutivas formativas.",
+    "Aplicar avaliações em ambiente com menor estímulo sensorial.",
+  ],
+  "fund2:adaptacoesTempo": [
+    "Conceder tempo adicional de 50% em provas e trabalhos.",
+    "Dividir provas longas em dois dias.",
+    "Permitir pausas programadas em avaliações longas.",
+    "Estabelecer prazos intermediários para entregas grandes.",
+  ],
+  "fund2:adaptacoesEspaco": [
+    "Posicionar em lugar de baixo fluxo de circulação.",
+    "Permitir o uso de fone abafador em momentos de leitura/prova.",
+    "Disponibilizar sala paralela para provas, quando necessário.",
+  ],
+  "fund2:estrategiasArea": [
+    "Língua Portuguesa: produção textual em etapas (planejamento, escrita, revisão).",
+    "Matemática: uso de calculadora em fatos básicos para focar no raciocínio.",
+    "Ciências da Natureza: laboratório virtual e simulações antes da formalização.",
+    "Ciências Humanas: linhas do tempo e mapas conceituais visuais.",
+    "Língua Inglesa: foco em vocabulário funcional e expressões do cotidiano.",
+  ],
+  "fund2:estrategiasInclusaoColetiva": [
+    "Trabalhos em grupos cooperativos com papéis rotativos.",
+    "Projetos interdisciplinares com produtos finais variados (vídeo, podcast, cartaz).",
+    "Combinados da turma revisitados a cada bimestre.",
+    "Mediação de conflitos com escuta ativa e contratos pedagógicos.",
+  ],
+
+  // ===== Adaptações — Ensino Médio =====
+  "em:adaptacoesConteudo": [
+    "Priorizar competências da BNCC e do itinerário formativo escolhido.",
+    "Identificar conteúdos essenciais por área e reduzir o supérfluo.",
+    "Conectar conteúdos a projetos de vida e ao mundo do trabalho.",
+    "Oferecer materiais de aprofundamento ou de retomada conforme demanda.",
+  ],
+  "em:adaptacoesMetodologicas": [
+    "Usar metodologias ativas (sala de aula invertida, ABP, estudo de caso).",
+    "Disponibilizar material em formato digital acessível previamente.",
+    "Trabalhar pesquisa orientada com fontes confiáveis e roteiro estruturado.",
+    "Apoiar a produção textual com mapas mentais e revisão em pares.",
+    "Estimular autorregulação com agenda, metas e auto-monitoramento.",
+  ],
+  "em:adaptacoesAvaliacao": [
+    "Permitir formatos alternativos: seminário, ensaio, projeto, prova oral.",
+    "Reduzir número de questões mantendo o nível de exigência cognitiva.",
+    "Oferecer simulados com correção formativa antes do ENEM e vestibulares.",
+    "Avaliar por meio de portfólio e produções autorais.",
+  ],
+  "em:adaptacoesTempo": [
+    "Conceder tempo adicional de 50% em provas e simulados.",
+    "Dividir avaliações extensas em dois dias.",
+    "Negociar cronograma de entregas em períodos de maior demanda.",
+  ],
+  "em:adaptacoesEspaco": [
+    "Sala separada para provas, quando necessário.",
+    "Permitir uso de fone abafador e quebra de estímulos visuais.",
+    "Disponibilizar mobiliário adequado e tomada para tecnologia assistiva.",
+  ],
+  "em:estrategiasArea": [
+    "Linguagens: produção em múltiplos suportes (texto, vídeo, podcast).",
+    "Matemática: foco em raciocínio com apoio de calculadora para fatos básicos.",
+    "Ciências da Natureza: laboratório virtual e modelos 3D.",
+    "Ciências Humanas: mapas conceituais, linhas do tempo e debates estruturados.",
+    "Projeto de vida: mentorias e planejamento de curto/médio prazo.",
+  ],
+  "em:estrategiasInclusaoColetiva": [
+    "Trabalhos em grupos cooperativos com avaliação por pares.",
+    "Projetos integradores entre áreas e itinerários formativos.",
+    "Roda de conversa periódica sobre clima de turma e convivência.",
+    "Apoio entre pares para preparação de avaliações externas.",
+  ],
 };
 
 type Props = {
