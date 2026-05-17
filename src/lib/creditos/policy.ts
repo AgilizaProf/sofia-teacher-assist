@@ -20,12 +20,12 @@ export const CUSTOS = {
   exportacao: 0,
 } as const;
 
-export const MESES_BONUS = new Set<number>([1, 6, 11]);
+export const MESES_BONUS = new Set<number>([1, 6, 12]);
 
 export const BONUS_NOMES: Record<number, string> = {
   1: "🎁 Bônus de Planejamento Anual",
   6: "🎁 Bônus de Fechamento de Semestre",
-  11: "🎁 Bônus de Antecipação do Encerramento",
+  12: "🎁 Bônus de Encerramento do Ano",
 };
 
 export const MESES_PT_LONGO = [
@@ -42,7 +42,7 @@ export function planoFromSnapshot(plano: string | null, ciclo: string | null): P
 export function proximoBonus(now: Date = new Date()): { mes: number; ano: number } | null {
   const m = now.getMonth() + 1;
   const y = now.getFullYear();
-  const meses = [1, 6, 11];
+  const meses = [1, 6, 12];
   for (const mb of meses) {
     if (mb > m) return { mes: mb, ano: y };
   }
