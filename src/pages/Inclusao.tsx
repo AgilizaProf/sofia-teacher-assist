@@ -1913,6 +1913,8 @@ ${corpo}
                       const peiPct = Math.round((peiFilled / 8) * 100);
                       const anamPct = Math.round((eixosPreenchidos / Math.max(totalEixos, 1)) * 100);
                       const ultimoReg = (regByStudent[selected.id] || [])[0];
+                      const anamCompleta = eixosPreenchidos >= totalEixos && totalEixos > 0;
+                      const peiCompleto = peiFilled >= 8;
 
                       // Estágio 0 — sem nada
                       if (eixosPreenchidos === 0 && peiFilled === 0 && totalRegs === 0) {
@@ -1936,8 +1938,8 @@ ${corpo}
                         );
                       }
 
-                      // Estágio 1 — Anamnese em andamento (ainda incompleta) e sem PEI
-                      if (eixosPreenchidos < totalEixos && peiFilled < 4) {
+                      // Estágio 1 — Anamnese em andamento (ainda incompleta) e PEI ainda fraco
+                      if (!anamCompleta && peiFilled < 4) {
                         const restantes = totalEixos - eixosPreenchidos;
                         return (
                           <>
@@ -1961,8 +1963,31 @@ ${corpo}
                         );
                       }
 
-                      // Estágio 2 — Anamnese ≥50%/completa, PEI ainda fraco (<4)
-                      if (peiFilled < 4) {
+                      // Estágio 1b — PEI completo mas Anamnese ainda incompleta
+                      if (!anamCompleta && peiCompleto) {
+                        const restantes = totalEixos - eixosPreenchidos;
+                        return (
+                          <>
+                            <div className="ac-head">
+                              <div className="sofia">S</div>
+                              <div className="ac-head-txt">
+                                <b>PEI 8/8 · falta concluir a Anamnese</b>
+                                <span>Anamnese {anamPct}% · PEI 100% · {totalRegs} registro{totalRegs !== 1 ? "s" : ""}</span>
+                              </div>
+                              <span className="ac-tag" style={{ background: "#FEF3C7", color: "#92400E" }}>Quase lá</span>
+                            </div>
+                            <h2 className="ac-title">Falta{restantes > 1 ? "m" : ""} <em>{restantes} eixo{restantes > 1 ? "s" : ""}</em> da Anamnese para refinar as adaptações</h2>
+                            <p className="ac-body">O PEI de {firstName} está completo. Concluir a Anamnese me dá a linha de base para sugerir adaptações ainda mais precisas.</p>
+                            <div className="ac-cta">
+                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("anam")}>Concluir Anamnese <ChevronRight size={14} /></button>
+                              <button className="btn-ghost-dark" onClick={() => setActiveTab("plan")}>Adaptar atividade</button>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      // Estágio 2 — Anamnese completa, PEI ainda fraco (<4)
+                      if (anamCompleta && peiFilled < 4) {
                         return (
                           <>
                             <div className="ac-head">
@@ -1983,15 +2008,15 @@ ${corpo}
                         );
                       }
 
-                      // Estágio 3 — PEI parcial (4-7/8)
-                      if (peiFilled < 8) {
+                      // Estágio 3 — PEI parcial (4-7/8), independente da Anamnese
+                      if (!peiCompleto) {
                         return (
                           <>
                             <div className="ac-head">
                               <div className="sofia">S</div>
                               <div className="ac-head-txt">
                                 <b>PEI quase completo · {peiPct}%</b>
-                                <span>{peiFilled} de 8 eixos · {totalRegs} registro{totalRegs !== 1 ? "s" : ""} pedagógico{totalRegs !== 1 ? "s" : ""}</span>
+                                <span>{peiFilled} de 8 eixos · Anamnese {anamPct}% · {totalRegs} registro{totalRegs !== 1 ? "s" : ""}</span>
                               </div>
                               <span className="ac-tag" style={{ background: "#DBEAFE", color: "#1E40AF" }}>Avançando</span>
                             </div>
@@ -2008,7 +2033,7 @@ ${corpo}
                         );
                       }
 
-                      // Estágio 4 — Tudo completo: foco em evolução + adaptações
+                      // Estágio 4 — Anamnese 100% e PEI 8/8: foco em evolução + adaptações
                       return (
                         <>
                           <div className="ac-head">
