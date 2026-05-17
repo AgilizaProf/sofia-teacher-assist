@@ -1464,12 +1464,35 @@ ${corpo}
     const eixosPreench = (anamByStudent[selected.id] || []).filter(
       (e) => e.items.some((i) => i.s !== "naoObservado") || (e.obs && e.obs.trim())
     ).length;
+    const totalEixosAnam = (anamByStudent[selected.id] || []).length;
+    const anamCompletaPro = totalEixosAnam > 0 && eixosPreench >= totalEixosAnam;
+    const peiObj = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+    const peiKeysPro = [
+      "diagnostico", "caracterizacao", "habilidadesDesenvolvidas",
+      "adaptacoesCurriculares", "formasAvaliacao", "familiaParticipacao",
+    ];
+    let peiFilledPro = 0;
+    peiKeysPro.forEach((k) => { if (String(peiObj[k] || "").trim().length > 5) peiFilledPro++; });
+    if (Array.isArray(peiObj.objetivos) && (peiObj.objetivos as unknown[]).length > 0) peiFilledPro++;
+    if (Array.isArray(peiObj.equipe) && (peiObj.equipe as unknown[]).length > 0) peiFilledPro++;
+    const peiCompletoPro = peiFilledPro >= 8;
     let message: string;
     let actionLabel = `Adaptar para ${firstName}`;
     let actionPrompt = `Adapte uma atividade para ${selected.name}${selected.diag ? ` (${selected.diag})` : ""}.`;
     if (proxima && proxima.minutos_ate <= 180) {
       message = `Tô vendo o perfil do(a) ${firstName}. Próxima aula em ${proxima.minutos_ate}min (${proxima.disciplina}). Adapto agora?`;
       actionPrompt = `Adapte a aula de ${proxima.disciplina} (${proxima.bncc_codigo || "BNCC"}) para ${selected.name}${selected.diag ? ` (${selected.diag})` : ""}. Sugira 3 ajustes práticos com tempo estimado.`;
+    } else if (anamCompletaPro && peiCompletoPro) {
+      message = `Perfil do(a) ${firstName} está completo (Anamnese e PEI 8/8). Quer que eu gere uma adaptação para a próxima aula?`;
+      actionLabel = "Sugerir adaptação";
+    } else if (peiCompletoPro && !anamCompletaPro) {
+      message = `PEI do(a) ${firstName} está pronto. Falta concluir a Anamnese (${eixosPreench}/${totalEixosAnam}) para refinar as adaptações. Continuamos?`;
+      actionLabel = "Continuar Anamnese";
+      actionPrompt = `Vamos continuar a Anamnese de ${selected.name} do ponto onde paramos.`;
+    } else if (anamCompletaPro && !peiCompletoPro) {
+      message = `Anamnese do(a) ${firstName} concluída. Faltam ${8 - peiFilledPro} eixo${8 - peiFilledPro > 1 ? "s" : ""} do PEI — vamos formalizar agora?`;
+      actionLabel = "Abrir PEI";
+      actionPrompt = `Vamos preencher os eixos restantes do PEI de ${selected.name}.`;
     } else if (eixosPreench >= 4) {
       message = `Já dá pra eu sugerir uma adaptação simples pra próxima aula do(a) ${firstName}. Continuar Anamnese ou gerar adaptação agora?`;
       actionLabel = "Sugerir adaptação";
@@ -1488,7 +1511,7 @@ ${corpo}
       });
     }, 800);
     return () => clearTimeout(t);
-  }, [view, selected, sofia, sofiaCtx, anamByStudent]);
+  }, [view, selected, sofia, sofiaCtx, anamByStudent, peiByStudent]);
 
   useEffect(() => {
     if (view !== "list") return;
