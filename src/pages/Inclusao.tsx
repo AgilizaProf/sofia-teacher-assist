@@ -1459,7 +1459,12 @@ ${corpo}
   // Período / formato do relatório IA
   type RelTipo = "bimestre" | "trimestre" | "semestre" | "anual";
   const [relTipo, setRelTipo] = useState<RelTipo>("bimestre");
-  const [relNumero, setRelNumero] = useState<number>(1);
+  // Default: período atual (bimestre vigente) baseado no mês corrente,
+  // para que registros recém-criados caiam no intervalo automaticamente.
+  const [relNumero, setRelNumero] = useState<number>(() => {
+    const m = new Date().getMonth(); // 0-based
+    return Math.min(4, Math.floor(m / 3) + 1);
+  });
   const [relAno, setRelAno] = useState<number>(new Date().getFullYear());
   const [relFormato, setRelFormato] = useState<"topicos" | "texto">("topicos");
 
