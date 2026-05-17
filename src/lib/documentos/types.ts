@@ -37,12 +37,10 @@ export type DocumentoPlanejamento = {
   leis: string[];
 };
 
-/** Retorna o título do documento conforme contexto (EI / Fund-Médio / PCD). */
-export function tituloDocumento(doc: Pick<DocumentoPlanejamento, "tipo" | "nivelTexto">): string {
-  if (doc.tipo === "pcd") return "RELATÓRIO DE INCLUSÃO";
-  const nivel = (doc.nivelTexto ?? "").toLowerCase();
-  if (/(infantil|creche|pr[eé]\s*-?\s*escola|maternal|bercário|berc[áa]rio)/.test(nivel)) {
-    return "PARECER DESCRITIVO";
-  }
-  return "RELATÓRIO DE DESEMPENHO";
+/**
+ * Título dos documentos de planejamento (Atividades, PCD, Trilhas, Sofia).
+ * Por especificação, todos seguem o mesmo cabeçalho "PLANEJAMENTO".
+ */
+export function tituloDocumento(_doc: Pick<DocumentoPlanejamento, "tipo" | "nivelTexto">): string {
+  return "PLANEJAMENTO";
 }
