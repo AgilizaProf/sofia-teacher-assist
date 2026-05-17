@@ -87,3 +87,38 @@ export function diasAteRenovacaoMensal(now: Date = new Date()): number {
 export function isMesPico(now: Date = new Date()): boolean {
   return MESES_BONUS.has(now.getMonth() + 1);
 }
+
+// ===== Plano gratuito: renovação semanal toda sexta-feira às 14h (BRT) =====
+export const FREE_CREDITOS_SEMANAIS = 75;
+
+/** Próxima sexta-feira às 14:00 (horário de Brasília). */
+export function proximaRenovacaoSemanal(now: Date = new Date()): Date {
+  // BRT = UTC-3 (sem horário de verão atualmente)
+  const brtNow = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+  const dow = brtNow.getUTCDay(); // 0=dom..5=sex
+  let diasAteSexta = (5 - dow + 7) % 7;
+  // monta candidato em BRT às 14h
+  const candidato = new Date(Date.UTC(
+    brtNow.getUTCFullYear(),
+    brtNow.getUTCMonth(),
+    brtNow.getUTCDate() + diasAteSexta,
+    14 + 3, // 14h BRT = 17h UTC
+    0, 0, 0,
+  ));
+  if (candidato.getTime() <= now.getTime()) {
+    candidato.setUTCDate(candidato.getUTCDate() + 7);
+  }
+  return candidato;
+}
+
+export function diasAteRenovacaoSemanal(now: Date = new Date()): number {
+  const next = proximaRenovacaoSemanal(now);
+  const ms = next.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+}
+
+export function horasAteRenovacaoSemanal(now: Date = new Date()): number {
+  const next = proximaRenovacaoSemanal(now);
+  const ms = next.getTime() - now.getTime();
+  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60)));
+}
