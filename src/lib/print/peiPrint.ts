@@ -191,8 +191,15 @@ body{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12pt;line-heigh
 .documento .sep{border:0;border-top:1px solid #000;margin:8px 0 14px;}
 
 .documento .doc-ident{text-align:left;margin:0 0 16px;}
-.documento .ident-row{margin:2px 0;text-align:left;}
+.documento .doc-ident{
+  display:grid;grid-template-columns:1fr 1fr;
+  column-gap:24px;row-gap:4px;
+}
+.documento .ident-row{margin:2px 0;text-align:left;break-inside:avoid;}
 .documento .ident-row b{font-weight:700;}
+@media print{
+  .documento .doc-ident{column-gap:18px;}
+}
 
 .documento .doc-secao{margin:6px 0;text-align:justify;}
 .documento .doc-secao h2{
