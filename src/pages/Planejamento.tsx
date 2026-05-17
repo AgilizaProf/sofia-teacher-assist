@@ -14,6 +14,8 @@ import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
+import { consumirCreditos } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 import { useHydrated } from "@/hooks/useHydrated";
 import { PlanoAtividadeEditor } from "@/components/atividade/PlanoAtividadeEditor";
 import { TrilhasPanel } from "@/components/trilhas/TrilhasPanel";
@@ -2351,6 +2353,7 @@ export function Planejamento() {
       const rel = (data as { relatorio?: M6AIRelatorio })?.relatorio;
       if (!rel) throw new Error("Resposta vazia da Sofia.");
       setM6AIRel(rel);
+      void consumirCreditos(CUSTOS.parecer_descritivo, "Relatório pedagógico (M6)");
     } catch (e) {
       setM6AIErro((e as Error)?.message || "Falha ao gerar relatório.");
     } finally {
