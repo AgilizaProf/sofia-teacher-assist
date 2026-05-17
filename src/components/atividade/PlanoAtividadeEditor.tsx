@@ -26,6 +26,11 @@ export type Habilidade = { codigo: string; descricao: string };
 export type Adaptacao = {
   categoria: "TEA" | "TDAH" | "DI" | "Deficiência física" | "Outra";
   texto: string;
+  /**
+   * Quando false, a adaptação NÃO entra no documento impresso/exportado
+   * nem na versão salva enviada para outras telas. Default: true.
+   */
+  incluido?: boolean;
 };
 export type Sugestao = { titulo: string; descricao: string };
 export type OpcaoAula = { titulo: string; resumo: string; abordagem: string };
@@ -1118,13 +1123,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       );
     }
 
-    if (plano.adaptacoes.length > 0) {
-      partes.push(editorialSection("Adaptações PCD"));
-      partes.push(
-        editorialLongField(
-          plano.adaptacoes.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
-        ),
-      );
+    {
+      const adapts = plano.adaptacoes.filter((a) => a.incluido !== false);
+      if (adapts.length > 0) {
+        partes.push(editorialSection("Adaptações PCD"));
+        partes.push(
+          editorialLongField(
+            adapts.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
+          ),
+        );
+      }
     }
 
     if (plano.sugestoes.length > 0) {
@@ -1212,11 +1220,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         p.contribuicoesInter!.map((c) => `• ${c.disciplina}: ${c.contribuicao}`).join("\n"),
       ));
     }
-    if (p.adaptacoes.length > 0) {
-      partes.push(editorialSection("Adaptações PCD"));
-      partes.push(editorialLongField(
-        p.adaptacoes.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
-      ));
+    {
+      const adapts = p.adaptacoes.filter((a) => a.incluido !== false);
+      if (adapts.length > 0) {
+        partes.push(editorialSection("Adaptações PCD"));
+        partes.push(editorialLongField(
+          adapts.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
+        ));
+      }
     }
     if (p.sugestoes.length > 0) {
       partes.push(editorialSection("Sugestões da Sofia"));
@@ -2241,8 +2252,30 @@ function PlanoBody(props: {
             ) : (
               <div className="atv-adapt-grid">
                 {plano.adaptacoes.map((a, i) => (
-                  <div className="atv-adapt-card" key={i}>
-                    <div className="atv-adapt-cat">{a.categoria}</div>
+                  <div
+                    className="atv-adapt-card"
+                    key={i}
+                    style={{ opacity: a.incluido === false ? 0.55 : 1 }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                      <div className="atv-adapt-cat">{a.categoria}</div>
+                      <label
+                        title="Incluir esta adaptação no documento impresso e na atividade salva"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 600, color: "var(--muted, #6B7280)", cursor: "pointer", userSelect: "none" }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={a.incluido !== false}
+                          onChange={(e) => {
+                            const next = [...plano.adaptacoes];
+                            next[i] = { ...a, incluido: e.target.checked };
+                            props.onChange("adaptacoes", next);
+                          }}
+                          style={{ accentColor: "#F97316" }}
+                        />
+                        Incluir
+                      </label>
+                    </div>
                     <InlineText
                       value={a.texto}
                       onChange={(v) => {
