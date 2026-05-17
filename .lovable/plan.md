@@ -1,56 +1,106 @@
-## Objetivo
-Substituir totalmente qualquer exportação atual nas abas **M1 (Atividades)**, **M2 (Atividades PCD)**, **M3 (Planos)** e **M7 (Trilhas Semestrais)** da página Planejamento por um fluxo único — formulário → preview WYSIWYG editável → PDF/Word/Imprimir — seguindo exatamente o modelo descrito.
+## Substituir o modelo de exportação em Relatórios e Relatório IA (Inclusão)
 
-## Arquitetura
+Adotar o mesmo padrão visual e fluxo do Planejamento (Fraunces no título, Arial 12 no corpo, margens 2 cm, borda 1 px) para todos os relatórios/pareceres gerados em:
 
-1. **Componente único reutilizável**: `src/components/planejamento/ExportPlanejamentoFlow.tsx`
-   - Recebe `tab: "m1" | "m2" | "m3" | "m7"` + um *content adapter* que extrai do estado da aba os dias/atividades/objetivos/materiais/leis citadas pela Sofia.
-   - Cada aba ganha um botão “📄 Exportar planejamento” que abre esse fluxo.
+- `src/pages/Relatorios.tsx` (parecer descritivo da turma — geral e Educação Infantil)
+- `src/pages/Inclusao.tsx` → aba **Relatório IA** (inclusão / aluno PCD)
 
-2. **Etapas do fluxo (Dialog/Drawer shadcn):**
-   - **Passo 1 — Formulário:** Nome da Escola, Turma (dropdown das turmas cadastradas), Nome do(a) Professor(a), Data início, Data fim (Calendar/Popover shadcn com `pointer-events-auto`), Modo (Completo/Simplificado). Validação Zod (`escola` 1–120, `professor` 1–120, datas válidas, `fim >= inicio`).
-   - **Passo 2 — Geração via Sofia:** chama `createServerFn` `gerarPlanejamentoDoc` que recebe `{ tab, turma, nivel, dataIni, dataFim, modo, contexto }` e usa Lovable AI (`google/gemini-2.5-flash`) com o prompt específico de cada aba (conforme seção 7). Retorna JSON `{ dias: [{ data, diaSemana, atividades, objetivos, materiais, bnccItens }], leisCitadas: string[] }`.
-   - **Passo 3 — Preview WYSIWYG editável:** renderiza o documento em HTML fiel ao modelo (Fraunces no título, Arial 12, margens 2cm, borda 1px sólida, justificado). Cada campo é `contentEditable` e salvo localmente (estado React).
-   - **Passo 4 — Ações:** três botões — `📄 Exportar PDF`, `📝 Exportar Word (.docx)`, `🖨️ Imprimir`.
+O modelo atual (`wrapEditorialPrintHtml`, exportação Word inline ~2000 linhas, etc.) deixa de aparecer nessas duas páginas.
 
-3. **Modelo do documento** (HTML/CSS comum para preview e impressão):
-   - `@page { size: A4; margin: 2cm }`, borda externa 1px sólida, fonte base Arial 12, justificado.
-   - Cabeçalho: título “PLANEJAMENTO” em Fraunces 28 negrito centralizado, período centralizado, divisor, e linhas Escola/Turma/Professor com label em negrito.
-   - Corpo por dia: separadores horizontais; modo Completo (Atividades / Objetivos / Materiais com label em negrito), modo Simplificado (bullets com código BNCC alinhado à direita via `display:flex; justify-content: space-between`).
-   - Rodapé fixo: assinaturas do professor e da coordenação + linha cinza “Documento gerado com apoio do AgilizaProf em consonância com [leis identificadas]”.
+---
 
-4. **Leis no rodapé:** função `montarLeis({ tab, nivel, cidsTurma, leisSofia })` combina (LDB 9.394/1996 sempre; LBI/TEA/TDAH conforme CIDs em M2; Resolução CNE/CP 2/2017 para Infantil, 4/2018 para Fundamental/Médio) + leis citadas pela Sofia no conteúdo.
+### 1. Reaproveitar e estender a infra de documentos existente
 
-5. **Exportação:**
-   - **PDF:** `html2canvas` + `jspdf` (já existe `jspdf` no projeto) para PDF fiel ao preview, com quebra de página entre semanas (cada bloco-dia recebe `break-inside: avoid`).
-   - **Word:** `docx` (biblioteca docx-js) — instalar `docx` e `file-saver`. Gerar `.docx` com a mesma estrutura (título Fraunces fallback Times, Arial 12 corpo, margens 2cm, borda na seção).
-   - **Imprimir:** abrir nova janela com mesmo HTML + `@page` + `window.print()`.
+Já existe (do Planejamento):
+- `src/lib/documentos/types.ts` · `builders.ts` · `leis.ts` · `print.ts` · `docx.ts`
+- `src/components/documentos/DocumentoDialog.tsx` + `DocumentoPreview.tsx`
+- Tabela `documentos_planejamento` no Supabase
+- Componente `GerarDocumentoButton`
 
-6. **Fonte Fraunces:** importar no `index.html` (link Google Fonts) e aplicar via classe `.doc-title` no preview e na janela de impressão.
+Vou criar uma camada irmã `documentos/relatorio*` que reaproveita CSS/print/leis e adiciona o tipo "relatório".
 
-7. **Persistência no Supabase:**
-   - Nova tabela `planejamento_documentos` (`user_id`, `tab`, `turma`, `escola`, `professor`, `data_ini`, `data_fim`, `modo`, `conteudo_json`, `leis`, criada/atualizada com RLS por `user_id`).
-   - Server fn `salvarPlanejamentoDoc` e `listarPlanejamentoDocs` com `requireSupabaseAuth`.
-   - Cada exportação salva o documento. Cada aba ganha um botão “🗂️ Histórico” que abre lista filtrada por turma/período e permite reabrir no preview.
+**Novos arquivos**
 
-## Arquivos novos
-- `src/components/planejamento/ExportPlanejamentoFlow.tsx`
-- `src/components/planejamento/DocumentoPreview.tsx`
-- `src/components/planejamento/exporters/exportPdf.ts`
-- `src/components/planejamento/exporters/exportDocx.ts`
-- `src/components/planejamento/exporters/printDocument.ts`
-- `src/components/planejamento/leis.ts`
-- `src/lib/planejamento/planejamentoDoc.functions.ts` (server fns: gerar, salvar, listar)
+- `src/lib/documentos/relatorioTypes.ts` — tipos `RelatorioTipo` (`geral` | `ei` | `pcd` | `semestral`), `RelatorioModo` (`completo` | `simplificado`), `RelatorioDocumento` (cabeçalho + dados do aluno + seções `desenvolvimentoGlobal`, `camposOuComponentes[]`, `bncc[]`, `observacoes`, `avancos`, `proximosPassos`, `adaptacoes?`, `evolucaoPei?`, `apoioTeorico?`).
+- `src/lib/documentos/relatorioBuilder.ts` — `buildRelatorio({ aluno, turma, periodo, modo, dadosCarregados, conteudoSofia })` retornando `RelatorioDocumento`. Decide o título por contexto:
+  - EI → "PARECER DESCRITIVO"
+  - Fund./Médio → "RELATÓRIO DE DESEMPENHO"
+  - PCD → "RELATÓRIO DE INCLUSÃO"
+  - Trilha semestral → "RELATÓRIO SEMESTRAL"
+- `src/lib/documentos/relatorioLeis.ts` — `escolherLeisRelatorio({ tipo, nivel, cidsAluno, frequentaAee })` cobrindo LDB, BNCC EI/EF/EM, LBI, TEA (F84), TDAH/Dislexia (F90/F81), AEE (Decreto 7.611/2011).
+- `src/components/documentos/RelatorioPreview.tsx` — versão WYSIWYG (todos os campos `contentEditable`), com modo completo e simplificado e bloco de assinaturas + "Ciente do(a) Responsável" quando PCD. Usa o mesmo CSS de impressão existente (já tem `documento`, `documento-wrap`, hr, h1 Fraunces, doc-rodape).
+- `src/components/documentos/RelatorioDialog.tsx` — diálogo com 3 abas (Dados / Pré-visualização / Histórico):
+  - **Dados**: Escola, Aluno (dropdown), Turma (auto), Professor, Período (`1º–4º Bimestre`, `1º–3º Trimestre`, `1º–2º Semestre`, Anual) com datas auto-preenchidas porém editáveis, Modo (Completo/Simplificado), checkbox "Gerar para toda a turma".
+  - **Pré-visualização**: edição inline; botões `Imprimir`, `Exportar PDF` (via print → salvar PDF), `Exportar Word`, e quando múltiplos alunos: `Exportar ZIP`.
+  - **Histórico**: lista por aluno + período; ao gerar novo do mesmo período pergunta "substituir ou nova versão".
+- `src/lib/db/relatoriosDoc.ts` — `saveRelatorio` / `listRelatorios` / `deleteRelatorio` usando nova tabela `relatorios_documento` (ver §3).
+- `src/lib/documentos/relatorioDocx.ts` — `exportarRelatorioDocx(doc)` reaproveitando padrões do `docx.ts` (Fraunces no título, Arial 12 corpo, borda na página).
+- `src/lib/documentos/relatorioZip.ts` — empacota múltiplos PDFs/DOCXs em `.zip` via `jszip`.
 
-## Arquivos alterados
-- `src/pages/Planejamento.tsx` — adicionar botão “Exportar planejamento” nas toolbars M1, M2, M3, M7; remover/substituir qualquer export antigo nessas abas (M5 fica como está, pois não foi pedido).
-- `index.html` — `<link>` Fraunces.
-- Migration Supabase para `planejamento_documentos`.
+**Server function**: `src/lib/documentos/relatorioGerar.functions.ts`
+- `gerarRelatorioComSofia` (`createServerFn` + `requireSupabaseAuth`):
+  - Inputs: `alunoClientId`, `turmaId`, `periodo`, `dataInicio`, `dataFim`, `modo`, `tipo`.
+  - Carrega do Supabase: avaliação BNCC do período, observações do professor, PEI mais recente (`pei_pdi`), CIDs (`alunos_inclusao`), ano de referência pedagógico, últimos 2 relatórios para Princípio 13 (Progressividade).
+  - Chama Lovable AI Gateway (`google/gemini-2.5-flash`) com prompt específico ao tipo (EI/Fund/PCD), pedindo retorno JSON com os campos do `RelatorioDocumento`.
+  - Retorna `{ documento, leisSugeridas, apoioTeorico }`.
 
-## Dependências
-- `bun add docx file-saver html2canvas` (`jspdf` já existe).
+**Dependências novas**: `jszip` (já temos `docx`, `file-saver`, `html2canvas` e `jspdf`).
 
-## Pontos a confirmar
-1. **M5 (Semana M5/Layout semanal) fica fora**, certo? Você listou apenas M1, M2, M3, M7.
-2. Em **modo Simplificado**, o ponto-ponto-ponto entre atividade e código BNCC deve ser renderizado mesmo se a atividade não tiver código? (proposto: omitir o código quando não houver).
-3. Para o **histórico**, posso assumir que pode ser reaberto e re-exportado, mas não re-gerado pela Sofia (mantém o conteúdo salvo)?
+---
+
+### 2. Substituir o que aparece nas páginas
+
+**`src/pages/Inclusao.tsx`** — aba "Relatório IA":
+- Remover a UI atual de exportação (Editor Word inline / `exportarParecer`) **no que toca ao documento final**.
+- O botão "Gerar relatório IA" passa a abrir o `RelatorioDialog` com `tipo="pcd"` e o aluno pré-selecionado.
+- A lógica antiga `gerar-parecer-inclusao` é substituída pela `gerarRelatorioComSofia`.
+
+**`src/pages/Relatorios.tsx`**:
+- Substituir as ações de exportação (`exportPdf`, `exportWord`, modal de impressão em lote, `wrapStandardPrintHtml`) por chamadas ao `RelatorioDialog`:
+  - Card de cada aluno: botão "Gerar com a Sofia" → `RelatorioDialog` (tipo `ei` se EI, `geral` caso contrário).
+  - Botão da topo "Imprimir vários" → abre `RelatorioDialog` com `lote=true` (gera 1 documento por aluno marcado, exporta em PDF único ou ZIP).
+- Listagem/cards (KPIs, status, navegação) permanecem como estão — só muda o motor de geração/exportação.
+- O componente antigo `RelatorioPedagogico.tsx` e as funções `exportPdf`/`exportWord` internas saem desses fluxos (manter o arquivo enquanto outra rota usar, mas remover imports e uso aqui).
+
+---
+
+### 3. Banco (Supabase)
+
+Nova migration (será proposta separadamente para aprovação):
+
+```sql
+create table public.relatorios_documento (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  aluno_client_id text not null,
+  aluno_nome text not null,
+  turma_id uuid,
+  tipo text not null,          -- geral|ei|pcd|semestral
+  modo text not null,          -- completo|simplificado
+  periodo text not null,       -- ex: "2º Bimestre"
+  data_inicio date not null,
+  data_fim date not null,
+  escola text,
+  professor text,
+  conteudo jsonb not null,     -- RelatorioDocumento
+  leis text[] not null default '{}',
+  versao int not null default 1,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.relatorios_documento enable row level security;
+-- policies próprios para auth.uid() = user_id (select/insert/update/delete)
+create index on public.relatorios_documento(user_id, aluno_client_id, periodo);
+```
+
+Detecção de "já existe" usa `(user_id, aluno_client_id, periodo)` → modal "Substituir / Nova versão" incrementa `versao`.
+
+---
+
+### Pontos a confirmar antes de implementar
+
+1. **Geração via Sofia (IA) continua obrigatória** para os 2 fluxos, ou em alguns casos o usuário escreve manualmente? (Assumo: Sofia gera rascunho e o usuário edita no preview.)
+2. **Exportação em lote**: prefere `PDF único com page-break` por padrão, com a opção `.zip` de arquivos individuais como secundária? (Assumo sim.)
+3. **`src/components/RelatorioPedagogico.tsx`**: posso deixá-lo só onde a rota `/relatorio-pedagogico` o usa, removendo apenas dos fluxos de Relatórios e Inclusão? (Assumo sim — não é mencionado pelo usuário.)
+
+Se confirmar (ou só responder "ok"), implemento em sequência: tipos/builder/leis → server fn Sofia → preview/dialog → docx/zip → integração nas duas páginas → migration.

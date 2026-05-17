@@ -1141,6 +1141,69 @@ export type Database = {
         }
         Relationships: []
       }
+      relatorios_documento: {
+        Row: {
+          aluno_client_id: string
+          aluno_nome: string
+          conteudo: Json
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          escola: string | null
+          id: string
+          leis: string[]
+          modo: string
+          periodo: string
+          professor: string | null
+          tipo: string
+          turma_id: string | null
+          turma_nome: string | null
+          updated_at: string
+          user_id: string
+          versao: number
+        }
+        Insert: {
+          aluno_client_id: string
+          aluno_nome: string
+          conteudo: Json
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          escola?: string | null
+          id?: string
+          leis?: string[]
+          modo: string
+          periodo: string
+          professor?: string | null
+          tipo: string
+          turma_id?: string | null
+          turma_nome?: string | null
+          updated_at?: string
+          user_id: string
+          versao?: number
+        }
+        Update: {
+          aluno_client_id?: string
+          aluno_nome?: string
+          conteudo?: Json
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          escola?: string | null
+          id?: string
+          leis?: string[]
+          modo?: string
+          periodo?: string
+          professor?: string | null
+          tipo?: string
+          turma_id?: string | null
+          turma_nome?: string | null
+          updated_at?: string
+          user_id?: string
+          versao?: number
+        }
+        Relationships: []
+      }
       relatorios_ei: {
         Row: {
           bimestre: string
