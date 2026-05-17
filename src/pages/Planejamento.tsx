@@ -1411,22 +1411,13 @@ export function Planejamento() {
   const setCtxAtual = (next: TurmaCtx) =>
     setCtxByTab((p) => ({ ...p, [m]: next }));
 
-  // Turmas cadastradas no perfil
-  const [turmasPerfil, setTurmasPerfil] = useState<string[]>([]);
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !active) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("turmas")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (active && data?.turmas) setTurmasPerfil(data.turmas as string[]);
-    })();
-    return () => { active = false; };
-  }, []);
+  // Turmas cadastradas — fonte ao vivo (tabela `turmas` via React Query).
+  // Assim, qualquer turma criada/editada em outra tela aparece aqui
+  // imediatamente (invalidação do cache `["turmas"]`).
+  const turmasPerfil = useMemo(
+    () => sofiaUser.turmas.map((t) => t.nome).filter(Boolean),
+    [sofiaUser.turmas],
+  );
 
   // Resolve etapa/ano efetivos do contexto atual (usado pela Sofia ao gerar).
   const ctxResolvido = useMemo(() => {
