@@ -324,18 +324,44 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
       {showModal && (
         <div className="cp-modal-bg" onClick={() => setShowModal(false)}>
           <div className="cp-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Adicionar créditos extras</h3>
+            <h3>⚡ Seus créditos por plano</h3>
             <p>
-              Que tal um reforço? Por <strong>R$ 9,90</strong> você adiciona
-              <strong> +500 créditos</strong> imediatamente à sua conta — o suficiente
-              para até <strong>50 documentos</strong> (parecer, plano de aula, anamnese
-              ou adaptação PCD a 10 créditos cada) ou <strong>10 trilhas semestrais</strong>.
+              Cada plano tem sua própria cota de créditos. Veja quanto você recebe:
+            </p>
+            <ul className="cp-modal-list">
+              <li style={{ fontWeight: c.plano === "free" ? 700 : 400 }}>
+                🆓 <strong>Gratuito</strong>: {FREE_CREDITOS_SEMANAIS} créditos por semana
+                <br /><span style={{ fontSize: 12, color: "#5B6B82" }}>Renovam toda sexta-feira às 14h. Não acumulam.</span>
+              </li>
+              <li style={{ fontWeight: c.plano === "mensal" ? 700 : 400 }}>
+                📅 <strong>Mensal</strong>: 1.500 créditos por mês
+                <br /><span style={{ fontSize: 12, color: "#5B6B82" }}>Renovam todo mês na data da assinatura. Não acumulam.</span>
+              </li>
+              <li style={{ fontWeight: c.plano === "anual" ? 700 : 400 }}>
+                🏆 <strong>Anual</strong>: 18.000 créditos por ano
+                <br /><span style={{ fontSize: 12, color: "#5B6B82" }}>
+                  + 500 créditos bônus em <strong>janeiro</strong>, <strong>junho</strong> e <strong>dezembro</strong> (total 19.500/ano).
+                </span>
+              </li>
+            </ul>
+            <p style={{ fontSize: 12, color: "#5B6B82" }}>
+              Seu plano atual: <strong>{c.plano === "anual" ? "Anual" : c.plano === "mensal" ? "Mensal" : "Gratuito"}</strong>
+              {" — "}{c.disponiveis.toLocaleString("pt-BR")} de {c.totais.toLocaleString("pt-BR")} créditos disponíveis.
             </p>
             <div className="cp-modal-actions">
-              <button className="ghost" onClick={() => setShowModal(false)}>Agora não</button>
-              <button className="primary" onClick={() => { setShowModal(false); }}>
-                Em breve
-              </button>
+              <button className="ghost" onClick={() => setShowModal(false)}>Fechar</button>
+              {c.plano !== "anual" && (
+                <a
+                  className="primary"
+                  href={MP_ANUAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", padding: "10px 16px", borderRadius: 8, fontWeight: 600, fontSize: 13 }}
+                  onClick={() => setShowModal(false)}
+                >
+                  Ver plano anual →
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -355,7 +381,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             </div>
             <ul className="cp-modal-list">
               <li>+ {CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos por ano</li>
-              <li>+ Bônus de 500 créditos em janeiro, junho e novembro</li>
+              <li>+ Bônus de 500 créditos em janeiro, junho e dezembro</li>
               <li>+ Nunca trava nos picos pedagógicos</li>
               <li>+ Créditos já usados no mês são preservados na migração</li>
             </ul>
