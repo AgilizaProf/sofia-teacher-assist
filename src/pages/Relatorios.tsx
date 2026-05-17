@@ -11,6 +11,8 @@ import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useDashClasses } from "@/hooks/useDashLegacyData";
 import { Skeleton } from "@/components/ui/skeleton";
+import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
@@ -764,6 +766,7 @@ export function Relatorios() {
       };
       setParecerByAluno((all) => ({ ...all, [a.id]: parecer }));
       toast.success(ei ? "Parecer descritivo gerado pela Sofia." : "Parecer gerado pela Sofia.");
+      void consumirCreditos(CUSTOS.parecer_descritivo, descricaoDoc("Parecer descritivo", a.nome));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Não foi possível gerar o parecer. ${msg}`);
