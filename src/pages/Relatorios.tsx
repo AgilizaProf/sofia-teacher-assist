@@ -1682,24 +1682,10 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   >Fechar</button>
                   <button
                     onClick={() => {
-                      const linhas = areas.flatMap((area, ai) => area.comps.map((c, ci) => {
-                        const s = rub[`${ai}.${ci}`];
-                        const lbl = statusLabel(turma, s);
-                        return `- (${area.area}) ${c}: ${lbl}`;
-                      })).join("\n");
-                      const obs = (bnccObsByAluno[id] || "").trim();
-                      const obsBloco = obs
-                        ? `\n\nObservações do professor sobre o aluno: ${obs}\nConsidere essas observações para personalizar o parecer, reforçar pontos positivos, sugerir estratégias para as dificuldades relatadas e tornar o texto fiel à realidade observada em sala.`
-                        : "";
-                      const gradeLbl = cls?.grade ? (EI_GRADE_LABELS[cls.grade] || cls.grade) : "";
-                      const prompt = ei
-                        ? `Gere um PARECER DESCRITIVO bimestral para a criança ${nome} (${turma || "sem turma"}${gradeLbl ? " · " + gradeLbl : ""}), ${bimestreNum}º bimestre, Educação Infantil. Use linguagem afetiva, humanizada e acessível à família. Cite os Campos de Experiência da BNCC Infantil observados e baseie a avaliação nos Direitos de Aprendizagem (${EI_DIREITOS_APRENDIZAGEM}). NUNCA use linguagem comparativa entre crianças ou capacitista; prefira "está desenvolvendo", "demonstra interesse em", "avança em", "em construção". Descreva o desenvolvimento de forma narrativa e individualizada. Use estritamente esta rubrica por Campo de Experiência:\n${linhas}${obsBloco}`
-                        : `Gere um parecer descritivo bimestral para ${nome} (${turma || "sem turma"}), ${bimestreNum}º bimestre, ALINHADO À BNCC do ${year}º ano do Ensino Fundamental${isPcd && yearOverride[id] ? " (ano de referência ajustado para aluno PCD)" : ""}. Use estritamente esta rubrica de competências e níveis de consolidação:\n${linhas}\n\nEstruture por áreas, mencione avanços (consolidadas), focos de trabalho (em desenvolvimento), pontos de atenção (não alcançadas) e o que ainda precisa ser observado. Linguagem profissional, acolhedora e objetiva.${obsBloco}`;
-                      sofia.openSofia({
-                        prompt,
-                        send: true,
-                      });
+                      const alunoArg = { id, nome, turma, pcd: pcd || "" };
                       setBnccOpen(null);
+                      setAlunoModal({ id, nome, turma, pcd: pcd || "", status: "review", statusLabel: "Parecer para revisar" });
+                      void handleGerarParecerSofia(alunoArg);
                     }}
                     style={{ background: "linear-gradient(135deg,#FF6A2C,#EA580C)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
                   ><Sparkles size={13} /> {ei ? "Gerar parecer descritivo com a Sofia" : "Gerar parecer com a Sofia"}</button>
