@@ -3,12 +3,15 @@ import { useCreditos, useHistoricoCreditos, type MovimentacaoCredito } from "@/l
 import {
   CREDITOS_ANUAIS_TOTAL,
   ECONOMIA_ANUAL,
+  FREE_CREDITOS_SEMANAIS,
   MESES_PT_LONGO,
   MP_ANUAL_URL,
   PRECO_ANUAL,
   PRECO_MENSAL,
   corDaBarra,
   diasAteRenovacaoMensal,
+  diasAteRenovacaoSemanal,
+  horasAteRenovacaoSemanal,
   isMesPico,
   mensagemContextual,
   proximoBonus,
@@ -141,9 +144,11 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
   const escopo =
     c.plano === "anual" ? "no ano letivo"
     : c.plano === "mensal" ? "este mês"
-    : "este mês (grátis)";
+    : "esta semana (grátis)";
 
   const diasRenov = useMemo(() => diasAteRenovacaoMensal(), [c.ano_referencia, c.mes_referencia]);
+  const diasRenovSemana = useMemo(() => diasAteRenovacaoSemanal(), [c.data_renovacao]);
+  const horasRenovSemana = useMemo(() => horasAteRenovacaoSemanal(), [c.data_renovacao]);
   const mesPico = useMemo(() => isMesPico(), []);
   const mesAtualNome = MESES_PT_LONGO[new Date().getMonth()];
 
@@ -230,6 +235,14 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             </div>
           )}
 
+          {c.plano === "free" && (
+            <div className="cp-renew">
+              🔄 Renovam {diasRenovSemana <= 1
+                ? `em ${horasRenovSemana}h`
+                : `em ${diasRenovSemana} dias`} (sexta às 14h)
+            </div>
+          )}
+
           {c.plano === "mensal" && !c.loading && (
             <>
               <div className="cp-upgrade-mod">
@@ -256,7 +269,10 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
 
           {c.plano === "free" && !c.loading && (
             <div className="cp-upgrade">
-              <span className="cp-upgrade-text">🔒 Upgrade para ter 18.000 créditos anuais + bônus de 500 créditos em janeiro, junho e novembro.</span>
+              <span className="cp-upgrade-text">
+                🔒 Plano gratuito: <strong>{FREE_CREDITOS_SEMANAIS} créditos/semana</strong> (renovam toda sexta às 14h, não acumulam).
+                Faça upgrade para ter 18.000 créditos anuais + bônus em janeiro, junho e novembro.
+              </span>
               <a className="cp-upgrade-btn" href={MP_ANUAL_URL} target="_blank" rel="noopener noreferrer">
                 Ver oferta
               </a>
