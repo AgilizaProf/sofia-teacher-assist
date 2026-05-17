@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BONUS_NOMES, MESES_PT_LONGO, planoFromSnapshot, type PlanoAtual } from "./policy";
+import {
+  BONUS_NOMES,
+  MESES_PT_LONGO,
+  diasAteRenovacaoMensal,
+  planoFromSnapshot,
+  type PlanoAtual,
+} from "./policy";
 
 export type CreditosState = {
   loading: boolean;
@@ -49,6 +55,8 @@ function rowToState(row: any, loading = false): CreditosState {
 export function useCreditos(): CreditosState & { refresh: () => Promise<void> } {
   const [state, setState] = useState<CreditosState>(EMPTY);
   const lastBonusRef = useRef<string | null>(null);
+  const lastMesRef = useRef<string | null>(null);
+  const renovAlertRef = useRef<string | null>(null);
 
   const fetchRow = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -61,6 +69,22 @@ export function useCreditos(): CreditosState & { refresh: () => Promise<void> } 
       setState(next);
       lastBonusRef.current = next.ultimo_bonus_mes && next.ultimo_bonus_ano
         ? `${next.ultimo_bonus_ano}-${next.ultimo_bonus_mes}` : null;
+      lastMesRef.current = next.ano_referencia && next.mes_referencia
+        ? `${next.ano_referencia}-${next.mes_referencia}` : null;
+
+      // Alerta 3 dias antes da renovação (apenas mensal/free), 1x por ciclo.
+      if (next.plano !== "anual") {
+        const dias = diasAteRenovacaoMensal();
+        const cicloKey = `cred_renov_alert:${lastMesRef.current ?? ""}`;
+        if (dias <= 3 && dias > 0 && typeof window !== "undefined" && !window.localStorage.getItem(cicloKey)) {
+          window.localStorage.setItem(cicloKey, "1");
+          renovAlertRef.current = cicloKey;
+          toast.info("🔄 Renovação em breve", {
+            description: `Seus créditos renovam em ${dias} dia${dias > 1 ? "s" : ""}. Você tem ${next.disponiveis} créditos restantes este mês.`,
+            duration: 8000,
+          });
+        }
+      }
     }
   }, []);
 
@@ -110,6 +134,16 @@ export function useCreditos(): CreditosState & { refresh: () => Promise<void> } 
               }
               lastBonusRef.current = key;
             }
+            // Toast de renovação mensal (mês de referência mudou e plano não-anual)
+            const mesKey = next.ano_referencia && next.mes_referencia
+              ? `${next.ano_referencia}-${next.mes_referencia}` : null;
+            if (mesKey && lastMesRef.current && mesKey !== lastMesRef.current && next.plano !== "anual") {
+              toast.success("✅ Créditos renovados!", {
+                description: `Seus ${next.totais.toLocaleString("pt-BR")} créditos foram renovados. Bom trabalho este mês!`,
+                duration: 8000,
+              });
+            }
+            lastMesRef.current = mesKey;
           },
         )
         .subscribe();
