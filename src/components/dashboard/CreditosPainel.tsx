@@ -91,16 +91,20 @@ const css = `
 
 type TabelaItem = { icone: string; nome: string; custo: string; free?: boolean };
 const TABELA_CREDITOS: TabelaItem[] = [
-  { icone: "💬", nome: "Mensagem da Sofia (chat)", custo: "1 crédito a cada 10 mensagens" },
-  { icone: "✍️", nome: "Parecer descritivo completo", custo: "5 créditos" },
-  { icone: "📘", nome: "Plano de aula BNCC", custo: "5 créditos" },
-  { icone: "🎗️", nome: "Adaptação inclusiva (PCD)", custo: "5 créditos" },
-  { icone: "📊", nome: "Relatório de inclusão", custo: "5 créditos" },
-  { icone: "📅", nome: "Planejamento semanal", custo: "5 créditos" },
-  { icone: "📋", nome: "Anamnese", custo: "5 créditos" },
-  { icone: "📄", nome: "PEI completo", custo: "5 créditos" },
-  { icone: "🗓️", nome: "Trilha semestral", custo: "10 créditos" },
-  { icone: "📄", nome: "Exportar PDF / Word", custo: "Grátis", free: true },
+  { icone: "💬", nome: "Chat curto (Gemini)", custo: "1 crédito a cada 10 msgs" },
+  { icone: "💬", nome: "Geração longa no chat", custo: "5 créditos" },
+  { icone: "✍️", nome: "Parecer descritivo", custo: "10 créditos" },
+  { icone: "📘", nome: "Plano de aula BNCC", custo: "10 créditos" },
+  { icone: "🎗️", nome: "Adaptação PCD", custo: "10 créditos" },
+  { icone: "📋", nome: "Anamnese", custo: "10 créditos" },
+  { icone: "🎯", nome: "Atividades geradas", custo: "10 créditos" },
+  { icone: "🌈", nome: "Atividades PCD", custo: "10 créditos" },
+  { icone: "📅", nome: "Planejamento semanal", custo: "15 créditos" },
+  { icone: "📊", nome: "Relatório de inclusão", custo: "20 créditos" },
+  { icone: "📄", nome: "PEI completo", custo: "50 créditos" },
+  { icone: "🗓️", nome: "Trilha semestral", custo: "50 créditos" },
+  { icone: "📄", nome: "Exportar PDF / Word", custo: "Grátis 🎁", free: true },
+  { icone: "🎁", nome: "Trial (14 dias)", custo: "1000 créditos" },
 ];
 
 function HistItem({ m }: { m: MovimentacaoCredito }) {
@@ -308,8 +312,8 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             <p>
               Que tal um reforço? Por <strong>R$ 9,90</strong> você adiciona
               <strong> +500 créditos</strong> imediatamente à sua conta — o suficiente
-              para até <strong>100 documentos</strong> (parecer, plano de aula, PEI, anamnese
-              ou adaptação PCD a 5 créditos cada) ou <strong>50 trilhas semestrais</strong>.
+              para até <strong>50 documentos</strong> (parecer, plano de aula, anamnese
+              ou adaptação PCD a 10 créditos cada) ou <strong>10 trilhas semestrais</strong>.
             </p>
             <div className="cp-modal-actions">
               <button className="ghost" onClick={() => setShowModal(false)}>Agora não</button>
