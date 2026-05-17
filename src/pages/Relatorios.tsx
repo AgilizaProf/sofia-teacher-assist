@@ -1684,7 +1684,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                     onClick={() => {
                       const alunoArg = { id, nome, turma, pcd: pcd || "" };
                       setBnccOpen(null);
-                      setAlunoModal({ id, nome, turma, pcd: pcd || "", status: "review", statusLabel: STATUS_LABEL["review"] });
+                      setAlunoModal({ id, nome, turma, pcd: pcd || "", status: "review", statusLabel: "Parecer para revisar" });
                       void handleGerarParecerSofia(alunoArg);
                     }}
                     style={{ background: "linear-gradient(135deg,#FF6A2C,#EA580C)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
