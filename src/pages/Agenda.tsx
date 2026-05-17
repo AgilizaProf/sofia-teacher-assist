@@ -1127,7 +1127,7 @@ export function Agenda() {
             </div>
 
             <div className="ag-col-side">
-              <AgendaSofiaSide />
+              <AgendaSofiaSide onImportM4={openM4Import} m4Count={m4Pending} />
 
               <div className="ag-up-card">
                 <div className="ag-up-head">
