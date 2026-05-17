@@ -5,6 +5,7 @@ import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Pri
 import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
 
 const DISCIPLINAS_COMUNS = [
   "Português", "Matemática", "Ciências", "História", "Geografia",
