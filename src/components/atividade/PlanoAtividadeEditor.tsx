@@ -1123,13 +1123,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       );
     }
 
-    if (plano.adaptacoes.length > 0) {
-      partes.push(editorialSection("Adaptações PCD"));
-      partes.push(
-        editorialLongField(
-          plano.adaptacoes.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
-        ),
-      );
+    {
+      const adapts = plano.adaptacoes.filter((a) => a.incluido !== false);
+      if (adapts.length > 0) {
+        partes.push(editorialSection("Adaptações PCD"));
+        partes.push(
+          editorialLongField(
+            adapts.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
+          ),
+        );
+      }
     }
 
     if (plano.sugestoes.length > 0) {
@@ -1217,11 +1220,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         p.contribuicoesInter!.map((c) => `• ${c.disciplina}: ${c.contribuicao}`).join("\n"),
       ));
     }
-    if (p.adaptacoes.length > 0) {
-      partes.push(editorialSection("Adaptações PCD"));
-      partes.push(editorialLongField(
-        p.adaptacoes.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
-      ));
+    {
+      const adapts = p.adaptacoes.filter((a) => a.incluido !== false);
+      if (adapts.length > 0) {
+        partes.push(editorialSection("Adaptações PCD"));
+        partes.push(editorialLongField(
+          adapts.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
+        ));
+      }
     }
     if (p.sugestoes.length > 0) {
       partes.push(editorialSection("Sugestões da Sofia"));
