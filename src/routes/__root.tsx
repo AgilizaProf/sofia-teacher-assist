@@ -174,9 +174,6 @@ function RootComponent() {
                   <SofiaErrorBoundary area="os lembretes da Sofia" silent>
                     <SofiaAutoReminders />
                   </SofiaErrorBoundary>
-                  <SofiaErrorBoundary area="o balão da Sofia" silent>
-                    <SofiaSpeechBubble />
-                  </SofiaErrorBoundary>
                 </>
               )}
               <Toaster position="top-right" richColors />
