@@ -743,7 +743,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   <label style={labelCss}>Meta</label>
                   <textarea style={{ ...inputCss, minHeight: 50, marginBottom: 6 }} value={m.meta} onChange={(e) => updMeta(m.id, { meta: e.target.value })}
                     placeholder="O que se quer alcançar..." />
-                  <PEISuggestions fieldKey="meta_texto" onPick={(t) => updMeta(m.id, { meta: appendText(m.meta, t) })} />
+                  <PEISuggestions fieldKey={`meta_texto:${m.area}`} fallbackKey="meta_texto" label={`Sugestões — ${m.area}`} onPick={(t) => updMeta(m.id, { meta: appendText(m.meta, t) })} />
                   <label style={labelCss}>Como saber que foi atingida (indicador)</label>
                   <input style={inputCss} value={m.indicador} onChange={(e) => updMeta(m.id, { indicador: e.target.value })}
                     placeholder="Critério observável para considerar a meta atingida" />
