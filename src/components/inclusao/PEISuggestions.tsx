@@ -212,11 +212,81 @@ export const PEI_SUGGESTIONS: Record<string, string[]> = {
     "Evidência em portfólio de produções do aluno.",
     "Relato consistente da família e do AEE.",
   ],
+
+  // ===== Versões para Educação Infantil (0 a 5 anos) =====
+  "ei:potencialidades": [
+    "Demonstra curiosidade ativa por objetos, sons e texturas novas.",
+    "Imita gestos, sons e expressões dos adultos de referência.",
+    "Engaja-se em brincadeiras de faz de conta com mediação.",
+    "Reconhece rostos familiares e responde com afeto.",
+    "Explora o espaço da sala com autonomia crescente.",
+  ],
+  "ei:interessesMotivacoes": [
+    "Demonstra interesse por músicas, cantigas e brincadeiras de roda.",
+    "Engaja-se com livros de imagens, fantoches e dedoches.",
+    "Gosta de brincadeiras sensoriais (água, areia, massinha, tinta).",
+    "Motiva-se com personagens de desenhos preferidos.",
+    "Demonstra interesse por animais, carrinhos ou bonecas.",
+  ],
+  "ei:objetivosLongoPrazo": [
+    "Ampliar a comunicação expressiva (gestos, palavras ou CAA) ao longo do ano.",
+    "Desenvolver autonomia nas atividades de cuidado (alimentação, higiene, vestir).",
+    "Participar de brincadeiras coletivas com mediação reduzida.",
+    "Explorar diferentes linguagens (corporal, sonora, plástica) com prazer.",
+    "Construir vínculos seguros com adultos e pares na rotina escolar.",
+  ],
+  "ei:objetivosAEE": [
+    "Estimular a comunicação alternativa por meio do brincar.",
+    "Apoiar o desenvolvimento sensório-motor com atividades lúdicas.",
+    "Favorecer a autorregulação por meio de rotinas previsíveis e visuais.",
+    "Promover a interação com pares em pequenos grupos.",
+  ],
+  "ei:meta_texto:Cognitiva/Pedagógica": [
+    "Reconhecer 5 a 10 figuras do cotidiano nomeando-as com apoio.",
+    "Encaixar peças em quebra-cabeças de 4 a 8 peças com autonomia.",
+    "Imitar sequências curtas de movimentos em brincadeiras dirigidas.",
+    "Participar de leitura compartilhada virando páginas e apontando figuras.",
+    "Permanecer em atividade dirigida por pelo menos 8 minutos.",
+    "Identificar e nomear cores primárias em situações lúdicas.",
+  ],
+  "ei:meta_texto:Social e emocional": [
+    "Brincar lado a lado com um colega por pelo menos 5 minutos.",
+    "Despedir-se do(a) responsável na entrada sem crise prolongada.",
+    "Reconhecer e apontar emoções básicas em figuras ou espelho.",
+    "Aguardar a vez em pequenas rodas dirigidas pela professora.",
+    "Aceitar o toque afetuoso de adultos de referência.",
+    "Participar de momentos de roda com apoio do adulto.",
+  ],
+  "ei:meta_texto:Motora": [
+    "Subir e descer rampas e degraus baixos com apoio.",
+    "Realizar rabiscos circulares e lineares com giz ou tinta.",
+    "Empilhar 4 a 6 blocos com coordenação adequada à idade.",
+    "Encaixar peças grandes (LEGO Duplo, blocos de montar).",
+    "Andar em diferentes superfícies mantendo o equilíbrio.",
+    "Manusear colher e copo durante o lanche com autonomia.",
+  ],
+  "ei:meta_texto:Comunicação e linguagem": [
+    "Apontar para o que deseja em vez de chorar ou gritar.",
+    "Usar 5 a 10 palavras ou sinais funcionais no dia a dia.",
+    "Responder ao próprio nome olhando para o adulto.",
+    "Participar de cantigas com gestos e onomatopeias.",
+    "Usar prancha CAA com 4 a 6 figuras em rotinas (banheiro, água, ajuda).",
+    "Imitar sons de animais e objetos em brincadeiras dirigidas.",
+  ],
+  "ei:meta_texto:Autonomia e independência": [
+    "Comunicar a necessidade de ir ao banheiro (gesto, palavra ou CAA).",
+    "Alimentar-se sozinho(a) com colher, com mínima ajuda.",
+    "Calçar e descalçar sapatos com velcro de forma autônoma.",
+    "Guardar brinquedos no lugar combinado após a brincadeira.",
+    "Lavar as mãos seguindo a sequência visual da rotina.",
+    "Beber água na garrafinha sem auxílio.",
+  ],
 };
 
 type Props = {
   fieldKey: keyof typeof PEI_SUGGESTIONS | string;
   fallbackKey?: string;
+  prefix?: string;
   onPick: (text: string) => void;
   label?: string;
 };
@@ -226,9 +296,12 @@ type Props = {
  * Ao clicar em um chip, o texto é enviado para `onPick` (que normalmente faz append
  * no campo de texto do PEI).
  */
-export function PEISuggestions({ fieldKey, fallbackKey, onPick, label = "Sugestões rápidas" }: Props) {
+export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = "Sugestões rápidas" }: Props) {
   const [open, setOpen] = useState(false);
-  const opts = PEI_SUGGESTIONS[fieldKey] || (fallbackKey ? PEI_SUGGESTIONS[fallbackKey] : undefined) || [];
+  const prefixed = prefix ? PEI_SUGGESTIONS[`${prefix}${fieldKey}`] : undefined;
+  const direct = PEI_SUGGESTIONS[fieldKey];
+  const fb = fallbackKey ? (prefix ? PEI_SUGGESTIONS[`${prefix}${fallbackKey}`] : undefined) || PEI_SUGGESTIONS[fallbackKey] : undefined;
+  const opts = prefixed || direct || fb || [];
   if (opts.length === 0) return null;
 
   return (
