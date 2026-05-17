@@ -372,7 +372,7 @@ const M_CONFIG: Record<MKey, { badge: string; title: string; sub: string; lead: 
     chips: [{ label: "♿ Adaptar PCD", solid: true }, { label: "👥 Por aluno" }, { label: "🧩 Por necessidade" }], crumb: "Atividades PCD" },
   m1: { badge: "★ MUDANÇA #1 · IA QUE OBSERVA", title: "Sofia preenche a semana por você.", sub: "Você revisa em 6 minutos. Não em 60.",
     lead: <>A IA esboça <strong>5 dias com 11 atividades</strong> baseadas no tema do mês, na BNCC e no histórico da turma. Você ajusta o que quiser e aprova com 1 clique.</>,
-    chips: [{ label: "✨ Aceitar tudo", solid: true }, { label: "🔄 Regenerar" }, { label: "✏️ Ajustar parâmetros" }], crumb: "Sofia preenche a semana" },
+    chips: [{ label: "✨ Aceitar tudo", solid: true }, { label: "🔄 Regenerar" }], crumb: "Sofia preenche a semana" },
   m2: { badge: "★ MUDANÇA #2 · CONTINUIDADE PEDAGÓGICA", title: "Sequência didática inteligente.", sub: "Cada aula puxa a próxima.",
     lead: <>Sofia <strong>conecta atividades em cadeia</strong>: quando você adiciona "introdução à adição", ela sugere "adição com dezenas" pro próximo dia. Continuidade vira automática.</>,
     chips: [{ label: "🔗 Ver cadeia", solid: true }, { label: "📚 Habilidades" }, { label: "📐 Reordenar" }], crumb: "Sequência didática" },
@@ -3041,6 +3041,7 @@ export function Planejamento() {
                 <div className="pl-tools">
                   <div><h2>Sofia preenche a semana <small>· defina turma e tema</small></h2></div>
                   <div className="right">
+                    <button className="pl-btn ghost" onClick={() => setParamsModalOpen(true)} title="Ajustar parâmetros"><Pencil size={14} /> Ajustar parâmetros</button>
                     <button className="pl-btn ghost" onClick={limparSemanaM1} disabled={m1Stats.atividades === 0}><X size={14} /> Limpar</button>
                     <button className="pl-btn ghost" onClick={gerarComSofia} disabled={m1Generating}><RefreshCw size={14} /> Regenerar</button>
                     <GerarDocumentoButton tipo="atividades" label="Exportar planejamento" />
