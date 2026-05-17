@@ -268,6 +268,9 @@ export function TrilhasPanel() {
 
   return (
     <div style={{ display: "grid", gap: 18 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <GerarDocumentoButton tipo="trilhas" label="Exportar planejamento" />
+      </div>
       <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: 20 }}>
         <h2 style={{ fontSize: 18, marginBottom: 4 }}>Nova trilha semestral <small style={{ color: "var(--muted)", fontWeight: 400, fontSize: 12.5, marginLeft: 6 }}>· Sofia distribui ~20 semanas com BNCC</small></h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginTop: 14 }}>
