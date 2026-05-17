@@ -621,6 +621,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
               description: `Atividade PCD gerada para ${a.primeiro_nome}: ${enriched.titulo}`,
               detail: `${anoEscolar} · ${disciplina}`,
             });
+            void consumirCreditos(CUSTOS.adaptacao_pcd, descricaoDoc("Adaptação inclusiva (PCD)", a.primeiro_nome));
           }
         }
       } catch (e) {
