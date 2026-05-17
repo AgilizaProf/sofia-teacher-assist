@@ -19,7 +19,6 @@ import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as EiRouteImport } from './routes/ei'
-import { Route as DocumentosRouteImport } from './routes/documentos'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AtividadeRouteImport } from './routes/atividade'
@@ -93,11 +92,6 @@ const InclusaoRoute = InclusaoRouteImport.update({
 const EiRoute = EiRouteImport.update({
   id: '/ei',
   path: '/ei',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentosRoute = DocumentosRouteImport.update({
-  id: '/documentos',
-  path: '/documentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
@@ -221,7 +215,6 @@ export interface FileRoutesByFullPath {
   '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/documentos': typeof DocumentosRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
@@ -255,7 +248,6 @@ export interface FileRoutesByTo {
   '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/documentos': typeof DocumentosRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
@@ -291,7 +283,6 @@ export interface FileRoutesById {
   '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/documentos': typeof DocumentosRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/onboarding': typeof OnboardingRoute
@@ -328,7 +319,6 @@ export interface FileRouteTypes {
     | '/atividade'
     | '/auth'
     | '/configuracoes'
-    | '/documentos'
     | '/ei'
     | '/inclusao'
     | '/onboarding'
@@ -362,7 +352,6 @@ export interface FileRouteTypes {
     | '/atividade'
     | '/auth'
     | '/configuracoes'
-    | '/documentos'
     | '/ei'
     | '/inclusao'
     | '/onboarding'
@@ -397,7 +386,6 @@ export interface FileRouteTypes {
     | '/atividade'
     | '/auth'
     | '/configuracoes'
-    | '/documentos'
     | '/ei'
     | '/inclusao'
     | '/onboarding'
@@ -433,7 +421,6 @@ export interface RootRouteChildren {
   AtividadeRoute: typeof AtividadeRoute
   AuthRoute: typeof AuthRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
-  DocumentosRoute: typeof DocumentosRoute
   EiRoute: typeof EiRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
@@ -518,13 +505,6 @@ declare module '@tanstack/react-router' {
       path: '/ei'
       fullPath: '/ei'
       preLoaderRoute: typeof EiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documentos': {
-      id: '/documentos'
-      path: '/documentos'
-      fullPath: '/documentos'
-      preLoaderRoute: typeof DocumentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracoes': {
@@ -759,7 +739,6 @@ const rootRouteChildren: RootRouteChildren = {
   AtividadeRoute: AtividadeRoute,
   AuthRoute: AuthRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
-  DocumentosRoute: DocumentosRoute,
   EiRoute: EiRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
