@@ -1001,7 +1001,12 @@ export function Inclusao() {
   const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
   const studentKey = selectedId || "_none";
   const studentRegs = regByStudent[studentKey] || [];
-  const buildBlankAnam = () => ANAMNESE_EIXOS.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
+  const selectedForAnam = students.find((s) => s.id === selectedId);
+  const isEISelected = isEducacaoInfantilSerie(selectedForAnam?.anoEscolar);
+  const buildBlankAnam = () => {
+    const base = isEISelected ? ANAMNESE_EIXOS_EI : ANAMNESE_EIXOS;
+    return base.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
+  };
   const [anamByStudent, setAnamByStudent] = usePersistentState<Record<string, ReturnType<typeof buildBlankAnam>>>("inc_anam", {});
   const anamData = anamByStudent[studentKey] || buildBlankAnam();
   // Observação geral da anamnese (texto livre por aluno) — usada pela Sofia ao montar pareceres/relatórios.
