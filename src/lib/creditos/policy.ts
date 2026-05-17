@@ -4,13 +4,16 @@
 export type PlanoAtual = "anual" | "mensal" | "free";
 
 export const CUSTOS = {
-  parecer_descritivo: 100,
-  relatorio_inclusao: 100,
-  pei_completo: 200,
-  plano_aula: 100,
-  adaptacao_pcd: 100,
-  anamnese: 100,
-  chat_sofia_bloco: 100, // a cada 100 mensagens
+  parecer_descritivo: 5,
+  relatorio_inclusao: 5,
+  pei_completo: 5,
+  plano_aula: 5,
+  adaptacao_pcd: 5,
+  anamnese: 5,
+  planejamento_semanal: 5,
+  trilha_semestral: 10,
+  chat_sofia_bloco: 1, // 1 crédito a cada 10 mensagens
+  chat_sofia_msgs_por_bloco: 10,
   exportacao: 0,
 } as const;
 
