@@ -601,6 +601,90 @@ const ANAMNESE_EIXOS: Array<{ l: string; items: Array<{ d: string; s: AnamStatus
   ]},
 ];
 
+/**
+ * Versão da Anamnese específica para Educação Infantil (0 a 5 anos).
+ * Os eixos foram redesenhados em torno dos campos de experiência da BNCC,
+ * dos cuidados da rotina e dos marcos do desenvolvimento típicos da etapa.
+ */
+const ANAMNESE_EIXOS_EI: Array<{ l: string; items: Array<{ d: string; s: AnamStatus }> }> = [
+  { l: "Ano de Referência", items: [
+    { d: "Reconhece a sala, a professora e os adultos da rotina", s: "naoObservado" },
+    { d: "Adapta-se à rotina da turma (entrada, roda, parque, saída)", s: "naoObservado" },
+  ]},
+  { l: "O eu, o outro e o nós", items: [
+    { d: "Reconhece o próprio nome quando chamado(a)", s: "naoObservado" },
+    { d: "Brinca lado a lado com colegas", s: "naoObservado" },
+    { d: "Aceita o toque afetuoso dos adultos de referência", s: "naoObservado" },
+    { d: "Participa de pequenas combinações da turma", s: "naoObservado" },
+  ]},
+  { l: "Corpo, gestos e movimentos", items: [
+    { d: "Sustenta o equilíbrio em pé e ao andar", s: "naoObservado" },
+    { d: "Sobe e desce degraus baixos com apoio", s: "naoObservado" },
+    { d: "Realiza rabiscos circulares e lineares", s: "naoObservado" },
+    { d: "Manuseia objetos pequenos com pinça funcional", s: "naoObservado" },
+  ]},
+  { l: "Traços, sons, cores e formas", items: [
+    { d: "Explora diferentes materiais (tinta, massinha, areia)", s: "naoObservado" },
+    { d: "Reage a estímulos sonoros e musicais", s: "naoObservado" },
+    { d: "Nomeia cores primárias em situações lúdicas", s: "naoObservado" },
+    { d: "Participa de brincadeiras de imitação e faz de conta", s: "naoObservado" },
+  ]},
+  { l: "Escuta, fala, pensamento e imaginação", items: [
+    { d: "Atende ao próprio nome e segue comando simples", s: "naoObservado" },
+    { d: "Usa palavras, gestos ou CAA para se comunicar", s: "naoObservado" },
+    { d: "Aponta para o que deseja em vez de chorar/gritar", s: "naoObservado" },
+    { d: "Demonstra interesse por histórias e livros de imagens", s: "naoObservado" },
+  ]},
+  { l: "Espaços, tempos, quantidades e relações", items: [
+    { d: "Reconhece pertences próprios na sala", s: "naoObservado" },
+    { d: "Encaixa peças de quebra-cabeças de 4 a 8 peças", s: "naoObservado" },
+    { d: "Organiza objetos por cor, tamanho ou forma com apoio", s: "naoObservado" },
+    { d: "Compreende noções de antes/depois na rotina visual", s: "naoObservado" },
+  ]},
+  { l: "Autonomia e cuidados de si", items: [
+    { d: "Alimenta-se sozinho(a) com colher (com mínima ajuda)", s: "naoObservado" },
+    { d: "Comunica a necessidade de ir ao banheiro (gesto/fala/CAA)", s: "naoObservado" },
+    { d: "Lava as mãos seguindo a sequência da rotina", s: "naoObservado" },
+    { d: "Calça e descalça sapatos com velcro de forma autônoma", s: "naoObservado" },
+  ]},
+  { l: "Emoção e autorregulação", items: [
+    { d: "Reconhece emoções básicas em figuras ou no espelho", s: "naoObservado" },
+    { d: "Procura adulto de referência em situações de desconforto", s: "naoObservado" },
+    { d: "Aceita estratégias de acolhimento (colo, canto calmo, música)", s: "naoObservado" },
+    { d: "Despede-se do responsável na entrada sem crise prolongada", s: "naoObservado" },
+  ]},
+  { l: "Memória e atenção", items: [
+    { d: "Permanece em atividade dirigida por pelo menos 5–10 minutos", s: "naoObservado" },
+    { d: "Imita sequências curtas de gestos ou sons", s: "naoObservado" },
+    { d: "Lembra de combinados simples ao longo do dia", s: "naoObservado" },
+  ]},
+  { l: "Dificuldades & Potencialidades", items: [
+    { d: "Dificuldade: transições entre atividades sem aviso prévio", s: "naoObservado" },
+    { d: "Potencialidade: curiosidade ativa em brincadeiras sensoriais", s: "naoObservado" },
+    { d: "Potencialidade: vínculo afetivo com adulto de referência", s: "naoObservado" },
+  ]},
+  { l: "Estratégias", items: [
+    { d: "Rotina visual fixa com pictogramas em todos os momentos", s: "naoObservado" },
+    { d: "Antecipação de transições com música ou objeto de referência", s: "naoObservado" },
+    { d: "Mediação afetiva e modelagem do adulto em brincadeiras", s: "naoObservado" },
+  ]},
+  { l: "Recursos", items: [
+    { d: "Cantinho calmo com almofadas e materiais sensoriais", s: "naoObservado" },
+    { d: "Pranchas de CAA com vocabulário da rotina", s: "naoObservado" },
+    { d: "Brinquedos adaptados (encaixe grande, livros táteis)", s: "naoObservado" },
+    { d: "Acompanhamento de AEE ou estimulação precoce", s: "naoObservado" },
+  ]},
+  { l: "Contexto Familiar", items: [
+    { d: "Família mantém rotina previsível em casa", s: "naoObservado" },
+    { d: "Comunicação diária via agenda ou aplicativo", s: "naoObservado" },
+    { d: "Família participa de atendimentos externos quando indicados", s: "naoObservado" },
+  ]},
+  { l: "Observações", items: [
+    { d: "Observações abertas da equipe pedagógica", s: "naoObservado" },
+    { d: "Observações abertas da família", s: "naoObservado" },
+  ]},
+];
+
 const ANAM_SUGESTOES: Record<string, string[]> = {
   "Ano de Referência": [
     "Há defasagem de 1 ano entre idade e ano cursado.",
@@ -674,6 +758,86 @@ const ANAM_SUGESTOES: Record<string, string[]> = {
     "Encaminhamento sugerido à equipe multidisciplinar para alinhamento.",
   ],
 };
+
+const ANAM_SUGESTOES_EI: Record<string, string[]> = {
+  "Ano de Referência": [
+    "Em processo de adaptação à rotina escolar.",
+    "Já reconhece adultos de referência e o espaço da sala.",
+    "Necessita de objeto de transição na chegada.",
+  ],
+  "O eu, o outro e o nós": [
+    "Brinca preferencialmente sozinho(a), com aproximações pontuais.",
+    "Apresenta vínculo seguro com 1 ou 2 adultos da equipe.",
+    "Aceita melhor o contato com pares quando mediado por adulto.",
+  ],
+  "Corpo, gestos e movimentos": [
+    "Cansaço motor rápido em atividades de coordenação fina.",
+    "Prefere brincadeiras corporais amplas (correr, pular, rodar).",
+    "Necessita de adaptação na pegada de lápis e tesoura.",
+  ],
+  "Traços, sons, cores e formas": [
+    "Demonstra forte interesse por música e movimento.",
+    "Hipersensibilidade a alguns sons (sinos, gritos).",
+    "Engaja-se bem com materiais sensoriais (tinta, massinha, areia).",
+  ],
+  "Escuta, fala, pensamento e imaginação": [
+    "Comunicação predominantemente por gestos e apontar.",
+    "Vocabulário expressivo restrito a 5–10 palavras funcionais.",
+    "Compreende ordens simples acompanhadas de gesto.",
+  ],
+  "Espaços, tempos, quantidades e relações": [
+    "Organiza objetos por cor com apoio do adulto.",
+    "Necessita rotina visual para compreender a sequência do dia.",
+    "Demonstra interesse por encaixes e empilhamento.",
+  ],
+  "Autonomia e cuidados de si": [
+    "Em desfralde — comunica a necessidade por gesto.",
+    "Alimenta-se sozinho(a) com pequena supervisão.",
+    "Necessita auxílio para vestir-se e calçar-se.",
+  ],
+  "Emoção e autorregulação": [
+    "Crises de choro em transições não antecipadas.",
+    "Procura cantinho calmo quando sobrecarregado(a).",
+    "Responde bem ao colo e ao acolhimento individual.",
+  ],
+  "Memória e atenção": [
+    "Lembra de cantigas e rotinas musicais com facilidade.",
+    "Atenção sustentada por períodos curtos (5–10 min).",
+    "Necessita revisão diária dos combinados.",
+  ],
+  "Dificuldades & Potencialidades": [
+    "Maior barreira: comunicação verbal expressiva.",
+    "Potencialidade marcante em [música/encaixes/movimento].",
+    "Demonstra interesse por animais/personagens específicos — usar como ponte.",
+  ],
+  "Estratégias": [
+    "Antecipar transições com música, objeto ou pictograma.",
+    "Reduzir o tempo de exposição a atividades dirigidas.",
+    "Combinar sinal não-verbal para pedir pausa.",
+  ],
+  "Recursos": [
+    "Família dispõe de prancha CAA simples em casa.",
+    "Atendimento de estimulação precoce em andamento.",
+    "Necessita de mobiliário adaptado para a faixa etária.",
+  ],
+  "Contexto Familiar": [
+    "Mudanças recentes na rotina familiar afetam o sono.",
+    "Responsável demonstra abertura para orientações da escola.",
+    "Outros profissionais (fono/TO) acompanham fora da escola.",
+  ],
+  "Observações": [
+    "Evolução percebida principalmente em [campo de experiência] neste período.",
+    "Ponto que merece reavaliação no próximo trimestre.",
+    "Encaminhamento sugerido à equipe multidisciplinar.",
+  ],
+};
+
+/** Detecta se a turma/ano informado corresponde à Educação Infantil. */
+function isEducacaoInfantilSerie(s?: string | null): boolean {
+  const t = (s || "").toLowerCase();
+  if (!t) return false;
+  return /(infantil|bercário|berçario|berc[aá]rio|maternal|pr[eé]\b|pr[eé]-escola|jardim|g[1-5]\b|creche)/.test(t);
+}
 
 export function Inclusao() {
   const user = useUser();
