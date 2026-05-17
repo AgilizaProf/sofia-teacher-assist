@@ -9,7 +9,6 @@ import { SofiaUserDataProvider } from "@/lib/sofia/SofiaUserContext";
 import { SofiaNotificationsProvider } from "@/lib/sofia/notifications";
 import { SofiaNotificationsWidget } from "@/components/sofia/SofiaNotificationsWidget";
 import { SofiaAutoReminders } from "@/lib/sofia/autoReminders";
-import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { RootErrorBoundary } from "@/components/RootErrorBoundary";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
@@ -173,9 +172,6 @@ function RootComponent() {
                   </SofiaErrorBoundary>
                   <SofiaErrorBoundary area="os lembretes da Sofia" silent>
                     <SofiaAutoReminders />
-                  </SofiaErrorBoundary>
-                  <SofiaErrorBoundary area="o balão da Sofia" silent>
-                    <SofiaSpeechBubble />
                   </SofiaErrorBoundary>
                 </>
               )}
