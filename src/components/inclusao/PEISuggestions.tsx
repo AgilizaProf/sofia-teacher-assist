@@ -216,6 +216,7 @@ export const PEI_SUGGESTIONS: Record<string, string[]> = {
 
 type Props = {
   fieldKey: keyof typeof PEI_SUGGESTIONS | string;
+  fallbackKey?: string;
   onPick: (text: string) => void;
   label?: string;
 };
@@ -225,9 +226,9 @@ type Props = {
  * Ao clicar em um chip, o texto é enviado para `onPick` (que normalmente faz append
  * no campo de texto do PEI).
  */
-export function PEISuggestions({ fieldKey, onPick, label = "Sugestões rápidas" }: Props) {
+export function PEISuggestions({ fieldKey, fallbackKey, onPick, label = "Sugestões rápidas" }: Props) {
   const [open, setOpen] = useState(false);
-  const opts = PEI_SUGGESTIONS[fieldKey] || [];
+  const opts = PEI_SUGGESTIONS[fieldKey] || (fallbackKey ? PEI_SUGGESTIONS[fallbackKey] : undefined) || [];
   if (opts.length === 0) return null;
 
   return (
