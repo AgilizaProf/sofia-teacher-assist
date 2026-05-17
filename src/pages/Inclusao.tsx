@@ -1150,6 +1150,18 @@ ${corpo}
     [anamData]
   );
 
+  // Detecta se a Anamnese preenchida usa o conjunto de eixos da Educação Infantil
+  // (independente do segmento atual do aluno — permite trocar o ano sem perder o
+  // contexto rápido / habilidades já calculados).
+  const anamUsesEI = useMemo(
+    () => anamData.some((e) =>
+      e.l === "O eu, o outro e o nós" ||
+      e.l === "Autonomia e cuidados de si" ||
+      e.l === "Emoção e autorregulação" ||
+      e.l === "Escuta, fala, pensamento e imaginação"
+    ),
+    [anamData],
+  );
   // Habilidades · evolução — recalcula automaticamente sempre que muda anamnese ou registros
   const skillsEvolucao = useMemo(() => {
     const POS = ["progresso", "avanço", "avancou", "avançou", "consegui", "conclu", "evolu", "melhor", "interagiu", "participou", "iniciou", "consolidou", "autônom", "autonom", "calmo", "regulou", "respondeu bem", "colabor"];
@@ -1174,6 +1186,15 @@ ${corpo}
       const trend: "up" | "down" | "flat" = delta > 0 ? "up" : delta < 0 ? "down" : "flat";
       return { l: label, p, c, observed, baseline, delta, trend, pos, neg, count: relevantes.length };
     };
+    if (anamUsesEI) {
+      return [
+        calc("Atenção e permanência", "Memória e atenção", ["ped", "com"]),
+        calc("Linguagem e expressão", "Escuta, fala, pensamento e imaginação", ["ped", "com"]),
+        calc("Interação com pares", "O eu, o outro e o nós", ["com", "ped"]),
+        calc("Autonomia nos cuidados de si", "Autonomia e cuidados de si", ["ped", "com"]),
+        calc("Autorregulação emocional", "Emoção e autorregulação", ["com", "sen"]),
+      ];
+    }
     return [
       calc("Atenção sustentada", "Aspectos Pedagógicos", ["ped", "com"]),
       calc("Leitura / Escrita / Cálculo", "Desempenho Acadêmico", ["ped"]),
@@ -1181,7 +1202,7 @@ ${corpo}
       calc("Autonomia", "Autonomia", ["ped", "com"]),
       calc("Autorregulação", "Emoção", ["com", "sen"]),
     ];
-  }, [anamData, regByStudent, studentKey]);
+  }, [anamData, regByStudent, studentKey, anamUsesEI]);
 
   // Planos adaptados gerados pela Sofia, persistidos por aluno
   const [plansByStudent, setPlansByStudent] = usePersistentState<Record<string, PlanoInclusao[]>>("inc_plans", {});
