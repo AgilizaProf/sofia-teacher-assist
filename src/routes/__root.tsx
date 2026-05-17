@@ -9,7 +9,6 @@ import { SofiaUserDataProvider } from "@/lib/sofia/SofiaUserContext";
 import { SofiaNotificationsProvider } from "@/lib/sofia/notifications";
 import { SofiaNotificationsWidget } from "@/components/sofia/SofiaNotificationsWidget";
 import { SofiaAutoReminders } from "@/lib/sofia/autoReminders";
-import { SofiaSpeechBubble } from "@/components/sofia/SofiaSpeechBubble";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { RootErrorBoundary } from "@/components/RootErrorBoundary";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
