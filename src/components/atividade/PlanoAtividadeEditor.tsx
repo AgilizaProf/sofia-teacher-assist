@@ -874,12 +874,49 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       [agendaDate]: [...(m4UserEvents[agendaDate] ?? []), evt],
     });
 
+    // 3) Salvar o plano no histórico (local + remoto), para que sempre que a
+    // atividade for colocada no calendário ela apareça também em "Histórico
+    // de planos" — mesma semântica do fluxo de lote.
+    const histId = `p_${Date.now()}`;
+    const registro: PlanoSalvo = {
+      id: histId,
+      titulo: plano.titulo,
+      turma,
+      disciplina,
+      ano: anoEscolar,
+      modo,
+      salvoEm: new Date().toISOString(),
+      plano: { ...plano },
+    };
+    setHistorico((h) => [registro, ...h].slice(0, 100));
+    void (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = auth.user?.id;
+        if (!uid) return;
+        const { data, error } = await supabase
+          .from("planos_aula")
+          .insert({
+            user_id: uid,
+            client_id: histId,
+            titulo: plano.titulo,
+            data: { ...registro, plano },
+          })
+          .select("id")
+          .single();
+        if (!error && data?.id) {
+          setHistorico((h) => h.map((p) => p.id === histId ? { ...p, remoteId: data.id } : p));
+        }
+      } catch { /* offline ok */ }
+    })();
+
     logActivity({
       type: "planejamento",
-      description: `Atividade agendada em ${dt.toLocaleDateString("pt-BR")}: ${plano.titulo}`,
+      description: `Atividade salva e agendada em ${dt.toLocaleDateString("pt-BR")}: ${plano.titulo}`,
+      detail: `${anoEscolar} · ${disciplina}`,
     });
     showToast(
-      `Agendada em ${dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} · vai aparecer no M4`,
+      `Salvo no histórico e agendado em ${dt.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })} · M1 + M4`,
     );
     setAgendaOpen(false);
   };
