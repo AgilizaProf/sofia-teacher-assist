@@ -59,8 +59,16 @@ export function actionOpenAgenda(label = "Abrir agenda"): SofiaNotifAction {
   return { label, to: "/", search: { open: "agenda" } };
 }
 
-/** Vai para a tela de Planejamento, opcionalmente em uma aba específica (m1..m6). */
-export function actionOpenPlanejamento(aba?: "m1" | "m2" | "m3" | "m4" | "m5" | "m6", label = "Abrir planejamento"): SofiaNotifAction {
+/**
+ * Vai para a tela de Planejamento, opcionalmente em uma aba específica.
+ * Use a numeração que o usuário enxerga na UI ("m1".."m7"). A rota
+ * normaliza para a chave interna correta — ou seja, "m3" sempre abre
+ * a aba M3 do Planejamento, "m1" sempre abre M1, etc.
+ */
+export function actionOpenPlanejamento(
+  aba?: "m1" | "m2" | "m3" | "m4" | "m5" | "m6" | "m7",
+  label = "Abrir planejamento",
+): SofiaNotifAction {
   return {
     label,
     to: "/planejamento",
