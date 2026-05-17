@@ -3156,6 +3156,13 @@ ${corpo}
                             <Printer size={14} /> Imprimir / PDF
                           </button>
                         )}
+                        {selected && (
+                          <GerarRelatorioButton
+                            defaultAlunoClientId={selected.id}
+                            forcarTipo="pcd"
+                            label="Novo editor de Relatório"
+                          />
+                        )}
                       </div>
                       {parecerAtual && (
                         <div style={{ marginTop: 14, padding: 14, background: "#fff", border: "1px solid var(--border)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
