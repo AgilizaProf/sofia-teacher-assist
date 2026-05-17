@@ -4,6 +4,8 @@ import { ArrowLeft, Sparkles, Save, Loader2, FileText, RefreshCw, Trash2 } from 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { consumirCreditos } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 
 type Student = { id: string; name: string; turma?: string; diag?: string };
 
@@ -130,6 +132,7 @@ export function PlanejamentoEi() {
       });
       setCurrentId(null);
       toast.success("Roteiro gerado pela Sofia");
+      void consumirCreditos(CUSTOS.planejamento_semanal, "Roteiro EI (Sofia)");
     } catch (e) {
       toast.error((e as Error).message || "Falha ao gerar roteiro");
     } finally {
