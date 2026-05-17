@@ -480,12 +480,29 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
     setDraft((d) => ({ ...d, [k]: v }));
   };
 
-  // Detecta se o aluno é da Educação Infantil a partir da série/turma informada.
-  const isEI = (() => {
+  // Detecta etapa escolar a partir da série/turma informada.
+  const etapa: "ei" | "fund1" | "fund2" | "em" | undefined = (() => {
     const t = `${draft.serie || ""} ${aluno?.anoEscolar || ""}`.toLowerCase();
-    return /(infantil|bercário|berçario|berc[aá]rio|maternal|pr[eé]\b|pr[eé]-escola|jardim|g[1-5]\b|creche)/.test(t);
+    if (/(infantil|bercário|berçario|berc[aá]rio|maternal|pr[eé]\b|pr[eé]-escola|jardim|g[1-5]\b|creche)/.test(t)) return "ei";
+    if (/(ensino\s*m[eé]dio|\bem\b|1[ºo°]?\s*(ano|s[eé]rie)\s*em|2[ºo°]?\s*(ano|s[eé]rie)\s*em|3[ºo°]?\s*(ano|s[eé]rie)\s*em)/.test(t)) return "em";
+    const m = t.match(/(\d{1,2})\s*[ºo°]?\s*ano/);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (n >= 1 && n <= 5) return "fund1";
+      if (n >= 6 && n <= 9) return "fund2";
+    }
+    if (/fundamental\s*i\b|anos\s*iniciais/.test(t)) return "fund1";
+    if (/fundamental\s*ii\b|anos\s*finais/.test(t)) return "fund2";
+    return undefined;
   })();
-  const eiPrefix = isEI ? "ei:" : undefined;
+  const isEI = etapa === "ei";
+  const etapaPrefix = etapa ? `${etapa}:` : undefined;
+  const etapaLabel: Record<NonNullable<typeof etapa>, string> = {
+    ei: "Ed. Infantil",
+    fund1: "Fund. I",
+    fund2: "Fund. II",
+    em: "Ens. Médio",
+  };
 
   const updMeta = (id: string, patch: Partial<MetaCurta>) => {
     setDraft((d) => ({ ...d, metasCurtoPrazo: d.metasCurtoPrazo.map((m) => m.id === id ? { ...m, ...patch } : m) }));
