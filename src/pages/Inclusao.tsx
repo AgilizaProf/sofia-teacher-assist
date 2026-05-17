@@ -18,6 +18,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
+import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
 import {
   printAnamneseDocument,
   downloadAnamneseDocx,
