@@ -1363,6 +1363,76 @@ export function Agenda() {
             </div>
           </div>
         )}
+        {m4ImportOpen && (
+          <div className="ag-overlay" onClick={() => !m4Importing && setM4ImportOpen(false)}>
+            <div className="ag-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="ag-panel-head">
+                <div style={{ minWidth: 0 }}>
+                  <div className="ag-panel-title">Atividades agendadas (M4)</div>
+                  <div className="ag-panel-sub">
+                    {m4Items.length === 0
+                      ? "Nada novo para importar — todas as atividades já estão na agenda."
+                      : `Selecione o que a Sofia deve trazer para a agenda (${m4Items.filter((i) => i.selected).length}/${m4Items.length}).`}
+                  </div>
+                </div>
+                <button className="ag-panel-close" onClick={() => !m4Importing && setM4ImportOpen(false)} aria-label="Fechar"><X size={16} /></button>
+              </div>
+              <div className="ag-panel-body">
+                {m4Items.length === 0 ? (
+                  <div className="ag-empty">
+                    Use o módulo de Atividades (M1/M2) para agendar planos no calendário M4.
+                    Quando agendar, eles aparecerão aqui para importar para a Agenda Escolar.
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="ag-btn" onClick={() => setAllM4(true)} disabled={m4Importing}>Selecionar todas</button>
+                      <button className="ag-btn" onClick={() => setAllM4(false)} disabled={m4Importing}>Limpar</button>
+                    </div>
+                    {m4Items.map((it, idx) => {
+                      const [, mm, dd] = it.date.split("-");
+                      const evType: EventType = it.evt.cat === "aval" ? "eval" : "plan";
+                      return (
+                        <label key={`${it.date}-${it.evt.id}`} className="ag-panel-event" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={it.selected}
+                            onChange={() => toggleM4Item(idx)}
+                            disabled={m4Importing}
+                            style={{ marginTop: 4 }}
+                          />
+                          <span className="ev-dot" style={{ background: TYPE_COLOR[evType] }} />
+                          <div className="ev-body">
+                            <div className="ev-title">{it.evt.title}</div>
+                            <div className="ev-meta">
+                              <span>{dd}/{mm}</span>
+                              <span className="mdot" />
+                              <span>{TYPE_LABEL[evType]}</span>
+                              {it.evt.turma && (<><span className="mdot" /><span>{it.evt.turma}</span></>)}
+                              {it.evt.disciplina && (<><span className="mdot" /><span>{it.evt.disciplina}</span></>)}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+              <div className="ag-panel-foot">
+                <button className="ag-btn" onClick={() => setM4ImportOpen(false)} disabled={m4Importing}>Fechar</button>
+                {m4Items.length > 0 && (
+                  <button
+                    className="ag-btn primary"
+                    onClick={confirmM4Import}
+                    disabled={m4Importing || m4Items.every((i) => !i.selected)}
+                  >
+                    <Plus size={14} /> {m4Importing ? "Trazendo…" : "Trazer para a agenda"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
