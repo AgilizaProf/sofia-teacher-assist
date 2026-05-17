@@ -26,6 +26,11 @@ export type Habilidade = { codigo: string; descricao: string };
 export type Adaptacao = {
   categoria: "TEA" | "TDAH" | "DI" | "Deficiência física" | "Outra";
   texto: string;
+  /**
+   * Quando false, a adaptação NÃO entra no documento impresso/exportado
+   * nem na versão salva enviada para outras telas. Default: true.
+   */
+  incluido?: boolean;
 };
 export type Sugestao = { titulo: string; descricao: string };
 export type OpcaoAula = { titulo: string; resumo: string; abordagem: string };
