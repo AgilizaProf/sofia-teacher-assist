@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { buildAnoReferenciaPromptBlock, isAnoReferenciaDivergente } from "@/lib/inclusao/anoReferencia";
 import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
+import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 
 export type PlanoInclusao = {
   id: string;
@@ -352,7 +354,11 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSav
       },
     });
     if (error) throw error;
-    return (data as { plano?: PlanoCore })?.plano ?? null;
+    const plano = (data as { plano?: PlanoCore })?.plano ?? null;
+    if (plano) {
+      void consumirCreditos(CUSTOS.adaptacao_pcd, descricaoDoc("Adaptação inclusiva (PCD)", aluno?.name));
+    }
+    return plano;
   }
 
   async function gerar() {
