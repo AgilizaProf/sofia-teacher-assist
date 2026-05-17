@@ -56,7 +56,9 @@ function leisAplicaveis(cid: string): string[] {
 function row(label: string, value: string): string {
   const v = (value ?? "").trim();
   if (!v) return ""; // não renderiza itens não preenchidos
-  return `<div class="ident-row"><b>${escHtml(label)}:</b> ${escHtml(v)}</div>`;
+  let val = v.replace(/\s*\(\s*([^()]*?)\s*\)/g, " — $1").trim();
+  if (!/[.!?…:;]$/.test(val)) val += ".";
+  return `<div class="ident-row"><b>${escHtml(label)}:</b> ${escHtml(val)}</div>`;
 }
 
 function buildIdentificacao(pei: Partial<PEIData>, alunoName: string, professorNome: string): string {
@@ -125,7 +127,28 @@ function buildCorpo(pei: Partial<PEIData>): string {
     // Pula a IDENTIFICAÇÃO técnica — ela já aparece no bloco de identificação acima.
     if (/^IDENTIFICAÇÃO/i.test(rawTitle)) continue;
     const title = RENAME[rawTitle.toUpperCase()] || rawTitle.toUpperCase();
-    const linhas = body.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    // Substitui parênteses "(...)" por travessão " — ..." e garante
+    // ponto final no fim de cada frase.
+    const limpar = (txt: string): string => {
+      let t = txt
+        // "abc (xyz)" → "abc — xyz"
+        .replace(/\s*\(\s*([^()]*?)\s*\)/g, " — $1")
+        // remove travessão final solto
+        .replace(/\s*—\s*$/, "")
+        .trim();
+      if (!t) return t;
+      // adiciona ponto final se a linha não terminar com pontuação
+      if (!/[.!?…:;]$/.test(t)) t += ".";
+      return t;
+    };
+    const linhas = body
+      .split(/\n+/)
+      .map((l) => l.replace(/\s+$/, ""))
+      .map((l) => {
+        const m = /^(\s*)(.*)$/.exec(l)!;
+        return m[1] + limpar(m[2]);
+      })
+      .filter((l) => l.trim().length > 0);
     if (linhas.length === 0) continue; // pula seções sem conteúdo
     // Cada linha vem como "Rótulo: resposta" (ou listas indentadas "  1. ...").
     // Renderiza o rótulo em negrito e a resposta sem negrito.
