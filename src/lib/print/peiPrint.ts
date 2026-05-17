@@ -125,10 +125,9 @@ function buildCorpo(pei: Partial<PEIData>): string {
     // Pula a IDENTIFICAÇÃO técnica — ela já aparece no bloco de identificação acima.
     if (/^IDENTIFICAÇÃO/i.test(rawTitle)) continue;
     const title = RENAME[rawTitle.toUpperCase()] || rawTitle.toUpperCase();
-    const html = body
-      .split(/\n+/)
-      .map((line) => `<p>${escHtml(line)}</p>`)
-      .join("");
+    const linhas = body.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    if (linhas.length === 0) continue; // pula seções sem conteúdo
+    const html = linhas.map((line) => `<p>${escHtml(line)}</p>`).join("");
     partes.push(`<section class="doc-secao"><h2>${escHtml(title)}</h2>${html}</section>`);
   }
 
