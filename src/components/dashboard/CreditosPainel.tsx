@@ -277,6 +277,27 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
           {onSeeAll && (
             <button className="cp-hist-more" onClick={onSeeAll}>Ver histórico completo →</button>
           )}
+
+          <div className="cp-tabela" aria-label="Tabela de créditos por ação">
+            <button
+              className="cp-tabela-h"
+              onClick={() => setShowTabela((v) => !v)}
+              aria-expanded={showTabela}
+            >
+              <span>📋 Tabela de consumo por ação</span>
+              <span>{showTabela ? "▾" : "▸"}</span>
+            </button>
+            {showTabela && (
+              <ul>
+                {TABELA_CREDITOS.map((t) => (
+                  <li key={t.nome}>
+                    <span><span aria-hidden>{t.icone}</span> {t.nome}</span>
+                    <span className={`preco${t.free ? " free" : ""}`}>{t.custo}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
 
@@ -287,7 +308,8 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             <p>
               Que tal um reforço? Por <strong>R$ 9,90</strong> você adiciona
               <strong> +500 créditos</strong> imediatamente à sua conta — o suficiente
-              para 5 pareceres, 5 planos de aula ou 2 PEIs completos + 1 anamnese.
+              para até <strong>100 documentos</strong> (parecer, plano de aula, PEI, anamnese
+              ou adaptação PCD a 5 créditos cada) ou <strong>50 trilhas semestrais</strong>.
             </p>
             <div className="cp-modal-actions">
               <button className="ghost" onClick={() => setShowModal(false)}>Agora não</button>
