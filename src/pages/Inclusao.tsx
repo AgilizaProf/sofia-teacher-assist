@@ -2639,7 +2639,7 @@ ${corpo}
                         const p = eixoPct(e.items);
                         const tone = eixoTone(p, e.items);
                         const open = !!anamOpen[e.l];
-                        const sugs = ANAM_SUGESTOES[e.l] || [];
+                        const sugs = (isEISelected ? ANAM_SUGESTOES_EI[e.l] : ANAM_SUGESTOES[e.l]) || ANAM_SUGESTOES[e.l] || [];
                         const sugVisible = sugOpenFor === e.l;
                         return (
                           <div className="anam-item" key={e.l}>
