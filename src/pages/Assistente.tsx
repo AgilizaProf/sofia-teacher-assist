@@ -345,7 +345,6 @@ export function Assistente() {
   const periodoLabel = ctx.temporal.periodo === "manha" ? "Bom dia" : ctx.temporal.periodo === "tarde" ? "Boa tarde" : "Boa noite";
   const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long", timeZone: "America/Sao_Paulo" }).toUpperCase();
   const proxima = ctx.dataState.proxima_aula;
-  const pcdComAula = isPro && proxima && proxima.minutos_ate <= 180 && ctx.entity.todos_alunos_pcd[0] ? ctx.entity.todos_alunos_pcd[0] : null;
   const [collapsed, setCollapsed] = useState(false);
   const [mobileHistOpen, setMobileHistOpen] = useState(false);
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
