@@ -18,6 +18,7 @@ import {
   editorialFieldsGrid,
   editorialLongField,
 } from "@/lib/print/editorialPrint";
+import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
