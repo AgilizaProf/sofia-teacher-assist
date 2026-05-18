@@ -960,9 +960,13 @@ export function Dashboard() {
                   {heroDynamic.ctaLabel}
                   <Svg strokeWidth={2.5} c={<path d="M5 12h14M13 5l7 7-7 7"/>} />
                 </button>
-                <button className="hero-cta-ghost">
+                <button
+                  className="hero-cta-ghost"
+                  onClick={() => { setTutorialStep(0); setTutorialOpen(true); }}
+                  aria-label="Abrir tutorial"
+                >
                   <Svg strokeWidth={2.5} c={<polygon points="5 3 19 12 5 21 5 3"/>} />
-                  Tutorial · 90s
+                  Tutorial
                 </button>
               </div>
             </div>
