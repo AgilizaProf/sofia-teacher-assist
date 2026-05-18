@@ -19,6 +19,7 @@ import {
 
 const css = `
 .cp-card{background:#fff;border:1px solid var(--border, #E4E8F0);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow-sm, 0 1px 2px rgba(27,42,78,.04));display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:14px;}
+.cp-card.collapsed{grid-template-columns:1fr;}
 .cp-head{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text-soft, #5B6B82);text-transform:uppercase;letter-spacing:.06em;}
 .cp-head .dot{width:6px;height:6px;border-radius:50%;background:var(--accent, #FF7A45);}
 .cp-saldo{font-family:'Fraunces',serif;font-weight:700;font-size:24px;line-height:1.05;color:var(--primary,#1B2A4E);letter-spacing:-0.01em;margin-top:6px;}
