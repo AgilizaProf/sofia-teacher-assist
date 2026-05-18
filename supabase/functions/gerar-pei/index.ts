@@ -33,7 +33,7 @@ serve(async (req) => {
       .map((r) => `- [${r.when || "—"}] (${r.cat || "ped"}) ${r.body || ""}`).join("\n");
     const adapt = (adaptacoes as string[]).slice(0, 30).map((a) => `- ${a}`).join("\n");
 
-    const sys = `Você é a Sofia, assistente pedagógica do AgilizaProf. Gere um PEI (Plano Educacional Individualizado) completo, em português brasileiro, com linguagem técnica pedagógica. Use APENAS os dados fornecidos. Nunca invente fatos, datas, diagnósticos ou objetivos. Quando faltar informação, diga explicitamente "sem dados suficientes". Devolva JSON estrito.`;
+    const sys = `Você é a Sofia, assistente pedagógica do AgilizaProf. Gere um PEI (Plano Educacional Individualizado) completo, em português brasileiro, com linguagem técnica pedagógica. Use APENAS os dados fornecidos. Nunca invente fatos, datas, diagnósticos ou objetivos. Quando faltar informação, diga explicitamente "sem dados suficientes". Devolva JSON estrito.\n\nREGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "diário", "anotações", "anamnese", "laudo" ou "notas do(a) professor(a)". Escreva sempre como conhecimento direto e consolidado sobre o(a) aluno(a). Evite expressões como "segundo as observações", "de acordo com os registros", "conforme observado", "com base na anamnese" ou "consta no laudo" — descreva os fatos diretamente, sem citar a origem.`;
 
     const user = `ALUNO: ${aluno}
 ANO ESCOLAR: ${ano_escolar || "não informado"}
