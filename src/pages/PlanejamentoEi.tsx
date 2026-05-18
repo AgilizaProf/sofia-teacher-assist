@@ -165,6 +165,7 @@ export function PlanejamentoEi() {
     if (error) { toast.error("Falha ao salvar: " + error.message); return; }
     if (data?.id) setCurrentId(data.id);
     toast.success("Roteiro salvo");
+    void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent(currentId ? "roteiro_ei_atualizado" : "roteiro_ei_gerado", { turma, faixa_etaria: faixa, tema, tipo_experiencia: tipo, duracao }));
     loadList();
   };
 
