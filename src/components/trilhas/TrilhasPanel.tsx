@@ -514,6 +514,7 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
       const { error } = await supabase.from("planos_aula").insert([payload]);
       if (error) throw error;
       setSalvos((x) => ({ ...x, [i]: "ok" }));
+      void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("plano_aula_salvo", { origem: "trilha", semana: semana.semana, disciplina: trilha.disciplina, ano: trilha.ano_escolar }));
     } catch (e) {
       setSalvos((x) => ({ ...x, [i]: (e as Error).message || "Erro" }));
     }
