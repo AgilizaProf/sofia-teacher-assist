@@ -75,7 +75,10 @@ const css = `
 .cp-modal-actions{display:flex;gap:8px;justify-content:flex-end;}
 .cp-modal-actions button{padding:10px 16px;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;border:none;}
 .cp-modal-actions .ghost{background:#F4F6FB;color:var(--text,#1B2A4E);}
-.cp-modal-actions .primary{background:var(--accent,#FF7A45);color:#fff;}
+.cp-modal-actions .primary{background:#FF7A45;color:#fff;}
+.cp-head{position:relative;}
+.cp-toggle{margin-left:auto;background:transparent;border:none;color:var(--text-soft,#5B6B82);font-size:14px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1;}
+.cp-toggle:hover{background:#F4F6FB;}
 .cp-tabela{margin-top:10px;border:1px solid var(--border,#E4E8F0);border-radius:10px;overflow:hidden;background:#fff;}
 .cp-tabela-h{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#F8FAFF;font-size:11px;font-weight:700;color:var(--text-soft,#5B6B82);text-transform:uppercase;letter-spacing:.06em;cursor:pointer;border:none;width:100%;}
 .cp-tabela-h:hover{background:#EEF1F8;}
