@@ -209,6 +209,7 @@ export function TrilhasPanel() {
       setSelected(trilhaRow!.id);
       setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", interdisciplinar: true, semestre: "1º semestre", contexto: "" });
       void consumirCreditos(CUSTOS.trilha_semestral, `Trilha semestral · ${tema.titulo || form.semestre}`);
+      void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("trilha_gerada", { turma: form.turma, ano: form.ano, semestre: form.semestre, tema: tema.titulo ?? null, semanas: semanasArr.length }));
     } catch (e) {
       setError((e as Error).message || "Não consegui gerar a trilha agora. Tente em instantes.");
     } finally {
