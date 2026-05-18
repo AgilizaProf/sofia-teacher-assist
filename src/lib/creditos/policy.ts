@@ -77,13 +77,32 @@ export const ECONOMIA_ANUAL = PRECO_MENSAL * 12 - PRECO_ANUAL; // R$ 171,80
 export const CREDITOS_ANUAIS_TOTAL = 19500; // 18.000 + 3x500
 
 // Próxima data de renovação do plano mensal:
-// usamos o início do próximo mês civil (alinhado com o reset feito no banco).
-export function proximaRenovacaoMensal(now: Date = new Date()): Date {
+// 30 dias a partir da última data de renovação (creditado pelo Mercado Pago).
+// Se não houver data_renovacao registrada, cai no fallback de início do próximo mês civil.
+export function proximaRenovacaoMensal(
+  dataRenovacao?: string | Date | null,
+  now: Date = new Date(),
+): Date {
+  if (dataRenovacao) {
+    const base = typeof dataRenovacao === "string" ? new Date(dataRenovacao) : dataRenovacao;
+    if (!isNaN(base.getTime())) {
+      let next = new Date(base.getTime());
+      next.setDate(next.getDate() + 30);
+      // Se já passou, avança em ciclos de 30 dias até cair no futuro.
+      while (next.getTime() <= now.getTime()) {
+        next.setDate(next.getDate() + 30);
+      }
+      return next;
+    }
+  }
   return new Date(now.getFullYear(), now.getMonth() + 1, 1);
 }
 
-export function diasAteRenovacaoMensal(now: Date = new Date()): number {
-  const next = proximaRenovacaoMensal(now);
+export function diasAteRenovacaoMensal(
+  dataRenovacao?: string | Date | null,
+  now: Date = new Date(),
+): number {
+  const next = proximaRenovacaoMensal(dataRenovacao, now);
   const ms = next.getTime() - now.getTime();
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
