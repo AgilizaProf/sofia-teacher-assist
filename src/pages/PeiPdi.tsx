@@ -269,6 +269,7 @@ export function PeiPdi() {
     if (error) { toast.error("Falha ao salvar: " + error.message); return; }
     if (data?.id) setCurrentId(data.id);
     toast.success("PEI salvo");
+    void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent(currentId ? "pei_atualizado" : "pei_criado", { aluno_nome: alunoNome, bimestre }));
     loadVersions();
   };
 
