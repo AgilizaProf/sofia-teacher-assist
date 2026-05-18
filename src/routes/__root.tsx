@@ -142,8 +142,8 @@ function RootComponent() {
   useEffect(() => { trackPageVisit(loc.pathname); }, [loc.pathname]);
   useEffect(() => {
     let prevUserId: string | null = null;
-    void supabase.auth.getUser().then(({ data }) => { prevUserId = data.user?.id ?? null; });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    void supabase.auth.getUser().then((res) => { prevUserId = res.data.user?.id ?? null; });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       const uid = session?.user?.id ?? null;
       if (event === "SIGNED_IN" && uid && uid !== prevUserId) {
         const meta = session?.user?.user_metadata ?? {};
