@@ -101,9 +101,9 @@ export function AppHeader({ breadcrumb, actions, secondaryStatus, hideActiveChip
             const planoLabel =
               u.plano === "pro"
                 ? u.ciclo === "anual"
-                  ? "Plano anual"
+                  ? "ANUAL"
                   : "MENSAL"
-                : "Plano free";
+                : "FREE";
             return (
               <div className="ah-user" aria-label={`Usuária ${u.nome}, ${planoLabel}`}>
                 <div className="av">{initialsFromName(u.nome)}</div>
