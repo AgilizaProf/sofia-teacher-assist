@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCreditos, useHistoricoCreditos, type MovimentacaoCredito } from "@/lib/creditos/useCreditos";
+import { trackEvent } from "@/lib/admin/track";
 import {
   CREDITOS_ANUAIS_TOTAL,
   ECONOMIA_ANUAL,
@@ -266,7 +267,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
                   💡 No plano anual você teria <strong>{CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos</strong> em janeiro, junho e novembro.
                   Economize <strong>R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
                     </span>
-                    <button className="cp-upgrade-btn" onClick={() => setShowUpgrade(true)}>
+                    <button className="cp-upgrade-btn" onClick={() => { void trackEvent("upgrade_click", { origin: "painel_oferta", plano_atual: "mensal" }); setShowUpgrade(true); }}>
                       Ver oferta
                     </button>
                   </div>
@@ -276,7 +277,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
                     <div className="cp-compare-row"><span>Mensal</span><strong>1.500/mês</strong></div>
                 <div className="cp-compare-row"><span>Anual</span><strong>1.625/mês</strong></div>
                     <div className="cp-compare-eco">Economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</div>
-                    <button className="cp-compare-cta" onClick={() => setShowUpgrade(true)}>
+                    <button className="cp-compare-cta" onClick={() => { void trackEvent("upgrade_click", { origin: "painel_anual", plano_atual: "mensal" }); setShowUpgrade(true); }}>
                       Mudar para anual →
                     </button>
                   </div>
@@ -289,7 +290,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
                     🔒 Plano gratuito: <strong>{FREE_CREDITOS_SEMANAIS} créditos/semana</strong> (renovam toda sexta às 14h, não acumulam).
                     Faça upgrade para ter 18.000 créditos anuais + bônus em janeiro, junho e novembro.
                   </span>
-                  <a className="cp-upgrade-btn" href={MP_ANUAL_URL} target="_blank" rel="noopener noreferrer">
+                  <a className="cp-upgrade-btn" href={MP_ANUAL_URL} target="_blank" rel="noopener noreferrer" onClick={() => void trackEvent("upgrade_click", { origin: "painel_free", plano_atual: "free", destino: "mp_anual" })}>
                     Ver oferta
                   </a>
                 </div>

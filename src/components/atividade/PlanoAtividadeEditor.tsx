@@ -619,6 +619,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                   titulo: tituloComAluno,
                   data: { ...registro, plano: registro.plano },
                 });
+                void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("atividade_pcd_gerada", { aluno: a.primeiro_nome, ano: anoEscolar, disciplina, titulo: enriched.titulo }));
               }
             } catch { /* offline ok */ }
 
@@ -982,6 +983,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             titulo: p.titulo,
             data: { ...registro, plano: p },
           });
+          void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("plano_aula_gerado", { titulo: p.titulo, turma, disciplina, ano: anoEscolar, modo }));
         }
       } catch { /* offline */ }
       okSave++;
