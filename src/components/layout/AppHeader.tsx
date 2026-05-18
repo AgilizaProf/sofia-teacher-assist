@@ -89,7 +89,7 @@ export function AppHeader({ breadcrumb, actions, secondaryStatus, hideActiveChip
         </div>
         <div className="ah-right">
           {actions}
-          {isPro && (
+          {isPro && u.ciclo !== "mensal" && (
             <div className="ah-credits" title="Créditos do mês">
               <div>
                 {u.creditos_usados.toLocaleString("pt-BR")}<span style={{ color: "#6B7691", fontWeight: 500 }}>/{u.creditos_total.toLocaleString("pt-BR")}</span>
@@ -102,7 +102,7 @@ export function AppHeader({ breadcrumb, actions, secondaryStatus, hideActiveChip
               u.plano === "pro"
                 ? u.ciclo === "anual"
                   ? "Plano anual"
-                  : "Plano mensal"
+                  : "MENSAL"
                 : "Plano free";
             return (
               <div className="ah-user" aria-label={`Usuária ${u.nome}, ${planoLabel}`}>
