@@ -139,6 +139,31 @@ function RootComponent() {
   const loc = useLocation();
   useEffect(() => { trackPageVisit(loc.pathname); }, [loc.pathname]);
   useEffect(() => {
+    let prevUserId: string | null = null;
+    void supabase.auth.getUser().then(({ data }) => { prevUserId = data.user?.id ?? null; });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const uid = session?.user?.id ?? null;
+      if (event === "SIGNED_IN" && uid && uid !== prevUserId) {
+        const meta = session?.user?.user_metadata ?? {};
+        const created = session?.user?.created_at ? new Date(session.user.created_at).getTime() : 0;
+        const isNew = created && Date.now() - created < 1000 * 60 * 5;
+        void import("@/lib/admin/track").then(({ trackEvent }) =>
+          trackEvent(isNew ? "auth_signup" : "auth_login", {
+            provider: session?.user?.app_metadata?.provider ?? "email",
+            email: session?.user?.email ?? null,
+            display_name: meta.display_name ?? meta.name ?? null,
+          }),
+        );
+      } else if (event === "SIGNED_OUT" && prevUserId) {
+        void import("@/lib/admin/track").then(({ trackEvent }) =>
+          trackEvent("auth_logout", { user_id: prevUserId }),
+        );
+      }
+      prevUserId = uid;
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+  useEffect(() => {
     if (typeof window !== "undefined") window.scrollTo(0, 0);
   }, [loc.pathname]);
 
