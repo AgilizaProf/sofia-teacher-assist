@@ -17,6 +17,8 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
 import { installPlatformTelemetry, trackPageVisit } from "@/lib/admin/track";
+import { supabase } from "@/integrations/supabase/client";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { syncOnboardingFlagIfPending } from "@/lib/onboarding";
 import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
 import { useLocation } from "@tanstack/react-router";
