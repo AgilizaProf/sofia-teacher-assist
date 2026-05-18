@@ -1102,6 +1102,71 @@ export function Assistente() {
           </div>
         </div>
       )}
+      {tutorialOpen && (() => {
+        const steps = [
+          { title: "Bem-vindo(a) ao Assistente IA", body: "Aqui você conversa com a Sofia, sua assistente pedagógica. Ela usa o contexto das suas turmas e alunos para gerar pareceres, planos, adaptações e relatórios em minutos." },
+          { title: "Sugestões e tarefas rápidas", body: "Logo abaixo da saudação você encontra cards de tarefas (pareceres, planos, inclusão, avaliação). Clique para iniciar uma conversa já direcionada." },
+          { title: "Contexto ativo", body: "Use o painel de contexto (acima do chat) para informar turma, bimestre, foco, estilo, recursos e o que evitar. Quanto mais contexto, mais personalizadas ficam as respostas." },
+          { title: "Histórico de conversas", body: "Na lateral (ou no botão 'Histórico' no mobile) ficam todas as conversas anteriores, agrupadas por hoje, semana e mais antigas. Clique em qualquer uma para retomar." },
+          { title: "Nova conversa", body: "Use o botão '+' para começar uma conversa do zero. O contexto ativo é mantido — apenas o histórico do chat é zerado." },
+          { title: "Como pedir bem", body: "Seja específico(a): cite a turma, o aluno (quando aplicável), o objetivo e o formato desejado (ex.: 'parecer bimestral em tópicos', 'plano de aula 50 minutos')." },
+        ];
+        const total = steps.length;
+        const idx = Math.min(tutorialStep, total - 1);
+        const s = steps[idx];
+        const close = () => setTutorialOpen(false);
+        return (
+          <div
+            onClick={close}
+            style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ background: "#fff", color: "#0B1220", borderRadius: 16, maxWidth: 520, width: "100%", padding: 24, boxShadow: "0 20px 60px rgba(0,0,0,.25)" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.6, color: "#7A8194" }}>
+                  TUTORIAL · {idx + 1}/{total}
+                </span>
+                <button onClick={close} aria-label="Fechar tutorial" style={{ background: "transparent", border: 0, cursor: "pointer", color: "inherit" }}>
+                  <X size={18} />
+                </button>
+              </div>
+              <h3 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 700 }}>{s.title}</h3>
+              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#3B4256" }}>{s.body}</p>
+              <div style={{ display: "flex", gap: 6, marginTop: 18, marginBottom: 18 }}>
+                {steps.map((_, i) => (
+                  <span key={i} style={{ height: 4, flex: 1, borderRadius: 2, background: i <= idx ? "#1B2A4E" : "rgba(148,163,184,.3)" }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <button
+                  onClick={() => setTutorialStep((n: number) => Math.max(0, n - 1))}
+                  disabled={idx === 0}
+                  style={{ padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(148,163,184,.4)", background: "transparent", cursor: idx === 0 ? "not-allowed" : "pointer", opacity: idx === 0 ? 0.5 : 1, color: "inherit" }}
+                >
+                  Voltar
+                </button>
+                {idx < total - 1 ? (
+                  <button
+                    onClick={() => setTutorialStep((n: number) => Math.min(total - 1, n + 1))}
+                    style={{ padding: "8px 14px", borderRadius: 10, border: 0, background: "#1B2A4E", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+                  >
+                    Próximo
+                  </button>
+                ) : (
+                  <button
+                    onClick={close}
+                    style={{ padding: "8px 14px", borderRadius: 10, border: 0, background: "#1B2A4E", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+                  >
+                    Entendi
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
