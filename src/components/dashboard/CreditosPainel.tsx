@@ -132,7 +132,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
 
   const pct = c.totais > 0 ? Math.round((c.disponiveis / c.totais) * 100) : 0;
   const cor = corDaBarra(pct);
-  const msg = mensagemContextual(pct);
+  const msg = mensagemContextual(pct, c.plano);
 
   const proxBonus = useMemo(() => {
     if (c.plano !== "anual") return null;
