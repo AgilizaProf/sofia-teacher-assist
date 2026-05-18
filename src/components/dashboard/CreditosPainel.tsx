@@ -209,6 +209,14 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             <span className="dot" /> ⚡ Seus créditos
             {c.plano === "mensal" && <span style={{ marginLeft: 6, fontWeight: 600, color: "#5B6B82", textTransform: "none", letterSpacing: 0 }}>— Mensal</span>}
             {c.plano === "anual" && <span style={{ marginLeft: 6, fontWeight: 600, color: "#5B6B82", textTransform: "none", letterSpacing: 0 }}>— Anual</span>}
+            <button
+              className="cp-toggle"
+              aria-label={collapsed ? "Expandir painel de créditos" : "Recolher painel de créditos"}
+              aria-expanded={!collapsed}
+              onClick={() => setCollapsed((v) => !v)}
+            >
+              {collapsed ? "▸" : "▾"}
+            </button>
           </div>
           <div className="cp-saldo">
             {c.loading ? "…" : c.disponiveis.toLocaleString("pt-BR")}
@@ -225,104 +233,111 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             <span>{pct}% restantes</span>
             <span>{100 - pct}% usados</span>
           </div>
-          <div className="cp-msg">{msg}</div>
 
-          {proxBonus && (
-            <div className="cp-bonus">
-              🎁 Próximo bônus: +500 em {proxBonus.mes}
-            </div>
-          )}
-
-          {c.plano === "mensal" && (
-            <div className="cp-renew">
-              🔄 Renovam em {diasRenov} dia{diasRenov === 1 ? "" : "s"}
-            </div>
-          )}
-
-          {c.plano === "free" && (
-            <div className="cp-renew">
-              🔄 Renovam {diasRenovSemana <= 1
-                ? `em ${horasRenovSemana}h`
-                : `em ${diasRenovSemana} dias`} (sexta às 14h)
-            </div>
-          )}
-
-          {c.plano === "mensal" && !c.loading && (
+          {!collapsed && (
             <>
-              <div className="cp-upgrade-mod">
-                <span className="cp-upgrade-text">
-                  💡 No plano anual você teria <strong>{CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos</strong> + bônus em janeiro, junho e novembro.
-                  Economize <strong>R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
-                </span>
-                <button className="cp-upgrade-btn" onClick={() => setShowUpgrade(true)}>
-                  Ver oferta
-                </button>
-              </div>
+              <div className="cp-msg">{msg}</div>
 
-              <div className="cp-compare">
-                <h5>📊 Plano Mensal vs Anual</h5>
-                <div className="cp-compare-row"><span>Mensal</span><strong>1.500/mês</strong></div>
-                <div className="cp-compare-row"><span>Anual</span><strong>1.625/mês + bônus</strong></div>
-                <div className="cp-compare-eco">Economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</div>
-                <button className="cp-compare-cta" onClick={() => setShowUpgrade(true)}>
-                  Mudar para anual →
-                </button>
-              </div>
+              {proxBonus && (
+                <div className="cp-bonus">
+                  🎁 Próximo bônus: +500 em {proxBonus.mes}
+                </div>
+              )}
+
+              {c.plano === "mensal" && (
+                <div className="cp-renew">
+                  🔄 Renovam em {diasRenov} dia{diasRenov === 1 ? "" : "s"}
+                </div>
+              )}
+
+              {c.plano === "free" && (
+                <div className="cp-renew">
+                  🔄 Renovam {diasRenovSemana <= 1
+                    ? `em ${horasRenovSemana}h`
+                    : `em ${diasRenovSemana} dias`} (sexta às 14h)
+                </div>
+              )}
+
+              {c.plano === "mensal" && !c.loading && (
+                <>
+                  <div className="cp-upgrade-mod">
+                    <span className="cp-upgrade-text">
+                      💡 No plano anual você teria <strong>{CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos</strong> + bônus em janeiro, junho e novembro.
+                      Economize <strong>R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
+                    </span>
+                    <button className="cp-upgrade-btn" onClick={() => setShowUpgrade(true)}>
+                      Ver oferta
+                    </button>
+                  </div>
+
+                  <div className="cp-compare">
+                    <h5>📊 Plano Mensal vs Anual</h5>
+                    <div className="cp-compare-row"><span>Mensal</span><strong>1.500/mês</strong></div>
+                    <div className="cp-compare-row"><span>Anual</span><strong>1.625/mês + bônus</strong></div>
+                    <div className="cp-compare-eco">Economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</div>
+                    <button className="cp-compare-cta" onClick={() => setShowUpgrade(true)}>
+                      Mudar para anual →
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {c.plano === "free" && !c.loading && (
+                <div className="cp-upgrade">
+                  <span className="cp-upgrade-text">
+                    🔒 Plano gratuito: <strong>{FREE_CREDITOS_SEMANAIS} créditos/semana</strong> (renovam toda sexta às 14h, não acumulam).
+                    Faça upgrade para ter 18.000 créditos anuais + bônus em janeiro, junho e novembro.
+                  </span>
+                  <a className="cp-upgrade-btn" href={MP_ANUAL_URL} target="_blank" rel="noopener noreferrer">
+                    Ver oferta
+                  </a>
+                </div>
+              )}
             </>
           )}
-
-          {c.plano === "free" && !c.loading && (
-            <div className="cp-upgrade">
-              <span className="cp-upgrade-text">
-                🔒 Plano gratuito: <strong>{FREE_CREDITOS_SEMANAIS} créditos/semana</strong> (renovam toda sexta às 14h, não acumulam).
-                Faça upgrade para ter 18.000 créditos anuais + bônus em janeiro, junho e novembro.
-              </span>
-              <a className="cp-upgrade-btn" href={MP_ANUAL_URL} target="_blank" rel="noopener noreferrer">
-                Ver oferta
-              </a>
-            </div>
-          )}
         </div>
 
-        <div className="cp-hist">
-          <h4>📋 {c.plano === "mensal" ? "Este mês" : "Últimas movimentações"}</h4>
-          {items.length === 0 ? (
-            <p className="cp-hist-empty">Sem movimentações ainda. Use a Sofia para começar!</p>
-          ) : (
-            <ul className="cp-hist-list">
-              {items.map((m) => (<HistItem key={m.id} m={m} />))}
-            </ul>
-          )}
-          {c.plano === "mensal" && c.utilizados > 0 && (
-            <div style={{ marginTop: 8, fontSize: 11, color: "#5B6B82" }}>
-              Total usado: <strong style={{ color: "#1B2A4E" }}>{c.utilizados.toLocaleString("pt-BR")} créditos</strong>
-            </div>
-          )}
-          {onSeeAll && (
-            <button className="cp-hist-more" onClick={onSeeAll}>Ver histórico completo →</button>
-          )}
-
-          <div className="cp-tabela" aria-label="Tabela de créditos por ação">
-            <button
-              className="cp-tabela-h"
-              onClick={() => setShowTabela((v) => !v)}
-              aria-expanded={showTabela}
-            >
-              <span>📋 Tabela de consumo por ação</span>
-              <span>{showTabela ? "▾" : "▸"}</span>
-            </button>
-            {showTabela && (
-              <ul>
-                {TABELA_CREDITOS.map((t) => (
-                  <li key={t.nome}>
-                    <span><span aria-hidden>{t.icone}</span> {t.nome}</span>
-                    <span className={`preco${t.free ? " free" : ""}`}>{t.custo}</span>
-                  </li>
-                ))}
+        {!collapsed && (
+          <div className="cp-hist">
+            <h4>📋 {c.plano === "mensal" ? "Este mês" : "Últimas movimentações"}</h4>
+            {items.length === 0 ? (
+              <p className="cp-hist-empty">Sem movimentações ainda. Use a Sofia para começar!</p>
+            ) : (
+              <ul className="cp-hist-list">
+                {items.map((m) => (<HistItem key={m.id} m={m} />))}
               </ul>
             )}
+            {c.plano === "mensal" && c.utilizados > 0 && (
+              <div style={{ marginTop: 8, fontSize: 11, color: "#5B6B82" }}>
+                Total usado: <strong style={{ color: "#1B2A4E" }}>{c.utilizados.toLocaleString("pt-BR")} créditos</strong>
+              </div>
+            )}
+            {onSeeAll && (
+              <button className="cp-hist-more" onClick={onSeeAll}>Ver histórico completo →</button>
+            )}
+
+            <div className="cp-tabela" aria-label="Tabela de créditos por ação">
+              <button
+                className="cp-tabela-h"
+                onClick={() => setShowTabela((v) => !v)}
+                aria-expanded={showTabela}
+              >
+                <span>📋 Tabela de consumo por ação</span>
+                <span>{showTabela ? "▾" : "▸"}</span>
+              </button>
+              {showTabela && (
+                <ul>
+                  {TABELA_CREDITOS.map((t) => (
+                    <li key={t.nome}>
+                      <span><span aria-hidden>{t.icone}</span> {t.nome}</span>
+                      <span className={`preco${t.free ? " free" : ""}`}>{t.custo}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {showModal && (
