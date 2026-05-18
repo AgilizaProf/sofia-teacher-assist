@@ -204,7 +204,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
         </div>
       )}
 
-      <section className="cp-card" aria-label="Painel de créditos">
+      <section className={`cp-card${collapsed ? " collapsed" : ""}`} aria-label="Painel de créditos">
         <div>
           <div className="cp-head">
             <span className="dot" /> ⚡ Seus créditos
