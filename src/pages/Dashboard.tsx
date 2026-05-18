@@ -2635,6 +2635,74 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+      {tutorialOpen && (() => {
+        const steps: { title: string; body: string }[] = [
+          { title: "Bem-vindo(a) ao AgilizaProf", body: "Esta é a sua página inicial. Aqui você acompanha o seu dia, vê as sugestões da Sofia e abre rapidamente os fluxos de parecer, plano, inclusão e agenda." },
+          { title: "Saudação, ação principal e Tempo devolvido", body: "No topo, a Sofia te cumprimenta e sugere uma ação imediata (botão laranja). Ao lado, o selo \"Tempo devolvido a você\" mostra quantas horas a plataforma já te economizou e o seu nível atual." },
+          { title: "Painel de créditos", body: "Logo abaixo da saudação fica o painel de créditos do seu plano (Free, Mensal ou Anual). Acompanhe o consumo do período e use o botão de upgrade quando quiser mais espaço para gerar documentos." },
+          { title: "Foco do dia & Adaptações da Sofia", body: "A Sofia destaca o foco do dia e propõe adaptações sob medida para suas turmas e alunos PCD. Clique nos cards para abrir a conversa já direcionada." },
+          { title: "Estatísticas e Seus alunos", body: "Mais abaixo aparecem os indicadores (documentos gerados, tempo economizado) e o card \"Seus alunos\", com a lista de turmas e alunos cadastrados. Clique em um aluno para abrir o perfil completo." },
+          { title: "Esta semana & Agenda", body: "Nos dois cards finais você vê o que aconteceu na semana e os próximos compromissos da agenda escolar. Use-os como bússola rápida do que vem pela frente." },
+          { title: "Assistente IA", body: "No menu lateral, abra \"Assistente IA\" para conversar com a Sofia em formato chat. Lá você pede pareceres, planos, adaptações e relatórios — sempre com o contexto das suas turmas." },
+          { title: "Planejamento", body: "Em \"Planejamento\" você cria planos de aula, trilhas semestrais, roteiros de Educação Infantil e atividades adaptadas em poucos cliques." },
+          { title: "Relatórios", body: "Em \"Relatórios\" você gera pareceres descritivos por bimestre, com avaliação BNCC e exportação em DOCX/PDF — pronto pra revisão e entrega à família." },
+          { title: "Inclusão", body: "Em \"Inclusão\" você cadastra alunos PCD, monta o PEI (Plano Educacional Individualizado) e mantém anamnese, registros e adaptações organizados num só lugar." },
+          { title: "Agenda e Configurações", body: "Em \"Agenda\" você organiza eventos, reuniões e prazos da escola. Em \"Configurações\" ajusta perfil, plano, indicação de amigos e preferências da plataforma." },
+        ];
+        const total = steps.length;
+        const idx = Math.min(tutorialStep, total - 1);
+        const s = steps[idx];
+        const close = () => setTutorialOpen(false);
+        return (
+          <div
+            onClick={close}
+            style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 200, display: "grid", placeItems: "center", padding: 16 }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{ background: "#FBFAF6", color: "#0B1220", borderRadius: 18, maxWidth: 560, width: "100%", padding: 26, boxShadow: "0 20px 60px rgba(0,0,0,.28)", border: "1px solid #E7E9EF" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", color: "#FF6A2C", textTransform: "uppercase" }}>
+                  Tutorial · {idx + 1}/{total}
+                </span>
+                <button onClick={close} aria-label="Fechar tutorial" style={{ background: "transparent", border: 0, cursor: "pointer", color: "#7A8194", fontSize: 18, lineHeight: 1, padding: 4 }}>✕</button>
+              </div>
+              <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, fontFamily: "'Fraunces', serif", color: "#1B2A4E" }}>{s.title}</h3>
+              <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: "#3B4256" }}>{s.body}</p>
+              <div style={{ display: "flex", gap: 6, marginTop: 20, marginBottom: 20 }}>
+                {steps.map((_, i) => (
+                  <span key={i} style={{ height: 4, flex: 1, borderRadius: 2, background: i <= idx ? "#1B2A4E" : "#E7E9EF" }} />
+                ))}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                <button
+                  onClick={() => setTutorialStep((n) => Math.max(0, n - 1))}
+                  disabled={idx === 0}
+                  style={{ padding: "9px 16px", borderRadius: 10, border: "1px solid #E7E9EF", background: "transparent", cursor: idx === 0 ? "not-allowed" : "pointer", opacity: idx === 0 ? 0.5 : 1, color: "#1B2A4E", fontWeight: 600 }}
+                >
+                  Voltar
+                </button>
+                {idx < total - 1 ? (
+                  <button
+                    onClick={() => setTutorialStep((n) => Math.min(total - 1, n + 1))}
+                    style={{ padding: "9px 18px", borderRadius: 10, border: 0, background: "#1B2A4E", color: "#fff", cursor: "pointer", fontWeight: 700 }}
+                  >
+                    Próximo
+                  </button>
+                ) : (
+                  <button
+                    onClick={close}
+                    style={{ padding: "9px 18px", borderRadius: 10, border: 0, background: "#FF6A2C", color: "#fff", cursor: "pointer", fontWeight: 700 }}
+                  >
+                    Entendi, vamos lá
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
