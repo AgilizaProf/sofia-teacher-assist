@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil,
-  FileText, Send, User, Sparkles, ArrowRight,
+  FileText, Send, User, Sparkles,
   Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
   GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock, ChevronUp, ChevronDown,
 } from "lucide-react";
@@ -574,9 +574,6 @@ export function Assistente() {
     }
     return out;
   }, [ctx, fala, proxima, navigate, sofia, turmaSelecionada]);
-
-  // Apenas a sugestão mais relevante do contexto atual (sem rotação automática).
-  const sugAtual = sugestoes[0];
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
