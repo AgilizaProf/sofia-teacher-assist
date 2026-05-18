@@ -633,7 +633,14 @@ export function Assistente() {
                 >
                   <FileText size={14} /> Histórico
                 </button>
-                <button className="ah-icon" aria-label="Ajuda"><HelpCircle size={16} /></button>
+                <button
+                  className="ah-icon"
+                  aria-label="Tutorial desta página"
+                  title="Tutorial desta página"
+                  onClick={() => { setTutorialStep(0); setTutorialOpen(true); }}
+                >
+                  <HelpCircle size={16} />
+                </button>
               </>
             }
           />
