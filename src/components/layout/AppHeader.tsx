@@ -89,14 +89,6 @@ export function AppHeader({ breadcrumb, actions, secondaryStatus, hideActiveChip
         </div>
         <div className="ah-right">
           {actions}
-          {isPro && u.ciclo !== "mensal" && (
-            <div className="ah-credits" title="Créditos do mês">
-              <div>
-                {u.creditos_usados.toLocaleString("pt-BR")}<span style={{ color: "#6B7691", fontWeight: 500 }}>/{u.creditos_total.toLocaleString("pt-BR")}</span>
-                <small>CRÉDITOS · {mes}</small>
-              </div>
-            </div>
-          )}
           {(() => {
             const planoLabel =
               u.plano === "pro"
