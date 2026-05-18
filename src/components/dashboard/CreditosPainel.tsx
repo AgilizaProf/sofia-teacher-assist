@@ -133,7 +133,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [peakDismissed, setPeakDismissed] = useState(false);
   const [showTabela, setShowTabela] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   const pct = c.totais > 0 ? Math.round((c.disponiveis / c.totais) * 100) : 0;
   const cor = corDaBarra(pct);
@@ -151,7 +151,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
     : c.plano === "mensal" ? "este mês"
     : "esta semana (grátis)";
 
-  const diasRenov = useMemo(() => diasAteRenovacaoMensal(), [c.ano_referencia, c.mes_referencia]);
+  const diasRenov = useMemo(() => diasAteRenovacaoMensal(c.data_renovacao), [c.data_renovacao]);
   const diasRenovSemana = useMemo(() => diasAteRenovacaoSemanal(), [c.data_renovacao]);
   const horasRenovSemana = useMemo(() => horasAteRenovacaoSemanal(), [c.data_renovacao]);
   const mesPico = useMemo(() => isMesPico(), []);
@@ -263,8 +263,8 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
                 <>
                   <div className="cp-upgrade-mod">
                     <span className="cp-upgrade-text">
-                      💡 No plano anual você teria <strong>{CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos</strong> + bônus em janeiro, junho e novembro.
-                      Economize <strong>R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
+                  💡 No plano anual você teria <strong>{CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos</strong> em janeiro, junho e novembro.
+                  Economize <strong>R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
                     </span>
                     <button className="cp-upgrade-btn" onClick={() => setShowUpgrade(true)}>
                       Ver oferta
@@ -274,7 +274,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
                   <div className="cp-compare">
                     <h5>📊 Plano Mensal vs Anual</h5>
                     <div className="cp-compare-row"><span>Mensal</span><strong>1.500/mês</strong></div>
-                    <div className="cp-compare-row"><span>Anual</span><strong>1.625/mês + bônus</strong></div>
+                <div className="cp-compare-row"><span>Anual</span><strong>1.625/mês</strong></div>
                     <div className="cp-compare-eco">Economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</div>
                     <button className="cp-compare-cta" onClick={() => setShowUpgrade(true)}>
                       Mudar para anual →
