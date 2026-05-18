@@ -36,7 +36,7 @@ serve(async (req) => {
     const peiRules = temPei
       ? `\n\nINTEGRAÇÃO COM O PEI (regras invioláveis):\n- O aluno POSSUI um Plano Educacional Individualizado (PEI) — utilize-o como referência principal.\n- Compare o desempenho atual do aluno (registros do período) com os OBJETIVOS, METAS e ADAPTAÇÕES definidos no PEI.\n- Para cada objetivo do PEI, indique quando possível se está: (a) ATINGIDO, (b) EM DESENVOLVIMENTO ou (c) PRECISA DE MAIS ATENÇÃO, sempre citando evidências dos registros.\n- NUNCA contradiga adaptações curriculares, avaliativas, metodologias ou recursos já definidos no PEI. Reforce-os.\n- Use a mesma terminologia e linguagem do PEI para manter consistência entre os documentos.\n- Se o desenvolvimento indicar necessidade de ajuste em alguma meta, sugira de forma DISCRETA usando o marcador: "(Sugestão a avaliar com a equipe pedagógica: considerar atualizar a meta X do PEI)".\n- Mostre a EVOLUÇÃO do aluno em relação ao plano pedagógico já definido.${peiAnteriorResumo ? "\n- Há PEI anterior disponível — descreva brevemente a evolução entre os dois períodos." : ""}`
       : "";
-    const sys = `Você é a Sofia, assistente pedagógica especializada em educação inclusiva (Lei 14.254/2021 e BNCC). Gere um parecer descritivo individual, narrativo, em tom profissional e empático, baseado APENAS nos dados reais fornecidos (anamnese, PEI e registros do período). Não invente fatos, datas ou objetivos não citados. Se faltar informação em algum eixo, indique brevemente. Devolva JSON estrito.${
+    const sys = `Você é a Sofia, assistente pedagógica especializada em educação inclusiva (Lei 14.254/2021 e BNCC). Gere um parecer descritivo individual, narrativo, em tom profissional e empático, baseado APENAS nos dados reais fornecidos (anamnese, PEI e registros do período). Não invente fatos, datas ou objetivos não citados. Se faltar informação em algum eixo, indique brevemente. Devolva JSON estrito.\n\nREGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "diário", "anamnese", "PEI", "notas do(a) professor(a)" ou qualquer outra fonte. Escreva sempre como conhecimento direto e consolidado sobre o(a) aluno(a). Evite expressões como "segundo as observações", "de acordo com os registros", "conforme observado", "com base na anamnese", "consta no PEI", "as observações indicam" — descreva os fatos diretamente, sem citar a origem.${
       refBlock ? `\n\nANO DE REFERÊNCIA PEDAGÓGICO (regra inviolável): ${refBlock}` : ""
     }${peiRules}`;
 
@@ -71,7 +71,7 @@ ${formato === "texto" ? `Responda APENAS com JSON válido neste formato:
   "comportamental": "1 parágrafo sobre aspectos comportamentais e socioafetivos",
   "sensorial": "1 parágrafo sobre aspectos sensoriais (ou 'sem registros' se não houver)",
   "familia": "1 parágrafo sobre comunicação com a família",
-  "avancos": ["3 a 5 avanços observados, citando os registros quando possível"],
+  "avancos": ["3 a 5 avanços percebidos no período, descritos diretamente sem citar a origem da informação"],
   "desafios": ["2 a 4 pontos de atenção concretos"],
   "encaminhamentos": ["3 a 5 encaminhamentos práticos para o próximo período"],
   "comunicacao_familias": "1 parágrafo curto pronto para enviar à família"
