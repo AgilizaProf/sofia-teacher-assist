@@ -764,18 +764,6 @@ export function Assistente() {
                   : "Cadastre suas turmas e alunos para que eu tenha contexto e possa gerar pareceres, planos e adaptações em minutos."}
               </p>
 
-              <div className="suggest" key={sugAtual?.id}>
-                <div className="ico-tile suggest-fade">{sugAtual?.icon ?? <FileText size={22} />}</div>
-                <div className="suggest-fade">
-                  <div className="label"><Star size={11} fill="currentColor" /> {sugAtual?.label?.toUpperCase() ?? "SUGESTÃO PRA VOCÊ AGORA"}</div>
-                  <h3>{sugAtual?.title ?? "Comece cadastrando sua primeira turma"}</h3>
-                  <p>{sugAtual?.subtitle ?? "Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui."}</p>
-                </div>
-                <button className="btn-cta" onClick={() => sugAtual?.onAction?.()} aria-label={sugAtual?.cta || "Começar agora"}>
-                  {sugAtual?.cta || "Começar agora"} <ArrowRight size={14} />
-                </button>
-              </div>
-
               <div className="tasks-wrap">
                 <div className="tasks-head">
                   <div className="tasks-title">Ou escolha uma tarefa</div>
