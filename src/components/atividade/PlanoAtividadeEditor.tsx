@@ -619,6 +619,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                   titulo: tituloComAluno,
                   data: { ...registro, plano: registro.plano },
                 });
+                void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("atividade_pcd_gerada", { aluno: a.primeiro_nome, ano: anoEscolar, disciplina, titulo: enriched.titulo }));
               }
             } catch { /* offline ok */ }
 
