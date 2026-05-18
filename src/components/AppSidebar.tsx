@@ -222,6 +222,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
                   aria-label={currentPlan.aria}
                   to={currentPlan.href.split("#")[0]}
                   hash={currentPlan.href.includes("#") ? currentPlan.href.split("#")[1] : undefined}
+                  onClick={() => { void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("upgrade_click", { origin: "sidebar", plano_card: currentPlan.key, destino: currentPlan.href })); }}
                 >
                   {currentPlan.cta}
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -233,6 +234,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
                   href={currentPlan.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => { void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("upgrade_click", { origin: "sidebar", plano_card: currentPlan.key, destino: currentPlan.href })); }}
                 >
                   {currentPlan.cta}
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
