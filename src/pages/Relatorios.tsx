@@ -751,7 +751,7 @@ export function Relatorios() {
         : isMedio ? "relatorio_medio" : "relatorio_fundamental";
       const instrucoesEI = ei
         ? `\n\nINSTRUÇÕES OBRIGATÓRIAS (Educação Infantil):\nGere um PARECER DESCRITIVO para criança da Educação Infantil. Use linguagem afetiva, humanizada e acessível à família. Cite os Campos de Experiência da BNCC Infantil trabalhados (${EI_CAMPOS_EXPERIENCIA.map(c => c.area).join("; ")}). Use os Direitos de Aprendizagem como base da avaliação (${EI_DIREITOS_APRENDIZAGEM}). NUNCA use linguagem comparativa entre crianças ou capacitista. Descreva o desenvolvimento de forma narrativa e individualizada. NUNCA mencione ou cite que a informação veio de "observações", "registros", "anotações" ou notas do(a) educador(a) — escreva sempre como conhecimento direto sobre a criança. Prefira expressões como "está desenvolvendo", "demonstra interesse em", "avança em", "em construção" — nunca "não sabe", "não consegue", "fraco" ou similares.`
-        : "";
+        : `\n\nINSTRUÇÕES OBRIGATÓRIAS (regra de redação inviolável):\nNUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "anotações", "diário", "anamnese", "PEI", "rubrica BNCC" ou "notas do(a) professor(a)". Escreva sempre como conhecimento direto e consolidado sobre o(a) aluno(a). Evite expressões como "segundo as observações", "de acordo com os registros", "conforme observado", "com base na anamnese" ou "as anotações indicam" — descreva os fatos diretamente, sem citar a origem.`;
       const peiResumo = [
         a.pcd ? `Condição/PCD: ${a.pcd}` : "",
         cls?.grade ? `Ano/Etapa: ${cls.grade}` : "",
