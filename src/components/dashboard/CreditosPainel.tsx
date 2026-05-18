@@ -45,16 +45,16 @@ const css = `
 .cp-hist-more{margin-top:8px;font-size:11px;color:var(--accent-deep,#E85F2C);font-weight:700;background:none;border:none;padding:0;text-align:left;cursor:pointer;}
 .cp-upgrade{margin-top:8px;padding:8px 10px;background:linear-gradient(135deg,#FFF1E8,#FFE4D1);border-radius:8px;font-size:11px;color:var(--accent-deep,#E85F2C);font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .cp-upgrade-text{flex:1;min-width:0;}
-.cp-upgrade-btn{background:var(--accent,#FF7A45);color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;}
-.cp-upgrade-btn:hover{background:var(--accent-deep,#E85F2C);color:#fff !important;}
+.cp-upgrade-btn{background:#FF7A45;color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;}
+.cp-upgrade-btn:hover{background:#E85F2C;color:#fff !important;}
 .cp-renew{margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:#EEF6FF;color:#1E40AF;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;}
 .cp-compare{margin-top:10px;padding:10px;background:linear-gradient(135deg,#F8FAFF,#EEF1F8);border:1px dashed var(--border,#E4E8F0);border-radius:10px;font-size:11px;color:var(--text,#1B2A4E);}
 .cp-compare h5{margin:0 0 6px;font-size:10px;font-weight:700;color:var(--text-soft,#5B6B82);text-transform:uppercase;letter-spacing:.06em;}
 .cp-compare-row{display:flex;justify-content:space-between;margin:2px 0;}
 .cp-compare-row strong{font-weight:700;}
 .cp-compare-eco{margin-top:6px;color:#059669;font-weight:700;}
-.cp-compare-cta{margin-top:8px;display:inline-block;background:var(--accent,#FF7A45);color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer;border:none;}
-.cp-compare-cta:hover{background:var(--accent-deep,#E85F2C);}
+.cp-compare-cta{margin-top:8px;display:inline-block;background:#FF7A45;color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer;border:none;}
+.cp-compare-cta:hover{background:#E85F2C;}
 .cp-peak{margin-bottom:10px;padding:10px 12px;border-radius:10px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:12px;display:flex;align-items:flex-start;gap:10px;}
 .cp-peak-body{flex:1;line-height:1.45;}
 .cp-peak-body strong{font-weight:700;}
