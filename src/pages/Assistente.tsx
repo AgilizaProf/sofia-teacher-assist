@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil,
-  FileText, Send, User, Sparkles, ArrowRight,
+  FileText, Send, User, Sparkles,
   Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
   GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock, ChevronUp, ChevronDown,
 } from "lucide-react";
@@ -575,9 +575,6 @@ export function Assistente() {
     return out;
   }, [ctx, fala, proxima, navigate, sofia, turmaSelecionada]);
 
-  // Apenas a sugestão mais relevante do contexto atual (sem rotação automática).
-  const sugAtual = sugestoes[0];
-
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -763,18 +760,6 @@ export function Assistente() {
                   ? `Tô de olho na ${ctx.entity.turma_atual?.nome || "sua turma"} · ${ctx.dataState.alunos_count} alunos. Pode pedir parecer, plano, adaptação ou registro.`
                   : "Cadastre suas turmas e alunos para que eu tenha contexto e possa gerar pareceres, planos e adaptações em minutos."}
               </p>
-
-              <div className="suggest" key={sugAtual?.id}>
-                <div className="ico-tile suggest-fade">{sugAtual?.icon ?? <FileText size={22} />}</div>
-                <div className="suggest-fade">
-                  <div className="label"><Star size={11} fill="currentColor" /> {sugAtual?.label?.toUpperCase() ?? "SUGESTÃO PRA VOCÊ AGORA"}</div>
-                  <h3>{sugAtual?.title ?? "Comece cadastrando sua primeira turma"}</h3>
-                  <p>{sugAtual?.subtitle ?? "Conforme você usa a Sofia, sugestões personalizadas aparecerão aqui."}</p>
-                </div>
-                <button className="btn-cta" onClick={() => sugAtual?.onAction?.()} aria-label={sugAtual?.cta || "Começar agora"}>
-                  {sugAtual?.cta || "Começar agora"} <ArrowRight size={14} />
-                </button>
-              </div>
 
               <div className="tasks-wrap">
                 <div className="tasks-head">
