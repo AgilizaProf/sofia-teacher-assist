@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { RelatorioDocumento } from "@/lib/documentos/relatorioTypes";
+import { trackEvent } from "@/lib/admin/track";
 
 export type RelatorioSalvo = {
   id: string;
@@ -98,7 +99,9 @@ export async function saveRelatorioDoc(
     .select()
     .single();
   if (error) throw error;
-  return rowToSaved(data as Record<string, unknown>);
+  const saved = rowToSaved(data as Record<string, unknown>);
+  void trackEvent("relatorio_gerado", { tipo: saved.tipo, modo: saved.modo, periodo: saved.periodo, aluno_nome: saved.alunoNome });
+  return saved;
 }
 
 export async function listRelatoriosDoc(filters: {
