@@ -350,6 +350,8 @@ export function Assistente() {
   const [tab, setTab] = useState<TaskTab>("Mais usadas");
   const [search, setSearch] = useState("");
   const [ctxOpen, setCtxOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
   // Permite recolher a barra de contexto para liberar espaço vertical no chat.
   // Persiste em localStorage para respeitar a preferência entre sessões.
   const [ctxCollapsed, setCtxCollapsed] = useState<boolean>(() => {
