@@ -129,6 +129,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [peakDismissed, setPeakDismissed] = useState(false);
   const [showTabela, setShowTabela] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const pct = c.totais > 0 ? Math.round((c.disponiveis / c.totais) * 100) : 0;
   const cor = corDaBarra(pct);
