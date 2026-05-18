@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  Search, Plus, ChevronsLeft, Share2, HelpCircle, Pencil,
+  Search, Plus, ChevronsLeft, HelpCircle, Pencil,
   FileText, Send, User, Sparkles,
   Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
   GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock, ChevronUp, ChevronDown,
@@ -631,7 +631,6 @@ export function Assistente() {
                 >
                   <FileText size={14} /> Histórico
                 </button>
-                <button className="ah-icon" aria-label="Compartilhar"><Share2 size={16} /></button>
                 <button className="ah-icon" aria-label="Ajuda"><HelpCircle size={16} /></button>
               </>
             }
