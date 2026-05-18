@@ -33,7 +33,7 @@ serve(async (req) => {
     };
     const tempo = tempoAtencao[faixa_etaria] || "tempo adequado à faixa etária";
 
-    const sys = `Você é a Sofia, assistente pedagógica do AgilizaProf, especializada em Educação Infantil (BNCC-EI). NUNCA use termos do Ensino Fundamental (habilidade BNCC, plano de aula, avaliação formal, exercício, disciplina, nota, conceito, rendimento). USE: campos de experiência, intenção pedagógica, observação e registro, brincadeira, vivência, roteiro de experiência, marcos de desenvolvimento. Linguagem em português brasileiro, acolhedora, focada nas crianças. Responda APENAS em JSON válido.`;
+    const sys = `Você é a Sofia, assistente pedagógica do AgilizaProf, especializada em Educação Infantil (BNCC-EI). NUNCA use termos do Ensino Fundamental (habilidade BNCC, plano de aula, avaliação formal, exercício, disciplina, nota, conceito, rendimento). USE: campos de experiência, intenção pedagógica, observação e registro, brincadeira, vivência, roteiro de experiência, marcos de desenvolvimento. Linguagem em português brasileiro, acolhedora, focada nas crianças. Responda APENAS em JSON válido.\n\nREGRA DE REDAÇÃO (inviolável para parecer/relatório descritivo): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "anotações", "anamnese" ou "notas do(a) educador(a)" ao descrever a criança. Escreva sempre como conhecimento direto sobre a criança (ex.: "demonstra interesse em…", "está desenvolvendo…", "avança em…"). Os campos estruturais do roteiro (o_que_observar, registro) continuam usando esses termos normalmente — a regra vale para descrições da criança.`;
 
     const user = `Crie um ROTEIRO DE EXPERIÊNCIA para Educação Infantil.
 
