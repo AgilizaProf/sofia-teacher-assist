@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCreditos, useHistoricoCreditos, type MovimentacaoCredito } from "@/lib/creditos/useCreditos";
+import { trackEvent } from "@/lib/admin/track";
 import {
   CREDITOS_ANUAIS_TOTAL,
   ECONOMIA_ANUAL,
