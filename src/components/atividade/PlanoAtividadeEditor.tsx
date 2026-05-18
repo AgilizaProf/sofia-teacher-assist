@@ -983,6 +983,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             titulo: p.titulo,
             data: { ...registro, plano: p },
           });
+          void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("plano_aula_gerado", { titulo: p.titulo, turma, disciplina, ano: anoEscolar, modo }));
         }
       } catch { /* offline */ }
       okSave++;
