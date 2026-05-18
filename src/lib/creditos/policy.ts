@@ -55,8 +55,12 @@ export function corDaBarra(pct: number): "ok" | "warn" | "danger" {
   return "danger";
 }
 
-export function mensagemContextual(pct: number): string {
-  if (pct >= 50) return "✅ Você está ótimo(a)! Créditos de sobra para o restante do ano.";
+export function mensagemContextual(pct: number, plano: PlanoAtual): string {
+  if (pct >= 50) {
+    if (plano === "mensal") return "✅ Você está ótimo(a)! Créditos de sobra para o restante do mês.";
+    if (plano === "free") return "✅ Você está ótimo(a)! Créditos de sobra para o restante da semana.";
+    return "✅ Você está ótimo(a)! Créditos de sobra para o restante do ano.";
+  }
   if (pct >= 20) return "⚡ Usando bem seus créditos. Continue o ótimo trabalho!";
   if (pct >= 5) return "⚠️ Seus créditos estão acabando. Considere usar com atenção até o próximo ciclo.";
   return "🔴 Créditos quase esgotados. Entre em contato para adicionar mais.";
