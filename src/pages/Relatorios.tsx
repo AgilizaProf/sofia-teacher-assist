@@ -1069,7 +1069,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   const bubbleMsg = (() => {
     if (!isPro) return null;
     if (totalBim === 0 && alunosCount > 0) return `${alunosCount} alunos prontos pra parecer. Gero todos em rascunho de uma vez ou começamos pelo ${alunoFoco}?`;
-    if (pct >= 100) return `Bimestre fechado! 🧡 ${horasEcon}h economizadas. Quer exportar tudo em PDF pra coordenação?`;
+    if (pct >= 100) return `${periodoTituloLower.charAt(0).toUpperCase()}${periodoTituloLower.slice(1)} fechado! 🧡 ${horasEcon}h economizadas. Quer exportar tudo em PDF pra coordenação?`;
     if (pct > 0 && pct < 100) return `${finalizados} prontos, faltam ${restantes}. Sigo gerando ou você quer revisar antes?`;
     return null;
   })();
@@ -1135,12 +1135,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   : totalBim === 0
                     ? (isEi ? "COMECE PELOS RELATÓRIOS DE DESENVOLVIMENTO" : "COMECE PELOS PARECERES")
                     : pct >= 100
-                      ? `BIMESTRE ${bimestreNum}º · TUDO FINALIZADO`
+                      ? `${periodoTituloUpper} · TUDO FINALIZADO`
                       : aRevisar > 0
-                        ? `BIMESTRE ${bimestreNum}º · ${aRevisar} PRONTO${aRevisar > 1 ? "S" : ""} PARA REVISAR`
+                        ? `${periodoTituloUpper} · ${aRevisar} PRONTO${aRevisar > 1 ? "S" : ""} PARA REVISAR`
                         : rascunhos > 0
-                          ? `BIMESTRE ${bimestreNum}º · ${rascunhos} RASCUNHO${rascunhos > 1 ? "S" : ""} EM ANDAMENTO`
-                          : `BIMESTRE ${bimestreNum}º · ${pct}% CONCLUÍDO`
+                          ? `${periodoTituloUpper} · ${rascunhos} RASCUNHO${rascunhos > 1 ? "S" : ""} EM ANDAMENTO`
+                          : `${periodoTituloUpper} · ${pct}% CONCLUÍDO`
               }</span>
                 {alunosCount === 0 ? (
                   <>
@@ -1156,12 +1156,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   </>
                 ) : pct >= 100 ? (
                   <>
-                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>todos prontos</em>: {finalizados}/{totalAlunos}.</h1>
-                    <p>Bimestre fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação ou siga para o próximo bimestre.</p>
+                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {periodoTituloLower}<br /><em>todos prontos</em>: {finalizados}/{totalAlunos}.</h1>
+                    <p>{periodoTituloLower.charAt(0).toUpperCase() + periodoTituloLower.slice(1)} fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação{tipoPeriodo === "Anual" ? "." : ` ou siga para o próximo ${periodoNomeLower}.`}</p>
                   </>
                 ) : (
                   <>
-                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>{finalizados}/{totalAlunos}</em> prontos.</h1>
+                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {periodoTituloLower}<br /><em>{finalizados}/{totalAlunos}</em> prontos.</h1>
                     <p>{(() => {
                       const parts: string[] = [];
                       if (aRevisar > 0) parts.push(`${aRevisar} ${aRevisar > 1 ? "prontos" : "pronto"} para revisar (100% observado, falta gerar)`);
@@ -1170,12 +1170,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                       const head = parts.length ? parts.join(" · ") + "." : "Quase lá.";
                       const tail =
                         aRevisar > 0
-                          ? ` Comece pelos ${aRevisar} prontos para revisar — é o caminho mais rápido para fechar o bimestre.`
+                          ? ` Comece pelos ${aRevisar} prontos para revisar — é o caminho mais rápido para fechar o ${periodoNomeLower}.`
                           : rascunhos > 0
                             ? ` Continue de onde parou nos rascunhos para destravar a geração.`
                             : aFazer > 0
                               ? ` Registre as primeiras observações para destravar a Sofia.`
-                              : restantes > 0 ? ` Faltam ${restantes} para fechar o bimestre.` : "";
+                              : restantes > 0 ? ` Faltam ${restantes} para fechar o ${periodoNomeLower}.` : "";
                       return head + tail;
                     })()}</p>
                   </>
@@ -1202,7 +1202,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 </div>
               </div>
               <div className="rel-pc">
-                <div className="rel-pc-title">PROGRESSO DO BIMESTRE</div>
+                <div className="rel-pc-title">PROGRESSO DO {periodoNomeUpper}</div>
                 <div className="rel-pc-num">{finalizados}<span>/{totalAlunos} alunos</span></div>
                 <div className="rel-pc-bar"><i style={{ width: `${pct}%` }} /></div>
                 <div className="rel-pc-meta"><span>{pct}% concluído</span><span>{horasEcon > 0 ? `~${horasEcon}h economizadas` : "sem economia ainda"}</span></div>
@@ -1250,7 +1250,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
             >
               <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
-              <div className="rel-kpi-foot">{pct}% do bimestre</div>
+              <div className="rel-kpi-foot">{pct}% do {periodoNomeLower}</div>
             </div>
             <div
               id="rel-kpi-horas"
@@ -1296,7 +1296,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           {/* Section header */}
           <div className="rel-sec-head">
             <div>
-              <h2>Pareceres deste bimestre</h2>
+              <h2>{isEi ? "Relatórios" : "Pareceres"} deste {periodoNomeLower}</h2>
               <p>Filtre por status, turma ou aluno. Clique para gerar com a Sofia ou abrir o rascunho.</p>
             </div>
             <div className="rel-sec-actions">
