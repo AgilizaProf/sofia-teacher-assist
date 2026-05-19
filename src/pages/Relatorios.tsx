@@ -723,6 +723,8 @@ export function Relatorios() {
   const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, ParecerNarrativo>>("rel_parecer", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
   const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
+  type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
+  const [tipoPeriodo, setTipoPeriodo] = usePersistentState<TipoPeriodo>("rel_tipo_periodo", "Bimestral");
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
