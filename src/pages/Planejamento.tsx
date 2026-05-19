@@ -3500,6 +3500,14 @@ export function Planejamento() {
                                 title="Arraste para reordenar"
                                 style={{ cursor: editing ? "default" : "grab", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}
                               >
+                                <input
+                                  type="checkbox"
+                                  checked={m2SelIds.size === 0 ? true : m2SelIds.has(s.id)}
+                                  onChange={() => m2ToggleSel(s.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  title="Incluir na impressão"
+                                  style={{ width: 12, height: 12, accentColor: "var(--primary, #F97316)", cursor: "pointer" }}
+                                />
                                 {!editing && <GripVertical size={11} style={{ opacity: .55 }} />}
                                 {s.d}
                               </div>
