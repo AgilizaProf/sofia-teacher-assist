@@ -19,7 +19,7 @@ import {
   editorialLongField,
 } from "@/lib/print/editorialPrint";
 import { imprimirPlanejamentoDireto, type SecaoImpressao } from "@/lib/print/planejamentoDireto";
-import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
+import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
