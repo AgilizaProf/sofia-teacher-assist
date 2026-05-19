@@ -68,9 +68,17 @@ export const getPlanoAtual = createServerFn({ method: "GET" })
 
 export const cancelarAssinatura = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({}).parse(input ?? {}))
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        reasons: z.array(z.string().min(1).max(80)).max(10).optional(),
+        comment: z.string().max(2000).optional(),
+      })
+      .parse(input ?? {}),
+  )
   .handler(async ({ context }) => {
     const { userId } = context;
+    const data = (arguments[0] as { data?: { reasons?: string[]; comment?: string } }).data ?? {};
     const accessToken = process.env.MP_ACCESS_TOKEN;
     if (!accessToken) {
       throw new Error("MP_ACCESS_TOKEN não configurado");
