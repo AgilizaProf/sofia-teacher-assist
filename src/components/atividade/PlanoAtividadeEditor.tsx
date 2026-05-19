@@ -1095,6 +1095,29 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   };
 
   const [exportSingleOpen, setExportSingleOpen] = useState(false);
+  /**
+   * Procura a data agendada (YYYY-MM-DD) desta atividade no calendário M4.
+   * Faz match pelo título do evento (gerado em `salvarPlanoNoCalendario`,
+   * que prefixa a TAG da disciplina). Retorna a primeira ocorrência futura
+   * se houver, ou a mais recente; `undefined` quando a atividade não está
+   * agendada.
+   */
+  const dataAgendadaDoPlanoAtual = useMemo<string | undefined>(() => {
+    const t = (plano.titulo || "").trim();
+    if (!t) return undefined;
+    const datas: string[] = [];
+    for (const [iso, eventos] of Object.entries(m4UserEvents || {})) {
+      if (!Array.isArray(eventos)) continue;
+      const achou = eventos.some((e) => typeof e?.title === "string" && e.title.includes(t));
+      if (achou) datas.push(iso);
+    }
+    if (datas.length === 0) return undefined;
+    const hoje = todayIso();
+    const futuras = datas.filter((d) => d >= hoje).sort();
+    if (futuras.length > 0) return futuras[0];
+    return datas.sort().pop();
+  }, [m4UserEvents, plano.titulo]);
+
   const exportarPDF = async () => {
     const f = validar();
     setMissing(f);
@@ -2048,6 +2071,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         onOpenChange={setExportSingleOpen}
         defaults={{ turma: turma || undefined }}
         title="Exportar plano de atividade"
+        askActivityDay
+        scheduledDate={dataAgendadaDoPlanoAtual}
         onConfirm={(info) => exportarPlanoAtual(info, false)}
         onConfirmWord={(info) => exportarPlanoAtual(info, true)}
       />
