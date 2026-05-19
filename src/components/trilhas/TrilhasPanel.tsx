@@ -475,9 +475,15 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const [agendExtra, setAgendExtra] = useState(0); // candidatas extras quando o usuário pede para estender
 
   // Dias personalizados para pular (feriados locais, provas, conselhos…)
-  // Persistido por usuário/projeto via usePersistentState (cloud + local).
+  // Persistido POR TURMA (cada turma tem sua própria lista de feriados/provas).
+  // Fallback para "sem_turma" quando a trilha não tiver turma definida.
   type DiaPular = { date: string; label: string; tipo: "feriado_local" | "prova" | "outro" };
-  const [diasPular, setDiasPular] = usePersistentState<DiaPular[]>("agendador_dias_pular", []);
+  const turmaKey = useMemo(() => {
+    const raw = (trilha.turma || "").trim().toLowerCase();
+    if (!raw) return "sem_turma";
+    return raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "sem_turma";
+  }, [trilha.turma]);
+  const [diasPular, setDiasPular] = usePersistentState<DiaPular[]>(`agendador_dias_pular::${turmaKey}`, []);
   const [novoDiaPular, setNovoDiaPular] = useState<DiaPular>({ date: today, label: "", tipo: "feriado_local" });
   const [gerenciarOpen, setGerenciarOpen] = useState(false);
   const mapaDiasPular = useMemo(() => {
