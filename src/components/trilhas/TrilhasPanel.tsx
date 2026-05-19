@@ -841,7 +841,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
               <div style={{ fontSize: 12, color: "var(--muted)" }}>Nenhuma data candidata encontrada.</div>
             )}
             {candidatas.map((c) => {
-              const auto = agendPularFeriados && !!c.feriado;
+              const auto = (agendPularFeriados && !!c.feriado) || !!c.diaLocal;
               const manual = !!agendSkip[c.iso];
               const atividadeIdx = mapaIsoParaAtividade.get(c.iso);
               const usado = atividadeIdx !== undefined;
@@ -862,6 +862,11 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
                     </span>
                   )}
                   {c.feriado && <span style={{ fontSize: 10.5, color: "#991B1B" }}>· {c.feriado}{auto ? " (pulado)" : ""}</span>}
+                  {c.diaLocal && (
+                    <span style={{ fontSize: 10.5, color: c.diaLocal.tipo === "prova" ? "#1E40AF" : "#991B1B" }}>
+                      · {c.diaLocal.tipo === "prova" ? "Prova" : c.diaLocal.tipo === "feriado_local" ? "Feriado local" : "Sem aula"}{c.diaLocal.label ? `: ${c.diaLocal.label}` : ""} (pulado)
+                    </span>
+                  )}
                 </label>
               );
             })}
