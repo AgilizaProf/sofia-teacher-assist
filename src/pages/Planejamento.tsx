@@ -2456,6 +2456,13 @@ export function Planejamento() {
   // Seleção por aula para impressão (M3). Vazio = todas selecionadas.
   const [m2SelIds, setM2SelIds] = useState<Set<string>>(new Set());
   const m2ToggleSel = (id: string) => setM2SelIds((prev) => {
+    // Conjunto vazio = "todas selecionadas". Ao desmarcar a primeira,
+    // materializamos o conjunto com todas menos a clicada.
+    if (prev.size === 0) {
+      const next = new Set(m2Steps.map((s) => s.id));
+      next.delete(id);
+      return next;
+    }
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
