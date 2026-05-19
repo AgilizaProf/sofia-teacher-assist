@@ -2071,6 +2071,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         onOpenChange={setExportSingleOpen}
         defaults={{ turma: turma || undefined }}
         title="Exportar plano de atividade"
+        askActivityDay
+        scheduledDate={dataAgendadaDoPlanoAtual}
         onConfirm={(info) => exportarPlanoAtual(info, false)}
         onConfirmWord={(info) => exportarPlanoAtual(info, true)}
       />
