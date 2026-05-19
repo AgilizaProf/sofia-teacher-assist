@@ -462,6 +462,7 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   };
   const [editando, setEditando] = useState<Record<number, boolean>>({});
   const [rascunho, setRascunho] = useState<Record<number, DiaPlano>>({});
+  const [printModalOpen, setPrintModalOpen] = useState(false);
 
   const toggleSel = (i: number) => setSelecionados((prev) => {
     const next = new Set(prev);
