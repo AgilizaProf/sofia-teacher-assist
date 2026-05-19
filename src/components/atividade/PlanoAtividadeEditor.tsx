@@ -932,6 +932,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       [agendaDate]: [...(m4UserEvents[agendaDate] ?? []), evt],
     });
 
+    // 2b) Exporta também para a Agenda Escolar, na data exata escolhida.
+    void exportarM4ParaAgenda(agendaDate, evt);
+
     // 3) Salvar o plano no histórico (local + remoto), para que sempre que a
     // atividade for colocada no calendário ela apareça também em "Histórico
     // de planos" — mesma semântica do fluxo de lote.
