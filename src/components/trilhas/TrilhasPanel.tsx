@@ -472,6 +472,7 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const [agendInicio, setAgendInicio] = useState<string>(today);
   const [agendPularFeriados, setAgendPularFeriados] = useState(true);
   const [agendSkip, setAgendSkip] = useState<Record<string, boolean>>({});
+  const [agendExtra, setAgendExtra] = useState(0); // candidatas extras quando o usuário pede para estender
 
   // Dias personalizados para pular (feriados locais, provas, conselhos…)
   // Persistido por usuário/projeto via usePersistentState (cloud + local).
@@ -492,6 +493,9 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   };
   const removerDiaPular = (iso: string) => setDiasPular(diasPular.filter((d) => d.date !== iso));
 
+  // Resetar a extensão quando o usuário muda recorrência ou data inicial.
+  useEffect(() => { setAgendExtra(0); }, [agendModo, agendInicio]);
+
   const matchWeekday = (d: Date, modo: WeekdayMode): boolean => {
     const dow = d.getUTCDay(); // 0=Dom..6=Sab
     if (modo === "todos") return true;
@@ -508,10 +512,10 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const candidatas = useMemo(() => {
     if (!agendOpen) return [] as Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }>;
     const out: Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }> = [];
-    const limite = Math.max(selecionados.size, 1) + 14;
+    const limite = Math.max(selecionados.size, 1) + 14 + agendExtra;
     let cursor = parseIso(agendInicio);
     const stopAt = new Date(cursor.getTime());
-    stopAt.setUTCDate(stopAt.getUTCDate() + 365);
+    stopAt.setUTCDate(stopAt.getUTCDate() + 365 + agendExtra * 7);
     const cacheAnos = new Map<number, Map<string, string>>();
     while (out.length < limite && cursor.getTime() <= stopAt.getTime()) {
       if (matchWeekday(cursor, agendModo)) {
@@ -524,7 +528,7 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
       cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
     return out;
-  }, [agendOpen, agendModo, agendInicio, selecionados.size, mapaDiasPular]);
+  }, [agendOpen, agendModo, agendInicio, selecionados.size, mapaDiasPular, agendExtra]);
 
   const datasAgendadas = useMemo(() => {
     const finais: string[] = [];
@@ -901,12 +905,28 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
             );
           })()}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-            <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
-              {datasAgendadas.length}/{selecionados.size} datas preparadas
-              {datasAgendadas.length < selecionados.size && " — amplie o intervalo ou desmarque menos dias."}
-            </div>
+            {datasAgendadas.length < selecionados.size ? (
+              <div style={{ flex: 1, minWidth: 240, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "#FEF3C7", border: "1px solid #FCD34D", color: "#92400E", fontSize: 12 }}>
+                <span>
+                  <strong>Faltam {selecionados.size - datasAgendadas.length} data(s).</strong> Só consegui preparar {datasAgendadas.length} de {selecionados.size} a partir de {agendInicio.split("-").reverse().join("/")}.
+                </span>
+                <button
+                  type="button"
+                  className="pl-btn primary"
+                  onClick={() => setAgendExtra((x) => x + 30)}
+                  style={{ fontSize: 11 }}
+                  title="Procurar mais datas candidatas a partir da data inicial"
+                >
+                  Estender intervalo automaticamente
+                </button>
+              </div>
+            ) : (
+              <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                {datasAgendadas.length}/{selecionados.size} datas preparadas
+              </div>
+            )}
             <div style={{ display: "inline-flex", gap: 6 }}>
-              <button className="pl-btn ghost" onClick={() => { setAgendSkip({}); }} style={{ fontSize: 11 }}>Limpar exclusões</button>
+              <button className="pl-btn ghost" onClick={() => { setAgendSkip({}); setAgendExtra(0); }} style={{ fontSize: 11 }}>Limpar exclusões</button>
               <button className="pl-btn primary" onClick={aplicarAgendamento} disabled={datasAgendadas.length === 0} style={{ fontSize: 11 }}>
                 Aplicar datas
               </button>
