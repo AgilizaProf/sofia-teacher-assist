@@ -1207,9 +1207,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const [printModalOpen, setPrintModalOpen] = useState(false);
 
-  const executarImpressao = (info: PrintInfo) => {
+  const construirArgsImpressao = (info: PrintInfo) => {
     const lista = historico.filter((p) => selecionados.has(p.id));
-    if (lista.length === 0) return;
+    if (lista.length === 0) return null;
     const tituloDoc = modo === "pcd" ? "PLANEJAMENTO PCD" : "PLANEJAMENTO";
     const secoes: SecaoImpressao[] = lista.map((s) => {
       const p = s.plano;
@@ -1249,7 +1249,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       return { titulo, blocos };
     });
     const turmas = Array.from(new Set(lista.map((p) => p.turma).filter(Boolean)));
-    imprimirPlanejamentoDireto({
+    return {
+      lista,
       titulo: tituloDoc,
       escola: info.escola || undefined,
       turma: info.turma || turmas.join(" · ") || undefined,
@@ -1260,13 +1261,33 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       rodapeLegal: modo === "pcd"
         ? "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB) e a Lei 13.146/2015 (LBI)."
         : "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
-    });
+    };
+  };
+
+  const executarImpressao = (info: PrintInfo) => {
+    const a = construirArgsImpressao(info);
+    if (!a) return;
+    const { lista, ...args } = a;
+    imprimirPlanejamentoDireto(args);
     logActivity({
       type: "exportacao",
       description: `Impressão em lote: ${lista.length} atividade(s)`,
       detail: lista.map((p) => p.titulo).join(" | "),
     });
     showToast(`📄 ${lista.length} atividade(s) abertas para impressão / PDF`);
+  };
+
+  const executarSalvarWord = (info: PrintInfo) => {
+    const a = construirArgsImpressao(info);
+    if (!a) return;
+    const { lista, ...args } = a;
+    salvarPlanejamentoDocx(args, `${args.titulo}_${lista.length}_atividades`);
+    logActivity({
+      type: "exportacao",
+      description: `Word exportado em lote: ${lista.length} atividade(s)`,
+      detail: lista.map((p) => p.titulo).join(" | "),
+    });
+    showToast(`💾 ${lista.length} atividade(s) salvas em Word.`);
   };
 
   /* ─────────── Render ─────────── */
