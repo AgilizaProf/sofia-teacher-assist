@@ -2031,6 +2031,12 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       </section>
 
       {toast && <div className="atv-toast">{toast}</div>}
+      <PrintInfoModal
+        open={printModalOpen}
+        onOpenChange={setPrintModalOpen}
+        defaults={{ turma: turma || undefined }}
+        onConfirm={executarImpressao}
+      />
     </div>
   );
 }
