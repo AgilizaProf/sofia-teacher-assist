@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles, Printer } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
@@ -10,6 +10,7 @@ import { useAgenda } from "@/hooks/useAgenda";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaListPrint";
 
 // ---- Integração M4 → Agenda --------------------------------------------------
 // Eventos do calendário M4 (Planejamento) são persistidos em localStorage sob
@@ -534,6 +535,63 @@ export function Agenda() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
 
+  // ---- Impressão de compromissos / atividades ------------------------------
+  // Permite selecionar quais eventos da Agenda imprimir, ordenados por dia
+  // e horário, com título, tipo, horário e observações.
+  const [printOpen, setPrintOpen] = useState(false);
+  const [printSel, setPrintSel] = useState<Set<string>>(new Set());
+  const [printFrom, setPrintFrom] = useState<string>("");
+  const [printTo, setPrintTo] = useState<string>("");
+  const printItems = useMemo(() => {
+    const list = [...filteredEvents];
+    const inRange = list.filter((e) => {
+      if (printFrom && e.date < printFrom) return false;
+      if (printTo && e.date > printTo) return false;
+      return true;
+    });
+    inRange.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.time || "99:99").localeCompare(b.time || "99:99");
+    });
+    return inRange;
+  }, [filteredEvents, printFrom, printTo]);
+  const openPrintDialog = () => {
+    const upcoming = events
+      .filter((e) => e.date >= todayKey)
+      .map((e) => e.date)
+      .sort();
+    const defaultFrom = upcoming[0] ?? todayKey;
+    const defaultTo = upcoming.length ? upcoming[upcoming.length - 1] : todayKey;
+    setPrintFrom(defaultFrom);
+    setPrintTo(defaultTo);
+    setPrintSel(new Set(events.filter((e) => e.date >= defaultFrom && e.date <= defaultTo).map((e) => e.id)));
+    setPrintOpen(true);
+  };
+  const togglePrintItem = (id: string) =>
+    setPrintSel((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  const setAllPrint = (val: boolean) =>
+    setPrintSel(val ? new Set(printItems.map((e) => e.id)) : new Set());
+  const confirmPrint = () => {
+    const selected = printItems.filter((e) => printSel.has(e.id));
+    if (selected.length === 0) { toast.error("Selecione ao menos um evento para imprimir."); return; }
+    const payload: PrintAgendaItem[] = selected.map((e) => ({
+      date: e.date,
+      time: e.time,
+      title: e.title,
+      type: TYPE_LABEL[e.type],
+      notes: e.notes,
+    }));
+    const sub = printFrom && printTo
+      ? `Período: ${printFrom.split("-").reverse().join("/")} a ${printTo.split("-").reverse().join("/")} · ${selected.length} evento(s)`
+      : `${selected.length} evento(s) selecionado(s)`;
+    imprimirListaAgenda(payload, { title: "Agenda Escolar — Compromissos e atividades", subtitle: sub });
+    setPrintOpen(false);
+  };
+
   // ---- Importar atividades agendadas (M4) ----------------------------------
   type M4ImportItem = { date: string; evt: M4UserEvt; selected: boolean };
   const [m4ImportOpen, setM4ImportOpen] = useState(false);
@@ -841,6 +899,9 @@ export function Agenda() {
                     </>
                   )}
                 </div>
+                <button className="ag-btn" onClick={openPrintDialog} title="Imprimir compromissos e atividades">
+                  <Printer size={14} /> Imprimir
+                </button>
                 <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
               </>
             }
@@ -1433,6 +1494,94 @@ export function Agenda() {
                     <Plus size={14} /> {m4Importing ? "Trazendo…" : "Trazer para a agenda"}
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+        {printOpen && (
+          <div className="ag-overlay" onClick={() => setPrintOpen(false)}>
+            <div className="ag-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="ag-panel-head">
+                <div style={{ minWidth: 0 }}>
+                  <div className="ag-panel-title">Imprimir compromissos e atividades</div>
+                  <div className="ag-panel-sub">
+                    Selecione período e eventos. Será impresso em ordem de dia e horário, com título, tipo, horário e observações.
+                  </div>
+                </div>
+                <button className="ag-panel-close" onClick={() => setPrintOpen(false)} aria-label="Fechar"><X size={16} /></button>
+              </div>
+              <div className="ag-panel-body">
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+                  <label style={{ fontSize: 12, color: "#5b6478", display: "flex", flexDirection: "column", gap: 4 }}>
+                    De
+                    <input
+                      type="date"
+                      value={printFrom}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPrintFrom(v);
+                        setPrintSel(new Set(events.filter((ev) => (!v || ev.date >= v) && (!printTo || ev.date <= printTo)).map((ev) => ev.id)));
+                      }}
+                      style={{ padding: "6px 8px", border: "1px solid rgba(15,27,54,.12)", borderRadius: 8 }}
+                    />
+                  </label>
+                  <label style={{ fontSize: 12, color: "#5b6478", display: "flex", flexDirection: "column", gap: 4 }}>
+                    Até
+                    <input
+                      type="date"
+                      value={printTo}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPrintTo(v);
+                        setPrintSel(new Set(events.filter((ev) => (!printFrom || ev.date >= printFrom) && (!v || ev.date <= v)).map((ev) => ev.id)));
+                      }}
+                      style={{ padding: "6px 8px", border: "1px solid rgba(15,27,54,.12)", borderRadius: 8 }}
+                    />
+                  </label>
+                </div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <button className="ag-btn" onClick={() => setAllPrint(true)}>Selecionar todos</button>
+                  <button className="ag-btn" onClick={() => setAllPrint(false)}>Limpar</button>
+                  <span style={{ marginLeft: "auto", fontSize: 12, color: "#5b6478", alignSelf: "center" }}>
+                    {printSel.size}/{printItems.length} selecionado(s)
+                  </span>
+                </div>
+                {printItems.length === 0 ? (
+                  <div className="ag-empty">Nenhum evento no período escolhido.</div>
+                ) : (
+                  printItems.map((ev) => {
+                    const [, mm, dd] = ev.date.split("-");
+                    return (
+                      <label key={ev.id} className="ag-panel-event" style={{ cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={printSel.has(ev.id)}
+                          onChange={() => togglePrintItem(ev.id)}
+                          style={{ marginTop: 4 }}
+                        />
+                        <span className="ev-dot" style={{ background: TYPE_COLOR[ev.type] }} />
+                        <div className="ev-body">
+                          <div className="ev-title">{ev.title}</div>
+                          <div className="ev-meta">
+                            <span>{dd}/{mm}</span>
+                            {ev.time && (<><span className="mdot" /><span>{ev.time}</span></>)}
+                            <span className="mdot" />
+                            <span>{TYPE_LABEL[ev.type]}</span>
+                          </div>
+                          {ev.notes && (
+                            <div style={{ fontSize: 11, color: "#5b6478", marginTop: 4, whiteSpace: "pre-wrap" }}>{ev.notes}</div>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+              <div className="ag-panel-foot">
+                <button className="ag-btn" onClick={() => setPrintOpen(false)}>Fechar</button>
+                <button className="ag-btn primary" onClick={confirmPrint} disabled={printSel.size === 0}>
+                  <Printer size={14} /> Imprimir selecionados
+                </button>
               </div>
             </div>
           </div>

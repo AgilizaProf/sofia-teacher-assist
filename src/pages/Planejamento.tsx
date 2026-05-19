@@ -11,6 +11,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
+import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaListPrint";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
@@ -1722,6 +1723,71 @@ export function Planejamento() {
     const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
     return s.charAt(0).toUpperCase() + s.slice(1);
   }, [m4Month]);
+
+  // Imprimir lista de compromissos/atividades do M4 (ordenado por dia/hora).
+  const [m4ListOpen, setM4ListOpen] = useState(false);
+  const [m4ListSel, setM4ListSel] = useState<Set<string>>(new Set());
+  const M4_CAT_LABEL: Record<string, string> = {
+    aulas: "Aula",
+    aval: "Avaliação",
+    eventos: "Evento da escola",
+    feriados: "Feriado",
+    bncc: "Habilidade BNCC",
+    sofia: "Sugestão Sofia",
+  };
+  const m4MonthEventsForPrint = useMemo(() => {
+    const mm = String(m4Month.m + 1).padStart(2, "0");
+    const prefix = `${m4Month.y}-${mm}-`;
+    type Row = { key: string; date: string; title: string; cat: string; meta?: string; turma?: string; disciplina?: string; minutos?: number };
+    const out: Row[] = [];
+    Object.entries(m4UserEvents).forEach(([iso, list]) => {
+      if (!iso.startsWith(prefix)) return;
+      list.forEach((e) => {
+        out.push({
+          key: `${iso}::${e.id}`,
+          date: iso,
+          title: e.title,
+          cat: e.cat,
+          meta: e.meta,
+          turma: (e as { turma?: string }).turma,
+          disciplina: (e as { disciplina?: string }).disciplina,
+          minutos: (e as { minutos?: number }).minutos,
+        });
+      });
+    });
+    out.sort((a, b) => a.date.localeCompare(b.date));
+    return out;
+  }, [m4UserEvents, m4Month]);
+  const openM4ListPrint = () => {
+    setM4ListSel(new Set(m4MonthEventsForPrint.map((r) => r.key)));
+    setM4ListOpen(true);
+  };
+  const toggleM4ListSel = (k: string) =>
+    setM4ListSel((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
+  const setAllM4List = (val: boolean) =>
+    setM4ListSel(val ? new Set(m4MonthEventsForPrint.map((r) => r.key)) : new Set());
+  const confirmM4ListPrint = () => {
+    const rows = m4MonthEventsForPrint.filter((r) => m4ListSel.has(r.key));
+    if (rows.length === 0) return;
+    const items: PrintAgendaItem[] = rows.map((r) => {
+      const notesParts: string[] = [];
+      if (r.turma) notesParts.push(`Turma: ${r.turma}`);
+      if (r.disciplina) notesParts.push(r.disciplina);
+      if (r.minutos) notesParts.push(`${r.minutos} min`);
+      if (r.meta) notesParts.push(r.meta);
+      return {
+        date: r.date,
+        title: r.title,
+        type: M4_CAT_LABEL[r.cat] ?? r.cat,
+        notes: notesParts.join(" · "),
+      };
+    });
+    imprimirListaAgenda(items, {
+      title: `M4 — Compromissos e atividades (${m4Label})`,
+      subtitle: `${rows.length} evento(s) selecionado(s)`,
+    });
+    setM4ListOpen(false);
+  };
   const m4Grid = useMemo(() => {
     const first = new Date(m4Month.y, m4Month.m, 1).getDay(); // 0=Dom
     const days = new Date(m4Month.y, m4Month.m + 1, 0).getDate();
@@ -3733,6 +3799,7 @@ export function Planejamento() {
                     <button className="pl-btn ghost" onClick={() => { const n = new Date(); setM4Month({ y: n.getFullYear(), m: n.getMonth() }); setM4SelectedDay(n.getDate()); }}>Hoje</button>
                     <button className="pl-btn ghost" onClick={() => m4ChangeMonth(1)}>Próximo <ChevronRight size={14} /></button>
                     <button className="pl-btn" onClick={m4Print} title="Imprimir calendário"><Printer size={14} /> Imprimir</button>
+                    <button className="pl-btn" onClick={openM4ListPrint} title="Imprimir lista de compromissos e atividades"><Printer size={14} /> Imprimir lista</button>
                   </div>
                 </div>
                 <div className="pl-layers-bar">
@@ -3908,6 +3975,61 @@ export function Planejamento() {
                   <span className="it"><span className="sw" style={{ background: "#06B6D4" }} /> BNCC</span>
                   <span className="it"><span className="sw" style={{ background: "#FF7A45" }} /> Sugestões Sofia</span>
                 </div>
+                {m4ListOpen && (
+                  <div
+                    onClick={() => setM4ListOpen(false)}
+                    style={{ position: "fixed", inset: 0, background: "rgba(15,27,54,.45)", backdropFilter: "blur(2px)", zIndex: 200, display: "flex", justifyContent: "center", alignItems: "center", padding: 16 }}
+                  >
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ background: "#fff", borderRadius: 12, width: "min(680px, 100%)", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 30px 60px rgba(15,27,54,.25)" }}
+                    >
+                      <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 15 }}>Imprimir compromissos e atividades</div>
+                          <div style={{ fontSize: 12, color: "var(--muted)" }}>{m4Label} · ordenado por dia e horário · com título, tipo e observações.</div>
+                        </div>
+                        <button onClick={() => setM4ListOpen(false)} aria-label="Fechar" style={{ border: 0, background: "transparent", cursor: "pointer", padding: 4 }}><X size={16} /></button>
+                      </div>
+                      <div style={{ padding: 12, overflow: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+                        {m4MonthEventsForPrint.length === 0 ? (
+                          <div style={{ fontSize: 13, color: "var(--muted)", padding: 12, textAlign: "center" }}>Nenhum evento neste mês.</div>
+                        ) : (
+                          <>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button className="pl-btn ghost" onClick={() => setAllM4List(true)}>Selecionar todos</button>
+                              <button className="pl-btn ghost" onClick={() => setAllM4List(false)}>Limpar</button>
+                              <span style={{ marginLeft: "auto", alignSelf: "center", fontSize: 12, color: "var(--muted)" }}>{m4ListSel.size}/{m4MonthEventsForPrint.length} selecionado(s)</span>
+                            </div>
+                            {m4MonthEventsForPrint.map((r) => {
+                              const [, mm, dd] = r.date.split("-");
+                              return (
+                                <label key={r.key} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: 10, border: "1px solid var(--line)", borderRadius: 8, cursor: "pointer" }}>
+                                  <input type="checkbox" checked={m4ListSel.has(r.key)} onChange={() => toggleM4ListSel(r.key)} style={{ marginTop: 4 }} />
+                                  <span style={{ width: 10, height: 10, borderRadius: 99, background: M4_CAT_META[r.cat as M4Cat]?.color ?? "#999", marginTop: 6, flexShrink: 0 }} />
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 13, fontWeight: 600 }}>{r.title}</div>
+                                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
+                                      {dd}/{mm} · {M4_CAT_LABEL[r.cat] ?? r.cat}
+                                      {r.turma && ` · ${r.turma}`}
+                                      {r.disciplina && ` · ${r.disciplina}`}
+                                      {r.minutos ? ` · ${r.minutos} min` : ""}
+                                    </div>
+                                    {r.meta && <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>{r.meta}</div>}
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </>
+                        )}
+                      </div>
+                      <div style={{ padding: 12, borderTop: "1px solid var(--line)", display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                        <button className="pl-btn ghost" onClick={() => setM4ListOpen(false)}>Fechar</button>
+                        <button className="pl-btn" onClick={confirmM4ListPrint} disabled={m4ListSel.size === 0}><Printer size={14} /> Imprimir selecionados</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
