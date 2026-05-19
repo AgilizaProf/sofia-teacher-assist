@@ -1048,6 +1048,13 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   const pct = totalAlunos > 0 ? Math.round((finalizados / totalAlunos) * 100) : 0;
   const restantes = Math.max(0, totalAlunos - finalizados);
 
+  // Valores reais para o banner — refletem a página, não dados mockados.
+  // "Iniciado" = qualquer aluno com observação preenchida ou parecer gerado.
+  const iniciados = rascunhos + aRevisar + finalizados;
+  const totalBim = iniciados;
+  // Estimativa: cada parecer finalizado economiza ~30min de redação manual.
+  const horasEcon = Math.round((finalizados * 30) / 60);
+
   // Bubble Sofia contextual (proativo)
   const bubbleMsg = (() => {
     if (!isPro) return null;
