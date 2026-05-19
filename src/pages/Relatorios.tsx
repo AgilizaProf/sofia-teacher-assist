@@ -743,7 +743,7 @@ export function Relatorios() {
       }).join("\n\n");
       const aluno = getStudentById(a.id);
       const cls = dashClasses.find((c) => c.name === a.turma);
-      const periodoLabel = `${bimestreNum}º bimestre · ${new Date().getFullYear()}`;
+      const periodoLabel = `${periodoTituloLower} · ${new Date().getFullYear()}`;
       const gradeRaw = (cls?.grade || "").trim();
       const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${a.turma}`);
       const nivelEnsino = ei ? "Educação Infantil"
@@ -768,7 +768,7 @@ export function Relatorios() {
         body: {
           aluno: a.nome,
           diagnostico: a.pcd || "",
-          periodo: "Bimestral",
+          periodo: tipoPeriodo,
           intervalo: periodoLabel,
           formato: formatoParecer,
           anamneseResumo: "",
