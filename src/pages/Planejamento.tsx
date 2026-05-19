@@ -11,6 +11,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
+import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -2452,7 +2453,23 @@ export function Planejamento() {
     else showToast(`Etapa ${next} concluída. Avançando para ${next + 1} de ${m2Total}. ✓`);
   };
   const reiniciarProgresso = () => { setM2CurIdx(0); showToast("Progresso reiniciado."); };
-  const imprimirSequencia = () => setM2PrintOpen(true);
+  const imprimirSequencia = () => {
+    if (m2Steps.length === 0) { showToast("Adicione ao menos uma aula antes de imprimir."); return; }
+    imprimirPlanejamentoDireto({
+      titulo: "SEQUÊNCIA DIDÁTICA",
+      secoes: m2Steps.map((s, idx) => {
+        const status = idx < m2CurIdx ? "Concluída" : idx === m2CurIdx ? "Em andamento" : "Futura";
+        return {
+          titulo: `Aula ${idx + 1} — ${s.d} · ${s.tag} · ${status}`,
+          blocos: [
+            { label: "Atividades:", body: s.t },
+            { label: "Objetivos:", body: s.p },
+          ],
+        };
+      }),
+      rodapeLegal: "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
+    });
+  };
   const [m2Form, setM2Form] = useState<{ d: string; tag: string; t: string; p: string }>({
     d: "SEG", tag: M2_TAG_OPTS[0], t: "", p: M2_BNCC_OPTS[0],
   });

@@ -18,6 +18,7 @@ import {
   editorialFieldsGrid,
   editorialLongField,
 } from "@/lib/print/editorialPrint";
+import { imprimirPlanejamentoDireto, type SecaoImpressao } from "@/lib/print/planejamentoDireto";
 import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
 
 /* ─────────────────────────── Types ─────────────────────────── */
@@ -1173,7 +1174,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
    * Gera as "partes" editoriais de um plano salvo (mesmo layout do
    * `exportarPDF` individual) para ser concatenado na impressão em lote.
    */
-  const partesDoPlanoSalvo = (s: PlanoSalvo): string => {
+  const _partesDoPlanoSalvo = (s: PlanoSalvo): string => {
     const p = s.plano;
     const titulo = p.titulo || s.titulo || "Plano de atividade";
     const meta = [
@@ -1254,18 +1255,53 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       showToast("Selecione ao menos uma atividade no histórico.");
       return;
     }
-    const pageBreak = `<div style="page-break-before:always;break-before:page;"></div>`;
-    const corpo = lista.map(partesDoPlanoSalvo).join(`\n${pageBreak}\n`);
-    printEditorial(
-      `${lista.length} atividades · AgilizaProf`,
-      corpo,
-      {
-        docType: "planejamento",
-        docLabel: modo === "pcd"
-          ? "PLANOS DE ATIVIDADE PCD"
-          : "PLANOS DE ATIVIDADE",
-      },
-    );
+    const tituloDoc = modo === "pcd" ? "PLANEJAMENTO PCD" : "PLANEJAMENTO";
+    const secoes: SecaoImpressao[] = lista.map((s) => {
+      const p = s.plano;
+      const descricao = [
+        p.abertura ? `Abertura\n${p.abertura}` : "",
+        p.desenvolvimento ? `Desenvolvimento\n${p.desenvolvimento}` : "",
+        p.fechamento ? `Fechamento\n${p.fechamento}` : "",
+      ].filter(Boolean).join("\n\n");
+      const blocos: SecaoImpressao["blocos"] = [];
+      if (descricao) blocos.push({ label: "Atividades:", body: descricao });
+      const objetivo = p.objetivo?.trim();
+      const habs = (p.habilidades || []).filter((h) => (h.codigo || h.descricao));
+      if (objetivo || habs.length) {
+        blocos.push({
+          label: "Objetivos:",
+          body: objetivo || undefined,
+          bulletsBncc: habs.map((h) => ({
+            texto: h.descricao?.trim() || h.codigo?.trim() || "—",
+            codigo: h.codigo?.trim() || undefined,
+          })),
+        });
+      }
+      const adapts = (p.adaptacoes || []).filter((a) => a.incluido !== false);
+      if (adapts.length) {
+        blocos.push({
+          label: "Adaptações PCD:",
+          bullets: adapts.map((a) => `[${a.categoria}] ${a.texto}`),
+        });
+      }
+      if (p.materiais && p.materiais.length) {
+        blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: p.materiais });
+      }
+      const titulo = [
+        s.salvoEm ? new Date(s.salvoEm).toLocaleDateString("pt-BR") : "",
+        p.titulo || s.titulo,
+      ].filter(Boolean).join(" — ");
+      return { titulo, blocos };
+    });
+    const turmas = Array.from(new Set(lista.map((p) => p.turma).filter(Boolean)));
+    imprimirPlanejamentoDireto({
+      titulo: tituloDoc,
+      turma: turmas.join(" · ") || undefined,
+      secoes,
+      rodapeLegal: modo === "pcd"
+        ? "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB) e a Lei 13.146/2015 (LBI)."
+        : "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
+    });
     logActivity({
       type: "exportacao",
       description: `Impressão em lote: ${lista.length} atividade(s)`,
