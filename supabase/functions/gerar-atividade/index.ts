@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { userIdFromAuthHeader, isBudgetExceeded, recordUsage, MONTHLY_LIMIT_BRL } from "../_shared/ai-budget.ts";
+import { userIdFromAuthHeader, isBudgetExceeded, recordUsage } from "../_shared/ai-budget.ts";
 import { withConstitution } from "../_shared/sofia-constitution.ts";
 
 const cors = {
@@ -21,8 +21,8 @@ serve(async (req) => {
       if (b.exceeded) {
         return new Response(
           JSON.stringify({
-            error: `Você atingiu o limite mensal de uso da IA (R$ ${MONTHLY_LIMIT_BRL.toFixed(2)}). O contador zera no início do próximo mês.`,
-            blocked: true, usedBrl: b.usedBrl, limitBrl: b.limitBrl,
+            error: `Você não tem créditos disponíveis (${b.usedBrl}/${b.limitBrl} usados). Aguarde a renovação do seu plano ou faça upgrade.`,
+            blocked: true, usedBrl: b.usedBrl, limitBrl: b.limitBrl, creditos: b.creditos,
           }),
           { status: 402, headers: { ...cors, "Content-Type": "application/json" } },
         );
