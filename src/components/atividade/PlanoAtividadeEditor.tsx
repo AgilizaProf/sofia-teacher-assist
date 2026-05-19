@@ -699,7 +699,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   };
 
   const usarSugestao = (s: Sugestao) => {
-    setPlano({ ...plano, titulo: s.titulo, desenvolvimento: s.descricao });
+    setPlano({
+      ...plano,
+      titulo: s.titulo,
+      desenvolvimento: s.descricao,
+      sugestoes: plano.sugestoes.map((x) =>
+        x.titulo === s.titulo && x.descricao === s.descricao ? { ...x, utilizado: true } : x,
+      ),
+    });
     logActivity({ type: "planejamento", description: `Variação aplicada: ${s.titulo}` });
     showToast("Variação aplicada");
   };
