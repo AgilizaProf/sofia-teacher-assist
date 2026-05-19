@@ -293,6 +293,33 @@ function PlanoBody({
   );
 }
 
+function ResumoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        border: `1px solid ${BORDER}`,
+        borderRadius: 12,
+        padding: "12px 14px",
+        background: "#fff",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: MUTED,
+          textTransform: "uppercase",
+          letterSpacing: ".05em",
+          marginBottom: 4,
+        }}
+      >
+        {label}
+      </div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>{value}</div>
+    </div>
+  );
+}
+
 const CANCEL_REASONS = [
   "Preço acima do que posso pagar",
   "Não estou usando o suficiente",
