@@ -727,9 +727,6 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
           <button className="pl-btn ghost" onClick={exportarPdf} style={{ fontSize: 12 }} disabled={selecionados.size === 0}>
             <Printer size={12} /> Imprimir / PDF
           </button>
-          <button className="pl-btn ghost" onClick={exportarWord} style={{ fontSize: 12 }} disabled={selecionados.size === 0}>
-            <Download size={12} /> Salvar em Word
-          </button>
           <button className="pl-btn primary" onClick={salvarSelecionados} disabled={salvandoTodos || selecionados.size === 0} style={{ fontSize: 12 }}>
             {salvandoTodos ? <Loader2 size={12} className="animate-spin" /> : <BookOpen size={12} />}
             {salvandoTodos ? "Salvando…" : `Salvar ${selecionados.size > 0 ? `(${selecionados.size}) ` : ""}no Planejamento`}
