@@ -1341,6 +1341,21 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               role="button"
               tabIndex={0}
               aria-haspopup="menu"
+              aria-expanded={openDropdown === "periodo"}
+              onClick={() => setOpenDropdown(openDropdown === "periodo" ? null : "periodo")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "periodo" ? null : "periodo"); } }}
+              title="Período de avaliação usado nos banners e na geração de pareceres"
+              style={{ background: "var(--paper-2)" }}
+            >
+              <Calendar size={13} /> Período · {tipoPeriodo} <ChevronDown size={11} strokeWidth={2.4} />
+              <Dropdown id="periodo" value={tipoPeriodo} onChange={(v) => setTipoPeriodo(v as TipoPeriodo)}
+                options={["Bimestral", "Trimestral", "Semestral", "Anual"]} />
+            </div>
+            <div
+              className="rel-pill"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
               aria-expanded={openDropdown === "turma"}
               onClick={() => setOpenDropdown(openDropdown === "turma" ? null : "turma")}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "turma" ? null : "turma"); } }}
