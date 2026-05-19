@@ -723,6 +723,8 @@ export function Relatorios() {
   const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, ParecerNarrativo>>("rel_parecer", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
   const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
+  type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
+  const [tipoPeriodo, setTipoPeriodo] = usePersistentState<TipoPeriodo>("rel_tipo_periodo", "Bimestral");
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
@@ -741,7 +743,7 @@ export function Relatorios() {
       }).join("\n\n");
       const aluno = getStudentById(a.id);
       const cls = dashClasses.find((c) => c.name === a.turma);
-      const periodoLabel = `${bimestreNum}º bimestre · ${new Date().getFullYear()}`;
+      const periodoLabel = `${periodoTituloLower} · ${new Date().getFullYear()}`;
       const gradeRaw = (cls?.grade || "").trim();
       const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${a.turma}`);
       const nivelEnsino = ei ? "Educação Infantil"
@@ -766,7 +768,7 @@ export function Relatorios() {
         body: {
           aluno: a.nome,
           diagnostico: a.pcd || "",
-          periodo: "Bimestral",
+          periodo: tipoPeriodo,
           intervalo: periodoLabel,
           formato: formatoParecer,
           anamneseResumo: "",
@@ -989,6 +991,14 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
     }
   }, [totalSavedMin]);
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
+  // Período de avaliação selecionado pelo professor (Bimestral/Trimestral/Semestral/Anual)
+  const periodoQtd = tipoPeriodo === "Bimestral" ? 4 : tipoPeriodo === "Trimestral" ? 3 : tipoPeriodo === "Semestral" ? 2 : 1;
+  const periodoNum = (() => { const m = new Date().getMonth() + 1; return Math.min(periodoQtd, Math.ceil((m * periodoQtd) / 12)); })();
+  const periodoNomeLower = tipoPeriodo === "Bimestral" ? "bimestre" : tipoPeriodo === "Trimestral" ? "trimestre" : tipoPeriodo === "Semestral" ? "semestre" : "ano letivo";
+  const periodoNomeUpper = periodoNomeLower.toUpperCase();
+  const periodoOrdinal = tipoPeriodo === "Anual" ? "" : `${periodoNum}º `;
+  const periodoTituloUpper = tipoPeriodo === "Anual" ? "ANO LETIVO" : `${periodoNomeUpper} ${periodoNum}º`;
+  const periodoTituloLower = tipoPeriodo === "Anual" ? "ano letivo" : `${periodoNum}º ${periodoNomeLower}`;
   const isPro = ctx.user.plano === "pro" || combinedStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
 
@@ -1059,7 +1069,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   const bubbleMsg = (() => {
     if (!isPro) return null;
     if (totalBim === 0 && alunosCount > 0) return `${alunosCount} alunos prontos pra parecer. Gero todos em rascunho de uma vez ou começamos pelo ${alunoFoco}?`;
-    if (pct >= 100) return `Bimestre fechado! 🧡 ${horasEcon}h economizadas. Quer exportar tudo em PDF pra coordenação?`;
+    if (pct >= 100) return `${periodoTituloLower.charAt(0).toUpperCase()}${periodoTituloLower.slice(1)} fechado! 🧡 ${horasEcon}h economizadas. Quer exportar tudo em PDF pra coordenação?`;
     if (pct > 0 && pct < 100) return `${finalizados} prontos, faltam ${restantes}. Sigo gerando ou você quer revisar antes?`;
     return null;
   })();
@@ -1125,12 +1135,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   : totalBim === 0
                     ? (isEi ? "COMECE PELOS RELATÓRIOS DE DESENVOLVIMENTO" : "COMECE PELOS PARECERES")
                     : pct >= 100
-                      ? `BIMESTRE ${bimestreNum}º · TUDO FINALIZADO`
+                      ? `${periodoTituloUpper} · TUDO FINALIZADO`
                       : aRevisar > 0
-                        ? `BIMESTRE ${bimestreNum}º · ${aRevisar} PRONTO${aRevisar > 1 ? "S" : ""} PARA REVISAR`
+                        ? `${periodoTituloUpper} · ${aRevisar} PRONTO${aRevisar > 1 ? "S" : ""} PARA REVISAR`
                         : rascunhos > 0
-                          ? `BIMESTRE ${bimestreNum}º · ${rascunhos} RASCUNHO${rascunhos > 1 ? "S" : ""} EM ANDAMENTO`
-                          : `BIMESTRE ${bimestreNum}º · ${pct}% CONCLUÍDO`
+                          ? `${periodoTituloUpper} · ${rascunhos} RASCUNHO${rascunhos > 1 ? "S" : ""} EM ANDAMENTO`
+                          : `${periodoTituloUpper} · ${pct}% CONCLUÍDO`
               }</span>
                 {alunosCount === 0 ? (
                   <>
@@ -1146,12 +1156,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   </>
                 ) : pct >= 100 ? (
                   <>
-                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>todos prontos</em>: {finalizados}/{totalAlunos}.</h1>
-                    <p>Bimestre fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação ou siga para o próximo bimestre.</p>
+                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {periodoTituloLower}<br /><em>todos prontos</em>: {finalizados}/{totalAlunos}.</h1>
+                    <p>{periodoTituloLower.charAt(0).toUpperCase() + periodoTituloLower.slice(1)} fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação{tipoPeriodo === "Anual" ? "." : ` ou siga para o próximo ${periodoNomeLower}.`}</p>
                   </>
                 ) : (
                   <>
-                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>{finalizados}/{totalAlunos}</em> prontos.</h1>
+                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {periodoTituloLower}<br /><em>{finalizados}/{totalAlunos}</em> prontos.</h1>
                     <p>{(() => {
                       const parts: string[] = [];
                       if (aRevisar > 0) parts.push(`${aRevisar} ${aRevisar > 1 ? "prontos" : "pronto"} para revisar (100% observado, falta gerar)`);
@@ -1160,12 +1170,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                       const head = parts.length ? parts.join(" · ") + "." : "Quase lá.";
                       const tail =
                         aRevisar > 0
-                          ? ` Comece pelos ${aRevisar} prontos para revisar — é o caminho mais rápido para fechar o bimestre.`
+                          ? ` Comece pelos ${aRevisar} prontos para revisar — é o caminho mais rápido para fechar o ${periodoNomeLower}.`
                           : rascunhos > 0
                             ? ` Continue de onde parou nos rascunhos para destravar a geração.`
                             : aFazer > 0
                               ? ` Registre as primeiras observações para destravar a Sofia.`
-                              : restantes > 0 ? ` Faltam ${restantes} para fechar o bimestre.` : "";
+                              : restantes > 0 ? ` Faltam ${restantes} para fechar o ${periodoNomeLower}.` : "";
                       return head + tail;
                     })()}</p>
                   </>
@@ -1192,7 +1202,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 </div>
               </div>
               <div className="rel-pc">
-                <div className="rel-pc-title">PROGRESSO DO BIMESTRE</div>
+                <div className="rel-pc-title">PROGRESSO DO {periodoNomeUpper}</div>
                 <div className="rel-pc-num">{finalizados}<span>/{totalAlunos} alunos</span></div>
                 <div className="rel-pc-bar"><i style={{ width: `${pct}%` }} /></div>
                 <div className="rel-pc-meta"><span>{pct}% concluído</span><span>{horasEcon > 0 ? `~${horasEcon}h economizadas` : "sem economia ainda"}</span></div>
@@ -1240,7 +1250,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
             >
               <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
-              <div className="rel-kpi-foot">{pct}% do bimestre</div>
+              <div className="rel-kpi-foot">{pct}% do {periodoNomeLower}</div>
             </div>
             <div
               id="rel-kpi-horas"
@@ -1286,7 +1296,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           {/* Section header */}
           <div className="rel-sec-head">
             <div>
-              <h2>Pareceres deste bimestre</h2>
+              <h2>{isEi ? "Relatórios" : "Pareceres"} deste {periodoNomeLower}</h2>
               <p>Filtre por status, turma ou aluno. Clique para gerar com a Sofia ou abrir o rascunho.</p>
             </div>
             <div className="rel-sec-actions">
@@ -1326,6 +1336,21 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               })}
             </div>
             <div className="rel-divider" />
+            <div
+              className="rel-pill"
+              role="button"
+              tabIndex={0}
+              aria-haspopup="menu"
+              aria-expanded={openDropdown === "periodo"}
+              onClick={() => setOpenDropdown(openDropdown === "periodo" ? null : "periodo")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "periodo" ? null : "periodo"); } }}
+              title="Período de avaliação usado nos banners e na geração de pareceres"
+              style={{ background: "var(--paper-2)" }}
+            >
+              <Calendar size={13} /> Período · {tipoPeriodo} <ChevronDown size={11} strokeWidth={2.4} />
+              <Dropdown id="periodo" value={tipoPeriodo} onChange={(v) => setTipoPeriodo(v as TipoPeriodo)}
+                options={["Bimestral", "Trimestral", "Semestral", "Anual"]} />
+            </div>
             <div
               className="rel-pill"
               role="button"
