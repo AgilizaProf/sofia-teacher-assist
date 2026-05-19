@@ -870,6 +870,21 @@ export function Assistente() {
               <button className="btn-new" onClick={(e) => { e.stopPropagation(); handleNew(); }} aria-label="Nova conversa">
                 <Plus size={12} /><span>Novo</span>
               </button>
+              {sofia.isAuthed && sofia.conversations.length > 0 && (
+                <button
+                  className="btn-clear-all"
+                  title="Limpar todo o histórico"
+                  aria-label="Limpar todo o histórico"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm("Apagar todo o histórico de conversas com a Sofia? Esta ação não pode ser desfeita.")) {
+                      sofia.clearConversations().catch(() => { /* noop */ });
+                    }
+                  }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
               <button
                 className="btn-collapse"
                 onClick={(e) => { e.stopPropagation(); setCollapsed((v) => !v); }}
