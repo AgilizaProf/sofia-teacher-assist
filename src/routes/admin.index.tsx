@@ -64,7 +64,7 @@ function AdminOverview() {
 
   if (!s) return <AdminLayout title="Visão geral"><div className="ad-card">Carregando…</div></AdminLayout>;
   const proTotal = s.pro_mensal + s.pro_anual + s.cortesia;
-  const mrr = s.pro_mensal * 47 + (s.pro_anual * 247) / 12;
+  const mrr = s.pro_mensal * 34.9 + (s.pro_anual * 247) / 12;
   const maxEv = Math.max(1, ...s.topEvents.map(x => x.count));
 
   return (

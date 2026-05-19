@@ -208,7 +208,7 @@ function PlanoBody({
             rel="noopener noreferrer"
             style={cta(data.ciclo === "anual" && isMpActive ? "ghost" : "primary")}
           >
-            Assinar mensal — R$ 27/mês
+            Assinar mensal — R$ 34,90/mês
           </a>
         )}
         {data.pode_assinar_anual && (
@@ -220,7 +220,7 @@ function PlanoBody({
           >
             {data.pode_migrar_anual
               ? "Migrar para anual (mantém dias restantes)"
-              : "Assinar anual — R$ 270/ano"}
+              : "Assinar anual — R$ 247/ano"}
           </a>
         )}
 
