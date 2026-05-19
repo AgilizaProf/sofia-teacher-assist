@@ -2473,6 +2473,7 @@ export function Planejamento() {
     return next;
   });
   const [m2PrintModalOpen, setM2PrintModalOpen] = useState(false);
+  const m3WordMode = useRef(false);
   const imprimirSequencia = () => {
     if (m2Steps.length === 0) { showToast("Adicione ao menos uma aula antes de imprimir."); return; }
     if (m2SelIds.size === 0) { showToast("Selecione ao menos uma aula para imprimir."); return; }
