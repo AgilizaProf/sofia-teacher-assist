@@ -156,7 +156,7 @@ export function PlanejamentoEi() {
       duracao,
       conteudo: JSON.parse(JSON.stringify(roteiro)),
       status: "salvo",
-      modelo: "claude-haiku-4-5-20251001",
+      modelo: "google/gemini-2.5-flash",
     };
     const { data, error } = currentId
       ? await supabase.from("roteiros_ei").update(payload).eq("id", currentId).select("id").single()
@@ -200,7 +200,7 @@ export function PlanejamentoEi() {
         </button>
         <span className="text-sm font-semibold">Roteiro de Experiência · Educação Infantil</span>
         <span className="ml-auto inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Claude Haiku
+          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Gemini 2.5 Flash
         </span>
       </header>
 
