@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, HelpCircle, Pencil,
-  FileText, Send, User, Sparkles,
+  FileText, Send, User, Sparkles, Trash2,
   Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
   GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock, ChevronUp, ChevronDown,
 } from "lucide-react";
@@ -266,6 +266,12 @@ const css = `
 .history-list{display:flex;flex-direction:column;gap:2px;padding:0 8px;overflow:auto;}
 .h-item{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:10px;cursor:pointer;text-align:left;width:100%;}
 .h-item:hover{background:#fff;}
+.h-item{position:relative;}
+.h-item .h-del{position:absolute;top:6px;right:6px;opacity:0;background:transparent;border:0;border-radius:6px;padding:4px;color:#9aa1b3;cursor:pointer;display:grid;place-items:center;transition:opacity .15s ease, background .15s ease, color .15s ease;}
+.h-item:hover .h-del,.h-item:focus-within .h-del{opacity:1;}
+.h-item .h-del:hover{background:#FEE2E2;color:#B91C1C;}
+.btn-clear-all{background:transparent;border:0;color:#9aa1b3;cursor:pointer;padding:4px;border-radius:6px;display:grid;place-items:center;}
+.btn-clear-all:hover{background:#FEE2E2;color:#B91C1C;}
 .h-icon{width:26px;height:26px;border-radius:7px;background:#fff;border:1px solid var(--line-soft);
   display:grid;place-items:center;color:#3B4256;flex:none;}
 .h-text{font-size:13px;line-height:1.35;color:var(--text);}
