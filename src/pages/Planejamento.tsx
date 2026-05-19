@@ -3799,6 +3799,7 @@ export function Planejamento() {
                     <button className="pl-btn ghost" onClick={() => { const n = new Date(); setM4Month({ y: n.getFullYear(), m: n.getMonth() }); setM4SelectedDay(n.getDate()); }}>Hoje</button>
                     <button className="pl-btn ghost" onClick={() => m4ChangeMonth(1)}>Próximo <ChevronRight size={14} /></button>
                     <button className="pl-btn" onClick={m4Print} title="Imprimir calendário"><Printer size={14} /> Imprimir</button>
+                    <button className="pl-btn" onClick={openM4ListPrint} title="Imprimir lista de compromissos e atividades"><Printer size={14} /> Imprimir lista</button>
                   </div>
                 </div>
                 <div className="pl-layers-bar">
