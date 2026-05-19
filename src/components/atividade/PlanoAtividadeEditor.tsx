@@ -1255,8 +1255,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           bullets: adapts.map((a) => `[${a.categoria}] ${a.texto}`),
         });
       }
-      if (p.materiais && p.materiais.length) {
-        blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: p.materiais });
+      const sugs = (p.sugestoes || []).filter((s) => s.utilizado === true);
+      if (sugs.length) {
+        blocos.push({
+          label: "Sugestões da Sofia:",
+          bullets: sugs.map((s) => `${s.titulo} — ${s.descricao}`),
+        });
+      }
+      const matsUsados = (p.materiais || []).filter((_, i) => !!p.materiaisCheck?.[i]);
+      if (matsUsados.length) {
+        blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: matsUsados });
       }
       const titulo = [
         s.salvoEm ? new Date(s.salvoEm).toLocaleDateString("pt-BR") : "",
