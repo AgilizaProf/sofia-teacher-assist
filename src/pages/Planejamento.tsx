@@ -1482,6 +1482,66 @@ export function Planejamento() {
     const bnccs = new Set(all.map((c) => c.bncc));
     return { atividades: all.length, habilidades: bnccs.size };
   }, [m1Plan]);
+  // ===== M1 (M3 · "Sofia preenche a semana") — exportação (PDF / Word) =====
+  const [m1PrintModalOpen, setM1PrintModalOpen] = useState(false);
+  const m1WordMode = useRef(false);
+  const m1OpenExport = () => {
+    if (m1Stats.atividades === 0) { showToast("A semana está vazia. Gere com a Sofia antes de exportar."); return; }
+    setM1PrintModalOpen(true);
+  };
+  const executarExportacaoM1 = (info: PrintInfo) => {
+    const DIAS_LONGOS: Record<DayKey, string> = {
+      seg: "Segunda-feira", ter: "Terça-feira", qua: "Quarta-feira", qui: "Quinta-feira", sex: "Sexta-feira",
+    };
+    const secoes = m1Week.days
+      .filter((d) => (m1Plan[d.k]?.length || 0) > 0)
+      .map((d) => {
+        const cards = m1Plan[d.k] || [];
+        const blocos: Array<{ label: string; body?: string; bullets?: string[]; bulletsBncc?: Array<{ texto: string; codigo?: string }> }> = [];
+        const ativ = cards
+          .map((c) => `${c.tag ? `[${c.tag}] ` : ""}${c.title}${c.minutos ? ` (${c.minutos} min)` : ""}`)
+          .join("\n");
+        if (ativ) blocos.push({ label: "Atividades:", body: ativ });
+        const objetivos = cards
+          .map((c) => c.objetivo?.trim())
+          .filter((s): s is string => !!s);
+        if (objetivos.length) blocos.push({ label: "Objetivos:", bullets: objetivos });
+        const bnccs = cards
+          .filter((c) => c.bncc?.trim())
+          .map((c) => ({ texto: c.title || "—", codigo: c.bncc?.trim() }));
+        if (bnccs.length) blocos.push({ label: "Habilidades BNCC:", bulletsBncc: bnccs });
+        const passos = cards.flatMap((c) =>
+          (c.passos || []).map((p) => `${c.tag ? `[${c.tag}] ` : ""}${p}`),
+        );
+        if (passos.length) blocos.push({ label: "Etapas / Passos:", bullets: passos });
+        const materiais = Array.from(new Set(cards.flatMap((c) => c.materiais || []))).filter(Boolean);
+        if (materiais.length) blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: materiais });
+        const avals = cards.map((c) => c.avaliacao?.trim()).filter((s): s is string => !!s);
+        if (avals.length) blocos.push({ label: "Avaliação:", bullets: avals });
+        const difs = cards.map((c) => c.diferenciacao?.trim()).filter((s): s is string => !!s);
+        if (difs.length) blocos.push({ label: "Adaptações / Diferenciação:", bullets: difs });
+        const licoes = cards.map((c) => c.licaoCasa?.trim()).filter((s): s is string => !!s);
+        if (licoes.length) blocos.push({ label: "Lição de casa:", bullets: licoes });
+        return { titulo: `${DIAS_LONGOS[d.k]} — ${d.iso}`, blocos };
+      });
+    if (secoes.length === 0) { showToast("A semana está vazia."); return; }
+    const dataInicio = info.dataInicio || m1Week.days[0]?.iso;
+    const dataFim = info.dataFim || m1Week.days[m1Week.days.length - 1]?.iso;
+    const args = {
+      titulo: "PLANEJAMENTO DA SEMANA",
+      escola: info.escola || undefined,
+      turma: info.turma || ctxAtual.turma || undefined,
+      professor: info.professor || undefined,
+      dataInicio,
+      dataFim,
+      secoes,
+      rodapeLegal: "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
+    };
+    const nome = `planejamento-semana${ctxAtual.turma ? "-" + ctxAtual.turma.replace(/[^\w-]+/g, "_") : ""}`;
+    if (m1WordMode.current) salvarPlanejamentoDocx(args, nome);
+    else imprimirPlanejamentoDireto(args);
+    showToast(m1WordMode.current ? "💾 Arquivo Word baixado." : "📄 Documento aberto para impressão / PDF");
+  };
   // Prévia da próxima geração: depende do nº de focos selecionados, do limite
   // atual de focos por geração e da intensidade.
   const m1Preview = useMemo(() => {
