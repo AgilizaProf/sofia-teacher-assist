@@ -6,6 +6,7 @@ import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
+import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
 
 const DISCIPLINAS_COMUNS = [
   "Português", "Matemática", "Ciências", "História", "Geografia",
