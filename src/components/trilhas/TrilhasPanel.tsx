@@ -563,9 +563,18 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
   };
   const exportarPdf = () => {
     if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
+    setPrintModalOpen(true);
+  };
+
+  const executarImpressao = (info: PrintInfo) => {
+    if (diasSelecionados.length === 0) return;
     imprimirPlanejamentoDireto({
       titulo: "TRILHA SEMESTRAL",
-      turma: [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined,
+      escola: info.escola || undefined,
+      turma: info.turma || [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined,
+      professor: info.professor || undefined,
+      dataInicio: info.dataInicio || undefined,
+      dataFim: info.dataFim || undefined,
       secoes: diasSelecionados.map((d, idx) => {
         const blocos: Array<{ label: string; body?: string; bullets?: string[] }> = [];
         const ativ = [d.abertura, d.desenvolvimento, d.fechamento].filter(Boolean).join("\n\n");
