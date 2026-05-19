@@ -1732,10 +1732,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             <Save size={14} /> {salvo ? "Salvo!" : "Salvar plano"}
           </button>
           <button className="atv-btn" onClick={exportarPDF}>
-            <FileDown size={14} /> Exportar PDF
-          </button>
-          <button className="atv-btn" onClick={exportarPDF} title="Mesmo modelo do PDF, em arquivo .doc">
-            <Download size={14} /> Salvar em Word
+            <FileDown size={14} /> Exportar PDF / Word
           </button>
           <button className="atv-btn" onClick={abrirAgenda}>
             <CalendarPlus size={14} /> Agendar no calendário
