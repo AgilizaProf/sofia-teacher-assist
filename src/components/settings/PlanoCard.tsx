@@ -161,6 +161,26 @@ function PlanoBody({
     isPro && data.source === "mercadopago" && data.status !== "active";
   const isAdminGrant = isPro && data.source === "admin_grant";
 
+  // Resumo (3 campos)
+  const planoNome = isPro ? "Pro" : "Free";
+  const cicloNome = isPro
+    ? data.source === "admin_grant"
+      ? "Cortesia"
+      : data.ciclo === "anual"
+      ? "Anual"
+      : data.ciclo === "mensal"
+      ? "Mensal"
+      : "—"
+    : "Semanal (gratuito)";
+  const terminoLabel = isMpActive
+    ? "Próxima renovação"
+    : isMpCanceled
+    ? "Acesso até"
+    : isAdminGrant
+    ? "Cortesia até"
+    : "—";
+  const terminoData = data.current_period_end ? fmtData(data.current_period_end) : "—";
+
   // Banner de status
   let label = "Plano Free";
   let labelStyle = pill("#F1F5F9", "#475569");
@@ -188,6 +208,19 @@ function PlanoBody({
 
   return (
     <div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gap: 10,
+          marginBottom: 14,
+        }}
+      >
+        <ResumoItem label="Plano atual" value={planoNome} />
+        <ResumoItem label="Ciclo" value={cicloNome} />
+        <ResumoItem label={terminoLabel} value={terminoData} />
+      </div>
+
       <div
         style={{
           display: "flex",
