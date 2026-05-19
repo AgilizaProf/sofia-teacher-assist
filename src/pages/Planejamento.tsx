@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
-import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
+import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
@@ -2473,6 +2473,7 @@ export function Planejamento() {
     return next;
   });
   const [m2PrintModalOpen, setM2PrintModalOpen] = useState(false);
+  const m3WordMode = useRef(false);
   const imprimirSequencia = () => {
     if (m2Steps.length === 0) { showToast("Adicione ao menos uma aula antes de imprimir."); return; }
     if (m2SelIds.size === 0) { showToast("Selecione ao menos uma aula para imprimir."); return; }
@@ -2481,7 +2482,7 @@ export function Planejamento() {
   const executarImpressaoM3 = (info: PrintInfo) => {
     const selecionadas = m2Steps.filter((s) => m2SelIds.has(s.id));
     if (selecionadas.length === 0) { showToast("Selecione ao menos uma aula."); return; }
-    imprimirPlanejamentoDireto({
+    const args = {
       titulo: "SEQUÊNCIA DIDÁTICA",
       escola: info.escola || undefined,
       turma: info.turma || undefined,
@@ -2500,7 +2501,8 @@ export function Planejamento() {
         };
       }),
       rodapeLegal: "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
-    });
+    };
+    (m3WordMode.current ? salvarPlanejamentoDocx : imprimirPlanejamentoDireto)(args);
   };
   const [m2Form, setM2Form] = useState<{ d: string; tag: string; t: string; p: string }>({
     d: "SEG", tag: M2_TAG_OPTS[0], t: "", p: M2_BNCC_OPTS[0],
@@ -4954,7 +4956,8 @@ export function Planejamento() {
       <PrintInfoModal
         open={m2PrintModalOpen}
         onOpenChange={setM2PrintModalOpen}
-        onConfirm={executarImpressaoM3}
+        onConfirm={(info) => { m3WordMode.current = false; executarImpressaoM3(info); }}
+        onConfirmWord={(info) => { m3WordMode.current = true; executarImpressaoM3(info); }}
         title="Imprimir sequência didática"
       />
     </div>

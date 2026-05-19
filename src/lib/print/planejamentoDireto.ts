@@ -79,8 +79,8 @@ function renderSecao(s: SecaoImpressao): string {
   return `<section class="dia">${head}${blocos}</section>`;
 }
 
-export function imprimirPlanejamentoDireto(args: ImprimirArgs): void {
-  if (typeof window === "undefined") return;
+/** Constrói o HTML do documento padrão (sem trigger de impressão). */
+export function construirPlanejamentoHtml(args: ImprimirArgs): string {
   const periodo = (args.dataInicio || args.dataFim)
     ? `${formatarDataBR(args.dataInicio || "")}${args.dataInicio && args.dataFim ? " a " : ""}${formatarDataBR(args.dataFim || "")}`
     : "";
@@ -104,7 +104,7 @@ export function imprimirPlanejamentoDireto(args: ImprimirArgs): void {
     ? `<hr class="sep-rodape" /><div class="rodape">${esc(args.rodapeLegal)}</div>`
     : "";
 
-  const html = `<!doctype html><html><head><meta charset="utf-8" />
+  return `<!doctype html><html><head><meta charset="utf-8" />
 <title>${esc(args.titulo)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -149,8 +149,16 @@ export function imprimirPlanejamentoDireto(args: ImprimirArgs): void {
   ${assinaturas}
   ${rodape}
 </div>
-<script>window.onload=function(){setTimeout(function(){try{window.print()}catch(_){}} ,250)}<\/script>
 </body></html>`;
+}
+
+export function imprimirPlanejamentoDireto(args: ImprimirArgs): void {
+  if (typeof window === "undefined") return;
+  const base = construirPlanejamentoHtml(args);
+  const html = base.replace(
+    "</body></html>",
+    `<script>window.onload=function(){setTimeout(function(){try{window.print()}catch(_){}} ,250)}<\/script></body></html>`,
+  );
 
   const w = window.open("", "_blank");
   if (!w) {
@@ -162,4 +170,28 @@ export function imprimirPlanejamentoDireto(args: ImprimirArgs): void {
   w.document.write(html);
   w.document.close();
   w.focus();
+}
+
+/**
+ * Faz download do mesmo documento padrão como arquivo Word (.doc) usando
+ * o cabeçalho mso. O Word abre o HTML e preserva o layout impresso.
+ */
+export function salvarPlanejamentoDocx(args: ImprimirArgs, nomeArquivo?: string): void {
+  if (typeof window === "undefined") return;
+  const html = construirPlanejamentoHtml(args);
+  const inner = html
+    .replace(/^<!doctype html>/i, "")
+    .replace(/^<html>/i, "")
+    .replace(/<\/html>\s*$/i, "");
+  const docHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">${inner}</html>`;
+  const blob = new Blob(["\ufeff", docHtml], { type: "application/msword" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const safe = (nomeArquivo || args.titulo || "planejamento").replace(/[^\w-]+/g, "_");
+  link.href = url;
+  link.download = `${safe}.doc`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
 }

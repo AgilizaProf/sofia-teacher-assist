@@ -5,7 +5,7 @@ import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Pri
 import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
-import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
+import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 
 const DISCIPLINAS_COMUNS = [
@@ -567,9 +567,9 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
     setPrintModalOpen(true);
   };
 
-  const executarImpressao = (info: PrintInfo) => {
-    if (diasSelecionados.length === 0) return;
-    imprimirPlanejamentoDireto({
+  const construirArgsTrilha = (info: PrintInfo) => {
+    if (diasSelecionados.length === 0) return null;
+    return {
       titulo: "TRILHA SEMESTRAL",
       escola: info.escola || undefined,
       turma: info.turma || [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined,
@@ -590,7 +590,16 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
         return { titulo, blocos };
       }),
       rodapeLegal: "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB) e a Resolução CNE/CP 4/2018 (BNCC).",
-    });
+    };
+  };
+
+  const executarImpressao = (info: PrintInfo) => {
+    const args = construirArgsTrilha(info);
+    if (args) imprimirPlanejamentoDireto(args);
+  };
+  const executarSalvarWord = (info: PrintInfo) => {
+    const args = construirArgsTrilha(info);
+    if (args) salvarPlanejamentoDocx(args, `Trilha_${(trilha.tema_central || "plano").replace(/\s+/g, "_")}_S${semana.semana}`);
   };
   const exportarWord = () => {
     if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
@@ -718,9 +727,6 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
           <button className="pl-btn ghost" onClick={exportarPdf} style={{ fontSize: 12 }} disabled={selecionados.size === 0}>
             <Printer size={12} /> Imprimir / PDF
           </button>
-          <button className="pl-btn ghost" onClick={exportarWord} style={{ fontSize: 12 }} disabled={selecionados.size === 0}>
-            <Download size={12} /> Salvar em Word
-          </button>
           <button className="pl-btn primary" onClick={salvarSelecionados} disabled={salvandoTodos || selecionados.size === 0} style={{ fontSize: 12 }}>
             {salvandoTodos ? <Loader2 size={12} className="animate-spin" /> : <BookOpen size={12} />}
             {salvandoTodos ? "Salvando…" : `Salvar ${selecionados.size > 0 ? `(${selecionados.size}) ` : ""}no Planejamento`}
@@ -732,6 +738,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
         onOpenChange={setPrintModalOpen}
         defaults={{ turma: [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined }}
         onConfirm={executarImpressao}
+        onConfirmWord={executarSalvarWord}
       />
     </div>
   );

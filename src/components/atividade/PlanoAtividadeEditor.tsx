@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
   Check, Pencil, Lightbulb, AlertTriangle, Save, FileDown, CalendarPlus,
-  Search, Trash2, FileText, Star, Printer,
+  Search, Trash2, FileText, Star, Printer, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -18,7 +18,7 @@ import {
   editorialFieldsGrid,
   editorialLongField,
 } from "@/lib/print/editorialPrint";
-import { imprimirPlanejamentoDireto, type SecaoImpressao } from "@/lib/print/planejamentoDireto";
+import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx, type SecaoImpressao } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 
 /* ─────────────────────────── Types ─────────────────────────── */
@@ -1038,6 +1038,40 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   /* ─────────── PDF ─────────── */
 
+  // Constrói as seções padrão (modelo novo) a partir do plano atual.
+  const construirSecoesPlanoAtual = (): SecaoImpressao[] => {
+    const blocos: SecaoImpressao["blocos"] = [];
+    const descricao = [
+      plano.abertura ? `Abertura\n${plano.abertura}` : "",
+      plano.desenvolvimento ? `Desenvolvimento\n${plano.desenvolvimento}` : "",
+      plano.fechamento ? `Fechamento\n${plano.fechamento}` : "",
+    ].filter(Boolean).join("\n\n");
+    if (descricao) blocos.push({ label: "Atividades:", body: descricao });
+    const habs = (plano.habilidades || []).filter((h) => (h.codigo || h.descricao));
+    if (plano.objetivo || habs.length) {
+      blocos.push({
+        label: "Objetivos:",
+        body: plano.objetivo || undefined,
+        bulletsBncc: habs.map((h) => ({
+          texto: h.descricao?.trim() || h.codigo?.trim() || "—",
+          codigo: h.codigo?.trim() || undefined,
+        })),
+      });
+    }
+    const adapts = plano.adaptacoes.filter((a) => a.incluido !== false);
+    if (adapts.length > 0) {
+      blocos.push({ label: "Adaptações PCD:", bullets: adapts.map((a) => `[${a.categoria}] ${a.texto}`) });
+    }
+    if ((plano.contribuicoesInter ?? []).length > 0) {
+      blocos.push({ label: "Interdisciplinar:", bullets: plano.contribuicoesInter!.map((c) => `${c.disciplina}: ${c.contribuicao}`) });
+    }
+    if (plano.materiais.length > 0) {
+      blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: plano.materiais });
+    }
+    return [{ titulo: plano.titulo || "Plano de atividade", blocos }];
+  };
+
+  const [exportSingleOpen, setExportSingleOpen] = useState(false);
   const exportarPDF = async () => {
     const f = validar();
     setMissing(f);
@@ -1055,119 +1089,32 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       }, 50);
       return;
     }
+    setExportSingleOpen(true);
+  };
 
-    // Mesmo layout editorial dos demais documentos (Relatório, PEI, Inclusão).
-    const titulo = plano.titulo || "Plano de atividade";
-    const meta = [
-      { label: "Ano escolar", value: anoEscolar || "—" },
-      { label: "Disciplina", value: disciplina || "—" },
-      { label: "Turma", value: turma || "—" },
-      { label: "Duração", value: duracao || "—" },
-      { label: "Tipo", value: tipo || "—" },
-      { label: "Modo", value: modo === "pcd" ? "Atividade PCD" : "Regular" },
-    ];
+  const tituloDocPlano = modo === "pcd" ? "PLANO DE ATIVIDADE PCD" : "PLANO DE ATIVIDADE";
 
-    const partes: string[] = [];
-    partes.push(
-      editorialCover({
-        title: titulo,
-        overline:
-          modo === "pcd"
-            ? "PLANO DE ATIVIDADE PCD • AGILIZAPROF"
-            : "PLANO DE ATIVIDADE • AGILIZAPROF",
-        subtitle: `${disciplina}${anoEscolar ? ` · ${anoEscolar}` : ""}${turma ? ` · ${turma}` : ""}`,
-      }),
-    );
-    partes.push(editorialSection("Identificação"));
-    partes.push(editorialFieldsGrid(meta));
-
-    if (plano.objetivo) {
-      partes.push(editorialSection("Objetivo"));
-      partes.push(editorialLongField(plano.objetivo));
-    }
-
-    partes.push(editorialSection("Descrição da atividade"));
-    partes.push(
-      editorialLongField(
-        [
-          plano.abertura ? `Abertura\n${plano.abertura}` : "",
-          plano.desenvolvimento ? `Desenvolvimento\n${plano.desenvolvimento}` : "",
-          plano.fechamento ? `Fechamento\n${plano.fechamento}` : "",
-        ]
-          .filter(Boolean)
-          .join("\n\n"),
-      ),
-    );
-
-    if (plano.habilidades.length > 0) {
-      partes.push(editorialSection("Habilidades BNCC"));
-      partes.push(
-        editorialLongField(
-          plano.habilidades
-            .map((h) => {
-              const cod = h.codigo?.trim();
-              const desc = h.descricao?.trim();
-              if (cod && desc) return `• ${cod} — ${desc}`;
-              return `• ${cod || desc || "—"}`;
-            })
-            .join("\n"),
-        ),
-      );
-    }
-
-    if ((plano.contribuicoesInter ?? []).length > 0) {
-      partes.push(editorialSection("Contribuição por disciplina (interdisciplinar)"));
-      partes.push(
-        editorialLongField(
-          plano.contribuicoesInter!
-            .map((c) => `• ${c.disciplina}: ${c.contribuicao}`)
-            .join("\n"),
-        ),
-      );
-    }
-
-    {
-      const adapts = plano.adaptacoes.filter((a) => a.incluido !== false);
-      if (adapts.length > 0) {
-        partes.push(editorialSection("Adaptações PCD"));
-        partes.push(
-          editorialLongField(
-            adapts.map((a) => `• [${a.categoria}] ${a.texto}`).join("\n"),
-          ),
-        );
-      }
-    }
-
-    if (plano.sugestoes.length > 0) {
-      partes.push(editorialSection("Sugestões da Sofia"));
-      partes.push(
-        editorialLongField(
-          plano.sugestoes.map((s) => `• ${s.titulo} — ${s.descricao}`).join("\n"),
-        ),
-      );
-    }
-
-    if (plano.materiais.length > 0) {
-      partes.push(editorialSection("Materiais necessários"));
-      partes.push(
-        editorialLongField(plano.materiais.map((m) => `☐ ${m}`).join("\n")),
-      );
-    }
-
-    printEditorial(titulo, partes.join("\n"), {
-      docType: "planejamento",
-      docLabel:
-        modo === "pcd"
-          ? "PLANO DE ATIVIDADE PCD"
-          : "PLANO DE ATIVIDADE",
-    });
-
+  const exportarPlanoAtual = (info: PrintInfo, comoWord: boolean) => {
+    const args = {
+      titulo: tituloDocPlano,
+      escola: info.escola || undefined,
+      turma: info.turma || turma || undefined,
+      professor: info.professor || undefined,
+      dataInicio: info.dataInicio || undefined,
+      dataFim: info.dataFim || undefined,
+      secoes: construirSecoesPlanoAtual(),
+      rodapeLegal: modo === "pcd"
+        ? "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB) e a Lei 13.146/2015 (LBI)."
+        : "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
+    };
+    if (comoWord) salvarPlanejamentoDocx(args, plano.titulo || tituloDocPlano);
+    else imprimirPlanejamentoDireto(args);
     logActivity({
       type: "exportacao",
-      description: `PDF exportado: ${plano.titulo}`,
+      description: `${comoWord ? "Word" : "PDF"} exportado: ${plano.titulo}`,
       detail: `${anoEscolar} · ${disciplina}`,
     });
-    showToast("📄 Documento aberto para impressão / PDF");
+    showToast(comoWord ? "💾 Arquivo Word baixado." : "📄 Documento aberto para impressão / PDF");
   };
 
   /**
@@ -1260,9 +1207,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const [printModalOpen, setPrintModalOpen] = useState(false);
 
-  const executarImpressao = (info: PrintInfo) => {
+  const construirArgsImpressao = (info: PrintInfo) => {
     const lista = historico.filter((p) => selecionados.has(p.id));
-    if (lista.length === 0) return;
+    if (lista.length === 0) return null;
     const tituloDoc = modo === "pcd" ? "PLANEJAMENTO PCD" : "PLANEJAMENTO";
     const secoes: SecaoImpressao[] = lista.map((s) => {
       const p = s.plano;
@@ -1302,7 +1249,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       return { titulo, blocos };
     });
     const turmas = Array.from(new Set(lista.map((p) => p.turma).filter(Boolean)));
-    imprimirPlanejamentoDireto({
+    return {
+      lista,
       titulo: tituloDoc,
       escola: info.escola || undefined,
       turma: info.turma || turmas.join(" · ") || undefined,
@@ -1313,13 +1261,33 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       rodapeLegal: modo === "pcd"
         ? "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB) e a Lei 13.146/2015 (LBI)."
         : "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
-    });
+    };
+  };
+
+  const executarImpressao = (info: PrintInfo) => {
+    const a = construirArgsImpressao(info);
+    if (!a) return;
+    const { lista, ...args } = a;
+    imprimirPlanejamentoDireto(args);
     logActivity({
       type: "exportacao",
       description: `Impressão em lote: ${lista.length} atividade(s)`,
       detail: lista.map((p) => p.titulo).join(" | "),
     });
     showToast(`📄 ${lista.length} atividade(s) abertas para impressão / PDF`);
+  };
+
+  const executarSalvarWord = (info: PrintInfo) => {
+    const a = construirArgsImpressao(info);
+    if (!a) return;
+    const { lista, ...args } = a;
+    salvarPlanejamentoDocx(args, `${args.titulo}_${lista.length}_atividades`);
+    logActivity({
+      type: "exportacao",
+      description: `Word exportado em lote: ${lista.length} atividade(s)`,
+      detail: lista.map((p) => p.titulo).join(" | "),
+    });
+    showToast(`💾 ${lista.length} atividade(s) salvas em Word.`);
   };
 
   /* ─────────── Render ─────────── */
@@ -1764,7 +1732,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             <Save size={14} /> {salvo ? "Salvo!" : "Salvar plano"}
           </button>
           <button className="atv-btn" onClick={exportarPDF}>
-            <FileDown size={14} /> Exportar PDF
+            <FileDown size={14} /> Exportar PDF / Word
           </button>
           <button className="atv-btn" onClick={abrirAgenda}>
             <CalendarPlus size={14} /> Agendar no calendário
@@ -2036,6 +2004,15 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         onOpenChange={setPrintModalOpen}
         defaults={{ turma: turma || undefined }}
         onConfirm={executarImpressao}
+        onConfirmWord={executarSalvarWord}
+      />
+      <PrintInfoModal
+        open={exportSingleOpen}
+        onOpenChange={setExportSingleOpen}
+        defaults={{ turma: turma || undefined }}
+        title="Exportar plano de atividade"
+        onConfirm={(info) => exportarPlanoAtual(info, false)}
+        onConfirmWord={(info) => exportarPlanoAtual(info, true)}
       />
     </div>
   );
