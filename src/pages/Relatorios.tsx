@@ -1053,7 +1053,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   const iniciados = rascunhos + aRevisar + finalizados;
   const totalBim = iniciados;
   // Estimativa: cada parecer finalizado economiza ~30min de redação manual.
-  const horasEcon = Math.round((finalizados * 30) / 60);
+  const horasEcon = Math.round((finalizados * 45) / 60);
 
   // Bubble Sofia contextual (proativo)
   const bubbleMsg = (() => {
