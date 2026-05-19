@@ -465,6 +465,72 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const [rascunho, setRascunho] = useState<Record<number, DiaPlano>>({});
   const [printModalOpen, setPrintModalOpen] = useState(false);
 
+  // ===== Agendamento em sequência (toda segunda, dias úteis, etc.) =====
+  type WeekdayMode = "todos" | "uteis" | "0" | "1" | "2" | "3" | "4" | "5" | "6";
+  const [agendOpen, setAgendOpen] = useState(false);
+  const [agendModo, setAgendModo] = useState<WeekdayMode>("1"); // segunda
+  const [agendInicio, setAgendInicio] = useState<string>(today);
+  const [agendPularFeriados, setAgendPularFeriados] = useState(true);
+  const [agendSkip, setAgendSkip] = useState<Record<string, boolean>>({});
+
+  const matchWeekday = (d: Date, modo: WeekdayMode): boolean => {
+    const dow = d.getUTCDay(); // 0=Dom..6=Sab
+    if (modo === "todos") return true;
+    if (modo === "uteis") return dow >= 1 && dow <= 5;
+    return dow === parseInt(modo, 10);
+  };
+  const parseIso = (iso: string): Date => {
+    const [y, m, d] = iso.split("-").map((x) => parseInt(x, 10));
+    return new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+  };
+  const fmtIso = (d: Date): string => d.toISOString().slice(0, 10);
+
+  // Calcula próximas datas candidatas (com até 60 dias de busca a partir do início).
+  const candidatas = useMemo(() => {
+    if (!agendOpen) return [] as Array<{ iso: string; feriado: string | null; weekday: number }>;
+    const out: Array<{ iso: string; feriado: string | null; weekday: number }> = [];
+    const limite = Math.max(selecionados.size, 1) + 14;
+    let cursor = parseIso(agendInicio);
+    const stopAt = new Date(cursor.getTime());
+    stopAt.setUTCDate(stopAt.getUTCDate() + 365);
+    const cacheAnos = new Map<number, Map<string, string>>();
+    while (out.length < limite && cursor.getTime() <= stopAt.getTime()) {
+      if (matchWeekday(cursor, agendModo)) {
+        const iso = fmtIso(cursor);
+        const y = cursor.getUTCFullYear();
+        if (!cacheAnos.has(y)) cacheAnos.set(y, feriadosNacionaisBR(y));
+        const feriado = cacheAnos.get(y)!.get(iso) ?? null;
+        out.push({ iso, feriado, weekday: cursor.getUTCDay() });
+      }
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+    return out;
+  }, [agendOpen, agendModo, agendInicio, selecionados.size]);
+
+  const datasAgendadas = useMemo(() => {
+    const finais: string[] = [];
+    for (const c of candidatas) {
+      if (agendPularFeriados && c.feriado) continue;
+      if (agendSkip[c.iso]) continue;
+      finais.push(c.iso);
+      if (finais.length >= selecionados.size) break;
+    }
+    return finais;
+  }, [candidatas, agendPularFeriados, agendSkip, selecionados.size]);
+
+  const aplicarAgendamento = () => {
+    if (datasAgendadas.length === 0) return;
+    const ordemSel = Array.from(selecionados).sort((a, b) => a - b);
+    const novas: Record<number, string> = { ...datas };
+    ordemSel.forEach((idx, k) => {
+      if (k < datasAgendadas.length) novas[idx] = datasAgendadas[k];
+    });
+    setDatas(novas);
+    setAgendOpen(false);
+  };
+
+  const nomeDia = (w: number) => ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][w] || "";
+
   const toggleSel = (i: number) => setSelecionados((prev) => {
     const next = new Set(prev);
     if (next.has(i)) next.delete(i); else next.add(i);
