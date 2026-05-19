@@ -4770,7 +4770,6 @@ export function Planejamento() {
           onClick={() => setParamsModalOpen(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 1000 }}
         >
-          {/* params modal */}
           <div
             onClick={(e) => e.stopPropagation()}
             style={{ background: "#fff", borderRadius: 14, width: "min(560px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
