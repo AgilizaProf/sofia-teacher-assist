@@ -4767,6 +4767,7 @@ export function Planejamento() {
           role="dialog"
           aria-modal="true"
           aria-label="Ajustar parâmetros"
+          data-paramsmodal
           onClick={() => setParamsModalOpen(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 1000 }}
         >
