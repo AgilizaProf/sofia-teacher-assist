@@ -2453,16 +2453,21 @@ export function Planejamento() {
     else showToast(`Etapa ${next} concluída. Avançando para ${next + 1} de ${m2Total}. ✓`);
   };
   const reiniciarProgresso = () => { setM2CurIdx(0); showToast("Progresso reiniciado."); };
-  // Seleção por aula para impressão (M3). Vazio = todas selecionadas.
+  // Seleção explícita por aula para impressão (M3). Apenas IDs presentes
+  // entram no documento — aulas desmarcadas são omitidas.
   const [m2SelIds, setM2SelIds] = useState<Set<string>>(new Set());
-  const m2ToggleSel = (id: string) => setM2SelIds((prev) => {
-    // Conjunto vazio = "todas selecionadas". Ao desmarcar a primeira,
-    // materializamos o conjunto com todas menos a clicada.
-    if (prev.size === 0) {
-      const next = new Set(m2Steps.map((s) => s.id));
-      next.delete(id);
+  // Mantém a seleção em sincronia com a lista atual de aulas: adiciona
+  // novas aulas automaticamente e remove ids inexistentes.
+  useEffect(() => {
+    setM2SelIds((prev) => {
+      const ids = new Set(m2Steps.map((s) => s.id));
+      const next = new Set<string>();
+      ids.forEach((id) => { if (prev.size === 0 || prev.has(id)) next.add(id); });
       return next;
-    }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [m2Steps.length, m2Steps.map((s) => s.id).join("|")]);
+  const m2ToggleSel = (id: string) => setM2SelIds((prev) => {
     const next = new Set(prev);
     if (next.has(id)) next.delete(id); else next.add(id);
     return next;
@@ -2470,12 +2475,11 @@ export function Planejamento() {
   const [m2PrintModalOpen, setM2PrintModalOpen] = useState(false);
   const imprimirSequencia = () => {
     if (m2Steps.length === 0) { showToast("Adicione ao menos uma aula antes de imprimir."); return; }
+    if (m2SelIds.size === 0) { showToast("Selecione ao menos uma aula para imprimir."); return; }
     setM2PrintModalOpen(true);
   };
   const executarImpressaoM3 = (info: PrintInfo) => {
-    const selecionadas = m2SelIds.size > 0
-      ? m2Steps.filter((s) => m2SelIds.has(s.id))
-      : m2Steps;
+    const selecionadas = m2Steps.filter((s) => m2SelIds.has(s.id));
     if (selecionadas.length === 0) { showToast("Selecione ao menos uma aula."); return; }
     imprimirPlanejamentoDireto({
       titulo: "SEQUÊNCIA DIDÁTICA",
