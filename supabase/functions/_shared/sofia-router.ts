@@ -1,12 +1,12 @@
 // Roteador central de modelos da Sofia.
-// Gemini 1.5/2.5 Flash via Lovable AI Gateway -> respostas rápidas.
-// Claude 3.5 Haiku via API direta da Anthropic -> produção de documentos.
+// Gemini 2.5 Flash via Lovable AI Gateway -> única IA disponível
+// (respostas rápidas e produção de documentos).
 import { isBudgetExceeded, recordUsage } from "./ai-budget.ts";
 import { withConstitution } from "./sofia-constitution.ts";
 
 export const MODELOS = {
   RAPIDO: "google/gemini-2.5-flash",
-  DOCUMENTO: "claude-haiku-4-5-20251001",
+  DOCUMENTO: "google/gemini-2.5-flash",
 } as const;
 
 export type SofiaTaskType =
@@ -28,32 +28,9 @@ export type SofiaTaskType =
   | "trilha_defasagem"
   | "roteiro_ei";
 
-const GEMINI_TASKS: SofiaTaskType[] = [
-  "chat",
-  "sugestoes",
-  "chips",
-  "saudacao",
-  "atalhos",
-  "diario_analise",
-  "padroes",
-  "trilha_progressao",
-  "trilha_defasagem",
-];
-const HAIKU_TASKS: SofiaTaskType[] = [
-  "parecer",
-  "relatorio_bimestral",
-  "pei",
-  "pdi",
-  "trilha_geracao",
-  "trilha_semana",
-  "trilha_relatorio",
-  "roteiro_ei",
-];
-
-export function rotear(tipo: SofiaTaskType): { provider: "lovable" | "anthropic"; model: string } {
-  if (GEMINI_TASKS.includes(tipo)) return { provider: "lovable", model: MODELOS.RAPIDO };
-  if (HAIKU_TASKS.includes(tipo)) return { provider: "anthropic", model: MODELOS.DOCUMENTO };
-  throw new Error(`Tipo de tarefa desconhecido: ${tipo}`);
+export function rotear(_tipo: SofiaTaskType): { provider: "lovable" | "anthropic"; model: string } {
+  // Todas as tarefas usam Gemini 2.5 Flash via Lovable AI Gateway.
+  return { provider: "lovable", model: MODELOS.RAPIDO };
 }
 
 export type CallAIArgs = {
