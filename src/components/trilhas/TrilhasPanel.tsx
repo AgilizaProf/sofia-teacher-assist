@@ -102,6 +102,8 @@ export function TrilhasPanel() {
   const [planoAberto, setPlanoAberto] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [selSemanas, setSelSemanas] = useState<Set<string>>(new Set());
+  const [bulkProgresso, setBulkProgresso] = useState<{ feito: number; total: number; falhou: number } | null>(null);
 
   // Detecta se o ano selecionado é Educação Infantil para alinhar a UI
   // (campos de experiência da BNCC) e o prompt enviado para a Sofia.
@@ -270,6 +272,43 @@ export function TrilhasPanel() {
     const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilhaId).order("semana");
     setSemanas((novas as Semana[]) || []);
   };
+
+  // Gera planos para várias semanas selecionadas em sequência.
+  const gerarPlanosLote = async (trilha: Trilha) => {
+    const alvo = semanas.filter((s) => selSemanas.has(s.id) && !s.plano_gerado);
+    if (alvo.length === 0) return;
+    if (!confirm(`Gerar planos para ${alvo.length} semana(s)? Cada plano consome créditos.`)) return;
+    setBulkProgresso({ feito: 0, total: alvo.length, falhou: 0 });
+    let feito = 0;
+    let falhou = 0;
+    for (const s of alvo) {
+      try {
+        await gerarPlanoSemana(trilha, s);
+      } catch {
+        falhou += 1;
+      }
+      feito += 1;
+      setBulkProgresso({ feito, total: alvo.length, falhou });
+    }
+    setSelSemanas(new Set());
+    // Mantém o aviso final por alguns segundos para o usuário ver o resultado.
+    setTimeout(() => setBulkProgresso(null), 3500);
+  };
+
+  const toggleSelSemana = (id: string) => {
+    setSelSemanas((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const selecionarTodasPendentes = () => {
+    setSelSemanas(new Set(semanas.filter((s) => !s.plano_gerado).map((s) => s.id)));
+  };
+  const limparSelecaoSemanas = () => setSelSemanas(new Set());
+
+  // Limpa seleção quando troca de trilha aberta.
+  useEffect(() => { setSelSemanas(new Set()); setBulkProgresso(null); }, [selected]);
 
   const excluirSemana = async (s: Semana, trilhaId: string) => {
     if (!confirm(`Excluir a semana S${s.semana}${s.titulo ? ` — ${s.titulo}` : ""}? As demais serão renumeradas.`)) return;
@@ -442,11 +481,50 @@ export function TrilhasPanel() {
               {selected === t.id && (
                 <div style={{ marginTop: 14, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
                   {t.justificativa && <p style={{ fontSize: 13, color: "var(--ink-2)", marginBottom: 12 }}>{t.justificativa}</p>}
-                  <h3 style={{ fontSize: 14, marginBottom: 8 }}><Calendar size={14} style={{ display: "inline", marginRight: 6 }} />{semanas.length} semana(s) <small style={{ color: "var(--muted)", fontWeight: 400, fontSize: 11.5, marginLeft: 6 }}>· arraste pela alça <GripVertical size={10} style={{ display: "inline", verticalAlign: "middle" }} /> para reorganizar · 🗑 para excluir</small></h3>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                    <h3 style={{ fontSize: 14, margin: 0 }}>
+                      <Calendar size={14} style={{ display: "inline", marginRight: 6 }} />{semanas.length} semana(s)
+                      <small style={{ color: "var(--muted)", fontWeight: 400, fontSize: 11.5, marginLeft: 6 }}>· arraste pela alça <GripVertical size={10} style={{ display: "inline", verticalAlign: "middle" }} /> · marque várias e gere em lote</small>
+                    </h3>
+                    {(() => {
+                      const pendentes = semanas.filter((s) => !s.plano_gerado);
+                      const selecionadas = pendentes.filter((s) => selSemanas.has(s.id));
+                      const rodando = !!bulkProgresso && bulkProgresso.feito < bulkProgresso.total;
+                      return (
+                        <div onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                          {bulkProgresso && (
+                            <span style={{ fontSize: 11.5, color: bulkProgresso.falhou > 0 ? "#9A3412" : "var(--muted)" }}>
+                              {bulkProgresso.feito}/{bulkProgresso.total} gerada(s){bulkProgresso.falhou > 0 ? ` · ${bulkProgresso.falhou} falha(s)` : ""}
+                            </span>
+                          )}
+                          <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); selecionarTodasPendentes(); }} disabled={pendentes.length === 0 || rodando} style={{ fontSize: 11 }}>
+                            Selecionar pendentes ({pendentes.length})
+                          </button>
+                          {selSemanas.size > 0 && (
+                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); limparSelecaoSemanas(); }} disabled={rodando} style={{ fontSize: 11 }}>
+                              Limpar
+                            </button>
+                          )}
+                          <button
+                            className="pl-btn primary"
+                            onClick={(e) => { e.stopPropagation(); void gerarPlanosLote(t); }}
+                            disabled={selecionadas.length === 0 || rodando}
+                            style={{ fontSize: 11 }}
+                            title="Gera, uma de cada vez, os planos das semanas selecionadas"
+                          >
+                            {rodando ? <Loader2 size={11} className="animate-spin" /> : <Wand2 size={11} />}
+                            {rodando ? `Gerando ${bulkProgresso!.feito + 1}/${bulkProgresso!.total}…` : `Gerar ${selecionadas.length || ""} plano(s) selecionado(s)`}
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
                   <div style={{ display: "grid", gap: 6 }}>
                     {semanas.map((s) => {
                       const isDragging = draggingId === s.id;
                       const isOver = dragOverId === s.id && draggingId && draggingId !== s.id;
+                      const podeSelecionar = !s.plano_gerado;
+                      const checado = selSemanas.has(s.id);
                       return (
                       <div
                         key={s.id}
@@ -456,12 +534,21 @@ export function TrilhasPanel() {
                         onDragOver={(e) => { if (draggingId && draggingId !== s.id) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverId(s.id); } }}
                         onDragLeave={() => { if (dragOverId === s.id) setDragOverId(null); }}
                         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); const fromId = e.dataTransfer.getData("text/plain") || draggingId; setDragOverId(null); setDraggingId(null); if (fromId) void reordenarSemanas(fromId, s.id, t.id); }}
-                        style={{ background: isOver ? "#FFF7ED" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : "none", transition: "background .12s ease" }}
+                        style={{ background: isOver ? "#FFF7ED" : checado ? "#FFF7ED" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : checado ? "1px solid var(--orange)" : "none", transition: "background .12s ease" }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
                           <span title="Arraste para reordenar" style={{ cursor: "grab", color: "var(--muted)", display: "inline-flex", alignItems: "center", padding: "2px 0", touchAction: "none" }} aria-label="Arrastar semana">
                             <GripVertical size={14} />
                           </span>
+                          <input
+                            type="checkbox"
+                            checked={checado}
+                            disabled={!podeSelecionar}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => { e.stopPropagation(); toggleSelSemana(s.id); }}
+                            title={podeSelecionar ? "Marcar para gerar em lote" : "Plano já gerado"}
+                            style={{ width: 14, height: 14, accentColor: "var(--orange)", cursor: podeSelecionar ? "pointer" : "not-allowed" }}
+                          />
                           <span style={{ minWidth: 28, fontWeight: 600, color: "var(--orange)" }}>S{s.semana}</span>
                           <span style={{ flex: 1 }}>{s.titulo}</span>
                           <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: s.status === "concluida" ? "#D1FAE5" : s.status === "em_andamento" ? "#DBEAFE" : "#F1F5F9", color: s.status === "concluida" ? "#065F46" : s.status === "em_andamento" ? "#1E40AF" : "#64748B" }}>{s.status}</span>
