@@ -270,11 +270,6 @@ const css = `
 .viral-action{display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--accent-deep);border:1px solid #FFD9BF;padding:9px 14px;border-radius:9px;font-size:12px;font-weight:800;flex-shrink:0;transition:all .2s;}
 .viral-action:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
 .viral-action svg{width:12px;height:12px;}
-.authorize{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;}
-.authorize-icon{width:34px;height:34px;border-radius:9px;background:var(--bg-soft);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.authorize-content{flex:1;min-width:0;}
-.authorize-title{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3;}
-.authorize-sub{font-size:11px;color:var(--text-soft);margin-top:2px;}
 .toggle-switch{position:relative;width:36px;height:20px;border-radius:100px;background:#CBD5E1;cursor:pointer;transition:background .25s;flex-shrink:0;}
 .toggle-switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.20);transition:transform .25s;}
 .toggle-switch.on{background:var(--accent);}
@@ -489,7 +484,7 @@ export function Dashboard() {
   const [studentClassSel, setStudentClassSel] = useState<string>("");
   const [studentSchoolSel, setStudentSchoolSel] = useState<string>("");
   const baseStudents = 0;
-  const [authorize, setAuthorize] = useState(false);
+  
   const [filter, setFilter] = useState<"all" | "pcd" | "reg">("all");
   const [collapsedClasses, setCollapsedClasses] = useState<Record<string, boolean>>({});
   const [editingClassIdx, setEditingClassIdx] = useState<number | null>(null);
@@ -1569,14 +1564,6 @@ export function Dashboard() {
             </button>
           </div>
 
-          <div className="authorize">
-            <div className="authorize-icon">📝</div>
-            <div className="authorize-content">
-              <div className="authorize-title">Autorizar nome nos documentos gerados</div>
-              <div className="authorize-sub">Seu nome será incluído como autor(a) nos relatórios e planejamentos exportados.</div>
-            </div>
-            <button className={`toggle-switch ${authorize ? "on" : ""}`} aria-label="Autorizar" onClick={() => setAuthorize(v => !v)} />
-          </div>
         </main>
       </div>
 
