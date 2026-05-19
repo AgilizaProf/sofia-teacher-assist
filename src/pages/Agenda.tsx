@@ -1498,6 +1498,94 @@ export function Agenda() {
             </div>
           </div>
         )}
+        {printOpen && (
+          <div className="ag-overlay" onClick={() => setPrintOpen(false)}>
+            <div className="ag-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="ag-panel-head">
+                <div style={{ minWidth: 0 }}>
+                  <div className="ag-panel-title">Imprimir compromissos e atividades</div>
+                  <div className="ag-panel-sub">
+                    Selecione período e eventos. Será impresso em ordem de dia e horário, com título, tipo, horário e observações.
+                  </div>
+                </div>
+                <button className="ag-panel-close" onClick={() => setPrintOpen(false)} aria-label="Fechar"><X size={16} /></button>
+              </div>
+              <div className="ag-panel-body">
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+                  <label style={{ fontSize: 12, color: "#5b6478", display: "flex", flexDirection: "column", gap: 4 }}>
+                    De
+                    <input
+                      type="date"
+                      value={printFrom}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPrintFrom(v);
+                        setPrintSel(new Set(events.filter((ev) => (!v || ev.date >= v) && (!printTo || ev.date <= printTo)).map((ev) => ev.id)));
+                      }}
+                      style={{ padding: "6px 8px", border: "1px solid rgba(15,27,54,.12)", borderRadius: 8 }}
+                    />
+                  </label>
+                  <label style={{ fontSize: 12, color: "#5b6478", display: "flex", flexDirection: "column", gap: 4 }}>
+                    Até
+                    <input
+                      type="date"
+                      value={printTo}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPrintTo(v);
+                        setPrintSel(new Set(events.filter((ev) => (!printFrom || ev.date >= printFrom) && (!v || ev.date <= v)).map((ev) => ev.id)));
+                      }}
+                      style={{ padding: "6px 8px", border: "1px solid rgba(15,27,54,.12)", borderRadius: 8 }}
+                    />
+                  </label>
+                </div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <button className="ag-btn" onClick={() => setAllPrint(true)}>Selecionar todos</button>
+                  <button className="ag-btn" onClick={() => setAllPrint(false)}>Limpar</button>
+                  <span style={{ marginLeft: "auto", fontSize: 12, color: "#5b6478", alignSelf: "center" }}>
+                    {printSel.size}/{printItems.length} selecionado(s)
+                  </span>
+                </div>
+                {printItems.length === 0 ? (
+                  <div className="ag-empty">Nenhum evento no período escolhido.</div>
+                ) : (
+                  printItems.map((ev) => {
+                    const [, mm, dd] = ev.date.split("-");
+                    return (
+                      <label key={ev.id} className="ag-panel-event" style={{ cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={printSel.has(ev.id)}
+                          onChange={() => togglePrintItem(ev.id)}
+                          style={{ marginTop: 4 }}
+                        />
+                        <span className="ev-dot" style={{ background: TYPE_COLOR[ev.type] }} />
+                        <div className="ev-body">
+                          <div className="ev-title">{ev.title}</div>
+                          <div className="ev-meta">
+                            <span>{dd}/{mm}</span>
+                            {ev.time && (<><span className="mdot" /><span>{ev.time}</span></>)}
+                            <span className="mdot" />
+                            <span>{TYPE_LABEL[ev.type]}</span>
+                          </div>
+                          {ev.notes && (
+                            <div style={{ fontSize: 11, color: "#5b6478", marginTop: 4, whiteSpace: "pre-wrap" }}>{ev.notes}</div>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+              <div className="ag-panel-foot">
+                <button className="ag-btn" onClick={() => setPrintOpen(false)}>Fechar</button>
+                <button className="ag-btn primary" onClick={confirmPrint} disabled={printSel.size === 0}>
+                  <Printer size={14} /> Imprimir selecionados
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
