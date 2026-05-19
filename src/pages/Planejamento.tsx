@@ -2453,11 +2453,32 @@ export function Planejamento() {
     else showToast(`Etapa ${next} concluída. Avançando para ${next + 1} de ${m2Total}. ✓`);
   };
   const reiniciarProgresso = () => { setM2CurIdx(0); showToast("Progresso reiniciado."); };
+  // Seleção por aula para impressão (M3). Vazio = todas selecionadas.
+  const [m2SelIds, setM2SelIds] = useState<Set<string>>(new Set());
+  const m2ToggleSel = (id: string) => setM2SelIds((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const [m2PrintModalOpen, setM2PrintModalOpen] = useState(false);
   const imprimirSequencia = () => {
     if (m2Steps.length === 0) { showToast("Adicione ao menos uma aula antes de imprimir."); return; }
+    setM2PrintModalOpen(true);
+  };
+  const executarImpressaoM3 = (info: PrintInfo) => {
+    const selecionadas = m2SelIds.size > 0
+      ? m2Steps.filter((s) => m2SelIds.has(s.id))
+      : m2Steps;
+    if (selecionadas.length === 0) { showToast("Selecione ao menos uma aula."); return; }
     imprimirPlanejamentoDireto({
       titulo: "SEQUÊNCIA DIDÁTICA",
-      secoes: m2Steps.map((s, idx) => {
+      escola: info.escola || undefined,
+      turma: info.turma || undefined,
+      professor: info.professor || undefined,
+      dataInicio: info.dataInicio || undefined,
+      dataFim: info.dataFim || undefined,
+      secoes: selecionadas.map((s) => {
+        const idx = m2Steps.findIndex((x) => x.id === s.id);
         const status = idx < m2CurIdx ? "Concluída" : idx === m2CurIdx ? "Em andamento" : "Futura";
         return {
           titulo: `Aula ${idx + 1} — ${s.d} · ${s.tag} · ${status}`,
