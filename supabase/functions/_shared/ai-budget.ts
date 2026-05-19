@@ -12,12 +12,7 @@ const CREDITS_PER_BRL = Number(Deno.env.get("CREDITS_PER_BRL") ?? 100);
 
 // Preço por 1M tokens (USD).
 const PRICING: Record<string, { in: number; out: number }> = {
-  "google/gemini-2.5-flash":      { in: 0.30, out: 2.50 },
-  "google/gemini-2.5-flash-lite": { in: 0.10, out: 0.40 },
-  "google/gemini-2.5-pro":        { in: 1.25, out: 10.0 },
-  "claude-haiku-4-5-20251001":    { in: 1.00, out: 5.00 },
-  "openai/gpt-5-mini":            { in: 0.25, out: 2.00 },
-  "openai/gpt-5":                 { in: 1.25, out: 10.0 },
+  "google/gemini-2.5-flash": { in: 0.30, out: 2.50 },
 };
 
 export function costBrl(model: string, inTok: number, outTok: number): number {
@@ -69,7 +64,7 @@ export async function isBudgetExceeded(
 
 export async function recordUsage(args: {
   userId: string;
-  provider: "lovable" | "anthropic";
+  provider: "lovable";
   model: string;
   task: string;
   inputTokens: number;
