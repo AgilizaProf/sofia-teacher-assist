@@ -795,7 +795,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
           {gerenciarOpen && (
             <div style={{ background: "#fff", border: "1px dashed var(--line)", borderRadius: 8, padding: 10, display: "grid", gap: 8 }}>
               <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
-                Cadastre feriados locais, dias de prova ou outros dias sem aula. Eles serão sempre pulados pelo agendador.
+                Cadastre feriados locais, dias de prova ou outros dias sem aula para <strong style={{ color: "var(--ink)" }}>{trilha.turma || "(turma não definida)"}</strong>. Cada turma tem sua própria lista — eles serão sempre pulados pelo agendador.
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
                 <input type="date" value={novoDiaPular.date} onChange={(e) => setNovoDiaPular({ ...novoDiaPular, date: e.target.value })} style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }} />
