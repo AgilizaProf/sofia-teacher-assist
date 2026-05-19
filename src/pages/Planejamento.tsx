@@ -4956,7 +4956,8 @@ export function Planejamento() {
       <PrintInfoModal
         open={m2PrintModalOpen}
         onOpenChange={setM2PrintModalOpen}
-        onConfirm={executarImpressaoM3}
+        onConfirm={(info) => { m3WordMode.current = false; executarImpressaoM3(info); }}
+        onConfirmWord={(info) => { m3WordMode.current = true; executarImpressaoM3(info); }}
         title="Imprimir sequência didática"
       />
     </div>
