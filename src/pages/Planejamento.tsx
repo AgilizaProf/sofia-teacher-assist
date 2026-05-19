@@ -3085,6 +3085,7 @@ export function Planejamento() {
                     <button className="pl-btn ghost" onClick={() => setParamsModalOpen(true)} title="Ajustar parâmetros"><Pencil size={14} /> Ajustar parâmetros</button>
                     <button className="pl-btn ghost" onClick={limparSemanaM1} disabled={m1Stats.atividades === 0}><X size={14} /> Limpar</button>
                     <button className="pl-btn ghost" onClick={gerarComSofia} disabled={m1Generating}><RefreshCw size={14} /> Regenerar</button>
+                    <button className="pl-btn" onClick={m1OpenExport} disabled={m1Stats.atividades === 0}><Download size={14} /> Exportar PDF / Word</button>
                     <button
                       className="pl-btn primary"
                       onClick={gerarComSofia}
