@@ -5,7 +5,7 @@ import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Pri
 import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
-import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
+import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 
 const DISCIPLINAS_COMUNS = [
