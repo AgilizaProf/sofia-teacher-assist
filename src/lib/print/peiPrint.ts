@@ -296,6 +296,7 @@ body{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12pt;line-heigh
   <div class="doc-ident">
     ${identificacao}
   </div>
+  <hr class="sep"/>
   ${corpo}
   ${assinaturas}
   ${rodape}
