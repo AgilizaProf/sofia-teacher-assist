@@ -566,11 +566,24 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
   };
   const exportarPdf = () => {
     if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
-    const html = buildHtml(formato);
-    const w = window.open("", "_blank", "width=900,height=1000");
-    if (!w) { alert("Permita pop-ups para gerar o PDF."); return; }
-    w.document.open(); w.document.write(html); w.document.close(); w.focus();
-    setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 350);
+    imprimirPlanejamentoDireto({
+      titulo: "TRILHA SEMESTRAL",
+      turma: [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined,
+      secoes: diasSelecionados.map((d, idx) => {
+        const blocos: Array<{ label: string; body?: string; bullets?: string[] }> = [];
+        const ativ = [d.abertura, d.desenvolvimento, d.fechamento].filter(Boolean).join("\n\n");
+        if (ativ) blocos.push({ label: "Atividades:", body: ativ });
+        const obj = [d.objetivo, d.habilidade_bncc ? `BNCC: ${d.habilidade_bncc}` : ""].filter(Boolean).join("\n");
+        if (obj) blocos.push({ label: "Objetivos:", body: obj });
+        if (Array.isArray(d.materiais) && d.materiais.length) {
+          blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: d.materiais });
+        }
+        if (d.adaptacao_pcd) blocos.push({ label: "Adaptação PCD:", body: d.adaptacao_pcd });
+        const titulo = `Dia ${idx + 1}${d.dia ? ` · ${d.dia}` : ""}${d.titulo ? ` — ${d.titulo}` : ""}`;
+        return { titulo, blocos };
+      }),
+      rodapeLegal: "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB) e a Resolução CNE/CP 4/2018 (BNCC).",
+    });
   };
   const exportarWord = () => {
     if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
