@@ -1265,100 +1265,39 @@ export function Planejamento() {
     setM5ConfirmDelete(false);
   };
   const m5OpenReplicar = () => { setM5ReplicaPicks({}); setM5ReplicaOpen(true); };
-  const m5ExportPdf = async () => {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const margin = 40;
-    const contentW = pageW - margin * 2;
-    const bottomLimit = pageH - margin - 24; // leave room for footer
-    let y = margin;
-    let pageNum = 1;
-
-    const drawFooter = () => {
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(150);
-      doc.text(`Página ${pageNum}`, pageW - margin, pageH - margin / 2, { align: "right" });
-      doc.text(`Planejamento · ${m5Turma}`, margin, pageH - margin / 2);
+  const [m5PrintModalOpen, setM5PrintModalOpen] = useState(false);
+  const m5WordMode = useRef(false);
+  const m5OpenExport = () => {
+    const total = DAYS.reduce((s, d) => s + (week[d.k]?.length || 0), 0);
+    if (total === 0) { showToast("A semana está vazia."); return; }
+    setM5PrintModalOpen(true);
+  };
+  const executarExportacaoM5 = (info: PrintInfo) => {
+    const secoes = DAYS
+      .filter((d) => (week[d.k]?.length || 0) > 0)
+      .map((d) => {
+        const cards = week[d.k] || [];
+        const ativ = cards.map((c) => `${c.tag ? `[${c.tag}] ` : ""}${c.title}`).join("\n");
+        const metas = cards.map((c) => `${c.tag ? `[${c.tag}] ` : ""}${c.meta}`).filter(Boolean).join("\n");
+        const blocos: Array<{ label: string; body?: string; bullets?: string[] }> = [];
+        if (ativ) blocos.push({ label: "Atividades:", body: ativ });
+        if (metas) blocos.push({ label: "Detalhes:", body: metas });
+        return { titulo: `${d.n} · ${d.d}`, blocos };
+      });
+    if (secoes.length === 0) { showToast("A semana está vazia."); return; }
+    const args = {
+      titulo: "PLANEJAMENTO DA SEMANA",
+      escola: info.escola || undefined,
+      turma: info.turma || m5Turma || undefined,
+      professor: info.professor || undefined,
+      dataInicio: info.dataInicio || undefined,
+      dataFim: info.dataFim || undefined,
+      secoes,
+      rodapeLegal: "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
     };
-    const newPage = () => {
-      drawFooter();
-      doc.addPage();
-      pageNum += 1;
-      y = margin;
-    };
-    const ensureSpace = (h: number) => { if (y + h > bottomLimit) newPage(); };
-
-    // Header
-    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.setTextColor(15, 23, 42);
-    doc.text("Planejamento da Semana", margin, y); y += 22;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(90);
-    doc.text(`Turma: ${m5Turma}`, margin, y); y += 14;
-    doc.text(`Exportado em: ${new Date().toLocaleString("pt-BR")}`, margin, y); y += 18;
-    doc.setDrawColor(220); doc.line(margin, y, pageW - margin, y); y += 16;
-
-    // Pre-measure cards (with wrapped title + meta)
-    const cardPadX = 10;
-    const tagColW = 70;
-    const titleW = contentW - cardPadX * 2 - tagColW;
-    const metaW = contentW - cardPadX * 2;
-    const measureCard = (c: Card) => {
-      doc.setFontSize(11);
-      const titleLines = doc.splitTextToSize(c.title || "", titleW) as string[];
-      doc.setFontSize(9);
-      const metaLines = doc.splitTextToSize(c.meta || "", metaW) as string[];
-      const h = 10 /*top pad*/ + titleLines.length * 13 + 4 + metaLines.length * 11 + 10 /*bottom pad*/;
-      return { titleLines, metaLines, h };
-    };
-
-    DAYS.forEach((day) => {
-      const cards = week[day.k] || [];
-      const measured = cards.map(measureCard);
-      const headerH = 22;
-      const emptyH = 22;
-      const dayTotal = headerH + (cards.length === 0 ? emptyH : measured.reduce((s, m) => s + m.h + 6, 0)) + 10;
-
-      // Keep day intact if it fits on a page; otherwise allow card-level split
-      const fitsOnPage = dayTotal <= bottomLimit - margin;
-      if (fitsOnPage) ensureSpace(dayTotal);
-      else ensureSpace(headerH + (measured[0]?.h ?? emptyH) + 6);
-
-      // Day header
-      doc.setTextColor(15, 23, 42); doc.setFont("helvetica", "bold"); doc.setFontSize(13);
-      doc.text(`${day.n} · ${day.d}  (${cards.length} ${cards.length === 1 ? "atividade" : "atividades"})`, margin, y);
-      y += 16;
-
-      if (cards.length === 0) {
-        doc.setFont("helvetica", "italic"); doc.setFontSize(10); doc.setTextColor(150);
-        doc.text("Sem atividades.", margin + 12, y); y += 18;
-      } else {
-        cards.forEach((c, i) => {
-          const m = measured[i];
-          ensureSpace(m.h + 6);
-          // Card box
-          doc.setDrawColor(230); doc.setFillColor(248, 250, 252);
-          doc.roundedRect(margin, y, contentW, m.h, 6, 6, "FD");
-          // Tag
-          doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(249, 115, 22);
-          doc.text(c.tag || "", margin + cardPadX, y + 16);
-          // Title (wrapped)
-          doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(15, 23, 42);
-          let ty = y + 16;
-          m.titleLines.forEach((line) => { doc.text(line, margin + cardPadX + tagColW, ty); ty += 13; });
-          // Meta (wrapped)
-          doc.setFontSize(9); doc.setTextColor(110);
-          let my = y + 16 + m.titleLines.length * 13 + 6;
-          m.metaLines.forEach((line) => { doc.text(line, margin + cardPadX, my); my += 11; });
-          y += m.h + 6;
-        });
-      }
-      y += 6;
-    });
-    drawFooter();
-
-    const safeTurma = m5Turma.replace(/[^\w-]+/g, "_");
-    doc.save(`planejamento-semana-${safeTurma}.pdf`);
-    showToast("📄 PDF exportado.");
+    if (m5WordMode.current) salvarPlanejamentoDocx(args, `planejamento-semana-${m5Turma.replace(/[^\w-]+/g, "_")}`);
+    else imprimirPlanejamentoDireto(args);
+    showToast(m5WordMode.current ? "💾 Arquivo Word baixado." : "📄 Documento aberto para impressão / PDF");
   };
   const m5ConfirmarReplicar = () => {
     const sel = Object.entries(m5ReplicaPicks).filter(([, v]) => v).map(([k]) => k);
@@ -2917,7 +2856,7 @@ export function Planejamento() {
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
                     <button className="pl-btn" onClick={() => setM5HistoryOpen(true)}><Clock size={14} /> Histórico {m5History.length > 0 && `(${m5History.length})`}</button>
                     <button className="pl-btn" onClick={m5OpenReplicar}><Copy size={14} /> Replicar em turmas</button>
-                    <button className="pl-btn" onClick={m5ExportPdf}><Download size={14} /> Exportar PDF</button>
+                    <button className="pl-btn" onClick={m5OpenExport}><Download size={14} /> Exportar PDF / Word</button>
                     <button className="pl-btn primary" onClick={m5GerarComSofia} disabled={m5Generating}>
                       <Sparkles size={14} /> {m5Generating ? "Sofia montando…" : "Gerar com Sofia"}
                     </button>
@@ -4959,6 +4898,13 @@ export function Planejamento() {
         onConfirm={(info) => { m3WordMode.current = false; executarImpressaoM3(info); }}
         onConfirmWord={(info) => { m3WordMode.current = true; executarImpressaoM3(info); }}
         title="Imprimir sequência didática"
+      />
+      <PrintInfoModal
+        open={m5PrintModalOpen}
+        onOpenChange={setM5PrintModalOpen}
+        onConfirm={(info) => { m5WordMode.current = false; executarExportacaoM5(info); }}
+        onConfirmWord={(info) => { m5WordMode.current = true; executarExportacaoM5(info); }}
+        title="Exportar planejamento da semana"
       />
     </div>
   ));
