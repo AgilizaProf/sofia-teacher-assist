@@ -3513,7 +3513,7 @@ export function Planejamento() {
                               >
                                 <input
                                   type="checkbox"
-                                  checked={m2SelIds.size === 0 ? true : m2SelIds.has(s.id)}
+                                  checked={m2SelIds.has(s.id)}
                                   onChange={() => m2ToggleSel(s.id)}
                                   onClick={(e) => e.stopPropagation()}
                                   title="Incluir na impressão"
