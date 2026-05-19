@@ -905,12 +905,28 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
             );
           })()}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-            <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
-              {datasAgendadas.length}/{selecionados.size} datas preparadas
-              {datasAgendadas.length < selecionados.size && " — amplie o intervalo ou desmarque menos dias."}
-            </div>
+            {datasAgendadas.length < selecionados.size ? (
+              <div style={{ flex: 1, minWidth: 240, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "#FEF3C7", border: "1px solid #FCD34D", color: "#92400E", fontSize: 12 }}>
+                <span>
+                  <strong>Faltam {selecionados.size - datasAgendadas.length} data(s).</strong> Só consegui preparar {datasAgendadas.length} de {selecionados.size} a partir de {agendInicio.split("-").reverse().join("/")}.
+                </span>
+                <button
+                  type="button"
+                  className="pl-btn primary"
+                  onClick={() => setAgendExtra((x) => x + 30)}
+                  style={{ fontSize: 11 }}
+                  title="Procurar mais datas candidatas a partir da data inicial"
+                >
+                  Estender intervalo automaticamente
+                </button>
+              </div>
+            ) : (
+              <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                {datasAgendadas.length}/{selecionados.size} datas preparadas
+              </div>
+            )}
             <div style={{ display: "inline-flex", gap: 6 }}>
-              <button className="pl-btn ghost" onClick={() => { setAgendSkip({}); }} style={{ fontSize: 11 }}>Limpar exclusões</button>
+              <button className="pl-btn ghost" onClick={() => { setAgendSkip({}); setAgendExtra(0); }} style={{ fontSize: 11 }}>Limpar exclusões</button>
               <button className="pl-btn primary" onClick={aplicarAgendamento} disabled={datasAgendadas.length === 0} style={{ fontSize: 11 }}>
                 Aplicar datas
               </button>
