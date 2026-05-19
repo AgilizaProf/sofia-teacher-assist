@@ -251,7 +251,22 @@ export function TrilhasPanel() {
           disciplina: trilha.disciplina || "",
         },
       });
-      if (fnErr) throw fnErr;
+      if (fnErr) {
+        // Tenta extrair mensagem amigável do corpo da resposta (ex.: 402 limite mensal)
+        let msg = (fnErr as Error).message || "Falha ao gerar o plano.";
+        let blocked = false;
+        try {
+          const ctx = (fnErr as unknown as { context?: Response }).context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.clone().json().catch(() => null);
+            if (body?.error) msg = String(body.error);
+            if (body?.blocked) blocked = true;
+          }
+        } catch { /* ignore */ }
+        const err = new Error(msg) as Error & { blocked?: boolean };
+        err.blocked = blocked;
+        throw err;
+      }
       const plano = (data as { plano?: unknown })?.plano || {};
       await supabase.from("trilha_semanas")
         .update({ plano_gerado: plano as never, status: s.status === "futura" ? "em_andamento" : s.status })
@@ -262,6 +277,7 @@ export function TrilhasPanel() {
       void consumirCreditos(CUSTOS.planejamento_semanal, `Planejamento semanal · Semana ${s.semana}`);
     } catch (e) {
       alert((e as Error).message || "Não consegui gerar o plano agora.");
+      throw e;
     } finally {
       setGerandoSemana(null);
     }
@@ -284,8 +300,13 @@ export function TrilhasPanel() {
     for (const s of alvo) {
       try {
         await gerarPlanoSemana(trilha, s);
-      } catch {
+      } catch (e) {
         falhou += 1;
+        feito += 1;
+        setBulkProgresso({ feito, total: alvo.length, falhou });
+        // Se o limite mensal de IA foi atingido, interrompe o lote.
+        if ((e as { blocked?: boolean })?.blocked) break;
+        continue;
       }
       feito += 1;
       setBulkProgresso({ feito, total: alvo.length, falhou });
