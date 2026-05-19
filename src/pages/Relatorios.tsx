@@ -964,10 +964,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
     toast.success(`Abrindo impressão de ${alunos.length} parecer(es) — escolha 'Salvar como PDF' se preferir.`);
   };
 
-  // Deriva valores reais do SofiaContext
-  const totalBim = ctx.dataState.pareceres_total_bimestre;
+  // Deriva valores do SofiaContext (fallback) — os valores REAIS são recalculados
+  // mais abaixo a partir da `alunosLista` desta página (estado real do usuário).
   const alunosCount = combinedStudents.length > 0 ? combinedStudents.length : ctx.dataState.alunos_count;
-  const horasEcon = ctx.user.horas_economizadas_mes;
 
   // Mesmo cálculo da página inicial (Tempo devolvido)
   const earnedMinutes =
@@ -1049,6 +1048,13 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   const pct = totalAlunos > 0 ? Math.round((finalizados / totalAlunos) * 100) : 0;
   const restantes = Math.max(0, totalAlunos - finalizados);
 
+  // Valores reais para o banner — refletem a página, não dados mockados.
+  // "Iniciado" = qualquer aluno com observação preenchida ou parecer gerado.
+  const iniciados = rascunhos + aRevisar + finalizados;
+  const totalBim = iniciados;
+  // Estimativa: cada parecer finalizado economiza ~30min de redação manual.
+  const horasEcon = Math.round((finalizados * 30) / 60);
+
   // Bubble Sofia contextual (proativo)
   const bubbleMsg = (() => {
     if (!isPro) return null;
@@ -1113,21 +1119,53 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           <section className="rel-hero">
             <div className="rel-hero-grid">
               <div>
-              <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> {totalBim > 0 ? `BIMESTRE ${bimestreNum}º · EM ANDAMENTO` : (isEi ? "COMECE PELOS RELATÓRIOS DE DESENVOLVIMENTO" : "COMECE PELOS PARECERES")}</span>
-                {totalBim === 0 ? (
+              <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> {
+                alunosCount === 0
+                  ? "CADASTRE SUA TURMA PARA COMEÇAR"
+                  : totalBim === 0
+                    ? (isEi ? "COMECE PELOS RELATÓRIOS DE DESENVOLVIMENTO" : "COMECE PELOS PARECERES")
+                    : pct >= 100
+                      ? `BIMESTRE ${bimestreNum}º · TUDO FINALIZADO`
+                      : `BIMESTRE ${bimestreNum}º · ${pct}% CONCLUÍDO`
+              }</span>
+                {alunosCount === 0 ? (
+                  <>
+                    <h1>Cadastre sua turma<br />para começar.</h1>
+                    <p>Adicione seus alunos em <b>Inclusão</b> ou no <b>Dashboard</b> para gerar {isEi ? "relatórios" : "pareceres"} aqui.</p>
+                  </>
+                ) : totalBim === 0 ? (
                   <>
                     <h1>{isEi ? <>Nenhum relatório<br />gerado ainda.</> : <>Nenhum parecer<br />gerado ainda.</>}</h1>
-                    <p>{isEi ? "Cadastre as crianças e gere o primeiro relatório de desenvolvimento com a Sofia em poucos minutos." : "Cadastre seus alunos e gere o primeiro parecer descritivo com a Sofia em poucos minutos."}</p>
+                    <p>{isEi
+                      ? `${alunosCount} criança(s) cadastrada(s). Gere o primeiro relatório de desenvolvimento com a Sofia em poucos minutos.`
+                      : `${alunosCount} aluno(s) cadastrado(s). Gere o primeiro parecer descritivo com a Sofia em poucos minutos.`}</p>
+                  </>
+                ) : pct >= 100 ? (
+                  <>
+                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>todos prontos</em>: {finalizados}/{totalAlunos}.</h1>
+                    <p>Bimestre fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação ou siga para o próximo bimestre.</p>
                   </>
                 ) : (
                   <>
-                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>{finalizados}/{alunosCount}</em> prontos.</h1>
-                    <p>{restantes > 0 ? `Faltam ${restantes} pra fechar o bimestre. A Sofia gera em rascunho e você só revisa.` : `Todos os ${isEi ? "relatórios" : "pareceres"} do bimestre estão fechados. Bora exportar pra coordenação?`}</p>
+                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>{finalizados}/{totalAlunos}</em> prontos.</h1>
+                    <p>{[
+                      rascunhos > 0 ? `${rascunhos} em rascunho` : null,
+                      aRevisar > 0 ? `${aRevisar} para revisar` : null,
+                      aFazer > 0 ? `${aFazer} a fazer` : null,
+                    ].filter(Boolean).join(" · ") || "Quase lá."} {restantes > 0 ? `Faltam ${restantes} para fechar o bimestre.` : ""}</p>
                   </>
                 )}
                 <div className="rel-hero-cta">
                   <button className="rel-btn-primary" onClick={goLote} aria-label="Gerar com a Sofia">
-                    <Sparkles size={14} strokeWidth={2.4} /> {totalBim === 0 ? (isEi ? "Gerar primeiro relatório" : "Gerar primeiro parecer") : restantes > 0 ? `Gerar ${restantes} restantes` : "Exportar tudo (PDF)"} <ArrowRight size={14} strokeWidth={2.4} />
+                    <Sparkles size={14} strokeWidth={2.4} /> {
+                      alunosCount === 0
+                        ? "Cadastrar alunos"
+                        : totalBim === 0
+                          ? (isEi ? "Gerar primeiro relatório" : "Gerar primeiro parecer")
+                          : restantes > 0
+                            ? `Gerar ${restantes} restante${restantes > 1 ? "s" : ""}`
+                            : "Exportar tudo (PDF)"
+                    } <ArrowRight size={14} strokeWidth={2.4} />
                   </button>
                   <button className="rel-btn-ghost" aria-label="Ver como funciona" onClick={() => setTutorialOpen(true)}>
                     <PlayCircle size={14} /> Como funciona · 60s
@@ -1136,9 +1174,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               </div>
               <div className="rel-pc">
                 <div className="rel-pc-title">PROGRESSO DO BIMESTRE</div>
-                <div className="rel-pc-num">{finalizados}<span>/{alunosCount} alunos</span></div>
+                <div className="rel-pc-num">{finalizados}<span>/{totalAlunos} alunos</span></div>
                 <div className="rel-pc-bar"><i style={{ width: `${pct}%` }} /></div>
-                <div className="rel-pc-meta"><span>{pct}% concluído</span><span>{horasEcon > 0 ? `~${horasEcon}h economizadas` : "—"}</span></div>
+                <div className="rel-pc-meta"><span>{pct}% concluído</span><span>{horasEcon > 0 ? `~${horasEcon}h economizadas` : "sem economia ainda"}</span></div>
               </div>
             </div>
           </section>
