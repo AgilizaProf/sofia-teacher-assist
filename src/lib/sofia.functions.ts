@@ -237,3 +237,33 @@ export const getSofiaConversation = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { messages: msgs || [] };
   });
+
+export const deleteSofiaConversation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => {
+    const id = (d as { id?: unknown })?.id;
+    if (typeof id !== "string") throw new Error("id inválido");
+    return { id };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("sofia_conversations")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const clearSofiaConversations = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("sofia_conversations")
+      .delete()
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
