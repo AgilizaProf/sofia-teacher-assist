@@ -727,6 +727,12 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
           </button>
         </div>
       )}
+      <PrintInfoModal
+        open={printModalOpen}
+        onOpenChange={setPrintModalOpen}
+        defaults={{ turma: [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined }}
+        onConfirm={executarImpressao}
+      />
     </div>
   );
 }
