@@ -33,7 +33,15 @@ export type Adaptacao = {
    */
   incluido?: boolean;
 };
-export type Sugestao = { titulo: string; descricao: string };
+export type Sugestao = {
+  titulo: string;
+  descricao: string;
+  /**
+   * Quando true, a sugestão é considerada "utilizada" pelo professor e
+   * entra no documento impresso/exportado. Default: false.
+   */
+  utilizado?: boolean;
+};
 export type OpcaoAula = { titulo: string; resumo: string; abordagem: string };
 export type ContribuicaoInter = { disciplina: string; contribuicao: string };
 
@@ -691,7 +699,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   };
 
   const usarSugestao = (s: Sugestao) => {
-    setPlano({ ...plano, titulo: s.titulo, desenvolvimento: s.descricao });
+    setPlano({
+      ...plano,
+      titulo: s.titulo,
+      desenvolvimento: s.descricao,
+      sugestoes: plano.sugestoes.map((x) =>
+        x.titulo === s.titulo && x.descricao === s.descricao ? { ...x, utilizado: true } : x,
+      ),
+    });
     logActivity({ type: "planejamento", description: `Variação aplicada: ${s.titulo}` });
     showToast("Variação aplicada");
   };
@@ -1062,11 +1077,19 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     if (adapts.length > 0) {
       blocos.push({ label: "Adaptações PCD:", bullets: adapts.map((a) => `[${a.categoria}] ${a.texto}`) });
     }
+    const sugs = (plano.sugestoes || []).filter((s) => s.utilizado === true);
+    if (sugs.length > 0) {
+      blocos.push({
+        label: "Sugestões da Sofia:",
+        bullets: sugs.map((s) => `${s.titulo} — ${s.descricao}`),
+      });
+    }
     if ((plano.contribuicoesInter ?? []).length > 0) {
       blocos.push({ label: "Interdisciplinar:", bullets: plano.contribuicoesInter!.map((c) => `${c.disciplina}: ${c.contribuicao}`) });
     }
-    if (plano.materiais.length > 0) {
-      blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: plano.materiais });
+    const matsUsados = (plano.materiais || []).filter((_, i) => !!plano.materiaisCheck?.[i]);
+    if (matsUsados.length > 0) {
+      blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: matsUsados });
     }
     return [{ titulo: plano.titulo || "Plano de atividade", blocos }];
   };
@@ -1179,15 +1202,21 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         ));
       }
     }
-    if (p.sugestoes.length > 0) {
-      partes.push(editorialSection("Sugestões da Sofia"));
-      partes.push(editorialLongField(
-        p.sugestoes.map((x) => `• ${x.titulo} — ${x.descricao}`).join("\n"),
-      ));
+    {
+      const sugs = p.sugestoes.filter((s) => s.utilizado === true);
+      if (sugs.length > 0) {
+        partes.push(editorialSection("Sugestões da Sofia"));
+        partes.push(editorialLongField(
+          sugs.map((x) => `• ${x.titulo} — ${x.descricao}`).join("\n"),
+        ));
+      }
     }
-    if (p.materiais.length > 0) {
-      partes.push(editorialSection("Materiais necessários"));
-      partes.push(editorialLongField(p.materiais.map((m) => `☐ ${m}`).join("\n")));
+    {
+      const matsUsados = p.materiais.filter((_, i) => !!p.materiaisCheck?.[i]);
+      if (matsUsados.length > 0) {
+        partes.push(editorialSection("Materiais necessários"));
+        partes.push(editorialLongField(matsUsados.map((m) => `☐ ${m}`).join("\n")));
+      }
     }
     return partes.join("\n");
   };
@@ -1239,8 +1268,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           bullets: adapts.map((a) => `[${a.categoria}] ${a.texto}`),
         });
       }
-      if (p.materiais && p.materiais.length) {
-        blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: p.materiais });
+      const sugs = (p.sugestoes || []).filter((s) => s.utilizado === true);
+      if (sugs.length) {
+        blocos.push({
+          label: "Sugestões da Sofia:",
+          bullets: sugs.map((s) => `${s.titulo} — ${s.descricao}`),
+        });
+      }
+      const matsUsados = (p.materiais || []).filter((_, i) => !!p.materiaisCheck?.[i]);
+      if (matsUsados.length) {
+        blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: matsUsados });
       }
       const titulo = [
         s.salvoEm ? new Date(s.salvoEm).toLocaleDateString("pt-BR") : "",
@@ -2366,7 +2403,11 @@ function PlanoBody(props: {
         ) : (
           <div className="atv-sug-grid">
             {plano.sugestoes.map((s, i) => (
-              <div className="atv-sug" key={i}>
+              <div
+                className="atv-sug"
+                key={i}
+                style={{ opacity: s.utilizado ? 1 : 0.75 }}
+              >
                 <button
                   className={`atv-sug-fav${props.isFavorita(s) ? " on" : ""}`}
                   onClick={() => props.onToggleFavorita(s)}
@@ -2381,9 +2422,27 @@ function PlanoBody(props: {
                 </button>
                 <div className="atv-sug-title">{s.titulo}</div>
                 <p>{s.descricao}</p>
-                <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
-                  <Check size={12} /> Usar esta
-                </button>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 6 }}>
+                  <label
+                    title="Marcar como utilizada — entra no documento impresso/exportado"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 600, color: "var(--muted, #6B7280)", cursor: "pointer", userSelect: "none" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!s.utilizado}
+                      onChange={(e) => {
+                        const next = [...plano.sugestoes];
+                        next[i] = { ...s, utilizado: e.target.checked };
+                        props.onChange("sugestoes", next);
+                      }}
+                      style={{ accentColor: "#F59E0B" }}
+                    />
+                    Utilizada
+                  </label>
+                  <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
+                    <Check size={12} /> Usar esta
+                  </button>
+                </div>
               </div>
             ))}
           </div>
