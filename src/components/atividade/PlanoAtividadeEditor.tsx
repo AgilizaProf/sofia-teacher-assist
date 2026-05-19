@@ -18,7 +18,7 @@ import {
   editorialFieldsGrid,
   editorialLongField,
 } from "@/lib/print/editorialPrint";
-import { imprimirPlanejamentoDireto, type SecaoImpressao } from "@/lib/print/planejamentoDireto";
+import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx, type SecaoImpressao } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 
 /* ─────────────────────────── Types ─────────────────────────── */
