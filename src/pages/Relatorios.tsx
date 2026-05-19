@@ -1126,7 +1126,11 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                     ? (isEi ? "COMECE PELOS RELATÓRIOS DE DESENVOLVIMENTO" : "COMECE PELOS PARECERES")
                     : pct >= 100
                       ? `BIMESTRE ${bimestreNum}º · TUDO FINALIZADO`
-                      : `BIMESTRE ${bimestreNum}º · ${pct}% CONCLUÍDO`
+                      : aRevisar > 0
+                        ? `BIMESTRE ${bimestreNum}º · ${aRevisar} PRONTO${aRevisar > 1 ? "S" : ""} PARA REVISAR`
+                        : rascunhos > 0
+                          ? `BIMESTRE ${bimestreNum}º · ${rascunhos} RASCUNHO${rascunhos > 1 ? "S" : ""} EM ANDAMENTO`
+                          : `BIMESTRE ${bimestreNum}º · ${pct}% CONCLUÍDO`
               }</span>
                 {alunosCount === 0 ? (
                   <>
@@ -1148,11 +1152,22 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 ) : (
                   <>
                     <h1>{isEi ? "Relatórios" : "Pareceres"} do {bimestreNum}º bimestre<br /><em>{finalizados}/{totalAlunos}</em> prontos.</h1>
-                    <p>{[
-                      rascunhos > 0 ? `${rascunhos} em rascunho` : null,
-                      aRevisar > 0 ? `${aRevisar} para revisar` : null,
-                      aFazer > 0 ? `${aFazer} a fazer` : null,
-                    ].filter(Boolean).join(" · ") || "Quase lá."} {restantes > 0 ? `Faltam ${restantes} para fechar o bimestre.` : ""}</p>
+                    <p>{(() => {
+                      const parts: string[] = [];
+                      if (aRevisar > 0) parts.push(`${aRevisar} ${aRevisar > 1 ? "prontos" : "pronto"} para revisar (100% observado, falta gerar)`);
+                      if (rascunhos > 0) parts.push(`${rascunhos} em rascunho (observações parciais)`);
+                      if (aFazer > 0) parts.push(`${aFazer} ainda sem observações`);
+                      const head = parts.length ? parts.join(" · ") + "." : "Quase lá.";
+                      const tail =
+                        aRevisar > 0
+                          ? ` Comece pelos ${aRevisar} prontos para revisar — é o caminho mais rápido para fechar o bimestre.`
+                          : rascunhos > 0
+                            ? ` Continue de onde parou nos rascunhos para destravar a geração.`
+                            : aFazer > 0
+                              ? ` Registre as primeiras observações para destravar a Sofia.`
+                              : restantes > 0 ? ` Faltam ${restantes} para fechar o bimestre.` : "";
+                      return head + tail;
+                    })()}</p>
                   </>
                 )}
                 <div className="rel-hero-cta">
@@ -1162,9 +1177,13 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                         ? "Cadastrar alunos"
                         : totalBim === 0
                           ? (isEi ? "Gerar primeiro relatório" : "Gerar primeiro parecer")
-                          : restantes > 0
-                            ? `Gerar ${restantes} restante${restantes > 1 ? "s" : ""}`
-                            : "Exportar tudo (PDF)"
+                          : aRevisar > 0
+                            ? `Revisar ${aRevisar} pronto${aRevisar > 1 ? "s" : ""}`
+                            : rascunhos > 0
+                              ? `Continuar ${rascunhos} rascunho${rascunhos > 1 ? "s" : ""}`
+                              : aFazer > 0
+                                ? `Iniciar ${aFazer} a fazer`
+                                : "Exportar tudo (PDF)"
                     } <ArrowRight size={14} strokeWidth={2.4} />
                   </button>
                   <button className="rel-btn-ghost" aria-label="Ver como funciona" onClick={() => setTutorialOpen(true)}>
