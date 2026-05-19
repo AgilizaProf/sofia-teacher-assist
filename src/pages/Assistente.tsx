@@ -918,10 +918,13 @@ export function Assistente() {
             )}
             {today.length > 0 && <div className="history-section">Hoje</div>}
             {today.map((c) => (
-              <button
+              <div
                 key={c.id}
                 className="h-item"
+                role="button"
+                tabIndex={0}
                 onClick={() => pickConversation(c.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
@@ -929,14 +932,30 @@ export function Assistente() {
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                   <div className="h-meta">{new Date(c.updated_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" })}</div>
                 </div>
-              </button>
+                <button
+                  className="h-del"
+                  aria-label="Excluir conversa"
+                  title="Excluir conversa"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Excluir a conversa "${c.title}"?`)) {
+                      sofia.deleteConversation(c.id).catch(() => { /* noop */ });
+                    }
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             ))}
             {week.length > 0 && <div className="history-section">Esta semana</div>}
             {week.map((c) => (
-              <button
+              <div
                 key={c.id}
                 className="h-item"
+                role="button"
+                tabIndex={0}
                 onClick={() => pickConversation(c.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
@@ -944,14 +963,30 @@ export function Assistente() {
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                   <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" })}</div>
                 </div>
-              </button>
+                <button
+                  className="h-del"
+                  aria-label="Excluir conversa"
+                  title="Excluir conversa"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Excluir a conversa "${c.title}"?`)) {
+                      sofia.deleteConversation(c.id).catch(() => { /* noop */ });
+                    }
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             ))}
             {older.length > 0 && <div className="history-section">Anteriores</div>}
             {older.map((c) => (
-              <button
+              <div
                 key={c.id}
                 className="h-item"
+                role="button"
+                tabIndex={0}
                 onClick={() => pickConversation(c.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
@@ -959,7 +994,20 @@ export function Assistente() {
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                   <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</div>
                 </div>
-              </button>
+                <button
+                  className="h-del"
+                  aria-label="Excluir conversa"
+                  title="Excluir conversa"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Excluir a conversa "${c.title}"?`)) {
+                      sofia.deleteConversation(c.id).catch(() => { /* noop */ });
+                    }
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             ))}
           </div>
 
