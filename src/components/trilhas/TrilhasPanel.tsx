@@ -567,9 +567,9 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
     setPrintModalOpen(true);
   };
 
-  const executarImpressao = (info: PrintInfo) => {
-    if (diasSelecionados.length === 0) return;
-    imprimirPlanejamentoDireto({
+  const construirArgsTrilha = (info: PrintInfo) => {
+    if (diasSelecionados.length === 0) return null;
+    return {
       titulo: "TRILHA SEMESTRAL",
       escola: info.escola || undefined,
       turma: info.turma || [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined,
@@ -590,7 +590,16 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
         return { titulo, blocos };
       }),
       rodapeLegal: "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB) e a Resolução CNE/CP 4/2018 (BNCC).",
-    });
+    };
+  };
+
+  const executarImpressao = (info: PrintInfo) => {
+    const args = construirArgsTrilha(info);
+    if (args) imprimirPlanejamentoDireto(args);
+  };
+  const executarSalvarWord = (info: PrintInfo) => {
+    const args = construirArgsTrilha(info);
+    if (args) salvarPlanejamentoDocx(args, `Trilha_${(trilha.tema_central || "plano").replace(/\s+/g, "_")}_S${semana.semana}`);
   };
   const exportarWord = () => {
     if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
