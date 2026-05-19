@@ -20,6 +20,41 @@ import {
 } from "@/lib/print/editorialPrint";
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx, type SecaoImpressao } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
+import { createAgendaEvent } from "@/lib/db/agenda";
+
+/**
+ * Exporta automaticamente um evento agendado no M4 para a Agenda Escolar,
+ * marcando o id como "já importado" para evitar duplicação pelo importador
+ * manual em src/pages/Agenda.tsx.
+ */
+async function exportarM4ParaAgenda(
+  date: string,
+  evt: { id: string; cat: "aulas" | "aval"; title: string; meta?: string; turma?: string; disciplina?: string; minutos?: number },
+): Promise<void> {
+  const IMPORTED_KEY = "agenda_m4_imported_v1";
+  try {
+    const notesParts: string[] = [];
+    if (evt.turma) notesParts.push(`Turma: ${evt.turma}`);
+    if (evt.disciplina) notesParts.push(evt.disciplina);
+    if (evt.minutos) notesParts.push(`${evt.minutos} min`);
+    if (evt.meta) notesParts.push(evt.meta);
+    await createAgendaEvent({
+      date,
+      title: evt.title,
+      time: "",
+      type: evt.cat === "aval" ? "eval" : "plan",
+      notes: notesParts.join(" · "),
+    });
+    try {
+      const raw = localStorage.getItem(IMPORTED_KEY);
+      const arr: string[] = raw ? JSON.parse(raw) : [];
+      if (!arr.includes(evt.id)) arr.push(evt.id);
+      localStorage.setItem(IMPORTED_KEY, JSON.stringify(arr));
+    } catch { /* noop */ }
+  } catch (err) {
+    console.error("[PlanoAtividadeEditor] falha ao exportar M4 → Agenda:", err);
+  }
+}
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
