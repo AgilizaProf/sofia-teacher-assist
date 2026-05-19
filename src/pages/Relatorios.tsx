@@ -991,6 +991,14 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
     }
   }, [totalSavedMin]);
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
+  // Período de avaliação selecionado pelo professor (Bimestral/Trimestral/Semestral/Anual)
+  const periodoQtd = tipoPeriodo === "Bimestral" ? 4 : tipoPeriodo === "Trimestral" ? 3 : tipoPeriodo === "Semestral" ? 2 : 1;
+  const periodoNum = (() => { const m = new Date().getMonth() + 1; return Math.min(periodoQtd, Math.ceil((m * periodoQtd) / 12)); })();
+  const periodoNomeLower = tipoPeriodo === "Bimestral" ? "bimestre" : tipoPeriodo === "Trimestral" ? "trimestre" : tipoPeriodo === "Semestral" ? "semestre" : "ano letivo";
+  const periodoNomeUpper = periodoNomeLower.toUpperCase();
+  const periodoOrdinal = tipoPeriodo === "Anual" ? "" : `${periodoNum}º `;
+  const periodoTituloUpper = tipoPeriodo === "Anual" ? "ANO LETIVO" : `${periodoNomeUpper} ${periodoNum}º`;
+  const periodoTituloLower = tipoPeriodo === "Anual" ? "ano letivo" : `${periodoNum}º ${periodoNomeLower}`;
   const isPro = ctx.user.plano === "pro" || combinedStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
 
