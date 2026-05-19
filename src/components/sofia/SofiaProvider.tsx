@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { askSofia, listSofiaConversations, getSofiaConversation } from "@/lib/sofia.functions";
+import { askSofia, listSofiaConversations, getSofiaConversation, deleteSofiaConversation, clearSofiaConversations } from "@/lib/sofia.functions";
 import { useSofiaContextOptional } from "@/lib/sofia/sofiaContext";
 import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 import { reportError } from "@/lib/admin/track";
@@ -64,6 +64,8 @@ type SofiaCtx = {
   conversations: SofiaConversationSummary[];
   loadConversation: (id: string) => Promise<void>;
   refreshConversations: () => Promise<void>;
+  deleteConversation: (id: string) => Promise<void>;
+  clearConversations: () => Promise<void>;
   isAuthed: boolean;
   routeContext: string;
   routeName: string;
@@ -339,6 +341,35 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const deleteConversation = useCallback(async (id: string) => {
+    try {
+      await deleteSofiaConversation({ data: { id } });
+    } catch (err) {
+      console.warn("[Sofia] deleteSofiaConversation falhou:", err);
+      throw err;
+    }
+    setConversations((list) => list.filter((c) => c.id !== id));
+    setConversationId((curr) => {
+      if (curr === id) {
+        setMessages([]);
+        return null;
+      }
+      return curr;
+    });
+  }, []);
+
+  const clearConversations = useCallback(async () => {
+    try {
+      await clearSofiaConversations();
+    } catch (err) {
+      console.warn("[Sofia] clearSofiaConversations falhou:", err);
+      throw err;
+    }
+    setConversations([]);
+    setConversationId(null);
+    setMessages([]);
+  }, []);
+
   const openSofia = useCallback((opts?: OpenOptions) => {
     if (opts?.newConversation) startNew();
     if (opts?.context && opts.prompt) {
@@ -391,6 +422,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const value: SofiaCtx = {
     open, setOpen: setOpenWrapped, openSofia, messages, loading, draft, setDraft, send,
     conversationId, startNew, conversations, loadConversation, refreshConversations,
+    deleteConversation, clearConversations,
     isAuthed, routeContext, routeName, unread, resetUnread,
     proactive, pushProactive, dismissProactive,
     bootError, retryBootstrap,
