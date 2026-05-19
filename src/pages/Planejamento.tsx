@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
-import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
 import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
+import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -2453,11 +2453,39 @@ export function Planejamento() {
     else showToast(`Etapa ${next} concluída. Avançando para ${next + 1} de ${m2Total}. ✓`);
   };
   const reiniciarProgresso = () => { setM2CurIdx(0); showToast("Progresso reiniciado."); };
+  // Seleção por aula para impressão (M3). Vazio = todas selecionadas.
+  const [m2SelIds, setM2SelIds] = useState<Set<string>>(new Set());
+  const m2ToggleSel = (id: string) => setM2SelIds((prev) => {
+    // Conjunto vazio = "todas selecionadas". Ao desmarcar a primeira,
+    // materializamos o conjunto com todas menos a clicada.
+    if (prev.size === 0) {
+      const next = new Set(m2Steps.map((s) => s.id));
+      next.delete(id);
+      return next;
+    }
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const [m2PrintModalOpen, setM2PrintModalOpen] = useState(false);
   const imprimirSequencia = () => {
     if (m2Steps.length === 0) { showToast("Adicione ao menos uma aula antes de imprimir."); return; }
+    setM2PrintModalOpen(true);
+  };
+  const executarImpressaoM3 = (info: PrintInfo) => {
+    const selecionadas = m2SelIds.size > 0
+      ? m2Steps.filter((s) => m2SelIds.has(s.id))
+      : m2Steps;
+    if (selecionadas.length === 0) { showToast("Selecione ao menos uma aula."); return; }
     imprimirPlanejamentoDireto({
       titulo: "SEQUÊNCIA DIDÁTICA",
-      secoes: m2Steps.map((s, idx) => {
+      escola: info.escola || undefined,
+      turma: info.turma || undefined,
+      professor: info.professor || undefined,
+      dataInicio: info.dataInicio || undefined,
+      dataFim: info.dataFim || undefined,
+      secoes: selecionadas.map((s) => {
+        const idx = m2Steps.findIndex((x) => x.id === s.id);
         const status = idx < m2CurIdx ? "Concluída" : idx === m2CurIdx ? "Em andamento" : "Futura";
         return {
           titulo: `Aula ${idx + 1} — ${s.d} · ${s.tag} · ${status}`,
@@ -3052,7 +3080,6 @@ export function Planejamento() {
                     <button className="pl-btn ghost" onClick={() => setParamsModalOpen(true)} title="Ajustar parâmetros"><Pencil size={14} /> Ajustar parâmetros</button>
                     <button className="pl-btn ghost" onClick={limparSemanaM1} disabled={m1Stats.atividades === 0}><X size={14} /> Limpar</button>
                     <button className="pl-btn ghost" onClick={gerarComSofia} disabled={m1Generating}><RefreshCw size={14} /> Regenerar</button>
-                    <GerarDocumentoButton tipo="atividades" label="Exportar planejamento" />
                     <button
                       className="pl-btn primary"
                       onClick={gerarComSofia}
@@ -3480,6 +3507,14 @@ export function Planejamento() {
                                 title="Arraste para reordenar"
                                 style={{ cursor: editing ? "default" : "grab", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}
                               >
+                                <input
+                                  type="checkbox"
+                                  checked={m2SelIds.size === 0 ? true : m2SelIds.has(s.id)}
+                                  onChange={() => m2ToggleSel(s.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  title="Incluir na impressão"
+                                  style={{ width: 12, height: 12, accentColor: "var(--primary, #F97316)", cursor: "pointer" }}
+                                />
                                 {!editing && <GripVertical size={11} style={{ opacity: .55 }} />}
                                 {s.d}
                               </div>
@@ -4732,6 +4767,7 @@ export function Planejamento() {
           role="dialog"
           aria-modal="true"
           aria-label="Ajustar parâmetros"
+          data-paramsmodal
           onClick={() => setParamsModalOpen(false)}
           style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 1000 }}
         >
@@ -4911,6 +4947,12 @@ export function Planejamento() {
           </div>
         </div>
       )}
+      <PrintInfoModal
+        open={m2PrintModalOpen}
+        onOpenChange={setM2PrintModalOpen}
+        onConfirm={executarImpressaoM3}
+        title="Imprimir sequência didática"
+      />
     </div>
   ));
 }

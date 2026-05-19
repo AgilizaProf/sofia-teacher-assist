@@ -5,8 +5,8 @@ import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Pri
 import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
-import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
 import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
+import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 
 const DISCIPLINAS_COMUNS = [
   "Português", "Matemática", "Ciências", "História", "Geografia",
@@ -270,9 +270,6 @@ export function TrilhasPanel() {
 
   return (
     <div style={{ display: "grid", gap: 18 }}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <GerarDocumentoButton tipo="trilhas" label="Exportar planejamento" />
-      </div>
       <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: 20 }}>
         <h2 style={{ fontSize: 18, marginBottom: 4 }}>Nova trilha semestral <small style={{ color: "var(--muted)", fontWeight: 400, fontSize: 12.5, marginLeft: 6 }}>· Sofia distribui ~20 semanas com BNCC</small></h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginTop: 14 }}>
@@ -465,6 +462,7 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   };
   const [editando, setEditando] = useState<Record<number, boolean>>({});
   const [rascunho, setRascunho] = useState<Record<number, DiaPlano>>({});
+  const [printModalOpen, setPrintModalOpen] = useState(false);
 
   const toggleSel = (i: number) => setSelecionados((prev) => {
     const next = new Set(prev);
@@ -566,9 +564,18 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
   };
   const exportarPdf = () => {
     if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
+    setPrintModalOpen(true);
+  };
+
+  const executarImpressao = (info: PrintInfo) => {
+    if (diasSelecionados.length === 0) return;
     imprimirPlanejamentoDireto({
       titulo: "TRILHA SEMESTRAL",
-      turma: [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined,
+      escola: info.escola || undefined,
+      turma: info.turma || [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined,
+      professor: info.professor || undefined,
+      dataInicio: info.dataInicio || undefined,
+      dataFim: info.dataFim || undefined,
       secoes: diasSelecionados.map((d, idx) => {
         const blocos: Array<{ label: string; body?: string; bullets?: string[] }> = [];
         const ativ = [d.abertura, d.desenvolvimento, d.fechamento].filter(Boolean).join("\n\n");
@@ -720,6 +727,12 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
           </button>
         </div>
       )}
+      <PrintInfoModal
+        open={printModalOpen}
+        onOpenChange={setPrintModalOpen}
+        defaults={{ turma: [trilha.turma, trilha.ano_escolar, trilha.disciplina].filter(Boolean).join(" · ") || undefined }}
+        onConfirm={executarImpressao}
+      />
     </div>
   );
 }
