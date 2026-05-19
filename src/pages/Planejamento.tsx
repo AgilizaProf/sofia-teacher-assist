@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
-import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
 import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
+import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -3052,7 +3052,6 @@ export function Planejamento() {
                     <button className="pl-btn ghost" onClick={() => setParamsModalOpen(true)} title="Ajustar parâmetros"><Pencil size={14} /> Ajustar parâmetros</button>
                     <button className="pl-btn ghost" onClick={limparSemanaM1} disabled={m1Stats.atividades === 0}><X size={14} /> Limpar</button>
                     <button className="pl-btn ghost" onClick={gerarComSofia} disabled={m1Generating}><RefreshCw size={14} /> Regenerar</button>
-                    <GerarDocumentoButton tipo="atividades" label="Exportar planejamento" />
                     <button
                       className="pl-btn primary"
                       onClick={gerarComSofia}
