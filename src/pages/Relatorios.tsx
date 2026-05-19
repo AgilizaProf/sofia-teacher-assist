@@ -964,10 +964,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
     toast.success(`Abrindo impressão de ${alunos.length} parecer(es) — escolha 'Salvar como PDF' se preferir.`);
   };
 
-  // Deriva valores reais do SofiaContext
-  const totalBim = ctx.dataState.pareceres_total_bimestre;
+  // Deriva valores do SofiaContext (fallback) — os valores REAIS são recalculados
+  // mais abaixo a partir da `alunosLista` desta página (estado real do usuário).
   const alunosCount = combinedStudents.length > 0 ? combinedStudents.length : ctx.dataState.alunos_count;
-  const horasEcon = ctx.user.horas_economizadas_mes;
 
   // Mesmo cálculo da página inicial (Tempo devolvido)
   const earnedMinutes =
