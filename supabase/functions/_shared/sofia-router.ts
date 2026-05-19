@@ -28,7 +28,7 @@ export type SofiaTaskType =
   | "trilha_defasagem"
   | "roteiro_ei";
 
-export function rotear(_tipo: SofiaTaskType): { provider: "lovable" | "anthropic"; model: string } {
+export function rotear(_tipo: SofiaTaskType): { provider: "lovable"; model: string } {
   // Todas as tarefas usam Gemini 2.5 Flash via Lovable AI Gateway.
   return { provider: "lovable", model: MODELOS.RAPIDO };
 }
@@ -47,7 +47,7 @@ export type CallAIResult = {
   status: number;
   text: string;
   error?: string;
-  provider: "lovable" | "anthropic";
+  provider: "lovable";
   model: string;
   usage?: { inputTokens: number; outputTokens: number; costBrl: number };
   blocked?: boolean;
@@ -116,61 +116,21 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     }
   }
 
-  if (route.provider === "lovable") {
-    const KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!KEY) {
-      return { ok: false, status: 500, text: "", error: "LOVABLE_API_KEY ausente.", ...route };
-    }
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${KEY}` },
-      body: JSON.stringify({
-        model: route.model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: args.user },
-        ],
-        max_tokens: maxTokens,
-        ...(args.json ? { response_format: { type: "json_object" } } : {}),
-      }),
-    });
-    if (!resp.ok) {
-      const txt = await resp.text();
-      return { ok: false, status: resp.status, text: "", error: txt, ...route };
-    }
-    const data = await resp.json();
-    const text = data?.choices?.[0]?.message?.content || "";
-    const finishReason: string = data?.choices?.[0]?.finish_reason || "";
-    const truncated = finishReason === "length" || finishReason === "MAX_TOKENS";
-    const inTok = Number(data?.usage?.prompt_tokens ?? 0);
-    const outTok = Number(data?.usage?.completion_tokens ?? 0);
-    let costBrl = 0;
-    if (args.userId) {
-      costBrl = await recordUsage({ userId: args.userId, provider: "lovable", model: route.model, task: args.tipo, inputTokens: inTok, outputTokens: outTok });
-    }
-    return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, truncated, finishReason, ...route };
-  }
-
-  // Anthropic provider (Claude 3.5 Haiku)
-  const KEY = Deno.env.get("ANTHROPIC_API_KEY");
+  const KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!KEY) {
-    return { ok: false, status: 500, text: "", error: "ANTHROPIC_API_KEY ausente.", ...route };
+    return { ok: false, status: 500, text: "", error: "LOVABLE_API_KEY ausente.", ...route };
   }
-  const userMsg = args.json
-    ? `${args.user}\n\nResponda APENAS com JSON válido, sem texto antes ou depois, sem markdown.`
-    : args.user;
-  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": KEY,
-      "anthropic-version": "2023-06-01",
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${KEY}` },
     body: JSON.stringify({
       model: route.model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: args.user },
+      ],
       max_tokens: maxTokens,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMsg }],
+      ...(args.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
   if (!resp.ok) {
@@ -178,23 +138,16 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     return { ok: false, status: resp.status, text: "", error: txt, ...route };
   }
   const data = await resp.json();
-  let text: string = data?.content?.[0]?.text || "";
-  const stopReason: string = data?.stop_reason || "";
-  const truncated = stopReason === "max_tokens";
-  if (args.json) {
-    // Strip code fences and isolate JSON object.
-    text = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "");
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-    if (start >= 0 && end > start) text = text.slice(start, end + 1);
-  }
-  const inTok = Number(data?.usage?.input_tokens ?? 0);
-  const outTok = Number(data?.usage?.output_tokens ?? 0);
+  const text = data?.choices?.[0]?.message?.content || "";
+  const finishReason: string = data?.choices?.[0]?.finish_reason || "";
+  const truncated = finishReason === "length" || finishReason === "MAX_TOKENS";
+  const inTok = Number(data?.usage?.prompt_tokens ?? 0);
+  const outTok = Number(data?.usage?.completion_tokens ?? 0);
   let costBrl = 0;
   if (args.userId) {
-    costBrl = await recordUsage({ userId: args.userId, provider: "anthropic", model: route.model, task: args.tipo, inputTokens: inTok, outputTokens: outTok });
+    costBrl = await recordUsage({ userId: args.userId, provider: "lovable", model: route.model, task: args.tipo, inputTokens: inTok, outputTokens: outTok });
   }
-  return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, truncated, finishReason: stopReason, ...route };
+  return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, truncated, finishReason, ...route };
 }
 
 export const corsHeaders = {
