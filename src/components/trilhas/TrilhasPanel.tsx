@@ -473,6 +473,25 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const [agendPularFeriados, setAgendPularFeriados] = useState(true);
   const [agendSkip, setAgendSkip] = useState<Record<string, boolean>>({});
 
+  // Dias personalizados para pular (feriados locais, provas, conselhos…)
+  // Persistido por usuário/projeto via usePersistentState (cloud + local).
+  type DiaPular = { date: string; label: string; tipo: "feriado_local" | "prova" | "outro" };
+  const [diasPular, setDiasPular] = usePersistentState<DiaPular[]>("agendador_dias_pular", []);
+  const [novoDiaPular, setNovoDiaPular] = useState<DiaPular>({ date: today, label: "", tipo: "feriado_local" });
+  const [gerenciarOpen, setGerenciarOpen] = useState(false);
+  const mapaDiasPular = useMemo(() => {
+    const m = new Map<string, DiaPular>();
+    diasPular.forEach((d) => m.set(d.date, d));
+    return m;
+  }, [diasPular]);
+  const adicionarDiaPular = () => {
+    if (!novoDiaPular.date) return;
+    if (diasPular.some((d) => d.date === novoDiaPular.date)) return;
+    setDiasPular([...diasPular, { ...novoDiaPular, label: novoDiaPular.label.trim() || (novoDiaPular.tipo === "prova" ? "Prova" : novoDiaPular.tipo === "feriado_local" ? "Feriado local" : "Sem aula") }].sort((a, b) => a.date.localeCompare(b.date)));
+    setNovoDiaPular({ date: today, label: "", tipo: novoDiaPular.tipo });
+  };
+  const removerDiaPular = (iso: string) => setDiasPular(diasPular.filter((d) => d.date !== iso));
+
   const matchWeekday = (d: Date, modo: WeekdayMode): boolean => {
     const dow = d.getUTCDay(); // 0=Dom..6=Sab
     if (modo === "todos") return true;
