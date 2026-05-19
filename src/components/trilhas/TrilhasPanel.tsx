@@ -1134,6 +1134,20 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
                 onChange={(e) => setDatas((x) => ({ ...x, [i]: e.target.value }))}
                 style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }}
               />
+              {temMultiplas && (
+                <>
+                  <label style={{ fontSize: 11.5, color: "var(--muted)" }}>Disciplina:</label>
+                  <select
+                    value={diaDisciplina[i] || ""}
+                    onChange={(e) => setDiaDisciplina({ ...diaDisciplina, [i]: e.target.value })}
+                    style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }}
+                    title="Marque para que o agendador 'Por disciplina' distribua nos dias corretos"
+                  >
+                    <option value="">— sem marcar —</option>
+                    {disciplinasTrilha.map((d) => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </>
+              )}
               <button
                 className="pl-btn ghost"
                 onClick={() => salvarDia(i, d)}
