@@ -81,7 +81,6 @@ function renderSecao(s: SecaoImpressao): string {
 
 /** Constrói o HTML do documento padrão (sem trigger de impressão). */
 export function construirPlanejamentoHtml(args: ImprimirArgs): string {
-  if (typeof window === "undefined") return;
   const periodo = (args.dataInicio || args.dataFim)
     ? `${formatarDataBR(args.dataInicio || "")}${args.dataInicio && args.dataFim ? " a " : ""}${formatarDataBR(args.dataFim || "")}`
     : "";
