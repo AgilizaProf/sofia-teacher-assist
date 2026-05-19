@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Printer, Download, Edit3, Save, X, ArrowUp, ArrowDown } from "lucide-react";
+import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Printer, Download, Edit3, Save, X, GripVertical } from "lucide-react";
 import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
@@ -100,6 +100,8 @@ export function TrilhasPanel() {
   const [error, setError] = useState<string | null>(null);
   const [gerandoSemana, setGerandoSemana] = useState<string | null>(null);
   const [planoAberto, setPlanoAberto] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   // Detecta se o ano selecionado é Educação Infantil para alinhar a UI
   // (campos de experiência da BNCC) e o prompt enviado para a Sofia.
@@ -291,18 +293,29 @@ export function TrilhasPanel() {
     if (planoAberto === s.id) setPlanoAberto(null);
   };
 
-  const moverSemana = async (idx: number, direcao: -1 | 1, trilhaId: string) => {
-    const alvoIdx = idx + direcao;
-    if (alvoIdx < 0 || alvoIdx >= semanas.length) return;
-    const a = semanas[idx];
-    const b = semanas[alvoIdx];
-    // Troca os números de semana entre A e B (passando por valor temporário p/ não violar UNIQUE).
-    const tmp = 9000 + a.semana;
-    await supabase.from("trilha_semanas").update({ semana: tmp }).eq("id", a.id);
-    await supabase.from("trilha_semanas").update({ semana: a.semana }).eq("id", b.id);
-    await supabase.from("trilha_semanas").update({ semana: b.semana }).eq("id", a.id);
-    const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilhaId).order("semana");
-    setSemanas((novas as Semana[]) || []);
+  const reordenarSemanas = async (fromId: string, toId: string, trilhaId: string) => {
+    if (fromId === toId) return;
+    const fromIdx = semanas.findIndex((x) => x.id === fromId);
+    const toIdx = semanas.findIndex((x) => x.id === toId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const nova = [...semanas];
+    const [moved] = nova.splice(fromIdx, 1);
+    nova.splice(toIdx, 0, moved);
+    // Otimismo: atualiza local primeiro com os novos números.
+    const renum = nova.map((x, i) => ({ ...x, semana: i + 1 }));
+    setSemanas(renum);
+    // Persiste em duas etapas (faixa alta temporária → final) para evitar conflito com UNIQUE(trilha_id, semana).
+    const updates = renum
+      .map((x) => ({ id: x.id, novo: x.semana, atual: semanas.find((y) => y.id === x.id)?.semana ?? x.semana }))
+      .filter((u) => u.novo !== u.atual);
+    for (const u of updates) {
+      await supabase.from("trilha_semanas").update({ semana: 9000 + u.novo }).eq("id", u.id);
+    }
+    for (const u of updates) {
+      await supabase.from("trilha_semanas").update({ semana: u.novo }).eq("id", u.id);
+    }
+    const { data: rec } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilhaId).order("semana");
+    if (rec) setSemanas(rec as Semana[]);
   };
 
   return (
@@ -429,32 +442,27 @@ export function TrilhasPanel() {
               {selected === t.id && (
                 <div style={{ marginTop: 14, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
                   {t.justificativa && <p style={{ fontSize: 13, color: "var(--ink-2)", marginBottom: 12 }}>{t.justificativa}</p>}
-                  <h3 style={{ fontSize: 14, marginBottom: 8 }}><Calendar size={14} style={{ display: "inline", marginRight: 6 }} />{semanas.length} semana(s) <small style={{ color: "var(--muted)", fontWeight: 400, fontSize: 11.5, marginLeft: 6 }}>· use ↑↓ para reorganizar ou 🗑 para excluir</small></h3>
+                  <h3 style={{ fontSize: 14, marginBottom: 8 }}><Calendar size={14} style={{ display: "inline", marginRight: 6 }} />{semanas.length} semana(s) <small style={{ color: "var(--muted)", fontWeight: 400, fontSize: 11.5, marginLeft: 6 }}>· arraste pela alça <GripVertical size={10} style={{ display: "inline", verticalAlign: "middle" }} /> para reorganizar · 🗑 para excluir</small></h3>
                   <div style={{ display: "grid", gap: 6 }}>
-                    {semanas.map((s, idx) => (
-                      <div key={s.id} style={{ background: "#F8FAFC", borderRadius: 6, padding: "8px 10px" }}>
+                    {semanas.map((s) => {
+                      const isDragging = draggingId === s.id;
+                      const isOver = dragOverId === s.id && draggingId && draggingId !== s.id;
+                      return (
+                      <div
+                        key={s.id}
+                        draggable
+                        onDragStart={(e) => { e.stopPropagation(); setDraggingId(s.id); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", s.id); }}
+                        onDragEnd={(e) => { e.stopPropagation(); setDraggingId(null); setDragOverId(null); }}
+                        onDragOver={(e) => { if (draggingId && draggingId !== s.id) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverId(s.id); } }}
+                        onDragLeave={() => { if (dragOverId === s.id) setDragOverId(null); }}
+                        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); const fromId = e.dataTransfer.getData("text/plain") || draggingId; setDragOverId(null); setDraggingId(null); if (fromId) void reordenarSemanas(fromId, s.id, t.id); }}
+                        style={{ background: isOver ? "#FFF7ED" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : "none", transition: "background .12s ease" }}
+                      >
                         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                          <span style={{ minWidth: 28, fontWeight: 600, color: "var(--orange)" }}>S{s.semana}</span>
-                          <span style={{ display: "inline-flex", flexDirection: "column", gap: 1 }}>
-                            <button
-                              className="pl-btn ghost"
-                              onClick={(e) => { e.stopPropagation(); void moverSemana(idx, -1, t.id); }}
-                              disabled={idx === 0}
-                              title="Mover para cima"
-                              style={{ padding: "1px 4px", fontSize: 10, lineHeight: 1 }}
-                            >
-                              <ArrowUp size={10} />
-                            </button>
-                            <button
-                              className="pl-btn ghost"
-                              onClick={(e) => { e.stopPropagation(); void moverSemana(idx, 1, t.id); }}
-                              disabled={idx === semanas.length - 1}
-                              title="Mover para baixo"
-                              style={{ padding: "1px 4px", fontSize: 10, lineHeight: 1 }}
-                            >
-                              <ArrowDown size={10} />
-                            </button>
+                          <span title="Arraste para reordenar" style={{ cursor: "grab", color: "var(--muted)", display: "inline-flex", alignItems: "center", padding: "2px 0", touchAction: "none" }} aria-label="Arrastar semana">
+                            <GripVertical size={14} />
                           </span>
+                          <span style={{ minWidth: 28, fontWeight: 600, color: "var(--orange)" }}>S{s.semana}</span>
                           <span style={{ flex: 1 }}>{s.titulo}</span>
                           <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: s.status === "concluida" ? "#D1FAE5" : s.status === "em_andamento" ? "#DBEAFE" : "#F1F5F9", color: s.status === "concluida" ? "#065F46" : s.status === "em_andamento" ? "#1E40AF" : "#64748B" }}>{s.status}</span>
                           {s.plano_gerado ? (
@@ -487,7 +495,8 @@ export function TrilhasPanel() {
                           </div>
                         )}
                       </div>
-                    ))}
+                      );
+                    })}
                     {semanas.length === 0 && <p style={{ color: "var(--muted)", fontSize: 12.5 }}>Nenhuma semana gerada ainda.</p>}
                   </div>
                 </div>
