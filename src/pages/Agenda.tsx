@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles, Printer } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
@@ -10,6 +10,7 @@ import { useAgenda } from "@/hooks/useAgenda";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaListPrint";
 
 // ---- Integração M4 → Agenda --------------------------------------------------
 // Eventos do calendário M4 (Planejamento) são persistidos em localStorage sob
