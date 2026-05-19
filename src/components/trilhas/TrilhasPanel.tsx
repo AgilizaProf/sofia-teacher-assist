@@ -842,19 +842,58 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
           <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)" }}>
             Agendar {selecionados.size} atividade(s) em sequência
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-            <label style={{ fontSize: 11.5, color: "var(--muted)" }}>Recorrência:</label>
-            <select value={agendModo} onChange={(e) => setAgendModo(e.target.value as WeekdayMode)} style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }}>
-              <option value="1">Toda segunda-feira</option>
-              <option value="2">Toda terça-feira</option>
-              <option value="3">Toda quarta-feira</option>
-              <option value="4">Toda quinta-feira</option>
-              <option value="5">Toda sexta-feira</option>
-              <option value="6">Todo sábado</option>
-              <option value="0">Todo domingo</option>
-              <option value="uteis">Todos os dias úteis (seg–sex)</option>
-              <option value="todos">Todos os dias</option>
-            </select>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            <label style={{ fontSize: 11.5, color: "var(--muted)" }}>Modo:</label>
+            <div style={{ display: "inline-flex", gap: 2, background: "#F1F5F9", borderRadius: 8, padding: 2 }}>
+              {([
+                { v: "simples", lbl: "1 dia da semana" },
+                { v: "multi", lbl: "Vários dias" },
+                ...(temMultiplas ? [{ v: "lanes" as AgendTipo, lbl: "Por disciplina" }] : []),
+              ] as Array<{ v: AgendTipo; lbl: string }>).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => setAgendTipo(opt.v)}
+                  style={{ padding: "3px 9px", borderRadius: 6, border: 0, fontSize: 11, fontWeight: 700, cursor: "pointer", background: agendTipo === opt.v ? "#fff" : "transparent", color: agendTipo === opt.v ? "var(--ink)" : "var(--muted)" }}
+                >
+                  {opt.lbl}
+                </button>
+              ))}
+            </div>
+            {agendTipo === "simples" && (
+              <>
+                <label style={{ fontSize: 11.5, color: "var(--muted)" }}>Recorrência:</label>
+                <select value={agendModo} onChange={(e) => setAgendModo(e.target.value as WeekdayMode)} style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }}>
+                  <option value="1">Toda segunda-feira</option>
+                  <option value="2">Toda terça-feira</option>
+                  <option value="3">Toda quarta-feira</option>
+                  <option value="4">Toda quinta-feira</option>
+                  <option value="5">Toda sexta-feira</option>
+                  <option value="6">Todo sábado</option>
+                  <option value="0">Todo domingo</option>
+                  <option value="uteis">Todos os dias úteis (seg–sex)</option>
+                  <option value="todos">Todos os dias</option>
+                </select>
+              </>
+            )}
+            {agendTipo === "multi" && (
+              <div style={{ display: "inline-flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>Dias:</span>
+                {[1, 2, 3, 4, 5, 6, 0].map((dow) => {
+                  const on = agendDiasMulti.includes(dow);
+                  return (
+                    <button
+                      key={dow}
+                      type="button"
+                      onClick={() => setAgendDiasMulti((arr) => toggleDiaSemana(arr, dow))}
+                      style={{ padding: "3px 8px", borderRadius: 6, border: `1px solid ${on ? "var(--orange)" : "var(--line)"}`, background: on ? "var(--orange)" : "#fff", color: on ? "#fff" : "var(--ink-2)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      {nomeDia(dow)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <label style={{ fontSize: 11.5, color: "var(--muted)" }}>A partir de:</label>
             <input type="date" value={agendInicio} onChange={(e) => setAgendInicio(e.target.value)} style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }} />
             <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--ink-2)", cursor: "pointer" }}>
@@ -865,6 +904,34 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
               {gerenciarOpen ? "Fechar dias personalizados" : `Dias personalizados (${diasPular.length})`}
             </button>
           </div>
+          {agendTipo === "lanes" && (
+            <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: 10, display: "grid", gap: 8 }}>
+              <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                Escolha os dias da semana de cada disciplina. Depois marque cada atividade abaixo com a disciplina à qual pertence.
+              </div>
+              {disciplinasTrilha.map((disc) => {
+                const arr = agendLanes[disc] || [];
+                return (
+                  <div key={disc} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ minWidth: 120, fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>{disc}</span>
+                    {[1, 2, 3, 4, 5, 6, 0].map((dow) => {
+                      const on = arr.includes(dow);
+                      return (
+                        <button
+                          key={dow}
+                          type="button"
+                          onClick={() => setAgendLanes((m) => ({ ...m, [disc]: toggleDiaSemana(m[disc] || [], dow) }))}
+                          style={{ padding: "3px 8px", borderRadius: 6, border: `1px solid ${on ? "var(--orange)" : "var(--line)"}`, background: on ? "var(--orange)" : "#fff", color: on ? "#fff" : "var(--ink-2)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                        >
+                          {nomeDia(dow)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
           {gerenciarOpen && (
             <div style={{ background: "#fff", border: "1px dashed var(--line)", borderRadius: 8, padding: 10, display: "grid", gap: 8 }}>
               <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
@@ -906,88 +973,95 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
             </div>
           )}
           {(() => {
-            const ordemSel = Array.from(selecionados).sort((a, b) => a - b);
-            const mapaIsoParaAtividade = new Map<string, number>();
-            datasAgendadas.forEach((iso, k) => {
-              const idx = ordemSel[k];
-              if (typeof idx === "number") mapaIsoParaAtividade.set(iso, idx);
-            });
             const tituloAtiv = (i: number) => {
               const d = dias[i];
               const t = d?.titulo || d?.dia || "";
               return `Atividade ${i + 1}${t ? ` — ${t}` : ""}`;
             };
+            const ordemSel = Array.from(selecionados).sort((a, b) => a - b);
             return (
               <>
-          <div style={{ display: "grid", gap: 4, maxHeight: 220, overflowY: "auto", background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: 8 }}>
-            {candidatas.length === 0 && (
-              <div style={{ fontSize: 12, color: "var(--muted)" }}>Nenhuma data candidata encontrada.</div>
-            )}
-            {candidatas.map((c) => {
-              const auto = (agendPularFeriados && !!c.feriado) || !!c.diaLocal;
-              const manual = !!agendSkip[c.iso];
-              const atividadeIdx = mapaIsoParaAtividade.get(c.iso);
-              const usado = atividadeIdx !== undefined;
-              return (
-                <label key={c.iso} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: auto ? "var(--muted)" : "var(--ink)", textDecoration: auto || manual ? "line-through" : "none", cursor: auto ? "not-allowed" : "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={!auto && !manual}
-                    disabled={auto}
-                    onChange={(e) => setAgendSkip((s) => ({ ...s, [c.iso]: !e.target.checked }))}
-                    style={{ accentColor: "var(--orange)" }}
-                  />
-                  <span style={{ minWidth: 36, fontWeight: 600 }}>{nomeDia(c.weekday)}</span>
-                  <span style={{ minWidth: 92 }}>{c.iso.split("-").reverse().join("/")}</span>
-                  {usado && (
-                    <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#FFF7ED", color: "#9A3412", fontWeight: 600 }}>
-                      → {tituloAtiv(atividadeIdx!)}
-                    </span>
-                  )}
-                  {c.feriado && <span style={{ fontSize: 10.5, color: "#991B1B" }}>· {c.feriado}{auto ? " (pulado)" : ""}</span>}
-                  {c.diaLocal && (
-                    <span style={{ fontSize: 10.5, color: c.diaLocal.tipo === "prova" ? "#1E40AF" : "#991B1B" }}>
-                      · {c.diaLocal.tipo === "prova" ? "Prova" : c.diaLocal.tipo === "feriado_local" ? "Feriado local" : "Sem aula"}{c.diaLocal.label ? `: ${c.diaLocal.label}` : ""} (pulado)
-                    </span>
-                  )}
-                </label>
-              );
-            })}
-          </div>
-          {datasAgendadas.length > 0 && (
-            <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: 10 }}>
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".06em" }}>
-                Pré-visualização do agendamento
-              </div>
-              <div style={{ display: "grid", gap: 4 }}>
-                {ordemSel.map((idx, k) => {
-                  const iso = datasAgendadas[k];
+                {lanes.map((lane) => {
+                  const cands = candidatasPorLane[lane.key] || [];
+                  const isoParaIdx = new Map<string, number>();
+                  lane.atividades.forEach((idx) => { const iso = atribuicoes[idx]; if (iso) isoParaIdx.set(iso, idx); });
                   return (
-                    <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-                      <span style={{ minWidth: 90, color: "var(--muted)" }}>{tituloAtiv(idx).split(" — ")[0]}</span>
-                      <span style={{ flex: 1, color: "var(--ink)" }}>{dias[idx]?.titulo || dias[idx]?.dia || "(sem título)"}</span>
-                      <span style={{ minWidth: 18, color: "var(--muted)" }}>→</span>
-                      {iso ? (
-                        <span style={{ fontWeight: 600, color: "#9A3412" }}>
-                          {nomeDia(parseIso(iso).getUTCDay())}, {iso.split("-").reverse().join("/")}
-                        </span>
-                      ) : (
-                        <span style={{ color: "#991B1B", fontStyle: "italic" }}>sem data disponível</span>
+                    <div key={lane.key} style={{ display: "grid", gap: 6 }}>
+                      {(agendTipo === "lanes" || lanes.length > 1) && (
+                        <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                          {lane.label} <span style={{ color: "var(--muted)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>· {lane.atividades.length} atividade(s)</span>
+                        </div>
                       )}
+                      <div style={{ display: "grid", gap: 4, maxHeight: 200, overflowY: "auto", background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: 8 }}>
+                        {cands.length === 0 && (
+                          <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                            {lane.weekdaySet.size === 0 ? "Selecione ao menos um dia da semana." : "Nenhuma data candidata encontrada."}
+                          </div>
+                        )}
+                        {cands.map((c) => {
+                          const auto = (agendPularFeriados && !!c.feriado) || !!c.diaLocal;
+                          const manual = !!agendSkip[c.iso];
+                          const atividadeIdx = isoParaIdx.get(c.iso);
+                          const usado = atividadeIdx !== undefined;
+                          return (
+                            <label key={c.iso} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: auto ? "var(--muted)" : "var(--ink)", textDecoration: auto || manual ? "line-through" : "none", cursor: auto ? "not-allowed" : "pointer" }}>
+                              <input type="checkbox" checked={!auto && !manual} disabled={auto} onChange={(e) => setAgendSkip((s) => ({ ...s, [c.iso]: !e.target.checked }))} style={{ accentColor: "var(--orange)" }} />
+                              <span style={{ minWidth: 36, fontWeight: 600 }}>{nomeDia(c.weekday)}</span>
+                              <span style={{ minWidth: 92 }}>{c.iso.split("-").reverse().join("/")}</span>
+                              {usado && (
+                                <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#FFF7ED", color: "#9A3412", fontWeight: 600 }}>
+                                  → {tituloAtiv(atividadeIdx!)}
+                                </span>
+                              )}
+                              {c.feriado && <span style={{ fontSize: 10.5, color: "#991B1B" }}>· {c.feriado}{auto ? " (pulado)" : ""}</span>}
+                              {c.diaLocal && (
+                                <span style={{ fontSize: 10.5, color: c.diaLocal.tipo === "prova" ? "#1E40AF" : "#991B1B" }}>
+                                  · {c.diaLocal.tipo === "prova" ? "Prova" : c.diaLocal.tipo === "feriado_local" ? "Feriado local" : "Sem aula"}{c.diaLocal.label ? `: ${c.diaLocal.label}` : ""} (pulado)
+                                </span>
+                              )}
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                   );
                 })}
-              </div>
-            </div>
-          )}
+                {totalAtribuidas > 0 && (
+                  <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: 10 }}>
+                    <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".06em" }}>
+                      Pré-visualização do agendamento
+                    </div>
+                    <div style={{ display: "grid", gap: 4 }}>
+                      {ordemSel.map((idx) => {
+                        const iso = atribuicoes[idx];
+                        const disc = diaDisciplina[idx];
+                        return (
+                          <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+                            <span style={{ minWidth: 90, color: "var(--muted)" }}>{tituloAtiv(idx).split(" — ")[0]}</span>
+                            <span style={{ flex: 1, color: "var(--ink)" }}>{dias[idx]?.titulo || dias[idx]?.dia || "(sem título)"}</span>
+                            {disc && <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#EEF2FF", color: "#3730A3", fontWeight: 600 }}>{disc}</span>}
+                            <span style={{ minWidth: 18, color: "var(--muted)" }}>→</span>
+                            {iso ? (
+                              <span style={{ fontWeight: 600, color: "#9A3412" }}>
+                                {nomeDia(parseIso(iso).getUTCDay())}, {iso.split("-").reverse().join("/")}
+                              </span>
+                            ) : (
+                              <span style={{ color: "#991B1B", fontStyle: "italic" }}>sem data disponível</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </>
             );
           })()}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-            {datasAgendadas.length < selecionados.size ? (
+            {totalAtribuidas < totalAlvo ? (
               <div style={{ flex: 1, minWidth: 240, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "#FEF3C7", border: "1px solid #FCD34D", color: "#92400E", fontSize: 12 }}>
                 <span>
-                  <strong>Faltam {selecionados.size - datasAgendadas.length} data(s).</strong> Só consegui preparar {datasAgendadas.length} de {selecionados.size} a partir de {agendInicio.split("-").reverse().join("/")}.
+                  <strong>Faltam {totalAlvo - totalAtribuidas} data(s).</strong> Só consegui preparar {totalAtribuidas} de {totalAlvo} a partir de {agendInicio.split("-").reverse().join("/")}{agendTipo === "lanes" ? " (verifique se cada disciplina tem dias e atividades marcadas)" : ""}.
                 </span>
                 <button
                   type="button"
@@ -1001,12 +1075,12 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
               </div>
             ) : (
               <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
-                {datasAgendadas.length}/{selecionados.size} datas preparadas
+                {totalAtribuidas}/{totalAlvo} datas preparadas
               </div>
             )}
             <div style={{ display: "inline-flex", gap: 6 }}>
               <button className="pl-btn ghost" onClick={() => { setAgendSkip({}); setAgendExtra(0); }} style={{ fontSize: 11 }}>Limpar exclusões</button>
-              <button className="pl-btn primary" onClick={aplicarAgendamento} disabled={datasAgendadas.length === 0} style={{ fontSize: 11 }}>
+              <button className="pl-btn primary" onClick={aplicarAgendamento} disabled={totalAtribuidas === 0} style={{ fontSize: 11 }}>
                 Aplicar datas
               </button>
             </div>
