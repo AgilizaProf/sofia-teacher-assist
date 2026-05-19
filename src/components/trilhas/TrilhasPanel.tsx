@@ -472,6 +472,7 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const [agendInicio, setAgendInicio] = useState<string>(today);
   const [agendPularFeriados, setAgendPularFeriados] = useState(true);
   const [agendSkip, setAgendSkip] = useState<Record<string, boolean>>({});
+  const [agendExtra, setAgendExtra] = useState(0); // candidatas extras quando o usuário pede para estender
 
   // Dias personalizados para pular (feriados locais, provas, conselhos…)
   // Persistido por usuário/projeto via usePersistentState (cloud + local).
@@ -508,10 +509,10 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const candidatas = useMemo(() => {
     if (!agendOpen) return [] as Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }>;
     const out: Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }> = [];
-    const limite = Math.max(selecionados.size, 1) + 14;
+    const limite = Math.max(selecionados.size, 1) + 14 + agendExtra;
     let cursor = parseIso(agendInicio);
     const stopAt = new Date(cursor.getTime());
-    stopAt.setUTCDate(stopAt.getUTCDate() + 365);
+    stopAt.setUTCDate(stopAt.getUTCDate() + 365 + agendExtra * 7);
     const cacheAnos = new Map<number, Map<string, string>>();
     while (out.length < limite && cursor.getTime() <= stopAt.getTime()) {
       if (matchWeekday(cursor, agendModo)) {
@@ -524,7 +525,7 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
       cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
     return out;
-  }, [agendOpen, agendModo, agendInicio, selecionados.size, mapaDiasPular]);
+  }, [agendOpen, agendModo, agendInicio, selecionados.size, mapaDiasPular, agendExtra]);
 
   const datasAgendadas = useMemo(() => {
     const finais: string[] = [];
