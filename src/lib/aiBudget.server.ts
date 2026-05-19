@@ -1,8 +1,10 @@
-// Server-only: tracker de orçamento mensal de IA por usuário.
+// Server-only: gating de IA baseado nos créditos do plano do usuário.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+// Mantido por compatibilidade — não é mais usado como bloqueio.
 export const MONTHLY_LIMIT_BRL = Number(process.env.AI_MONTHLY_LIMIT_BRL ?? 4.2);
 const USD_BRL = Number(process.env.USD_BRL_RATE ?? 5.3);
+const CREDITS_PER_BRL = Number(process.env.CREDITS_PER_BRL ?? 100);
 
 const PRICING: Record<string, { in: number; out: number }> = {
   "google/gemini-2.5-flash":      { in: 0.30, out: 2.50 },
@@ -28,16 +30,30 @@ export async function getMonthUsageBrl(userId: string): Promise<number> {
   return Number(data ?? 0);
 }
 
-export async function isBudgetExceeded(userId: string): Promise<{ exceeded: boolean; usedBrl: number; limitBrl: number }> {
-  const used = await getMonthUsageBrl(userId);
-  return { exceeded: used >= MONTHLY_LIMIT_BRL, usedBrl: used, limitBrl: MONTHLY_LIMIT_BRL };
+export function costToCredits(costBrlValue: number): number {
+  return Math.max(1, Math.ceil(costBrlValue * CREDITS_PER_BRL));
+}
+
+export async function isBudgetExceeded(
+  userId: string,
+): Promise<{ exceeded: boolean; usedBrl: number; limitBrl: number; creditos: number }> {
+  const { data, error } = await supabaseAdmin.rpc("garantir_creditos_usuario", { _user_id: userId });
+  if (error) {
+    console.error("[aiBudget] garantir_creditos_usuario error:", error);
+    return { exceeded: false, usedBrl: 0, limitBrl: 0, creditos: 0 };
+  }
+  const d = data as any;
+  const totais = Number(d?.creditos_totais ?? 0);
+  const utilizados = Number(d?.creditos_utilizados ?? 0);
+  const disponiveis = Number(d?.creditos_disponiveis ?? totais - utilizados);
+  return { exceeded: disponiveis <= 0, usedBrl: utilizados, limitBrl: totais, creditos: disponiveis };
 }
 
 export class BudgetExceededError extends Error {
   usedBrl: number;
   limitBrl: number;
   constructor(usedBrl: number, limitBrl: number) {
-    super(`Limite mensal de IA atingido (R$ ${usedBrl.toFixed(2)} / R$ ${limitBrl.toFixed(2)}).`);
+    super(`Você não tem créditos disponíveis (${usedBrl}/${limitBrl} usados). Aguarde a renovação do seu plano ou faça upgrade.`);
     this.usedBrl = usedBrl;
     this.limitBrl = limitBrl;
     this.name = "BudgetExceededError";
@@ -68,5 +84,16 @@ export async function recordUsage(args: {
     cost_brl: cost,
   });
   if (error) console.error("[aiBudget] insert error:", error);
+  try {
+    const qtd = costToCredits(cost);
+    const { error: consErr } = await supabaseAdmin.rpc("consumir_creditos", {
+      _user_id: args.userId,
+      _quantidade: qtd,
+      _descricao: `IA: ${args.task} (${args.model})`,
+    });
+    if (consErr) console.error("[aiBudget] consumir_creditos error:", consErr);
+  } catch (e) {
+    console.error("[aiBudget] consumir_creditos exception:", e);
+  }
   return cost;
 }
