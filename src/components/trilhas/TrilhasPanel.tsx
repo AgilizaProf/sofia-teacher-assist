@@ -7,6 +7,7 @@ import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
+import { feriadosNacionaisBR } from "@/lib/calendar/feriadosBR";
 
 const DISCIPLINAS_COMUNS = [
   "Português", "Matemática", "Ciências", "História", "Geografia",
