@@ -473,6 +473,25 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const [agendPularFeriados, setAgendPularFeriados] = useState(true);
   const [agendSkip, setAgendSkip] = useState<Record<string, boolean>>({});
 
+  // Dias personalizados para pular (feriados locais, provas, conselhos…)
+  // Persistido por usuário/projeto via usePersistentState (cloud + local).
+  type DiaPular = { date: string; label: string; tipo: "feriado_local" | "prova" | "outro" };
+  const [diasPular, setDiasPular] = usePersistentState<DiaPular[]>("agendador_dias_pular", []);
+  const [novoDiaPular, setNovoDiaPular] = useState<DiaPular>({ date: today, label: "", tipo: "feriado_local" });
+  const [gerenciarOpen, setGerenciarOpen] = useState(false);
+  const mapaDiasPular = useMemo(() => {
+    const m = new Map<string, DiaPular>();
+    diasPular.forEach((d) => m.set(d.date, d));
+    return m;
+  }, [diasPular]);
+  const adicionarDiaPular = () => {
+    if (!novoDiaPular.date) return;
+    if (diasPular.some((d) => d.date === novoDiaPular.date)) return;
+    setDiasPular([...diasPular, { ...novoDiaPular, label: novoDiaPular.label.trim() || (novoDiaPular.tipo === "prova" ? "Prova" : novoDiaPular.tipo === "feriado_local" ? "Feriado local" : "Sem aula") }].sort((a, b) => a.date.localeCompare(b.date)));
+    setNovoDiaPular({ date: today, label: "", tipo: novoDiaPular.tipo });
+  };
+  const removerDiaPular = (iso: string) => setDiasPular(diasPular.filter((d) => d.date !== iso));
+
   const matchWeekday = (d: Date, modo: WeekdayMode): boolean => {
     const dow = d.getUTCDay(); // 0=Dom..6=Sab
     if (modo === "todos") return true;
@@ -487,8 +506,8 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
 
   // Calcula próximas datas candidatas (com até 60 dias de busca a partir do início).
   const candidatas = useMemo(() => {
-    if (!agendOpen) return [] as Array<{ iso: string; feriado: string | null; weekday: number }>;
-    const out: Array<{ iso: string; feriado: string | null; weekday: number }> = [];
+    if (!agendOpen) return [] as Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }>;
+    const out: Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }> = [];
     const limite = Math.max(selecionados.size, 1) + 14;
     let cursor = parseIso(agendInicio);
     const stopAt = new Date(cursor.getTime());
@@ -500,17 +519,18 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
         const y = cursor.getUTCFullYear();
         if (!cacheAnos.has(y)) cacheAnos.set(y, feriadosNacionaisBR(y));
         const feriado = cacheAnos.get(y)!.get(iso) ?? null;
-        out.push({ iso, feriado, weekday: cursor.getUTCDay() });
+        out.push({ iso, feriado, weekday: cursor.getUTCDay(), diaLocal: mapaDiasPular.get(iso) ?? null });
       }
       cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
     return out;
-  }, [agendOpen, agendModo, agendInicio, selecionados.size]);
+  }, [agendOpen, agendModo, agendInicio, selecionados.size, mapaDiasPular]);
 
   const datasAgendadas = useMemo(() => {
     const finais: string[] = [];
     for (const c of candidatas) {
       if (agendPularFeriados && c.feriado) continue;
+      if (c.diaLocal) continue; // sempre pula dias cadastrados pelo usuário
       if (agendSkip[c.iso]) continue;
       finais.push(c.iso);
       if (finais.length >= selecionados.size) break;
@@ -758,7 +778,50 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
               <input type="checkbox" checked={agendPularFeriados} onChange={(e) => setAgendPularFeriados(e.target.checked)} />
               Pular feriados nacionais
             </label>
+            <button type="button" className="pl-btn ghost" onClick={() => setGerenciarOpen((v) => !v)} style={{ fontSize: 11 }}>
+              {gerenciarOpen ? "Fechar dias personalizados" : `Dias personalizados (${diasPular.length})`}
+            </button>
           </div>
+          {gerenciarOpen && (
+            <div style={{ background: "#fff", border: "1px dashed var(--line)", borderRadius: 8, padding: 10, display: "grid", gap: 8 }}>
+              <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                Cadastre feriados locais, dias de prova ou outros dias sem aula. Eles serão sempre pulados pelo agendador.
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                <input type="date" value={novoDiaPular.date} onChange={(e) => setNovoDiaPular({ ...novoDiaPular, date: e.target.value })} style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }} />
+                <select value={novoDiaPular.tipo} onChange={(e) => setNovoDiaPular({ ...novoDiaPular, tipo: e.target.value as DiaPular["tipo"] })} style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }}>
+                  <option value="feriado_local">Feriado local</option>
+                  <option value="prova">Prova</option>
+                  <option value="outro">Outro (sem aula)</option>
+                </select>
+                <input
+                  placeholder="Descrição (opcional)"
+                  value={novoDiaPular.label}
+                  onChange={(e) => setNovoDiaPular({ ...novoDiaPular, label: e.target.value })}
+                  style={{ ...inputStyle, padding: "4px 8px", fontSize: 12, flex: 1, minWidth: 160 }}
+                />
+                <button type="button" className="pl-btn primary" onClick={adicionarDiaPular} disabled={!novoDiaPular.date} style={{ fontSize: 11 }}>
+                  Adicionar
+                </button>
+              </div>
+              {diasPular.length > 0 ? (
+                <div style={{ display: "grid", gap: 3, maxHeight: 140, overflowY: "auto" }}>
+                  {diasPular.map((d) => (
+                    <div key={d.date} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, padding: "3px 6px", background: "#F8FAFC", borderRadius: 6 }}>
+                      <span style={{ minWidth: 92, fontWeight: 600 }}>{d.date.split("-").reverse().join("/")}</span>
+                      <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: d.tipo === "prova" ? "#DBEAFE" : d.tipo === "feriado_local" ? "#FEE2E2" : "#F1F5F9", color: d.tipo === "prova" ? "#1E40AF" : d.tipo === "feriado_local" ? "#991B1B" : "#475569" }}>
+                        {d.tipo === "prova" ? "Prova" : d.tipo === "feriado_local" ? "Feriado local" : "Sem aula"}
+                      </span>
+                      <span style={{ flex: 1, color: "var(--ink-2)" }}>{d.label}</span>
+                      <button type="button" className="pl-btn ghost" onClick={() => removerDiaPular(d.date)} style={{ fontSize: 10.5 }}>Remover</button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: 11.5, color: "var(--muted)", fontStyle: "italic" }}>Nenhum dia personalizado cadastrado ainda.</div>
+              )}
+            </div>
+          )}
           {(() => {
             const ordemSel = Array.from(selecionados).sort((a, b) => a - b);
             const mapaIsoParaAtividade = new Map<string, number>();
@@ -778,7 +841,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
               <div style={{ fontSize: 12, color: "var(--muted)" }}>Nenhuma data candidata encontrada.</div>
             )}
             {candidatas.map((c) => {
-              const auto = agendPularFeriados && !!c.feriado;
+              const auto = (agendPularFeriados && !!c.feriado) || !!c.diaLocal;
               const manual = !!agendSkip[c.iso];
               const atividadeIdx = mapaIsoParaAtividade.get(c.iso);
               const usado = atividadeIdx !== undefined;
@@ -799,6 +862,11 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
                     </span>
                   )}
                   {c.feriado && <span style={{ fontSize: 10.5, color: "#991B1B" }}>· {c.feriado}{auto ? " (pulado)" : ""}</span>}
+                  {c.diaLocal && (
+                    <span style={{ fontSize: 10.5, color: c.diaLocal.tipo === "prova" ? "#1E40AF" : "#991B1B" }}>
+                      · {c.diaLocal.tipo === "prova" ? "Prova" : c.diaLocal.tipo === "feriado_local" ? "Feriado local" : "Sem aula"}{c.diaLocal.label ? `: ${c.diaLocal.label}` : ""} (pulado)
+                    </span>
+                  )}
                 </label>
               );
             })}
