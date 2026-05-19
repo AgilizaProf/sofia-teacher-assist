@@ -540,16 +540,28 @@ export function Agenda() {
   const [m4Items, setM4Items] = useState<M4ImportItem[]>([]);
   const [m4Importing, setM4Importing] = useState(false);
   const [m4Tick, setM4Tick] = useState(0);
+  // Considera um evento M4 como "já na agenda" se houver evento na mesma
+  // data com o mesmo título (case-insensitive, trim). Isto permite que o
+  // botão "Trazer atividades agendadas (M4)" mostre tudo do calendário M4
+  // (independente da aba/origem que salvou) e apenas oculte o que já está
+  // realmente na Agenda Escolar.
+  const agendaKeySet = useMemo(() => {
+    const s = new Set<string>();
+    for (const e of events) s.add(`${e.date}::${(e.title || "").trim().toLowerCase()}`);
+    return s;
+  }, [events]);
   const m4Pending = useMemo(() => {
     void m4Tick;
     const store = readM4Store();
-    const imported = readM4Imported();
     let n = 0;
-    for (const arr of Object.values(store)) {
-      for (const ev of arr) if (!imported.has(ev.id)) n++;
+    for (const [date, arr] of Object.entries(store)) {
+      for (const ev of arr) {
+        const key = `${date}::${(ev.title || "").trim().toLowerCase()}`;
+        if (!agendaKeySet.has(key)) n++;
+      }
     }
     return n;
-  }, [m4Tick, events.length]);
+  }, [m4Tick, agendaKeySet]);
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === M4_STORE_KEY || e.key === M4_IMPORTED_KEY) setM4Tick((n) => n + 1);
@@ -559,11 +571,11 @@ export function Agenda() {
   }, []);
   const openM4Import = () => {
     const store = readM4Store();
-    const imported = readM4Imported();
     const items: M4ImportItem[] = [];
     for (const [date, arr] of Object.entries(store)) {
       for (const evt of arr) {
-        if (imported.has(evt.id)) continue;
+        const key = `${date}::${(evt.title || "").trim().toLowerCase()}`;
+        if (agendaKeySet.has(key)) continue;
         items.push({ date, evt, selected: true });
       }
     }
