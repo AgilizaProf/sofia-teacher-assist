@@ -759,6 +759,20 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
               Pular feriados nacionais
             </label>
           </div>
+          {(() => {
+            const ordemSel = Array.from(selecionados).sort((a, b) => a - b);
+            const mapaIsoParaAtividade = new Map<string, number>();
+            datasAgendadas.forEach((iso, k) => {
+              const idx = ordemSel[k];
+              if (typeof idx === "number") mapaIsoParaAtividade.set(iso, idx);
+            });
+            const tituloAtiv = (i: number) => {
+              const d = dias[i];
+              const t = d?.titulo || d?.dia || "";
+              return `Atividade ${i + 1}${t ? ` — ${t}` : ""}`;
+            };
+            return (
+              <>
           <div style={{ display: "grid", gap: 4, maxHeight: 220, overflowY: "auto", background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: 8 }}>
             {candidatas.length === 0 && (
               <div style={{ fontSize: 12, color: "var(--muted)" }}>Nenhuma data candidata encontrada.</div>
@@ -766,7 +780,8 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
             {candidatas.map((c) => {
               const auto = agendPularFeriados && !!c.feriado;
               const manual = !!agendSkip[c.iso];
-              const usado = !auto && !manual && datasAgendadas.includes(c.iso);
+              const atividadeIdx = mapaIsoParaAtividade.get(c.iso);
+              const usado = atividadeIdx !== undefined;
               return (
                 <label key={c.iso} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: auto ? "var(--muted)" : "var(--ink)", textDecoration: auto || manual ? "line-through" : "none", cursor: auto ? "not-allowed" : "pointer" }}>
                   <input
@@ -778,12 +793,45 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
                   />
                   <span style={{ minWidth: 36, fontWeight: 600 }}>{nomeDia(c.weekday)}</span>
                   <span style={{ minWidth: 92 }}>{c.iso.split("-").reverse().join("/")}</span>
-                  {usado && <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#FFF7ED", color: "#9A3412" }}>Será usada</span>}
+                  {usado && (
+                    <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#FFF7ED", color: "#9A3412", fontWeight: 600 }}>
+                      → {tituloAtiv(atividadeIdx!)}
+                    </span>
+                  )}
                   {c.feriado && <span style={{ fontSize: 10.5, color: "#991B1B" }}>· {c.feriado}{auto ? " (pulado)" : ""}</span>}
                 </label>
               );
             })}
           </div>
+          {datasAgendadas.length > 0 && (
+            <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: 10 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--ink)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".06em" }}>
+                Pré-visualização do agendamento
+              </div>
+              <div style={{ display: "grid", gap: 4 }}>
+                {ordemSel.map((idx, k) => {
+                  const iso = datasAgendadas[k];
+                  return (
+                    <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+                      <span style={{ minWidth: 90, color: "var(--muted)" }}>{tituloAtiv(idx).split(" — ")[0]}</span>
+                      <span style={{ flex: 1, color: "var(--ink)" }}>{dias[idx]?.titulo || dias[idx]?.dia || "(sem título)"}</span>
+                      <span style={{ minWidth: 18, color: "var(--muted)" }}>→</span>
+                      {iso ? (
+                        <span style={{ fontWeight: 600, color: "#9A3412" }}>
+                          {nomeDia(parseIso(iso).getUTCDay())}, {iso.split("-").reverse().join("/")}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#991B1B", fontStyle: "italic" }}>sem data disponível</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+              </>
+            );
+          })()}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
             <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
               {datasAgendadas.length}/{selecionados.size} datas preparadas
