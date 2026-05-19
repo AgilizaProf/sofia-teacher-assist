@@ -1,7 +1,7 @@
 // Roteador central de modelos da Sofia.
 // Gemini 1.5/2.5 Flash via Lovable AI Gateway -> respostas rápidas.
 // Claude 3.5 Haiku via API direta da Anthropic -> produção de documentos.
-import { isBudgetExceeded, recordUsage, MONTHLY_LIMIT_BRL } from "./ai-budget.ts";
+import { isBudgetExceeded, recordUsage } from "./ai-budget.ts";
 import { withConstitution } from "./sofia-constitution.ts";
 
 export const MODELOS = {
@@ -130,7 +130,7 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
         ok: false,
         status: 402,
         text: "",
-        error: `Limite mensal de IA atingido (R$ ${b.usedBrl.toFixed(2)} / R$ ${b.limitBrl.toFixed(2)}).`,
+        error: `Você não tem créditos disponíveis (${b.usedBrl}/${b.limitBrl} usados).`,
         blocked: true,
         usedBrl: b.usedBrl,
         limitBrl: b.limitBrl,
@@ -231,7 +231,7 @@ export function aiErrorResponse(r: CallAIResult): Response {
   if (r.blocked) {
     return new Response(
       JSON.stringify({
-        error: `Você atingiu o limite mensal de uso da IA (R$ ${MONTHLY_LIMIT_BRL.toFixed(2)}). O contador zera no início do próximo mês.`,
+        error: `Você não tem créditos disponíveis (${r.usedBrl ?? 0}/${r.limitBrl ?? 0} usados). Aguarde a renovação do seu plano ou faça upgrade.`,
         blocked: true,
         usedBrl: r.usedBrl,
         limitBrl: r.limitBrl,

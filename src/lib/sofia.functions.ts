@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { validateSofiaOutput } from "@/lib/sofia-validator";
 import { buildSofiaPrompt } from "@/lib/sofia-constitution";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertBudget, recordUsage, BudgetExceededError, MONTHLY_LIMIT_BRL } from "@/lib/aiBudget.server";
+import { assertBudget, recordUsage, BudgetExceededError } from "@/lib/aiBudget.server";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -67,7 +67,7 @@ export const askSofia = createServerFn({ method: "POST" })
         yield {
           type: "done" as const,
           conversationId: data.conversationId ?? null,
-          content: `Você atingiu o limite mensal de uso da IA (R$ ${MONTHLY_LIMIT_BRL.toFixed(2)}). O contador zera no início do próximo mês.`,
+          content: `Você não tem créditos disponíveis (${e.usedBrl}/${e.limitBrl} usados). Aguarde a renovação do seu plano ou faça upgrade.`,
           issues: null,
           sanitizedApplied: false,
           blocked: true,
