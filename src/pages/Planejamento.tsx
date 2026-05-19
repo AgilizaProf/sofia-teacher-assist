@@ -4967,6 +4967,13 @@ export function Planejamento() {
         onConfirmWord={(info) => { m5WordMode.current = true; executarExportacaoM5(info); }}
         title="Exportar planejamento da semana"
       />
+      <PrintInfoModal
+        open={m1PrintModalOpen}
+        onOpenChange={setM1PrintModalOpen}
+        onConfirm={(info) => { m1WordMode.current = false; executarExportacaoM1(info); }}
+        onConfirmWord={(info) => { m1WordMode.current = true; executarExportacaoM1(info); }}
+        title="Exportar planejamento da semana"
+      />
     </div>
   ));
 }
