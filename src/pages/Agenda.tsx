@@ -899,6 +899,9 @@ export function Agenda() {
                     </>
                   )}
                 </div>
+                <button className="ag-btn" onClick={openPrintDialog} title="Imprimir compromissos e atividades">
+                  <Printer size={14} /> Imprimir
+                </button>
                 <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
               </>
             }
