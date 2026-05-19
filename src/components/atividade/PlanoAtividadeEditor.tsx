@@ -1195,15 +1195,21 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         ));
       }
     }
-    if (p.sugestoes.length > 0) {
-      partes.push(editorialSection("Sugestões da Sofia"));
-      partes.push(editorialLongField(
-        p.sugestoes.map((x) => `• ${x.titulo} — ${x.descricao}`).join("\n"),
-      ));
+    {
+      const sugs = p.sugestoes.filter((s) => s.utilizado === true);
+      if (sugs.length > 0) {
+        partes.push(editorialSection("Sugestões da Sofia"));
+        partes.push(editorialLongField(
+          sugs.map((x) => `• ${x.titulo} — ${x.descricao}`).join("\n"),
+        ));
+      }
     }
-    if (p.materiais.length > 0) {
-      partes.push(editorialSection("Materiais necessários"));
-      partes.push(editorialLongField(p.materiais.map((m) => `☐ ${m}`).join("\n")));
+    {
+      const matsUsados = p.materiais.filter((_, i) => !!p.materiaisCheck?.[i]);
+      if (matsUsados.length > 0) {
+        partes.push(editorialSection("Materiais necessários"));
+        partes.push(editorialLongField(matsUsados.map((m) => `☐ ${m}`).join("\n")));
+      }
     }
     return partes.join("\n");
   };
