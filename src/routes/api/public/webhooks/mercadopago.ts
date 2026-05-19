@@ -180,6 +180,49 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
         };
 
         if (status === "authorized") {
+          // ---- Migração mensal -> anual: soma dias restantes ----------
+          let effectivePeriodEnd = periodEnd;
+          if (
+            ciclo === "anual" &&
+            current &&
+            current.source === "mercadopago" &&
+            current.plano === "pro" &&
+            current.current_period_end
+          ) {
+            const prevEnd = new Date(current.current_period_end).getTime();
+            const remainingMs = Math.max(0, prevEnd - Date.now());
+            if (remainingMs > 0) {
+              effectivePeriodEnd = new Date(
+                new Date(periodEnd).getTime() + remainingMs
+              ).toISOString();
+            }
+
+            // Cancela o preapproval antigo (se houver) no MP.
+            const prevMeta = (await supabaseAdmin
+              .from("subscriptions")
+              .select("metadata")
+              .eq("user_id", userId)
+              .maybeSingle()).data?.metadata as Record<string, unknown> | null;
+            const prevPreId =
+              prevMeta && typeof prevMeta.preapproval_id === "string"
+                ? (prevMeta.preapproval_id as string)
+                : null;
+            if (prevPreId && prevPreId !== sub.id) {
+              try {
+                await fetch(`https://api.mercadopago.com/preapproval/${prevPreId}`, {
+                  method: "PUT",
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ status: "cancelled" }),
+                });
+              } catch (e) {
+                console.warn("[mp-webhook] falha ao cancelar preapproval antigo", e);
+              }
+            }
+          }
+
           await supabaseAdmin
             .from("subscriptions")
             .upsert(
@@ -190,8 +233,8 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
                 status: "active",
                 source: "mercadopago",
                 started_at: sub.date_created || new Date().toISOString(),
-                current_period_end: periodEnd,
-                metadata: baseMeta,
+                current_period_end: effectivePeriodEnd,
+                metadata: { ...baseMeta, current_period_end: effectivePeriodEnd },
                 updated_at: new Date().toISOString(),
               },
               { onConflict: "user_id" }
