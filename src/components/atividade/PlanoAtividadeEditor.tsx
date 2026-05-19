@@ -33,7 +33,15 @@ export type Adaptacao = {
    */
   incluido?: boolean;
 };
-export type Sugestao = { titulo: string; descricao: string };
+export type Sugestao = {
+  titulo: string;
+  descricao: string;
+  /**
+   * Quando true, a sugestão é considerada "utilizada" pelo professor e
+   * entra no documento impresso/exportado. Default: false.
+   */
+  utilizado?: boolean;
+};
 export type OpcaoAula = { titulo: string; resumo: string; abordagem: string };
 export type ContribuicaoInter = { disciplina: string; contribuicao: string };
 
