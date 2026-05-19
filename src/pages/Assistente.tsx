@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Search, Plus, ChevronsLeft, HelpCircle, Pencil,
-  FileText, Send, User, Sparkles,
+  FileText, Send, User, Sparkles, Trash2,
   Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
   GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock, ChevronUp, ChevronDown,
 } from "lucide-react";
@@ -266,6 +266,12 @@ const css = `
 .history-list{display:flex;flex-direction:column;gap:2px;padding:0 8px;overflow:auto;}
 .h-item{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:10px;cursor:pointer;text-align:left;width:100%;}
 .h-item:hover{background:#fff;}
+.h-item{position:relative;}
+.h-item .h-del{position:absolute;top:6px;right:6px;opacity:0;background:transparent;border:0;border-radius:6px;padding:4px;color:#9aa1b3;cursor:pointer;display:grid;place-items:center;transition:opacity .15s ease, background .15s ease, color .15s ease;}
+.h-item:hover .h-del,.h-item:focus-within .h-del{opacity:1;}
+.h-item .h-del:hover{background:#FEE2E2;color:#B91C1C;}
+.btn-clear-all{background:transparent;border:0;color:#9aa1b3;cursor:pointer;padding:4px;border-radius:6px;display:grid;place-items:center;}
+.btn-clear-all:hover{background:#FEE2E2;color:#B91C1C;}
 .h-icon{width:26px;height:26px;border-radius:7px;background:#fff;border:1px solid var(--line-soft);
   display:grid;place-items:center;color:#3B4256;flex:none;}
 .h-text{font-size:13px;line-height:1.35;color:var(--text);}
@@ -864,6 +870,21 @@ export function Assistente() {
               <button className="btn-new" onClick={(e) => { e.stopPropagation(); handleNew(); }} aria-label="Nova conversa">
                 <Plus size={12} /><span>Novo</span>
               </button>
+              {sofia.isAuthed && sofia.conversations.length > 0 && (
+                <button
+                  className="btn-clear-all"
+                  title="Limpar todo o histórico"
+                  aria-label="Limpar todo o histórico"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm("Apagar todo o histórico de conversas com a Sofia? Esta ação não pode ser desfeita.")) {
+                      sofia.clearConversations().catch(() => { /* noop */ });
+                    }
+                  }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
               <button
                 className="btn-collapse"
                 onClick={(e) => { e.stopPropagation(); setCollapsed((v) => !v); }}
@@ -897,10 +918,13 @@ export function Assistente() {
             )}
             {today.length > 0 && <div className="history-section">Hoje</div>}
             {today.map((c) => (
-              <button
+              <div
                 key={c.id}
                 className="h-item"
+                role="button"
+                tabIndex={0}
                 onClick={() => pickConversation(c.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
@@ -908,14 +932,30 @@ export function Assistente() {
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                   <div className="h-meta">{new Date(c.updated_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" })}</div>
                 </div>
-              </button>
+                <button
+                  className="h-del"
+                  aria-label="Excluir conversa"
+                  title="Excluir conversa"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Excluir a conversa "${c.title}"?`)) {
+                      sofia.deleteConversation(c.id).catch(() => { /* noop */ });
+                    }
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             ))}
             {week.length > 0 && <div className="history-section">Esta semana</div>}
             {week.map((c) => (
-              <button
+              <div
                 key={c.id}
                 className="h-item"
+                role="button"
+                tabIndex={0}
                 onClick={() => pickConversation(c.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
@@ -923,14 +963,30 @@ export function Assistente() {
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                   <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", timeZone: "America/Sao_Paulo" })}</div>
                 </div>
-              </button>
+                <button
+                  className="h-del"
+                  aria-label="Excluir conversa"
+                  title="Excluir conversa"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Excluir a conversa "${c.title}"?`)) {
+                      sofia.deleteConversation(c.id).catch(() => { /* noop */ });
+                    }
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             ))}
             {older.length > 0 && <div className="history-section">Anteriores</div>}
             {older.map((c) => (
-              <button
+              <div
                 key={c.id}
                 className="h-item"
+                role="button"
+                tabIndex={0}
                 onClick={() => pickConversation(c.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
                 style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
@@ -938,7 +994,20 @@ export function Assistente() {
                   <div className="h-text" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
                   <div className="h-meta">{new Date(c.updated_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</div>
                 </div>
-              </button>
+                <button
+                  className="h-del"
+                  aria-label="Excluir conversa"
+                  title="Excluir conversa"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Excluir a conversa "${c.title}"?`)) {
+                      sofia.deleteConversation(c.id).catch(() => { /* noop */ });
+                    }
+                  }}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             ))}
           </div>
 
