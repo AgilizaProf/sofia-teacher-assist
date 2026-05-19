@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Printer, FileDown } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -19,8 +20,10 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   /** Valores iniciais (ex.: turma já conhecida). */
   defaults?: PrintInfo;
-  /** Disparado quando o usuário confirma — tanto preenchido quanto vazio. */
+  /** Disparado quando o usuário escolhe imprimir/PDF. */
   onConfirm: (info: PrintInfo) => void;
+  /** Opcional: disparado quando o usuário escolhe salvar em Word. */
+  onConfirmWord?: (info: PrintInfo) => void;
   title?: string;
   description?: string;
 };
@@ -40,6 +43,11 @@ export function PrintInfoModal({
 
   const confirmar = (limpar = false) => {
     onConfirm(limpar ? {} : info);
+    onOpenChange(false);
+  };
+  const confirmarWord = (limpar = false) => {
+    if (!onConfirmWord) return;
+    onConfirmWord(limpar ? {} : info);
     onOpenChange(false);
   };
 
@@ -74,9 +82,16 @@ export function PrintInfoModal({
             </div>
           </div>
         </div>
-        <DialogFooter className="gap-2">
-          <Button variant="ghost" onClick={() => confirmar(true)}>Imprimir sem preencher</Button>
-          <Button onClick={() => confirmar(false)}>Imprimir</Button>
+        <DialogFooter className="gap-2 flex-wrap">
+          <Button variant="ghost" onClick={() => confirmar(true)}>Sem preencher</Button>
+          {onConfirmWord && (
+            <Button variant="outline" onClick={() => confirmarWord(false)}>
+              <FileDown className="h-4 w-4 mr-1" /> Salvar em Word
+            </Button>
+          )}
+          <Button onClick={() => confirmar(false)}>
+            <Printer className="h-4 w-4 mr-1" /> Imprimir / PDF
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
