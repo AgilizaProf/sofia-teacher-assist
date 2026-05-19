@@ -2004,6 +2004,15 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         onOpenChange={setPrintModalOpen}
         defaults={{ turma: turma || undefined }}
         onConfirm={executarImpressao}
+        onConfirmWord={executarSalvarWord}
+      />
+      <PrintInfoModal
+        open={exportSingleOpen}
+        onOpenChange={setExportSingleOpen}
+        defaults={{ turma: turma || undefined }}
+        title="Exportar plano de atividade"
+        onConfirm={(info) => exportarPlanoAtual(info, false)}
+        onConfirmWord={(info) => exportarPlanoAtual(info, true)}
       />
     </div>
   );
