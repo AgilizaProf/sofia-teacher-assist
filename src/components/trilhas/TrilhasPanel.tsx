@@ -474,6 +474,29 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const [agendSkip, setAgendSkip] = useState<Record<string, boolean>>({});
   const [agendExtra, setAgendExtra] = useState(0); // candidatas extras quando o usuário pede para estender
 
+  // ===== Multi-disciplina (várias matérias com dias diferentes) =====
+  // Parse das disciplinas da trilha — separadas por · , ; / no campo trilha.disciplina.
+  const disciplinasTrilha = useMemo(() => {
+    const raw = (trilha.disciplina || "").split(/\s*[·,;/]\s*/).map((s) => s.trim()).filter(Boolean);
+    // Remove duplicatas mantendo a ordem.
+    return Array.from(new Set(raw));
+  }, [trilha.disciplina]);
+  const temMultiplas = disciplinasTrilha.length > 1;
+
+  // Modo do agendador: simples (1 dia da semana), multi (vários dias), lanes (1 trilho por disciplina).
+  type AgendTipo = "simples" | "multi" | "lanes";
+  const [agendTipo, setAgendTipo] = useState<AgendTipo>(temMultiplas ? "lanes" : "simples");
+  const [agendDiasMulti, setAgendDiasMulti] = useState<number[]>([1, 3]); // multi: seg+qua
+  const [agendLanes, setAgendLanes] = useState<Record<string, number[]>>(() =>
+    Object.fromEntries(disciplinasTrilha.map((d, i) => [d, [1 + (i % 5)]]))
+  );
+  // Marcação manual: atividade idx → disciplina (string vazia = sem disciplina).
+  const [diaDisciplina, setDiaDisciplina] = usePersistentState<Record<number, string>>(`${persistKey}_disc`, {});
+  const toggleDiaSemana = (lista: number[], dow: number): number[] => {
+    const has = lista.includes(dow);
+    return has ? lista.filter((x) => x !== dow) : [...lista, dow].sort((a, b) => a - b);
+  };
+
   // Dias personalizados para pular (feriados locais, provas, conselhos…)
   // Persistido POR TURMA (cada turma tem sua própria lista de feriados/provas).
   // Fallback para "sem_turma" quando a trilha não tiver turma definida.
@@ -500,13 +523,12 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   const removerDiaPular = (iso: string) => setDiasPular(diasPular.filter((d) => d.date !== iso));
 
   // Resetar a extensão quando o usuário muda recorrência ou data inicial.
-  useEffect(() => { setAgendExtra(0); }, [agendModo, agendInicio]);
+  useEffect(() => { setAgendExtra(0); }, [agendModo, agendInicio, agendTipo, agendDiasMulti, agendLanes]);
 
-  const matchWeekday = (d: Date, modo: WeekdayMode): boolean => {
-    const dow = d.getUTCDay(); // 0=Dom..6=Sab
-    if (modo === "todos") return true;
-    if (modo === "uteis") return dow >= 1 && dow <= 5;
-    return dow === parseInt(modo, 10);
+  const weekdaysFromModo = (modo: WeekdayMode): Set<number> => {
+    if (modo === "todos") return new Set([0, 1, 2, 3, 4, 5, 6]);
+    if (modo === "uteis") return new Set([1, 2, 3, 4, 5]);
+    return new Set([parseInt(modo, 10)]);
   };
   const parseIso = (iso: string): Date => {
     const [y, m, d] = iso.split("-").map((x) => parseInt(x, 10));
@@ -514,17 +536,17 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   };
   const fmtIso = (d: Date): string => d.toISOString().slice(0, 10);
 
-  // Calcula próximas datas candidatas (com até 60 dias de busca a partir do início).
-  const candidatas = useMemo(() => {
-    if (!agendOpen) return [] as Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }>;
-    const out: Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }> = [];
-    const limite = Math.max(selecionados.size, 1) + 14 + agendExtra;
+  type Candidata = { iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null };
+  const construirCandidatas = (weekdaySet: Set<number>, alvo: number): Candidata[] => {
+    const out: Candidata[] = [];
+    if (weekdaySet.size === 0 || alvo <= 0) return out;
+    const limite = Math.max(alvo, 1) + 14 + agendExtra;
     let cursor = parseIso(agendInicio);
     const stopAt = new Date(cursor.getTime());
     stopAt.setUTCDate(stopAt.getUTCDate() + 365 + agendExtra * 7);
     const cacheAnos = new Map<number, Map<string, string>>();
     while (out.length < limite && cursor.getTime() <= stopAt.getTime()) {
-      if (matchWeekday(cursor, agendModo)) {
+      if (weekdaySet.has(cursor.getUTCDay())) {
         const iso = fmtIso(cursor);
         const y = cursor.getUTCFullYear();
         if (!cacheAnos.has(y)) cacheAnos.set(y, feriadosNacionaisBR(y));
@@ -534,28 +556,79 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
       cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
     return out;
-  }, [agendOpen, agendModo, agendInicio, selecionados.size, mapaDiasPular, agendExtra]);
+  };
 
-  const datasAgendadas = useMemo(() => {
-    const finais: string[] = [];
-    for (const c of candidatas) {
-      if (agendPularFeriados && c.feriado) continue;
-      if (c.diaLocal) continue; // sempre pula dias cadastrados pelo usuário
-      if (agendSkip[c.iso]) continue;
-      finais.push(c.iso);
-      if (finais.length >= selecionados.size) break;
+  // Trilhos (lanes) calculados conforme o modo.
+  // Cada lane tem: rótulo, conjunto de weekdays, atividades selecionadas pertencentes a ela.
+  type Lane = {
+    key: string;
+    label: string;
+    weekdaySet: Set<number>;
+    atividades: number[]; // idx das atividades selecionadas nesta lane (em ordem)
+  };
+  const lanes = useMemo<Lane[]>(() => {
+    const ordemSel = Array.from(selecionados).sort((a, b) => a - b);
+    if (agendTipo === "simples") {
+      return [{ key: "_all", label: "Todas as atividades", weekdaySet: weekdaysFromModo(agendModo), atividades: ordemSel }];
     }
-    return finais;
-  }, [candidatas, agendPularFeriados, agendSkip, selecionados.size]);
+    if (agendTipo === "multi") {
+      return [{ key: "_all", label: "Todas as atividades", weekdaySet: new Set(agendDiasMulti), atividades: ordemSel }];
+    }
+    // lanes: agrupa por disciplina marcada manualmente.
+    const grupos: Record<string, number[]> = {};
+    ordemSel.forEach((idx) => {
+      const disc = diaDisciplina[idx] || "";
+      if (!grupos[disc]) grupos[disc] = [];
+      grupos[disc].push(idx);
+    });
+    const out: Lane[] = disciplinasTrilha.map((disc) => ({
+      key: disc,
+      label: disc,
+      weekdaySet: new Set(agendLanes[disc] || []),
+      atividades: grupos[disc] || [],
+    }));
+    if ((grupos[""] || []).length > 0) {
+      // Atividades sem disciplina caem no trilho "Sem disciplina" usando a união dos weekdays configurados.
+      const uniao = new Set<number>();
+      Object.values(agendLanes).forEach((arr) => arr.forEach((d) => uniao.add(d)));
+      out.push({ key: "_sem", label: "Sem disciplina", weekdaySet: uniao, atividades: grupos[""] });
+    }
+    return out;
+  }, [agendTipo, agendModo, agendDiasMulti, agendLanes, diaDisciplina, disciplinasTrilha, selecionados]);
+
+  // Mapa final: atividade idx → ISO. Calculado lane por lane, sem reaproveitar a mesma data entre lanes.
+  const { atribuicoes, candidatasPorLane } = useMemo(() => {
+    const atrib: Record<number, string> = {};
+    const porLane: Record<string, Candidata[]> = {};
+    if (!agendOpen) return { atribuicoes: atrib, candidatasPorLane: porLane };
+    const usadas = new Set<string>();
+    for (const lane of lanes) {
+      const alvo = lane.atividades.length;
+      const cands = construirCandidatas(lane.weekdaySet, alvo);
+      porLane[lane.key] = cands;
+      let cursor = 0;
+      for (const idx of lane.atividades) {
+        while (cursor < cands.length) {
+          const c = cands[cursor++];
+          if (agendPularFeriados && c.feriado) continue;
+          if (c.diaLocal) continue;
+          if (agendSkip[c.iso]) continue;
+          if (usadas.has(c.iso)) continue;
+          atrib[idx] = c.iso;
+          usadas.add(c.iso);
+          break;
+        }
+      }
+    }
+    return { atribuicoes: atrib, candidatasPorLane: porLane };
+  }, [agendOpen, lanes, agendPularFeriados, agendSkip, mapaDiasPular, agendExtra, agendInicio]);
+
+  const totalAlvo = selecionados.size;
+  const totalAtribuidas = Object.keys(atribuicoes).length;
 
   const aplicarAgendamento = () => {
-    if (datasAgendadas.length === 0) return;
-    const ordemSel = Array.from(selecionados).sort((a, b) => a - b);
-    const novas: Record<number, string> = { ...datas };
-    ordemSel.forEach((idx, k) => {
-      if (k < datasAgendadas.length) novas[idx] = datasAgendadas[k];
-    });
-    setDatas(novas);
+    if (totalAtribuidas === 0) return;
+    setDatas((prev) => ({ ...prev, ...atribuicoes }));
     setAgendOpen(false);
   };
 
