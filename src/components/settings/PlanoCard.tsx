@@ -80,6 +80,7 @@ export function PlanoCard() {
   const [data, setData] = useState<PlanoAtualDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
   const fetchPlano = useServerFn(getPlanoAtual);
   const cancel = useServerFn(cancelarAssinatura);
 
@@ -101,12 +102,12 @@ export function PlanoCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleCancel = async () => {
-    if (!confirm("Cancelar assinatura? Você continuará no Pro até o fim do período pago.")) return;
+  const handleCancelConfirm = async (reasons: string[], comment: string) => {
     setBusy(true);
     try {
-      await cancel({ data: {} });
+      await cancel({ data: { reasons, comment: comment.trim() || undefined } });
       toast.success("Assinatura cancelada. Você mantém o Pro até o fim do período.");
+      setShowCancel(false);
       await reload();
     } catch (e) {
       toast.error((e as Error).message || "Não foi possível cancelar.");
@@ -132,7 +133,14 @@ export function PlanoCard() {
       {loading || !data ? (
         <div style={{ color: MUTED, fontSize: 13 }}>Carregando…</div>
       ) : (
-        <PlanoBody data={data} busy={busy} onCancel={handleCancel} />
+        <PlanoBody data={data} busy={busy} onCancel={() => setShowCancel(true)} />
+      )}
+      {showCancel && (
+        <CancelModal
+          busy={busy}
+          onClose={() => !busy && setShowCancel(false)}
+          onConfirm={handleCancelConfirm}
+        />
       )}
     </section>
   );
