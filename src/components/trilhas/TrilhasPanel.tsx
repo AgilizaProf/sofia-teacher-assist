@@ -722,8 +722,82 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
           <span style={{ fontSize: 11.5, color: "var(--muted)" }}>{selecionados.size}/{dias.length} selecionado(s)</span>
           <button className="pl-btn ghost" onClick={selecionarTodos} style={{ fontSize: 11 }}>Selecionar todos</button>
           <button className="pl-btn ghost" onClick={desmarcarTodos} style={{ fontSize: 11 }}>Desmarcar todos</button>
+          <button
+            className="pl-btn ghost"
+            onClick={() => setAgendOpen((v) => !v)}
+            disabled={selecionados.size === 0}
+            style={{ fontSize: 11 }}
+            title="Distribuir as atividades selecionadas em dias sequenciais"
+          >
+            <Calendar size={11} /> {agendOpen ? "Fechar agendamento" : "Agendar em sequência"}
+          </button>
         </div>
       </div>
+
+      {agendOpen && (
+        <div style={{ background: "#F8FAFC", border: "1px solid var(--line)", borderRadius: 10, padding: 12, display: "grid", gap: 10 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)" }}>
+            Agendar {selecionados.size} atividade(s) em sequência
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <label style={{ fontSize: 11.5, color: "var(--muted)" }}>Recorrência:</label>
+            <select value={agendModo} onChange={(e) => setAgendModo(e.target.value as WeekdayMode)} style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }}>
+              <option value="1">Toda segunda-feira</option>
+              <option value="2">Toda terça-feira</option>
+              <option value="3">Toda quarta-feira</option>
+              <option value="4">Toda quinta-feira</option>
+              <option value="5">Toda sexta-feira</option>
+              <option value="6">Todo sábado</option>
+              <option value="0">Todo domingo</option>
+              <option value="uteis">Todos os dias úteis (seg–sex)</option>
+              <option value="todos">Todos os dias</option>
+            </select>
+            <label style={{ fontSize: 11.5, color: "var(--muted)" }}>A partir de:</label>
+            <input type="date" value={agendInicio} onChange={(e) => setAgendInicio(e.target.value)} style={{ ...inputStyle, padding: "4px 8px", fontSize: 12 }} />
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--ink-2)", cursor: "pointer" }}>
+              <input type="checkbox" checked={agendPularFeriados} onChange={(e) => setAgendPularFeriados(e.target.checked)} />
+              Pular feriados nacionais
+            </label>
+          </div>
+          <div style={{ display: "grid", gap: 4, maxHeight: 220, overflowY: "auto", background: "#fff", border: "1px solid var(--line)", borderRadius: 8, padding: 8 }}>
+            {candidatas.length === 0 && (
+              <div style={{ fontSize: 12, color: "var(--muted)" }}>Nenhuma data candidata encontrada.</div>
+            )}
+            {candidatas.map((c) => {
+              const auto = agendPularFeriados && !!c.feriado;
+              const manual = !!agendSkip[c.iso];
+              const usado = !auto && !manual && datasAgendadas.includes(c.iso);
+              return (
+                <label key={c.iso} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: auto ? "var(--muted)" : "var(--ink)", textDecoration: auto || manual ? "line-through" : "none", cursor: auto ? "not-allowed" : "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={!auto && !manual}
+                    disabled={auto}
+                    onChange={(e) => setAgendSkip((s) => ({ ...s, [c.iso]: !e.target.checked }))}
+                    style={{ accentColor: "var(--orange)" }}
+                  />
+                  <span style={{ minWidth: 36, fontWeight: 600 }}>{nomeDia(c.weekday)}</span>
+                  <span style={{ minWidth: 92 }}>{c.iso.split("-").reverse().join("/")}</span>
+                  {usado && <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#FFF7ED", color: "#9A3412" }}>Será usada</span>}
+                  {c.feriado && <span style={{ fontSize: 10.5, color: "#991B1B" }}>· {c.feriado}{auto ? " (pulado)" : ""}</span>}
+                </label>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+            <div style={{ fontSize: 11.5, color: "var(--muted)" }}>
+              {datasAgendadas.length}/{selecionados.size} datas preparadas
+              {datasAgendadas.length < selecionados.size && " — amplie o intervalo ou desmarque menos dias."}
+            </div>
+            <div style={{ display: "inline-flex", gap: 6 }}>
+              <button className="pl-btn ghost" onClick={() => { setAgendSkip({}); }} style={{ fontSize: 11 }}>Limpar exclusões</button>
+              <button className="pl-btn primary" onClick={aplicarAgendamento} disabled={datasAgendadas.length === 0} style={{ fontSize: 11 }}>
+                Aplicar datas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {objetivoGeral && <div><strong>Objetivo geral:</strong> {objetivoGeral}</div>}
       {dias.map((d, i) => {
