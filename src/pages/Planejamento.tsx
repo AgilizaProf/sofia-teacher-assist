@@ -1723,6 +1723,71 @@ export function Planejamento() {
     const s = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
     return s.charAt(0).toUpperCase() + s.slice(1);
   }, [m4Month]);
+
+  // Imprimir lista de compromissos/atividades do M4 (ordenado por dia/hora).
+  const [m4ListOpen, setM4ListOpen] = useState(false);
+  const [m4ListSel, setM4ListSel] = useState<Set<string>>(new Set());
+  const M4_CAT_LABEL: Record<string, string> = {
+    aulas: "Aula",
+    aval: "Avaliação",
+    eventos: "Evento da escola",
+    feriados: "Feriado",
+    bncc: "Habilidade BNCC",
+    sofia: "Sugestão Sofia",
+  };
+  const m4MonthEventsForPrint = useMemo(() => {
+    const mm = String(m4Month.m + 1).padStart(2, "0");
+    const prefix = `${m4Month.y}-${mm}-`;
+    type Row = { key: string; date: string; title: string; cat: string; meta?: string; turma?: string; disciplina?: string; minutos?: number };
+    const out: Row[] = [];
+    Object.entries(m4UserEvents).forEach(([iso, list]) => {
+      if (!iso.startsWith(prefix)) return;
+      list.forEach((e) => {
+        out.push({
+          key: `${iso}::${e.id}`,
+          date: iso,
+          title: e.title,
+          cat: e.cat,
+          meta: e.meta,
+          turma: (e as { turma?: string }).turma,
+          disciplina: (e as { disciplina?: string }).disciplina,
+          minutos: (e as { minutos?: number }).minutos,
+        });
+      });
+    });
+    out.sort((a, b) => a.date.localeCompare(b.date));
+    return out;
+  }, [m4UserEvents, m4Month]);
+  const openM4ListPrint = () => {
+    setM4ListSel(new Set(m4MonthEventsForPrint.map((r) => r.key)));
+    setM4ListOpen(true);
+  };
+  const toggleM4ListSel = (k: string) =>
+    setM4ListSel((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
+  const setAllM4List = (val: boolean) =>
+    setM4ListSel(val ? new Set(m4MonthEventsForPrint.map((r) => r.key)) : new Set());
+  const confirmM4ListPrint = () => {
+    const rows = m4MonthEventsForPrint.filter((r) => m4ListSel.has(r.key));
+    if (rows.length === 0) return;
+    const items: PrintAgendaItem[] = rows.map((r) => {
+      const notesParts: string[] = [];
+      if (r.turma) notesParts.push(`Turma: ${r.turma}`);
+      if (r.disciplina) notesParts.push(r.disciplina);
+      if (r.minutos) notesParts.push(`${r.minutos} min`);
+      if (r.meta) notesParts.push(r.meta);
+      return {
+        date: r.date,
+        title: r.title,
+        type: M4_CAT_LABEL[r.cat] ?? r.cat,
+        notes: notesParts.join(" · "),
+      };
+    });
+    imprimirListaAgenda(items, {
+      title: `M4 — Compromissos e atividades (${m4Label})`,
+      subtitle: `${rows.length} evento(s) selecionado(s)`,
+    });
+    setM4ListOpen(false);
+  };
   const m4Grid = useMemo(() => {
     const first = new Date(m4Month.y, m4Month.m, 1).getDay(); // 0=Dom
     const days = new Date(m4Month.y, m4Month.m + 1, 0).getDate();
