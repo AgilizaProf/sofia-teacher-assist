@@ -11,6 +11,7 @@ import {
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { GerarDocumentoButton } from "@/components/documentos/DocumentoDialog";
+import { imprimirPlanejamentoDireto } from "@/lib/print/planejamentoDireto";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
