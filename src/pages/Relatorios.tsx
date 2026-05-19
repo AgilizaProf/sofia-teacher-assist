@@ -973,7 +973,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
     dashSchools.length * 10 +
     dashClasses.length * 20 +
     dbStudents.length * 5 +
-    (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 30;
+    (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 45;
   const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
   const animatedMin = useAnimatedNumber(totalSavedMin, 900);
   const savedH = Math.floor(animatedMin / 60);
