@@ -2856,7 +2856,7 @@ export function Planejamento() {
                     <button className="pl-btn ghost">Próxima <ChevronRight size={14} /></button>
                     <button className="pl-btn" onClick={() => setM5HistoryOpen(true)}><Clock size={14} /> Histórico {m5History.length > 0 && `(${m5History.length})`}</button>
                     <button className="pl-btn" onClick={m5OpenReplicar}><Copy size={14} /> Replicar em turmas</button>
-                    <button className="pl-btn" onClick={m5ExportPdf}><Download size={14} /> Exportar PDF</button>
+                    <button className="pl-btn" onClick={m5OpenExport}><Download size={14} /> Exportar PDF / Word</button>
                     <button className="pl-btn primary" onClick={m5GerarComSofia} disabled={m5Generating}>
                       <Sparkles size={14} /> {m5Generating ? "Sofia montando…" : "Gerar com Sofia"}
                     </button>
