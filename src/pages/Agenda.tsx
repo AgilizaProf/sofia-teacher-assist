@@ -535,6 +535,63 @@ export function Agenda() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
 
+  // ---- Impressão de compromissos / atividades ------------------------------
+  // Permite selecionar quais eventos da Agenda imprimir, ordenados por dia
+  // e horário, com título, tipo, horário e observações.
+  const [printOpen, setPrintOpen] = useState(false);
+  const [printSel, setPrintSel] = useState<Set<string>>(new Set());
+  const [printFrom, setPrintFrom] = useState<string>("");
+  const [printTo, setPrintTo] = useState<string>("");
+  const printItems = useMemo(() => {
+    const list = [...filteredEvents];
+    const inRange = list.filter((e) => {
+      if (printFrom && e.date < printFrom) return false;
+      if (printTo && e.date > printTo) return false;
+      return true;
+    });
+    inRange.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.time || "99:99").localeCompare(b.time || "99:99");
+    });
+    return inRange;
+  }, [filteredEvents, printFrom, printTo]);
+  const openPrintDialog = () => {
+    const upcoming = events
+      .filter((e) => e.date >= todayKey)
+      .map((e) => e.date)
+      .sort();
+    const defaultFrom = upcoming[0] ?? todayKey;
+    const defaultTo = upcoming.length ? upcoming[upcoming.length - 1] : todayKey;
+    setPrintFrom(defaultFrom);
+    setPrintTo(defaultTo);
+    setPrintSel(new Set(events.filter((e) => e.date >= defaultFrom && e.date <= defaultTo).map((e) => e.id)));
+    setPrintOpen(true);
+  };
+  const togglePrintItem = (id: string) =>
+    setPrintSel((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  const setAllPrint = (val: boolean) =>
+    setPrintSel(val ? new Set(printItems.map((e) => e.id)) : new Set());
+  const confirmPrint = () => {
+    const selected = printItems.filter((e) => printSel.has(e.id));
+    if (selected.length === 0) { toast.error("Selecione ao menos um evento para imprimir."); return; }
+    const payload: PrintAgendaItem[] = selected.map((e) => ({
+      date: e.date,
+      time: e.time,
+      title: e.title,
+      type: TYPE_LABEL[e.type],
+      notes: e.notes,
+    }));
+    const sub = printFrom && printTo
+      ? `Período: ${printFrom.split("-").reverse().join("/")} a ${printTo.split("-").reverse().join("/")} · ${selected.length} evento(s)`
+      : `${selected.length} evento(s) selecionado(s)`;
+    imprimirListaAgenda(payload, { title: "Agenda Escolar — Compromissos e atividades", subtitle: sub });
+    setPrintOpen(false);
+  };
+
   // ---- Importar atividades agendadas (M4) ----------------------------------
   type M4ImportItem = { date: string; evt: M4UserEvt; selected: boolean };
   const [m4ImportOpen, setM4ImportOpen] = useState(false);
