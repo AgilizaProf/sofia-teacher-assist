@@ -78,7 +78,6 @@ export const cancelarAssinatura = createServerFn({ method: "POST" })
   )
   .handler(async ({ context }) => {
     const { userId } = context;
-    const data = (arguments[0] as { data?: { reasons?: string[]; comment?: string } }).data ?? {};
     const accessToken = process.env.MP_ACCESS_TOKEN;
     if (!accessToken) {
       throw new Error("MP_ACCESS_TOKEN não configurado");
