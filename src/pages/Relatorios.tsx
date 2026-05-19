@@ -1174,9 +1174,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               </div>
               <div className="rel-pc">
                 <div className="rel-pc-title">PROGRESSO DO BIMESTRE</div>
-                <div className="rel-pc-num">{finalizados}<span>/{alunosCount} alunos</span></div>
+                <div className="rel-pc-num">{finalizados}<span>/{totalAlunos} alunos</span></div>
                 <div className="rel-pc-bar"><i style={{ width: `${pct}%` }} /></div>
-                <div className="rel-pc-meta"><span>{pct}% concluído</span><span>{horasEcon > 0 ? `~${horasEcon}h economizadas` : "—"}</span></div>
+                <div className="rel-pc-meta"><span>{pct}% concluído</span><span>{horasEcon > 0 ? `~${horasEcon}h economizadas` : "sem economia ainda"}</span></div>
               </div>
             </div>
           </section>
