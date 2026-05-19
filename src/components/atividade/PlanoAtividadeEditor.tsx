@@ -1075,6 +1075,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         };
         m4Acc[data] = [...(m4Acc[data] ?? []), evt];
         okSched++;
+        // Exporta também para a Agenda Escolar na data exata.
+        void exportarM4ParaAgenda(data, evt);
       }
     }
     setM1Plan(m1Acc);
