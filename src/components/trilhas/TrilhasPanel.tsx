@@ -506,8 +506,8 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
 
   // Calcula próximas datas candidatas (com até 60 dias de busca a partir do início).
   const candidatas = useMemo(() => {
-    if (!agendOpen) return [] as Array<{ iso: string; feriado: string | null; weekday: number }>;
-    const out: Array<{ iso: string; feriado: string | null; weekday: number }> = [];
+    if (!agendOpen) return [] as Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }>;
+    const out: Array<{ iso: string; feriado: string | null; weekday: number; diaLocal: DiaPular | null }> = [];
     const limite = Math.max(selecionados.size, 1) + 14;
     let cursor = parseIso(agendInicio);
     const stopAt = new Date(cursor.getTime());
@@ -519,17 +519,18 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
         const y = cursor.getUTCFullYear();
         if (!cacheAnos.has(y)) cacheAnos.set(y, feriadosNacionaisBR(y));
         const feriado = cacheAnos.get(y)!.get(iso) ?? null;
-        out.push({ iso, feriado, weekday: cursor.getUTCDay() });
+        out.push({ iso, feriado, weekday: cursor.getUTCDay(), diaLocal: mapaDiasPular.get(iso) ?? null });
       }
       cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
     return out;
-  }, [agendOpen, agendModo, agendInicio, selecionados.size]);
+  }, [agendOpen, agendModo, agendInicio, selecionados.size, mapaDiasPular]);
 
   const datasAgendadas = useMemo(() => {
     const finais: string[] = [];
     for (const c of candidatas) {
       if (agendPularFeriados && c.feriado) continue;
+      if (c.diaLocal) continue; // sempre pula dias cadastrados pelo usuário
       if (agendSkip[c.iso]) continue;
       finais.push(c.iso);
       if (finais.length >= selecionados.size) break;
