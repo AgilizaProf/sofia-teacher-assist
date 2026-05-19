@@ -493,6 +493,9 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
   };
   const removerDiaPular = (iso: string) => setDiasPular(diasPular.filter((d) => d.date !== iso));
 
+  // Resetar a extensão quando o usuário muda recorrência ou data inicial.
+  useEffect(() => { setAgendExtra(0); }, [agendModo, agendInicio]);
+
   const matchWeekday = (d: Date, modo: WeekdayMode): boolean => {
     const dow = d.getUTCDay(); // 0=Dom..6=Sab
     if (modo === "todos") return true;
