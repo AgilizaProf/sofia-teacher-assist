@@ -1255,6 +1255,14 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       showToast("Selecione ao menos uma atividade no histórico.");
       return;
     }
+    setPrintModalOpen(true);
+  };
+
+  const [printModalOpen, setPrintModalOpen] = useState(false);
+
+  const executarImpressao = (info: PrintInfo) => {
+    const lista = historico.filter((p) => selecionados.has(p.id));
+    if (lista.length === 0) return;
     const tituloDoc = modo === "pcd" ? "PLANEJAMENTO PCD" : "PLANEJAMENTO";
     const secoes: SecaoImpressao[] = lista.map((s) => {
       const p = s.plano;
@@ -1296,7 +1304,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     const turmas = Array.from(new Set(lista.map((p) => p.turma).filter(Boolean)));
     imprimirPlanejamentoDireto({
       titulo: tituloDoc,
-      turma: turmas.join(" · ") || undefined,
+      escola: info.escola || undefined,
+      turma: info.turma || turmas.join(" · ") || undefined,
+      professor: info.professor || undefined,
+      dataInicio: info.dataInicio || undefined,
+      dataFim: info.dataFim || undefined,
       secoes,
       rodapeLegal: modo === "pcd"
         ? "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB) e a Lei 13.146/2015 (LBI)."
