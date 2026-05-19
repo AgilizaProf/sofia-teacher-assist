@@ -266,6 +266,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cancellation_feedback: {
+        Row: {
+          ciclo: string | null
+          comment: string | null
+          created_at: string
+          id: string
+          reasons: string[]
+          user_id: string
+        }
+        Insert: {
+          ciclo?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          reasons?: string[]
+          user_id: string
+        }
+        Update: {
+          ciclo?: string | null
+          comment?: string | null
+          created_at?: string
+          id?: string
+          reasons?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       creditos_historico: {
         Row: {
           created_at: string

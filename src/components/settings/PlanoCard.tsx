@@ -80,6 +80,7 @@ export function PlanoCard() {
   const [data, setData] = useState<PlanoAtualDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
   const fetchPlano = useServerFn(getPlanoAtual);
   const cancel = useServerFn(cancelarAssinatura);
 
@@ -101,12 +102,12 @@ export function PlanoCard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleCancel = async () => {
-    if (!confirm("Cancelar assinatura? Você continuará no Pro até o fim do período pago.")) return;
+  const handleCancelConfirm = async (reasons: string[], comment: string) => {
     setBusy(true);
     try {
-      await cancel({ data: {} });
+      await cancel({ data: { reasons, comment: comment.trim() || undefined } });
       toast.success("Assinatura cancelada. Você mantém o Pro até o fim do período.");
+      setShowCancel(false);
       await reload();
     } catch (e) {
       toast.error((e as Error).message || "Não foi possível cancelar.");
@@ -132,7 +133,14 @@ export function PlanoCard() {
       {loading || !data ? (
         <div style={{ color: MUTED, fontSize: 13 }}>Carregando…</div>
       ) : (
-        <PlanoBody data={data} busy={busy} onCancel={handleCancel} />
+        <PlanoBody data={data} busy={busy} onCancel={() => setShowCancel(true)} />
+      )}
+      {showCancel && (
+        <CancelModal
+          busy={busy}
+          onClose={() => !busy && setShowCancel(false)}
+          onConfirm={handleCancelConfirm}
+        />
       )}
     </section>
   );
@@ -248,6 +256,165 @@ function PlanoBody({
           Você pode reassinar a qualquer momento — basta escolher mensal ou anual acima.
         </p>
       )}
+    </div>
+  );
+}
+
+const CANCEL_REASONS = [
+  "Preço acima do que posso pagar",
+  "Não estou usando o suficiente",
+  "Faltam funcionalidades que preciso",
+  "Encontrei outra ferramenta",
+  "Tive problemas técnicos",
+  "Foi apenas para testar",
+  "Outro motivo",
+];
+
+function CancelModal({
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (reasons: string[], comment: string) => void;
+}) {
+  const [selected, setSelected] = useState<string[]>([]);
+  const [comment, setComment] = useState("");
+
+  const toggle = (r: string) =>
+    setSelected((cur) => (cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]));
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cancel-title"
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(15,23,42,.55)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+        zIndex: 9999,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#fff",
+          borderRadius: 16,
+          width: "100%",
+          maxWidth: 520,
+          maxHeight: "90vh",
+          overflowY: "auto",
+          padding: 24,
+          boxShadow: "0 20px 50px rgba(15,23,42,.25)",
+        }}
+      >
+        <h3
+          id="cancel-title"
+          style={{
+            fontFamily: "'Fraunces',serif",
+            fontSize: 20,
+            fontWeight: 700,
+            margin: 0,
+            color: NAVY,
+          }}
+        >
+          Tem certeza que deseja cancelar?
+        </h3>
+        <p style={{ color: MUTED, fontSize: 13, margin: "8px 0 18px", lineHeight: 1.5 }}>
+          Você continuará com o Pro até o fim do período já pago. Antes de confirmar, conte o
+          motivo — sua resposta nos ajuda a melhorar.
+        </p>
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8, letterSpacing: ".03em", textTransform: "uppercase" }}>
+            Por que está cancelando? (pode marcar mais de um)
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {CANCEL_REASONS.map((r) => {
+              const checked = selected.includes(r);
+              return (
+                <label
+                  key={r}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 12px",
+                    border: `1px solid ${checked ? ACCENT : BORDER}`,
+                    background: checked ? "#FFF6F0" : "#fff",
+                    borderRadius: 10,
+                    fontSize: 13,
+                    color: NAVY,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(r)}
+                    style={{ accentColor: ACCENT }}
+                  />
+                  <span>{r}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 18 }}>
+          <label
+            htmlFor="cancel-comment"
+            style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8, display: "block", letterSpacing: ".03em", textTransform: "uppercase" }}
+          >
+            Quer contar mais? (opcional)
+          </label>
+          <textarea
+            id="cancel-comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value.slice(0, 2000))}
+            placeholder="O que faltou ou o que poderíamos melhorar?"
+            rows={4}
+            maxLength={2000}
+            style={{
+              width: "100%",
+              border: `1px solid ${BORDER}`,
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontSize: 13,
+              fontFamily: "inherit",
+              color: NAVY,
+              resize: "vertical",
+              outline: "none",
+            }}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            style={{ ...cta("ghost"), opacity: busy ? 0.6 : 1 }}
+          >
+            Voltar
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(selected, comment)}
+            disabled={busy}
+            style={{ ...cta("danger"), opacity: busy ? 0.6 : 1 }}
+          >
+            {busy ? "Cancelando…" : "Confirmar cancelamento"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

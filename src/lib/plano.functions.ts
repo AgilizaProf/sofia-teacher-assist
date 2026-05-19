@@ -68,9 +68,18 @@ export const getPlanoAtual = createServerFn({ method: "GET" })
 
 export const cancelarAssinatura = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({}).parse(input ?? {}))
-  .handler(async ({ context }) => {
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        reasons: z.array(z.string().min(1).max(80)).max(10).optional(),
+        comment: z.string().max(2000).optional(),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ context, data }) => {
     const { userId } = context;
+    const reasons = data?.reasons ?? [];
+    const comment = data?.comment ?? null;
     const accessToken = process.env.MP_ACCESS_TOKEN;
     if (!accessToken) {
       throw new Error("MP_ACCESS_TOKEN não configurado");
@@ -78,7 +87,7 @@ export const cancelarAssinatura = createServerFn({ method: "POST" })
 
     const { data: sub } = await supabaseAdmin
       .from("subscriptions")
-      .select("metadata, source, status")
+      .select("metadata, source, status, ciclo")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -114,6 +123,18 @@ export const cancelarAssinatura = createServerFn({ method: "POST" })
       })
       .eq("user_id", userId)
       .eq("source", "mercadopago");
+
+    // Registra feedback (não bloqueia o cancelamento se falhar).
+    try {
+      await supabaseAdmin.from("cancellation_feedback").insert({
+        user_id: userId,
+        ciclo: (sub as { ciclo?: string | null } | null)?.ciclo ?? null,
+        reasons,
+        comment,
+      });
+    } catch (err) {
+      console.error("[cancel-feedback]", err);
+    }
 
     return { ok: true };
   });
