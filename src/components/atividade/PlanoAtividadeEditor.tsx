@@ -1070,11 +1070,19 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     if (adapts.length > 0) {
       blocos.push({ label: "Adaptações PCD:", bullets: adapts.map((a) => `[${a.categoria}] ${a.texto}`) });
     }
+    const sugs = (plano.sugestoes || []).filter((s) => s.utilizado === true);
+    if (sugs.length > 0) {
+      blocos.push({
+        label: "Sugestões da Sofia:",
+        bullets: sugs.map((s) => `${s.titulo} — ${s.descricao}`),
+      });
+    }
     if ((plano.contribuicoesInter ?? []).length > 0) {
       blocos.push({ label: "Interdisciplinar:", bullets: plano.contribuicoesInter!.map((c) => `${c.disciplina}: ${c.contribuicao}`) });
     }
-    if (plano.materiais.length > 0) {
-      blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: plano.materiais });
+    const matsUsados = (plano.materiais || []).filter((_, i) => !!plano.materiaisCheck?.[i]);
+    if (matsUsados.length > 0) {
+      blocos.push({ label: "Materiais e Recursos Utilizados:", bullets: matsUsados });
     }
     return [{ titulo: plano.titulo || "Plano de atividade", blocos }];
   };
