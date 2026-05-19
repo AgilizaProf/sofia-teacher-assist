@@ -2481,7 +2481,7 @@ export function Planejamento() {
   const executarImpressaoM3 = (info: PrintInfo) => {
     const selecionadas = m2Steps.filter((s) => m2SelIds.has(s.id));
     if (selecionadas.length === 0) { showToast("Selecione ao menos uma aula."); return; }
-    imprimirPlanejamentoDireto({
+    const args = {
       titulo: "SEQUÊNCIA DIDÁTICA",
       escola: info.escola || undefined,
       turma: info.turma || undefined,
@@ -2500,7 +2500,8 @@ export function Planejamento() {
         };
       }),
       rodapeLegal: "Documento gerado com apoio do AgilizaProf em consonância com a Lei 9.394/1996 (LDB).",
-    });
+    };
+    (m3WordMode.current ? salvarPlanejamentoDocx : imprimirPlanejamentoDireto)(args);
   };
   const [m2Form, setM2Form] = useState<{ d: string; tag: string; t: string; p: string }>({
     d: "SEG", tag: M2_TAG_OPTS[0], t: "", p: M2_BNCC_OPTS[0],
