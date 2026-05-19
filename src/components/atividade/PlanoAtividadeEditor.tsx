@@ -2396,7 +2396,11 @@ function PlanoBody(props: {
         ) : (
           <div className="atv-sug-grid">
             {plano.sugestoes.map((s, i) => (
-              <div className="atv-sug" key={i}>
+              <div
+                className="atv-sug"
+                key={i}
+                style={{ opacity: s.utilizado ? 1 : 0.75 }}
+              >
                 <button
                   className={`atv-sug-fav${props.isFavorita(s) ? " on" : ""}`}
                   onClick={() => props.onToggleFavorita(s)}
@@ -2411,9 +2415,27 @@ function PlanoBody(props: {
                 </button>
                 <div className="atv-sug-title">{s.titulo}</div>
                 <p>{s.descricao}</p>
-                <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
-                  <Check size={12} /> Usar esta
-                </button>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 6 }}>
+                  <label
+                    title="Marcar como utilizada — entra no documento impresso/exportado"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 600, color: "var(--muted, #6B7280)", cursor: "pointer", userSelect: "none" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!s.utilizado}
+                      onChange={(e) => {
+                        const next = [...plano.sugestoes];
+                        next[i] = { ...s, utilizado: e.target.checked };
+                        props.onChange("sugestoes", next);
+                      }}
+                      style={{ accentColor: "#F59E0B" }}
+                    />
+                    Utilizada
+                  </label>
+                  <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
+                    <Check size={12} /> Usar esta
+                  </button>
+                </div>
               </div>
             ))}
           </div>
