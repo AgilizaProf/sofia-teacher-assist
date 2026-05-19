@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
   Check, Pencil, Lightbulb, AlertTriangle, Save, FileDown, CalendarPlus,
-  Search, Trash2, FileText, Star, Printer,
+  Search, Trash2, FileText, Star, Printer, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
