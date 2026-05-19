@@ -34,7 +34,7 @@ type Props = {
  * abrir a janela de impressão; o usuário pode imprimir sem preencher.
  */
 export function PrintInfoModal({
-  open, onOpenChange, defaults, onConfirm,
+  open, onOpenChange, defaults, onConfirm, onConfirmWord,
   title = "Imprimir planejamento",
   description = "Preencha os campos abaixo para aparecerem no cabeçalho do documento. Você pode deixar em branco e imprimir mesmo assim.",
 }: Props) {
