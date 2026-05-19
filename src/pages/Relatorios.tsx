@@ -973,7 +973,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
     dashSchools.length * 10 +
     dashClasses.length * 20 +
     dbStudents.length * 5 +
-    (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 30;
+    (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 45;
   const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
   const animatedMin = useAnimatedNumber(totalSavedMin, 900);
   const savedH = Math.floor(animatedMin / 60);
@@ -1053,7 +1053,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   const iniciados = rascunhos + aRevisar + finalizados;
   const totalBim = iniciados;
   // Estimativa: cada parecer finalizado economiza ~30min de redação manual.
-  const horasEcon = Math.round((finalizados * 30) / 60);
+  const horasEcon = Math.round((finalizados * 45) / 60);
 
   // Bubble Sofia contextual (proativo)
   const bubbleMsg = (() => {

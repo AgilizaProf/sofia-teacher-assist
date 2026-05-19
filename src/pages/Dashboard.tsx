@@ -538,7 +538,7 @@ export function Dashboard() {
   // Tempo devolvido — regras de produto:
   //   • Cada aluno vinculado a uma turma: 1 min (individual ou em massa).
   //   • Cada planejamento de aula: 60 min × quantidade.
-  //   • Cada relatório/parecer escrito: 40 min × quantidade.
+  //   • Cada relatório/parecer escrito: 45 min × quantidade.
   //   • Cada PEI: 300 min (5 h) × quantidade.
   const lessonPlansCount =
     (Array.isArray(atvHistRegular) ? atvHistRegular.length : 0) +
@@ -562,7 +562,7 @@ export function Dashboard() {
   const earnedMinutes =
     Math.max(studentsWithClassCount, bulkStudentsCount) * 1 +
     lessonPlansCount * 60 +
-    reportsCount * 40 +
+    reportsCount * 45 +
     peiCount * 300;
   const totalMinutes = user.hoursSavedTotal * 60 + earnedMinutes;
   const h = Math.floor(totalMinutes / 60);
