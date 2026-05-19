@@ -1174,7 +1174,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
    * Gera as "partes" editoriais de um plano salvo (mesmo layout do
    * `exportarPDF` individual) para ser concatenado na impressão em lote.
    */
-  const partesDoPlanoSalvo = (s: PlanoSalvo): string => {
+  const _partesDoPlanoSalvo = (s: PlanoSalvo): string => {
     const p = s.plano;
     const titulo = p.titulo || s.titulo || "Plano de atividade";
     const meta = [
