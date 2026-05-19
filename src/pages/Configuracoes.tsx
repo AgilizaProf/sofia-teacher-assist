@@ -5,6 +5,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
 import { ReferralCard } from "@/components/settings/ReferralCard";
+import { PlanoCard } from "@/components/settings/PlanoCard";
 import { useReducedMotion, type ReducedMotionMode } from "@/hooks/useReducedMotion";
 
 const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: string }> = [
@@ -90,6 +91,8 @@ export function Configuracoes() {
             </p>
             <ProfileEditor />
           </section>
+
+          <PlanoCard />
 
           <section id="convide" aria-labelledby="indique-title" style={{ marginBottom: 18, scrollMarginTop: 80 }}>
             <h2 id="indique-title" style={{ position: "absolute", left: -9999 }}>Programa de indicação</h2>
