@@ -26,19 +26,20 @@
     --rainbow:linear-gradient(90deg,#FF4D4D,#FF9D2E,#FFD93D,#6BCB77,#4D96FF,#9B59B6);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  html,body{height:100%;}
+  html,body{min-height:100%;}
   body{
     font-family:'Inter',sans-serif;
     background:linear-gradient(135deg,#FAF8F5 0%,#F4F1EB 100%);
-    color:var(--text);overflow-x:hidden;min-height:100vh;
-    display:flex;align-items:center;justify-content:center;padding:12px;
+    color:var(--text);overflow-x:hidden;overflow-y:auto;
+    min-height:100dvh;
+    display:flex;align-items:flex-start;justify-content:center;padding:12px;
   }
 
   .onboarding-shell{
     width:100%;max-width:1000px;background:#fff;
     border-radius:28px;box-shadow:0 30px 80px rgba(27,42,78,.18);
-    overflow:hidden;position:relative;
-    height:calc(100vh - 24px);min-height:0;max-height:none;
+    position:relative;
+    min-height:calc(100dvh - 24px);
     display:flex;flex-direction:column;
   }
 
