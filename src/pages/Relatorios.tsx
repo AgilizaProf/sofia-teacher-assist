@@ -725,6 +725,13 @@ export function Relatorios() {
   const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
   type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
   const [tipoPeriodo, setTipoPeriodo] = usePersistentState<TipoPeriodo>("rel_tipo_periodo", "Bimestral");
+  // Configuração por turma — sobrescreve o padrão global quando definida.
+  const [tipoPeriodoByTurma, setTipoPeriodoByTurma] = usePersistentState<Record<string, TipoPeriodo>>("rel_tipo_periodo_por_turma", {});
+  const [configPeriodoOpen, setConfigPeriodoOpen] = useState(false);
+  const getTipoPeriodoFor = (turma?: string | null): TipoPeriodo => {
+    if (turma && tipoPeriodoByTurma[turma]) return tipoPeriodoByTurma[turma];
+    return tipoPeriodo;
+  };
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
