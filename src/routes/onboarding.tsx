@@ -56,12 +56,14 @@ function OnboardingPage() {
     <iframe
       src="/onboarding.html"
       title="AgilizaProf Onboarding"
+      scrolling="yes"
       style={{
         position: "fixed",
         inset: 0,
         width: "100vw",
-        height: "100vh",
+        height: "100dvh",
         border: "none",
+        display: "block",
       }}
     />
   );
