@@ -1175,7 +1175,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 ) : pct >= 100 ? (
                   <>
                     <h1>{isEi ? "Relatórios" : "Pareceres"} do {periodoTituloLower}<br /><em>todos prontos</em>: {finalizados}/{totalAlunos}.</h1>
-                    <p>{periodoTituloLower.charAt(0).toUpperCase() + periodoTituloLower.slice(1)} fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação{tipoPeriodo === "Anual" ? "." : ` ou siga para o próximo ${periodoNomeLower}.`}</p>
+                    <p>{periodoTituloLower.charAt(0).toUpperCase() + periodoTituloLower.slice(1)} fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação{tipoPeriodoEfetivo === "Anual" ? "." : ` ou siga para o próximo ${periodoNomeLower}.`}</p>
                   </>
                 ) : (
                   <>
