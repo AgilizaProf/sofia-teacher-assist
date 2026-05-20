@@ -17,7 +17,7 @@ import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
-  MessageSquare, Download, Copy, X, ClipboardList, UserPlus, RefreshCw, Trash2,
+  MessageSquare, Download, Copy, X, ClipboardList, UserPlus, RefreshCw, Trash2, Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -725,6 +725,13 @@ export function Relatorios() {
   const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
   type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
   const [tipoPeriodo, setTipoPeriodo] = usePersistentState<TipoPeriodo>("rel_tipo_periodo", "Bimestral");
+  // Configuração por turma — sobrescreve o padrão global quando definida.
+  const [tipoPeriodoByTurma, setTipoPeriodoByTurma] = usePersistentState<Record<string, TipoPeriodo>>("rel_tipo_periodo_por_turma", {});
+  const [configPeriodoOpen, setConfigPeriodoOpen] = useState(false);
+  const getTipoPeriodoFor = (turma?: string | null): TipoPeriodo => {
+    if (turma && tipoPeriodoByTurma[turma]) return tipoPeriodoByTurma[turma];
+    return tipoPeriodo;
+  };
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
@@ -743,7 +750,13 @@ export function Relatorios() {
       }).join("\n\n");
       const aluno = getStudentById(a.id);
       const cls = dashClasses.find((c) => c.name === a.turma);
-      const periodoLabel = `${periodoTituloLower} · ${new Date().getFullYear()}`;
+      // Periodicidade específica da turma do aluno (cai no padrão global se não configurada).
+      const tipoPeriodoAluno = getTipoPeriodoFor(a.turma);
+      const pQtd = tipoPeriodoAluno === "Bimestral" ? 4 : tipoPeriodoAluno === "Trimestral" ? 3 : tipoPeriodoAluno === "Semestral" ? 2 : 1;
+      const pNum = (() => { const m = new Date().getMonth() + 1; return Math.min(pQtd, Math.ceil((m * pQtd) / 12)); })();
+      const pNome = tipoPeriodoAluno === "Bimestral" ? "bimestre" : tipoPeriodoAluno === "Trimestral" ? "trimestre" : tipoPeriodoAluno === "Semestral" ? "semestre" : "ano letivo";
+      const pTituloLower = tipoPeriodoAluno === "Anual" ? "ano letivo" : `${pNum}º ${pNome}`;
+      const periodoLabel = `${pTituloLower} · ${new Date().getFullYear()}`;
       const gradeRaw = (cls?.grade || "").trim();
       const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${a.turma}`);
       const nivelEnsino = ei ? "Educação Infantil"
@@ -768,7 +781,7 @@ export function Relatorios() {
         body: {
           aluno: a.nome,
           diagnostico: a.pcd || "",
-          periodo: tipoPeriodo,
+          periodo: tipoPeriodoAluno,
           intervalo: periodoLabel,
           formato: formatoParecer,
           anamneseResumo: "",
@@ -992,13 +1005,18 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   }, [totalSavedMin]);
   const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
   // Período de avaliação selecionado pelo professor (Bimestral/Trimestral/Semestral/Anual)
-  const periodoQtd = tipoPeriodo === "Bimestral" ? 4 : tipoPeriodo === "Trimestral" ? 3 : tipoPeriodo === "Semestral" ? 2 : 1;
+  // Quando o usuário filtra por uma turma específica, o banner respeita a periodicidade configurada
+  // para aquela turma; caso contrário, usa o padrão global.
+  const tipoPeriodoEfetivo: TipoPeriodo = filterTurma && filterTurma !== "Todas"
+    ? getTipoPeriodoFor(filterTurma)
+    : tipoPeriodo;
+  const periodoQtd = tipoPeriodoEfetivo === "Bimestral" ? 4 : tipoPeriodoEfetivo === "Trimestral" ? 3 : tipoPeriodoEfetivo === "Semestral" ? 2 : 1;
   const periodoNum = (() => { const m = new Date().getMonth() + 1; return Math.min(periodoQtd, Math.ceil((m * periodoQtd) / 12)); })();
-  const periodoNomeLower = tipoPeriodo === "Bimestral" ? "bimestre" : tipoPeriodo === "Trimestral" ? "trimestre" : tipoPeriodo === "Semestral" ? "semestre" : "ano letivo";
+  const periodoNomeLower = tipoPeriodoEfetivo === "Bimestral" ? "bimestre" : tipoPeriodoEfetivo === "Trimestral" ? "trimestre" : tipoPeriodoEfetivo === "Semestral" ? "semestre" : "ano letivo";
   const periodoNomeUpper = periodoNomeLower.toUpperCase();
-  const periodoOrdinal = tipoPeriodo === "Anual" ? "" : `${periodoNum}º `;
-  const periodoTituloUpper = tipoPeriodo === "Anual" ? "ANO LETIVO" : `${periodoNomeUpper} ${periodoNum}º`;
-  const periodoTituloLower = tipoPeriodo === "Anual" ? "ano letivo" : `${periodoNum}º ${periodoNomeLower}`;
+  const periodoOrdinal = tipoPeriodoEfetivo === "Anual" ? "" : `${periodoNum}º `;
+  const periodoTituloUpper = tipoPeriodoEfetivo === "Anual" ? "ANO LETIVO" : `${periodoNomeUpper} ${periodoNum}º`;
+  const periodoTituloLower = tipoPeriodoEfetivo === "Anual" ? "ano letivo" : `${periodoNum}º ${periodoNomeLower}`;
   const isPro = ctx.user.plano === "pro" || combinedStudents.length > 0;
   const alunoFoco = ctx.entity.todos_alunos_pcd[0]?.nome || "o primeiro aluno";
 
@@ -1157,7 +1175,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 ) : pct >= 100 ? (
                   <>
                     <h1>{isEi ? "Relatórios" : "Pareceres"} do {periodoTituloLower}<br /><em>todos prontos</em>: {finalizados}/{totalAlunos}.</h1>
-                    <p>{periodoTituloLower.charAt(0).toUpperCase() + periodoTituloLower.slice(1)} fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação{tipoPeriodo === "Anual" ? "." : ` ou siga para o próximo ${periodoNomeLower}.`}</p>
+                    <p>{periodoTituloLower.charAt(0).toUpperCase() + periodoTituloLower.slice(1)} fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação{tipoPeriodoEfetivo === "Anual" ? "." : ` ou siga para o próximo ${periodoNomeLower}.`}</p>
                   </>
                 ) : (
                   <>
@@ -1300,6 +1318,13 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               <p>Filtre por status, turma ou aluno. Clique para gerar com a Sofia ou abrir o rascunho.</p>
             </div>
             <div className="rel-sec-actions">
+              <button
+                className="rel-pill"
+                onClick={() => setConfigPeriodoOpen(true)}
+                title="Definir se a avaliação é bimestral, trimestral, semestral ou anual — geral ou por turma"
+              >
+                <Settings size={13} /> Período de avaliação
+              </button>
               <button
                 className="rel-pill"
                 onClick={abrirImpressaoLote}
@@ -2543,6 +2568,97 @@ ${parecerHtml}
           </div>
         );
       })()}
+      {configPeriodoOpen && (
+        <div className="rel-modal-bg" onClick={() => setConfigPeriodoOpen(false)}>
+          <div className="rel-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Período de avaliação</h3>
+            <div className="rel-modal-meta">
+              Defina o padrão usado nos banners e na geração dos {isEi ? "relatórios" : "pareceres"}.
+              Você pode personalizar por turma — turmas sem configuração usam o padrão geral.
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ background: "var(--paper-2)", border: "1px solid var(--line-soft)", borderRadius: 12, padding: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Padrão geral
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 13.5, color: "var(--text)" }}>Avaliação:</span>
+                  <select
+                    value={tipoPeriodo}
+                    onChange={(e) => setTipoPeriodo(e.target.value as TipoPeriodo)}
+                    style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff", fontSize: 13.5, color: "var(--text)" }}
+                  >
+                    <option value="Bimestral">Bimestral (4 períodos)</option>
+                    <option value="Trimestral">Trimestral (3 períodos)</option>
+                    <option value="Semestral">Semestral (2 períodos)</option>
+                    <option value="Anual">Anual (1 período)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Por turma
+                </div>
+                {dashClasses.length === 0 ? (
+                  <div style={{ fontSize: 13, color: "var(--muted)", padding: 12, background: "var(--paper-2)", border: "1px dashed var(--line-soft)", borderRadius: 10 }}>
+                    Você ainda não cadastrou turmas. O padrão geral será usado para todos os alunos.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
+                    {dashClasses.map((c) => {
+                      const atual = tipoPeriodoByTurma[c.name] ?? "";
+                      return (
+                        <div key={c.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff" }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 13.5, color: "var(--text)" }}>{c.name}</div>
+                            <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{c.grade || "—"}{c.school ? ` · ${c.school}` : ""}</div>
+                          </div>
+                          <select
+                            value={atual}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setTipoPeriodoByTurma((prev) => {
+                                const next = { ...prev };
+                                if (!v) delete next[c.name];
+                                else next[c.name] = v as TipoPeriodo;
+                                return next;
+                              });
+                            }}
+                            style={{ padding: "7px 9px", borderRadius: 9, border: "1px solid var(--line-soft)", background: "#fff", fontSize: 12.5, color: "var(--text)" }}
+                          >
+                            <option value="">Usar padrão ({tipoPeriodo})</option>
+                            <option value="Bimestral">Bimestral</option>
+                            <option value="Trimestral">Trimestral</option>
+                            <option value="Semestral">Semestral</option>
+                            <option value="Anual">Anual</option>
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="rel-modal-foot">
+              <button
+                className="rel-btn-card"
+                onClick={() => {
+                  setTipoPeriodoByTurma({});
+                  toast.success("Configurações por turma restauradas para o padrão.");
+                }}
+              >
+                Restaurar padrão em todas
+              </button>
+              <button className="rel-btn-card dark" onClick={() => { setConfigPeriodoOpen(false); toast.success("Configurações salvas."); }}>
+                Concluído
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
