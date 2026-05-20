@@ -2568,6 +2568,97 @@ ${parecerHtml}
           </div>
         );
       })()}
+      {configPeriodoOpen && (
+        <div className="rel-modal-bg" onClick={() => setConfigPeriodoOpen(false)}>
+          <div className="rel-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Período de avaliação</h3>
+            <div className="rel-modal-meta">
+              Defina o padrão usado nos banners e na geração dos {isEi ? "relatórios" : "pareceres"}.
+              Você pode personalizar por turma — turmas sem configuração usam o padrão geral.
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ background: "var(--paper-2)", border: "1px solid var(--line-soft)", borderRadius: 12, padding: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Padrão geral
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 13.5, color: "var(--text)" }}>Avaliação:</span>
+                  <select
+                    value={tipoPeriodo}
+                    onChange={(e) => setTipoPeriodo(e.target.value as TipoPeriodo)}
+                    style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff", fontSize: 13.5, color: "var(--text)" }}
+                  >
+                    <option value="Bimestral">Bimestral (4 períodos)</option>
+                    <option value="Trimestral">Trimestral (3 períodos)</option>
+                    <option value="Semestral">Semestral (2 períodos)</option>
+                    <option value="Anual">Anual (1 período)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Por turma
+                </div>
+                {dashClasses.length === 0 ? (
+                  <div style={{ fontSize: 13, color: "var(--muted)", padding: 12, background: "var(--paper-2)", border: "1px dashed var(--line-soft)", borderRadius: 10 }}>
+                    Você ainda não cadastrou turmas. O padrão geral será usado para todos os alunos.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
+                    {dashClasses.map((c) => {
+                      const atual = tipoPeriodoByTurma[c.name] ?? "";
+                      return (
+                        <div key={c.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff" }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: 13.5, color: "var(--text)" }}>{c.name}</div>
+                            <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{c.grade || "—"}{c.school ? ` · ${c.school}` : ""}</div>
+                          </div>
+                          <select
+                            value={atual}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setTipoPeriodoByTurma((prev) => {
+                                const next = { ...prev };
+                                if (!v) delete next[c.name];
+                                else next[c.name] = v as TipoPeriodo;
+                                return next;
+                              });
+                            }}
+                            style={{ padding: "7px 9px", borderRadius: 9, border: "1px solid var(--line-soft)", background: "#fff", fontSize: 12.5, color: "var(--text)" }}
+                          >
+                            <option value="">Usar padrão ({tipoPeriodo})</option>
+                            <option value="Bimestral">Bimestral</option>
+                            <option value="Trimestral">Trimestral</option>
+                            <option value="Semestral">Semestral</option>
+                            <option value="Anual">Anual</option>
+                          </select>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="rel-modal-foot">
+              <button
+                className="rel-btn-card"
+                onClick={() => {
+                  setTipoPeriodoByTurma({});
+                  toast.success("Configurações por turma restauradas para o padrão.");
+                }}
+              >
+                Restaurar padrão em todas
+              </button>
+              <button className="rel-btn-card dark" onClick={() => { setConfigPeriodoOpen(false); toast.success("Configurações salvas."); }}>
+                Concluído
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
