@@ -1320,6 +1320,13 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
             <div className="rel-sec-actions">
               <button
                 className="rel-pill"
+                onClick={() => setConfigPeriodoOpen(true)}
+                title="Definir se a avaliação é bimestral, trimestral, semestral ou anual — geral ou por turma"
+              >
+                <Settings size={13} /> Período de avaliação
+              </button>
+              <button
+                className="rel-pill"
                 onClick={abrirImpressaoLote}
                 title="Selecionar vários alunos e imprimir/exportar em PDF de uma só vez"
               >
