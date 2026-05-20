@@ -17,7 +17,7 @@ import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
-  MessageSquare, Download, Copy, X, ClipboardList, UserPlus, RefreshCw, Trash2,
+  MessageSquare, Download, Copy, X, ClipboardList, UserPlus, RefreshCw, Trash2, Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
