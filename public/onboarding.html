@@ -26,19 +26,20 @@
     --rainbow:linear-gradient(90deg,#FF4D4D,#FF9D2E,#FFD93D,#6BCB77,#4D96FF,#9B59B6);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  html,body{height:100%;}
+  html,body{min-height:100%;}
   body{
     font-family:'Inter',sans-serif;
     background:linear-gradient(135deg,#FAF8F5 0%,#F4F1EB 100%);
-    color:var(--text);overflow-x:hidden;min-height:100vh;
-    display:flex;align-items:center;justify-content:center;padding:12px;
+    color:var(--text);overflow-x:hidden;overflow-y:auto;
+    min-height:100dvh;
+    display:flex;align-items:flex-start;justify-content:center;padding:12px;
   }
 
   .onboarding-shell{
     width:100%;max-width:1000px;background:#fff;
     border-radius:28px;box-shadow:0 30px 80px rgba(27,42,78,.18);
-    overflow:hidden;position:relative;
-    height:calc(100vh - 24px);min-height:0;max-height:none;
+    position:relative;
+    min-height:calc(100dvh - 24px);
     display:flex;flex-direction:column;
   }
 
@@ -78,18 +79,18 @@
   }
   .skip-btn:hover{background:var(--bg-soft);color:var(--text);}
 
-  .stage{flex:1;position:relative;overflow:hidden;min-height:0;}
+  .stage{flex:1;position:relative;min-height:0;display:flex;}
   .screen{
-    position:absolute;inset:0;
+    display:none;
+    width:100%;
     padding:32px 56px;
-    display:flex;flex-direction:column;
-    opacity:0;pointer-events:none;
+    flex-direction:column;
+    opacity:0;
     transform:translateX(40px);
     transition:opacity .5s ease,transform .5s ease;
-    overflow-y:auto;
-    overflow-x:hidden;
+    overflow:visible;
   }
-  .screen.active{opacity:1;pointer-events:auto;transform:translateX(0);}
+  .screen.active{display:flex;opacity:1;pointer-events:auto;transform:translateX(0);}
   /* scrollbar fina */
   .screen::-webkit-scrollbar{width:6px;}
   .screen::-webkit-scrollbar-track{background:transparent;}
@@ -689,7 +690,7 @@
   @media(max-width:760px){
     body{padding:0;}
     .onboarding-shell{
-      height:100vh;max-height:none;border-radius:0;
+      min-height:100dvh;border-radius:0;
     }
     .screen{padding:24px 20px;}
     h1.screen-title{font-size:24px;}
