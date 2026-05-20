@@ -750,7 +750,13 @@ export function Relatorios() {
       }).join("\n\n");
       const aluno = getStudentById(a.id);
       const cls = dashClasses.find((c) => c.name === a.turma);
-      const periodoLabel = `${periodoTituloLower} · ${new Date().getFullYear()}`;
+      // Periodicidade específica da turma do aluno (cai no padrão global se não configurada).
+      const tipoPeriodoAluno = getTipoPeriodoFor(a.turma);
+      const pQtd = tipoPeriodoAluno === "Bimestral" ? 4 : tipoPeriodoAluno === "Trimestral" ? 3 : tipoPeriodoAluno === "Semestral" ? 2 : 1;
+      const pNum = (() => { const m = new Date().getMonth() + 1; return Math.min(pQtd, Math.ceil((m * pQtd) / 12)); })();
+      const pNome = tipoPeriodoAluno === "Bimestral" ? "bimestre" : tipoPeriodoAluno === "Trimestral" ? "trimestre" : tipoPeriodoAluno === "Semestral" ? "semestre" : "ano letivo";
+      const pTituloLower = tipoPeriodoAluno === "Anual" ? "ano letivo" : `${pNum}º ${pNome}`;
+      const periodoLabel = `${pTituloLower} · ${new Date().getFullYear()}`;
       const gradeRaw = (cls?.grade || "").trim();
       const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${a.turma}`);
       const nivelEnsino = ei ? "Educação Infantil"
@@ -775,7 +781,7 @@ export function Relatorios() {
         body: {
           aluno: a.nome,
           diagnostico: a.pcd || "",
-          periodo: tipoPeriodo,
+          periodo: tipoPeriodoAluno,
           intervalo: periodoLabel,
           formato: formatoParecer,
           anamneseResumo: "",
