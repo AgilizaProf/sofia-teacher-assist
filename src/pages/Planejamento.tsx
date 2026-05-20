@@ -366,9 +366,9 @@ const css = `
   .pl-btn{padding:9px 10px;font-size:12px;}
   .pl-panel{padding:12px;border-radius:11px;}
   .pl-cal-card,.pl-chain-card,.pl-chat-card,.pl-diary-card,.pl-d6-card{padding:12px;}
-  .pl-week,.pl-cal-grid{grid-template-columns:repeat(5,minmax(72vw,72vw));overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;padding:10px;gap:8px;}
-  .pl-week > *,.pl-cal-grid > *{scroll-snap-align:start;}
-  .pl-day,.pl-cal-day{min-height:260px;padding:9px;}
+  .pl-week,.pl-cal-grid{grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;padding:10px;gap:10px;}
+  .pl-day,.pl-cal-day{min-height:0;height:auto;padding:10px;overflow:visible;}
+  .pl-cal-day .pl-ai{white-space:normal;}
   .pl-generic{padding:30px 16px;}
   .pl-generic h3{font-size:20px;}
   .pl-generic p{font-size:13px;}
@@ -395,7 +395,7 @@ const css = `
   .pl-hero .chips{gap:6px;}
   .pl-hero .hbc{padding:7px 10px;font-size:11.5px;}
   .pl-workspace{padding:12px 10px 90px;}
-  .pl-week,.pl-cal-grid{grid-template-columns:repeat(5,minmax(82vw,82vw));}
+  .pl-week,.pl-cal-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
   .pl-stats{grid-template-columns:1fr;}
 }
 
