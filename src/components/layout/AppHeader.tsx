@@ -25,6 +25,20 @@ export const appHeaderCss = `
 .app-header .ah-user .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#FF9466,#FF7A45);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:10.5px;}
 .app-header .ah-user .nm{font-size:11.5px;font-weight:700;color:#1B2A4E;line-height:1.2;}
 .app-header .ah-user .pl{font-size:9px;color:#FF7A45;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-top:1px;}
+@media(max-width:820px){
+  .app-header{padding:8px 14px;gap:8px;min-height:auto;margin-top:56px;}
+  .app-header .ah-left{min-width:0;flex:1 1 100%;order:1;}
+  .app-header .ah-crumbs{font-size:11px;flex-wrap:nowrap;overflow:hidden;max-width:100%;}
+  .app-header .ah-crumbs span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .app-header .ah-right{order:2;flex:1 1 100%;justify-content:flex-start;gap:6px;flex-wrap:wrap;margin-left:0;}
+  .app-header .ah-credits{display:none;}
+  .app-header .ah-user{display:none;}
+  .app-header .ah-streak{display:none;}
+}
+@media(max-width:480px){
+  .app-header .ah-right button{font-size:11px;padding:5px 8px;gap:4px;}
+  .app-header .ah-right button svg{width:12px;height:12px;}
+}
 `;
 
 export type AppHeaderProps = {
