@@ -207,6 +207,12 @@ const css = `
 .class-name{font-size:12.5px;font-weight:800;color:var(--primary);line-height:1.2;}
 .class-meta{font-size:10.5px;color:var(--text-soft);margin-top:2px;}
 .class-count{font-size:10px;font-weight:700;color:var(--text-soft);background:#fff;border:1px solid var(--border);padding:2.5px 8px;border-radius:100px;flex-shrink:0;white-space:nowrap;}
+.btn-label-desktop{display:inline;}
+@media(max-width:400px){
+  .btn-label-desktop{display:none;}
+  .class-head{gap:6px;padding:8px;}
+  .bulk-action-bar .bulk-selected-text{display:none;}
+}
 .student{display:flex;align-items:center;gap:11px;padding:9px 11px;margin-top:4px;border-radius:8px;transition:background .15s;border:1px solid transparent;}
 .student:hover{background:var(--bg-soft);border-color:var(--border-soft);}
 .student-row{display:flex;align-items:stretch;gap:6px;}
