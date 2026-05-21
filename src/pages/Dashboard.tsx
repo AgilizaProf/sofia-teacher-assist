@@ -982,7 +982,7 @@ export function Dashboard() {
               <div className="hero-metric-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <Svg strokeWidth={2.5} c={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />
                 <span>Tempo devolvido a você</span>
-                <RealtimeStatusBadge />
+                <RealtimeStatusBadge compact={typeof window !== "undefined" && window.innerWidth <= 820} />
               </div>
               <div
                 className={`hero-tier-badge ${currentTier.tone}`}
