@@ -199,7 +199,7 @@ const css = `
 .filter-pill.active .count{background:var(--accent-soft);color:var(--accent);}
 .class-group{margin-bottom:10px;}
 .class-group:last-child{margin-bottom:0;}
-.class-head{display:flex;align-items:center;gap:10px;padding:8px 11px;background:var(--bg-soft);border-radius:8px;cursor:pointer;transition:background .15s;}
+.class-head{display:flex;align-items:center;gap:10px;padding:8px 11px;background:var(--bg-soft);border-radius:8px;cursor:pointer;transition:background .15s;overflow:hidden;max-width:100%;}
 .class-head:hover{background:var(--primary-soft);}
 .class-toggle{width:16px;height:16px;display:flex;align-items:center;justify-content:center;color:var(--text-soft);transition:transform .2s;}
 .class-toggle.collapsed{transform:rotate(-90deg);}
