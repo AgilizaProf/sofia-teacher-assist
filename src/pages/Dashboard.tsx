@@ -1389,7 +1389,7 @@ export function Dashboard() {
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); setDeletingClassId(classMeta.id); }}
-                                aria-label={`Excluir turma ${turma}`}
+                                <span className="btn-label-desktop">Excluir</span>
                                 title="Excluir turma"
                               style={{ marginLeft: 6, background: "transparent", border: "1px solid #FCA5A5", borderRadius: 6, padding: "3px 6px", cursor: "pointer", color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap" }}
                               >
