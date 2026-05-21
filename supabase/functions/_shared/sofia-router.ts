@@ -1,12 +1,13 @@
 // Roteador central de modelos da Sofia.
-// Gemini 2.5 Flash via Lovable AI Gateway -> única IA disponível
-// (respostas rápidas e produção de documentos).
+// Gemini 2.5 Flash direto via Google AI API (sem passar pelo Lovable Gateway).
+// Flash → respostas rápidas e chat.
+// Flash-Lite → tarefas simples (sugestões, chips, saudação).
 import { isBudgetExceeded, recordUsage } from "./ai-budget.ts";
 import { withConstitution } from "./sofia-constitution.ts";
 
 export const MODELOS = {
-  RAPIDO: "google/gemini-2.5-flash",
-  DOCUMENTO: "google/gemini-2.5-flash",
+  RAPIDO: "gemini-2.5-flash",
+  LITE:   "gemini-2.5-flash-lite",
 } as const;
 
 export type SofiaTaskType =
@@ -28,9 +29,13 @@ export type SofiaTaskType =
   | "trilha_defasagem"
   | "roteiro_ei";
 
-export function rotear(_tipo: SofiaTaskType): { provider: "lovable"; model: string } {
-  // Todas as tarefas usam Gemini 2.5 Flash via Lovable AI Gateway.
-  return { provider: "lovable", model: MODELOS.RAPIDO };
+const TAREFAS_LITE: SofiaTaskType[] = [
+  "sugestoes", "chips", "saudacao", "atalhos", "padroes",
+];
+
+export function rotear(tipo: SofiaTaskType): { provider: "google"; model: string } {
+  const model = TAREFAS_LITE.includes(tipo) ? MODELOS.LITE : MODELOS.RAPIDO;
+  return { provider: "google", model };
 }
 
 export type CallAIArgs = {
@@ -47,41 +52,32 @@ export type CallAIResult = {
   status: number;
   text: string;
   error?: string;
-  provider: "lovable";
+  provider: "google";
   model: string;
   usage?: { inputTokens: number; outputTokens: number; costBrl: number };
   blocked?: boolean;
   usedBrl?: number;
   limitBrl?: number;
-  /** true quando a resposta foi cortada por limite de tokens. */
   truncated?: boolean;
-  /** Motivo de parada bruto retornado pelo provedor. */
   finishReason?: string;
 };
 
-// Limites de tokens por tipo de tarefa.
-// Curtas (chat), médias (atividades/estratégias), longas (pareceres/relatórios),
-// muito longas (documentos institucionais completos).
 const TOKEN_LIMITS: Record<SofiaTaskType, number> = {
-  // curtas
-  chat: 1000,
-  sugestoes: 1000,
-  chips: 1000,
-  saudacao: 1000,
-  atalhos: 1000,
+  chat:           1000,
+  sugestoes:      1000,
+  chips:          1000,
+  saudacao:       1000,
+  atalhos:        1000,
   diario_analise: 1000,
-  padroes: 1000,
-  // médias
+  padroes:        1000,
   trilha_progressao: 2000,
-  trilha_defasagem: 2000,
-  trilha_semana: 2000,
-  roteiro_ei: 2000,
-  // longas
-  parecer: 4000,
-  relatorio_bimestral: 4000,
-  trilha_relatorio: 4000,
-  trilha_geracao: 4000,
-  // muito longas
+  trilha_defasagem:  2000,
+  trilha_semana:     2000,
+  roteiro_ei:        2000,
+  parecer:            4000,
+  relatorio_bimestral:4000,
+  trilha_relatorio:   4000,
+  trilha_geracao:     4000,
   pei: 8000,
   pdi: 8000,
 };
@@ -93,13 +89,8 @@ export function maxTokensFor(tipo: SofiaTaskType): number {
 export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
   const route = rotear(args.tipo);
   const maxTokens = args.maxTokens ?? maxTokensFor(args.tipo);
-
-  // CONSTITUIÇÃO INVIOLÁVEL: prepend automático em TODAS as chamadas de IA.
-  // Garante que os 14 princípios + regras gerais cheguem ao modelo, sem
-  // depender de cada edge function lembrar de incluí-los.
   const systemPrompt = withConstitution(args.system);
 
-  // Checagem de orçamento ANTES da chamada (evita gastar se já estourou).
   if (args.userId) {
     const b = await isBudgetExceeded(args.userId);
     if (b.exceeded) {
@@ -116,38 +107,63 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     }
   }
 
-  const KEY = Deno.env.get("LOVABLE_API_KEY");
+  const KEY = Deno.env.get("GOOGLE_API_KEY");
   if (!KEY) {
-    return { ok: false, status: 500, text: "", error: "LOVABLE_API_KEY ausente.", ...route };
+    return { ok: false, status: 500, text: "", error: "GOOGLE_API_KEY ausente.", ...route };
   }
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${route.model}:generateContent?key=${KEY}`;
+
+  const body: Record<string, unknown> = {
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ role: "user", parts: [{ text: args.user }] }],
+    generationConfig: {
+      maxOutputTokens: maxTokens,
+      ...(args.json ? { responseMimeType: "application/json" } : {}),
+    },
+  };
+
+  const resp = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${KEY}` },
-    body: JSON.stringify({
-      model: route.model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: args.user },
-      ],
-      max_tokens: maxTokens,
-      ...(args.json ? { response_format: { type: "json_object" } } : {}),
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
+
   if (!resp.ok) {
     const txt = await resp.text();
     return { ok: false, status: resp.status, text: "", error: txt, ...route };
   }
+
   const data = await resp.json();
-  const text = data?.choices?.[0]?.message?.content || "";
-  const finishReason: string = data?.choices?.[0]?.finish_reason || "";
-  const truncated = finishReason === "length" || finishReason === "MAX_TOKENS";
-  const inTok = Number(data?.usage?.prompt_tokens ?? 0);
-  const outTok = Number(data?.usage?.completion_tokens ?? 0);
+  const candidate = data?.candidates?.[0];
+  const text: string = candidate?.content?.parts?.[0]?.text || "";
+  const finishReason: string = candidate?.finishReason || "";
+  const truncated = finishReason === "MAX_TOKENS";
+
+  const inTok  = Number(data?.usageMetadata?.promptTokenCount ?? 0);
+  const outTok = Number(data?.usageMetadata?.candidatesTokenCount ?? 0);
+
   let costBrl = 0;
   if (args.userId) {
-    costBrl = await recordUsage({ userId: args.userId, provider: "lovable", model: route.model, task: args.tipo, inputTokens: inTok, outputTokens: outTok });
+    costBrl = await recordUsage({
+      userId: args.userId,
+      provider: "google",
+      model: route.model,
+      task: args.tipo,
+      inputTokens: inTok,
+      outputTokens: outTok,
+    });
   }
-  return { ok: true, status: 200, text, usage: { inputTokens: inTok, outputTokens: outTok, costBrl }, truncated, finishReason, ...route };
+
+  return {
+    ok: true,
+    status: 200,
+    text,
+    usage: { inputTokens: inTok, outputTokens: outTok, costBrl },
+    truncated,
+    finishReason,
+    ...route,
+  };
 }
 
 export const corsHeaders = {
