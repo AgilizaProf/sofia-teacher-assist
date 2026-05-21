@@ -17,7 +17,8 @@ const PRICING: Record<string, { in: number; out: number }> = {
 };
 
 export function costBrl(model: string, inTok: number, outTok: number): number {
-  const p = PRICING[model] ?? PRICING["google/gemini-2.5-flash"];
+  const key = model.replace(/^google\//, "");
+  const p = PRICING[key] ?? PRICING[model] ?? PRICING["gemini-2.5-flash"];
   const usd = (inTok * p.in + outTok * p.out) / 1_000_000;
   return Number((usd * USD_BRL).toFixed(6));
 }
