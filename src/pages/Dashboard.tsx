@@ -360,6 +360,8 @@ const css = `
   .filter-pill{font-size:11px;padding:5px 10px;}
 }
 @media(max-width:360px){
+  .ag-up-item{grid-template-columns:44px 1fr;gap:8px;}
+  .ag-event-title{font-size:12px;word-break:break-word;}
   .ap-main{padding:8px 8px 100px;}
   .hero{padding:14px 12px;}
   .ap-root .hero-title{font-size:18px;}
