@@ -227,6 +227,12 @@ const css = `
 .bulk-action-bar button.ghost{opacity:.85;}
 .bulk-action-bar button:disabled{opacity:.5;cursor:not-allowed;}
 @media (max-width:820px){.bulk-action-bar{font-size:12px;padding:9px 12px;gap:8px;}}
+@media (max-width:480px){
+  .class-head{flex-wrap:nowrap;overflow:hidden;}
+  .class-name{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .class-meta{font-size:9.5px;}
+  .class-count{font-size:9px;flex-shrink:0;}
+}
 .student-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#fff;flex-shrink:0;font-family:'Fraunces',serif;}
 .av-1{background:linear-gradient(135deg,#FF7A45,#FF9466);}
 .av-2{background:linear-gradient(135deg,#3B82F6,#60A5FA);}
