@@ -340,6 +340,28 @@ const css = `
   .school-row{grid-template-columns:1fr;}
   .grid-2{gap:12px;}
 }
+@media(max-width:390px){
+  .ap-main{padding:10px 10px 100px;}
+  .hero{padding:16px 14px;border-radius:14px;}
+  .ap-root .hero-title{font-size:clamp(18px,5vw,22px);}
+  .hero-metric-value{font-size:30px !important;}
+  .hero-metric-unit{font-size:16px !important;}
+  .hero-metric{padding:12px;}
+  .hero-cta,.hero-cta-ghost{font-size:12px;padding:9px 12px;}
+  .stats{grid-template-columns:1fr !important;}
+  .hero-metric-tag{font-size:9px;}
+  .filter-pills{flex-wrap:wrap;gap:4px;}
+  .filter-pill{font-size:11px;padding:5px 10px;}
+}
+@media(max-width:360px){
+  .ap-main{padding:8px 8px 100px;}
+  .hero{padding:14px 12px;}
+  .ap-root .hero-title{font-size:18px;}
+  .hero-metric-value{font-size:26px !important;}
+  .card-head{flex-direction:column;align-items:flex-start;gap:8px;}
+  .hero-cta,.hero-cta-ghost{padding:8px 10px;font-size:11px;}
+}
+}
 
 /* Modais (Cadastrar turma / Cadastrar aluno) — mobile */
 @media(max-width:640px){
