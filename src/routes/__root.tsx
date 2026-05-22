@@ -204,7 +204,7 @@ function RootComponent() {
               )}
               <Toaster position="top-right" richColors />
             </SofiaProvider>
-          </SofiaNotificationsProvider>
+         {/* </SofiaNotificationsProvider> */}
         </SofiaUserDataProvider>
       </SofiaContextProvider>
       </QueryClientProvider>
