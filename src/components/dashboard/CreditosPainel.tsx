@@ -99,7 +99,7 @@ const css = `
 
 type TabelaItem = { icone: string; nome: string; custo: string; free?: boolean };
 const TABELA_CREDITOS: TabelaItem[] = [
-  { icone: "💬", nome: "Chat curto (Gemini)", custo: "1 crédito a cada 10 msgs" },
+  { icone: "💬", nome: "Chat curto com a Sofia", custo: "1 crédito a cada 10 msgs" },
   { icone: "💬", nome: "Geração longa no chat", custo: "5 créditos" },
   { icone: "✍️", nome: "Parecer descritivo", custo: "10 créditos" },
   { icone: "📘", nome: "Plano de aula BNCC", custo: "10 créditos" },
