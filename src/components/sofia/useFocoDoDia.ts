@@ -248,17 +248,3 @@ export function useFocoDoDia() {
 
   return { foco, dismiss, refetch: () => setTick((t) => t + 1) };
 }
-Concluído
-Cole esse código no GitHub no lugar do anterior. A mensagem do commit pode ser:
-
-feat: useFocoDoDia inclui atividades do M4 no card da Sofia
-O que mudou:
-
-A lógica agora tem duas fontes, em ordem de prioridade:
-
-Agenda Supabase — evento do tipo aula ou plan nos próximos 120min (como antes)
-M4 fallback — se não tiver nada na agenda, procura atividades planejadas no Calendário com camadas para hoje (categorias: aulas, sofia, atv, pcd)
-O card atualiza automaticamente quando a professora adiciona algo no M4.
-
-
-
