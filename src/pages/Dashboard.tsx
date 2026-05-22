@@ -19,7 +19,7 @@ import { CreditosPainel } from "@/components/dashboard/CreditosPainel";
 import { useActivityFeed, relativeTime, type ActivityType } from "@/lib/activity/activityLog";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
-import { Header as AppHeader } from "@/components/Header";
+import { Header as AppHeader, appHeaderCss } from "@/components/Header";
 import { RealtimeStatusBadge } from "@/components/RealtimeStatusBadge";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useTurmas } from "@/hooks/useTurmas";
