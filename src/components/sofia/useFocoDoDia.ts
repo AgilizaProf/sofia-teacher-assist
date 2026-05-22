@@ -1,14 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAgenda } from "@/hooks/useAgenda";
+import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
+import type { AgendaEventUI } from "@/lib/db/agenda";
+import type { StudentUI } from "@/lib/db/inclusao";
 
 export type FocoAluno = { id: string; nome: string; condicao: string | null };
 export type FocoAula = { disciplina: string; quando: string; tempo_restante: string; data_aula: string };
 export type FocoSugestao = { tipo: string; tempo_geracao: string; fonte: string };
-/**
- * CONTRATO DA RESPOSTA — idêntico ao que uma futura server route
- * `GET /api/sofia/foco-do-dia` deverá devolver. Não adicione/renomeie
- * campos sem atualizar o server e o componente <SofiaFocoCard /> juntos.
- */
 export type FocoDoDia = {
   exibir: boolean;
   motivo?: "sem_aula" | "sem_alunos" | "ok";
@@ -18,34 +17,7 @@ export type FocoDoDia = {
   prompt_pre_preenchido?: string;
 };
 
-type Student = {
-  id: string;
-  name: string;
-  turma?: string;
-  diag?: string;     // diagnóstico/laudo (texto curto, ex.: "TDAH")
-  cid?: string;
-  pareceresPendentes?: number;
-  diarioAtencao?: boolean;
-  adaptacaoFeitaPara?: string[]; // ids de aulas já adaptadas
-};
-
-type AgendaEvento = {
-  id: string;
-  tipo: string;            // "aula" | "evento" | ...
-  disciplina?: string;
-  turma?: string;
-  inicio_em: string;       // ISO
-};
-
 const JANELA_MIN = 120;
-
-function readJSON<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch { return fallback; }
-}
 
 function formatTempoRestante(ms: number): string {
   const min = Math.max(1, Math.round(ms / 60000));
@@ -58,108 +30,84 @@ function quandoLabel(d: Date): string {
   const now = new Date();
   const isSameDay = d.toDateString() === now.toDateString();
   if (isSameDay) return "hoje";
-  const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
   if (d.toDateString() === tomorrow.toDateString()) return "amanhã";
   return d.toLocaleDateString("pt-BR", { weekday: "long" });
 }
 
-/** Mock de agenda: lê de localStorage `agenda_eventos`. Se vazio, gera uma
- *  aula sintética para a próxima hora cheia, usando a primeira turma cadastrada. */
-function getProximaAula(students: Student[]): AgendaEvento | null {
-  const ag = readJSON<AgendaEvento[]>("agenda_eventos", []);
+/** Retorna o próximo evento do tipo "aula" ou "plan" dentro da janela de 120 min. */
+function getProximaAula(events: AgendaEventUI[]): AgendaEventUI | null {
   const now = Date.now();
   const limite = now + JANELA_MIN * 60_000;
-  const candidata = ag
-    .filter((e) => e.tipo === "aula")
-    .map((e) => ({ ...e, ts: new Date(e.inicio_em).getTime() }))
+  const candidatas = events
+    .filter((e) => e.type === "aula" || e.type === "plan")
+    .map((e) => {
+      const iso = e.time ? `${e.date}T${e.time}:00` : `${e.date}T00:00:00`;
+      return { ...e, ts: new Date(iso).getTime() };
+    })
     .filter((e) => e.ts >= now && e.ts <= limite)
-    .sort((a, b) => a.ts - b.ts)[0];
-  if (candidata) {
-    const { ts: _ts, ...rest } = candidata;
-    return rest;
-  }
-  // Sem aula real cadastrada na janela → não exibe o card. NUNCA inventar
-  // disciplina/horário (regra: o card só aparece quando há aula planejada).
-  void students;
-  return null;
+    .sort((a, b) => a.ts - b.ts);
+  if (!candidatas.length) return null;
+  const { ts: _ts, ...rest } = candidatas[0];
+  return rest;
 }
 
-function pickAluno(students: Student[], aulaId: string, turma?: string): { aluno: Student; razao: "pcd" | "atencao" | "parecer" | "generico" } | null {
-  const pool = turma ? students.filter((s) => (s.turma || "") === turma) : students;
+/** Escolhe o aluno mais relevante da turma para destacar no card. */
+function pickAluno(
+  students: StudentUI[],
+  turmaHint?: string,
+): { aluno: StudentUI; razao: "pcd" | "generico" } | null {
+  const pool = turmaHint
+    ? students.filter((s) => (s.turma || "") === turmaHint)
+    : students;
   if (!pool.length) return null;
-  // a) PCD com laudo, sem adaptação para esta aula
-  const pcd = pool.find((s) => (s.diag || s.cid) && !(s.adaptacaoFeitaPara || []).includes(aulaId));
+  const pcd = pool.find(
+    (s) =>
+      (s.diag && s.diag.trim()) ||
+      (s.cid && s.cid !== "nao_informado" && s.cid.trim()),
+  );
   if (pcd) return { aluno: pcd, razao: "pcd" };
-  // b) atenção no diário
-  const atn = pool.find((s) => s.diarioAtencao);
-  if (atn) return { aluno: atn, razao: "atencao" };
-  // c) parecer pendente
-  const par = pool.find((s) => (s.pareceresPendentes || 0) > 0);
-  if (par) return { aluno: par, razao: "parecer" };
   return { aluno: pool[0], razao: "generico" };
 }
 
-/**
- * TODO: migrar para createServerFn quando alunos/agenda forem para o Supabase.
- *
- * Contrato esperado da futura server route `GET /api/sofia/foco-do-dia`
- * (createServerFn({ method: "GET" }) com middleware `requireSupabaseAuth`):
- *
- *   Input  — nenhum (usa o usuário autenticado para resolver alunos/agenda).
- *   Output — `FocoDoDia` (vide tipo acima). Mesmas chaves, mesmos tipos.
- *            • `exibir: false` quando não houver aula na janela de 120min,
- *              quando o professor não tiver alunos ou quando a sugestão já
- *              tiver sido dispensada na sessão (controle anti-repetição
- *              continua sendo do cliente, via sessionStorage).
- *            • `aluno`, `aula`, `sugestao`, `prompt_pre_preenchido` populados
- *              somente quando `exibir: true`.
- *
- * Quando migrar:
- *   1. Mover esta função para `src/server/sofia-foco.server.ts` com a mesma
- *      assinatura, lendo `students`/`agenda` via `supabase` do middleware.
- *   2. Trocar `useFocoDoDia` para usar `useQuery({ queryFn: getFocoDoDia })`
- *      mantendo o mesmo shape de retorno — nenhum componente da UI muda.
- *   3. O cliente continua dono do dismiss (sessionStorage `sofia_foco_dismissed_*`).
- */
-function buildFoco(students: Student[]): FocoDoDia {
-  if (students.length === 0) return { exibir: false, motivo: "sem_alunos" };
-  const aula = getProximaAula(students);
+function buildFoco(students: StudentUI[], events: AgendaEventUI[]): FocoDoDia {
+  if (!students.length) return { exibir: false, motivo: "sem_alunos" };
+  const aula = getProximaAula(events);
   if (!aula) return { exibir: false, motivo: "sem_aula" };
-  const pick = pickAluno(students, aula.id, aula.turma);
+
+  const turmaHint = aula.notes?.trim() || undefined;
+  const pick = pickAluno(students, turmaHint);
   if (!pick) return { exibir: false, motivo: "sem_alunos" };
+
   const { aluno, razao } = pick;
-  const dataAula = new Date(aula.inicio_em);
+  const dataAula = aula.time
+    ? new Date(`${aula.date}T${aula.time}:00`)
+    : new Date(`${aula.date}T00:00:00`);
   const tempoMs = dataAula.getTime() - Date.now();
   const tempo_restante = formatTempoRestante(tempoMs);
   const quando = quandoLabel(dataAula);
-  const condicao = aluno.diag || (aluno.cid && aluno.cid !== "nao_informado" ? aluno.cid : null);
+  const condicao =
+    aluno.diag?.trim() ||
+    (aluno.cid && aluno.cid !== "nao_informado" ? aluno.cid : null) ||
+    null;
   const firstName = aluno.name.split(" ")[0];
+  const disciplina = aula.title || "aula";
 
-  const tipo =
-    razao === "pcd" ? "atividade adaptada" :
-    razao === "atencao" ? "observação no diário" :
-    razao === "parecer" ? "revisão de parecer" :
-    "atividade adaptada";
-  const tempo_geracao = razao === "parecer" ? "1 minuto" : "2 minutos";
-  const fonte =
-    razao === "pcd" ? "no laudo já cadastrado" :
-    razao === "atencao" ? "no histórico do aluno" :
-    razao === "parecer" ? "no PEI ativo" :
-    "na BNCC";
+  const tipo = "atividade adaptada";
+  const tempo_geracao = "2 minutos";
+  const fonte = razao === "pcd" ? "no laudo já cadastrado" : "na BNCC";
 
-  const disciplina = aula.disciplina || "aula";
   const prompt_pre_preenchido =
-    razao === "parecer"
-      ? `Revise o parecer pendente do(a) aluno(a) ${aluno.name}${condicao ? ` (${condicao})` : ""}, considerando o PEI e o histórico.`
-      : razao === "atencao"
-      ? `Sugira uma observação para o diário do(a) aluno(a) ${aluno.name} para a aula de ${disciplina} de ${quando}, com base no histórico recente.`
-      : `Crie uma ${tipo} para o(a) aluno(a) ${aluno.name}${condicao ? ` (${condicao})` : ""} para a aula de ${disciplina} de ${quando}, considerando o laudo/PEI já cadastrado e mantendo o objetivo da BNCC.`;
+    razao === "pcd"
+      ? `Crie uma atividade adaptada para o(a) aluno(a) ${aluno.name}${condicao ? ` (${condicao})` : ""} para ${disciplina} de ${quando}, considerando o laudo/PEI cadastrado e mantendo o objetivo da BNCC.`
+      : `Crie uma atividade para ${disciplina} de ${quando} alinhada à BNCC.`;
 
   return {
     exibir: true,
     motivo: "ok",
     aluno: { id: aluno.id, nome: firstName, condicao },
-    aula: { disciplina, quando, tempo_restante, data_aula: dataAula.toISOString().slice(0, 10) },
+    aula: { disciplina, quando, tempo_restante, data_aula: aula.date },
     sugestao: { tipo, tempo_geracao, fonte },
     prompt_pre_preenchido,
   };
@@ -167,32 +115,29 @@ function buildFoco(students: Student[]): FocoDoDia {
 
 export function useFocoDoDia() {
   const [foco, setFoco] = useState<FocoDoDia>({ exibir: false });
-  // `storageKey` é estado puramente do cliente (anti-repetição via sessionStorage)
-  // e por isso fica FORA do contrato `FocoDoDia` que será espelhado pelo server.
   const [storageKey, setStorageKey] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
+
+  // ✅ Dados reais do Supabase — sem localStorage
+  const { students } = useInclusaoStudents();
+  const { events } = useAgenda();
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => mounted && setUserId(data.session?.user?.id ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user?.id ?? null));
-    return () => { mounted = false; sub.subscription.unsubscribe(); };
-  }, []);
-
-  // refetch a cada 5 minutos + escuta de mudanças no localStorage
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 5 * 60 * 1000);
-    const onStorage = (e: StorageEvent) => {
-      if (!e.key || e.key === "inc_students" || e.key === "agenda_eventos") setTick((t) => t + 1);
+    supabase.auth.getSession().then(({ data }) =>
+      mounted && setUserId(data.session?.user?.id ?? null),
+    );
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) =>
+      setUserId(s?.user?.id ?? null),
+    );
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
     };
-    window.addEventListener("storage", onStorage);
-    return () => { clearInterval(id); window.removeEventListener("storage", onStorage); };
   }, []);
 
   useEffect(() => {
-    const students = readJSON<Student[]>("inc_students", []);
-    const next = buildFoco(students);
+    const next = buildFoco(students, events);
     if (next.exibir && next.aluno && next.aula && userId) {
       const key = `sofia_foco_dismissed_${userId}_${next.aluno.id}_${next.aula.data_aula}`;
       setStorageKey(key);
@@ -206,7 +151,7 @@ export function useFocoDoDia() {
       setStorageKey(null);
     }
     setFoco(next);
-  }, [userId, tick]);
+  }, [students, events, userId]);
 
   const dismiss = useCallback(() => {
     if (storageKey) {
@@ -215,5 +160,5 @@ export function useFocoDoDia() {
     setFoco({ exibir: false, motivo: "ok" });
   }, [storageKey]);
 
-  return { foco, dismiss, refetch: () => setTick((t) => t + 1) };
+  return { foco, dismiss, refetch: () => {} };
 }
