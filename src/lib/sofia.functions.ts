@@ -183,8 +183,9 @@ const askSofiaServer = createServerFn({ method: "POST" })
       if (createError) throw new Error(createError.message);
       conversationId = created.id;
 
+      const createdConversationId = conversationId;
       const historyRows = data.messages.map((message) => ({
-        conversation_id: conversationId,
+        conversation_id: createdConversationId,
         user_id: userId,
         role: message.role,
         content: message.content,
