@@ -1382,15 +1382,15 @@ export function Dashboard() {
                             </div>
                             <span className="class-count">{list.length} {list.length === 1 ? "aluno" : "alunos"}</span>
                             {classMeta && (
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setEditingClassIdx(classes.indexOf(classMeta)); }}
-                                title="Editar turma"
-                        style={{ marginLeft: 4, background: "transparent", border: "1px solid var(--border, #E4E8F0)", borderRadius: 6, padding: "3px 5px", cursor: "pointer", color: "var(--text-soft, #6B7691)", display: "inline-flex", alignItems: "center", gap: 0, fontSize: 11, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap", minWidth: 0 }}
-                              >
-                                <Svg width={12} height={12} c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></>} />
-                                Editar
-                              </button>
+                            <button
+  type="button"
+  onClick={(e) => { e.stopPropagation(); setEditingClassIdx(classes.indexOf(classMeta)); }}
+  aria-label={`Editar turma ${turma}`}
+  title="Editar turma"
+  style={{ marginLeft: 4, background: "transparent", border: "1px solid var(--border, #E4E8F0)", borderRadius: 6, padding: "3px 5px", cursor: "pointer", color: "var(--text-soft, #6B7691)", display: "inline-flex", alignItems: "center", gap: 0, fontSize: 11, fontWeight: 600, flexShrink: 0 }}
+>
+  <Svg width={12} height={12} c={<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></>} />
+</button>
                             )}
                             {classMeta && (
                               <button
