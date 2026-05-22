@@ -984,7 +984,9 @@ export function Dashboard() {
         <AppSidebar active="home" onCmdK={() => setCmdk(true)} />
 
         <main className="ap-main">
-          <AppHeader />
+         <AppHeader
+  breadcrumb={[{ label: "Sua sala" }, { label: "Página inicial" }]}
+/>
 
           <section className="hero">
             <div className="hero-left">
