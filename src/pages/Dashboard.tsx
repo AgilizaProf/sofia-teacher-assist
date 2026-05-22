@@ -980,9 +980,8 @@ export function Dashboard() {
 
   return (
     <div className="ap-root">
-     import { appHeaderCss } from "@/components/layout/AppHeader";
-// ...
-<style dangerouslySetInnerHTML={{ __html: css + emptyStateCss + sidebarCss + appHeaderCss }} />      <div className="ap-app">
+      <style dangerouslySetInnerHTML={{ __html: css + emptyStateCss + sidebarCss + appHeaderCss }} />
+      <div className="ap-app">
         <AppSidebar active="home" onCmdK={() => setCmdk(true)} />
 
         <main className="ap-main">
