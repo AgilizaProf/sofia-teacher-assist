@@ -19,6 +19,16 @@ export type FocoDoDia = {
 
 const JANELA_MIN = 120;
 
+// ─── Tipos do M4 ────────────────────────────────────────────────────────────
+type M4Cat = "aulas" | "aval" | "eventos" | "feriados" | "bncc" | "sofia";
+type M4UserEvt = {
+  id: string;
+  cat: M4Cat;
+  title: string;
+  meta?: string;
+  source: "atv" | "pcd" | "m3";
+};
+
 function formatTempoRestante(ms: number): string {
   const min = Math.max(1, Math.round(ms / 60000));
   if (min < 60) return `${min}min`;
@@ -28,16 +38,22 @@ function formatTempoRestante(ms: number): string {
 
 function quandoLabel(d: Date): string {
   const now = new Date();
-  const isSameDay = d.toDateString() === now.toDateString();
-  if (isSameDay) return "hoje";
+  if (d.toDateString() === now.toDateString()) return "hoje";
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
   if (d.toDateString() === tomorrow.toDateString()) return "amanhã";
   return d.toLocaleDateString("pt-BR", { weekday: "long" });
 }
 
-/** Retorna o próximo evento do tipo "aula" ou "plan" dentro da janela de 120 min. */
-function getProximaAula(events: AgendaEventUI[]): AgendaEventUI | null {
+function todayKey(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+// ─── Agenda Supabase ─────────────────────────────────────────────────────────
+/** Próximo evento de tipo aula/plan dentro de 120 min no Supabase. */
+function getProximaAulaAgenda(events: AgendaEventUI[]): AgendaEventUI | null {
   const now = Date.now();
   const limite = now + JANELA_MIN * 60_000;
   const candidatas = events
@@ -53,7 +69,29 @@ function getProximaAula(events: AgendaEventUI[]): AgendaEventUI | null {
   return rest;
 }
 
-/** Escolhe o aluno mais relevante da turma para destacar no card. */
+// ─── M4 localStorage ─────────────────────────────────────────────────────────
+/**
+ * Lê atividades planejadas no M4 (Calendário com camadas) para hoje.
+ * Retorna apenas categorias pedagógicas: aulas, sofia e atv.
+ */
+function getAtividadesM4Hoje(): M4UserEvt[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem("plan_m4_user_events");
+    if (!raw) return [];
+    const all: Record<string, M4UserEvt[]> = JSON.parse(raw);
+    const hoje = todayKey();
+    const evtsHoje = all[hoje] ?? [];
+    // Filtra categorias relevantes para o card da Sofia
+    return evtsHoje.filter((e) =>
+      e.cat === "aulas" || e.cat === "sofia" || e.source === "atv" || e.source === "pcd",
+    );
+  } catch {
+    return [];
+  }
+}
+
+// ─── Seleção de aluno ─────────────────────────────────────────────────────────
 function pickAluno(
   students: StudentUI[],
   turmaHint?: string,
@@ -71,54 +109,95 @@ function pickAluno(
   return { aluno: pool[0], razao: "generico" };
 }
 
+// ─── buildFoco ────────────────────────────────────────────────────────────────
 function buildFoco(students: StudentUI[], events: AgendaEventUI[]): FocoDoDia {
   if (!students.length) return { exibir: false, motivo: "sem_alunos" };
-  const aula = getProximaAula(events);
-  if (!aula) return { exibir: false, motivo: "sem_aula" };
 
-  const turmaHint = aula.notes?.trim() || undefined;
-  const pick = pickAluno(students, turmaHint);
-  if (!pick) return { exibir: false, motivo: "sem_alunos" };
+  // 1️⃣ Prioridade: aula na agenda do Supabase dentro de 120min
+  const aulaAgenda = getProximaAulaAgenda(events);
+  if (aulaAgenda) {
+    const turmaHint = aulaAgenda.notes?.trim() || undefined;
+    const pick = pickAluno(students, turmaHint);
+    if (!pick) return { exibir: false, motivo: "sem_alunos" };
+    const { aluno, razao } = pick;
+    const dataAula = aulaAgenda.time
+      ? new Date(`${aulaAgenda.date}T${aulaAgenda.time}:00`)
+      : new Date(`${aulaAgenda.date}T00:00:00`);
+    const tempoMs = dataAula.getTime() - Date.now();
+    const quando = quandoLabel(dataAula);
+    const condicao =
+      aluno.diag?.trim() ||
+      (aluno.cid && aluno.cid !== "nao_informado" ? aluno.cid : null) ||
+      null;
+    const firstName = aluno.name.split(" ")[0];
+    const disciplina = aulaAgenda.title || "aula";
+    const fonte = razao === "pcd" ? "no laudo já cadastrado" : "na BNCC";
+    return {
+      exibir: true,
+      motivo: "ok",
+      aluno: { id: aluno.id, nome: firstName, condicao },
+      aula: {
+        disciplina,
+        quando,
+        tempo_restante: formatTempoRestante(tempoMs),
+        data_aula: aulaAgenda.date,
+      },
+      sugestao: { tipo: "atividade adaptada", tempo_geracao: "2 minutos", fonte },
+      prompt_pre_preenchido:
+        razao === "pcd"
+          ? `Crie uma atividade adaptada para ${aluno.name}${condicao ? ` (${condicao})` : ""} para ${disciplina} de ${quando}, considerando o laudo/PEI cadastrado e mantendo o objetivo da BNCC.`
+          : `Crie uma atividade para ${disciplina} de ${quando} alinhada à BNCC.`,
+    };
+  }
 
-  const { aluno, razao } = pick;
-  const dataAula = aula.time
-    ? new Date(`${aula.date}T${aula.time}:00`)
-    : new Date(`${aula.date}T00:00:00`);
-  const tempoMs = dataAula.getTime() - Date.now();
-  const tempo_restante = formatTempoRestante(tempoMs);
-  const quando = quandoLabel(dataAula);
-  const condicao =
-    aluno.diag?.trim() ||
-    (aluno.cid && aluno.cid !== "nao_informado" ? aluno.cid : null) ||
-    null;
-  const firstName = aluno.name.split(" ")[0];
-  const disciplina = aula.title || "aula";
+  // 2️⃣ Fallback: atividades planejadas no M4 para hoje
+  const m4Hoje = getAtividadesM4Hoje();
+  if (m4Hoje.length > 0) {
+    const evt = m4Hoje[0];
+    const pick = pickAluno(students);
+    if (!pick) return { exibir: false, motivo: "sem_alunos" };
+    const { aluno, razao } = pick;
+    const hoje = new Date();
+    const condicao =
+      aluno.diag?.trim() ||
+      (aluno.cid && aluno.cid !== "nao_informado" ? aluno.cid : null) ||
+      null;
+    const firstName = aluno.name.split(" ")[0];
+    const disciplina = evt.title || "atividade planejada";
+    const fonte = razao === "pcd" ? "no laudo já cadastrado" : "no M4 — Calendário";
+    const tipo =
+      evt.source === "pcd" ? "atividade adaptada (PCD)" :
+      evt.cat === "sofia" ? "atividade da Sofia" :
+      "atividade planejada";
+    return {
+      exibir: true,
+      motivo: "ok",
+      aluno: { id: aluno.id, nome: firstName, condicao },
+      aula: {
+        disciplina,
+        quando: quandoLabel(hoje),
+        tempo_restante: "hoje",
+        data_aula: todayKey(),
+      },
+      sugestao: { tipo, tempo_geracao: "2 minutos", fonte },
+      prompt_pre_preenchido:
+        razao === "pcd"
+          ? `Crie uma atividade adaptada para ${aluno.name}${condicao ? ` (${condicao})` : ""} para "${disciplina}" de hoje, considerando o laudo/PEI cadastrado.`
+          : `Prepare a atividade "${disciplina}" planejada para hoje no M4. Sugira estratégias e materiais alinhados à BNCC.`,
+    };
+  }
 
-  const tipo = "atividade adaptada";
-  const tempo_geracao = "2 minutos";
-  const fonte = razao === "pcd" ? "no laudo já cadastrado" : "na BNCC";
-
-  const prompt_pre_preenchido =
-    razao === "pcd"
-      ? `Crie uma atividade adaptada para o(a) aluno(a) ${aluno.name}${condicao ? ` (${condicao})` : ""} para ${disciplina} de ${quando}, considerando o laudo/PEI cadastrado e mantendo o objetivo da BNCC.`
-      : `Crie uma atividade para ${disciplina} de ${quando} alinhada à BNCC.`;
-
-  return {
-    exibir: true,
-    motivo: "ok",
-    aluno: { id: aluno.id, nome: firstName, condicao },
-    aula: { disciplina, quando, tempo_restante, data_aula: aula.date },
-    sugestao: { tipo, tempo_geracao, fonte },
-    prompt_pre_preenchido,
-  };
+  return { exibir: false, motivo: "sem_aula" };
 }
 
+// ─── Hook principal ───────────────────────────────────────────────────────────
 export function useFocoDoDia() {
   const [foco, setFoco] = useState<FocoDoDia>({ exibir: false });
   const [storageKey, setStorageKey] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
 
-  // ✅ Dados reais do Supabase — sem localStorage
+  // ✅ Dados reais do Supabase
   const { students } = useInclusaoStudents();
   const { events } = useAgenda();
 
@@ -130,10 +209,17 @@ export function useFocoDoDia() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) =>
       setUserId(s?.user?.id ?? null),
     );
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
+    return () => { mounted = false; sub.subscription.unsubscribe(); };
+  }, []);
+
+  // Reprocessa a cada 5min + quando M4 muda no localStorage
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 5 * 60 * 1000);
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key || e.key === "plan_m4_user_events") setTick((t) => t + 1);
     };
+    window.addEventListener("storage", onStorage);
+    return () => { clearInterval(id); window.removeEventListener("storage", onStorage); };
   }, []);
 
   useEffect(() => {
@@ -151,7 +237,7 @@ export function useFocoDoDia() {
       setStorageKey(null);
     }
     setFoco(next);
-  }, [students, events, userId]);
+  }, [students, events, userId, tick]);
 
   const dismiss = useCallback(() => {
     if (storageKey) {
@@ -160,5 +246,19 @@ export function useFocoDoDia() {
     setFoco({ exibir: false, motivo: "ok" });
   }, [storageKey]);
 
-  return { foco, dismiss, refetch: () => {} };
+  return { foco, dismiss, refetch: () => setTick((t) => t + 1) };
 }
+Concluído
+Cole esse código no GitHub no lugar do anterior. A mensagem do commit pode ser:
+
+feat: useFocoDoDia inclui atividades do M4 no card da Sofia
+O que mudou:
+
+A lógica agora tem duas fontes, em ordem de prioridade:
+
+Agenda Supabase — evento do tipo aula ou plan nos próximos 120min (como antes)
+M4 fallback — se não tiver nada na agenda, procura atividades planejadas no Calendário com camadas para hoje (categorias: aulas, sofia, atv, pcd)
+O card atualiza automaticamente quando a professora adiciona algo no M4.
+
+
+
