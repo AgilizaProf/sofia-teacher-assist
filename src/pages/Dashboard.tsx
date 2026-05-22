@@ -1,4 +1,4 @@
-import { appHeaderCss } from "@/components/layout/AppHeader"
+import { Header as AppHeader, appHeaderCss } from "@/components/Header";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
