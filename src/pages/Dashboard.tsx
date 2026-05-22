@@ -1393,15 +1393,15 @@ export function Dashboard() {
 </button>
                             )}
                             {classMeta && (
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setDeletingClassId(classMeta.id); }}
-                                title="Excluir turma"
-                              style={{ marginLeft: 6, background: "transparent", border: "1px solid #FCA5A5", borderRadius: 6, padding: "3px 6px", cursor: "pointer", color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap" }}
-                              >
-                                <Svg width={12} height={12} c={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></>} />
-                                Excluir
-                              </button>
+                             <button
+  type="button"
+  onClick={(e) => { e.stopPropagation(); setDeletingClassId(classMeta.id); }}
+  aria-label={`Excluir turma ${turma}`}
+  title="Excluir turma"
+  style={{ marginLeft: 4, background: "transparent", border: "1px solid #FCA5A5", borderRadius: 6, padding: "3px 5px", cursor: "pointer", color: "#DC2626", display: "inline-flex", alignItems: "center", gap: 0, fontSize: 11, fontWeight: 600, flexShrink: 0 }}
+>
+  <Svg width={12} height={12} c={<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></>} />
+</button>
                             )}
                           </div>
                           {!isCollapsed && list.map((s, i) => {
