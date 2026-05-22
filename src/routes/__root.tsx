@@ -194,9 +194,6 @@ function RootComponent() {
                   <SofiaErrorBoundary area="o assistente Sofia" silent>
                     <SofiaWidget />
                   </SofiaErrorBoundary>
-                  <SofiaErrorBoundary area="as notificações da Sofia" silent>
-                    {/* <SofiaNotificationsWidget /> */}
-                  </SofiaErrorBoundary>
                   <SofiaErrorBoundary area="os lembretes da Sofia" silent>
                     <SofiaAutoReminders />
                   </SofiaErrorBoundary>
