@@ -2538,8 +2538,9 @@ export function Planejamento() {
     m6ResetForm();
     // Sofia interpreta o registro e propõe um ajuste para a próxima aula.
     const sugestao = gerarSugestaoSofia(entry);
-    setM6JustSaved({ entryId: entry.id, ...sugestao });
+    setM6JustSaved({ entryId: entry.id, ...sugestao, iaLoading: true });
     showToast("✓ Diário salvo.");
+    void analisarM6ComIA(entry, entry.id);
   };
 
   // M2 — Sequência didática
