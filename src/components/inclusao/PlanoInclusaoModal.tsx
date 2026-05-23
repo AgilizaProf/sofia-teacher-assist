@@ -333,6 +333,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
     const anotacoesCombinadas = [
       condicaoLabel ? `Condição: ${condicaoLabel}` : "",
       anamneseResumo ? `Anamnese (resumo):\n${anamneseResumo}` : "Anamnese ainda não preenchida — gere assim mesmo, considerando práticas inclusivas gerais para a condição informada.",
+      peiResumo ? `\nPEI vigente (objetivos e metas — a atividade DEVE ser progressiva em relação a eles):\n${peiResumo}` : "\n(Sem PEI cadastrado — use boas práticas inclusivas para a condição informada.)",
     ].filter(Boolean).join("\n\n");
     const anoReferenciaInstrucao = buildAnoReferenciaPromptBlock(
       aluno.anoEscolar,
