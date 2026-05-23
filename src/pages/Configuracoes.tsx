@@ -135,40 +135,64 @@ export function Configuracoes() {
                 <ChevronDown size={14} style={{ transform: a11yOpen ? "rotate(180deg)" : "none", transition: ".2s" }} />
               </button>
             </div>
-            {a11yOpen && (<div id="a11y-content">
-            <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 14px" }}>
-              Ajuste como o app se comporta para tornar a navegação mais confortável.
-            </p>
-            <div role="radiogroup" aria-label="Reduzir movimento" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Reduzir movimento</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
-                {RM_OPTS.map((opt) => {
-                  const on = rmMode === opt.v;
-                  return (
-                    <button
-                      key={opt.v}
-                      type="button"
-                      role="radio"
-                      aria-checked={on}
-                      onClick={() => setRmMode(opt.v)}
-                      style={{
-                        textAlign: "left",
-                        padding: "12px 14px",
-                        borderRadius: 10,
-                        border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0",
-                        background: on ? "#FFF1E8" : "#fff",
-                        color: "#1B2A4E",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
-                      <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
-                    </button>
-                  );
-                })}
+            {a11yOpen && (
+              <div id="a11y-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                <p style={{ color: "#6B7691", fontSize: 13, margin: 0 }}>
+                  Ajuste como o app se comporta para tornar a navegação mais confortável. As preferências são salvas automaticamente.
+                </p>
+
+                {/* Tamanho do texto */}
+                <div role="radiogroup" aria-label="Tamanho do texto" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Tamanho do texto</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
+                    {FS_OPTS.map((opt) => {
+                      const on = fsMode === opt.v;
+                      return (
+                        <button key={opt.v} type="button" role="radio" aria-checked={on} onClick={() => setFsMode(opt.v)}
+                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0", background: on ? "#FFF1E8" : "#fff", color: "#1B2A4E", cursor: "pointer" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
+                          <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Alto contraste */}
+                <div role="radiogroup" aria-label="Alto contraste" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Alto contraste</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
+                    {HC_OPTS.map((opt) => {
+                      const on = hcMode === opt.v;
+                      return (
+                        <button key={opt.v} type="button" role="radio" aria-checked={on} onClick={() => setHcMode(opt.v)}
+                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0", background: on ? "#FFF1E8" : "#fff", color: "#1B2A4E", cursor: "pointer" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
+                          <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Reduzir movimento */}
+                <div role="radiogroup" aria-label="Reduzir movimento" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Reduzir movimento</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
+                    {RM_OPTS.map((opt) => {
+                      const on = rmMode === opt.v;
+                      return (
+                        <button key={opt.v} type="button" role="radio" aria-checked={on} onClick={() => setRmMode(opt.v)}
+                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0", background: on ? "#FFF1E8" : "#fff", color: "#1B2A4E", cursor: "pointer" }}>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
+                          <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
-            </div>)}
+            )}
           </section>
 
           <section className="cfg-section" aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
