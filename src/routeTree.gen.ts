@@ -31,6 +31,8 @@ import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
 import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
 import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
+import { Route as AdminStorageRouteImport } from './routes/admin.storage'
+import { Route as AdminRetencaoRouteImport } from './routes/admin.retencao'
 import { Route as AdminProRouteImport } from './routes/admin.pro'
 import { Route as AdminManutencaoRouteImport } from './routes/admin.manutencao'
 import { Route as AdminInfraRouteImport } from './routes/admin.infra'
@@ -154,6 +156,16 @@ const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStorageRoute = AdminStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRetencaoRoute = AdminRetencaoRouteImport.update({
+  id: '/retencao',
+  path: '/retencao',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminProRoute = AdminProRouteImport.update({
   id: '/pro',
   path: '/pro',
@@ -232,6 +244,8 @@ export interface FileRoutesByFullPath {
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
+  '/admin/retencao': typeof AdminRetencaoRoute
+  '/admin/storage': typeof AdminStorageRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
@@ -265,6 +279,8 @@ export interface FileRoutesByTo {
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
+  '/admin/retencao': typeof AdminRetencaoRoute
+  '/admin/storage': typeof AdminStorageRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
@@ -300,6 +316,8 @@ export interface FileRoutesById {
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
+  '/admin/retencao': typeof AdminRetencaoRoute
+  '/admin/storage': typeof AdminStorageRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
@@ -336,6 +354,8 @@ export interface FileRouteTypes {
     | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
+    | '/admin/retencao'
+    | '/admin/storage'
     | '/admin/usuarios'
     | '/inclusao/pei'
     | '/planejamento/atividade'
@@ -369,6 +389,8 @@ export interface FileRouteTypes {
     | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
+    | '/admin/retencao'
+    | '/admin/storage'
     | '/admin/usuarios'
     | '/inclusao/pei'
     | '/planejamento/atividade'
@@ -403,6 +425,8 @@ export interface FileRouteTypes {
     | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
+    | '/admin/retencao'
+    | '/admin/storage'
     | '/admin/usuarios'
     | '/inclusao/pei'
     | '/planejamento/atividade'
@@ -591,6 +615,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsuariosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/storage': {
+      id: '/admin/storage'
+      path: '/storage'
+      fullPath: '/admin/storage'
+      preLoaderRoute: typeof AdminStorageRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/retencao': {
+      id: '/admin/retencao'
+      path: '/retencao'
+      fullPath: '/admin/retencao'
+      preLoaderRoute: typeof AdminRetencaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/pro': {
       id: '/admin/pro'
       path: '/pro'
@@ -672,6 +710,8 @@ interface AdminRouteChildren {
   AdminInfraRoute: typeof AdminInfraRoute
   AdminManutencaoRoute: typeof AdminManutencaoRoute
   AdminProRoute: typeof AdminProRoute
+  AdminRetencaoRoute: typeof AdminRetencaoRoute
+  AdminStorageRoute: typeof AdminStorageRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -684,6 +724,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInfraRoute: AdminInfraRoute,
   AdminManutencaoRoute: AdminManutencaoRoute,
   AdminProRoute: AdminProRoute,
+  AdminRetencaoRoute: AdminRetencaoRoute,
+  AdminStorageRoute: AdminStorageRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -756,12 +798,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
