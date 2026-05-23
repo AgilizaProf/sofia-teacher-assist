@@ -347,8 +347,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [draft, loading, messages, conversationId, routeContext, loc.pathname, isAuthed, navigate, refreshConversations, open]);
-
+  }, [draft, loading, messages, conversationId, routeContext, userContext, loc.pathname, isAuthed, navigate, refreshConversations, open]);
   const startNew = useCallback(() => {
     setMessages([]);
     setConversationId(null);
