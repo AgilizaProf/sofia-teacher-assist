@@ -238,20 +238,25 @@ const askSofiaServer = createServerFn({ method: "POST" })
     const json = await res.json();
     const content: string = json?.choices?.[0]?.message?.content ?? "";
 
+    // Roda o validator para P3 (linguagem), P2 (BNCC) e P6 (transparência)
+    const { validateSofiaOutput } = await import("@/lib/sofia-validator");
+    const validation = validateSofiaOutput(content);
+    const issues = validation.issues.length > 0 ? validation.issues : null;
+
     const { error: assistantError } = await supabase.from("sofia_messages").insert({
       conversation_id: conversationId,
       user_id: userId,
       role: "assistant",
-      content,
-      issues: null,
+      content: validation.sanitized,
+      issues,
     });
 
     if (assistantError) throw new Error(assistantError.message);
 
     return {
       conversationId,
-      content,
-      issues: null as SofiaStoredMessage["issues"],
+      content: validation.sanitized,
+      issues,
       truncated: false,
     };
   });
