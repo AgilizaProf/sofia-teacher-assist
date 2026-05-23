@@ -464,11 +464,12 @@ export function Dashboard() {
 
   // Foco automático no primeiro campo + Esc para fechar (turma / aluno)
   useEffect(() => {
-    if (!classOpen && !studentOpen && !schoolOpen) return;
+    if (!classOpen && !studentOpen && !schoolOpen && !curricuoOpen) return;
     const close = () => {
       if (classOpen) setClassOpen(false);
       if (studentOpen) setStudentOpen(false);
       if (schoolOpen) setSchoolOpen(false);
+      if (curricuoOpen) setCurricuoOpen(false);
     };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
     window.addEventListener("keydown", onKey);
