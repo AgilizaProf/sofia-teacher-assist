@@ -1823,7 +1823,7 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className={`cmdk-overlay ${classOpen ? "show" : ""}`}
+      <div className={`cmdk-overlay ${classOpen ? "show" : ""}`}>
         <div className="school-modal" role="dialog" aria-label="Cadastrar turma">
           <div className="school-modal-head">
             <div className="school-modal-icon">
