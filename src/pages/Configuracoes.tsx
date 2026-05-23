@@ -47,10 +47,22 @@ export function Configuracoes() {
   const [principlesOpen, setPrinciplesOpen] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const { mode: rmMode, setMode: setRmMode } = useReducedMotion();
+  const { mode: fsMode, setMode: setFsMode } = useFontSize();
+  const { mode: hcMode, setMode: setHcMode } = useHighContrast();
+
   const RM_OPTS: Array<{ v: ReducedMotionMode; label: string; desc: string }> = [
     { v: "system", label: "Seguir sistema", desc: "Usa a preferência do seu dispositivo." },
     { v: "on", label: "Ativado", desc: "Reduz animações em todo o app." },
     { v: "off", label: "Desativado", desc: "Mantém todas as animações." },
+  ];
+  const FS_OPTS: Array<{ v: FontSizeMode; label: string; desc: string }> = [
+    { v: "normal", label: "Normal", desc: "Tamanho padrão do app." },
+    { v: "large", label: "Grande", desc: "Aumenta o texto em 15%." },
+    { v: "extra-large", label: "Muito grande", desc: "Aumenta o texto em 30%." },
+  ];
+  const HC_OPTS: Array<{ v: HighContrastMode; label: string; desc: string }> = [
+    { v: "off", label: "Desativado", desc: "Aparência padrão." },
+    { v: "on", label: "Ativado", desc: "Aumenta o contraste de textos e bordas." },
   ];
 
   return (
