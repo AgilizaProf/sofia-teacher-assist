@@ -457,6 +457,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
     isAuthed, routeContext, routeName, unread, resetUnread,
     proactive, pushProactive, dismissProactive,
     bootError, retryBootstrap,
+    userContext, setUserContext,
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
