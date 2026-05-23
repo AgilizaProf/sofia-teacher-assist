@@ -2491,6 +2491,18 @@ export function Planejamento() {
             reforco: m6RelLeitura.reforco,
           }
         : { total: 0 };
+      const histKey = `${m6RelTurma || "todas"}__${m6Periodo}`;
+      const relAnterior = (m6RelHistorico[histKey] ?? []).slice(-2);
+      const turmaAtualNome = m6RelTurma || m5Turma || "";
+      const alunosPcdTurma = turmaAtualNome
+        ? (sofiaUser.alunosPCDPorTurma[turmaAtualNome] ?? []).map((a) => ({
+            nome: a.primeiro_nome,
+            condicao: a.pcd_codigo ?? "",
+          }))
+        : sofiaUser.alunosPCD.map((a) => ({
+            nome: a.primeiro_nome,
+            condicao: a.pcd_codigo ?? "",
+          }));
       const payload = {
         periodo: M6_PERIODO_META[m6Periodo].label.toLowerCase(),
         turma: m6RelTurma || "",
