@@ -94,13 +94,30 @@ function useRouteContext() {
     else if (p.startsWith("/configuracoes")) tela = "Você está nas Configurações.";
 
     const turma = sofia?.entity?.turma_atual;
+    const pcd = sofia?.entity?.todos_alunos_pcd ?? [];
     const nivel = inferirNivelEnsino(turma?.ano) ?? inferirNivelEnsino(turma?.nome);
+    const ds = sofia?.dataState;
     const linhas = [tela];
-    if (turma) {
-      linhas.push(`Turma atual: ${turma.nome}${turma.ano ? ` (${turma.ano})` : ""} — ${turma.total_alunos ?? 0} aluno(s).`);
-    } else {
-      linhas.push("Turma atual: NENHUMA selecionada.");
+
+    if (ds && ds.turmas_count > 0) {
+      linhas.push(`Total de turmas cadastradas: ${ds.turmas_count}.`);
+      linhas.push(`Total de alunos cadastrados: ${ds.alunos_count}.`);
     }
+
+    if (turma) {
+      linhas.push(`Turma em foco: ${turma.nome}${turma.ano ? ` (${turma.ano})` : ""} — ${turma.total_alunos ?? 0} aluno(s).`);
+    } else if (!ds || ds.turmas_count === 0) {
+      linhas.push("Turma atual: NENHUMA cadastrada ainda.");
+    }
+
+    if (pcd.length > 0) {
+      const listaPcd = pcd.map((a) => `${a.nome}${a.condicao ? ` (${a.condicao})` : ""}`).join(", ");
+      linhas.push(`Alunos PCD cadastrados: ${listaPcd}.`);
+      linhas.push("Adapte sempre as atividades e sugestões para incluir esses alunos.");
+    } else if (ds && ds.alunos_count > 0) {
+      linhas.push("Nenhum aluno PCD cadastrado.");
+    }
+
     if (nivel) {
       linhas.push(
         `Nível de ensino da turma: ${nivel}. Adapte TODAS as suas respostas (atividades, estratégias, linguagem, sugestões de vídeos, relatórios e planejamentos) para esse público, conforme o bloco "ADAPTAÇÃO POR NÍVEL DE ENSINO" da sua Constituição.`,
