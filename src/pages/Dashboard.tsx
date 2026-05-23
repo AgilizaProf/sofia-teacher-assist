@@ -426,6 +426,7 @@ export function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, realName]);
   const [cmdk, setCmdk] = useState(false);
+  const [cmdkQuery, setCmdkQuery] = useState("");
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [schoolOpen, setSchoolOpen] = useState(false);
