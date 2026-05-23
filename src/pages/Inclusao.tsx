@@ -1532,6 +1532,19 @@ ${corpo}
         : "";
       const temPei = Boolean(peiResumo);
       const peiReferenciaId = temPei ? `${selected.id}::${(pei.atualizadoEm as string) || "sem-data"}` : "";
+      const nomeAluno = selected.name.toLowerCase().trim();
+      const primeiroNome = nomeAluno.split(" ")[0];
+      const m6DoAluno = (m6EntriesGlobal || [])
+        .filter((e) => {
+          const txt = `${e.title || ""} ${e.text || ""} ${e.atividadeTitulo || ""}`.toLowerCase();
+          return txt.includes(primeiroNome) || txt.includes(nomeAluno);
+        })
+        .slice(0, 20)
+        .map((e) => ({ when: e.date || "—", cat: "diario", body: `${e.emoji || ""} ${e.title || ""}${e.text ? ` — ${e.text}` : ""}${e.tags?.length ? ` [${e.tags.join(", ")}]` : ""}` }));
+      const anamSnaps = anamHistByStudent[selected.id] ?? [];
+      const anamAnteriorResumo = anamSnaps.length > 0
+        ? `Registro anterior (${anamSnaps[anamSnaps.length - 1].data}):\n${anamSnaps[anamSnaps.length - 1].resumo}`
+        : "";
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
           aluno: selected.name,
