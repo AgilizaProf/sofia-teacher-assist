@@ -272,6 +272,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [busca, setBusca] = useState("");
   const [confirmDel, setConfirmDel] = useState<string>("");
 
+  const { isAtivo: municipalAtivo, curriculo: curriculoMunicipalDados } = useCurriculoMunicipal();
+
   // Opções de aula (etapa antes de gerar o plano completo)
   const [opcoes, setOpcoes] = useState<OpcaoAula[]>([]);
   const [opcoesSel, setOpcoesSel] = useState<number[]>([]);
