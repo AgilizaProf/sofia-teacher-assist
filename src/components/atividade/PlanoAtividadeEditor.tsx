@@ -21,7 +21,7 @@ import {
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx, type SecaoImpressao } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { createAgendaEvent } from "@/lib/db/agenda";
-
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 /**
  * Exporta automaticamente um evento agendado no M4 para a Agenda Escolar,
  * marcando o id como "já importado" para evitar duplicação pelo importador
