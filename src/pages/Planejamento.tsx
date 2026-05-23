@@ -3008,7 +3008,7 @@ export function Planejamento() {
           <div className="pl-tabbar" role="tablist">
             {TABS.map((t) => (
               <button key={t.k} className={"pl-tab" + (m === t.k ? " active" : "")} onClick={() => setMudanca(t.k)} role="tab" aria-selected={m === t.k}>
-                <span className="num">{t.num}</span> {t.label}
+                <span className="num">{t.num}</span><span className="lbl">{t.label}</span>
               </button>
             ))}
           </div>
