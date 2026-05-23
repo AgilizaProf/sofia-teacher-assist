@@ -290,6 +290,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
           messages: next.map(({ role, content }) => ({ role, content })),
           routeContext: composedRouteContext,
           originRoute: loc.pathname,
+          userContext: userContext || undefined,
         },
       });
       let assistantStarted = false;
