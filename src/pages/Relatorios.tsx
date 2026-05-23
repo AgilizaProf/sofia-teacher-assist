@@ -1496,7 +1496,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
                     aria-label={`${isEiAluno(a.turma) ? "Avaliar por Campos de Experiência" : "Avaliar competências BNCC"} de ${a.nome}`}
                   >
-                    <ClipboardList size={13} /> {isEiAluno(a.turma) ? "Avaliar Campos" : "Avaliar BNCC"}
+                   <ClipboardList size={13} /> {isEiAluno(a.turma) ? "Avaliar Campos" : labelAvaliacao}
                   </button>
                   {a.status === "todo" && (
                     <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
