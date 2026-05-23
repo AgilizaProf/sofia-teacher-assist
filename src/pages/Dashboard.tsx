@@ -16,6 +16,8 @@ import { SofiaAdaptacaoCard } from "@/components/sofia/SofiaAdaptacaoCard";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { AtividadeFeed } from "@/components/dashboard/AtividadeFeed";
 import { CreditosPainel } from "@/components/dashboard/CreditosPainel";
+import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useActivityFeed, relativeTime, type ActivityType } from "@/lib/activity/activityLog";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
