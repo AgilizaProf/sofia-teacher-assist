@@ -33,7 +33,8 @@ export function useCurriculoMunicipal() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
-      const { data } = await (supabase as ReturnType<typeof import("@supabase/supabase-js").createClient>)
+     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
         .from("user_curriculo_municipal")
         .select("*")
         .eq("user_id", user.id)
