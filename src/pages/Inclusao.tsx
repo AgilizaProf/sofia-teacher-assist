@@ -3316,6 +3316,7 @@ ${corpo}
         onClose={() => setAdaptOpen(false)}
         aluno={selected ? { id: selected.id, name: selected.name, diag: selected.diag, cid: selected.cid, anoEscolar: selected.anoEscolar, anoReferenciaPedagogico: selected.anoReferenciaPedagogico, turma: selected.turma } : null}
         anamneseResumo={anamneseResumo}
+        peiResumo={selectedId ? buildPEIContext(peiByStudent[selectedId] as PEIData || {}) : ""}
         onSaved={(novo) => {
           setPlansByStudent((all) => ({ ...all, [novo.alunoId]: [novo, ...(all[novo.alunoId] || [])] }));
         }}
