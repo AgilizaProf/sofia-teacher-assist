@@ -83,7 +83,7 @@ REGRAS:
 - Retorne APENAS o JSON, sem texto adicional`;
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=${GOOGLE_KEY}`,
+     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GOOGLE_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
