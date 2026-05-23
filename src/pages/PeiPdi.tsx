@@ -113,7 +113,29 @@ export function PeiPdi() {
       laudo: aluno.cid ? `CID: ${aluno.cid}` : "",
       bimestre,
       contexto_adicional: contexto,
-      registros: [] as unknown[],
+      registros: (regByStudent[aluno.id] || []).slice(0, 60).map((r) => ({
+        when: r.when, cat: r.cat, body: r.body,
+      })),
+      anamneseResumo: (() => {
+        const data = anamByStudent[aluno.id] as Array<{ l?: string; obs?: string; items?: Array<{ d?: string; s?: string }> }> | undefined;
+        const obsGeral = (anamObsGeralByStudent[aluno.id] || "").trim();
+        if (!data && !obsGeral) return "";
+        const eixosTxt = (data || []).map((e) => {
+          const itens = (e.items || []).filter((i) => i.s !== "naoObservado").map((i) => i.d).join("; ");
+          const obs = (e.obs || "").trim();
+          if (!itens && !obs) return "";
+          return `${e.l}: ${itens}${obs ? ` — ${obs}` : ""}`;
+        }).filter(Boolean).join("\n");
+        return [eixosTxt, obsGeral ? `Observações gerais: ${obsGeral}` : ""].filter(Boolean).join("\n\n");
+      })(),
+      peiAnterior: (() => {
+        const pei = peiByStudent[aluno.id] || {};
+        const linhas = Object.entries(pei)
+          .filter(([, v]) => typeof v === "string" && (v as string).trim())
+          .map(([k, v]) => `${k}: ${v}`)
+          .join("\n");
+        return linhas || "";
+      })(),
       adaptacoes: [] as string[],
     };
 
