@@ -575,3 +575,11 @@ button[aria-label="Dispensar"] > * {
   .ag-cal-weekday { font-size: 0.65rem !important; letter-spacing: 0 !important; padding: 7px 0 !important; }
   .ag-cal-month { font-size: clamp(0.95rem, 4.8vw, 1.2rem) !important; }
 }
+/* ===== ALTO CONTRASTE ===== */
+html.high-contrast {
+  --color-text-soft: #3B4256;
+  --color-muted: #4A5568;
+}
+html.high-contrast body {
+  filter: contrast(1.12);
+}
