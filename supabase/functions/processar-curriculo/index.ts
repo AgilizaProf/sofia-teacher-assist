@@ -131,8 +131,8 @@ REGRAS:
 
     // Registrar uso no budget de IA do usuário
     try {
-      const { registerAiUsage } = await import("../_shared/ai-budget.ts");
-      await registerAiUsage({ userId, model: "gemini-2.5-flash-lite", inputTokens: 60000, outputTokens: habilidades.length * 50 });
+      const { recordUsage } = await import("../_shared/ai-budget.ts");
+      await recordUsage({ userId, model: "gemini-2.5-flash-lite", inTok: 60000, outTok: habilidades.length * 50 });
     } catch { /* não bloqueia se falhar */ }
 
     return new Response(
