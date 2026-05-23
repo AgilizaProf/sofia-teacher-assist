@@ -414,6 +414,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   ): Promise<PlanoAtividade | null> => {
     setErro("");
     const diarioBordo = lerDiarioBordo(turma);
+    const historicoFiltrado = historico
+      .filter((p) => (!turma || p.turma === turma) && (!disciplina || p.disciplina === disciplina))
+      .slice(0, 6)
+      .map((p) => {
+        const habs = (p.plano.habilidades ?? []).map((h) => h.codigo).filter(Boolean).join(", ");
+        return `${p.salvoEm?.slice(0, 10) ?? ""} — "${p.plano.titulo || p.titulo}"${habs ? ` [${habs}]` : ""}`;
+      });
     const payload = {
       modo, anoEscolar, disciplina, turma,
       tema: tema.trim(),
