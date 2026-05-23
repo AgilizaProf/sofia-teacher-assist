@@ -129,6 +129,12 @@ REGRAS:
       .update({ status: "ativo", habilidades, ativo: true, usar_municipal: true, updated_at: new Date().toISOString() })
       .eq("id", curriculo_id);
 
+    // Registrar uso no budget de IA do usuário
+    try {
+      const { registerAiUsage } = await import("../_shared/ai-budget.ts");
+      await registerAiUsage({ userId, model: "gemini-2.5-flash-lite", inputTokens: 60000, outputTokens: habilidades.length * 50 });
+    } catch { /* não bloqueia se falhar */ }
+
     return new Response(
       JSON.stringify({ ok: true, total: habilidades.length }),
       { headers: { ...cors, "Content-Type": "application/json" } }
