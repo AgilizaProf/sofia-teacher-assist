@@ -58,7 +58,8 @@ export function useCurriculoMunicipal() {
   const toggleUsarMunicipal = useCallback(async (usar: boolean) => {
     if (!curriculo) return;
     setCurriculo((c) => c ? { ...c, usar_municipal: usar } : c);
-    await supabase.from("user_curriculo_municipal").update({ usar_municipal: usar }).eq("id", curriculo.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("user_curriculo_municipal").update({ usar_municipal: usar }).eq("id", curriculo.id);
   }, [curriculo]);
 
   const remover = useCallback(async () => {
