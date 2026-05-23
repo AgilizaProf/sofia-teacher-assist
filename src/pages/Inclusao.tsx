@@ -857,11 +857,17 @@ export function Inclusao() {
   const students = useMemo(
     () =>
       allStudents.filter((s) => {
+        // Exclui apenas quem foi explicitamente marcado como "não PCD".
+        // Todos os demais registros em alunos_inclusao são PCD por definição —
+        // a tabela é exclusiva para inclusão. Garante que alunos cadastrados
+        // sem CID (ex.: diagnóstico informado só pelo nome) também apareçam.
         const pcdFlag = (s.pcd ?? "").toString().trim().toLowerCase();
-        const isPcdByFlag = pcdFlag !== "" && pcdFlag !== "nao";
-        const cidVal = (s.cid ?? "").trim();
-        const hasCid = cidVal !== "" && cidVal !== "CID não informado";
-        return isPcdByFlag || hasCid;
+        if (pcdFlag === "nao") return false;
+        const hasCid = (s.cid ?? "").trim() !== "" && (s.cid ?? "").trim() !== "CID não informado";
+        const hasCids = Array.isArray(s.cids) && s.cids.length > 0;
+        const hasDiag = (s.diag ?? "").trim() !== "" && (s.diag ?? "").trim() !== "Não informado";
+        const hasPcdFlag = pcdFlag !== "";
+        return hasCid || hasCids || hasDiag || hasPcdFlag || true;
       }),
     [allStudents],
   );
