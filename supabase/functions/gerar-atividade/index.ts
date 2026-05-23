@@ -175,7 +175,7 @@ serve(async (req) => {
       `Alunos PCD na turma:`,
       incluirPCD ? pcdResumo : "Adaptações PCD desativadas pela professora.",
       ``,
-      `Histórico recente da professora:`,
+      `Atividades já realizadas nesta turma/disciplina (NÃO repita temas, habilidades ou abordagens idênticas — sugira progressão ou variação):`,
       histResumo,
       ``,
       `DIÁRIO DE BORDO recente da turma (humor + observações + tags). `
