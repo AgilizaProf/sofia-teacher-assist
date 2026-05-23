@@ -599,8 +599,10 @@ export function Assistente() {
     const content = (raw ?? sofia.draft).trim();
     if (!content || loading) return;
     sofia.send(content);
+    void import("@/lib/admin/track").then(({ trackEvent }) =>
+      trackEvent("sofia_chat_mensagem", { origin: raw ? "shortcut" : "manual" })
+    );
   };
-
   // Agrupa conversas por data
   const { today, week, older } = useMemo(() => {
     const todayKey = brDateKey();
