@@ -164,6 +164,17 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const [unread, setUnread] = useState(0);
   const [proactive, setProactive] = useState<SofiaProactive | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
+  // Contexto pedagógico persistido — injetado no system prompt a cada mensagem.
+  const [userContext, setUserContextState] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("sofia_user_context") ?? "";
+  });
+  const setUserContext = useCallback((ctx: string) => {
+    setUserContextState(ctx);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sofia_user_context", ctx);
+    }
+  }, []);
   const proactiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingAutoSend = useRef<string | null>(null);
   // Marcador invisível de navegação — anexado ao próximo envio.
