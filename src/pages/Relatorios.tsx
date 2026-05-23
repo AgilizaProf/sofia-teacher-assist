@@ -2387,7 +2387,7 @@ ${parecerHtml}
               </div>
               <div className="rel-modal-foot" style={{ flexWrap: "wrap" }}>
                 <button className="rel-btn-card" onClick={() => { setAlunoModal(null); setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }); }}>
-                  <ClipboardList size={13} /> Avaliar BNCC
+                  <ClipboardList size={13} /> {labelAvaliacao}
                 </button>
                 {isDone && (
                   <>
