@@ -3326,7 +3326,9 @@ ${corpo}
       <PlanoPeriodoModal
         open={periodoOpen}
         onClose={() => setPeriodoOpen(false)}
-        aluno={selected ? { id: selected.id, name: selected.name, diag: selected.diag, cid: selected.cid, anoEscolar: selected.anoEscolar, anoReferenciaPedagogico: selected.anoReferenciaPedagogico, turma: selected.turma } : null}
+       aluno={selected ? { id: selected.id, name: selected.name, diag: selected.diag, cid: selected.cid, anoEscolar: selected.anoEscolar, anoReferenciaPedagogico: selected.anoReferenciaPedagogico, turma: selected.turma } : null}
+        anamneseResumo={anamneseResumo}
+        peiResumo={selectedId ? buildPEIContext(peiByStudent[selectedId] as PEIData || {}) : ""}
         anamneseResumo={anamneseResumo}
         onSavedMany={(novos) => {
           if (!novos.length) return;
