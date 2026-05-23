@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
-import { useLocation, useParams } from "@tanstack/react-router";
-import type { SofiaContext, RouteKey, SofiaUser, SofiaAluno, SofiaTurma, ProximaAula, DiaSemana, Periodo } from "./types";
-import { getMockAccount, subscribeMockAccount, PRO_DATASET, type MockAccount } from "./mockAccount";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useLocation } from "@tanstack/react-router";
+import type { SofiaContext, RouteKey, SofiaUser, DiaSemana, Periodo } from "./types";
 import { supabase } from "@/integrations/supabase/client";
+import { useSofiaUserDataOptional } from "@/lib/sofia/SofiaUserContext";
+import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 
 // ----- Helpers -----
 function routeKeyOf(path: string): RouteKey {
@@ -20,7 +21,6 @@ function temporal(): SofiaContext["temporal"] {
   const dias: DiaSemana[] = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
   const h = d.getHours();
   const periodo: Periodo = h < 12 ? "manha" : h < 18 ? "tarde" : "noite";
-  // Fim de bimestre (regra simples: bimestres terminam em mar/jun/ago/dez ~ último dia útil).
   const fimBim = [2, 5, 7, 11].map((m) => new Date(d.getFullYear(), m + 1, 0));
   const proxFim = fimBim.find((x) => x.getTime() >= d.getTime());
   const fim_de_bimestre_em_dias = proxFim
@@ -35,117 +35,37 @@ function temporal(): SofiaContext["temporal"] {
   };
 }
 
-function buildProximaAula(turma: SofiaTurma | null): ProximaAula | null {
-  if (!turma) return null;
-  // Mock para conta Pro: "próxima aula" é sempre a próxima hora cheia, disciplina rotativa por dia.
-  const d = new Date();
-  d.setMinutes(0, 0, 0);
-  d.setHours(d.getHours() + 1);
-  const disciplinas = ["Português", "Matemática", "Ciências", "História", "Geografia", "Arte"];
-  const bnccs = ["EF02LP01", "EF02MA08", "EF02CI03", "EF02HI04", "EF02GE05", "EF15AR02"];
-  const idx = d.getDay() % disciplinas.length;
-  return {
-    disciplina: disciplinas[idx],
-    bncc_codigo: bnccs[idx],
-    horario: d.toISOString(),
-    minutos_ate: Math.max(1, Math.round((d.getTime() - Date.now()) / 60000)),
-    turma: turma.nome,
-  };
-}
-
-function buildContext(account: MockAccount, route: RouteKey, alunoId: string | null): SofiaContext {
-  const temp = temporal();
-  if (account === "pro_cheio") {
-    const turma: SofiaTurma = PRO_DATASET.turma;
-    const alunos = PRO_DATASET.alunos as SofiaAluno[];
-    const aluno_atual: SofiaAluno | null =
-      route === "inclusao" && alunoId ? alunos.find((a) => a.id === alunoId) ?? alunos[0] : null;
-    const user: SofiaUser = PRO_DATASET.user;
-    return {
-      route,
-      user,
-      entity: {
-        turma_atual: turma,
-        aluno_atual,
-        todos_alunos_pcd: alunos.map((a) => ({ nome: a.primeiro_nome, condicao: a.condicao_label ?? "" })),
-      },
-      dataState: {
-        turmas_count: 1,
-        alunos_count: turma.total_alunos,
-        pareceres_finalizados: PRO_DATASET.pareceres.finalizados,
-        pareceres_total_bimestre: PRO_DATASET.pareceres.total,
-        eventos_agenda_mes: PRO_DATASET.eventos_mes,
-        proxima_aula: buildProximaAula(turma),
-      },
-      temporal: temp,
-    };
-  }
-  // free vazio
-  const user: SofiaUser = {
-    nome: "Educador(a)",
-    primeiro_nome: "Educador(a)",
-    plano: "free",
-    streak_dias: 0,
-    horas_economizadas_mes: 0,
-    creditos_usados: 0,
-    creditos_total: 3000,
-  };
-  return {
-    route,
-    user,
-    entity: { turma_atual: null, aluno_atual: null, todos_alunos_pcd: [] },
-    dataState: {
-      turmas_count: 0,
-      alunos_count: 0,
-      pareceres_finalizados: 0,
-      pareceres_total_bimestre: 0,
-      eventos_agenda_mes: 0,
-      proxima_aula: null,
-    },
-    temporal: temp,
-  };
-}
-
 // ----- React context -----
 const Ctx = createContext<SofiaContext | null>(null);
 
 export function SofiaContextProvider({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
   const route = routeKeyOf(loc.pathname);
-  // /inclusao usa search param `aluno` para o detail view
-  const search = loc.search as Record<string, unknown>;
-  const alunoId = typeof search?.aluno === "string" ? search.aluno : null;
 
-  const [account, setAccount] = useState<MockAccount>(() => (typeof window === "undefined" ? "free_vazio" : getMockAccount()));
-  const [tick, setTick] = useState(0);
   const [authUser, setAuthUser] = useState<{ nome: string; primeiro_nome: string } | null>(null);
   const [planInfo, setPlanInfo] = useState<{ plano: "free" | "pro"; ciclo: "mensal" | "anual" | null } | null>(null);
+  const [tick, setTick] = useState(0);
+
+  // ✅ Dados reais do Supabase
+  const userData = useSofiaUserDataOptional();
 
   useEffect(() => {
-    const unsub = subscribeMockAccount(setAccount);
-    const onMutate = () => setTick((t) => t + 1);
-    window.addEventListener("sofia:mutate", onMutate);
-    const interval = setInterval(() => setTick((t) => t + 1), 60_000); // recalcula minutos_ate
-    return () => { unsub(); window.removeEventListener("sofia:mutate", onMutate); clearInterval(interval); };
+    const interval = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Carrega o nome real do usuário autenticado (perfil do Supabase) para
-  // usar no header / saudações da Sofia.
+  // Carrega nome e plano do usuário autenticado
   useEffect(() => {
     let mounted = true;
+
     async function loadProfile(uid: string, fallbackEmail: string | null, metaName: string | null) {
       type ProfileRow = { display_name: string | null; email: string | null };
       let data: ProfileRow | null = null;
       try {
-        const res = await supabase
-          .from("profiles")
-          .select("display_name, email")
-          .eq("user_id", uid)
-          .maybeSingle();
+        const res = await supabase.from("profiles").select("display_name, email").eq("user_id", uid).maybeSingle();
         data = (res.data ?? null) as ProfileRow | null;
       } catch (err) {
-        // Falha de rede/permissão não pode travar a Sofia — usa fallback.
-        console.warn("[SofiaContext] loadProfile falhou, usando fallback:", err);
+        console.warn("[SofiaContext] loadProfile falhou:", err);
       }
       if (!mounted) return;
       const nome =
@@ -154,16 +74,12 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         (data?.email && data.email.split("@")[0]) ||
         (fallbackEmail && fallbackEmail.split("@")[0]) ||
         "Educador(a)";
-      const primeiro = nome.split(" ")[0];
-      setAuthUser({ nome, primeiro_nome: primeiro });
+      setAuthUser({ nome, primeiro_nome: nome.split(" ")[0] });
     }
+
     async function loadPlan(uid: string) {
       try {
-        const { data } = await supabase
-          .from("subscriptions")
-          .select("plano, ciclo, status, current_period_end")
-          .eq("user_id", uid)
-          .maybeSingle();
+        const { data } = await supabase.from("subscriptions").select("plano, ciclo, status, current_period_end").eq("user_id", uid).maybeSingle();
         if (!mounted) return;
         const row = data as { plano?: string; ciclo?: string | null; status?: string; current_period_end?: string | null } | null;
         const stillValid = !row?.current_period_end || new Date(row.current_period_end) > new Date();
@@ -175,6 +91,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         if (mounted) setPlanInfo({ plano: "free", ciclo: null });
       }
     }
+
     supabase.auth.getSession().then(({ data }) => {
       const u = data.session?.user;
       if (!u) { setAuthUser(null); setPlanInfo(null); return; }
@@ -185,41 +102,41 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         (typeof meta.full_name === "string" ? meta.full_name : null);
       loadProfile(u.id, u.email ?? null, metaName);
       loadPlan(u.id);
-    }).catch((err) => {
-      console.warn("[SofiaContext] getSession falhou:", err);
-      if (mounted) setAuthUser(null);
-    });
+    }).catch(() => { if (mounted) setAuthUser(null); });
+
     let sub: { subscription: { unsubscribe: () => void } } | null = null;
     try {
       const res = supabase.auth.onAuthStateChange((_e, s) => {
-      const u = s?.user;
-      if (!u) { setAuthUser(null); setPlanInfo(null); return; }
-      const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
-      const metaName =
-        (typeof meta.display_name === "string" ? meta.display_name : null) ||
-        (typeof meta.name === "string" ? meta.name : null) ||
-        (typeof meta.full_name === "string" ? meta.full_name : null);
-      loadProfile(u.id, u.email ?? null, metaName);
-      loadPlan(u.id);
+        const u = s?.user;
+        if (!u) { setAuthUser(null); setPlanInfo(null); return; }
+        const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
+        const metaName =
+          (typeof meta.display_name === "string" ? meta.display_name : null) ||
+          (typeof meta.name === "string" ? meta.name : null) ||
+          (typeof meta.full_name === "string" ? meta.full_name : null);
+        loadProfile(u.id, u.email ?? null, metaName);
+        loadPlan(u.id);
       });
       sub = res.data;
     } catch (err) {
-      console.warn("[SofiaContext] onAuthStateChange falhou ao registrar:", err);
+      console.warn("[SofiaContext] onAuthStateChange falhou:", err);
     }
+
     const onProfileUpdate = () => {
       supabase.auth.getSession().then(({ data }) => {
         const u = data.session?.user;
-        if (u) { loadProfile(u.id, u.email ?? null, null); loadPlan(u.id); }
-      }).catch(() => { /* ignore */ });
+        if (u) loadProfile(u.id, u.email ?? null, null);
+      }).catch(() => {});
     };
-    window.addEventListener("sofia:profile-updated", onProfileUpdate);
     const onPlanUpdate = () => {
       supabase.auth.getSession().then(({ data }) => {
         const u = data.session?.user;
         if (u) loadPlan(u.id);
-      }).catch(() => { /* ignore */ });
+      }).catch(() => {});
     };
+    window.addEventListener("sofia:profile-updated", onProfileUpdate);
     window.addEventListener("sofia:plan-updated", onPlanUpdate);
+
     return () => {
       mounted = false;
       try { sub?.subscription.unsubscribe(); } catch { /* ignore */ }
@@ -228,19 +145,91 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
     };
   }, []);
 
-  const value = useMemo(() => {
-    const base = buildContext(account, route, alunoId);
-    const user = { ...base.user };
-    if (authUser) {
-      user.nome = authUser.nome;
-      user.primeiro_nome = authUser.primeiro_nome;
+  const value = useMemo<SofiaContext>(() => {
+    const temp = temporal();
+
+    // ── Usuário ──────────────────────────────────────────────────────────
+    const user: SofiaUser = {
+      nome: authUser?.nome ?? "Educador(a)",
+      primeiro_nome: authUser?.primeiro_nome ?? "Educador(a)",
+      plano: planInfo?.plano ?? "free",
+      ciclo: planInfo?.ciclo ?? null,
+      streak_dias: 0,
+      horas_economizadas_mes: 0,
+      creditos_usados: 0,
+      creditos_total: 3000,
+    };
+
+    // ── Dados reais do Supabase ─────────────────────────────────────────
+    if (!userData) {
+      // Ainda carregando — retorna contexto mínimo sem mock
+      return {
+        route,
+        user,
+        entity: { turma_atual: null, aluno_atual: null, todos_alunos_pcd: [] },
+        dataState: { turmas_count: 0, alunos_count: 0, pareceres_finalizados: 0, pareceres_total_bimestre: 0, eventos_agenda_mes: 0, proxima_aula: null },
+        temporal: temp,
+      };
     }
-    if (planInfo) {
-      user.plano = planInfo.plano;
-      user.ciclo = planInfo.ciclo;
-    }
-    return { ...base, user };
-  }, [account, route, alunoId, tick, authUser, planInfo]);
+
+    const turmas = userData.turmas;
+    const alunos = userData.alunos;
+    const alunosPCD = userData.alunosPCD;
+
+    // Turma atual: primeira turma cadastrada (ou null)
+    const primeiraTurma = turmas[0] ?? null;
+    const turma_atual = primeiraTurma
+      ? {
+          id: primeiraTurma.id,
+          nome: primeiraTurma.nome,
+          ano: primeiraTurma.ano || "",
+          total_alunos: primeiraTurma.total_alunos,
+        }
+      : null;
+
+    // Nível de ensino para o routeContext
+    const nivel = turma_atual
+      ? inferirNivelEnsino(turma_atual.ano) ?? inferirNivelEnsino(turma_atual.nome)
+      : null;
+
+    // Todos alunos PCD com nome e condição
+    const todos_alunos_pcd = alunosPCD.map((a) => ({
+      nome: a.primeiro_nome,
+      condicao: a.pcd_codigo ?? "",
+    }));
+
+    // Agenda do mês (conta eventos do mês corrente)
+    const agora = new Date();
+    const eventos_agenda_mes = (userData.agenda ?? []).filter((e) => {
+      try {
+        const d = new Date(e.date);
+        return d.getFullYear() === agora.getFullYear() && d.getMonth() === agora.getMonth();
+      } catch { return false; }
+    }).length;
+
+    return {
+      route,
+      user,
+      entity: {
+        turma_atual,
+        aluno_atual: null,
+        todos_alunos_pcd,
+        // @ts-ignore — campo extra para o useRouteContext usar nivel
+        nivel_ensino: nivel,
+      },
+      dataState: {
+        turmas_count: turmas.length,
+        alunos_count: alunos.length,
+        pareceres_finalizados: 0,
+        pareceres_total_bimestre: alunos.length,
+        eventos_agenda_mes,
+        proxima_aula: null,
+      },
+      temporal: temp,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route, authUser, planInfo, userData, tick]);
+
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
@@ -250,7 +239,6 @@ export function useSofiaContext(): SofiaContext {
   return c;
 }
 
-/** Versão tolerante: retorna null quando não há provider (ex.: SSR ou árvore acima do provider). */
 export function useSofiaContextOptional(): SofiaContext | null {
   return useContext(Ctx);
 }
