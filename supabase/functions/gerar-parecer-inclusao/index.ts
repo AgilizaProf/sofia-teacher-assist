@@ -53,6 +53,14 @@ LINGUAGEM (regras invioláveis):
 - Tom positivo, construtivo e não-capacitista. Sem rótulos ou diagnósticos novos.
 - Português brasileiro corrente, voz ativa, presente do indicativo quando possível.
 
+PONTUAÇÃO E ESCRITA (inviolável):
+- Use APENAS: letras, números, acentuação gráfica (á é í ó ú â ê ô ã õ ç à) e parênteses ( ).
+- PROIBIDO usar: travessão (—), hífen como separador ( - ), aspas angulares (« »), barras (/ \\), sinais de maior/menor (< >), asteriscos (*), colchetes [ ], chaves { }, arroba (@), sustenido (#), pipes (|), underscores (_) ou qualquer outro símbolo tipográfico.
+- Para separar ideias dentro de uma frase, use vírgula ou ponto final. Nunca use travessão ou hífen com essa função.
+- Não use bullet points, listas com hífen ou markdown dentro dos textos narrativos — escreva em parágrafos corridos.
+- Sem palavras inventadas, sem anglicismos desnecessários, sem linguagem jurídica ou clínica sem explicação em seguida.
+- Frases completas com sujeito, verbo e complemento. Sem fragmentos de frase.
+
 REGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "diário", "anamnese", "PEI", "notas do(a) professor(a)" ou qualquer outra fonte. Escreva sempre como conhecimento direto e consolidado sobre o(a) aluno(a). Evite "segundo as observações", "de acordo com os registros", "conforme observado", "com base na anamnese", "consta no PEI", "as observações indicam" — descreva os fatos diretamente.${
       refBlock ? `\n\nANO DE REFERÊNCIA PEDAGÓGICO (regra inviolável): ${refBlock}` : ""
     }${peiRules}`;
