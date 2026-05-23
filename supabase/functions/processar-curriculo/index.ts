@@ -23,6 +23,17 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Parâmetros inválidos." }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
+    // Verificar ownership — garante que o curriculo_id pertence ao userId autenticado
+    const { data: ownerCheck } = await admin
+      .from("user_curriculo_municipal")
+      .select("id")
+      .eq("id", curriculo_id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!ownerCheck) {
+      return new Response(JSON.stringify({ error: "Currículo não encontrado." }), { status: 404, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+
     // 1. Baixar o PDF do Storage
     const { data: fileData, error: fileErr } = await admin.storage
       .from("curriculos-municipais")
