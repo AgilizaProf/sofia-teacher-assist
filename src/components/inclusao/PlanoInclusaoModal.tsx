@@ -44,6 +44,7 @@ type Props = {
   onClose: () => void;
   aluno: Aluno | null;
   anamneseResumo: string;
+  peiResumo?: string;
   onSaved: (plano: PlanoInclusao) => void;
 };
 
