@@ -1553,9 +1553,10 @@ ${corpo}
           intervalo: intervaloLabel,
           formato: relFormato,
           anamneseResumo,
+          anamAnteriorResumo,
+          registros: [...regs, ...m6DoAluno],
           peiResumo,
           peiAtualizadoEm,
-          registros: regs,
           anoEscolar: selected.anoEscolar || "",
           anoReferenciaPedagogico: selected.anoReferenciaPedagogico || "",
           anoReferenciaInstrucao: buildAnoReferenciaPromptBlock(
