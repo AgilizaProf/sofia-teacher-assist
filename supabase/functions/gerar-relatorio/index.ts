@@ -62,7 +62,11 @@ serve(async (req) => {
       ? `\n\nALUNOS COM NECESSIDADES ESPECÍFICAS NA TURMA:\n${(alunos_pcd as AlunoPcd[]).map((a) => `- ${a.nome}${a.condicao ? ` (${a.condicao})` : ""}`).join("\n")}\n- Mencione de forma respeitosa e não-capacitista as conquistas desses alunos no relatório, quando os registros permitirem. Use linguagem que valorize o percurso individual.`
       : "";
 
+   const usandoMunicipal = curriculo_municipal && Array.isArray(curriculo_municipal.habilidades) && curriculo_municipal.habilidades.length > 0;
+    const referencialLabel = usandoMunicipal ? `Currículo Municipal de ${curriculo_municipal!.municipio}` : "BNCC";
+
     const sys = `Você é a Sofia, assistente pedagógica. Gere um relatório ${periodo} narrativo, baseado APENAS nos registros do diário de bordo fornecidos. Devolva JSON estrito.
+${usandoMunicipal ? `\nREFERENCIAL CURRICULAR: use o Currículo Municipal de ${curriculo_municipal!.municipio} como base — NÃO cite códigos BNCC. Cite os códigos do currículo municipal quando relevante.` : ""}
 
 PÚBLICO-ALVO (inviolável): este relatório será LIDO PELAS FAMÍLIAS dos(as) alunos(as). Escreva para mães, pais e responsáveis — pessoas leigas em pedagogia.
 
