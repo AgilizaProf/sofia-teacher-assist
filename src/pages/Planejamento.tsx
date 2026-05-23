@@ -68,13 +68,9 @@ const css = `
 .pl-hero .hbc.outline:hover{background:rgba(255,255,255,.12);color:#fff;}
 @media(max-width:880px){.pl-hero h1{font-size:22px;}}
 
-.pl-tabbar{margin:18px 24px 0;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker);border-radius:11px;padding:6px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;align-items:stretch;}
-@media(max-width:1100px){.pl-tabbar{grid-template-columns:repeat(4,minmax(0,1fr));}}
-@media(max-width:720px){.pl-tabbar{grid-template-columns:repeat(2,minmax(0,1fr));}}
-@media(max-width:720px){.pl-tabbar .pl-tab:last-child:nth-child(odd){grid-column:2;}}
-.pl-tab{min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 10px;border-radius:7px;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:.15s;overflow:hidden;white-space:nowrap;}
-.pl-tab .num{flex:0 0 auto;}
-.pl-tab .num{display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.pl-tabbar{margin:18px 24px 0;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker);border-radius:11px;padding:6px;display:flex;flex-wrap:nowrap;gap:4px;align-items:stretch;overflow-x:auto;}
+.pl-tab{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 10px;border-radius:7px;font-size:12.5px;font-weight:500;color:#fff;cursor:pointer;transition:.15s;overflow:hidden;white-space:nowrap;}
+.pl-tab .num{flex:0 0 auto;display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .pl-tab:hover{background:rgba(255,255,255,.08);color:#fff;}
 .pl-tab.active{background:linear-gradient(135deg,var(--orange),#FF9466);color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.35);}
 .pl-tab.active .num{background:rgba(255,255,255,.22);color:#fff;}
