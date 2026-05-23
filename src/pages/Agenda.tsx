@@ -244,10 +244,67 @@ const MONTHS_PT = [
 
 function AgendaSofiaSide({ onImportM4, m4Count }: { onImportM4: () => void; m4Count: number }) {
   const ctx = useSofiaContext();
-  const sofia = useSofia();
   const mes = MONTHS_PT[new Date().getMonth()].toLowerCase();
   const eventos = ctx.dataState.eventos_agenda_mes;
   const horas = ctx.user.horas_economizadas_mes;
+  const turma = ctx.entity.turma_atual?.nome;
+  const pcds = ctx.entity.todos_alunos_pcd;
+  const fimBimestre = ctx.temporal.fim_de_bimestre_em_dias;
+  const periodo = ctx.temporal.periodo;
+
+  const msg = (() => {
+    if (eventos === 0) {
+      if (m4Count > 0) {
+        return (
+          <>
+            Você tem <b>{m4Count}</b> atividade{m4Count > 1 ? "s" : ""} planejada{m4Count > 1 ? "s" : ""} no M4 ainda não na agenda de <b>{mes}</b>. Quer trazer agora?
+          </>
+        );
+      }
+      if (turma) {
+        return (
+          <>
+            Agenda de <b>{mes}</b> vazia para a <b>{turma}</b>. Posso preencher os marcos do mês — fechamento de bimestre, conselho de classe e reuniões. Leva 30 segundos.
+          </>
+        );
+      }
+      return (
+        <>
+          Sua agenda de <b>{mes}</b> tá em branco. Posso preencher os marcos do mês: reunião pedagógica, fechamento do bimestre, conselho de classe e feriados.
+        </>
+      );
+    }
+
+    if (fimBimestre !== null && fimBimestre !== undefined && fimBimestre <= 14) {
+      return (
+        <>
+          Faltam <b>{fimBimestre} dia{fimBimestre !== 1 ? "s" : ""}</b> para o fim do bimestre. Você tem <b>{eventos}</b> evento{eventos > 1 ? "s" : ""} em <b>{mes}</b> — quer revisar o que ainda precisa fechar?
+        </>
+      );
+    }
+    if (pcds.length > 0) {
+      const nomePcd = pcds[0].nome.split(" ")[0];
+      return (
+        <>
+          {periodo === "manha" ? "Bom dia" : periodo === "tarde" ? "Boa tarde" : "Boa noite"}! Você tem <b>{eventos}</b> evento{eventos > 1 ? "s" : ""} em <b>{mes}</b>. Lembrei que <b>{nomePcd}</b>{pcds.length > 1 ? ` e mais ${pcds.length - 1}` : ""} tem{pcds.length > 1 ? "têm" : ""} atendimento este mês — está no planejamento?
+        </>
+      );
+    }
+    if (m4Count > 0) {
+      return (
+        <>
+          Você tem <b>{eventos}</b> evento{eventos > 1 ? "s" : ""} em <b>{mes}</b> e <b>{m4Count}</b> atividade{m4Count > 1 ? "s" : ""} do planejamento ainda não na agenda. Quer sincronizar?
+        </>
+      );
+    }
+    return (
+      <>
+        Você tem <b>{eventos}</b> evento{eventos > 1 ? "s" : ""} em <b>{mes}</b>
+        {turma ? <>, <b>{turma}</b></> : ""}. Tudo certo por aqui!
+      </>
+    );
+  })();
+
   return (
     <>
       <div className="ag-sofia-card">
@@ -255,31 +312,15 @@ function AgendaSofiaSide({ onImportM4, m4Count }: { onImportM4: () => void; m4Co
           <div className="ag-sofia-avatar">S</div>
           <div className="ag-sofia-name">Sofia <small>Sua assistente · online</small></div>
         </div>
-        {eventos === 0 ? (
-          <>
-            <div className="ag-sofia-msg">
-              Sua agenda de <b>{mes}</b> tá em branco. Posso já preencher os marcos do mês: reunião pedagógica, fechamento do bimestre, conselho de classe e feriados. 30 segundos.
-            </div>
-            <div className="ag-sofia-actions">
-              <button className="ag-sofia-action" onClick={onImportM4}>
-                <span className="ag-sofia-action-ic">🗂️</span>
-                <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="ag-sofia-msg">
-              Você tem <b>{eventos}</b> evento(s) este mês. Quer que eu destaque os que precisam de preparação?
-            </div>
-            <div className="ag-sofia-actions">
-              <button className="ag-sofia-action" onClick={onImportM4}>
-                <span className="ag-sofia-action-ic">🗂️</span>
-                <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
-              </button>
-            </div>
-          </>
-        )}
+        <>
+          <div className="ag-sofia-msg">{msg}</div>
+          <div className="ag-sofia-actions">
+            <button className="ag-sofia-action" onClick={onImportM4}>
+              <span className="ag-sofia-action-ic">🗂️</span>
+              <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
+            </button>
+          </div>
+        </>
       </div>
       <div className="ag-stat-card">
         <div className="ag-stat-head"><Clock size={11} style={{ display: "inline", marginRight: 4 }} />Você esta semana</div>
