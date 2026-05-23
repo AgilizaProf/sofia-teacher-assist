@@ -376,6 +376,43 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     setOpcoesSel([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turma, alunosPCDDaTurma.length]);
+  // Mapeia nome+turma do alunoFoco para o ID do inc_students
+  // (os IDs do SofiaUserContext são slugs, os do inc_students são UUIDs do Supabase)
+  const peiResumoBySlug = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const s of incStudents) {
+      const pei = peiByStudentRaw[s.id] || {};
+      const linhas = Object.entries(pei)
+        .filter(([k, v]) => typeof v === "string" && (v as string).trim() && !["id","alunoId","atualizadoEm","versao"].includes(k))
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("\n");
+      if (linhas) {
+        const slug = `${s.classRef || ""}-${s.name}-${s.createdAt || ""}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        out[slug] = linhas;
+      }
+    }
+    return out;
+  }, [incStudents, peiByStudentRaw]);
+
+  const anamResumoBySlug = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const s of incStudents) {
+      const data = anamByStudentRaw[s.id] as Array<{ l?: string; obs?: string; items?: Array<{ d?: string; s?: string }> }> | undefined;
+      const obsGeral = (anamObsGeralRaw[s.id] || "").trim();
+      if (!data && !obsGeral) continue;
+      const eixosTxt = (data || []).map((e) => {
+        const itens = (e.items || []).filter((i) => i.s !== "naoObservado").map((i) => i.d).join("; ");
+        return itens ? `${e.l}: ${itens}` : "";
+      }).filter(Boolean).join("\n");
+      const resumo = [eixosTxt, obsGeral].filter(Boolean).join("\n\n");
+      if (resumo) {
+        const slug = `${s.classRef || ""}-${s.name}-${s.createdAt || ""}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        out[slug] = resumo;
+      }
+    }
+    return out;
+  }, [incStudents, anamByStudentRaw, anamObsGeralRaw]);
+
   const alunoFoco =
     modo === "pcd" ? alunosPCDDaTurma[alunoFocoIdx] ?? null : null;
 
