@@ -536,6 +536,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             nome: alunoFoco.primeiro_nome,
             codigo: alunoFoco.pcd_codigo || undefined,
             anotacoes: alunoFoco.pcd_anotacoes || undefined,
+            peiResumo: peiResumoBySlug[alunoFoco.id] || undefined,
+            anamneseResumo: anamResumoBySlug[alunoFoco.id] || undefined,
           }
         : null,
       historico: historicoFiltrado,
