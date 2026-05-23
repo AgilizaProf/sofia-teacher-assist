@@ -1455,6 +1455,8 @@ ${corpo}
     peiConsiderado?: boolean;
   };
   const [parecerByStudent, setParecerByStudent] = usePersistentState<Record<string, Parecer>>("inc_parecer", {});
+  const [anamHistByStudent, setAnamHistByStudent] = usePersistentState<Record<string, { resumo: string; data: string }[]>>("inc_anam_hist_v1", {});
+  const [m6EntriesGlobal] = usePersistentState<Array<{ id: string; emoji?: string; title?: string; text?: string; tags?: string[]; date?: string; turma?: string; atividadeTitulo?: string }>>("plan_m6_entries", []);
   const [gerandoParecer, setGerandoParecer] = useState(false);
   const parecerAtual = (selectedId && parecerByStudent[selectedId]) || null;
 
