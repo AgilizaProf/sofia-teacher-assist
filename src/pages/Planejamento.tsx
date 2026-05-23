@@ -2508,6 +2508,7 @@ export function Planejamento() {
         stats,
         relatorio_anterior: relAnterior,
         alunos_pcd: alunosPcdTurma,
+        curriculo_municipal: curriculoMunicipalAtivo && curriculoMunicipalDados ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] } : null,
         entries: m6RelEntries.map((e) => ({
           emoji: e.emoji,
           title: e.title,
