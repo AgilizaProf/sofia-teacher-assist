@@ -2210,33 +2210,53 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className={`cmdk-overlay ${cmdk ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setCmdk(false); }}>
-        <div className="cmdk">
-          <input className="cmdk-input" placeholder="O que você quer fazer? (ex: gerar parecer, adicionar aluno...)" autoComplete="off" autoFocus={cmdk} />
-          <div className="cmdk-list">
-              <div className="cmdk-section">Sugestões da IA</div>
-              <DashboardCmdkSuggestions />
-            <div className="cmdk-section">Ir para</div>
-            <div className="cmdk-item">
-              <Svg c={<rect x="3" y="4" width="18" height="18" rx="2"/>} />
-              Planejamento<span className="cmdk-item-shortcut">G P</span>
-            </div>
-            <div className="cmdk-item">
-              <Svg c={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />
-              Inclusão<span className="cmdk-item-shortcut">G I</span>
-            </div>
-            <div className="cmdk-section">Ações rápidas</div>
-            <div className="cmdk-item">
-              <Svg c={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />
-              Cadastrar novo aluno<span className="cmdk-item-shortcut">N A</span>
-            </div>
-            <div className="cmdk-item">
-              <Svg c={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />
-              Importar lista de alunos (CSV)
+      <{cmdk && (() => {
+        const cmdkItems = [
+          { label: "Página inicial", shortcut: "G H", icon: <Svg c={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />, action: () => { navigate({ to: "/" }); setCmdk(false); }, keywords: "home dashboard início" },
+          { label: "Assistente IA (Sofia)", shortcut: "G S", icon: <Svg c={<><path d="M12 2v3"/><path d="M12 19v3"/><circle cx="12" cy="12" r="6"/><path d="M5 12H2"/><path d="M22 12h-3"/></>} />, action: () => { navigate({ to: "/assistente" }); setCmdk(false); }, keywords: "sofia chat ia" },
+          { label: "Planejamento", shortcut: "G P", icon: <Svg c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />, action: () => { navigate({ to: "/planejamento" }); setCmdk(false); }, keywords: "aulas plano" },
+          { label: "Relatórios e pareceres", shortcut: "G R", icon: <Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />, action: () => { navigate({ to: "/relatorios" }); setCmdk(false); }, keywords: "parecer bimestral bncc" },
+          { label: "Inclusão", shortcut: "G I", icon: <Svg c={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />, action: () => { navigate({ to: "/inclusao" }); setCmdk(false); }, keywords: "pcd anamnese pei" },
+          { label: "Agenda escolar", shortcut: "G A", icon: <Svg c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />, action: () => { navigate({ to: "/agenda" }); setCmdk(false); }, keywords: "calendario eventos" },
+          { label: "Configurações", icon: <Svg c={<><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></>} />, action: () => { navigate({ to: "/configuracoes" }); setCmdk(false); }, keywords: "perfil ajustes conta" },
+          { label: "Cadastrar novo aluno", shortcut: "N A", icon: <Svg c={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />, action: () => { setCmdk(false); setStudentOpen(true); }, keywords: "criar adicionar" },
+        ];
+        const [cmdkQ, setCmdkQ] = [cmdkQuery, setCmdkQuery];
+        const filtered = cmdkQ.trim()
+          ? cmdkItems.filter(i => (i.label + " " + (i.keywords || "")).toLowerCase().includes(cmdkQ.trim().toLowerCase()))
+          : cmdkItems;
+        return (
+          <div className="cmdk-overlay show" onClick={(e) => { if (e.target === e.currentTarget) { setCmdk(false); setCmdkQuery(""); } }}>
+            <div className="cmdk">
+              <input
+                className="cmdk-input"
+                placeholder="Buscar páginas, ações, atalhos…"
+                autoComplete="off"
+                autoFocus
+                value={cmdkQ}
+                onChange={(e) => setCmdkQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") { setCmdk(false); setCmdkQuery(""); }
+                  if (e.key === "Enter" && filtered.length > 0) { filtered[0].action(); setCmdkQuery(""); }
+                }}
+              />
+              <div className="cmdk-list">
+                {filtered.length === 0 && (
+                  <div style={{ padding: "20px 14px", textAlign: "center", color: "#6B7691", fontSize: 13 }}>Nada encontrado para "{cmdkQ}".</div>
+                )}
+                {filtered.length > 0 && <div className="cmdk-section">Ir para / Ações</div>}
+                {filtered.map((item, i) => (
+                  <div key={i} className="cmdk-item" onClick={() => { item.action(); setCmdkQuery(""); }}>
+                    {item.icon}
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {item.shortcut && <span className="cmdk-item-shortcut">{item.shortcut}</span>}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       <div
         className={`cmdk-overlay ${studentDetail ? "show" : ""}`}
