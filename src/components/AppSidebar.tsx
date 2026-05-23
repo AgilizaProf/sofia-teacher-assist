@@ -273,7 +273,6 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
         </div>
       </div>
     </aside>
-    {usingInternal && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />}
     </>
   );
 }
