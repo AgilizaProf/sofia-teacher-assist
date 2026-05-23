@@ -1745,7 +1745,83 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className={`cmdk-overlay ${classOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setClassOpen(false); }}>
+      <div className={`cmdk-overlay ${curricuoOpen ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setCurricuoOpen(false); }}>
+        <div className="school-modal" role="dialog" aria-label="Currículo Municipal" style={{ maxWidth: 520 }}>
+          <div className="school-modal-head">
+            <div className="school-modal-icon" style={{ background: "linear-gradient(135deg,#3B82F6,#60A5FA)" }}>
+              <Svg c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>} />
+            </div>
+            <div>
+              <div className="school-modal-title">Currículo Municipal</div>
+              <div className="school-modal-sub">Envie o PDF do currículo da sua cidade para a Sofia usar as habilidades locais</div>
+            </div>
+            <button className="school-modal-close" aria-label="Fechar" onClick={() => setCurricuoOpen(false)}>
+              <Svg c={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />
+            </button>
+          </div>
+
+          <div className="school-modal-body">
+
+            {/* Dica principal */}
+            <div className="curricuo-tip">
+              <div className="curricuo-tip-icon">💡</div>
+              <div className="curricuo-tip-text">
+                <strong>A IA lê melhor quando você envia só a parte do seu ano escolar.</strong>
+                {" "}Currículos municipais costumam ter dezenas de páginas. Enviando apenas as páginas do seu ano (ex: 3º ano), a IA extrai as habilidades com muito mais precisão e sem desperdício de espaço.
+              </div>
+            </div>
+
+            {/* Como salvar só a parte certa */}
+            <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontWeight: 700, fontSize: 12.5, color: "#1E293B", marginBottom: 8 }}>
+                📄 Como salvar só o seu ano escolar em PDF
+              </div>
+              <div className="curricuo-steps">
+                <div className="curricuo-step">
+                  <div className="curricuo-step-num">1</div>
+                  <span>Abra o PDF do currículo no seu navegador (Chrome, Edge ou Safari).</span>
+                </div>
+                <div className="curricuo-step">
+                  <div className="curricuo-step-num">2</div>
+                  <span>Pressione <strong>Ctrl + P</strong> (Windows/Linux) ou <strong>⌘ + P</strong> (Mac) para imprimir.</span>
+                </div>
+                <div className="curricuo-step">
+                  <div className="curricuo-step-num">3</div>
+                  <span>Na impressora, selecione <strong>"Salvar como PDF"</strong> (ou "Microsoft Print to PDF").</span>
+                </div>
+                <div className="curricuo-step">
+                  <div className="curricuo-step-num">4</div>
+                  <span>Em <strong>"Páginas"</strong>, coloque apenas o intervalo do seu ano (ex: <em>45-68</em>). Consulte o índice do currículo para saber as páginas certas.</span>
+                </div>
+                <div className="curricuo-step">
+                  <div className="curricuo-step-num">5</div>
+                  <span>Clique em <strong>"Salvar"</strong> e envie esse PDF aqui. Pronto!</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Capacidade */}
+            <div style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#0369A1" }}>
+              <strong>Capacidade:</strong> o arquivo pode ter até <strong>7 MB</strong>. Um trecho de currículo costuma ter menos de 1 MB — sobra bastante espaço. O PDF fica armazenado com segurança e apenas você tem acesso.
+            </div>
+
+            <div className="curricuo-divider" />
+
+            {/* Card real de upload/status */}
+            <CurriculoMunicipalCard />
+
+          </div>
+
+          <div className="school-modal-foot">
+            <button type="button" className="school-cancel" onClick={() => setCurricuoOpen(false)}>Fechar</button>
+            {curricuoAtivo && (
+              <span style={{ fontSize: 12, color: "#16A34A", fontWeight: 700 }}>✓ Currículo ativo</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className={`cmdk-overlay ${classOpen ? "show" : ""}`}
         <div className="school-modal" role="dialog" aria-label="Cadastrar turma">
           <div className="school-modal-head">
             <div className="school-modal-icon">
