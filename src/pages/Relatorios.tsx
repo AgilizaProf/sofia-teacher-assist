@@ -519,6 +519,8 @@ export function Relatorios() {
   }, [openDropdown]);
 
   const [filterTurma, setFilterTurma] = useState(routeSearch.turma ?? "Todas");
+  const { isAtivo: municipalAtivo, nomeExibicao: nomeMunicipio, curriculo: curriculoMunicipal } = useCurriculoMunicipal();
+  const labelAvaliacao = municipalAtivo && nomeMunicipio ? `Avaliar ${nomeMunicipio}` : "Avaliar BNCC";
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState(routeSearch.pcd === "apenas" ? "Apenas PCD" : "Todos");
 
