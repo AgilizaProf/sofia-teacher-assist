@@ -65,6 +65,9 @@ export async function createAgendaEvent(input: AgendaEventInput): Promise<Agenda
     .select()
     .single();
   if (error) throw error;
+  void import("@/lib/admin/track").then(({ trackEvent }) =>
+    trackEvent("agenda_evento_criado", { tipo: input.type ?? "outro" })
+  );
   return rowToUI(data as AgendaRow);
 }
 
