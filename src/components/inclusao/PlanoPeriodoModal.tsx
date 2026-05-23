@@ -66,7 +66,7 @@ function isoFromOffset(weeks: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, onSavedMany }: Props) {
+export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSavedMany }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!open) return;
