@@ -445,8 +445,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             anotacoes: alunoFoco.pcd_anotacoes || undefined,
           }
         : null,
-      historico: historicoFiltrado,
+     historico: historicoFiltrado,
       diarioBordo,
+      curriculo_municipal: municipalAtivo && curriculoMunicipalDados ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] } : null,
     };
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
       body: payload,
