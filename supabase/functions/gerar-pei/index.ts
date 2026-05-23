@@ -46,6 +46,12 @@ LAUDO: ${laudo ? laudo : "(sem laudo cadastrado — use apenas o tipo de necessi
 BIMESTRE: ${bimestre}
 CONTEXTO ADICIONAL: ${contexto_adicional || "(nenhum)"}
 
+ANAMNESE DO ALUNO:
+${anamneseResumo || "(sem anamnese cadastrada)"}
+
+PEI ANTERIOR (use para garantir progressividade nas metas):
+${peiAnterior || "(sem PEI anterior — gere objetivos iniciais)"}
+
 HISTÓRICO NO DIÁRIO (${(registros as Registro[]).length} registros):
 ${linhas || "(nenhum registro)"}
 
