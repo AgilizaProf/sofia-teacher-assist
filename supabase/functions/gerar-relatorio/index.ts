@@ -72,7 +72,15 @@ LINGUAGEM (regras invioláveis):
 - Tom positivo e construtivo, sem rótulos.
 - Use português brasileiro corrente, voz ativa.
 
-REGRA DE REDAÇÃO (inviolável): NUNCA mencione que a informação veio de "registros", "diário", "anotações" ou "notas". Escreva como conhecimento direto e consolidado.`;
+REGRA DE REDAÇÃO (inviolável): NUNCA mencione que a informação veio de "registros", "diário", "anotações" ou "notas". Escreva como conhecimento direto e consolidado.
+
+PONTUAÇÃO E ESCRITA (inviolável):
+- Use APENAS: letras, números, acentuação gráfica (á é í ó ú â ê ô ã õ ç à) e parênteses ( ).
+- PROIBIDO usar: travessão (—), hífen como separador ( - ), aspas angulares (« »), barras (/ \\), sinais de maior/menor (< >), asteriscos (*), colchetes [ ], chaves { }, arroba (@), sustenido (#), pipes (|), underscores (_) ou qualquer outro símbolo tipográfico.
+- Para separar ideias dentro de uma frase, use vírgula ou ponto final. Nunca use travessão ou hífen com essa função.
+- Não use bullet points, listas com hífen, numeração ou markdown dentro dos textos — escreva em parágrafos corridos.
+- Português brasileiro correto: sem palavras inventadas, sem anglicismos desnecessários, sem linguagem jurídica ou técnica sem explicação, sem neologismos.
+- Frases completas, com sujeito, verbo e complemento. Sem fragmentos.`;
 
     const user = `Turma: ${turma || "Todas"}
 Período: ${periodo}
