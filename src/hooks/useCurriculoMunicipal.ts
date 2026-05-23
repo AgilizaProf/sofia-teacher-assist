@@ -47,6 +47,13 @@ export function useCurriculoMunicipal() {
 
   useEffect(() => { void load(); }, [load]);
 
+  // Polling automático enquanto status = processando (verifica a cada 3s)
+  useEffect(() => {
+    if (curriculo?.status !== "processando") return;
+    const timer = setInterval(() => { void load(); }, 3000);
+    return () => clearInterval(timer);
+  }, [curriculo?.status, load]);
+
   const toggleUsarMunicipal = useCallback(async (usar: boolean) => {
     if (!curriculo) return;
     setCurriculo((c) => c ? { ...c, usar_municipal: usar } : c);
