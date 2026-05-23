@@ -445,6 +445,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             anotacoes: alunoFoco.pcd_anotacoes || undefined,
           }
         : null,
+      historico: historicoFiltrado,
       diarioBordo,
     };
     const { data, error } = await supabase.functions.invoke("gerar-atividade", {
