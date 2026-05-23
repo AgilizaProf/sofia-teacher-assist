@@ -2154,6 +2154,8 @@ function PlanoBody(props: {
   plano: PlanoAtividade;
   modo: "regular" | "pcd";
   alunosPCDCount: number;
+  peiResumoByStudent?: Record<string, string>;
+  anamneseResumoByStudent?: Record<string, string>;
   missing: string[];
   regenField: string;
   onChange: <K extends keyof PlanoAtividade>(k: K, v: PlanoAtividade[K]) => void;
