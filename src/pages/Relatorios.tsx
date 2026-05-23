@@ -22,7 +22,6 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
-import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
 
