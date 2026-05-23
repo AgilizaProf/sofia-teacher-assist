@@ -22,6 +22,7 @@ type Props = {
   onClose: () => void;
   aluno: Aluno | null;
   anamneseResumo: string;
+  peiResumo?: string;
   onSavedMany: (planos: PlanoInclusao[]) => void;
 };
 
