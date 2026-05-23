@@ -68,7 +68,7 @@ const css = `
 .pl-hero .hbc.outline:hover{background:rgba(255,255,255,.12);color:#fff;}
 @media(max-width:880px){.pl-hero h1{font-size:22px;}}
 
-.pl-tabbar{margin:18px 24px 0;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker);border-radius:11px;padding:6px;display:flex;flex-wrap:nowrap;gap:4px;align-items:stretch;overflow-x:auto;}
+.pl-tabbar{margin:18px 24px 0;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker);border-radius:11px;padding:6px;display:flex;flex-wrap:wrap;gap:4px;align-items:stretch;}
 .pl-tab{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 10px;border-radius:7px;font-size:12.5px;font-weight:500;color:#fff;cursor:pointer;transition:.15s;overflow:hidden;white-space:nowrap;}
 .pl-tab .num{flex:0 0 auto;display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .pl-tab:hover{background:rgba(255,255,255,.08);color:#fff;}
