@@ -4685,7 +4685,7 @@ export function Planejamento() {
                       <p style={{ margin: 0, fontSize: 12.5, color: "#166534", lineHeight: 1.5, fontWeight: 600 }}>{m6AIRel.evolucao_periodo}</p>
                     </div>
                   )}
-                  {Array.isArray(m6AIRel.destaques)
+                  {Array.isArray(m6AIRel.destaques) && m6AIRel.destaques.length > 0 && (
                     <div>
                       <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Destaques</div>
                       <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
