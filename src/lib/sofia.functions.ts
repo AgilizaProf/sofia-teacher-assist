@@ -241,16 +241,14 @@ const askSofiaServer = createServerFn({ method: "POST" })
     // Roda o validator para P3 (linguagem), P2 (BNCC) e P6 (transparência)
     const { validateSofiaOutput } = await import("@/lib/sofia-validator");
     const validation = validateSofiaOutput(content);
-    const issues = validation.issues.length > 0
-      ? (validation.issues as unknown as import("@/integrations/supabase/types").Json[])
-      : null;
+    const issues = validation.issues.length > 0 ? validation.issues : null;
 
     const { error: assistantError } = await supabase.from("sofia_messages").insert({
       conversation_id: conversationId,
       user_id: userId,
       role: "assistant",
       content: validation.sanitized,
-      issues,
+      issues: issues as unknown as import("@/integrations/supabase/types").Json,
     });
 
     if (assistantError) throw new Error(assistantError.message);
