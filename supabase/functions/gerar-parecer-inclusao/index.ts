@@ -33,6 +33,10 @@ serve(async (req) => {
       .join("\n");
 
     const refBlock = (anoReferenciaInstrucao || "").trim();
+   const temAnamAnterior = Boolean((anamAnteriorResumo || "").trim());
+    const anamProgressBlock = temAnamAnterior
+      ? `\n\nCOMPARAÇÃO COM ANAMNESE ANTERIOR (use para evidenciar evolução):\n${anamAnteriorResumo}\nINSTRUÇÃO: compare com o estado ATUAL. Destaque avanços com frases como "Desde o último registro, demonstra maior...", "Comparando com o período anterior, já consegue...". NUNCA reforce dificuldades — apenas evidencie crescimento.`
+      : "";
     const temPei = Boolean((peiResumo || "").trim());
     const peiRules = temPei
       ? `\n\nINTEGRAÇÃO COM O PEI (regras invioláveis):\n- O aluno POSSUI um Plano Educacional Individualizado (PEI) — utilize-o como referência principal.\n- Compare o desempenho atual do aluno (registros do período) com os OBJETIVOS, METAS e ADAPTAÇÕES definidos no PEI.\n- Para cada objetivo do PEI, indique quando possível se está: (a) ATINGIDO, (b) EM DESENVOLVIMENTO ou (c) PRECISA DE MAIS ATENÇÃO, sempre citando evidências dos registros.\n- NUNCA contradiga adaptações curriculares, avaliativas, metodologias ou recursos já definidos no PEI. Reforce-os.\n- Use a mesma terminologia e linguagem do PEI para manter consistência entre os documentos.\n- Se o desenvolvimento indicar necessidade de ajuste em alguma meta, sugira de forma DISCRETA usando o marcador: "(Sugestão a avaliar com a equipe pedagógica: considerar atualizar a meta X do PEI)".\n- Mostre a EVOLUÇÃO do aluno em relação ao plano pedagógico já definido.${peiAnteriorResumo ? "\n- Há PEI anterior disponível — descreva brevemente a evolução entre os dois períodos." : ""}`
