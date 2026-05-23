@@ -212,6 +212,10 @@ function lerDiarioBordo(turma: string): DiarioBordoItem[] {
 
 export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const sofia = useSofiaUserData();
+  const [peiByStudentRaw] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
+  const [anamByStudentRaw] = usePersistentState<Record<string, unknown[]>>("inc_anam", {});
+  const [anamObsGeralRaw] = usePersistentState<Record<string, string>>("inc_anam_obs_geral", {});
+  const [incStudents] = usePersistentState<Array<{ id: string; name: string; classRef?: string; createdAt?: string }>>("inc_students", []);
 
   const [plano, setPlano] = usePersistentState<PlanoAtividade>(
     `plan_atividade_${modo}_v1`, EMPTY,
