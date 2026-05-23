@@ -4224,6 +4224,11 @@ export function Planejamento() {
                           <span style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
                             <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Sofia entendeu
                           </span>
+                          {m6JustSaved.iaLoading && (
+                            <span style={{ fontSize: 11, color: "#9A3412", fontStyle: "italic", opacity: 0.7 }}>
+                              analisando com IA…
+                            </span>
+                          )}
                           {m6JustSaved.sinais.map((s) => (
                             <span key={s} style={{ background: "#fff", border: "1px solid #FDBA74", color: "#9A3412", borderRadius: 99, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
                               {s}
