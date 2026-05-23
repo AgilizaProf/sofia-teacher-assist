@@ -1589,6 +1589,14 @@ ${corpo}
       partesToast.push(`${regs.length} registro${regs.length === 1 ? "" : "s"}${usarTodos ? " (todos disponíveis)" : ""}`);
       if (anamneseResumo) partesToast.push("anamnese considerada");
       toast.success(partesToast.join(" · "));
+      void import("@/lib/admin/track").then(({ trackEvent }) =>
+        trackEvent("parecer_inclusao_gerado", {
+          formato: relFormato,
+          tem_pei: temPei,
+          num_registros: regs.length,
+          diagnostico: selected.diag || null,
+        })
+      );
       void consumirCreditos(CUSTOS.relatorio_inclusao, descricaoDoc("Relatório de inclusão", selected?.name));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
