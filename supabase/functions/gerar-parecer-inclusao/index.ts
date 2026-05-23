@@ -18,6 +18,7 @@ serve(async (req) => {
       peiResumo = "",
       peiAtualizadoEm = "",
       peiAnteriorResumo = "",
+      anamAnteriorResumo = "",
       registros = [] as Registro[],
       formato = "topicos", // "topicos" | "texto"
       intervalo = "",
