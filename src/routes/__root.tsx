@@ -13,6 +13,7 @@ import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { RootErrorBoundary } from "@/components/RootErrorBoundary";
 import { installHydrationTelemetry } from "@/lib/sofia/hydrationTelemetry";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useFontSize, useHighContrast } from "@/hooks/useA11y";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
