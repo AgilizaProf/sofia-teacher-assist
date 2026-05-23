@@ -2455,6 +2455,25 @@ export function Planejamento() {
     showToast("✓ Sofia aplicou o ajuste na próxima aula.");
   };
   // Gera relatório com a Sofia (Lovable AI) a partir dos registros do diário.
+  const analisarM6ComIA = async (entry: M6Entry, entryId: string) => {
+    const proximaM1 = acharProximaAulaM1();
+    const proximaAula = proximaM1
+      ? { titulo: proximaM1.card.titulo || "", objetivo: proximaM1.card.objetivo || "", passos: proximaM1.card.passos || [], diferenciacao: proximaM1.card.diferenciacao || "" }
+      : null;
+    const historicoEntries = [...m6Entries].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 5).map((e) => ({ emoji: e.emoji, title: e.title, text: e.text, tags: e.tags, date: e.date }));
+    const turmaAtual = m5Turma || "";
+    try {
+      const { data, error } = await supabase.functions.invoke("analisar-m6", { body: { entry, proximaAula, historicoEntries, turma: turmaAtual } });
+      if (error) throw error;
+      const s = (data as { sugestao?: M6NextSuggestion })?.sugestao;
+      if (!s) return;
+      setM6JustSaved((prev) => prev?.entryId === entryId ? { ...prev, ...s, entryId, iaLoading: false } : prev);
+    } catch (err) {
+      console.warn("[M6] analisarM6ComIA falhou, mantendo sugestão local:", err);
+      setM6JustSaved((prev) => prev?.entryId === entryId ? { ...prev, iaLoading: false } : prev);
+    }
+  };
+
   const m6GerarRelatorioSofia = async () => {
     setM6AILoading(true);
     setM6AIErro(null);
