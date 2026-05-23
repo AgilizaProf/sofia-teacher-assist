@@ -68,8 +68,9 @@ const css = `
 .pl-hero .hbc.outline:hover{background:rgba(255,255,255,.12);color:#fff;}
 @media(max-width:880px){.pl-hero h1{font-size:22px;}}
 
-.pl-tabbar{margin:18px 24px 0;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker);border-radius:11px;padding:6px;display:flex;flex-wrap:wrap;gap:4px;align-items:stretch;}
-.pl-tab{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;border-radius:7px;font-size:12.5px;font-weight:500;color:#fff;cursor:pointer;transition:.15s;white-space:nowrap;}
+.pl-tabbar{margin:18px 24px 0;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker);border-radius:11px;padding:6px;display:flex;flex-wrap:nowrap;gap:4px;align-items:stretch;}
+.pl-tab{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 8px;border-radius:7px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;transition:.15s;white-space:nowrap;overflow:hidden;}
+.pl-tab .lbl{overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .pl-tab .num{flex:0 0 auto;display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .pl-tab:hover{background:rgba(255,255,255,.08);color:#fff;}
 .pl-tab.active{background:linear-gradient(135deg,var(--orange),#FF9466);color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.35);}
@@ -448,12 +449,12 @@ const M_CONFIG: Record<MKey, { badge: string; title: string; sub: string; lead: 
 
 const TABS: Array<{ k: MKey; num: string; label: string }> = [
   { k: "atv", num: "M1", label: "Atividades" },
-  { k: "pcd", num: "M2", label: "Atividades PCD" },
-  { k: "m1",  num: "M3", label: "Sofia preenche a semana" },
-  { k: "m4", num: "M4", label: "Calendário com camadas" },
-  { k: "m5", num: "M5", label: "Drag & drop · multi-turma" },
-  { k: "m6", num: "M6", label: "Diário de bordo" },
-  { k: "trilhas", num: "M7", label: "Trilhas semestrais" },
+  { k: "pcd", num: "M2", label: "PCD" },
+  { k: "m1",  num: "M3", label: "Semana" },
+  { k: "m4", num: "M4", label: "Calendário" },
+  { k: "m5", num: "M5", label: "Drag & drop" },
+  { k: "m6", num: "M6", label: "Diário" },
+  { k: "trilhas", num: "M7", label: "Trilhas" },
 ];
 
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
