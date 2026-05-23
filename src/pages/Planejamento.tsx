@@ -2492,6 +2492,8 @@ export function Planejamento() {
         periodo: M6_PERIODO_META[m6Periodo].label.toLowerCase(),
         turma: m6RelTurma || "",
         stats,
+        relatorio_anterior: relAnterior,
+        alunos_pcd: alunosPcdTurma,
         entries: m6RelEntries.map((e) => ({
           emoji: e.emoji,
           title: e.title,
