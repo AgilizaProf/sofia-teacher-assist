@@ -70,7 +70,7 @@ const css = `
 
 .pl-tabbar{margin:18px 24px 0;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker);border-radius:11px;padding:6px;display:flex;flex-wrap:nowrap;gap:4px;align-items:stretch;}
 .pl-tab{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;padding:8px 8px;border-radius:7px;font-size:11.5px;line-height:1.15;font-weight:500;color:#fff !important;cursor:pointer;transition:.15s;white-space:normal;text-align:left;hyphens:auto;overflow:hidden;}
-.pl-tab .lbl{min-width:0;flex:1 1 auto;color:#fff !important;}
+.pl-tab .lbl{min-width:0;flex:1 1 auto;color:#fff !important;overflow:hidden;text-overflow:ellipsis;}
 .pl-tab .num{flex:0 0 auto;display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .pl-tab:hover{background:rgba(255,255,255,.08);color:#fff;}
 .pl-tab.active{background:linear-gradient(135deg,var(--orange),#FF9466);color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.35);}
@@ -357,7 +357,8 @@ const css = `
   .pl-hero h1{font-size:20px;}
   .pl-hero .lead{font-size:13px;}
   .pl-tabbar{margin:14px 12px 0;}
-  .pl-tab{font-size:11.5px;padding:8px 6px;gap:5px;}
+  .pl-tab{font-size:11.5px;padding:8px 6px;gap:5px;white-space:nowrap;}
+  .pl-tab .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .pl-workspace{padding:14px 12px 90px;gap:14px;}
   .pl-tools{align-items:flex-start;}
   .pl-tools .right{width:100%;}
@@ -387,7 +388,7 @@ const css = `
 
 @media(max-width:480px){
   .pl-tabbar{padding:5px;gap:3px;}
-  .pl-tab{font-size:11px;padding:7px 5px;}
+  .pl-tab{font-size:11px;padding:7px 5px;white-space:nowrap;}
   .pl-tab .num{font-size:9.5px;padding:1px 5px;}
   .pl-hero{padding:16px 14px;}
   .pl-hero h1{font-size:18px;}
