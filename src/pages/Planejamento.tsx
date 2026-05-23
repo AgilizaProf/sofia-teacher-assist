@@ -2029,6 +2029,7 @@ export function Planejamento() {
     ajuste: string;
     abertura: string;
     sinais: string[];
+    iaLoading?: boolean;
   };
   const [m6JustSaved, setM6JustSaved] = useState<M6NextSuggestion | null>(null);
   // Relatório gerado pela Sofia (IA) a partir dos registros do diário.
