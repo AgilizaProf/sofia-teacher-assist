@@ -95,8 +95,19 @@ serve(async (req) => {
             .join("\n")
         : "Sem registros recentes no diário.";
 
-    const systemPrompt =
-      "Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade " +
+    const usandoMunicipal = curriculo_municipal && Array.isArray(curriculo_municipal.habilidades) && curriculo_municipal.habilidades.length > 0;
+
+    const habMunicipaisResumo = usandoMunicipal
+      ? curriculo_municipal!.habilidades
+          .filter((h) => (!anoEscolar || h.ano?.includes(anoEscolar.replace(/[^\d]/g, ""))) && (!disciplina || h.disciplina?.toLowerCase().includes(disciplina.toLowerCase())))
+          .slice(0, 30)
+          .map((h) => `- ${h.codigo}: ${h.descricao} (${h.ano} · ${h.disciplina})`)
+          .join("\n")
+      : null;
+
+    const systemPrompt = usandoMunicipal
+      ? `Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade alinhados ao CURRÍCULO MUNICIPAL de ${curriculo_municipal!.municipio}, em PT-BR, claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. Não invente dados sobre alunos.\n\nREGRAS DO CURRÍCULO MUNICIPAL (invioláveis):\n1) Use APENAS os códigos e habilidades do currículo municipal fornecido. NÃO use códigos BNCC.\n2) Em 'habilidades', cite os códigos REAIS do currículo municipal listados abaixo.\n3) A 'descricao' de cada habilidade deve reproduzir fielmente o enunciado do currículo municipal.\n4) Se nenhuma habilidade municipal for compatível com o tema, escolha a mais próxima e sinalize em 'sugestoes'.\n\nHABILIDADES DO CURRÍCULO MUNICIPAL disponíveis para ${anoEscolar || "o ano informado"} · ${disciplina || "a disciplina informada"}:\n${habMunicipaisResumo || "(usar todas as habilidades disponíveis)"}`
+      : "Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade " +
       "ESTRITAMENTE alinhados à BNCC (Base Nacional Comum Curricular), em PT-BR, " +
       "claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. " +
       "Não invente dados sobre alunos.\n\n" +
