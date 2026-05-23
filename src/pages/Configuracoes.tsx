@@ -4,6 +4,7 @@ import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
+import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
 import { ReferralCard } from "@/components/settings/ReferralCard";
 import { PlanoCard } from "@/components/settings/PlanoCard";
 import { useReducedMotion, type ReducedMotionMode } from "@/hooks/useReducedMotion";
