@@ -2458,7 +2458,7 @@ export function Planejamento() {
   const analisarM6ComIA = async (entry: M6Entry, entryId: string) => {
     const proximaM1 = acharProximaAulaM1();
     const proximaAula = proximaM1
-      ? { titulo: proximaM1.card.titulo || "", objetivo: proximaM1.card.objetivo || "", passos: proximaM1.card.passos || [], diferenciacao: proximaM1.card.diferenciacao || "" }
+      ? { titulo: proximaM1.card.title || "", objetivo: proximaM1.card.objetivo || "", passos: proximaM1.card.passos || [], diferenciacao: proximaM1.card.diferenciacao || "" }
       : null;
     const historicoEntries = [...m6Entries].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 5).map((e) => ({ emoji: e.emoji, title: e.title, text: e.text, tags: e.tags, date: e.date }));
     const turmaAtual = m5Turma || "";
