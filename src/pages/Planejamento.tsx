@@ -4672,8 +4672,14 @@ export function Planejamento() {
                     <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Relatório gerado pela Sofia
                   </div>
                   {m6AIRel.titulo && <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, margin: 0, color: "var(--ink)" }}>{m6AIRel.titulo}</h4>}
-                  {{m6AIRel.resumo && <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.55 }}>{m6AIRel.resumo}</p>}
+                  {m6AIRel.resumo && <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.55 }}>{m6AIRel.resumo}</p>}
                   {m6AIRel.evolucao_periodo && (
+                    <div style={{ background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)", border: "1px solid #86EFAC", borderRadius: 9, padding: "10px 13px", display: "flex", gap: 9, alignItems: "flex-start" }}>
+                      <span style={{ fontSize: 16, lineHeight: 1 }}>📈</span>
+                      <p style={{ margin: 0, fontSize: 12.5, color: "#166534", lineHeight: 1.5, fontWeight: 600 }}>{m6AIRel.evolucao_periodo}</p>
+                    </div>
+                  )}
+                  {Array.isArray(m6AIRel.destaques) && m6AIRel.destaques.length > 0 && (
                     <div style={{ background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)", border: "1px solid #86EFAC", borderRadius: 9, padding: "10px 13px", display: "flex", gap: 9, alignItems: "flex-start" }}>
                       <span style={{ fontSize: 16, lineHeight: 1 }}>📈</span>
                       <p style={{ margin: 0, fontSize: 12.5, color: "#166534", lineHeight: 1.5, fontWeight: 600 }}>{m6AIRel.evolucao_periodo}</p>
