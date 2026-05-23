@@ -32,7 +32,8 @@ export function CurriculoMunicipalCard() {
       if (storageErr) throw storageErr;
 
       // Criar registro no banco
-      const { data: row, error: dbErr } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: row, error: dbErr } = await (supabase as any)
         .from("user_curriculo_municipal")
         .insert({
           user_id: user.id,
