@@ -72,7 +72,7 @@ const css = `
 @media(max-width:1100px){.pl-tabbar{grid-template-columns:repeat(4,minmax(0,1fr));}}
 @media(max-width:720px){.pl-tabbar{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:720px){.pl-tabbar .pl-tab:last-child:nth-child(odd){grid-column:2;}}
-.pl-tab{min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 10px;border-radius:8px;color:#fff !important;font-size:12px;font-weight:600;line-height:1.2;text-align:center;white-space:normal;overflow-wrap:break-word;word-break:break-word;border:1px solid transparent;transition:.15s;cursor:pointer;background:transparent;}
+.pl-tab{min-width:0;display:inline-flex;align-items:center;justify-content:flex-start;gap:7px;padding:8px 10px;border-radius
 .pl-tab .num{flex:0 0 auto;}
 .pl-tab .num{display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .pl-tab:hover{background:rgba(255,255,255,.08);color:#fff;}
