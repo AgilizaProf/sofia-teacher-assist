@@ -29,7 +29,6 @@ import { useUser } from "@/lib/mockData";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
-import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
