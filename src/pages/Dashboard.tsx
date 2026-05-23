@@ -284,6 +284,27 @@ const css = `
 .viral-action{display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--accent-deep);border:1px solid #FFD9BF;padding:9px 14px;border-radius:9px;font-size:12px;font-weight:800;flex-shrink:0;transition:all .2s;}
 .viral-action:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
 .viral-action svg{width:12px;height:12px;}
+.curricuo-strip{background:linear-gradient(135deg,#F0F7FF,#E8F4FF);border:1px solid #BFDBFE;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:18px;cursor:pointer;transition:all .2s;}
+.curricuo-strip:hover{border-color:#93C5FD;box-shadow:0 4px 14px rgba(59,130,246,.12);}
+.curricuo-strip.ativo{background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-color:#BBF7D0;}
+.curricuo-strip.ativo:hover{border-color:#86EFAC;}
+.curricuo-icon{width:42px;height:42px;border-radius:11px;flex-shrink:0;background:linear-gradient(135deg,#3B82F6,#60A5FA);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(59,130,246,.28);font-size:19px;}
+.curricuo-strip.ativo .curricuo-icon{background:linear-gradient(135deg,#16A34A,#22C55E);box-shadow:0 4px 12px rgba(22,163,74,.28);}
+.curricuo-content{flex:1;min-width:0;}
+.curricuo-title{font-size:13px;font-weight:800;color:var(--text);line-height:1.3;}
+.curricuo-sub{font-size:11.5px;color:var(--text-soft);margin-top:2px;}
+.curricuo-action{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#1D4ED8;border:1px solid #BFDBFE;padding:9px 14px;border-radius:9px;font-size:12px;font-weight:800;flex-shrink:0;white-space:nowrap;transition:all .2s;}
+.curricuo-strip:hover .curricuo-action{background:#3B82F6;color:#fff;border-color:#3B82F6;}
+.curricuo-strip.ativo .curricuo-action{color:#166534;border-color:#BBF7D0;}
+.curricuo-strip.ativo:hover .curricuo-action{background:#16A34A;color:#fff;border-color:#16A34A;}
+.curricuo-tip{background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;}
+.curricuo-tip-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.curricuo-tip-text{font-size:12.5px;color:#92400E;line-height:1.5;}
+.curricuo-tip-text strong{color:#78350F;}
+.curricuo-steps{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.curricuo-step{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:#374151;line-height:1.5;}
+.curricuo-step-num{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#60A5FA);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.curricuo-divider{height:1px;background:var(--border-soft);margin:4px 0;}
 .toggle-switch{position:relative;width:36px;height:20px;border-radius:100px;background:#CBD5E1;cursor:pointer;transition:background .25s;flex-shrink:0;}
 .toggle-switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.20);transition:transform .25s;}
 .toggle-switch.on{background:var(--accent);}
