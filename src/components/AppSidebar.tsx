@@ -153,6 +153,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   };
   return (
     <>
+    {usingInternal && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />}
     <aside className="ap-sidebar">
       <div className="sb-head">
         <div className="sb-logo-icon"><img src={logoImg} alt="AgilizaProf" /></div>
