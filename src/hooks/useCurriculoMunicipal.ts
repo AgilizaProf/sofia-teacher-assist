@@ -1,0 +1,66 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+export type HabilidadeMunicipal = {
+  codigo: string;
+  descricao: string;
+  ano: string;
+  disciplina: string;
+  eixo?: string;
+};
+
+export type CurriculoMunicipal = {
+  id: string;
+  municipio: string;
+  estado: string;
+  arquivo_nome: string;
+  arquivo_bytes: number;
+  status: "processando" | "ativo" | "erro";
+  erro_msg?: string | null;
+  habilidades: HabilidadeMunicipal[];
+  ativo: boolean;
+  usar_municipal: boolean;
+  created_at: string;
+};
+
+export function useCurriculoMunicipal() {
+  const [curriculo, setCurriculo] = useState<CurriculoMunicipal | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      const { data } = await supabase
+        .from("user_curriculo_municipal")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setCurriculo(data as CurriculoMunicipal | null);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const toggleUsarMunicipal = useCallback(async (usar: boolean) => {
+    if (!curriculo) return;
+    setCurriculo((c) => c ? { ...c, usar_municipal: usar } : c);
+    await supabase.from("user_curriculo_municipal").update({ usar_municipal: usar }).eq("id", curriculo.id);
+  }, [curriculo]);
+
+  const remover = useCallback(async () => {
+    if (!curriculo) return;
+    await supabase.storage.from("curriculos-municipais").remove([curriculo.arquivo_nome]);
+    await supabase.from("user_curriculo_municipal").delete().eq("id", curriculo.id);
+    setCurriculo(null);
+  }, [curriculo]);
+
+  const isAtivo = curriculo?.status === "ativo" && curriculo?.ativo && curriculo?.usar_municipal;
+  const nomeExibicao = curriculo ? `${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}` : null;
+
+  return { curriculo, loading, load, toggleUsarMunicipal, remover, isAtivo, nomeExibicao };
+}
