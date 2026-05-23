@@ -16,6 +16,7 @@ import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
