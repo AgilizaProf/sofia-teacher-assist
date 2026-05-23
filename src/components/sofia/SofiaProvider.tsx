@@ -76,6 +76,9 @@ type SofiaCtx = {
   dismissProactive: () => void;
   bootError: string | null;
   retryBootstrap: () => Promise<void>;
+  /** Contexto pedagógico salvo pela professora — injetado no system prompt a cada mensagem. */
+  userContext: string;
+  setUserContext: (ctx: string) => void;
 };
 
 const Ctx = createContext<SofiaCtx | null>(null);
