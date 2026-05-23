@@ -2524,6 +2524,17 @@ export function Planejamento() {
       const rel = (data as { relatorio?: M6AIRelatorio })?.relatorio;
       if (!rel) throw new Error("Resposta vazia da Sofia.");
       setM6AIRel(rel);
+      if (rel.resumo) {
+        const novoReg = {
+          resumo: String(rel.resumo),
+          destaques: Array.isArray(rel.destaques) ? rel.destaques.slice(0, 3).map(String) : [],
+          data: new Date().toLocaleDateString("pt-BR"),
+        };
+        setM6RelHistorico((prev) => ({
+          ...prev,
+          [histKey]: [...(prev[histKey] ?? []).slice(-4), novoReg],
+        }));
+      }
       void consumirCreditos(CUSTOS.parecer_descritivo, "Relatório pedagógico (M6)");
     } catch (e) {
       setM6AIErro((e as Error)?.message || "Falha ao gerar relatório.");
