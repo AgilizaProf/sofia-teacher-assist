@@ -66,7 +66,8 @@ export function useCurriculoMunicipal() {
     if (!curriculo) return;
     // arquivo_path é o caminho real no bucket (userId/timestamp_curriculo.pdf)
     await supabase.storage.from("curriculos-municipais").remove([curriculo.arquivo_path]);
-    await supabase.from("user_curriculo_municipal").delete().eq("id", curriculo.id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("user_curriculo_municipal").delete().eq("id", curriculo.id);
     setCurriculo(null);
   }, [curriculo]);
 
