@@ -406,7 +406,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       }).filter(Boolean).join("\n");
       const resumo = [eixosTxt, obsGeral].filter(Boolean).join("\n\n");
       if (resumo) {
-        const slug = `${s.classRef || ""}-${s.name}-${s.createdAt || ""}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+       const slug = `${s.classRef || ""}-${s.name}-${s.createdAt || ""}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
         out[slug] = resumo;
       }
     }
