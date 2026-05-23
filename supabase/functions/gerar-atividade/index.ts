@@ -48,7 +48,7 @@ serve(async (req) => {
       etapa = "" as string, // "opcoes" para sugerir 4-5 opções de aula
       opcoesSelecionadas = [] as Array<{ titulo?: string; resumo?: string; abordagem?: string }>,
       disciplinasInter = [] as string[],
-      alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string } | null,
+      alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string; peiResumo?: string; anamneseResumo?: string } | null,
       diarioBordo = [] as Array<{ emoji?: string; titulo?: string; texto?: string; tags?: string[]; data?: string; turma?: string; atividadeTitulo?: string }>,
     } = body || {};
 
