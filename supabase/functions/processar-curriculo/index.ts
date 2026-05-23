@@ -96,7 +96,7 @@ REGRAS:
               { text: prompt },
             ],
           }],
-          generationConfig: { maxOutputTokens: 8000, responseMimeType: "application/json" },
+          generationConfig: { maxOutputTokens: 32000, responseMimeType: "application/json" },
         }),
       }
     );
