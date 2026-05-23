@@ -2036,6 +2036,7 @@ export function Planejamento() {
   type M6AIRelatorio = {
     titulo?: string;
     resumo?: string;
+    evolucao_periodo?: string;
     destaques?: string[];
     alertas?: string[];
     padroes?: string[];
