@@ -20,7 +20,8 @@ export const sidebarCss = `
 .sb-cmdk svg{width:13px;height:13px;flex-shrink:0;}
 .sb-cmdk-shortcut{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(255,255,255,.10);padding:1px 6px;border-radius:4px;color:rgba(255,255,255,.70);font-weight:700;}
 .sb-section-label{font-size:9.5px;font-weight:800;color:rgba(255,255,255,.36);text-transform:uppercase;letter-spacing:.14em;padding:8px 20px 6px;}
-.sb-nav{padding:0 10px;flex:1;position:relative;z-index:1;display:flex;flex-direction:column;gap:1px;}
+.sb-nav{padding:0 10px;flex:1 1 auto;min-height:0;position:relative;z-index:1;display:flex;flex-direction:column;gap:1px;overflow-y:auto;scrollbar-width:none;}
+.sb-nav::-webkit-scrollbar{display:none;}
 .sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;color:rgba(255,255,255,.74);font-weight:500;font-size:13px;width:100%;text-align:left;transition:all .15s;position:relative;text-decoration:none;}
 .sb-item:hover{background:rgba(255,255,255,.06);color:#fff;}
 .sb-item.active{background:rgba(255,122,69,.13);color:#fff;font-weight:700;box-shadow:inset 0 0 0 1px rgba(255,122,69,.26);}
@@ -29,7 +30,7 @@ export const sidebarCss = `
 .sb-badge{margin-left:auto;background:#FF7A45;color:#fff;font-size:9px;font-weight:800;padding:1.5px 6px;border-radius:100px;line-height:1.4;}
 .sb-badge.exclusive{background:linear-gradient(135deg,#FF7A45,#FFB07A);box-shadow:0 2px 6px rgba(255,122,69,.45);}
 .sb-shortcut{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.40);font-weight:600;}
-.sb-foot{padding:10px 12px 12px;position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.06);margin-top:auto;}
+.sb-foot{padding:10px 12px 12px;position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.06);margin-top:auto;flex-shrink:0;}
 .sb-plan{margin:0 10px 10px;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);border:1px solid #F7C9A8;border-radius:10px;padding:9px 11px;color:#3a1f0b;position:relative;z-index:1;height:120px;width:calc(100% - 20px);box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;overflow:hidden;}
 .sb-plan-top{display:flex;flex-direction:column;gap:2px;}
 .sb-plan-bottom{display:flex;align-items:center;justify-content:space-between;gap:6px;}
