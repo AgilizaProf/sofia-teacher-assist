@@ -2046,6 +2046,9 @@ export function Planejamento() {
   const [m6AIRel, setM6AIRel] = useState<M6AIRelatorio | null>(null);
   const [m6AILoading, setM6AILoading] = useState(false);
   const [m6AIErro, setM6AIErro] = useState<string | null>(null);
+  const [m6RelHistorico, setM6RelHistorico] = usePersistentState
+    Record<string, { resumo: string; destaques: string[]; data: string }[]>
+  >("plan_m6_rel_hist_v1", {});
   // Período do relatório e turma selecionada para a leitura adaptativa.
   type M6Periodo = "bimestral" | "trimestral" | "semestral" | "anual";
   const M6_PERIODO_META: Record<M6Periodo, { label: string; meta: number; semanas: number }> = {
