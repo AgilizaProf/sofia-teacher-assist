@@ -114,7 +114,7 @@ function useRouteContext() {
   }, [loc.pathname, sofia?.entity?.turma_atual, sofia?.entity?.todos_alunos_pcd, sofia?.dataState]);
 }
 
-function useRouteName()
+function useRouteName() {
   const loc = useLocation();
   return useMemo(() => {
     const p = loc.pathname;
