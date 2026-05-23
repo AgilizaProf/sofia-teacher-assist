@@ -116,8 +116,9 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
     const tema = `Atividade ${semana}/${totalSemanas} do ${PERIODOS.find((p) => p.k === periodo)!.label.toLowerCase()} — sequência didática progressiva`;
     const anotacoes = [
       condicaoLabel ? `Condição: ${condicaoLabel}` : "",
-      anamneseResumo
-        ? `Anamnese (resumo):\n${anamneseResumo}`
+      peiResumo
+        ? `\nPEI vigente (objetivos e metas — o período DEVE ser progressivo em relação a eles):\n${peiResumo}`
+        : "\n(Sem PEI cadastrado — use boas práticas inclusivas para a condição informada.)",
         : "Anamnese ainda não preenchida — gere com práticas inclusivas gerais para a condição informada.",
       `Esta é a atividade ${semana} de ${totalSemanas} de uma sequência. Garanta progressão de complexidade em relação às anteriores.`,
     ].filter(Boolean).join("\n\n");
