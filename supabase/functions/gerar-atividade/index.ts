@@ -158,6 +158,8 @@ serve(async (req) => {
           + `- Nome: ${alunoFoco.nome || "Aluno"}\n`
           + `- Condição/CID: ${alunoFoco.codigo || "PCD (não especificada)"}\n`
           + `- Anotações da professora: ${alunoFoco.anotacoes || "—"}\n`
+          + (alunoFoco.peiResumo ? `- PEI vigente (objetivos e metas — a atividade DEVE ser progressiva em relação a eles):\n${alunoFoco.peiResumo}\n` : "")
+          + (alunoFoco.anamneseResumo ? `- Anamnese (perfil detalhado do aluno):\n${alunoFoco.anamneseResumo}\n` : "")
           + `Regras obrigatórias:\n`
           + `1) Título, objetivo, abertura, desenvolvimento, fechamento, materiais e `
           + `sugestões devem citar o aluno pelo primeiro nome e ser pensados para `
