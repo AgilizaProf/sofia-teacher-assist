@@ -12,6 +12,8 @@ const navItems = [
   { to: "/admin/erros", label: "Erros", icon: "M12 9v4 M12 17h.01 M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" },
   { to: "/admin/infra", label: "Infra", icon: "M2 12h6l3-9 4 18 3-9h4" },
   { to: "/admin/ia", label: "Consumo IA", icon: "M12 2a5 5 0 0 0-5 5v3a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z M5 13v1a7 7 0 0 0 14 0v-1 M12 21v-3" },
+  { to: "/admin/storage", label: "Storage", icon: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12" },
+  { to: "/admin/retencao", label: "Retenção", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75 M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0" },
 ];
 
 export function AdminLayout({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
