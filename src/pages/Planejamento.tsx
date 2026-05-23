@@ -69,8 +69,8 @@ const css = `
 @media(max-width:880px){.pl-hero h1{font-size:22px;}}
 
 .pl-tabbar{margin:18px 24px 0;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker);border-radius:11px;padding:6px;display:flex;flex-wrap:nowrap;gap:4px;align-items:stretch;}
-.pl-tab{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 8px;border-radius:7px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;transition:.15s;white-space:nowrap;overflow:hidden;}
-.pl-tab .lbl{overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.pl-tab{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;padding:8px 8px;border-radius:7px;font-size:11.5px;line-height:1.15;font-weight:500;color:#fff;cursor:pointer;transition:.15s;white-space:normal;text-align:left;hyphens:auto;overflow:hidden;}
+.pl-tab .lbl{min-width:0;flex:1 1 auto;}
 .pl-tab .num{flex:0 0 auto;display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .pl-tab:hover{background:rgba(255,255,255,.08);color:#fff;}
 .pl-tab.active{background:linear-gradient(135deg,var(--orange),#FF9466);color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.35);}
