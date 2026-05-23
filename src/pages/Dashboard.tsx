@@ -305,6 +305,7 @@ const css = `
 .curricuo-step{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:#374151;line-height:1.5;}
 .curricuo-step-num{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#60A5FA);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
 .curricuo-divider{height:1px;background:var(--border-soft);margin:4px 0;}
+.badge-inedito{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#7C3AED,#9333EA);color:#fff;font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;vertical-align:middle;}
 .toggle-switch{position:relative;width:36px;height:20px;border-radius:100px;background:#CBD5E1;cursor:pointer;transition:background .25s;flex-shrink:0;}
 .toggle-switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.20);transition:transform .25s;}
 .toggle-switch.on{background:var(--accent);}
