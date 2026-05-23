@@ -106,7 +106,15 @@ if (fnErr) {
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <button
                 type="button"
-                onClick={() => toggleUsarMunicipal(!curriculo.usar_municipal)}
+                onClick={() => {
+  void import("@/lib/admin/track").then(({ trackEvent }) =>
+    trackEvent("curriculo_municipal_toggle", {
+      acao: curriculo.usar_municipal ? "desativado" : "ativado",
+      municipio: curriculo.municipio,
+    })
+  );
+  void toggleUsarMunicipal(!curriculo.usar_municipal);
+}}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "7px 12px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
