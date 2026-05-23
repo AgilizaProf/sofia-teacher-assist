@@ -273,7 +273,7 @@ type PlanoItem = {
   incluir: boolean;
 };
 
-export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, onSaved }: Props) {
+export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSaved }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
   useKeyboardAwareModal(modalRef, open);
   useEffect(() => {
