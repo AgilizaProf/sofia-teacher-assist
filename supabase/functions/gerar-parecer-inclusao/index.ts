@@ -64,7 +64,7 @@ Ano de matrícula: ${anoEscolar || "não informado"}
 Ano de referência pedagógico: ${anoReferenciaPedagogico || "(não definido — usar ano de matrícula)"}
 
 Anamnese (resumo dos eixos):
-${anamneseResumo || "(sem dados de anamnese)"}
+${anamneseResumo || "(sem dados de anamnese)"}${anamProgressBlock}
 
 PEI (resumo${peiAtualizadoEm ? ` · atualizado em ${peiAtualizadoEm}` : ""}):
 ${peiResumo || "(sem PEI cadastrado — gere o parecer com base em anamnese e registros)"}
