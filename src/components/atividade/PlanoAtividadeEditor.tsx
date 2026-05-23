@@ -387,7 +387,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         .map(([k, v]) => `${k}: ${v}`)
         .join("\n");
       if (linhas) {
-        const slug = `${s.classRef || ""}-${s.name}-${s.createdAt || ""}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        const slug = `${s.classRef || ""}-${s.name}-${s.createdAt || ""}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
         out[slug] = linhas;
       }
     }
