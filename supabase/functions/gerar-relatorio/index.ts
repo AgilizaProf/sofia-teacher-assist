@@ -34,6 +34,7 @@ serve(async (req) => {
     const {
       periodo = "bimestral",
       turma = "",
+      curriculo_municipal = null as { municipio: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string }> } | null,
       entries = [] as Entry[],
       stats = {} as Record<string, unknown>,
       relatorio_anterior = [] as RelAnterior[],
