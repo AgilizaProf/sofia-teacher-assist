@@ -13,6 +13,7 @@ export type CurriculoMunicipal = {
   id: string;
   municipio: string;
   estado: string;
+  arquivo_path: string;
   arquivo_nome: string;
   arquivo_bytes: number;
   status: "processando" | "ativo" | "erro";
