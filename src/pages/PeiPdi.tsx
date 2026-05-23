@@ -53,6 +53,10 @@ const emptyPei: PeiData = {
 export function PeiPdi() {
   const navigate = useNavigate();
   const [students] = usePersistentState<Student[]>("inc_students", []);
+  const [regByStudent] = usePersistentState<Record<string, Array<{ when?: string; cat?: string; body?: string }>>>("inc_reg", {});
+  const [anamByStudent] = usePersistentState<Record<string, unknown[]>>("inc_anam", {});
+  const [anamObsGeralByStudent] = usePersistentState<Record<string, string>>("inc_anam_obs_geral", {});
+  const [peiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
 
   const [alunoId, setAlunoId] = useState<string>("");
   const [bimestre, setBimestre] = useState<string>(BIMESTRES[0]);
