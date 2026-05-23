@@ -171,6 +171,8 @@ function RootComponent() {
   }, [loc.pathname]);
 
   useReducedMotion();
+  useFontSize();
+  useHighContrast();
   const { ready, authed, isPublicRoute } = useAuthGuard();
   const showSofia = ready && authed && !isPublicRoute;
   return (
