@@ -1160,9 +1160,9 @@ export function Assistente() {
                   if (ctxDocs.length) partes.push(`Documentos seguidos: ${ctxDocs.join(", ")}.`);
                   if (ctxMomento.length) partes.push(`Momento do dia em foco: ${ctxMomento.join(", ")}.`);
                   if (observacoes.trim()) partes.push(observacoes.trim());
-                  if (partes.length) {
-                    sofia.openSofia({ prompt: `Atualize meu contexto: ${partes.join(" ")}`, send: false });
-                  }
+                  // Salva no system prompt — persiste em TODAS as mensagens,
+                  // inclusive novas conversas. Nunca some como mensagem de usuário.
+                  sofia.setUserContext(partes.join(" "));
                   setCtxOpen(false);
                 }}
               >
