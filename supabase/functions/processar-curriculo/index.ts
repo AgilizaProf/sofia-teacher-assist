@@ -53,7 +53,6 @@ serve(async (req) => {
       binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
     }
     const base64 = btoa(binary);
-    );
 
     // 3. Chamar Gemini Flash-Lite com o PDF
     const prompt = `Você é um assistente especializado em currículos educacionais brasileiros.
