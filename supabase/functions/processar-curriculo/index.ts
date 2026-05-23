@@ -44,10 +44,15 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Arquivo não encontrado." }), { status: 404, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
-    // 2. Converter PDF → base64 para o Gemini (método nativo, sem loop)
+    // 2. Converter PDF → base64 para o Gemini (seguro para arquivos grandes)
     const buffer = await fileData.arrayBuffer();
-    const base64 = btoa(
-      String.fromCharCode(...new Uint8Array(buffer).subarray(0, Math.min(new Uint8Array(buffer).length, 5000000)))
+    const bytes = new Uint8Array(buffer);
+    const CHUNK = 8192;
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    const base64 = btoa(binary);
     );
 
     // 3. Chamar Gemini Flash-Lite com o PDF
