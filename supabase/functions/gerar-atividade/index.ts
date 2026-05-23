@@ -31,6 +31,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const {
       modo = "regular",
+      curriculo_municipal = null as { municipio: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string }> } | null,
       anoEscolar = "",
       anoReferenciaPedagogico = "",
       anoReferenciaInstrucao = "",
