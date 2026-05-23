@@ -194,6 +194,18 @@ export function Configuracoes() {
                 </div>
               </div>
             )}
+</section>
+
+          <section className="cfg-section" aria-labelledby="curriculo-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <h2 id="curriculo-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
+                🏫 Currículo Municipal
+              </h2>
+            </div>
+            <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 16px" }}>
+              Faça upload do currículo do seu município. Quando ativo, a Sofia substituirá os códigos BNCC pelos códigos e habilidades do seu município em planos de aula, relatórios e pareceres.
+            </p>
+            <CurriculoMunicipalCard />
           </section>
 
           <section className="cfg-section" aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
