@@ -511,8 +511,8 @@ function AgendaSofiaSide({ onImportM4, m4Count, counts, todayKey, onImportCalend
           const d = counts.deadlinesCount;
           const t = counts.todayCount;
 
-          // Carga da semana — Opção A
-          const diasOcupados = Math.min(5, w); // máx 5 dias úteis
+          // Carga da semana — Opção A (baseado em dias únicos ocupados, não total de eventos)
+          const diasOcupados = counts.weekDaysWithEvents;
           const pct = Math.round((diasOcupados / 5) * 100);
           const tone = pct >= 80 ? "crit" : pct >= 50 ? "warn" : "ok";
           const cargaLabel = pct >= 80 ? "Semana intensa" : pct >= 50 ? "Semana moderada" : w === 0 ? "Semana livre" : "Semana tranquila";
