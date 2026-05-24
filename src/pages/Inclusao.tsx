@@ -1870,8 +1870,35 @@ ${corpo}
       toast.error("Selecione um aluno antes de salvar.");
       return;
     }
-    // All state already auto-syncs to localStorage via useEffect; this
-    // forces a write and confirms to the user.
+
+    // Recalcula contadores reais do localStorage e sincroniza no banco
+    const regsDoAluno = regByStudent[selected.id] || [];
+    const anamDoAluno = anamByStudent[selected.id] || buildBlankAnam();
+    const eixosTotal = anamDoAluno.length;
+    const eixosOk = anamDoAluno.filter(
+      (e) => e.items.some((i) => i.s !== "naoObservado") || (e.obs && e.obs.trim())
+    ).length;
+    const peiDoAluno = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+    const peiCheck = ["diagnostico","caracterizacao","habilidadesDesenvolvidas","estrategias","adaptacoesCurriculares","adaptacoesAvaliativas","recursos","comunicacao"];
+    let peiFilled = 0;
+    peiCheck.forEach((k) => { if (String(peiDoAluno[k] || "").trim().length > 5) peiFilled++; });
+    if (Array.isArray(peiDoAluno.objetivos) && (peiDoAluno.objetivos as unknown[]).length > 0) peiFilled++;
+    if (Array.isArray(peiDoAluno.equipe) && (peiDoAluno.equipe as unknown[]).length > 0) peiFilled++;
+    const objsArr = (Array.isArray(peiDoAluno.objetivos) ? peiDoAluno.objetivos : []) as Array<{ status?: string }>;
+    const objsTotal = objsArr.length;
+    const objsAtingidos = objsArr.filter((o) => o.status === "realizado" || o.status === "atingido").length;
+    const trendTone: "ok" | "warn" | "muted" =
+      objsTotal === 0 ? "muted" : objsAtingidos / objsTotal >= 0.5 ? "ok" : "warn";
+    const trendLabel =
+      objsTotal === 0 ? "—" : `${objsAtingidos}/${objsTotal}`;
+
+    void updateStudent(selected.id, {
+      anamnese: `${eixosOk}/${eixosTotal}`,
+      registros: String(regsDoAluno.length),
+      trend: trendLabel,
+      trendTone,
+    });
+
     toast.success(`${label} salvo`, { description: `Sincronizado para ${selected.name}.` });
   };
 
