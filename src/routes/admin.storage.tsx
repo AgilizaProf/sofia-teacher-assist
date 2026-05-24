@@ -48,7 +48,7 @@ function StoragePage() {
 
       setBuckets([
         {
-          bucket: "curriculos-municipais",
+          bucket: "documentos-professor",
           arquivos: (curriculos ?? []).length,
           bytes: totalCurriculo,
           usuarios: usuariosCurriculo,
