@@ -54,7 +54,11 @@ serve(async (req) => {
     }
     const base64 = btoa(binary);
 
-    // 3. Chamar Gemini Flash-Lite com o PDF
+    // 3. Escolher modelo dinamicamente conforme o tamanho do PDF
+    const pdfSizeMB = bytes.length / (1024 * 1024);
+    const initialModel = pdfSizeMB <= 2 ? "gemini-2.5-flash-lite" : "gemini-2.5-flash";
+    console.log(`[processar-curriculo] PDF size: ${pdfSizeMB.toFixed(2)} MB → modelo inicial: ${initialModel}`);
+
     const prompt = `Você é um assistente especializado em currículos educacionais brasileiros.
 
 Analise este documento de currículo municipal e extraia APENAS as habilidades/objetivos de aprendizagem.
@@ -82,23 +86,30 @@ REGRAS:
 - Inclua habilidades de todos os anos e disciplinas encontrados
 - Retorne APENAS o JSON, sem texto adicional`;
 
-    const geminiRes = await fetch(
-     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GOOGLE_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{
-            role: "user",
-            parts: [
-              { inline_data: { mime_type: "application/pdf", data: base64 } },
-              { text: prompt },
-            ],
-          }],
-          generationConfig: { maxOutputTokens: 32000, responseMimeType: "application/json" },
-        }),
-      }
-    );
+    async function callGemini(model: string) {
+      console.log(`[processar-curriculo] Chamando Gemini com modelo: ${model}`);
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              role: "user",
+              parts: [
+                { inline_data: { mime_type: "application/pdf", data: base64 } },
+                { text: prompt },
+              ],
+            }],
+            generationConfig: { maxOutputTokens: 64000, responseMimeType: "application/json" },
+          }),
+        }
+      );
+      return res;
+    }
+
+    let modelUsed = initialModel;
+    let geminiRes = await callGemini(modelUsed);
 
     if (!geminiRes.ok) {
       const err = await geminiRes.text();
@@ -106,13 +117,40 @@ REGRAS:
       return new Response(JSON.stringify({ error: "Erro ao processar com IA." }), { status: 502, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
-    const geminiData = await geminiRes.json();
-    const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    let geminiData = await geminiRes.json();
+    let rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    let finishReason = geminiData?.candidates?.[0]?.finishReason;
+    console.log(`[processar-curriculo] finishReason (${modelUsed}): ${finishReason}`);
 
     let parsed: { municipio?: string; total_habilidades?: number; habilidades?: unknown[] } = {};
+    let parseOk = false;
     try {
       parsed = JSON.parse(rawText.replace(/```json|```/g, "").trim());
+      parseOk = true;
     } catch {
+      parseOk = false;
+    }
+
+    // Retry com modelo maior se o parse falhou e ainda não usamos o flash
+    if (!parseOk && modelUsed !== "gemini-2.5-flash") {
+      console.warn(`[processar-curriculo] Parse JSON falhou com ${modelUsed}. Tentando novamente com gemini-2.5-flash.`);
+      modelUsed = "gemini-2.5-flash";
+      geminiRes = await callGemini(modelUsed);
+      if (geminiRes.ok) {
+        geminiData = await geminiRes.json();
+        rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+        finishReason = geminiData?.candidates?.[0]?.finishReason;
+        console.log(`[processar-curriculo] finishReason (retry ${modelUsed}): ${finishReason}`);
+        try {
+          parsed = JSON.parse(rawText.replace(/```json|```/g, "").trim());
+          parseOk = true;
+        } catch {
+          parseOk = false;
+        }
+      }
+    }
+
+    if (!parseOk) {
       await admin.from("user_curriculo_municipal").update({ status: "erro", erro_msg: "Não foi possível estruturar as habilidades do documento." }).eq("id", curriculo_id);
       return new Response(JSON.stringify({ error: "Documento não reconhecido como currículo." }), { status: 422, headers: { ...cors, "Content-Type": "application/json" } });
     }
@@ -131,7 +169,7 @@ REGRAS:
     // Registrar uso no budget de IA do usuário
     try {
       const { recordUsage } = await import("../_shared/ai-budget.ts");
-      await recordUsage({ userId, provider: "google", model: "gemini-2.5-flash-lite", task: "processar-curriculo", inputTokens: 60000, outputTokens: habilidades.length * 50 });
+      await recordUsage({ userId, provider: "google", model: modelUsed, task: "processar-curriculo", inputTokens: 60000, outputTokens: habilidades.length * 50 });
     } catch { /* não bloqueia se falhar */ }
 
     return new Response(
