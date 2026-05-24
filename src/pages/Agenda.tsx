@@ -1389,7 +1389,7 @@ export function Agenda() {
             </div>
 
             <div className="ag-col-side">
-              <AgendaSofiaSide onImportM4={openM4Import} m4Count={m4Pending} />
+              <AgendaSofiaSide onImportM4={openM4Import} m4Count={m4Pending} counts={counts} todayKey={todayKey} />
 
               <div className="ag-up-card">
                 <div className="ag-up-head">
