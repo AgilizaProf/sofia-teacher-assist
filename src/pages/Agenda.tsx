@@ -36,14 +36,15 @@ function readM4Store(): M4UserStore {
     return raw ? (JSON.parse(raw) as M4UserStore) : {};
   } catch { return {}; }
 }
+// M4_IMPORTED_KEY mantido apenas para o listener de storage (compatibilidade)
 function readM4Imported(): Set<string> {
   try {
-    const raw = localStorage.getItem(M4_IMPORTED_KEY);
+    const raw = localStorage.getItem(`aprof:${M4_IMPORTED_KEY}`);
     return new Set<string>(raw ? (JSON.parse(raw) as string[]) : []);
   } catch { return new Set(); }
 }
 function writeM4Imported(set: Set<string>) {
-  try { localStorage.setItem(M4_IMPORTED_KEY, JSON.stringify([...set])); } catch { /* noop */ }
+  try { localStorage.setItem(`aprof:${M4_IMPORTED_KEY}`, JSON.stringify([...set])); } catch { /* noop */ }
 }
 
 const css = `
