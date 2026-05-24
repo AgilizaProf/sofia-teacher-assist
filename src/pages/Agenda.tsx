@@ -29,7 +29,7 @@ type M4UserEvt = {
 };
 type M4UserStore = Record<string, M4UserEvt[]>;
 const M4_STORE_KEY = "aprof:plan_m4_user_events";
-const M4_IMPORTED_KEY = "agenda_m4_imported_v1";
+const M4_IMPORTED_KEY = "agenda_m4_imported_v2"; // v2 para não conflitar com dados antigos
 function readM4Store(): M4UserStore {
   try {
     const raw = localStorage.getItem(M4_STORE_KEY);
