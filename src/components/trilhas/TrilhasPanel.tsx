@@ -245,7 +245,10 @@ export function TrilhasPanel() {
           semana: s.semana,
           tema_central: trilha.tema_central || "",
           habilidades_semana: habilidades,
-          resumo_anterior: anterior?.titulo || "",
+          resumo_anterior: (() => {
+            const prevPlano = anterior?.plano_gerado as { ponte_proxima_semana?: string; objetivo_geral?: string } | null | undefined;
+            return prevPlano?.ponte_proxima_semana || prevPlano?.objetivo_geral || anterior?.titulo || "";
+          })(),
           titulo_proxima: proxima?.titulo || "",
           turma: trilha.turma || "",
           ano: trilha.ano_escolar || "",
