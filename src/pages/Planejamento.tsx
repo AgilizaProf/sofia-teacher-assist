@@ -1632,12 +1632,72 @@ export function Planejamento() {
       totalMin,
     };
   }, [focosSelecionados, m1MaxFocos, pillsInt]);
-  const gerarComSofia = () => {
+  const gerarComSofia = async () => {
     if (!ctxResolvido.pronto) {
       showToast("Selecione uma turma cadastrada ou um ano de escolaridade no topo da aba.");
       return;
     }
     setM1Generating(true);
+
+    // Quando há currículo municipal ativo, delega à edge function para que
+    // a Sofia gere atividades alinhadas às habilidades do município.
+    if (curriculoMunicipalAtivo && curriculoMunicipalDados) {
+      try {
+        const diasISO = m1Week.days.map((d) => d.iso);
+        const perDay = m1Modo === "quantidade" ? m1Qtd : m1Modo === "tempo" ? Math.max(1, Math.round(m1Min / 35)) : pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
+        const totalAtiv = diasISO.length * perDay;
+        const { data, error: fnErr } = await supabase.functions.invoke("gerar-atividade", {
+          body: {
+            etapa: "opcoes",
+            tema: m1Tema || "tema da semana",
+            anoEscolar: ctxResolvido.anoLabel,
+            disciplina: focosSelecionados.join(", ") || "Geral",
+            turma: ctxResolvido.turma,
+            curriculo_municipal: {
+              municipio: curriculoMunicipalDados.municipio,
+              habilidades: curriculoMunicipalDados.habilidades || [],
+            },
+            tipoAtividade: "variadas",
+            duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
+            opcoesSelecionadas: Array.from({ length: totalAtiv }, (_, i) => ({ titulo: `Atividade ${i + 1}` })),
+          },
+        });
+        if (fnErr) throw fnErr;
+        const opcoes = (data as { opcoes?: Array<{ titulo?: string; resumo?: string; codigo_hab?: string; tipo?: string }> })?.opcoes ?? [];
+        const dayKeys: DayKey[] = ["seg", "ter", "qua", "qui", "sex"];
+        const plan: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
+        let idx = 0;
+        for (let d = 0; d < 5; d++) {
+          for (let k = 0; k < perDay; k++) {
+            const op = opcoes[idx % Math.max(1, opcoes.length)];
+            idx++;
+            plan[dayKeys[d]].push({
+              id: `m1_${diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}`,
+              v: "port",
+              tag: op?.tipo || "Atividade",
+              title: op?.titulo || `Atividade ${idx}`,
+              bncc: op?.codigo_hab || curriculoMunicipalDados.municipio,
+              minutos: m1Modo === "tempo" ? Math.round(m1Min / perDay) : 40,
+              foco: focosSelecionados[0] || "Municipal",
+              motivo: op?.resumo || "",
+            });
+          }
+        }
+        setM1Plan(plan);
+        const total = (Object.values(plan) as M1Card[][]).flat().length;
+        showToast(total > 0 ? `Sofia montou ${total} atividade(s) com o currículo de ${curriculoMunicipalDados.municipio}. ✨` : "Não consegui gerar atividades agora. Tente novamente.");
+      } catch (e) {
+        showToast("Não consegui gerar com o currículo municipal agora. Usando BNCC como fallback.");
+        const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
+        const plan = sofiaGenerateWeek({ tema: m1Tema, focos: focosLimitados, intensidade: pillsInt, diasISO: m1Week.days.map((d) => d.iso), quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined, minutosPorDia: m1Modo === "tempo" ? m1Min : undefined });
+        setM1Plan(plan);
+      } finally {
+        setM1Generating(false);
+      }
+      return;
+    }
+
+    // Geração local com BNCC (sem currículo municipal)
     setTimeout(() => {
       const focosLimitados = m1MaxFocos === "all"
         ? focosSelecionados
