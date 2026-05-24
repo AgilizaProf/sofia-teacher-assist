@@ -44,7 +44,6 @@ export function CurriculoMunicipalCard() {
       const { error: storageErr } = await supabase.storage
         .from("documentos-professor")
         .upload(path, file, { upsert: true });
-        .upload(path, file, { upsert: true });
       if (storageErr) throw storageErr;
 
       // Criar registro no banco
