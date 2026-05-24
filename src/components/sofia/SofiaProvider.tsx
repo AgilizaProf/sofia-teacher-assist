@@ -167,7 +167,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   // Contexto pedagógico persistido — injetado no system prompt a cada mensagem.
   const [userContext, setUserContextState] = useState<string>(() => {
     if (typeof window === "undefined") return "";
-    return window.localStorage.getItem("sofia_user_context") ?? "";
+    return window.localStorage.getItem("aprof:sofia_user_context") ?? "";
   });
   const setUserContext = useCallback((ctx: string) => {
     setUserContextState(ctx);
