@@ -100,6 +100,11 @@ export function useRealtimeSync() {
                 );
               }
             }
+            if (table === "user_curriculo_municipal") {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("aprof:curriculo-changed"));
+              }
+            }
           },
         );
       }
