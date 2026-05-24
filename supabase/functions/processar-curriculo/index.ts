@@ -17,7 +17,9 @@ serve(async (req) => {
     if (!userId) return new Response(JSON.stringify({ error: "Não autenticado." }), { status: 401, headers: cors });
 
     const body = await req.json().catch(() => ({}));
-    const { curriculo_id, arquivo_path, municipio } = body as { curriculo_id: string; arquivo_path: string; municipio: string };
+    const { curriculo_id, arquivo_path, municipio, ordem } = body as { curriculo_id: string; arquivo_path: string; municipio: string; ordem?: number };
+    const ordemValida: 1 | 2 = ordem === 2 ? 2 : 1;
+    console.log(`[processar-curriculo] curriculo_id=${curriculo_id} ordem=${ordemValida}`);
 
     if (!curriculo_id || !arquivo_path) {
       return new Response(JSON.stringify({ error: "Parâmetros inválidos." }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });

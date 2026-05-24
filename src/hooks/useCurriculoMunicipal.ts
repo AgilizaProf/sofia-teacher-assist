@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type HabilidadeMunicipal = {
@@ -21,58 +21,74 @@ export type CurriculoMunicipal = {
   habilidades: HabilidadeMunicipal[];
   ativo: boolean;
   usar_municipal: boolean;
+  ordem: 1 | 2;
+  eh_padrao: boolean;
   created_at: string;
 };
 
 export function useCurriculoMunicipal() {
-  const [curriculo, setCurriculo] = useState<CurriculoMunicipal | null>(null);
+  const [curriculos, setCurriculos] = useState<CurriculoMunicipal[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!user) { setCurriculos([]); setLoading(false); return; }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any)
         .from("user_curriculo_municipal")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      setCurriculo(data as CurriculoMunicipal | null);
+        .order("ordem", { ascending: true });
+      setCurriculos((data as CurriculoMunicipal[]) ?? []);
     } catch { /* ignore */ }
     setLoading(false);
   }, []);
 
   useEffect(() => { void load(); }, [load]);
 
-  // Polling automático enquanto status = processando (verifica a cada 3s)
+  // Polling automático enquanto algum currículo estiver processando
   useEffect(() => {
-    if (curriculo?.status !== "processando") return;
+    if (!curriculos.some((c) => c.status === "processando")) return;
     const timer = setInterval(() => { void load(); }, 3000);
     return () => clearInterval(timer);
-  }, [curriculo?.status, load]);
+  }, [curriculos, load]);
 
-  const toggleUsarMunicipal = useCallback(async (usar: boolean) => {
-    if (!curriculo) return;
-    setCurriculo((c) => c ? { ...c, usar_municipal: usar } : c);
+  const toggleUsarMunicipal = useCallback(async (id: string, usar: boolean) => {
+    setCurriculos((cs) => cs.map((c) => c.id === id ? { ...c, usar_municipal: usar } : c));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from("user_curriculo_municipal").update({ usar_municipal: usar }).eq("id", curriculo.id);
-  }, [curriculo]);
+    await (supabase as any).from("user_curriculo_municipal").update({ usar_municipal: usar }).eq("id", id);
+  }, []);
 
-  const remover = useCallback(async () => {
-    if (!curriculo) return;
-    // arquivo_path é o caminho real no bucket (userId/timestamp_curriculo.pdf)
-    await supabase.storage.from("documentos-professor").remove([curriculo.arquivo_path]);
+  const definirPadrao = useCallback(async (id: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    setCurriculos((cs) => cs.map((c) => ({ ...c, eh_padrao: c.id === id })));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase as any).from("user_curriculo_municipal").delete().eq("id", curriculo.id);
-    setCurriculo(null);
-  }, [curriculo]);
+    const sb = supabase as any;
+    // Desmarcar todos primeiro (evita conflito com o índice único parcial)
+    await sb.from("user_curriculo_municipal").update({ eh_padrao: false }).eq("user_id", user.id);
+    await sb.from("user_curriculo_municipal").update({ eh_padrao: true }).eq("id", id);
+    await load();
+  }, [load]);
 
-  const isAtivo = curriculo?.status === "ativo" && curriculo?.ativo && curriculo?.usar_municipal;
-  const nomeExibicao = curriculo ? `${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}` : null;
+  const removerPorId = useCallback(async (id: string) => {
+    const alvo = curriculos.find((c) => c.id === id);
+    if (!alvo) return;
+    await supabase.storage.from("documentos-professor").remove([alvo.arquivo_path]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from("user_curriculo_municipal").delete().eq("id", id);
+    setCurriculos((cs) => cs.filter((c) => c.id !== id));
+  }, [curriculos]);
 
-  return { curriculo, loading, load, toggleUsarMunicipal, remover, isAtivo, nomeExibicao };
+  const curriculoPadrao = useMemo<CurriculoMunicipal | null>(() => {
+    if (curriculos.length === 0) return null;
+    return curriculos.find((c) => c.eh_padrao) ?? curriculos[0];
+  }, [curriculos]);
+
+  const isAtivo = !!(curriculoPadrao && curriculoPadrao.status === "ativo" && curriculoPadrao.ativo && curriculoPadrao.usar_municipal);
+  const nomeExibicao = curriculoPadrao ? `${curriculoPadrao.municipio}${curriculoPadrao.estado ? ` (${curriculoPadrao.estado})` : ""}` : null;
+
+  return { curriculos, curriculoPadrao, loading, load, toggleUsarMunicipal, definirPadrao, removerPorId, isAtivo, nomeExibicao };
 }

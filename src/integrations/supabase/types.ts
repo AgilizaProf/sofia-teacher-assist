@@ -1596,11 +1596,13 @@ export type Database = {
           arquivo_path: string
           ativo: boolean | null
           created_at: string
+          eh_padrao: boolean
           erro_msg: string | null
           estado: string | null
           habilidades: Json | null
           id: string
           municipio: string
+          ordem: number
           status: string | null
           updated_at: string
           usar_municipal: boolean | null
@@ -1612,11 +1614,13 @@ export type Database = {
           arquivo_path: string
           ativo?: boolean | null
           created_at?: string
+          eh_padrao?: boolean
           erro_msg?: string | null
           estado?: string | null
           habilidades?: Json | null
           id?: string
           municipio: string
+          ordem?: number
           status?: string | null
           updated_at?: string
           usar_municipal?: boolean | null
@@ -1628,11 +1632,13 @@ export type Database = {
           arquivo_path?: string
           ativo?: boolean | null
           created_at?: string
+          eh_padrao?: boolean
           erro_msg?: string | null
           estado?: string | null
           habilidades?: Json | null
           id?: string
           municipio?: string
+          ordem?: number
           status?: string | null
           updated_at?: string
           usar_municipal?: boolean | null
