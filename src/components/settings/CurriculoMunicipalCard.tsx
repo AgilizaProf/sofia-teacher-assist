@@ -20,6 +20,7 @@ export function CurriculoMunicipalCard() {
 
     setUploading(true);
     try {
+      // eslint-disable-next-line no-useless-catch
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado.");
 
