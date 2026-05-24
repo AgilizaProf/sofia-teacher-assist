@@ -909,6 +909,11 @@ export function Agenda() {
       }
     }
     writeM4Imported(imported);
+    // Sync remoto via usePersistentState — dispara evento para outros dispositivos
+    window.dispatchEvent(new StorageEvent("storage", {
+      key: `aprof:${M4_IMPORTED_KEY}`,
+      newValue: JSON.stringify([...imported]),
+    }));
     setM4Importing(false);
     setM4ImportOpen(false);
     setM4Tick((n) => n + 1);
