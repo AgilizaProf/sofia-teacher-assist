@@ -519,7 +519,17 @@ export function Relatorios() {
   }, [openDropdown]);
 
   const [filterTurma, setFilterTurma] = useState(routeSearch.turma ?? "Todas");
-  const { isAtivo: municipalAtivo, nomeExibicao: nomeMunicipio, curriculo: curriculoMunicipal } = useCurriculoMunicipal();
+  const { curriculos } = useCurriculoMunicipal();
+  const curriculosAtivos = useMemo(() => curriculos.filter((c) => c.status === "ativo"), [curriculos]);
+  const [curriculoSelecionadoId, setCurriculoSelecionadoId] = useState<string>(
+    () => curriculosAtivos.find((c) => c.eh_padrao)?.id ?? (curriculosAtivos[0]?.id ?? "bncc")
+  );
+  const curriculoSelecionado = curriculosAtivos.find((c) => c.id === curriculoSelecionadoId) ?? null;
+  const municipalAtivo = curriculoSelecionado !== null;
+  const nomeMunicipio = curriculoSelecionado
+    ? `${curriculoSelecionado.municipio}${curriculoSelecionado.estado ? ` (${curriculoSelecionado.estado})` : ""}`
+    : null;
+  const curriculoMunicipal = curriculoSelecionado;
   const labelAvaliacao = municipalAtivo && nomeMunicipio ? `Avaliar ${nomeMunicipio}` : "Avaliar BNCC";
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState(routeSearch.pcd === "apenas" ? "Apenas PCD" : "Todos");
