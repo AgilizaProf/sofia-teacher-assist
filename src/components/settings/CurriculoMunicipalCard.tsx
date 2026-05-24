@@ -24,7 +24,7 @@ export function CurriculoMunicipalCard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado.");
 
-      const path = `${user.id}/curriculo.pdf`;
+      const path = `curriculo-${user.id}.pdf`;
 
       // Verificar espaço disponível (limite de 7 MB por usuário, compartilhado entre currículo e calendário)
       const { data: arquivosExistentes } = await supabase.storage
