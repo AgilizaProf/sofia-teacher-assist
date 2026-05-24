@@ -888,7 +888,67 @@ export function Agenda() {
     if (ok > 0) toast.success(`${ok} atividade(s) trazida(s) do calendário M4 para a agenda.`);
     else toast.error("Não foi possível importar as atividades.");
   };
+const handleCalendarioFile = async (file: File) => {
+    const MAX = 7 * 1024 * 1024;
+    if (file.size > MAX) { toast.error("O arquivo deve ter no máximo 7 MB."); return; }
+    if (file.type !== "application/pdf") { toast.error("Apenas arquivos PDF são aceitos."); return; }
 
+    setImportandoCalendario(true);
+    try {
+      const base64 = await new Promise<string>((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res((reader.result as string).split(",")[1]);
+        reader.onerror = () => rej(new Error("Erro ao ler o arquivo."));
+        reader.readAsDataURL(file);
+      });
+
+      const { data, error } = await supabase.functions.invoke("processar-calendario", {
+        body: { pdf_base64: base64 },
+      });
+
+      if (error) throw error;
+
+      const eventos = (data?.eventos ?? []) as Array<{
+        titulo: string; data: string; hora?: string | null;
+        tipo: "meeting" | "eval" | "report" | "plan" | "personal"; descricao?: string | null;
+      }>;
+
+      if (eventos.length === 0) {
+        toast.error("Nenhum evento encontrado no calendário.");
+        return;
+      }
+
+      let criados = 0;
+      for (const ev of eventos) {
+        try {
+          await create({
+            date: ev.data,
+            title: ev.titulo,
+            time: ev.hora || "",
+            type: ev.tipo,
+            notes: ev.descricao || "",
+          });
+          criados++;
+        } catch (e) {
+          console.error("[Agenda] falha ao criar evento do calendário:", e);
+        }
+      }
+
+      toast.success(
+        `${criados} evento${criados !== 1 ? "s" : ""} importado${criados !== 1 ? "s" : ""} do calendário escolar.`,
+        { description: data?.ano ? `Ano letivo ${data.ano}` : undefined }
+      );
+    } catch (e) {
+      const msg = (e as { context?: { error?: string } })?.context?.error
+        || (e as Error)?.message || "Erro ao processar o calendário.";
+      toast.error(msg);
+    } finally {
+      setImportandoCalendario(false);
+      if (calendarFileRef.current) calendarFileRef.current.value = "";
+    }
+  };
+
+  const onDragStartEvent = (e: React.DragEvent, id: string) => {
   const onDragStartEvent = (e: React.DragEvent, id: string) => {
     setDraggedId(id);
     e.dataTransfer.effectAllowed = "move";
