@@ -22,7 +22,6 @@ export function CurriculoMunicipalCard() {
     { ordem: 2, curriculo: slot2 },
   ];
   const totalOcupados = curriculos.length;
-  const proximaOrdemLivre: Ordem | null = !slot1 ? 1 : !slot2 ? 2 : null;
 
   const abrirForm = (ordem: Ordem) => {
     const atual = ordem === 1 ? slot1 : slot2;
