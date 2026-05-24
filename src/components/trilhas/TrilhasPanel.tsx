@@ -104,6 +104,7 @@ export function TrilhasPanel() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [selSemanas, setSelSemanas] = useState<Set<string>>(new Set());
   const [bulkProgresso, setBulkProgresso] = useState<{ feito: number; total: number; falhou: number } | null>(null);
+  const [menuAberto, setMenuAberto] = useState<string | null>(null);
 
   // Detecta se o ano selecionado é Educação Infantil para alinhar a UI
   // (campos de experiência da BNCC) e o prompt enviado para a Sofia.
