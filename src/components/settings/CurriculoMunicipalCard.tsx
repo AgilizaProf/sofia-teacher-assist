@@ -23,11 +23,26 @@ export function CurriculoMunicipalCard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado.");
 
-      const path = `${user.id}/${Date.now()}_curriculo.pdf`;
+      const path = `${user.id}/curriculo.pdf`;
+
+      // Verificar espaço disponível (limite de 7 MB por usuário, compartilhado entre currículo e calendário)
+      const { data: arquivosExistentes } = await supabase.storage
+        .from("documentos-professor")
+        .list(user.id);
+
+      const usoAtual = (arquivosExistentes ?? [])
+        .filter((f) => f.name !== "curriculo.pdf") // desconta o arquivo que será substituído
+        .reduce((total, f) => total + (f.metadata?.size ?? 0), 0);
+
+      if (usoAtual + file.size > MAX_BYTES) {
+        const disponivel = MAX_BYTES - usoAtual;
+        toast.error(`Sem espaço. Disponível: ${(disponivel / 1024 / 1024).toFixed(1)} MB`);
+        return;
+      }
 
       // Upload no Storage
       const { error: storageErr } = await supabase.storage
-        .from("curriculos-municipais")
+        .from("documentos-professor")
         .upload(path, file, { upsert: true });
       if (storageErr) throw storageErr;
 
