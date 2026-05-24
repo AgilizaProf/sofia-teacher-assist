@@ -1461,7 +1461,21 @@ const handleCalendarioFile = async (file: File) => {
             </div>
 
             <div className="ag-col-side">
-              <AgendaSofiaSide onImportM4={openM4Import} m4Count={m4Pending} counts={counts} todayKey={todayKey} />
+              <input
+                ref={calendarFileRef}
+                type="file"
+                accept="application/pdf"
+                style={{ display: "none" }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCalendarioFile(f); }}
+              />
+              <AgendaSofiaSide
+                onImportM4={openM4Import}
+                m4Count={m4Pending}
+                counts={counts}
+                todayKey={todayKey}
+                onImportCalendario={() => calendarFileRef.current?.click()}
+                importandoCalendario={importandoCalendario}
+              />
 
               <div className="ag-up-card">
                 <div className="ag-up-head">
