@@ -885,7 +885,7 @@ export function Agenda() {
     const toImport = m4Items.filter((it) => it.selected);
     if (toImport.length === 0) { setM4ImportOpen(false); return; }
     setM4Importing(true);
-    const imported = readM4Imported();
+    const imported = readM4Imported(); // lê do localStorage com prefixo aprof:
     let ok = 0;
     for (const it of toImport) {
       const evType: EventType = it.evt.cat === "aval" ? "eval" : "plan";
