@@ -88,6 +88,8 @@ const Ctx = createContext<SofiaCtx | null>(null);
 function useRouteContext() {
   const loc = useLocation();
   const sofia = useSofiaContextOptional();
+  const { curriculo, isAtivo: municipalAtivo } = useCurriculoMunicipal();
+  const userData = useSofiaUserDataOptional();
   return useMemo(() => {
     const p = loc.pathname;
     let tela = "Você está na Página inicial (painel do(a) educador(a)).";
