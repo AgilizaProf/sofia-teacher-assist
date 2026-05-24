@@ -31,7 +31,7 @@ async function exportarM4ParaAgenda(
   date: string,
   evt: { id: string; cat: "aulas" | "aval"; title: string; meta?: string; turma?: string; disciplina?: string; minutos?: number },
 ): Promise<void> {
-  const IMPORTED_KEY = "agenda_m4_imported_v1";
+  const IMPORTED_KEY = "aprof:agenda_m4_imported_v2";
   try {
     const notesParts: string[] = [];
     if (evt.turma) notesParts.push(`Turma: ${evt.turma}`);
