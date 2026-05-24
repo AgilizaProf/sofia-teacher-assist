@@ -6,6 +6,8 @@ import { useSofiaContextOptional } from "@/lib/sofia/sofiaContext";
 import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 import { reportError } from "@/lib/admin/track";
 import { registrarMensagemSofia } from "@/lib/creditos/consume";
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
+import { useSofiaUserDataOptional } from "@/lib/sofia/SofiaUserContext";
 
 export type SofiaMessage = {
   role: "user" | "assistant";
