@@ -1070,7 +1070,11 @@ export function Agenda() {
       .sort((a, b) => a.date.localeCompare(b.date))[0];
     const weekDaysWithEvents = new Set(
       filteredEvents
-        .filter((e) => e.date >= weekRange.start && e.date <= weekRange.end && e.date.split("-")[5] !== "0" && e.date.split("-")[5] !== "6")
+        .filter((e) => {
+          if (e.date < weekRange.start || e.date > weekRange.end) return false;
+          const dow = new Date(e.date + "T12:00:00").getDay();
+          return dow !== 0 && dow !== 6; // ignora sábado e domingo
+        })
         .map((e) => e.date)
     ).size;
     return { todayCount, tomorrowCount, weekCount, weekDaysWithEvents, deadlinesCount, nextDeadline };
