@@ -1701,7 +1701,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
         const STATUS = ei ? BNCC_STATUS_EI : BNCC_STATUS;
         const tituloModal = ei
           ? `Avaliação por Campos de Experiência · ${nome}`
-          : `Avaliação BNCC · ${nome}`;
+          : municipalAtivo && nomeMunicipio
+            ? `Avaliação — ${nomeMunicipio} · ${nome}`
+            : `Avaliação BNCC · ${nome}`;
         return (
           <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setBnccOpen(null)}>
             <div className="rel-modal" style={{ maxWidth: 760, width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
