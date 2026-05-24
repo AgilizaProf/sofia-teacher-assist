@@ -50,7 +50,7 @@ export function CurriculoMunicipalCard() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: row, error: dbErr } = await (supabase as any)
         .from("user_curriculo_municipal")
-        .insert({
+        .upsert({
           user_id: user.id,
           municipio: municipio.trim(),
           estado: estado.trim(),
@@ -59,7 +59,8 @@ export function CurriculoMunicipalCard() {
           arquivo_bytes: file.size,
           status: "processando",
           ativo: false,
-        })
+          usar_municipal: false,
+        }, { onConflict: "user_id" })
         .select("id")
         .single();
       if (dbErr) throw dbErr;
