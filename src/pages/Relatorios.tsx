@@ -844,6 +844,28 @@ export function Relatorios() {
     (statusListFor(turma).find((x) => x.k === k)?.label) || "Não observada";
 
   const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
+    // Quando há currículo municipal ativo, agrupa as habilidades por disciplina
+    // e usa como competências no modal — substituindo a lista BNCC hardcoded.
+    if (municipalAtivo && curriculoMunicipal && Array.isArray(curriculoMunicipal.habilidades) && curriculoMunicipal.habilidades.length > 0) {
+      const year = yearForAluno(id, turma);
+      const habFiltradas = curriculoMunicipal.habilidades.filter((h) => {
+        if (!year) return true;
+        const anoH = String(h.ano || "").replace(/\D/g, "");
+        return !anoH || anoH === year;
+      });
+      const habs = habFiltradas.length > 0 ? habFiltradas : curriculoMunicipal.habilidades;
+      const porDisc: Record<string, string[]> = {};
+      habs.forEach((h) => {
+        const disc = h.disciplina || "Geral";
+        if (!porDisc[disc]) porDisc[disc] = [];
+        const label = h.codigo ? `[${h.codigo}] ${h.descricao}` : h.descricao;
+        if (porDisc[disc].length < 12) porDisc[disc].push(label);
+      });
+      const base: BnccArea[] = Object.entries(porDisc).map(([area, comps]) => ({ area, comps }));
+      if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
+      return base;
+    }
+    // Fallback: BNCC hardcoded (sem currículo municipal)
     if (isEiAluno(turma)) {
       const base = EI_CAMPOS_EXPERIENCIA;
       if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
