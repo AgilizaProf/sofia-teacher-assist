@@ -48,6 +48,13 @@ export function useCurriculoMunicipal() {
 
   useEffect(() => { void load(); }, [load]);
 
+  // Recarrega quando outro dispositivo atualiza o currículo via Realtime
+  useEffect(() => {
+    const onSync = () => { void load(); };
+    window.addEventListener("aprof:snapshot-changed", onSync);
+    return () => window.removeEventListener("aprof:snapshot-changed", onSync);
+  }, [load]);
+
   // Polling automático enquanto algum currículo estiver processando
   useEffect(() => {
     if (!curriculos.some((c) => c.status === "processando")) return;

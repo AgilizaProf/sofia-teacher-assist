@@ -33,6 +33,7 @@ const TABLE_TO_QUERY_KEY: Record<string, readonly unknown[] | null> = {
   pei_evidencias: null,
   pei_progresso: null,
   profiles: null,
+  user_curriculo_municipal: null,
   // local-first key/value store — invalidation handled via custom event below
   app_snapshots: null,
 };
