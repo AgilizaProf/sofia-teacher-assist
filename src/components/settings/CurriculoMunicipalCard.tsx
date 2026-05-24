@@ -42,9 +42,10 @@ const usoAtual = (arquivosExistentes ?? [])
       }
 
       // Upload no Storage
-      const { error: storageErr } = await supabase.storage
+      const { data: uploadData, error: storageErr } = await supabase.storage
         .from("documentos-professor")
         .upload(path, file, { upsert: true });
+      console.log("UPLOAD RESULT:", JSON.stringify({ uploadData, storageErr }));
       if (storageErr) throw storageErr;
 
       // Criar registro no banco
