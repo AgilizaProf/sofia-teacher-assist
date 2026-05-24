@@ -1165,7 +1165,16 @@ export function Planejamento() {
   };
   const navigate = useNavigate({ from: "/planejamento" });
   const isEi = useEiMode();
-  const { isAtivo: curriculoMunicipalAtivo, curriculo: curriculoMunicipalDados } = useCurriculoMunicipal();
+  const { curriculos } = useCurriculoMunicipal();
+  const curriculosAtivos = useMemo(
+    () => curriculos.filter((c) => c.status === "ativo"),
+    [curriculos],
+  );
+  const [curriculoPlanoId, setCurriculoPlanoId] = useState<string>(
+    () => curriculosAtivos.find((c) => c.eh_padrao)?.id ?? (curriculosAtivos[0]?.id ?? "bncc"),
+  );
+  const curriculoMunicipalDados = curriculosAtivos.find((c) => c.id === curriculoPlanoId) ?? null;
+  const curriculoMunicipalAtivo = curriculoMunicipalDados !== null;
   const [m, setM] = useState<MKey>(search.m || "atv");
   const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
   const [dropDay, setDropDay] = useState<DayKey | null>(null);
