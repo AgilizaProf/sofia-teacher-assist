@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal, type CurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { toast } from "sonner";
 
-const MAX_BYTES = 7 * 1024 * 1024; // 7MB
+const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15MB total no bucket (currículos + calendário)
+const MAX_FILE_BYTES = 7 * 1024 * 1024;   // 7MB por arquivo individual de currículo
 
 type Ordem = 1 | 2;
 
@@ -38,7 +39,7 @@ export function CurriculoMunicipalCard() {
 
   const handleUpload = async (file: File) => {
     if (formOrdem == null) return;
-    if (file.size > MAX_BYTES) { toast.error("O arquivo deve ter no máximo 7MB."); return; }
+    if (file.size > MAX_FILE_BYTES) { toast.error("Cada currículo deve ter no máximo 7 MB."); return; }
     if (file.type !== "application/pdf") { toast.error("Apenas arquivos PDF são aceitos."); return; }
     if (!municipio.trim()) { toast.error("Informe o nome do município."); return; }
 
@@ -57,8 +58,8 @@ export function CurriculoMunicipalCard() {
       const usoAtual = (arquivosExistentes ?? [])
         .filter((f) => f.name !== path)
         .reduce((total, f) => total + (f.metadata?.size ?? 0), 0);
-      if (usoAtual + file.size > MAX_BYTES) {
-        const disponivel = Math.max(0, MAX_BYTES - usoAtual);
+      if (usoAtual + file.size > MAX_TOTAL_BYTES) {
+        const disponivel = Math.max(0, MAX_TOTAL_BYTES - usoAtual);
         toast.error(`Sem espaço. Disponível: ${(disponivel / 1024 / 1024).toFixed(1)} MB`);
         setUploading(false);
         return;
@@ -198,10 +199,10 @@ export function CurriculoMunicipalCard() {
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}
           >
-            {uploading ? "⏳ Enviando..." : "📄 Selecionar PDF do currículo (máx. 7MB)"}
+            {uploading ? "⏳ Enviando..." : "📄 Selecionar PDF do currículo (máx. 7MB por arquivo)"}
           </button>
           <p style={{ fontSize: 11.5, color: "#9AA3B8", margin: 0 }}>
-            O arquivo fica armazenado com segurança. Apenas você tem acesso. Só PDF, máx. 7MB.
+            O arquivo fica armazenado com segurança. Apenas você tem acesso. Só PDF, máx. 7 MB por arquivo (15 MB total compartilhados com o calendário escolar).
           </p>
         </div>
       )}

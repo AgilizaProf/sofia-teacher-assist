@@ -1804,7 +1804,7 @@ export function Dashboard() {
 
             {/* Capacidade */}
             <div style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#0369A1" }}>
-              <strong>Capacidade:</strong> o arquivo pode ter até <strong>7 MB</strong>. Um trecho de currículo costuma ter menos de 1 MB — sobra bastante espaço. O PDF fica armazenado com segurança e apenas você tem acesso.
+              <strong>Capacidade:</strong> até <strong>15 MB total</strong> (compartilhado entre os 2 currículos e o calendário escolar), com limite de <strong>7 MB por arquivo</strong> de currículo. Um trecho de currículo costuma ter menos de 1 MB — sobra bastante espaço. O PDF fica armazenado com segurança e apenas você tem acesso.
             </div>
 
             <div className="curricuo-divider" />
