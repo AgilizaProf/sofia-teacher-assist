@@ -489,7 +489,14 @@ export function TrilhasPanel() {
           )}
         </div>
         <textarea placeholder="Contexto adicional (opcional): projetos da escola, datas comemorativas..." value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} style={{ ...inputStyle, marginTop: 10, minHeight: 60, width: "100%", resize: "vertical" }} />
-        {error && <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: "#FEF2F2", color: "#991B1B", fontSize: 13 }}>{error}</div>}
+       {error && <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: "#FEF2F2", color: "#991B1B", fontSize: 13 }}>{error}</div>}
+        <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: "#F8FAFC", border: "1px solid var(--line)", fontSize: 12, color: "var(--ink-2)", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <span>💳 Gerar trilha: <strong>50 créditos</strong></span>
+          <span style={{ color: "var(--muted)" }}>·</span>
+          <span>Cada plano semanal: <strong>15 créditos</strong></span>
+          <span style={{ color: "var(--muted)" }}>·</span>
+          <span style={{ color: "var(--muted)" }}>Total estimado (todos os 20 planos): ~<strong style={{ color: "var(--ink-2)" }}>350 créditos</strong></span>
+        </div>
         <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end" }}>
           <button className="pl-btn primary" onClick={gerarTrilha} disabled={loading}>
             {loading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
