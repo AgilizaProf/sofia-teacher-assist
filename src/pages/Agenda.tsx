@@ -1068,7 +1068,12 @@ export function Agenda() {
     const nextDeadline = filteredEvents
       .filter((e) => e.date >= todayKey && (e.type === "report" || e.type === "eval"))
       .sort((a, b) => a.date.localeCompare(b.date))[0];
-    return { todayCount, tomorrowCount, weekCount, deadlinesCount, nextDeadline };
+    const weekDaysWithEvents = new Set(
+      filteredEvents
+        .filter((e) => e.date >= weekRange.start && e.date <= weekRange.end && e.date.split("-")[5] !== "0" && e.date.split("-")[5] !== "6")
+        .map((e) => e.date)
+    ).size;
+    return { todayCount, tomorrowCount, weekCount, weekDaysWithEvents, deadlinesCount, nextDeadline };
   }, [filteredEvents, todayKey, tomorrowKey, weekRange]);
 
   // Próximos compromissos: ordenados por data+hora, removendo os que já passaram.
