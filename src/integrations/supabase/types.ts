@@ -1589,6 +1589,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_curriculo_municipal: {
+        Row: {
+          arquivo_bytes: number | null
+          arquivo_nome: string | null
+          arquivo_path: string
+          ativo: boolean | null
+          created_at: string
+          erro_msg: string | null
+          estado: string | null
+          habilidades: Json | null
+          id: string
+          municipio: string
+          status: string | null
+          updated_at: string
+          usar_municipal: boolean | null
+          user_id: string
+        }
+        Insert: {
+          arquivo_bytes?: number | null
+          arquivo_nome?: string | null
+          arquivo_path: string
+          ativo?: boolean | null
+          created_at?: string
+          erro_msg?: string | null
+          estado?: string | null
+          habilidades?: Json | null
+          id?: string
+          municipio: string
+          status?: string | null
+          updated_at?: string
+          usar_municipal?: boolean | null
+          user_id: string
+        }
+        Update: {
+          arquivo_bytes?: number | null
+          arquivo_nome?: string | null
+          arquivo_path?: string
+          ativo?: boolean | null
+          created_at?: string
+          erro_msg?: string | null
+          estado?: string | null
+          habilidades?: Json | null
+          id?: string
+          municipio?: string
+          status?: string | null
+          updated_at?: string
+          usar_municipal?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
