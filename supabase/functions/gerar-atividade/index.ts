@@ -111,6 +111,7 @@ serve(async (req) => {
       "ESTRITAMENTE alinhados à BNCC (Base Nacional Comum Curricular), em PT-BR, " +
       "claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. " +
       "Não invente dados sobre alunos.\n\n" +
+      "REGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de \"observações\", \"registros\", \"diário\", \"anamnese\", \"PEI\", \"laudo\", \"planejamento\" ou qualquer outra fonte. Escreva sempre como conhecimento direto sobre o(a) aluno(a). Evite: \"segundo as observações\", \"de acordo com os registros\", \"de acordo com o PEI\", \"de acordo com a anamnese\", \"conforme o PEI\", \"com base na anamnese\", \"com base no planejamento\", \"o PEI prevê\", \"conforme planejado\", \"as anotações indicam\" — descreva os fatos diretamente.\n\n" +
       "REGRAS BNCC OBRIGATÓRIAS:\n" +
       "1) O TEMA/CONTEÚDO da aula deve ser um OBJETO DE CONHECIMENTO previsto pela " +
       "BNCC para o ano escolar e a disciplina/campo de experiência informados. " +
