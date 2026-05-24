@@ -858,7 +858,7 @@ export function Agenda() {
   }, [m4Tick, agendaKeySet]);
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === M4_STORE_KEY || e.key === M4_IMPORTED_KEY) setM4Tick((n) => n + 1);
+      if (e.key === M4_STORE_KEY || e.key === `aprof:${M4_IMPORTED_KEY}`) setM4Tick((n) => n + 1);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
