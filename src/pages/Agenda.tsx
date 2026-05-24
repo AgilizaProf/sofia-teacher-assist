@@ -472,10 +472,17 @@ function AgendaSofiaSide({ onImportM4, m4Count, counts, todayKey, onImportCalend
         </div>
         <>
           <div className="ag-sofia-msg">{msg}</div>
-          <div className="ag-sofia-actions">
+         <div className="ag-sofia-actions">
             <button className="ag-sofia-action" onClick={onImportM4}>
               <span className="ag-sofia-action-ic">🗂️</span>
               <b>Trazer atividades agendadas (M4){m4Count > 0 ? ` · ${m4Count}` : ""}</b>
+            </button>
+            <button className="ag-sofia-action" onClick={onImportCalendario} disabled={importandoCalendario}>
+              <span className="ag-sofia-action-ic">{importandoCalendario ? "⏳" : "📅"}</span>
+              <div>
+                <b>{importandoCalendario ? "Lendo calendário…" : "Importar calendário escolar (PDF)"}</b>
+                <small>Máx. 7 MB · a Sofia lê e cria os eventos automaticamente</small>
+              </div>
             </button>
           </div>
         </>
