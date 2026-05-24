@@ -90,5 +90,7 @@ export function useCurriculoMunicipal() {
   const isAtivo = !!(curriculoPadrao && curriculoPadrao.status === "ativo" && curriculoPadrao.ativo && curriculoPadrao.usar_municipal);
   const nomeExibicao = curriculoPadrao ? `${curriculoPadrao.municipio}${curriculoPadrao.estado ? ` (${curriculoPadrao.estado})` : ""}` : null;
 
-  return { curriculos, curriculoPadrao, loading, load, toggleUsarMunicipal, definirPadrao, removerPorId, isAtivo, nomeExibicao };
+  // `curriculo` é mantido como alias de `curriculoPadrao` para compatibilidade
+  // com páginas que ainda não migraram (Relatórios, Planejamento, Inclusão, etc.).
+  return { curriculos, curriculoPadrao, curriculo: curriculoPadrao, loading, load, toggleUsarMunicipal, definirPadrao, removerPorId, isAtivo, nomeExibicao };
 }
