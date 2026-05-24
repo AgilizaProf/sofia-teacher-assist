@@ -888,7 +888,8 @@ export function Agenda() {
     if (ok > 0) toast.success(`${ok} atividade(s) trazida(s) do calendário M4 para a agenda.`);
     else toast.error("Não foi possível importar as atividades.");
   };
-const handleCalendarioFile = async (file: File) => {
+
+  const handleCalendarioFile = async (file: File) => {
     const MAX = 7 * 1024 * 1024;
     if (file.size > MAX) { toast.error("O arquivo deve ter no máximo 7 MB."); return; }
     if (file.type !== "application/pdf") { toast.error("Apenas arquivos PDF são aceitos."); return; }
