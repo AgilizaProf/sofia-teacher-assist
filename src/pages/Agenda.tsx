@@ -257,8 +257,158 @@ function AgendaSofiaSide({ onImportM4, m4Count, counts, todayKey }: {
   const fimBimestre = ctx.temporal.fim_de_bimestre_em_dias;
   const periodo = ctx.temporal.periodo;
 
+  const diaSemana = ctx.temporal.dia_semana;
+  const hora = new Date().getHours();
+
+  const diffDias = (dateStr: string) => {
+    const diff = Math.round((new Date(dateStr + "T12:00:00").getTime() - new Date(todayKey + "T12:00:00").getTime()) / 86400000);
+    return diff;
+  };
+
   const msg = (() => {
+    // ── Prazo urgente (≤3 dias) — prioridade máxima ──────────────────────
+    if (counts.nextDeadline) {
+      const dias = diffDias(counts.nextDeadline.date);
+      if (dias <= 3) {
+        return (
+          <>
+            {dias === 0
+              ? <>⚠️ <b>{counts.nextDeadline.title}</b> é <b>hoje</b>. Preparação em dia?</>
+              : dias === 1
+              ? <>⚠️ <b>{counts.nextDeadline.title}</b> é <b>amanhã</b>. Tudo certo?</>
+              : <>⚠️ <b>{counts.nextDeadline.title}</b> em <b>{dias} dias</b>. Quer revisar o que ainda falta?</>
+            }
+          </>
+        );
+      }
+    }
+
+    // ── Segunda de manhã ─────────────────────────────────────────────────
+    if (diaSemana === "seg" && periodo === "manha") {
+      if (counts.weekCount > 0) {
+        return (
+          <>
+            Semana nova! Você tem <b>{counts.weekCount} evento{counts.weekCount > 1 ? "s" : ""}</b> esta semana
+            {counts.deadlinesCount > 0 ? <> e <b>{counts.deadlinesCount} prazo{counts.deadlinesCount > 1 ? "s" : ""}</b> chegando</> : ""}.
+            {" "}Quer que eu destaque o que precisa de preparação?
+          </>
+        );
+      }
+      return (
+        <>
+          Semana nova e a agenda está livre! Boa hora para planejar os marcos do período
+          {turma ? <> para a <b>{turma}</b></> : ""}.
+        </>
+      );
+    }
+
+    // ── Sexta à tarde ────────────────────────────────────────────────────
+    if (diaSemana === "sex" && (periodo === "tarde" || periodo === "noite")) {
+      return (
+        <>
+          Semana quase fechando
+          {turma ? <> na <b>{turma}</b></> : ""}. Faltou registrar algo? Posso te lembrar no próximo mês.
+        </>
+      );
+    }
+
+    // ── Fim do dia (após 17h qualquer dia) ───────────────────────────────
+    if (hora >= 17 && counts.todayCount > 0) {
+      return (
+        <>
+          Fim do dia! Você tinha <b>{counts.todayCount} compromisso{counts.todayCount > 1 ? "s" : ""}</b> hoje. Quer registrar como foi?
+        </>
+      );
+    }
+
+    // ── Véspera de evento importante ─────────────────────────────────────
+    if (counts.tomorrowCount > 0 && counts.nextDeadline) {
+      const dias = diffDias(counts.nextDeadline.date);
+      if (dias === 1) {
+        return (
+          <>
+            Amanhã você tem <b>{counts.nextDeadline.title}</b>. Preparação em dia?
+          </>
+        );
+      }
+    }
+
+    // ── Agenda do mês vazia ──────────────────────────────────────────────
     if (eventos === 0) {
+      if (m4Count > 0) {
+        return (
+          <>
+            Você tem <b>{m4Count}</b> atividade{m4Count > 1 ? "s" : ""} planejada{m4Count > 1 ? "s" : ""} no M4 ainda não na agenda de <b>{mes}</b>. Quer trazer agora?
+          </>
+        );
+      }
+      if (fimBimestre !== null && fimBimestre !== undefined && fimBimestre <= 30) {
+        return (
+          <>
+            Agenda de <b>{mes}</b> ainda vazia e o bimestre fecha em <b>{fimBimestre} dias</b>. Posso preencher os marcos — fechamento, conselho de classe e reuniões.
+          </>
+        );
+      }
+      if (turma) {
+        return (
+          <>
+            Agenda de <b>{mes}</b> vazia para a <b>{turma}</b>. Posso preencher os marcos do mês — fechamento de bimestre, conselho de classe e reuniões. Leva 30 segundos.
+          </>
+        );
+      }
+      return (
+        <>
+          Sua agenda de <b>{mes}</b> tá em branco. Posso preencher os marcos do mês: reunião pedagógica, fechamento do bimestre, conselho de classe e feriados.
+        </>
+      );
+    }
+
+    // ── Fim de bimestre próximo ──────────────────────────────────────────
+    if (fimBimestre !== null && fimBimestre !== undefined && fimBimestre <= 14) {
+      return (
+        <>
+          Faltam <b>{fimBimestre} dia{fimBimestre !== 1 ? "s" : ""}</b> para o fim do bimestre. Você tem <b>{eventos}</b> evento{eventos > 1 ? "s" : ""} em <b>{mes}</b> — quer revisar o que ainda precisa fechar?
+        </>
+      );
+    }
+
+    // ── Aluno PCD sem destaque recente ───────────────────────────────────
+    if (pcds.length > 0) {
+      const nomePcd = pcds[0].nome.split(" ")[0];
+      return (
+        <>
+          {periodo === "manha" ? "Bom dia" : periodo === "tarde" ? "Boa tarde" : "Boa noite"}! Você tem <b>{eventos}</b> evento{eventos > 1 ? "s" : ""} em <b>{mes}</b>. Lembrei que <b>{nomePcd}</b>{pcds.length > 1 ? ` e mais ${pcds.length - 1}` : ""} tem{pcds.length > 1 ? "têm" : ""} atendimento este mês — está no planejamento?
+        </>
+      );
+    }
+
+    // ── Semana intensa ───────────────────────────────────────────────────
+    if (counts.weekCount >= 4) {
+      return (
+        <>
+          Semana intensa — <b>{counts.weekCount} eventos</b>
+          {counts.deadlinesCount > 0 ? <> e <b>{counts.deadlinesCount} prazo{counts.deadlinesCount > 1 ? "s" : ""}</b></> : ""}. Lembra de reservar tempo para os registros dos alunos.
+        </>
+      );
+    }
+
+    // ── M4 pendente ──────────────────────────────────────────────────────
+    if (m4Count > 0) {
+      return (
+        <>
+          Você tem <b>{eventos}</b> evento{eventos > 1 ? "s" : ""} em <b>{mes}</b> e <b>{m4Count}</b> atividade{m4Count > 1 ? "s" : ""} do planejamento ainda não na agenda. Quer sincronizar?
+        </>
+      );
+    }
+
+    // ── Estado tranquilo — padrão ────────────────────────────────────────
+    return (
+      <>
+        Você tem <b>{eventos}</b> evento{eventos > 1 ? "s" : ""} em <b>{mes}</b>
+        {turma ? <>, <b>{turma}</b></> : ""}. Tudo certo por aqui!
+      </>
+    );
+  })();
       if (m4Count > 0) {
         return (
           <>
