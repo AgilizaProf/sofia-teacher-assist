@@ -448,7 +448,7 @@ function AgendaSofiaSide({ onImportM4, m4Count, counts, todayKey, onImportCalend
               <span className="ag-sofia-action-ic">{importandoCalendario ? "⏳" : "📅"}</span>
               <div>
                 <b>{importandoCalendario ? "Lendo calendário…" : "Importar calendário escolar (PDF)"}</b>
-                <small>Máx. 7 MB · a Sofia lê e cria os eventos automaticamente</small>
+                <small>Máx. 15 MB total · a Sofia lê e cria os eventos automaticamente</small>
               </div>
             </button>
           </div>
@@ -916,12 +916,35 @@ export function Agenda() {
   };
 
   const handleCalendarioFile = async (file: File) => {
-    const MAX = 7 * 1024 * 1024;
-    if (file.size > MAX) { toast.error("O arquivo deve ter no máximo 7 MB."); return; }
+    const MAX = 15 * 1024 * 1024;
+    if (file.size > MAX) { toast.error("O arquivo deve ter no máximo 15 MB."); return; }
     if (file.type !== "application/pdf") { toast.error("Apenas arquivos PDF são aceitos."); return; }
 
     setImportandoCalendario(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error("Não autenticado."); return; }
+      const calendarioPath = `calendario-${user.id}.pdf`;
+
+      // Validação de espaço — soma todos os arquivos exceto o próprio calendário (se já existir)
+      const { data: arquivos } = await supabase.storage
+        .from("documentos-professor")
+        .list("");
+      const usoAtual = (arquivos ?? [])
+        .filter((f) => f.name !== calendarioPath)
+        .reduce((total, f) => total + (f.metadata?.size ?? 0), 0);
+      if (usoAtual + file.size > MAX) {
+        const disponivel = Math.max(0, MAX - usoAtual);
+        toast.error(`Sem espaço. Disponível: ${(disponivel / 1024 / 1024).toFixed(1)} MB`);
+        return;
+      }
+
+      // Salva o PDF no bucket para que conte no uso total compartilhado
+      const { error: upErr } = await supabase.storage
+        .from("documentos-professor")
+        .upload(calendarioPath, file, { upsert: true });
+      if (upErr) throw upErr;
+
       const base64 = await new Promise<string>((res, rej) => {
         const reader = new FileReader();
         reader.onload = () => res((reader.result as string).split(",")[1]);
