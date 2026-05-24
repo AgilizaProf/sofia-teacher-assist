@@ -976,7 +976,6 @@ export function Agenda() {
   };
 
   const onDragStartEvent = (e: React.DragEvent, id: string) => {
-  const onDragStartEvent = (e: React.DragEvent, id: string) => {
     setDraggedId(id);
     e.dataTransfer.effectAllowed = "move";
     try { e.dataTransfer.setData("text/plain", id); } catch { /* noop */ }
@@ -1908,5 +1907,4 @@ export function Agenda() {
       </div>
     </div>
   );
-}
 }
