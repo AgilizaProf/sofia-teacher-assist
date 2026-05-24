@@ -93,25 +93,20 @@ export function CurriculoMunicipalCard() {
         .single();
       if (dbErr) throw dbErr;
 
-      toast.info("Arquivo enviado. Processando habilidades com IA...");
       fecharForm();
 
-      const { error: fnErr } = await supabase.functions.invoke("processar-curriculo", {
+      await supabase.functions.invoke("processar-curriculo", {
         body: { curriculo_id: row.id, arquivo_path: path, municipio: municipio.trim(), ordem },
       });
-      if (fnErr) {
-        toast.error("Erro ao processar o currículo. Tente novamente.");
-      } else {
-        toast.success("Currículo municipal processado com sucesso!");
-        void import("@/lib/admin/track").then(({ trackEvent }) =>
-          trackEvent("curriculo_municipal_upload", {
-            municipio: municipio.trim(),
-            estado: estado.trim() || null,
-            arquivo_bytes: file.size,
-            ordem,
-          })
-        );
-      }
+      toast.info("Arquivo enviado! Processando habilidades em background...");
+      void import("@/lib/admin/track").then(({ trackEvent }) =>
+        trackEvent("curriculo_municipal_upload", {
+          municipio: municipio.trim(),
+          estado: estado.trim() || null,
+          arquivo_bytes: file.size,
+          ordem,
+        })
+      );
       await load();
     } catch (e) {
       toast.error((e as Error)?.message || "Erro no upload.");
