@@ -172,7 +172,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const setUserContext = useCallback((ctx: string) => {
     setUserContextState(ctx);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("sofia_user_context", ctx);
+      window.localStorage.setItem("aprof:sofia_user_context", ctx);
     }
   }, []);
   const proactiveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
