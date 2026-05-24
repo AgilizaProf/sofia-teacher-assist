@@ -90,8 +90,9 @@ if (fnErr) {
       await load();
     } catch (e) {
       toast.error((e as Error)?.message || "Erro no upload.");
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   const inp: React.CSSProperties = {
