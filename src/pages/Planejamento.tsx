@@ -4638,6 +4638,16 @@ export function Planejamento() {
                   </select>
                 </label>
               </div>
+              {curriculosAtivos.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>Rede de ensino:</span>
+                  <SeletorCurriculo
+                    curriculos={curriculosAtivos}
+                    value={curriculoPlanoId}
+                    onChange={setCurriculoPlanoId}
+                  />
+                </div>
+              )}
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>
                   <span>Progresso ({M6_PERIODO_META[m6Periodo].label.toLowerCase()})</span>
