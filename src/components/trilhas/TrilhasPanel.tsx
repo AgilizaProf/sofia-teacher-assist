@@ -335,6 +335,14 @@ export function TrilhasPanel() {
   // Limpa seleção quando troca de trilha aberta.
   useEffect(() => { setSelSemanas(new Set()); setBulkProgresso(null); }, [selected]);
 
+  // Fecha o menu ⋮ ao clicar em qualquer lugar fora dele.
+  useEffect(() => {
+    if (!menuAberto) return;
+    const handler = () => setMenuAberto(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [menuAberto]);
+
   const excluirSemana = async (s: Semana, trilhaId: string) => {
     if (!confirm(`Excluir a semana S${s.semana}${s.titulo ? ` — ${s.titulo}` : ""}? As demais serão renumeradas.`)) return;
     // Apaga e recompacta a numeração para manter S1..Sn sem buracos.
