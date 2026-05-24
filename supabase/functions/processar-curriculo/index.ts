@@ -36,7 +36,7 @@ serve(async (req) => {
 
     // 1. Baixar o PDF do Storage
     const { data: fileData, error: fileErr } = await admin.storage
-      .from("curriculos-municipais")
+      .from("documentos-professor")
       .download(arquivo_path);
 
     if (fileErr || !fileData) {
