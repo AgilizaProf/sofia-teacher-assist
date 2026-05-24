@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles, Printer } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
