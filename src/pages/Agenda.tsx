@@ -804,6 +804,8 @@ export function Agenda() {
   const [m4ImportOpen, setM4ImportOpen] = useState(false);
   const [m4Items, setM4Items] = useState<M4ImportItem[]>([]);
   const [m4Importing, setM4Importing] = useState(false);
+  const [importandoCalendario, setImportandoCalendario] = useState(false);
+  const calendarFileRef = useRef<HTMLInputElement>(null);
   const [m4Tick, setM4Tick] = useState(0);
   // Considera um evento M4 como "já na agenda" se houver evento na mesma
   // data com o mesmo título (case-insensitive, trim). Isto permite que o
