@@ -38,7 +38,7 @@ function StoragePage() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      // curriculos-municipais — dados do banco (arquivo_bytes)
+      // documentos-professor — dados do banco (arquivo_bytes)
       const { data: curriculos } = await (supabase as any)
         .from("user_curriculo_municipal")
         .select("user_id, arquivo_bytes");
