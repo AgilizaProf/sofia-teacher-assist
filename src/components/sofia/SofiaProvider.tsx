@@ -134,8 +134,38 @@ function useRouteContext() {
         'Nível de ensino: NÃO INFORMADO. Antes de responder qualquer pedido pedagógico, pergunte: "Para te ajudar melhor, com qual nível de ensino você está trabalhando? 🧸 Educação Infantil  📚 Ensino Fundamental  🎓 Ensino Médio". Use a resposta para adaptar toda a conversa.',
       );
     }
+    // ── Currículo municipal ─────────────────────────────────────────────
+    if (municipalAtivo && curriculo && Array.isArray(curriculo.habilidades) && curriculo.habilidades.length > 0) {
+      const nome = `${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}`;
+      linhas.push(`\nCURRÍCULO MUNICIPAL ATIVO: ${nome}.`);
+      linhas.push(`O professor(a) usa o Currículo Municipal de ${nome} como referencial — NÃO cite códigos BNCC quando responder sobre planejamento ou habilidades, use os códigos municipais quando disponíveis.`);
+      const habResumidas = curriculo.habilidades.slice(0, 40)
+        .map((h) => `  - [${h.codigo || "—"}] ${h.descricao} (${h.ano || "—"} · ${h.disciplina || "—"})`)
+        .join("\n");
+      linhas.push(`Habilidades do currículo municipal (amostra):\n${habResumidas}`);
+    } else {
+      linhas.push("Referencial curricular: BNCC (nenhum currículo municipal anexado).");
+    }
+
+    // ── Agenda real ─────────────────────────────────────────────────────
+    const agenda = userData?.agenda ?? [];
+    if (agenda.length > 0) {
+      const hoje = new Date().toISOString().slice(0, 10);
+      const proximos = agenda
+        .filter((e) => e.date >= hoje)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 10);
+      if (proximos.length > 0) {
+        const linhasAgenda = proximos.map((e) => {
+          const data = e.date.split("-").reverse().join("/");
+          return `  - ${data}${e.hora ? ` às ${e.hora}` : ""}: ${e.title || "(sem título)"}${e.type ? ` [${e.type}]` : ""}${e.notas ? ` — ${e.notas}` : ""}`;
+        }).join("\n");
+        linhas.push(`\nAGENDA (próximos eventos):\n${linhasAgenda}`);
+      }
+    }
+
     return linhas.join("\n");
-  }, [loc.pathname, sofia?.entity?.turma_atual, sofia?.entity?.todos_alunos_pcd, sofia?.dataState]);
+  }, [loc.pathname, sofia?.entity?.turma_atual, sofia?.entity?.todos_alunos_pcd, sofia?.dataState, curriculo, municipalAtivo, userData?.agenda]);
 }
 
 function useRouteName() {
