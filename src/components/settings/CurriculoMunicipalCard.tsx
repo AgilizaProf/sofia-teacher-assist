@@ -28,12 +28,12 @@ export function CurriculoMunicipalCard() {
 
       // Verificar espaço disponível (limite de 7 MB por usuário, compartilhado entre currículo e calendário)
       const { data: arquivosExistentes } = await supabase.storage
-        .from("documentos-professor")
-        .list(user.id);
+  .from("documentos-professor")
+  .list("");
 
-      const usoAtual = (arquivosExistentes ?? [])
-        .filter((f) => f.name !== "curriculo.pdf") // desconta o arquivo que será substituído
-        .reduce((total, f) => total + (f.metadata?.size ?? 0), 0);
+const usoAtual = (arquivosExistentes ?? [])
+  .filter((f) => f.name !== `curriculo-${user.id}.pdf`)
+  .reduce((total, f) => total + (f.metadata?.size ?? 0), 0);
 
       if (usoAtual + file.size > MAX_BYTES) {
         const disponivel = MAX_BYTES - usoAtual;
