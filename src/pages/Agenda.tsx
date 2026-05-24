@@ -243,11 +243,13 @@ const MONTHS_PT = [
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
 ];
 
-function AgendaSofiaSide({ onImportM4, m4Count, counts, todayKey }: {
+function AgendaSofiaSide({ onImportM4, m4Count, counts, todayKey, onImportCalendario, importandoCalendario }: {
   onImportM4: () => void;
   m4Count: number;
   counts: { todayCount: number; tomorrowCount: number; weekCount: number; deadlinesCount: number; nextDeadline?: { title: string; date: string; type: string } };
   todayKey: string;
+  onImportCalendario: () => void;
+  importandoCalendario: boolean;
 }) {
   const ctx = useSofiaContext();
   const mes = MONTHS_PT[new Date().getMonth()].toLowerCase();
