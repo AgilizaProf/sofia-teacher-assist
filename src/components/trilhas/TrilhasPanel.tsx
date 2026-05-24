@@ -577,7 +577,8 @@ export function TrilhasPanel() {
                         style={{ background: isOver ? "#FFF7ED" : checado ? "#FFF7ED" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : checado ? "1px solid var(--orange)" : "none", transition: "background .12s ease" }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                          <span title="Arraste para reordenar" style={{ cursor: "grab", color: "var(--muted)", display: "inline-flex", alignItems: "center", padding: "2px 0", touchAction: "none" }} aria-label="Arrastar semana">
+                          {/* Esquerda: alça de drag + checkbox */}
+                          <span title="Arraste para reordenar" style={{ cursor: "grab", color: "var(--muted)", display: "inline-flex", alignItems: "center", padding: "2px 0", touchAction: "none", flexShrink: 0 }} aria-label="Arrastar semana">
                             <GripVertical size={14} />
                           </span>
                           <input
@@ -587,34 +588,56 @@ export function TrilhasPanel() {
                             onClick={(e) => e.stopPropagation()}
                             onChange={(e) => { e.stopPropagation(); toggleSelSemana(s.id); }}
                             title={podeSelecionar ? "Marcar para gerar em lote" : "Plano já gerado"}
-                            style={{ width: 14, height: 14, accentColor: "var(--orange)", cursor: podeSelecionar ? "pointer" : "not-allowed" }}
+                            style={{ width: 14, height: 14, accentColor: "var(--orange)", cursor: podeSelecionar ? "pointer" : "not-allowed", flexShrink: 0 }}
                           />
-                          <span style={{ minWidth: 28, fontWeight: 600, color: "var(--orange)" }}>S{s.semana}</span>
-                          <span style={{ flex: 1 }}>{s.titulo}</span>
-                          <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: s.status === "concluida" ? "#D1FAE5" : s.status === "em_andamento" ? "#DBEAFE" : "#F1F5F9", color: s.status === "concluida" ? "#065F46" : s.status === "em_andamento" ? "#1E40AF" : "#64748B" }}>{s.status}</span>
+                          {/* Centro: número + título + badge status */}
+                          <span style={{ minWidth: 28, fontWeight: 600, color: "var(--orange)", flexShrink: 0 }}>S{s.semana}</span>
+                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.titulo}</span>
+                          <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 99, flexShrink: 0, background: s.status === "concluida" ? "#D1FAE5" : s.status === "em_andamento" ? "#DBEAFE" : "#F1F5F9", color: s.status === "concluida" ? "#065F46" : s.status === "em_andamento" ? "#1E40AF" : "#64748B" }}>
+                            {s.status === "concluida" ? "✓ concluída" : s.status === "em_andamento" ? "em andamento" : "pendente"}
+                          </span>
+                          {/* Direita: ação principal */}
                           {s.plano_gerado ? (
-                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); setPlanoAberto(planoAberto === s.id ? null : s.id); }} style={{ fontSize: 11 }}>
+                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); setPlanoAberto(planoAberto === s.id ? null : s.id); }} style={{ fontSize: 11, flexShrink: 0 }}>
                               {planoAberto === s.id ? "Ocultar" : "Ver plano"}
                             </button>
                           ) : (
-                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); gerarPlanoSemana(t, s); }} disabled={gerandoSemana === s.id} style={{ fontSize: 11 }}>
+                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); void gerarPlanoSemana(t, s); }} disabled={gerandoSemana === s.id} style={{ fontSize: 11, flexShrink: 0 }}>
                               {gerandoSemana === s.id ? <Loader2 size={11} className="animate-spin" /> : <Wand2 size={11} />}
                               {gerandoSemana === s.id ? "Gerando…" : "Gerar plano"}
                             </button>
                           )}
-                          {s.status !== "concluida" && Boolean(s.plano_gerado) && (
-                            <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); concluirSemana(s, t.id); }} title="Marcar como concluída" style={{ fontSize: 11 }}>
-                              <CheckCircle2 size={11} />
+                          {/* Menu ⋮ com ações secundárias */}
+                          <div style={{ position: "relative", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="pl-btn ghost"
+                              onClick={() => setMenuAberto(menuAberto === s.id ? null : s.id)}
+                              title="Mais ações"
+                              style={{ fontSize: 14, padding: "2px 6px", lineHeight: 1 }}
+                            >
+                              ⋮
                             </button>
-                          )}
-                          <button
-                            className="pl-btn ghost"
-                            onClick={(e) => { e.stopPropagation(); void excluirSemana(s, t.id); }}
-                            title="Excluir semana"
-                            style={{ fontSize: 11, color: "#991B1B" }}
-                          >
-                            <Trash2 size={11} />
-                          </button>
+                            {menuAberto === s.id && (
+                              <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", zIndex: 100, background: "#fff", border: "1px solid var(--line)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,.08)", padding: 4, minWidth: 170, display: "grid", gap: 2 }}>
+                                {s.status !== "concluida" && Boolean(s.plano_gerado) && (
+                                  <button
+                                    className="pl-btn ghost"
+                                    onClick={() => { void concluirSemana(s, t.id); setMenuAberto(null); }}
+                                    style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", justifyContent: "flex-start" }}
+                                  >
+                                    <CheckCircle2 size={13} /> Marcar como concluída
+                                  </button>
+                                )}
+                                <button
+                                  className="pl-btn ghost"
+                                  onClick={() => { void excluirSemana(s, t.id); setMenuAberto(null); }}
+                                  style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", justifyContent: "flex-start", color: "#991B1B" }}
+                                >
+                                  <Trash2 size={13} /> Excluir semana
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         {planoAberto === s.id && s.plano_gerado != null && (
                           <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8, padding: 10, background: "#fff", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12.5, color: "var(--ink-2)" }}>
