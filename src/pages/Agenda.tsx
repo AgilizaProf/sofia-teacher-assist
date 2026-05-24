@@ -504,19 +504,78 @@ function AgendaSofiaSide({ onImportM4, m4Count, counts, todayKey, onImportCalend
           </div>
         </>
       </div>
-      <div className="ag-stat-card">
+     <div className="ag-stat-card">
         <div className="ag-stat-head"><Clock size={11} style={{ display: "inline", marginRight: 4 }} />Você esta semana</div>
-        {horas > 0 || eventos >= 1 ? (
-          <>
-            <div className="ag-stat-big">{horas}h <small>economizadas</small></div>
-            <div className="ag-stat-desc">Tempo devolvido a você este mês com a Sofia.</div>
-          </>
-        ) : (
-          <>
-            <div className="ag-stat-big">~2h <small>economizáveis</small></div>
-            <div className="ag-stat-desc" title="Potencial baseado em educadores(as) com perfil parecido">Potencial estimado para esta semana.</div>
-          </>
-        )}
+        {(() => {
+          const w = counts.weekCount;
+          const d = counts.deadlinesCount;
+          const t = counts.todayCount;
+
+          // Carga da semana — Opção A
+          const diasOcupados = Math.min(5, w); // máx 5 dias úteis
+          const pct = Math.round((diasOcupados / 5) * 100);
+          const tone = pct >= 80 ? "crit" : pct >= 50 ? "warn" : "ok";
+          const cargaLabel = pct >= 80 ? "Semana intensa" : pct >= 50 ? "Semana moderada" : w === 0 ? "Semana livre" : "Semana tranquila";
+          const pillLabel = pct >= 80 ? "⚠️ intensa" : pct >= 50 ? "moderada" : w === 0 ? "livre" : "tranquila";
+
+          // Próximo prazo — Opção B
+          const nd = counts.nextDeadline;
+          const diasPrazo = nd ? Math.round((new Date(nd.date + "T12:00:00").getTime() - new Date(todayKey + "T12:00:00").getTime()) / 86400000) : null;
+          const prazoUrgente = diasPrazo !== null && diasPrazo <= 3;
+
+          return (
+            <>
+              {/* Carga da semana */}
+              <div className="ag-stat-row">
+                <div className="ag-stat-big">
+                  {w} <small>{w === 1 ? "evento" : "eventos"}</small>
+                </div>
+                <span className={`ag-stat-pill ${tone}`}>{pillLabel}</span>
+              </div>
+
+              <div className="ag-stat-bar-wrap">
+                <div className="ag-stat-bar-label">
+                  <span>{cargaLabel}</span>
+                  <span>{t > 0 ? `${t} hoje` : "nenhum hoje"}</span>
+                </div>
+                <div className="ag-stat-bar-track">
+                  <div
+                    className={`ag-stat-bar-fill ${tone}`}
+                    style={{ width: `${Math.max(w === 0 ? 0 : 8, pct)}%` }}
+                  />
+                </div>
+                {d > 0 && (
+                  <div className="ag-stat-desc" style={{ marginTop: 6 }}>
+                    <b>{d} prazo{d > 1 ? "s" : ""}</b> chegando esta semana
+                  </div>
+                )}
+              </div>
+
+              {/* Próximo prazo — Opção B */}
+              {nd && diasPrazo !== null && (
+                <div className="ag-stat-deadline">
+                  <div className="ag-stat-deadline-label">Próximo prazo</div>
+                  <div className="ag-stat-deadline-title">{nd.title}</div>
+                  <div className={`ag-stat-deadline-sub${prazoUrgente ? " urgent" : ""}`}>
+                    {diasPrazo === 0
+                      ? "⚠️ Hoje"
+                      : diasPrazo === 1
+                      ? "⚠️ Amanhã"
+                      : `em ${diasPrazo} dias`}
+                    {" · "}{new Date(nd.date + "T12:00:00").toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}
+                  </div>
+                </div>
+              )}
+
+              {/* Sem prazos e semana livre */}
+              {!nd && w === 0 && (
+                <div className="ag-stat-desc" style={{ marginTop: 8 }}>
+                  Boa janela para adiantar pareceres ou planejar o próximo bimestre.
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
     </>
   );
