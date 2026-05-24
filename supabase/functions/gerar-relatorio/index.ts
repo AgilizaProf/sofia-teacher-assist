@@ -77,7 +77,7 @@ LINGUAGEM (regras invioláveis):
 - Tom positivo e construtivo, sem rótulos.
 - Use português brasileiro corrente, voz ativa.
 
-REGRA DE REDAÇÃO (inviolável): NUNCA mencione que a informação veio de "registros", "diário", "anotações" ou "notas". Escreva como conhecimento direto e consolidado.
+REGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de "registros", "diário", "anotações", "notas", "anamnese", "PEI", "planejamento" ou qualquer outra fonte. Escreva sempre como conhecimento direto e consolidado sobre a turma. Evite QUALQUER variação de: "segundo as observações", "de acordo com os registros", "de acordo com o PEI", "de acordo com a anamnese", "de acordo com o planejamento", "conforme observado", "conforme o PEI", "com base nos registros", "com base na anamnese", "com base no planejamento", "os registros mostram", "o diário aponta", "o PEI prevê", "conforme planejado", "as anotações indicam" — descreva os fatos diretamente, como conhecimento consolidado.
 
 PONTUAÇÃO E ESCRITA (inviolável):
 - Use APENAS: letras, números, acentuação gráfica (á é í ó ú â ê ô ã õ ç à) e parênteses ( ).
