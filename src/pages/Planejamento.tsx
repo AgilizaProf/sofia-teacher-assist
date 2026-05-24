@@ -18,6 +18,7 @@ import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
+import { SeletorCurriculo } from "@/components/shared/SeletorCurriculo";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -1164,7 +1165,16 @@ export function Planejamento() {
   };
   const navigate = useNavigate({ from: "/planejamento" });
   const isEi = useEiMode();
-  const { isAtivo: curriculoMunicipalAtivo, curriculo: curriculoMunicipalDados } = useCurriculoMunicipal();
+  const { curriculos } = useCurriculoMunicipal();
+  const curriculosAtivos = useMemo(
+    () => curriculos.filter((c) => c.status === "ativo"),
+    [curriculos],
+  );
+  const [curriculoPlanoId, setCurriculoPlanoId] = useState<string>(
+    () => curriculosAtivos.find((c) => c.eh_padrao)?.id ?? (curriculosAtivos[0]?.id ?? "bncc"),
+  );
+  const curriculoMunicipalDados = curriculosAtivos.find((c) => c.id === curriculoPlanoId) ?? null;
+  const curriculoMunicipalAtivo = curriculoMunicipalDados !== null;
   const [m, setM] = useState<MKey>(search.m || "atv");
   const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
   const [dropDay, setDropDay] = useState<DayKey | null>(null);
@@ -4628,6 +4638,16 @@ export function Planejamento() {
                   </select>
                 </label>
               </div>
+              {curriculosAtivos.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>Rede de ensino:</span>
+                  <SeletorCurriculo
+                    curriculos={curriculosAtivos}
+                    value={curriculoPlanoId}
+                    onChange={setCurriculoPlanoId}
+                  />
+                </div>
+              )}
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>
                   <span>Progresso ({M6_PERIODO_META[m6Periodo].label.toLowerCase()})</span>
