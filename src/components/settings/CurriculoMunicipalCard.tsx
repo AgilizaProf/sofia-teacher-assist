@@ -225,6 +225,7 @@ function SlotCard({
   onSubstituir,
   onDefinirPadrao,
   onRemover,
+  onReprocessar,
 }: {
   ordem: Ordem;
   curriculo: CurriculoMunicipal | null;
@@ -232,6 +233,7 @@ function SlotCard({
   onSubstituir: () => void;
   onDefinirPadrao: (id: string) => void | Promise<void>;
   onRemover: (id: string) => void | Promise<void>;
+  onReprocessar: (id: string) => void | Promise<void>;
 }) {
   if (!curriculo) {
     return (
@@ -321,6 +323,16 @@ function SlotCard({
         >
           Substituir arquivo
         </button>
+        {(isAtivo || isErro) && (
+          <button
+            type="button"
+            onClick={() => void onReprocessar(curriculo.id)}
+            style={{ fontSize: 11.5, color: "#1B2A4E", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: "6px 0" }}
+            title="Reprocessar o arquivo já enviado (sem novo upload)"
+          >
+            Reprocessar
+          </button>
+        )}
         <button
           type="button"
           onClick={() => void onRemover(curriculo.id)}
