@@ -87,10 +87,18 @@ PONTUAÇÃO E ESCRITA (inviolável):
 - Português brasileiro correto: sem palavras inventadas, sem anglicismos desnecessários, sem linguagem jurídica ou técnica sem explicação, sem neologismos.
 - Frases completas, com sujeito, verbo e complemento. Sem fragmentos.`;
 
+    const habMunicipaisCtx = usandoMunicipal && Array.isArray(curriculo_municipal!.habilidades) && curriculo_municipal!.habilidades.length > 0
+      ? `\nHABILIDADES DO CURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio} (use os códigos abaixo ao citar competências trabalhadas):\n` +
+        curriculo_municipal!.habilidades
+          .slice(0, 30)
+          .map((h) => `- [${h.codigo}] ${h.descricao} (${h.ano} · ${h.disciplina})`)
+          .join("\n")
+      : "";
+
     const user = `Turma: ${turma || "Todas"}
 Período: ${periodo}
 Estatísticas: ${JSON.stringify(stats)}
-
+${habMunicipaisCtx}
 Registros (${(entries as Entry[]).length}):
 ${linhas || "(nenhum registro)"}
 ${historicoCtx}
