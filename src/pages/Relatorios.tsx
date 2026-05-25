@@ -13,7 +13,7 @@ import { useDashClasses } from "@/hooks/useDashLegacyData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
-import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
+import { isEducacaoInfantilGrade, EI_GRADE_LABELS, formatTurmaGrade } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { SeletorCurriculo } from "@/components/shared/SeletorCurriculo";
 import { useTurmas } from "@/hooks/useTurmas";
+import { matchAnoCurriculo } from "@/lib/curriculo/matchAno";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
 
@@ -530,7 +531,7 @@ export function Relatorios() {
   //    (ex.: o usuário removeu o currículo).
   useEffect(() => {
     const turmaAtual = filterTurma !== "Todas"
-      ? turmasDb.find((t) => t.name === filterTurma)
+      ? turmasDb.find((t) => (t.name || "").trim().toLowerCase() === filterTurma.trim().toLowerCase())
       : null;
     const curriculoDaTurma = turmaAtual?.curriculo_id
       ? curriculosAtivos.find((c) => c.id === turmaAtual.curriculo_id)
@@ -545,13 +546,6 @@ export function Relatorios() {
       return curriculosAtivos.find((c) => c.eh_padrao)?.id ?? curriculosAtivos[0]?.id ?? "bncc";
     });
   }, [curriculosAtivos, filterTurma, turmasDb]);
-  const curriculoSelecionado = curriculosAtivos.find((c) => c.id === curriculoSelecionadoId) ?? null;
-  const municipalAtivo = curriculoSelecionado !== null;
-  const nomeMunicipio = curriculoSelecionado
-    ? `${curriculoSelecionado.municipio}${curriculoSelecionado.estado ? ` (${curriculoSelecionado.estado})` : ""}`
-    : null;
-  const curriculoMunicipal = curriculoSelecionado;
-  const labelAvaliacao = municipalAtivo && nomeMunicipio ? `Avaliar ${nomeMunicipio}` : "Avaliar BNCC";
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState(routeSearch.pcd === "apenas" ? "Apenas PCD" : "Todos");
 
@@ -848,14 +842,38 @@ export function Relatorios() {
 
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
-    const cls = dashClasses.find((c) => c.name === turma);
+    const cls = turmaByName(turma);
     const g = cls?.grade?.replace(/\D/g, "");
     return g && YEAR_OPTIONS.includes(g) ? g : "2";
   };
+  const turmaByName = useCallback(
+    (turma?: string | null) => {
+      const nome = (turma || "").trim().toLowerCase();
+      if (!nome) return null;
+      return turmasDb.find((t) => (t.name || "").trim().toLowerCase() === nome) ?? null;
+    },
+    [turmasDb],
+  );
+  const curriculoParaTurma = useCallback(
+    (turma?: string | null) => {
+      const turmaAtual = turmaByName(turma);
+      if (!turmaAtual?.curriculo_id) return null;
+      return curriculosAtivos.find((c) => c.id === turmaAtual.curriculo_id) ?? null;
+    },
+    [curriculosAtivos, turmaByName],
+  );
+  const labelAvaliacaoParaTurma = useCallback(
+    (turma?: string | null) => {
+      const curriculo = curriculoParaTurma(turma);
+      if (!curriculo) return "Avaliar BNCC";
+      return `Avaliar ${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}`;
+    },
+    [curriculoParaTurma],
+  );
   // EI por aluno: usa o grade da turma (ex.: "pre-2", "maternal-1").
   const isEiAluno = (turma: string): boolean => {
     if (isEi) return true; // perfil docente em EI: trata tudo como EI
-    const cls = dashClasses.find((c) => c.name === turma);
+    const cls = turmaByName(turma);
     return isEiTurma(cls?.grade);
   };
   // Status (rubrica) adaptado por nível.
@@ -865,16 +883,14 @@ export function Relatorios() {
     (statusListFor(turma).find((x) => x.k === k)?.label) || "Não observada";
 
   const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
+    const curriculoDaTurma = curriculoParaTurma(turma);
     // Quando há currículo municipal ativo, agrupa as habilidades por disciplina
     // e usa como competências no modal — substituindo a lista BNCC hardcoded.
-    if (municipalAtivo && curriculoMunicipal && Array.isArray(curriculoMunicipal.habilidades) && curriculoMunicipal.habilidades.length > 0) {
-      const year = yearForAluno(id, turma);
-      const habFiltradas = curriculoMunicipal.habilidades.filter((h) => {
-        if (!year) return true;
-        const anoH = String(h.ano || "").replace(/\D/g, "");
-        return !anoH || anoH === year;
-      });
-      const habs = habFiltradas.length > 0 ? habFiltradas : curriculoMunicipal.habilidades;
+    if (curriculoDaTurma && Array.isArray(curriculoDaTurma.habilidades) && curriculoDaTurma.habilidades.length > 0) {
+      const turmaAtual = turmaByName(turma);
+      const alvoAno = yearOverride[id] || formatTurmaGrade(turmaAtual?.grade) || turmaAtual?.grade || turma;
+      const habFiltradas = curriculoDaTurma.habilidades.filter((h) => matchAnoCurriculo(alvoAno, h.ano));
+      const habs = habFiltradas.length > 0 ? habFiltradas : curriculoDaTurma.habilidades;
       const porDisc: Record<string, string[]> = {};
       habs.forEach((h) => {
         const disc = h.disciplina || "Geral";
@@ -978,7 +994,7 @@ export function Relatorios() {
     const rub = getAlunoRubric(a.id);
     const dataStr = new Date().toLocaleDateString("pt-BR");
     const aluno = getStudentById(a.id);
-    const cls = dashClasses.find((c) => c.name === a.turma);
+      const cls = turmaByName(a.turma);
     const escola = dashSchools.find((s) => s.name === cls?.school);
     const parecerAluno = parecerByAluno[a.id] || null;
     const parecerHtml = parecerAluno
@@ -1556,9 +1572,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   <button
                     className="rel-btn-card"
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
-                    aria-label={`${isEiAluno(a.turma) ? "Avaliar por Campos de Experiência" : "Avaliar competências BNCC"} de ${a.nome}`}
+                    aria-label={`${isEiAluno(a.turma) ? "Avaliar por Campos de Experiência" : "Avaliar competências"} de ${a.nome}`}
                   >
-                   <ClipboardList size={13} /> {isEiAluno(a.turma) ? "Avaliar Campos" : labelAvaliacao}
+                   <ClipboardList size={13} /> {isEiAluno(a.turma) ? "Avaliar Campos" : labelAvaliacaoParaTurma(a.turma)}
                   </button>
                   {a.status === "todo" && (
                     <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
@@ -1713,15 +1729,19 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
         const { pctPreenchido, pctDesempenho } = computeProgress(id, turma, pcd);
         const year = yearForAluno(id, turma);
         const areas = areasFor(id, turma, pcd);
-        const cls = dashClasses.find((c) => c.name === turma);
+        const cls = turmaByName(turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
         const ei = isEiAluno(turma);
         const STATUS = ei ? BNCC_STATUS_EI : BNCC_STATUS;
+        const curriculoModal = curriculoParaTurma(turma);
+        const nomeMunicipioModal = curriculoModal
+          ? `${curriculoModal.municipio}${curriculoModal.estado ? ` (${curriculoModal.estado})` : ""}`
+          : null;
         const tituloModal = ei
           ? `Avaliação por Campos de Experiência · ${nome}`
-          : municipalAtivo && nomeMunicipio
-            ? `Avaliação — ${nomeMunicipio} · ${nome}`
+          : nomeMunicipioModal
+            ? `Avaliação — ${nomeMunicipioModal} · ${nome}`
             : `Avaliação BNCC · ${nome}`;
         return (
           <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setBnccOpen(null)}>
@@ -2451,7 +2471,7 @@ ${parecerHtml}
               </div>
               <div className="rel-modal-foot" style={{ flexWrap: "wrap" }}>
                 <button className="rel-btn-card" onClick={() => { setAlunoModal(null); setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }); }}>
-                  <ClipboardList size={13} /> {labelAvaliacao}
+                  <ClipboardList size={13} /> {labelAvaliacaoParaTurma(a.turma)}
                 </button>
                 {isDone && (
                   <>
