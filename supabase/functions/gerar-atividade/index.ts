@@ -462,7 +462,12 @@ serve(async (req) => {
       });
     }
 
-    // === Validação dos códigos BNCC ===
+    // === Validação dos códigos BNCC (pulada quando currículo municipal está ativo) ===
+    if (usandoMunicipal) {
+      return new Response(JSON.stringify(parsed), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
     const disciplinasParaValidar: string[] =
       Array.isArray(disciplinasInter) && disciplinasInter.length > 0
         ? disciplinasInter
