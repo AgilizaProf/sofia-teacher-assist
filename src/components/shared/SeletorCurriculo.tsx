@@ -10,10 +10,10 @@ export type SeletorCurriculoProps = {
 
 /**
  * Seletor de referencial curricular (BNCC ou um dos currículos municipais ativos).
- * Renderiza pills compactas para uso inline em Relatórios e Planejamento.
+ * Sempre exibe a opção BNCC — mesmo sem currículo municipal anexado.
  */
 export function SeletorCurriculo({ curriculos, value, onChange, className }: SeletorCurriculoProps) {
-  // Auto-selecionar o único currículo ativo se ainda estiver em BNCC e nenhum padrão BNCC explícito.
+  // Auto-selecionar o único currículo ativo se ainda estiver em BNCC.
   useEffect(() => {
     if (curriculos.length === 1 && value === "bncc") {
       onChange(curriculos[0].id);
@@ -24,7 +24,7 @@ export function SeletorCurriculo({ curriculos, value, onChange, className }: Sel
     { id: "bncc", label: "BNCC" },
     ...curriculos.map((c) => ({
       id: c.id,
-      label: `Currículo — ${c.municipio}${c.estado ? ` (${c.estado})` : ""}`,
+      label: c.municipio + (c.estado ? ` (${c.estado})` : ""),
     })),
   ];
 
@@ -61,6 +61,11 @@ export function SeletorCurriculo({ curriculos, value, onChange, className }: Sel
           </button>
         );
       })}
+      {curriculos.length === 0 && (
+        <span style={{ fontSize: 11, color: "#94a3b8", alignSelf: "center" }}>
+          Anexe um currículo municipal em Configurações para habilitar mais opções.
+        </span>
+      )}
     </div>
   );
 }
