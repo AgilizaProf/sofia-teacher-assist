@@ -76,6 +76,7 @@ export function PlanejamentoEi() {
   const [tipo, setTipo] = useState(TIPOS[0]);
   const [duracao, setDuracao] = useState(30);
   const [generating, setGenerating] = useState(false);
+  const creditosGate = useCreditosGate();
   const [saving, setSaving] = useState(false);
 
   const [roteiro, setRoteiro] = useState<Roteiro | null>(null);
@@ -108,6 +109,8 @@ export function PlanejamentoEi() {
 
   const gerar = async () => {
     if (campos.length === 0) { toast.error("Selecione ao menos um Campo de Experiência"); return; }
+    const okGate = await creditosGate.checar({ custo: CUSTOS.planejamento_semanal, acao: "Roteiro de Educação Infantil" });
+    if (!okGate) return;
     setGenerating(true);
     try {
       const camposNomes = campos.map((id) => CAMPOS.find((c) => c.id === id)?.nome || id);
