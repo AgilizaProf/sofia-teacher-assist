@@ -258,6 +258,9 @@ export function TrilhasPanel() {
           turma: trilha.turma || "",
           ano: trilha.ano_escolar || "",
           disciplina: trilha.disciplina || "",
+          curriculo_municipal: curriculoMunicipalAtivo && curriculoMunicipal
+            ? { municipio: curriculoMunicipal.municipio, habilidades: curriculoMunicipal.habilidades || [] }
+            : null,
         },
       });
       if (fnErr) {
