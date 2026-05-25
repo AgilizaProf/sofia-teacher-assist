@@ -203,7 +203,7 @@ export function CurriculoMunicipalCard() {
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}
           >
-            {uploading ? "⏳ Enviando..." : "📄 Selecionar PDF do currículo (máx. 7MB por arquivo)"}
+            {uploading ? "⏳ Enviando..." : "📄 Selecionar PDF do currículo"}
           </button>
           <p style={{ fontSize: 11.5, color: "#9AA3B8", margin: 0 }}>
             O arquivo fica armazenado com segurança. Apenas você tem acesso. Só PDF, máx. 7 MB por arquivo (15 MB total compartilhados com o calendário escolar).
