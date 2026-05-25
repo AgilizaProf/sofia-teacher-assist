@@ -13,12 +13,24 @@ serve(async (req) => {
       disciplina = "",
       semestre = "1º semestre",
       contexto = "",
+      curriculo_municipal = null as { municipio: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string }> } | null,
     } = body || {};
 
     const anoStr = String(ano || "").toLowerCase();
     const isEdInfantil = /infantil|berç|maternal|pré[\s-]?(i|ii|escola)|creche|g[1-5]\b/.test(anoStr);
+    const usandoMunicipal = curriculo_municipal && Array.isArray(curriculo_municipal.habilidades) && curriculo_municipal.habilidades.length > 0;
 
-    const sysBase = `Você é a Sofia, assistente pedagógica do AgilizaProf. Crie trilhas semestrais alinhadas à BNCC oficial brasileira. Nunca invente habilidades — use códigos BNCC válidos para o ano/disciplina informados. Linguagem profissional, acolhedora, não-capacitista. Devolva JSON estrito.`;
+    const habMunicipaisTexto = usandoMunicipal
+      ? curriculo_municipal!.habilidades
+          .filter((h) => !ano || h.ano?.includes(String(ano).replace(/[^\d]/g, "")))
+          .slice(0, 40)
+          .map((h) => `- [${h.codigo}] ${h.descricao} (${h.ano} · ${h.disciplina})`)
+          .join("\n")
+      : null;
+
+    const sysBase = usandoMunicipal
+      ? `Você é a Sofia, assistente pedagógica do AgilizaProf. Crie trilhas semestrais alinhadas ao CURRÍCULO MUNICIPAL de ${curriculo_municipal!.municipio}. USE os códigos e habilidades do currículo municipal fornecido — NÃO cite BNCC nem invente códigos. Linguagem profissional, acolhedora, não-capacitista. Devolva JSON estrito.`
+      : `Você é a Sofia, assistante pedagógica do AgilizaProf. Crie trilhas semestrais alinhadas à BNCC oficial brasileira. Nunca invente habilidades — use códigos BNCC válidos para o ano/disciplina informados. Linguagem profissional, acolhedora, não-capacitista. Devolva JSON estrito.`;
     const sysEI = `Você é a Sofia, assistente pedagógica do AgilizaProf. Crie trilhas semestrais para EDUCAÇÃO INFANTIL alinhadas à BNCC oficial brasileira.
 
 REGRAS OBRIGATÓRIAS PARA EDUCAÇÃO INFANTIL:
