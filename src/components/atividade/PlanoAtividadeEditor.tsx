@@ -9,6 +9,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { logActivity } from "@/lib/activity/activityLog";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { formatTurmaGrade } from "@/lib/turmaGrade";
 import {
