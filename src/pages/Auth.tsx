@@ -263,7 +263,7 @@ export function AuthPage() {
             </div>
 
             <p className="legal">
-              Ao continuar você concorda com os <a href="#">Termos de uso</a> e a <a href="#">Política de privacidade</a>.
+              Ao continuar você concorda com os <a href="/termos">Termos de uso</a> e a <a href="/privacidade">Política de privacidade</a>.
             </p>
           </div>
         </main>
