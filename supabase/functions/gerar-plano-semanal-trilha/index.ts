@@ -40,6 +40,7 @@ CONTEXTO DA TRILHA
 Tema central: ${tema_central}
 Subtema do mês: ${subtema_mes}
 Habilidades foco da semana: ${JSON.stringify(habilidades_semana)}
+${referencialStr}
 
 ENCADEAMENTO
 Semana anterior (${semana - 1}): ${resumo_anterior || "(início da trilha)"}
