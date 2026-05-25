@@ -2051,7 +2051,7 @@ export function Dashboard() {
                   </select>
                 </div>
               </div>
-              <<div className="school-field">
+              <div className="school-field">
                 <label htmlFor="edit-class-students">Nº de alunos</label>
                 <input id="edit-class-students" name="students" type="number" min={1} defaultValue={classes[editingClassIdx].students} />
               </div>
