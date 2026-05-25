@@ -52,11 +52,11 @@ REGRAS OBRIGATÓRIAS PARA EDUCAÇÃO INFANTIL:
 Turma: ${turma || "—"} | Ano escolar: ${ano || "—"} | Disciplina: ${disciplina || "—"}
 Semestre: ${semestre} | Duração: ~20 semanas
 Contexto adicional: ${contexto || "(nenhum)"}
-
+${usandoMunicipal ? `\nCURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio} — use ESTES códigos (não BNCC):\n${habMunicipaisTexto}\n` : ""}
 Gere:
 1) TEMA CENTRAL (título criativo + justificativa pedagógica curta).
-2) DISTRIBUIÇÃO MENSAL (4 meses): subtema, 3 a 4 habilidades BNCC (código + descrição), foco, conexão anterior/próxima.
-3) DISTRIBUIÇÃO SEMANAL (20 semanas): título, habilidades_foco (códigos BNCC), tipo_atividade, conecta_anterior, prepara_proxima.
+2) DISTRIBUIÇÃO MENSAL (4 meses): subtema, 3 a 4 habilidades ${usandoMunicipal ? `do currículo municipal de ${curriculo_municipal!.municipio}` : "BNCC"} (código + descrição), foco, conexão anterior/próxima.
+3) DISTRIBUIÇÃO SEMANAL (20 semanas): título, habilidades_foco (códigos ${usandoMunicipal ? "municipais" : "BNCC"}), tipo_atividade, conecta_anterior, prepara_proxima.
 
 Responda APENAS em JSON válido neste formato:
 {
