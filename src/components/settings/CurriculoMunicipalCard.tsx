@@ -39,7 +39,6 @@ export function CurriculoMunicipalCard() {
 
   const handleUpload = async (file: File) => {
     if (formOrdem == null) return;
-    if (file.size > MAX_FILE_BYTES) { toast.error("Cada currículo deve ter no máximo 7 MB."); return; }
     if (file.type !== "application/pdf") { toast.error("Apenas arquivos PDF são aceitos."); return; }
     if (!municipio.trim()) { toast.error("Informe o nome do município."); return; }
 
@@ -51,24 +50,34 @@ export function CurriculoMunicipalCard() {
       const ordem = formOrdem;
       const path = `curriculo-${user.id}-${ordem}.pdf`;
 
-      // Validação de espaço — considera todos os arquivos do usuário exceto o slot que está sendo substituído
-      const { data: arquivosExistentes } = await supabase.storage
+      // Validação de espaço total — exclui o slot que será substituído
+      const { data: arquivosExistentes, error: listErr } = await supabase.storage
         .from("documentos-professor")
-        .list("");
+        .list("", { limit: 100 });
+      if (listErr) console.warn("[upload] list() falhou:", listErr.message);
       const usoAtual = (arquivosExistentes ?? [])
         .filter((f) => f.name !== path)
         .reduce((total, f) => total + (f.metadata?.size ?? 0), 0);
+      const disponivelMB = ((MAX_TOTAL_BYTES - usoAtual) / 1024 / 1024).toFixed(1);
       if (usoAtual + file.size > MAX_TOTAL_BYTES) {
-        const disponivel = Math.max(0, MAX_TOTAL_BYTES - usoAtual);
-        toast.error(`Sem espaço. Disponível: ${(disponivel / 1024 / 1024).toFixed(1)} MB`);
+        toast.error(`Sem espaço. Disponível: ${disponivelMB} MB dos 15 MB totais.`);
         setUploading(false);
         return;
       }
 
       const { error: storageErr } = await supabase.storage
         .from("documentos-professor")
-        .upload(path, file, { upsert: true });
-      if (storageErr) throw storageErr;
+        .upload(path, file, { upsert: true, contentType: "application/pdf" });
+      if (storageErr) {
+        const msg = storageErr.message || String(storageErr);
+        if (msg.includes("row-level security") || msg.includes("violates")) {
+          throw new Error("Permissão negada. Tente sair e entrar novamente.");
+        }
+        if (msg.includes("too large") || msg.includes("size")) {
+          throw new Error(`Arquivo muito grande para o plano atual. Disponível: ${disponivelMB} MB.`);
+        }
+        throw new Error(`Erro no upload: ${msg}`);
+      }
 
       const ehPrimeiro = totalOcupados === 0;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
