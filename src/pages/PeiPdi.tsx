@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 
 type Student = {
   id: string; name: string; turma?: string; anoEscolar?: string;
@@ -63,6 +64,7 @@ export function PeiPdi() {
   const [contexto, setContexto] = useState("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const creditosGate = useCreditosGate();
 
   const [pei, setPei] = useState<PeiData | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -102,6 +104,8 @@ export function PeiPdi() {
 
   const gerarPei = async () => {
     if (!aluno) { toast.error("Selecione um aluno PCD"); return; }
+    const okGate = await creditosGate.checar({ custo: CUSTOS.pei_completo, acao: "PEI completo" });
+    if (!okGate) return;
     setGenerating(true);
     setDebugLog([]);
 
