@@ -89,6 +89,21 @@ useEffect(() => {
     setCurriculos((cs) => cs.filter((c) => c.id !== id));
   }, [curriculos]);
 
+  const reprocessar = useCallback(async (id: string) => {
+    const alvo = curriculos.find((c) => c.id === id);
+    if (!alvo) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("user_curriculo_municipal")
+      .update({ status: "processando", erro_msg: null })
+      .eq("id", id);
+    setCurriculos((cs) => cs.map((c) => c.id === id ? { ...c, status: "processando", erro_msg: null } : c));
+    await supabase.functions.invoke("processar-curriculo", {
+      body: { curriculo_id: id, arquivo_path: alvo.arquivo_path, municipio: alvo.municipio, ordem: alvo.ordem },
+    });
+    await load();
+  }, [curriculos, load]);
+
   const curriculoPadrao = useMemo<CurriculoMunicipal | null>(() => {
     if (curriculos.length === 0) return null;
     return curriculos.find((c) => c.eh_padrao) ?? curriculos[0];
@@ -99,5 +114,5 @@ useEffect(() => {
 
   // `curriculo` é mantido como alias de `curriculoPadrao` para compatibilidade
   // com páginas que ainda não migraram (Relatórios, Planejamento, Inclusão, etc.).
-  return { curriculos, curriculoPadrao, curriculo: curriculoPadrao, loading, load, toggleUsarMunicipal, definirPadrao, removerPorId, isAtivo, nomeExibicao };
+  return { curriculos, curriculoPadrao, curriculo: curriculoPadrao, loading, load, toggleUsarMunicipal, definirPadrao, removerPorId, reprocessar, isAtivo, nomeExibicao };
 }

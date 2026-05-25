@@ -9,7 +9,7 @@ const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB total no bucket (compartilhad
 type Ordem = 1 | 2;
 
 export function CurriculoMunicipalCard() {
-  const { curriculos, loading, load, definirPadrao, removerPorId } = useCurriculoMunicipal();
+  const { curriculos, loading, load, definirPadrao, removerPorId, reprocessar } = useCurriculoMunicipal();
   const [uploading, setUploading] = useState(false);
   const [formOrdem, setFormOrdem] = useState<Ordem | null>(null);
   const [municipio, setMunicipio] = useState("");
@@ -156,6 +156,10 @@ export function CurriculoMunicipalCard() {
               await removerPorId(id);
               toast.success("Currículo removido.");
             }}
+            onReprocessar={async (id) => {
+              await reprocessar(id);
+              toast.info("Reprocessando o currículo com prompt aprimorado...");
+            }}
           />
         ))}
       </div>
@@ -221,6 +225,7 @@ function SlotCard({
   onSubstituir,
   onDefinirPadrao,
   onRemover,
+  onReprocessar,
 }: {
   ordem: Ordem;
   curriculo: CurriculoMunicipal | null;
@@ -228,6 +233,7 @@ function SlotCard({
   onSubstituir: () => void;
   onDefinirPadrao: (id: string) => void | Promise<void>;
   onRemover: (id: string) => void | Promise<void>;
+  onReprocessar: (id: string) => void | Promise<void>;
 }) {
   if (!curriculo) {
     return (
@@ -317,6 +323,16 @@ function SlotCard({
         >
           Substituir arquivo
         </button>
+        {(isAtivo || isErro) && (
+          <button
+            type="button"
+            onClick={() => void onReprocessar(curriculo.id)}
+            style={{ fontSize: 11.5, color: "#1B2A4E", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: "6px 0" }}
+            title="Reprocessar o arquivo já enviado (sem novo upload)"
+          >
+            Reprocessar
+          </button>
+        )}
         <button
           type="button"
           onClick={() => void onRemover(curriculo.id)}
