@@ -854,6 +854,7 @@ export function Inclusao() {
     loading: studentsLoading,
   } = useInclusaoStudents();
   const { isAtivo: municipalAtivo, curriculo: curriculoMunicipalDados } = useCurriculoMunicipal();
+  const creditosGate = useCreditosGate();
   // Filtro PCD: a página de Inclusão só lista alunos PCD.
   // Considera PCD quando o campo `pcd` está preenchido e diferente de "nao",
   // OU quando há CID cadastrado (cadastro feito pela própria Inclusão).
