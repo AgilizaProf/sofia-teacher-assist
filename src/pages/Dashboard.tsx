@@ -21,38 +21,6 @@ import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipal
               <label htmlFor="class-students">Nº de alunos</label>
               <input id="class-students" name="students" type="number" min={1} placeholder="Ex.: 24" />
             </div>
-            <div className="school-field">
-              <label htmlFor="class-curriculo">Currículo de referência</label>
-              <select id="class-curriculo" name="curriculo_id" defaultValue="">
-                <option value="">BNCC (padrão)</option>
-                {curriculos
-                  .filter((c) => c.status === "ativo")
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.municipio}{c.estado ? ` (${c.estado})` : ""}
-                    </option>
-                  ))}
-              </select>
-              {curriculos.filter((c) => c.status === "ativo").length === 0 && (
-                <span className="school-hint">Nenhum currículo municipal ativo. Configure na página inicial.</span>
-              )}
-            </div>
-            <div className="school-field">
-              <label htmlFor="class-curriculo">Currículo de referência</label>
-              <select id="class-curriculo" name="curriculo_id" defaultValue="">
-                <option value="">BNCC (padrão)</option>
-                {curriculos
-                  .filter((c) => c.status === "ativo")
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.municipio}{c.estado ? ` (${c.estado})` : ""}
-                    </option>
-                  ))}
-              </select>
-              {curriculos.filter((c) => c.status === "ativo").length === 0 && (
-                <span className="school-hint">Nenhum currículo municipal ativo. Configure na página inicial.</span>
-              )}
-            </div>
             <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
 import { useActivityFeed, relativeTime, type ActivityType } from "@/lib/activity/activityLog";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
