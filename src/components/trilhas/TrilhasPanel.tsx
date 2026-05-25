@@ -5,6 +5,7 @@ import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Pri
 import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { feriadosNacionaisBR } from "@/lib/calendar/feriadosBR";
