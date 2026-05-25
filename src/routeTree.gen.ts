@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as RelatorioPedagogicoRouteImport } from './routes/relatorio-pedagogico'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PlanejamentoPedagogicoRouteImport } from './routes/planejamento-pedagogico'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagamento-confirmado-mensal'
@@ -44,6 +46,11 @@ import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.sugg
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 import { Route as ApiPublicWebhooksMercadopagoTestRouteImport } from './routes/api/public/webhooks/mercadopago.test'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -57,6 +64,11 @@ const RelatoriosRoute = RelatoriosRouteImport.update({
 const RelatorioPedagogicoRoute = RelatorioPedagogicoRouteImport.update({
   id: '/relatorio-pedagogico',
   path: '/relatorio-pedagogico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlanejamentoPedagogicoRoute = PlanejamentoPedagogicoRouteImport.update({
@@ -234,9 +246,11 @@ export interface FileRoutesByFullPath {
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/erros': typeof AdminErrosRoute
@@ -269,9 +283,11 @@ export interface FileRoutesByTo {
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/erros': typeof AdminErrosRoute
@@ -306,9 +322,11 @@ export interface FileRoutesById {
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/erros': typeof AdminErrosRoute
@@ -344,9 +362,11 @@ export interface FileRouteTypes {
     | '/pagamento-confirmado-mensal'
     | '/planejamento'
     | '/planejamento-pedagogico'
+    | '/privacidade'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
+    | '/termos'
     | '/admin/atividades'
     | '/admin/conversao'
     | '/admin/erros'
@@ -379,9 +399,11 @@ export interface FileRouteTypes {
     | '/pagamento-confirmado-mensal'
     | '/planejamento'
     | '/planejamento-pedagogico'
+    | '/privacidade'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
+    | '/termos'
     | '/admin/atividades'
     | '/admin/conversao'
     | '/admin/erros'
@@ -415,9 +437,11 @@ export interface FileRouteTypes {
     | '/pagamento-confirmado-mensal'
     | '/planejamento'
     | '/planejamento-pedagogico'
+    | '/privacidade'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
+    | '/termos'
     | '/admin/atividades'
     | '/admin/conversao'
     | '/admin/erros'
@@ -452,15 +476,24 @@ export interface RootRouteChildren {
   PagamentoConfirmadoMensalRoute: typeof PagamentoConfirmadoMensalRoute
   PlanejamentoRoute: typeof PlanejamentoRouteWithChildren
   PlanejamentoPedagogicoRoute: typeof PlanejamentoPedagogicoRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   RelatorioPedagogicoRoute: typeof RelatorioPedagogicoRoute
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TermosRoute: typeof TermosRoute
   ApiSofiaSuggestionsRoute: typeof ApiSofiaSuggestionsRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -480,6 +513,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorio-pedagogico'
       fullPath: '/relatorio-pedagogico'
       preLoaderRoute: typeof RelatorioPedagogicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/planejamento-pedagogico': {
@@ -788,9 +828,11 @@ const rootRouteChildren: RootRouteChildren = {
   PagamentoConfirmadoMensalRoute: PagamentoConfirmadoMensalRoute,
   PlanejamentoRoute: PlanejamentoRouteWithChildren,
   PlanejamentoPedagogicoRoute: PlanejamentoPedagogicoRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   RelatorioPedagogicoRoute: RelatorioPedagogicoRoute,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TermosRoute: TermosRoute,
   ApiSofiaSuggestionsRoute: ApiSofiaSuggestionsRoute,
   ApiPublicWebhooksMercadopagoRoute:
     ApiPublicWebhooksMercadopagoRouteWithChildren,
@@ -798,3 +840,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
