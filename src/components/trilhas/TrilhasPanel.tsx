@@ -177,6 +177,9 @@ export function TrilhasPanel() {
         disciplina: disciplinaStr,
         semestre: form.semestre,
         contexto: contextoFinal,
+        curriculo_municipal: curriculoMunicipalAtivo && curriculoMunicipal
+          ? { municipio: curriculoMunicipal.municipio, habilidades: curriculoMunicipal.habilidades || [] }
+          : null,
       };
       const { data, error: fnErr } = await supabase.functions.invoke("gerar-trilha", { body: payload });
       if (fnErr) throw fnErr;
