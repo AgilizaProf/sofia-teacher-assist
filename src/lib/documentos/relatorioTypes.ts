@@ -30,6 +30,7 @@ export type RelatorioDocumento = {
   escola: string;
   professor: string;
   turmaId?: string | null;
+  curriculoId?: string | null;
   turmaNome: string;
   nivelTexto?: string | null;
   alunoClientId: string;
