@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { SeletorCurriculo } from "@/components/shared/SeletorCurriculo";
 import { useTurmas } from "@/hooks/useTurmas";
+import { matchAnoCurriculo } from "@/lib/curriculo/matchAno";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
 
@@ -852,10 +853,34 @@ export function Relatorios() {
     const g = cls?.grade?.replace(/\D/g, "");
     return g && YEAR_OPTIONS.includes(g) ? g : "2";
   };
+  const turmaByName = useCallback(
+    (turma?: string | null) => {
+      const nome = (turma || "").trim().toLowerCase();
+      if (!nome) return null;
+      return turmasDb.find((t) => (t.name || "").trim().toLowerCase() === nome) ?? null;
+    },
+    [turmasDb],
+  );
+  const curriculoParaTurma = useCallback(
+    (turma?: string | null) => {
+      const turmaAtual = turmaByName(turma);
+      if (!turmaAtual?.curriculo_id) return null;
+      return curriculosAtivos.find((c) => c.id === turmaAtual.curriculo_id) ?? null;
+    },
+    [curriculosAtivos, turmaByName],
+  );
+  const labelAvaliacaoParaTurma = useCallback(
+    (turma?: string | null) => {
+      const curriculo = curriculoParaTurma(turma);
+      if (!curriculo) return "Avaliar BNCC";
+      return `Avaliar ${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}`;
+    },
+    [curriculoParaTurma],
+  );
   // EI por aluno: usa o grade da turma (ex.: "pre-2", "maternal-1").
   const isEiAluno = (turma: string): boolean => {
     if (isEi) return true; // perfil docente em EI: trata tudo como EI
-    const cls = dashClasses.find((c) => c.name === turma);
+    const cls = turmaByName(turma);
     return isEiTurma(cls?.grade);
   };
   // Status (rubrica) adaptado por nível.
@@ -865,16 +890,14 @@ export function Relatorios() {
     (statusListFor(turma).find((x) => x.k === k)?.label) || "Não observada";
 
   const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
+    const curriculoDaTurma = curriculoParaTurma(turma);
     // Quando há currículo municipal ativo, agrupa as habilidades por disciplina
     // e usa como competências no modal — substituindo a lista BNCC hardcoded.
-    if (municipalAtivo && curriculoMunicipal && Array.isArray(curriculoMunicipal.habilidades) && curriculoMunicipal.habilidades.length > 0) {
-      const year = yearForAluno(id, turma);
-      const habFiltradas = curriculoMunicipal.habilidades.filter((h) => {
-        if (!year) return true;
-        const anoH = String(h.ano || "").replace(/\D/g, "");
-        return !anoH || anoH === year;
-      });
-      const habs = habFiltradas.length > 0 ? habFiltradas : curriculoMunicipal.habilidades;
+    if (curriculoDaTurma && Array.isArray(curriculoDaTurma.habilidades) && curriculoDaTurma.habilidades.length > 0) {
+      const turmaAtual = turmaByName(turma);
+      const alvoAno = yearOverride[id] || turmaAtual?.grade || turma;
+      const habFiltradas = curriculoDaTurma.habilidades.filter((h) => matchAnoCurriculo(alvoAno, h.ano));
+      const habs = habFiltradas.length > 0 ? habFiltradas : curriculoDaTurma.habilidades;
       const porDisc: Record<string, string[]> = {};
       habs.forEach((h) => {
         const disc = h.disciplina || "Geral";
@@ -1713,15 +1736,19 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
         const { pctPreenchido, pctDesempenho } = computeProgress(id, turma, pcd);
         const year = yearForAluno(id, turma);
         const areas = areasFor(id, turma, pcd);
-        const cls = dashClasses.find((c) => c.name === turma);
+        const cls = turmaByName(turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
         const ei = isEiAluno(turma);
         const STATUS = ei ? BNCC_STATUS_EI : BNCC_STATUS;
+        const curriculoModal = curriculoParaTurma(turma);
+        const nomeMunicipioModal = curriculoModal
+          ? `${curriculoModal.municipio}${curriculoModal.estado ? ` (${curriculoModal.estado})` : ""}`
+          : null;
         const tituloModal = ei
           ? `Avaliação por Campos de Experiência · ${nome}`
-          : municipalAtivo && nomeMunicipio
-            ? `Avaliação — ${nomeMunicipio} · ${nome}`
+          : nomeMunicipioModal
+            ? `Avaliação — ${nomeMunicipioModal} · ${nome}`
             : `Avaliação BNCC · ${nome}`;
         return (
           <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setBnccOpen(null)}>
