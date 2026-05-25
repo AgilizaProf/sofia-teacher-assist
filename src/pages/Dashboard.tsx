@@ -17,7 +17,11 @@ import { SofiaErrorBoundary } from "@/components/sofia/SofiaErrorBoundary";
 import { AtividadeFeed } from "@/components/dashboard/AtividadeFeed";
 import { CreditosPainel } from "@/components/dashboard/CreditosPainel";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
-import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
+<div className="school-field">
+              <label htmlFor="class-students">Nº de alunos</label>
+              <input id="class-students" name="students" type="number" min={1} placeholder="Ex.: 24" />
+            </div>
+            <div className="school-modal-foot" style={{ margin: "4px -20px -16px", borderRadius: 0 }}>
 import { useActivityFeed, relativeTime, type ActivityType } from "@/lib/activity/activityLog";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
