@@ -2578,6 +2578,15 @@ export function Planejamento() {
         ? sofiaUser.turmas.find((t) => t.nome.toLowerCase() === turmaAtualNome.toLowerCase())
         : undefined;
       const anoTurmaAtual = turmaAtualInfo?.ano || "";
+      // Currículo correto para a turma do relatório: prioriza o currículo
+      // vinculado à turma (anexo), caindo no global apenas se a turma não tiver.
+      const turmaDbAtual = turmaAtualNome
+        ? turmasDb.find((t) => (t.name || "").trim().toLowerCase() === turmaAtualNome.trim().toLowerCase())
+        : null;
+      const curriculoDaTurma = turmaDbAtual?.curriculo_id
+        ? curriculosAtivos.find((c) => c.id === turmaDbAtual.curriculo_id) ?? null
+        : null;
+      const curriculoParaRelatorio = curriculoDaTurma ?? (curriculoMunicipalAtivo ? curriculoMunicipalDados : null);
       const alunosPcdTurma = turmaAtualNome
         ? (sofiaUser.alunosPCDPorTurma[turmaAtualNome] ?? []).map((a) => ({
             nome: a.primeiro_nome,
@@ -2595,7 +2604,9 @@ export function Planejamento() {
         stats,
         relatorio_anterior: relAnterior,
         alunos_pcd: alunosPcdTurma,
-        curriculo_municipal: curriculoMunicipalAtivo && curriculoMunicipalDados ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] } : null,
+        curriculo_municipal: curriculoParaRelatorio
+          ? { municipio: curriculoParaRelatorio.municipio, habilidades: curriculoParaRelatorio.habilidades || [] }
+          : null,
         entries: m6RelEntries.map((e) => ({
           emoji: e.emoji,
           title: e.title,
