@@ -12,6 +12,43 @@ const GOOGLE_KEY   = Deno.env.get("GOOGLE_API_KEY")!;
 
 const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
+/**
+ * Recupera habilidades completas de um JSON truncado (quando Gemini corta em MAX_TOKENS).
+ * Procura o array "habilidades": [ ... e extrai cada objeto { ... } balanceado, ignorando o último incompleto.
+ */
+function recuperarHabilidadesTruncadas(raw: string): unknown[] {
+  try {
+    const txt = raw.replace(/```json|```/g, "");
+    const idx = txt.search(/"habilidades"\s*:\s*\[/);
+    if (idx < 0) return [];
+    let i = txt.indexOf("[", idx) + 1;
+    const out: unknown[] = [];
+    while (i < txt.length) {
+      // pula whitespace e vírgulas
+      while (i < txt.length && /[\s,]/.test(txt[i])) i++;
+      if (i >= txt.length || txt[i] !== "{") break;
+      // varre objeto balanceado respeitando strings e escapes
+      let depth = 0, start = i, inStr = false, esc = false;
+      for (; i < txt.length; i++) {
+        const c = txt[i];
+        if (inStr) {
+          if (esc) esc = false;
+          else if (c === "\\") esc = true;
+          else if (c === '"') inStr = false;
+        } else {
+          if (c === '"') inStr = true;
+          else if (c === "{") depth++;
+          else if (c === "}") { depth--; if (depth === 0) { i++; break; } }
+        }
+      }
+      if (depth !== 0) break; // objeto incompleto → descarta
+      const slice = txt.slice(start, i);
+      try { out.push(JSON.parse(slice)); } catch { /* ignora item malformado */ }
+    }
+    return out;
+  } catch { return []; }
+}
+
 async function processarComGemini(curriculo_id: string, arquivo_path: string, municipio: string, ordemValida: 1 | 2, userId: string) {
   try {
     console.log(`[processar-curriculo:bg] iniciando curriculo_id=${curriculo_id} ordem=${ordemValida}`);
