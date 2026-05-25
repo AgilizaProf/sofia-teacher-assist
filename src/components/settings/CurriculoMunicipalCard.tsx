@@ -9,7 +9,7 @@ const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB total no bucket (compartilhad
 type Ordem = 1 | 2;
 
 export function CurriculoMunicipalCard() {
-  const { curriculos, loading, load, definirPadrao, removerPorId } = useCurriculoMunicipal();
+  const { curriculos, loading, load, definirPadrao, removerPorId, reprocessar } = useCurriculoMunicipal();
   const [uploading, setUploading] = useState(false);
   const [formOrdem, setFormOrdem] = useState<Ordem | null>(null);
   const [municipio, setMunicipio] = useState("");
@@ -155,6 +155,10 @@ export function CurriculoMunicipalCard() {
               if (!confirm("Remover este currículo? As habilidades serão apagadas.")) return;
               await removerPorId(id);
               toast.success("Currículo removido.");
+            }}
+            onReprocessar={async (id) => {
+              await reprocessar(id);
+              toast.info("Reprocessando o currículo com prompt aprimorado...");
             }}
           />
         ))}
