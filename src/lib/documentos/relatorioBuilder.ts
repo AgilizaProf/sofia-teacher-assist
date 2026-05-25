@@ -80,6 +80,7 @@ export function buildRelatorioBase(args: {
     escola: args.escola,
     professor: args.professor,
     turmaId: args.turmaId ?? null,
+    curriculoId: args.curriculoId ?? null,
     turmaNome: args.turmaNome,
     nivelTexto: args.nivelTexto ?? null,
     alunoClientId: args.alunoClientId,
