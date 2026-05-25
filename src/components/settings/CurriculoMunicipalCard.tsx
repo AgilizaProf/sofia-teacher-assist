@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal, type CurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { toast } from "sonner";
 
-const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB total no bucket (compartilhado entre currículos + calendário)
-// Sem limite fixo por arquivo individual — o limite é o total disponível
+const MAX_TOTAL_BYTES = 50 * 1024 * 1024; // 50 MB total no bucket (compartilhado entre currículos + calendário)
+// Sem limite fixo por arquivo individual — o limite é o total disponível (50 MB)
 
 type Ordem = 1 | 2;
 
@@ -60,7 +60,7 @@ export function CurriculoMunicipalCard() {
         .reduce((total, f) => total + (f.metadata?.size ?? 0), 0);
       const disponivelMB = ((MAX_TOTAL_BYTES - usoAtual) / 1024 / 1024).toFixed(1);
       if (usoAtual + file.size > MAX_TOTAL_BYTES) {
-        toast.error(`Sem espaço. Disponível: ${disponivelMB} MB dos 15 MB totais.`);
+        toast.error(`Sem espaço. Disponível: ${disponivelMB} MB dos 50 MB totais.`);
         setUploading(false);
         return;
       }
@@ -206,7 +206,7 @@ export function CurriculoMunicipalCard() {
             {uploading ? "⏳ Enviando..." : "📄 Selecionar PDF do currículo"}
           </button>
           <p style={{ fontSize: 11.5, color: "#9AA3B8", margin: 0 }}>
-            O arquivo fica armazenado com segurança. Apenas você tem acesso. Só PDF · limite total de 15 MB compartilhado entre os 2 currículos e o calendário escolar.
+            O arquivo fica armazenado com segurança. Apenas você tem acesso. Só PDF · limite total de 50 MB compartilhado entre os 2 currículos e o calendário escolar.
           </p>
         </div>
       )}
