@@ -86,6 +86,7 @@ type Semana = {
 export function TrilhasPanel() {
   const { turmas: turmasCadastradas } = useTurmas();
   const { curriculo: curriculoMunicipal, isAtivo: curriculoMunicipalAtivo } = useCurriculoMunicipal();
+  const creditosGate = useCreditosGate();
   const [trilhas, setTrilhas] = useState<Trilha[]>([]);
   const [semanas, setSemanas] = useState<Semana[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
