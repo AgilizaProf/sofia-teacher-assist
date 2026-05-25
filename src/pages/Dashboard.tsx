@@ -491,7 +491,7 @@ export function Dashboard() {
   const [tutorialStep, setTutorialStep] = useState(0);
   const [schoolOpen, setSchoolOpen] = useState(false);
   const [curricuoOpen, setCurricuoOpen] = useState(false);
-  const { isAtivo: curricuoAtivo, nomeExibicao: curricuoNome } = useCurriculoMunicipal();
+  const { isAtivo: curricuoAtivo, nomeExibicao: curricuoNome, curriculos } = useCurriculoMunicipal();
   const [schools, setSchools] = usePersistentState<Array<{ name: string; network: string; stage: string; city: string; uf: string; classes: string }>>("dash_schools", []);
   const baseSchools = 0;
   const [classOpen, setClassOpen] = useState(false);
