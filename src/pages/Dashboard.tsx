@@ -1870,6 +1870,7 @@ export function Dashboard() {
                 grade: String(fd.get("grade") || ""),
                 shift: String(fd.get("shift") || ""),
                 students: String(fd.get("students") || ""),
+                curriculo_id: String(fd.get("curriculo_id") || "") || null,
               });
               form.reset();
               setClassOpen(false);
