@@ -276,6 +276,7 @@ type PlanoItem = {
 
 export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSaved }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const creditosGate = useCreditosGate();
   useKeyboardAwareModal(modalRef, open);
   useEffect(() => {
     if (!open) return;
