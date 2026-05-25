@@ -3334,6 +3334,12 @@ export function Planejamento() {
                   </div>
                 </div>
 
+               {/* Seletor de referencial curricular */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 4px" }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>Referencial:</span>
+                  <SeletorCurriculo curriculos={curriculosAtivos} value={curriculoPlanoId} onChange={setCurriculoPlanoId} />
+                </div>
+
                 {m1Stats.atividades > 0 && !m1Generating && (
                   <div
                     role="status"
