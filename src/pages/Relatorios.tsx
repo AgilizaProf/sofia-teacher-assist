@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { SeletorCurriculo } from "@/components/shared/SeletorCurriculo";
+import { useTurmas } from "@/hooks/useTurmas";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
 import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
 
@@ -520,16 +521,30 @@ export function Relatorios() {
 
   const [filterTurma, setFilterTurma] = useState(routeSearch.turma ?? "Todas");
   const { curriculos } = useCurriculoMunicipal();
+  const { turmas: turmasDb } = useTurmas();
   const curriculosAtivos = useMemo(() => curriculos.filter((c) => c.status === "ativo"), [curriculos]);
   const [curriculoSelecionadoId, setCurriculoSelecionadoId] = useState<string>("bncc");
-  // Quando os currículos carregam do banco, auto-seleciona o padrão
+  // Sincroniza o currículo selecionado com:
+  // 1. O currículo vinculado à turma filtrada (quando houver);
+  // 2. O currículo padrão, quando a seleção atual não existe mais
+  //    (ex.: o usuário removeu o currículo).
   useEffect(() => {
-    if (curriculosAtivos.length === 0) return;
+    const turmaAtual = filterTurma !== "Todas"
+      ? turmasDb.find((t) => t.name === filterTurma)
+      : null;
+    const curriculoDaTurma = turmaAtual?.curriculo_id
+      ? curriculosAtivos.find((c) => c.id === turmaAtual.curriculo_id)
+      : null;
     setCurriculoSelecionadoId((prev) => {
-      if (prev !== "bncc") return prev;
+      // Se a turma define um currículo válido, segue ele.
+      if (curriculoDaTurma) return curriculoDaTurma.id;
+      // Se a seleção atual não existe mais (foi removida) ou ainda é a inicial,
+      // cai no padrão / primeiro ativo / BNCC.
+      if (prev !== "bncc" && curriculosAtivos.some((c) => c.id === prev)) return prev;
+      if (curriculosAtivos.length === 0) return "bncc";
       return curriculosAtivos.find((c) => c.eh_padrao)?.id ?? curriculosAtivos[0]?.id ?? "bncc";
     });
-  }, [curriculosAtivos]);
+  }, [curriculosAtivos, filterTurma, turmasDb]);
   const curriculoSelecionado = curriculosAtivos.find((c) => c.id === curriculoSelecionadoId) ?? null;
   const municipalAtivo = curriculoSelecionado !== null;
   const nomeMunicipio = curriculoSelecionado
