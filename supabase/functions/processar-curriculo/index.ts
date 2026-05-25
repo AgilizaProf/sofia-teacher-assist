@@ -28,14 +28,8 @@ async function processarComGemini(curriculo_id: string, arquivo_path: string, mu
     // 2. base64
     const buffer = await fileData.arrayBuffer();
     const bytes = new Uint8Array(buffer);
-    const CHUNK = 8192;
-    let binary = "";
-    for (let i = 0; i < bytes.length; i += CHUNK) {
-      binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-    }
-    const base64 = btoa(binary);
 
-    // 3. Escolher modelo
+    // 3. Escolher modelo e estratégia de envio
     const pdfSizeMB = bytes.length / (1024 * 1024);
     const initialModel = pdfSizeMB <= 2 ? "gemini-2.5-flash-lite" : "gemini-2.5-flash";
     console.log(`[processar-curriculo:bg] PDF size: ${pdfSizeMB.toFixed(2)} MB → modelo inicial: ${initialModel}`);
