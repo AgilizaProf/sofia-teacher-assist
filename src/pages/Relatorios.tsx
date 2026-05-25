@@ -530,7 +530,7 @@ export function Relatorios() {
   //    (ex.: o usuário removeu o currículo).
   useEffect(() => {
     const turmaAtual = filterTurma !== "Todas"
-      ? turmasDb.find((t) => t.nome === filterTurma)
+      ? turmasDb.find((t) => t.name === filterTurma)
       : null;
     const curriculoDaTurma = turmaAtual?.curriculo_id
       ? curriculosAtivos.find((c) => c.id === turmaAtual.curriculo_id)
