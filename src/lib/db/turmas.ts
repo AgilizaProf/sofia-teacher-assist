@@ -34,6 +34,7 @@ function rowToUI(r: TurmaRow): TurmaUI {
     grade: r.ano ?? "",
     shift: r.turno ?? "",
     students: r.qtd_alunos ?? "",
+    curriculo_id: r.curriculo_id ?? null,
   };
 }
 
