@@ -20,6 +20,7 @@ type TurmaRow = {
   ano: string | null;
   turno: string | null;
   qtd_alunos: string | null;
+  curriculo_id: string | null;
   data: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
