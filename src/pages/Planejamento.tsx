@@ -2124,6 +2124,7 @@ export function Planejamento() {
   };
   const [m6AIRel, setM6AIRel] = useState<M6AIRelatorio | null>(null);
   const [m6AILoading, setM6AILoading] = useState(false);
+  const creditosGate = useCreditosGate();
   const [m6AIErro, setM6AIErro] = useState<string | null>(null);
   const [m6RelHistorico, setM6RelHistorico] = usePersistentState<Record<string, { resumo: string; destaques: string[]; data: string }[]>>("plan_m6_rel_hist_v1", {});
   // Período do relatório e turma selecionada para a leitura adaptativa.
@@ -2556,6 +2557,8 @@ export function Planejamento() {
   };
 
   const m6GerarRelatorioSofia = async () => {
+    const okGate = await creditosGate.checar({ custo: CUSTOS.parecer_descritivo, acao: "Relatório pedagógico (M6)" });
+    if (!okGate) return;
     setM6AILoading(true);
     setM6AIErro(null);
     try {
