@@ -1988,7 +1988,7 @@ export function Dashboard() {
               if (!name) return;
               const oldName = classes[editingClassIdx!].name;
               const turmaId = classes[editingClassIdx!].id;
-              cconst updated = {
+              const updated = {
                 name,
                 school: String(fd.get("school") || ""),
                 grade: String(fd.get("grade") || ""),
