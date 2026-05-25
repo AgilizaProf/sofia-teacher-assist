@@ -1,8 +1,7 @@
-Saída
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 
 type Entry = {
   emoji?: string;
@@ -34,6 +33,8 @@ serve(async (req) => {
     const {
       periodo = "bimestral",
       turma = "",
+      ano_escolar = "",
+      ano_referencia_pedagogico = "",
       curriculo_municipal = null as { municipio: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string }> } | null,
       entries = [] as Entry[],
       stats = {} as Record<string, unknown>,
@@ -88,11 +89,16 @@ PONTUAÇÃO E ESCRITA (inviolável):
 - Frases completas, com sujeito, verbo e complemento. Sem fragmentos.`;
 
     const habMunicipaisCtx = usandoMunicipal && Array.isArray(curriculo_municipal!.habilidades) && curriculo_municipal!.habilidades.length > 0
-      ? `\nHABILIDADES DO CURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio} (use os códigos abaixo ao citar competências trabalhadas):\n` +
-        curriculo_municipal!.habilidades
-          .slice(0, 30)
-          .map((h) => `- [${h.codigo}] ${h.descricao} (${h.ano} · ${h.disciplina})`)
-          .join("\n")
+      ? (() => {
+          const alvoAno = (ano_referencia_pedagogico || ano_escolar || "").trim();
+          const filtradas = curriculo_municipal!.habilidades.filter((h) => matchAnoCurriculo(alvoAno, h.ano));
+          const base = filtradas.length > 0 ? filtradas : curriculo_municipal!.habilidades;
+          return `\nHABILIDADES DO CURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio}${alvoAno ? ` (filtradas para "${alvoAno}")` : ""} — use os códigos abaixo ao citar competências trabalhadas:\n` +
+            base
+              .slice(0, 40)
+              .map((h) => `- [${h.codigo}] ${h.descricao} (${h.ano} · ${h.disciplina})`)
+              .join("\n");
+        })()
       : "";
 
     const user = `Turma: ${turma || "Todas"}
