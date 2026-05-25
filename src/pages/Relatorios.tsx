@@ -531,7 +531,7 @@ export function Relatorios() {
   //    (ex.: o usuário removeu o currículo).
   useEffect(() => {
     const turmaAtual = filterTurma !== "Todas"
-      ? turmasDb.find((t) => t.name === filterTurma)
+      ? turmasDb.find((t) => (t.name || "").trim().toLowerCase() === filterTurma.trim().toLowerCase())
       : null;
     const curriculoDaTurma = turmaAtual?.curriculo_id
       ? curriculosAtivos.find((c) => c.id === turmaAtual.curriculo_id)
@@ -849,7 +849,7 @@ export function Relatorios() {
 
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
-    const cls = dashClasses.find((c) => c.name === turma);
+    const cls = turmaByName(turma);
     const g = cls?.grade?.replace(/\D/g, "");
     return g && YEAR_OPTIONS.includes(g) ? g : "2";
   };
@@ -1001,7 +1001,7 @@ export function Relatorios() {
     const rub = getAlunoRubric(a.id);
     const dataStr = new Date().toLocaleDateString("pt-BR");
     const aluno = getStudentById(a.id);
-    const cls = dashClasses.find((c) => c.name === a.turma);
+      const cls = turmaByName(a.turma);
     const escola = dashSchools.find((s) => s.name === cls?.school);
     const parecerAluno = parecerByAluno[a.id] || null;
     const parecerHtml = parecerAluno
@@ -1579,9 +1579,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   <button
                     className="rel-btn-card"
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
-                    aria-label={`${isEiAluno(a.turma) ? "Avaliar por Campos de Experiência" : "Avaliar competências BNCC"} de ${a.nome}`}
+                    aria-label={`${isEiAluno(a.turma) ? "Avaliar por Campos de Experiência" : "Avaliar competências"} de ${a.nome}`}
                   >
-                   <ClipboardList size={13} /> {isEiAluno(a.turma) ? "Avaliar Campos" : labelAvaliacao}
+                   <ClipboardList size={13} /> {isEiAluno(a.turma) ? "Avaliar Campos" : labelAvaliacaoParaTurma(a.turma)}
                   </button>
                   {a.status === "todo" && (
                     <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
@@ -2478,7 +2478,7 @@ ${parecerHtml}
               </div>
               <div className="rel-modal-foot" style={{ flexWrap: "wrap" }}>
                 <button className="rel-btn-card" onClick={() => { setAlunoModal(null); setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }); }}>
-                  <ClipboardList size={13} /> {labelAvaliacao}
+                  <ClipboardList size={13} /> {labelAvaliacaoParaTurma(a.turma)}
                 </button>
                 {isDone && (
                   <>
