@@ -7,6 +7,7 @@ import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 
 type Student = { id: string; name: string; turma?: string; diag?: string };
 
