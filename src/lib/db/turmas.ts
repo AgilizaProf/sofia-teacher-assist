@@ -45,6 +45,7 @@ function uiToPayload(input: Partial<TurmaInput>) {
   if (input.grade !== undefined) p.ano = input.grade || null;
   if (input.shift !== undefined) p.turno = input.shift || null;
   if (input.students !== undefined) p.qtd_alunos = input.students || null;
+  if (input.curriculo_id !== undefined) p.curriculo_id = input.curriculo_id || null;
   return p;
 }
 
