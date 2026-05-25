@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal, type CurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { toast } from "sonner";
 
-const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15MB total no bucket (currículos + calendário)
-const MAX_FILE_BYTES = 7 * 1024 * 1024;   // 7MB por arquivo individual de currículo
+const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB total no bucket (compartilhado entre currículos + calendário)
+// Sem limite fixo por arquivo individual — o limite é o total disponível
 
 type Ordem = 1 | 2;
 
