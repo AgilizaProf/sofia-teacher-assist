@@ -151,6 +151,7 @@ export function RelatorioDialog({
         anoReferencia: String(ano),
         diagnostico: aluno.diag || null,
         cids: aluno.cids ?? (aluno.cid ? [aluno.cid] : []),
+        curriculoId: turma?.curriculo_id ?? null,
       });
       const saved = await saveRelatorioDoc(base);
       setDoc(saved.conteudo);
