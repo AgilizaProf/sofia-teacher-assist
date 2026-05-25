@@ -1457,16 +1457,14 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
             </div>
           </div>
 
-          {curriculosAtivos.length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "6px 0 12px" }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#5a6170" }}>Referencial curricular:</span>
-              <SeletorCurriculo
-                curriculos={curriculosAtivos}
-                value={curriculoSelecionadoId}
-                onChange={setCurriculoSelecionadoId}
-              />
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "6px 0 12px" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#5a6170" }}>Referencial curricular:</span>
+            <SeletorCurriculo
+              curriculos={curriculosAtivos}
+              value={curriculoSelecionadoId}
+              onChange={setCurriculoSelecionadoId}
+            />
+          </div>
 
           {/* Cards grid */}
           <div className="rel-grid">
