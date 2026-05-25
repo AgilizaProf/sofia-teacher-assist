@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 
 type Registro = { when?: string; cat?: string; body?: string };
 
@@ -25,6 +26,9 @@ serve(async (req) => {
       anoEscolar = "",
       anoReferenciaPedagogico = "",
       anoReferenciaInstrucao = "",
+      curriculo_municipal = null as
+        | { municipio: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string }> }
+        | null,
     } = body || {};
 
     const linhas = (registros as Registro[])
@@ -33,6 +37,17 @@ serve(async (req) => {
       .join("\n");
 
     const refBlock = (anoReferenciaInstrucao || "").trim();
+    const usandoMunicipal = curriculo_municipal && Array.isArray(curriculo_municipal.habilidades) && curriculo_municipal.habilidades.length > 0;
+    const referencialLabel = usandoMunicipal ? `Currículo Municipal de ${curriculo_municipal!.municipio}` : "BNCC";
+    const habMunicipaisCtx = usandoMunicipal
+      ? (() => {
+          const alvoAno = (anoReferenciaPedagogico || anoEscolar || "").trim();
+          const filtradas = curriculo_municipal!.habilidades.filter((h) => matchAnoCurriculo(alvoAno, h.ano));
+          const base = filtradas.length > 0 ? filtradas : curriculo_municipal!.habilidades;
+          return `\n\nREFERENCIAL CURRICULAR (regra inviolável): use o ${referencialLabel} como base. NÃO cite códigos BNCC. Cite os códigos do currículo municipal quando relevante.\nHABILIDADES DO CURRÍCULO MUNICIPAL${alvoAno ? ` (filtradas para "${alvoAno}")` : ""}:\n` +
+            base.slice(0, 40).map((h) => `- [${h.codigo}] ${h.descricao} (${h.ano} · ${h.disciplina})`).join("\n");
+        })()
+      : "";
    const temAnamAnterior = Boolean((anamAnteriorResumo || "").trim());
     const anamProgressBlock = temAnamAnterior
       ? `\n\nCOMPARAÇÃO COM ANAMNESE ANTERIOR (use para evidenciar evolução):\n${anamAnteriorResumo}\nINSTRUÇÃO: compare com o estado ATUAL. Destaque avanços com frases como "Desde o último registro, demonstra maior...", "Comparando com o período anterior, já consegue...". NUNCA reforce dificuldades — apenas evidencie crescimento.`
@@ -70,7 +85,8 @@ Diagnóstico/CID: ${diagnostico || "não informado"}
 Período do parecer: ${periodo}
 Ano de matrícula: ${anoEscolar || "não informado"}
 Ano de referência pedagógico: ${anoReferenciaPedagogico || "(não definido — usar ano de matrícula)"}
-
+Referencial curricular: ${referencialLabel}
+${habMunicipaisCtx}
 Anamnese (resumo dos eixos):
 ${anamneseResumo || "(sem dados de anamnese)"}${anamProgressBlock}
 
