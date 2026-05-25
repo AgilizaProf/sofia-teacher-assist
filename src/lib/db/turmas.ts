@@ -7,6 +7,7 @@ export type TurmaUI = {
   grade: string;
   shift: string;
   students: string;
+  curriculo_id: string | null;
 };
 
 export type TurmaInput = Omit<TurmaUI, "id">;
