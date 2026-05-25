@@ -922,8 +922,8 @@ export function Agenda() {
   };
 
   const handleCalendarioFile = async (file: File) => {
-    const MAX = 50 * 1024 * 1024;
-    if (file.size > MAX) { toast.error("O arquivo deve ter no máximo 50 MB."); return; }
+    const MAX = 15 * 1024 * 1024;
+    if (file.size > MAX) { toast.error("O arquivo deve ter no máximo 15 MB."); return; }
     if (file.type !== "application/pdf") { toast.error("Apenas arquivos PDF são aceitos."); return; }
 
     setImportandoCalendario(true);
