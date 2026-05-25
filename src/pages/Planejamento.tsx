@@ -1416,6 +1416,26 @@ export function Planejamento() {
   const setCtxAtual = (next: TurmaCtx) =>
     setCtxByTab((p) => ({ ...p, [m]: next }));
 
+  // Regra (M1, M2, M3, M7): o currículo usado pela Sofia é estritamente o
+  // vinculado à turma selecionada na aba atual. Se a turma não tiver
+  // currículo vinculado, cai em BNCC. Sem fallbacks para "padrão" do usuário.
+  useEffect(() => {
+    const nomeTurma = (ctxAtual.turma ?? "").trim().toLowerCase();
+    if (!nomeTurma) {
+      setCurriculoPlanoId("bncc");
+      return;
+    }
+    const tDb = turmasDb.find(
+      (t) => (t.name || "").trim().toLowerCase() === nomeTurma,
+    );
+    const cid = tDb?.curriculo_id;
+    if (cid && curriculosAtivos.some((c) => c.id === cid)) {
+      setCurriculoPlanoId(cid);
+    } else {
+      setCurriculoPlanoId("bncc");
+    }
+  }, [m, ctxAtual.turma, turmasDb, curriculosAtivos]);
+
   // Turmas cadastradas — fonte ao vivo (tabela `turmas` via React Query).
   // Assim, qualquer turma criada/editada em outra tela aparece aqui
   // imediatamente (invalidação do cache `["turmas"]`).
