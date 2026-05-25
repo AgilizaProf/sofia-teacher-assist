@@ -5,6 +5,7 @@ import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Pri
 import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { feriadosNacionaisBR } from "@/lib/calendar/feriadosBR";
@@ -85,6 +86,7 @@ type Semana = {
 export function TrilhasPanel() {
   const { turmas: turmasCadastradas } = useTurmas();
   const { curriculo: curriculoMunicipal, isAtivo: curriculoMunicipalAtivo } = useCurriculoMunicipal();
+  const creditosGate = useCreditosGate();
   const [trilhas, setTrilhas] = useState<Trilha[]>([]);
   const [semanas, setSemanas] = useState<Semana[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -149,6 +151,11 @@ export function TrilhasPanel() {
       setError("Selecione a turma, o ano e ao menos uma disciplina.");
       return;
     }
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.trilha_semestral,
+      acao: `Trilha semestral · ${form.turma} (${form.semestre})`,
+    });
+    if (!okGate) return;
     const multiplas = discsAll.length > 1;
     const interdisciplinar = multiplas && form.interdisciplinar;
     const disciplinaStr = !multiplas
@@ -237,6 +244,15 @@ export function TrilhasPanel() {
   };
 
   const gerarPlanoSemana = async (trilha: Trilha, s: Semana) => {
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.planejamento_semanal,
+      acao: `Planejamento semanal · Semana ${s.semana}`,
+    });
+    if (!okGate) {
+      const blocked = new Error("Créditos insuficientes para esta semana.") as Error & { blocked?: boolean };
+      blocked.blocked = true;
+      throw blocked;
+    }
     setGerandoSemana(s.id);
     try {
       const habilidades = Array.isArray(s.habilidades_bncc)

@@ -6,6 +6,7 @@ import type { PlanoInclusao } from "./PlanoInclusaoModal";
 import { buildAnoReferenciaPromptBlock } from "@/lib/inclusao/anoReferencia";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 
 type Aluno = {
   id: string;
@@ -68,6 +69,7 @@ function isoFromOffset(weeks: number): string {
 
 export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSavedMany }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const creditosGate = useCreditosGate();
   useEffect(() => {
     if (!open) return;
     const t = window.setTimeout(() => {
@@ -161,6 +163,12 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
         tarefas.push({ disciplina: d, semana: 1 + i * passo });
       }
     }
+    const custoTotal = tarefas.length * CUSTOS.planejamento_semanal;
+    const okGate = await creditosGate.checar({
+      custo: custoTotal,
+      acao: `Planejamento por período · ${tarefas.length} atividade(s) para ${aluno.name}`,
+    });
+    if (!okGate) return;
     setLoading(true);
     setProgresso({ feito: 0, total: tarefas.length });
     setItens([]);

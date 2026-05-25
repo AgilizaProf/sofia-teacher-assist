@@ -6,6 +6,7 @@ import { buildAnoReferenciaPromptBlock, isAnoReferenciaDivergente } from "@/lib/
 import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 
 export type PlanoInclusao = {
   id: string;
@@ -275,6 +276,7 @@ type PlanoItem = {
 
 export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSaved }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const creditosGate = useCreditosGate();
   useKeyboardAwareModal(modalRef, open);
   useEffect(() => {
     if (!open) return;
@@ -368,6 +370,12 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
       toast.error("Selecione ao menos uma disciplina ou campo de experiência.");
       return;
     }
+    const totalChamadas = modoGeracao === "integrado" && disciplinas.length > 1 ? 1 : disciplinas.length;
+    const okGate = await creditosGate.checar({
+      custo: totalChamadas * CUSTOS.adaptacao_pcd,
+      acao: `Adaptação inclusiva (PCD) · ${aluno.name}${totalChamadas > 1 ? ` · ${totalChamadas} planos` : ""}`,
+    });
+    if (!okGate) return;
     setLoading(true);
     try {
       if (modoGeracao === "integrado" && disciplinas.length > 1) {
@@ -404,6 +412,11 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
   async function regerarAtual() {
     const atual = planos[abaAtiva];
     if (!atual) return;
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.adaptacao_pcd,
+      acao: `Regerar plano · ${atual.disciplina}`,
+    });
+    if (!okGate) return;
     setLoading(true);
     try {
       const interd = atual.disciplina.includes(" + ");

@@ -14,6 +14,7 @@ import { buildCidsPromptBlock } from "@/lib/inclusao/cidPrompt";
 import { toast } from "sonner";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -853,6 +854,7 @@ export function Inclusao() {
     loading: studentsLoading,
   } = useInclusaoStudents();
   const { isAtivo: municipalAtivo, curriculo: curriculoMunicipalDados } = useCurriculoMunicipal();
+  const creditosGate = useCreditosGate();
   // Filtro PCD: a página de Inclusão só lista alunos PCD.
   // Considera PCD quando o campo `pcd` está preenchido e diferente de "nao",
   // OU quando há CID cadastrado (cadastro feito pela própria Inclusão).
@@ -1517,6 +1519,11 @@ ${corpo}
 
   const handleGerarParecer = async () => {
     if (!selected) return;
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.relatorio_inclusao,
+      acao: descricaoDoc("Relatório de inclusão", selected.name),
+    });
+    if (!okGate) return;
     setGerandoParecer(true);
     try {
       // Usa registros do período; se vazio, faz fallback para TODOS os
