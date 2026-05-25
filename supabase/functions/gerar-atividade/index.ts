@@ -468,7 +468,7 @@ serve(async (req) => {
 
     // === Validação dos códigos BNCC (pulada quando currículo municipal está ativo) ===
     if (usandoMunicipal) {
-      return new Response(JSON.stringify(parsed), {
+      return new Response(JSON.stringify({ plano: parsed }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
