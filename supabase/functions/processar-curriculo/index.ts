@@ -111,7 +111,7 @@ REGRAS:
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ role: "user", parts: [{ file_data: { mime_type: "application/pdf", file_uri: fileUri } }, { text: prompt }] }],
-              generationConfig: { maxOutputTokens: 64000, responseMimeType: "application/json" },
+              generationConfig: { maxOutputTokens: 65536, responseMimeType: "application/json" },
             }),
           }
         );
@@ -131,7 +131,7 @@ REGRAS:
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{ role: "user", parts: [{ inline_data: { mime_type: "application/pdf", data: base64 } }, { text: prompt }] }],
-            generationConfig: { maxOutputTokens: 64000, responseMimeType: "application/json" },
+            generationConfig: { maxOutputTokens: 65536, responseMimeType: "application/json" },
           }),
         }
       );
@@ -158,6 +158,16 @@ REGRAS:
       parseOk = true;
     } catch { parseOk = false; }
 
+    // Recuperação de JSON truncado (finishReason MAX_TOKENS) — extrai habilidades completas
+    if (!parseOk) {
+      const recovered = recuperarHabilidadesTruncadas(rawText);
+      if (recovered.length > 0) {
+        parsed = { municipio, total_habilidades: recovered.length, habilidades: recovered };
+        parseOk = true;
+        console.warn(`[processar-curriculo:bg] JSON truncado (${finishReason}). Recuperadas ${recovered.length} habilidades.`);
+      }
+    }
+
     if (!parseOk && modelUsed !== "gemini-2.5-flash") {
       console.warn(`[processar-curriculo:bg] Parse falhou com ${modelUsed}. Retry com gemini-2.5-flash.`);
       modelUsed = "gemini-2.5-flash";
@@ -171,6 +181,14 @@ REGRAS:
           parsed = JSON.parse(rawText.replace(/```json|```/g, "").trim());
           parseOk = true;
         } catch { parseOk = false; }
+        if (!parseOk) {
+          const recovered = recuperarHabilidadesTruncadas(rawText);
+          if (recovered.length > 0) {
+            parsed = { municipio, total_habilidades: recovered.length, habilidades: recovered };
+            parseOk = true;
+            console.warn(`[processar-curriculo:bg] (retry) JSON truncado. Recuperadas ${recovered.length} habilidades.`);
+          }
+        }
       }
     }
 
