@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { userIdFromAuthHeader, isBudgetExceeded, recordUsage } from "../_shared/ai-budget.ts";
 import { withConstitution } from "../_shared/sofia-constitution.ts";
+import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -97,12 +98,23 @@ serve(async (req) => {
 
     const usandoMunicipal = curriculo_municipal && Array.isArray(curriculo_municipal.habilidades) && curriculo_municipal.habilidades.length > 0;
 
+    const alvoAno = anoReferenciaPedagogico || anoEscolar || "";
     const habMunicipaisResumo = usandoMunicipal
-      ? curriculo_municipal!.habilidades
-          .filter((h) => (!anoEscolar || h.ano?.includes(anoEscolar.replace(/[^\d]/g, ""))) && (!disciplina || h.disciplina?.toLowerCase().includes(disciplina.toLowerCase())))
-          .slice(0, 30)
-          .map((h) => `- ${h.codigo}: ${h.descricao} (${h.ano} · ${h.disciplina})`)
-          .join("\n")
+      ? (() => {
+          const filtradas = curriculo_municipal!.habilidades.filter(
+            (h) =>
+              matchAnoCurriculo(alvoAno, h.ano) &&
+              (!disciplina || (h.disciplina || "").toLowerCase().includes(disciplina.toLowerCase())),
+          );
+          // Fallback: se o filtro de disciplina zerou tudo, mantém só pelo ano
+          const base = filtradas.length > 0
+            ? filtradas
+            : curriculo_municipal!.habilidades.filter((h) => matchAnoCurriculo(alvoAno, h.ano));
+          return base
+            .slice(0, 40)
+            .map((h) => `- ${h.codigo}: ${h.descricao} (${h.ano} · ${h.disciplina})`)
+            .join("\n");
+        })()
       : null;
 
     const systemPrompt = usandoMunicipal

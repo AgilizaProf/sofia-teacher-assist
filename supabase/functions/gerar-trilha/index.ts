@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -21,11 +22,14 @@ serve(async (req) => {
     const usandoMunicipal = curriculo_municipal && Array.isArray(curriculo_municipal.habilidades) && curriculo_municipal.habilidades.length > 0;
 
     const habMunicipaisTexto = usandoMunicipal
-      ? curriculo_municipal!.habilidades
-          .filter((h) => !ano || h.ano?.includes(String(ano).replace(/[^\d]/g, "")))
-          .slice(0, 40)
-          .map((h) => `- [${h.codigo}] ${h.descricao} (${h.ano} · ${h.disciplina})`)
-          .join("\n")
+      ? (() => {
+          const filtradas = curriculo_municipal!.habilidades.filter((h) => matchAnoCurriculo(ano, h.ano));
+          const base = filtradas.length > 0 ? filtradas : curriculo_municipal!.habilidades;
+          return base
+            .slice(0, 60)
+            .map((h) => `- [${h.codigo}] ${h.descricao} (${h.ano} · ${h.disciplina})`)
+            .join("\n");
+        })()
       : null;
 
     const sysBase = usandoMunicipal
