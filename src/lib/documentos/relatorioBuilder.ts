@@ -57,6 +57,7 @@ export function buildRelatorioBase(args: {
   cids?: string[];
   anoReferenciaPedagogico?: string | null;
   frequentaAee?: boolean;
+  curriculoId?: string | null;
   /** Conteúdo opcional pré-preenchido (vindo da Sofia ou do app). */
   conteudo?: Partial<Pick<RelatorioDocumento,
     | "desenvolvimentoGlobal" | "campos" | "bncc" | "observacoes" | "avancos"
