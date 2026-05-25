@@ -23,7 +23,10 @@ serve(async (req) => {
 
     const anoStr = String(ano || "").toLowerCase();
     const isEdInfantil = /infantil|berç|maternal|pré[\s-]?(i|ii|escola)|creche|g[1-5]\b/.test(anoStr);
-    const usandoMunicipal = !isEdInfantil && curriculo_municipal && curriculo_municipal.municipio;
+    const usandoMunicipal = !isEdInfantil
+      && curriculo_municipal
+      && Array.isArray(curriculo_municipal.habilidades)
+      && curriculo_municipal.habilidades.length > 0;
 
     const sys = isEdInfantil
       ? `Você é a Sofia, assistente pedagógica do AgilizaProf. Gere planos semanais encadeados para EDUCAÇÃO INFANTIL, baseados EXCLUSIVAMENTE nos Campos de Experiência da BNCC (códigos EI0X__##). NÃO use disciplinas do Ensino Fundamental (Matemática/Português/etc.). Foque em interações, brincadeiras e eixos estruturantes. Linguagem não-capacitista. Devolva JSON estrito.`
