@@ -14,6 +14,7 @@ import { buildCidsPromptBlock } from "@/lib/inclusao/cidPrompt";
 import { toast } from "sonner";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
