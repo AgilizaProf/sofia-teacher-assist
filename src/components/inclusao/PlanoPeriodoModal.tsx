@@ -163,6 +163,12 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
         tarefas.push({ disciplina: d, semana: 1 + i * passo });
       }
     }
+    const custoTotal = tarefas.length * CUSTOS.planejamento_semanal;
+    const okGate = await creditosGate.checar({
+      custo: custoTotal,
+      acao: `Planejamento por período · ${tarefas.length} atividade(s) para ${aluno.name}`,
+    });
+    if (!okGate) return;
     setLoading(true);
     setProgresso({ feito: 0, total: tarefas.length });
     setItens([]);
