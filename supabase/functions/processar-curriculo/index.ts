@@ -81,11 +81,28 @@ REGRAS:
           { method: "POST", headers: { "X-Goog-Upload-Protocol": "multipart", "Content-Type": `multipart/related; boundary=${boundary}` }, body }
         );
         if (!uploadRes.ok) throw new Error(`File API upload falhou: ${(await uploadRes.text()).slice(0, 200)}`);
-        const uploadJson = await uploadRes.json() as { file?: { uri?: string; name?: string } };
+        const uploadJson = await uploadRes.json() as { file?: { uri?: string; name?: string; state?: string } };
         const fileUri = uploadJson?.file?.uri;
         const fileName = uploadJson?.file?.name;
-        if (!fileUri) throw new Error("File API não retornou URI.");
-        console.log(`[processar-curriculo:bg] File API upload OK → ${fileUri}`);
+        if (!fileUri || !fileName) throw new Error("File API não retornou URI.");
+        console.log(`[processar-curriculo:bg] File API upload OK → ${fileUri} | aguardando ACTIVE...`);
+
+        // Aguarda o arquivo ficar ACTIVE antes de chamar generateContent
+        let fileState = uploadJson?.file?.state ?? "PROCESSING";
+        let tentativas = 0;
+        while (fileState === "PROCESSING" && tentativas < 30) {
+          await new Promise((r) => setTimeout(r, 2000));
+          tentativas++;
+          const statusRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${GOOGLE_KEY}`);
+          if (!statusRes.ok) break;
+          const statusJson = await statusRes.json() as { state?: string };
+          fileState = statusJson?.state ?? "PROCESSING";
+          console.log(`[processar-curriculo:bg] tentativa ${tentativas}: state=${fileState}`);
+        }
+        if (fileState !== "ACTIVE") {
+          throw new Error(`Arquivo não ficou pronto na File API após ${tentativas * 2}s (estado: ${fileState}).`);
+        }
+        console.log(`[processar-curriculo:bg] Arquivo ACTIVE após ${tentativas * 2}s`);
 
         const res = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_KEY}`,
