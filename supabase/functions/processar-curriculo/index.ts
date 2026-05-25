@@ -62,20 +62,58 @@ REGRAS:
 - Retorne APENAS o JSON, sem texto adicional`;
 
     async function callGemini(model: string) {
-      console.log(`[processar-curriculo:bg] Chamando Gemini com modelo: ${model}`);
-      return await fetch(
+      console.log(`[processar-curriculo:bg] Chamando Gemini com modelo: ${model} | estratégia: ${pdfSizeMB > 4 ? "File API" : "inline"}`);
+
+      // PDFs > 4 MB: usa File API para evitar estouro de contexto inline
+      if (pdfSizeMB > 4) {
+        const enc = new TextEncoder();
+        const metaJson = JSON.stringify({ file: { display_name: `curriculo_${curriculo_id}.pdf`, mime_type: "application/pdf" } });
+        const boundary = "curriculo_boundary";
+        const metaBytes = enc.encode(`--${boundary}\r\nContent-Type: application/json\r\n\r\n${metaJson}\r\n--${boundary}\r\nContent-Type: application/pdf\r\n\r\n`);
+        const closingBytes = enc.encode(`\r\n--${boundary}--`);
+        const body = new Uint8Array(metaBytes.length + bytes.length + closingBytes.length);
+        body.set(metaBytes, 0);
+        body.set(bytes, metaBytes.length);
+        body.set(closingBytes, metaBytes.length + bytes.length);
+
+        const uploadRes = await fetch(
+          `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GOOGLE_KEY}`,
+          { method: "POST", headers: { "X-Goog-Upload-Protocol": "multipart", "Content-Type": `multipart/related; boundary=${boundary}` }, body }
+        );
+        if (!uploadRes.ok) throw new Error(`File API upload falhou: ${(await uploadRes.text()).slice(0, 200)}`);
+        const uploadJson = await uploadRes.json() as { file?: { uri?: string; name?: string } };
+        const fileUri = uploadJson?.file?.uri;
+        const fileName = uploadJson?.file?.name;
+        if (!fileUri) throw new Error("File API não retornou URI.");
+        console.log(`[processar-curriculo:bg] File API upload OK → ${fileUri}`);
+
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ file_data: { mime_type: "application/pdf", file_uri: fileUri } }, { text: prompt }] }],
+              generationConfig: { maxOutputTokens: 64000, responseMimeType: "application/json" },
+            }),
+          }
+        );
+        if (fileName) fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${GOOGLE_KEY}`, { method: "DELETE" }).catch(() => {});
+        return res;
+      }
+
+      // PDFs ≤ 4 MB: envia inline (base64)
+      const CHUNK = 8192;
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += CHUNK) binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+      const base64 = btoa(binary);
+      return fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GOOGLE_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            contents: [{
-              role: "user",
-              parts: [
-                { inline_data: { mime_type: "application/pdf", data: base64 } },
-                { text: prompt },
-              ],
-            }],
+            contents: [{ role: "user", parts: [{ inline_data: { mime_type: "application/pdf", data: base64 } }, { text: prompt }] }],
             generationConfig: { maxOutputTokens: 64000, responseMimeType: "application/json" },
           }),
         }
