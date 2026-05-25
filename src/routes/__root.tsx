@@ -6,6 +6,7 @@ import { SofiaProvider } from "@/components/sofia/SofiaProvider";
 import { SofiaWidget } from "@/components/sofia/SofiaWidget";
 import { SofiaContextProvider } from "@/lib/sofia/sofiaContext";
 import { SofiaUserDataProvider } from "@/lib/sofia/SofiaUserContext";
+import { CreditosGateProvider } from "@/lib/creditos/CreditosGate";
 // import { SofiaNotificationsProvider } from "@/lib/sofia/notifications";
 // import { SofiaNotificationsWidget } from "@/components/sofia/SofiaNotificationsWidget";
 import { SofiaAutoReminders } from "@/lib/sofia/autoReminders";
@@ -189,9 +190,11 @@ function RootComponent() {
         <SofiaUserDataProvider>
           {/* <SofiaNotificationsProvider> */}
             <SofiaProvider>
-              <MaintenanceBanner />
-              {showSofia && <MobileTopBar />}
-              <Outlet />
+              <CreditosGateProvider>
+                <MaintenanceBanner />
+                {showSofia && <MobileTopBar />}
+                <Outlet />
+              </CreditosGateProvider>
               {showSofia && (
                 <>
                   <SofiaErrorBoundary area="o assistente Sofia" silent>
