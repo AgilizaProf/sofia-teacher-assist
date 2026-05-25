@@ -151,6 +151,11 @@ export function TrilhasPanel() {
       setError("Selecione a turma, o ano e ao menos uma disciplina.");
       return;
     }
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.trilha_semestral,
+      acao: `Trilha semestral · ${form.turma} (${form.semestre})`,
+    });
+    if (!okGate) return;
     const multiplas = discsAll.length > 1;
     const interdisciplinar = multiplas && form.interdisciplinar;
     const disciplinaStr = !multiplas
