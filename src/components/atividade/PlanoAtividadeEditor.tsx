@@ -655,6 +655,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   const gerarParaTodos = async () => {
     if (modo !== "pcd" || alunosPCDDaTurma.length === 0 || gerandoLote) return;
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.adaptacao_pcd * alunosPCDDaTurma.length,
+      acao: `Adaptações PCD (${alunosPCDDaTurma.length} alunos)`,
+    });
+    if (!okGate) return;
     setErro("");
     setGerandoLote(true);
     setLote([]);
