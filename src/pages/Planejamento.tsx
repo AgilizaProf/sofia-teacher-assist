@@ -2586,7 +2586,9 @@ export function Planejamento() {
       const curriculoDaTurma = turmaDbAtual?.curriculo_id
         ? curriculosAtivos.find((c) => c.id === turmaDbAtual.curriculo_id) ?? null
         : null;
-      const curriculoParaRelatorio = curriculoDaTurma ?? (curriculoMunicipalAtivo ? curriculoMunicipalDados : null);
+      // Regra estrita: o relatório segue o currículo vinculado à turma do registro.
+      // Sem vínculo => BNCC (não cai no padrão global do usuário).
+      const curriculoParaRelatorio = curriculoDaTurma;
       const alunosPcdTurma = turmaAtualNome
         ? (sofiaUser.alunosPCDPorTurma[turmaAtualNome] ?? []).map((a) => ({
             nome: a.primeiro_nome,

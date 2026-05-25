@@ -826,12 +826,9 @@ export function Relatorios() {
           anoReferenciaPedagogico: yearOverride[a.id] || cls?.grade || "",
           curriculo_municipal: (() => {
             const tDb = turmasDb.find((t) => (t.name || "").trim().toLowerCase() === (a.turma || "").trim().toLowerCase());
-            // Regra: SEM currículo anexado > BNCC. COM currículo anexado > usar o currículo.
-            // 1) preferir o currículo vinculado à turma; 2) cair no padrão do usuário;
-            // 3) cair em qualquer ativo; só então retornar null (=> BNCC).
-            const curTurma = tDb?.curriculo_id ? curriculosAtivos.find((c) => c.id === tDb.curriculo_id) : null;
-            const curPadrao = curriculosAtivos.find((c) => c.eh_padrao) ?? curriculosAtivos[0] ?? null;
-            const cur = curTurma ?? curPadrao;
+            // Regra estrita: turma vinculada a um currículo => usa o currículo.
+            // Turma sem vínculo => BNCC (curriculo_municipal=null). Não cai em padrão global.
+            const cur = tDb?.curriculo_id ? curriculosAtivos.find((c) => c.id === tDb.curriculo_id) : null;
             return cur ? { municipio: cur.municipio, habilidades: cur.habilidades || [] } : null;
           })(),
         },
