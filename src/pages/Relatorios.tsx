@@ -13,7 +13,7 @@ import { useDashClasses } from "@/hooks/useDashLegacyData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
-import { isEducacaoInfantilGrade, EI_GRADE_LABELS } from "@/lib/turmaGrade";
+import { isEducacaoInfantilGrade, EI_GRADE_LABELS, formatTurmaGrade } from "@/lib/turmaGrade";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -546,13 +546,6 @@ export function Relatorios() {
       return curriculosAtivos.find((c) => c.eh_padrao)?.id ?? curriculosAtivos[0]?.id ?? "bncc";
     });
   }, [curriculosAtivos, filterTurma, turmasDb]);
-  const curriculoSelecionado = curriculosAtivos.find((c) => c.id === curriculoSelecionadoId) ?? null;
-  const municipalAtivo = curriculoSelecionado !== null;
-  const nomeMunicipio = curriculoSelecionado
-    ? `${curriculoSelecionado.municipio}${curriculoSelecionado.estado ? ` (${curriculoSelecionado.estado})` : ""}`
-    : null;
-  const curriculoMunicipal = curriculoSelecionado;
-  const labelAvaliacao = municipalAtivo && nomeMunicipio ? `Avaliar ${nomeMunicipio}` : "Avaliar BNCC";
   const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState(routeSearch.pcd === "apenas" ? "Apenas PCD" : "Todos");
 
@@ -895,7 +888,7 @@ export function Relatorios() {
     // e usa como competências no modal — substituindo a lista BNCC hardcoded.
     if (curriculoDaTurma && Array.isArray(curriculoDaTurma.habilidades) && curriculoDaTurma.habilidades.length > 0) {
       const turmaAtual = turmaByName(turma);
-      const alvoAno = yearOverride[id] || turmaAtual?.grade || turma;
+      const alvoAno = yearOverride[id] || formatTurmaGrade(turmaAtual?.grade) || turmaAtual?.grade || turma;
       const habFiltradas = curriculoDaTurma.habilidades.filter((h) => matchAnoCurriculo(alvoAno, h.ano));
       const habs = habFiltradas.length > 0 ? habFiltradas : curriculoDaTurma.habilidades;
       const porDisc: Record<string, string[]> = {};
