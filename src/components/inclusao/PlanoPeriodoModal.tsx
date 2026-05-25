@@ -6,6 +6,7 @@ import type { PlanoInclusao } from "./PlanoInclusaoModal";
 import { buildAnoReferenciaPromptBlock } from "@/lib/inclusao/anoReferencia";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 
 type Aluno = {
   id: string;
