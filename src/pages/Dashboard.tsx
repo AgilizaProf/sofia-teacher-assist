@@ -1972,12 +1972,13 @@ export function Dashboard() {
               if (!name) return;
               const oldName = classes[editingClassIdx!].name;
               const turmaId = classes[editingClassIdx!].id;
-              const updated = {
+              cconst updated = {
                 name,
                 school: String(fd.get("school") || ""),
                 grade: String(fd.get("grade") || ""),
                 shift: String(fd.get("shift") || ""),
                 students: String(fd.get("students") || ""),
+                curriculo_id: String(fd.get("curriculo_id") || "") || null,
               };
               try {
                 await updateTurmaDb(turmaId, updated);
