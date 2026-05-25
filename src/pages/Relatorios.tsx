@@ -822,6 +822,13 @@ export function Relatorios() {
           registros: [],
           nivel_ensino: nivelEnsino,
           tipo_relatorio: tipoRelatorio,
+          anoEscolar: cls?.grade || "",
+          anoReferenciaPedagogico: yearOverride[a.id] || cls?.grade || "",
+          curriculo_municipal: (() => {
+            const tDb = turmasDb.find((t) => (t.name || "").trim().toLowerCase() === (a.turma || "").trim().toLowerCase());
+            const cur = tDb?.curriculo_id ? curriculosAtivos.find((c) => c.id === tDb.curriculo_id) : null;
+            return cur ? { municipio: cur.municipio, habilidades: cur.habilidades || [] } : null;
+          })(),
         },
       });
       if (error) throw error;
