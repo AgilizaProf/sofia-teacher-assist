@@ -752,6 +752,7 @@ export function Relatorios() {
   };
   const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, ParecerNarrativo>>("rel_parecer", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
+  const creditosGate = useCreditosGate();
   const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
   type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
   const [tipoPeriodo, setTipoPeriodo] = usePersistentState<TipoPeriodo>("rel_tipo_periodo", "Bimestral");
@@ -766,6 +767,8 @@ export function Relatorios() {
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
   const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }) => {
+    const okGate = await creditosGate.checar({ custo: CUSTOS.parecer_descritivo, acao: `Parecer descritivo — ${a.nome}` });
+    if (!okGate) return;
     setGerandoParecerId(a.id);
     try {
       const areas = areasFor(a.id, a.turma, a.pcd);
