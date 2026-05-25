@@ -67,8 +67,12 @@ async function processarComGemini(curriculo_id: string, arquivo_path: string, mu
     const bytes = new Uint8Array(buffer);
 
     // 3. Escolher modelo e estratégia de envio
+    // PDFs > 2 MB tendem a ter muitas tabelas/anos distintos → usa Pro para preservar agrupamentos.
     const pdfSizeMB = bytes.length / (1024 * 1024);
-    const initialModel = pdfSizeMB <= 2 ? "gemini-2.5-flash-lite" : "gemini-2.5-flash";
+    const initialModel =
+      pdfSizeMB <= 2 ? "gemini-2.5-flash-lite"
+      : pdfSizeMB <= 4 ? "gemini-2.5-flash"
+      : "gemini-2.5-pro";
     console.log(`[processar-curriculo:bg] PDF size: ${pdfSizeMB.toFixed(2)} MB → modelo inicial: ${initialModel}`);
 
     const prompt = `Você é um assistente especializado em currículos educacionais brasileiros.
@@ -83,19 +87,26 @@ Retorne um JSON válido com este formato exato:
   "total_habilidades": número,
   "habilidades": [
     {
-      "codigo": "código da habilidade (ex: ALP01EF01 ou similar)",
+      "codigo": "código da habilidade (ex: EI01EO03, EF03MA07 ou similar)",
       "descricao": "descrição completa da habilidade",
-      "ano": "ano escolar (ex: 1º ano, 2º ano, EI, EM)",
+      "ano": "ano/etapa escolar EXATAMENTE como aparece no documento",
       "disciplina": "nome da disciplina ou campo de experiência",
       "eixo": "eixo temático ou unidade (opcional)"
     }
   ]
 }
 
-REGRAS:
+REGRAS CRÍTICAS SOBRE O CAMPO "ano" (invioláveis):
+1) Preserve EXATAMENTE o rótulo de ano/etapa mostrado no documento para cada habilidade. Se a tabela mostra "Berçário I", use "Berçário I" — NÃO agrupe com "Berçário II". Se mostra "Maternal I" e "Maternal II" separadamente, mantenha-os SEPARADOS. Se mostra "Pré I" e "Pré II", idem.
+2) NUNCA invente faixas combinadas tipo "Berçário I e II" ou "Maternal I/II" a menos que o próprio documento use literalmente esse rótulo combinado.
+3) Se a MESMA habilidade aparece em DOIS anos diferentes no documento, emita DUAS entradas (uma por ano) — não consolide.
+4) Use os rótulos do documento mesmo que sejam locais (ex: "1º Ano EF", "1º ano do Ensino Fundamental", "1º ano"). Mantenha o texto original do cabeçalho.
+5) Para Educação Infantil, os códigos BNCC indicam a faixa: EI01 = 0-1 ano (Berçário), EI02 = 2-3 anos (Maternal), EI03 = 4-5 anos (Pré). Use isso apenas como CONFIRMAÇÃO de que o ano informado bate com o código — não para sobrescrever o rótulo do documento.
+
+OUTRAS REGRAS:
 - Se não houver código explícito, crie um baseado no padrão: [SIGLA_DISC][ANO][SEQUENCIAL]
 - Mantenha as descrições fiéis ao documento, sem inventar
-- Inclua habilidades de todos os anos e disciplinas encontrados
+- Inclua habilidades de TODOS os anos e disciplinas encontrados, sem pular nenhuma página de tabelas
 - Retorne APENAS o JSON, sem texto adicional`;
 
     async function callGemini(model: string) {
