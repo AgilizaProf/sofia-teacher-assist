@@ -1172,14 +1172,6 @@ export function Planejamento() {
     [curriculos],
   );
   const [curriculoPlanoId, setCurriculoPlanoId] = useState<string>("bncc");
-  // Quando os currículos carregam do banco, auto-seleciona o padrão (evita ficar preso em BNCC)
-  useEffect(() => {
-    if (curriculosAtivos.length === 0) return;
-    setCurriculoPlanoId((prev) => {
-      if (prev !== "bncc") return prev; // professor já escolheu manualmente
-      return curriculosAtivos.find((c) => c.eh_padrao)?.id ?? curriculosAtivos[0]?.id ?? "bncc";
-    });
-  }, [curriculosAtivos]);
   const curriculoMunicipalDados = curriculosAtivos.find((c) => c.id === curriculoPlanoId) ?? null;
   const curriculoMunicipalAtivo = curriculoMunicipalDados !== null;
   const [m, setM] = useState<MKey>(search.m || "atv");
@@ -1423,6 +1415,26 @@ export function Planejamento() {
   const ctxAtual: TurmaCtx = ctxByTab[m] ?? {};
   const setCtxAtual = (next: TurmaCtx) =>
     setCtxByTab((p) => ({ ...p, [m]: next }));
+
+  // Regra (M1, M2, M3, M7): o currículo usado pela Sofia é estritamente o
+  // vinculado à turma selecionada na aba atual. Se a turma não tiver
+  // currículo vinculado, cai em BNCC. Sem fallbacks para "padrão" do usuário.
+  useEffect(() => {
+    const nomeTurma = (ctxAtual.turma ?? "").trim().toLowerCase();
+    if (!nomeTurma) {
+      setCurriculoPlanoId("bncc");
+      return;
+    }
+    const tDb = turmasDb.find(
+      (t) => (t.name || "").trim().toLowerCase() === nomeTurma,
+    );
+    const cid = tDb?.curriculo_id;
+    if (cid && curriculosAtivos.some((c) => c.id === cid)) {
+      setCurriculoPlanoId(cid);
+    } else {
+      setCurriculoPlanoId("bncc");
+    }
+  }, [m, ctxAtual.turma, turmasDb, curriculosAtivos]);
 
   // Turmas cadastradas — fonte ao vivo (tabela `turmas` via React Query).
   // Assim, qualquer turma criada/editada em outra tela aparece aqui
