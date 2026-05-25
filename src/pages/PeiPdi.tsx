@@ -64,6 +64,7 @@ export function PeiPdi() {
   const [contexto, setContexto] = useState("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const creditosGate = useCreditosGate();
 
   const [pei, setPei] = useState<PeiData | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -103,6 +104,8 @@ export function PeiPdi() {
 
   const gerarPei = async () => {
     if (!aluno) { toast.error("Selecione um aluno PCD"); return; }
+    const okGate = await creditosGate.checar({ custo: CUSTOS.pei_completo, acao: "PEI completo" });
+    if (!okGate) return;
     setGenerating(true);
     setDebugLog([]);
 
