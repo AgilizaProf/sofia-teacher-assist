@@ -521,9 +521,15 @@ export function Relatorios() {
   const [filterTurma, setFilterTurma] = useState(routeSearch.turma ?? "Todas");
   const { curriculos } = useCurriculoMunicipal();
   const curriculosAtivos = useMemo(() => curriculos.filter((c) => c.status === "ativo"), [curriculos]);
-  const [curriculoSelecionadoId, setCurriculoSelecionadoId] = useState<string>(
-    () => curriculosAtivos.find((c) => c.eh_padrao)?.id ?? (curriculosAtivos[0]?.id ?? "bncc")
-  );
+  const [curriculoSelecionadoId, setCurriculoSelecionadoId] = useState<string>("bncc");
+  // Quando os currículos carregam do banco, auto-seleciona o padrão
+  useEffect(() => {
+    if (curriculosAtivos.length === 0) return;
+    setCurriculoSelecionadoId((prev) => {
+      if (prev !== "bncc") return prev;
+      return curriculosAtivos.find((c) => c.eh_padrao)?.id ?? curriculosAtivos[0]?.id ?? "bncc";
+    });
+  }, [curriculosAtivos]);
   const curriculoSelecionado = curriculosAtivos.find((c) => c.id === curriculoSelecionadoId) ?? null;
   const municipalAtivo = curriculoSelecionado !== null;
   const nomeMunicipio = curriculoSelecionado
