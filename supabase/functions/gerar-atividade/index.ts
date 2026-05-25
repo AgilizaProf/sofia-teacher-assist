@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { userIdFromAuthHeader, isBudgetExceeded, recordUsage } from "../_shared/ai-budget.ts";
 import { withConstitution } from "../_shared/sofia-constitution.ts";
+import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
