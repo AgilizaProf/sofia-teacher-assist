@@ -242,6 +242,10 @@ serve(async (req) => {
       : [
       baseContext,
       ``,
+      habMunicipaisResumo
+        ? `HABILIDADES DO CURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio} (use ESTES códigos — não BNCC):\n${habMunicipaisResumo}`
+        : ``,
+      ``,
       Array.isArray(opcoesSelecionadas) && opcoesSelecionadas.length > 0
         ? `A professora escolheu ${opcoesSelecionadas.length} opção(ões) de aula `
           + `para combinar em um único plano integrado:\n`
