@@ -2055,6 +2055,19 @@ export function Dashboard() {
                 <label htmlFor="edit-class-students">Nº de alunos</label>
                 <input id="edit-class-students" name="students" type="number" min={1} defaultValue={classes[editingClassIdx].students} />
               </div>
+                 <div className="school-field">
+                <label htmlFor="edit-class-curriculo">Currículo de referência</label>
+                <select id="edit-class-curriculo" name="curriculo_id" defaultValue={classes[editingClassIdx].curriculo_id ?? ""}>
+                  <option value="">BNCC (padrão)</option>
+                  {curriculos
+                    .filter((c) => c.status === "ativo")
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.municipio}{c.estado ? ` (${c.estado})` : ""}
+                      </option>
+                    ))}
+                </select>
+              </div>
               <div className="school-field">
                 <label htmlFor="edit-class-curriculo">Currículo de referência</label>
                 <select id="edit-class-curriculo" name="curriculo_id" defaultValue={classes[editingClassIdx].curriculo_id ?? ""}>
