@@ -1554,7 +1554,6 @@ export type Database = {
         Row: {
           ano: string | null
           created_at: string
-          curriculo_id: string | null
           data: Json
           escola: string | null
           id: string
@@ -1567,7 +1566,6 @@ export type Database = {
         Insert: {
           ano?: string | null
           created_at?: string
-          curriculo_id?: string | null
           data?: Json
           escola?: string | null
           id?: string
@@ -1580,7 +1578,6 @@ export type Database = {
         Update: {
           ano?: string | null
           created_at?: string
-          curriculo_id?: string | null
           data?: Json
           escola?: string | null
           id?: string
