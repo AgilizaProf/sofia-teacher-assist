@@ -244,6 +244,15 @@ export function TrilhasPanel() {
   };
 
   const gerarPlanoSemana = async (trilha: Trilha, s: Semana) => {
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.planejamento_semanal,
+      acao: `Planejamento semanal · Semana ${s.semana}`,
+    });
+    if (!okGate) {
+      const blocked = new Error("Créditos insuficientes para esta semana.") as Error & { blocked?: boolean };
+      blocked.blocked = true;
+      throw blocked;
+    }
     setGerandoSemana(s.id);
     try {
       const habilidades = Array.isArray(s.habilidades_bncc)
