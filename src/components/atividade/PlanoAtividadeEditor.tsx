@@ -269,6 +269,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   const [duracao, setDuracao] = useState<string>("45 min");
   const [tipo, setTipo] = useState<string>("Livre");
   const [generating, setGenerating] = useState(false);
+  const creditosGate = useCreditosGate();
   const [regenField, setRegenField] = useState<string>(""); // só visual
   const [erro, setErro] = useState<string>("");
   const [missing, setMissing] = useState<string[]>([]);
@@ -571,6 +572,12 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     );
 
   const gerar = async () => {
+    const opcoesSelCount = opcoesSel.length > 1 ? opcoesSel.length : 1;
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.plano_aula * opcoesSelCount,
+      acao: opcoesSelCount > 1 ? `Planos de aula (${opcoesSelCount} opções)` : "Plano de aula BNCC",
+    });
+    if (!okGate) return;
     setGenerating(true);
     // Quando há mais de uma opção selecionada → gera UM plano por opção,
     // mantendo cada um editável em sua própria aba.
