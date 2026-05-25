@@ -69,6 +69,7 @@ function isoFromOffset(weeks: number): string {
 
 export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSavedMany }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const creditosGate = useCreditosGate();
   useEffect(() => {
     if (!open) return;
     const t = window.setTimeout(() => {
