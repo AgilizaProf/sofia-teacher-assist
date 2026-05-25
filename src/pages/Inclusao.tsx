@@ -1519,6 +1519,11 @@ ${corpo}
 
   const handleGerarParecer = async () => {
     if (!selected) return;
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.relatorio_inclusao,
+      acao: descricaoDoc("Relatório de inclusão", selected.name),
+    });
+    if (!okGate) return;
     setGerandoParecer(true);
     try {
       // Usa registros do período; se vazio, faz fallback para TODOS os
