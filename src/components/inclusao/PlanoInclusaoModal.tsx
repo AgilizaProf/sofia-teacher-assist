@@ -370,6 +370,12 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
       toast.error("Selecione ao menos uma disciplina ou campo de experiência.");
       return;
     }
+    const totalChamadas = modoGeracao === "integrado" && disciplinas.length > 1 ? 1 : disciplinas.length;
+    const okGate = await creditosGate.checar({
+      custo: totalChamadas * CUSTOS.adaptacao_pcd,
+      acao: `Adaptação inclusiva (PCD) · ${aluno.name}${totalChamadas > 1 ? ` · ${totalChamadas} planos` : ""}`,
+    });
+    if (!okGate) return;
     setLoading(true);
     try {
       if (modoGeracao === "integrado" && disciplinas.length > 1) {
@@ -406,6 +412,11 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
   async function regerarAtual() {
     const atual = planos[abaAtiva];
     if (!atual) return;
+    const okGate = await creditosGate.checar({
+      custo: CUSTOS.adaptacao_pcd,
+      acao: `Regerar plano · ${atual.disciplina}`,
+    });
+    if (!okGate) return;
     setLoading(true);
     try {
       const interd = atual.disciplina.includes(" + ");
