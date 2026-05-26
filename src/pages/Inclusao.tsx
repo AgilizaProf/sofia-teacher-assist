@@ -1012,6 +1012,7 @@ export function Inclusao() {
   };
   const [anamOpen, setAnamOpen] = useState<Record<string, boolean>>({});
   const studentKey = selectedId || "_none";
+  const selected = students.find((s) => s.id === selectedId) ?? null;
   const studentRegs = regByStudent[studentKey] || [];
   const selectedForAnam = students.find((s) => s.id === selectedId);
   const isEISelected = isEducacaoInfantilSerie(selectedForAnam?.anoEscolar);
