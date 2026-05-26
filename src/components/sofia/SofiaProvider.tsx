@@ -181,7 +181,7 @@ function useRouteContext() {
     }
 
     return linhas.join("\n");
-  }, [loc.pathname, sofia?.entity?.turma_atual, sofia?.entity?.todos_alunos_pcd, sofia?.dataState, curriculo, municipalAtivo, userData?.agenda]);
+  }, [loc.pathname, sofia?.entity?.turma_atual, sofia?.entity?.aluno_atual, sofia?.entity?.todos_alunos_pcd, sofia?.dataState, curriculo, municipalAtivo, userData?.agenda]);
 }
 
 function useRouteName() {
