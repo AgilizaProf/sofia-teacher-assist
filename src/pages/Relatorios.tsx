@@ -844,7 +844,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           diagnostico: a.pcd || "",
           periodo: tipoPeriodoAluno,
           intervalo: periodoLabel,
-          formato: formatoParecer,
+          formato: formatoParecer || "topicos",
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
           registros: registrosDoAluno,
@@ -862,7 +862,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       const parecer: ParecerNarrativo = {
         ...((data as { parecer?: ParecerNarrativo })?.parecer || {}),
         periodoLabel,
-        formato: formatoParecer,
+        formato: (formatoParecer || "topicos") as "topicos" | "texto",
         geradoEm: new Date().toLocaleString("pt-BR"),
         tipo_relatorio: tipoRelatorio,
         nivel_ensino: nivelEnsino,
