@@ -161,6 +161,9 @@ export async function createInclusaoStudent(
     console.error("[inclusao.db] erro no insert", error);
     throw error;
   }
+  void import("@/lib/admin/track").then(({ trackEvent }) =>
+    trackEvent("aluno_criado", { diagnostico: input.diag ?? null, turma: input.turma ?? null })
+  );
   return rowToUI(data as StudentRow);
 }
 
