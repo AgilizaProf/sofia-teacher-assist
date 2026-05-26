@@ -1695,7 +1695,7 @@ export function Planejamento() {
               v: "port",
               tag: op?.tipo || "Atividade",
               title: op?.titulo || `Atividade ${idx}`,
-              bncc: op?.codigo_hab || curriculoMunicipalDados.municipio,
+              bncc: op?.codigo_hab || "",
               minutos: m1Modo === "tempo" ? Math.round(m1Min / perDay) : 40,
               foco: focosSelecionados[0] || "Municipal",
               motivo: op?.resumo || "",
@@ -1706,7 +1706,7 @@ export function Planejamento() {
         const total = (Object.values(plan) as M1Card[][]).flat().length;
         showToast(total > 0 ? `Sofia montou ${total} atividade(s) com o currículo de ${curriculoMunicipalDados.municipio}. ✨` : "Não consegui gerar atividades agora. Tente novamente.");
       } catch (e) {
-        showToast("Não consegui gerar com o currículo municipal agora. Usando BNCC como fallback.");
+        showToast(`Não consegui gerar com o currículo de ${curriculoMunicipalDados.municipio} agora. Usando BNCC como fallback.`);
         const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
         const plan = sofiaGenerateWeek({ tema: m1Tema, focos: focosLimitados, intensidade: pillsInt, diasISO: m1Week.days.map((d) => d.iso), quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined, minutosPorDia: m1Modo === "tempo" ? m1Min : undefined });
         setM1Plan(plan);
@@ -2592,15 +2592,6 @@ export function Planejamento() {
       const anoTurmaAtual = turmaAtualInfo?.ano || "";
       // Currículo correto para a turma do relatório: prioriza o currículo
       // vinculado à turma (anexo), caindo no global apenas se a turma não tiver.
-      const turmaDbAtual = turmaAtualNome
-        ? turmasDb.find((t) => (t.name || "").trim().toLowerCase() === turmaAtualNome.trim().toLowerCase())
-        : null;
-      const curriculoDaTurma = turmaDbAtual?.curriculo_id
-        ? curriculosAtivos.find((c) => c.id === turmaDbAtual.curriculo_id) ?? null
-        : null;
-      // Regra estrita: o relatório segue o currículo vinculado à turma do registro.
-      // Sem vínculo => BNCC (não cai no padrão global do usuário).
-      const curriculoParaRelatorio = curriculoDaTurma;
       const alunosPcdTurma = turmaAtualNome
         ? (sofiaUser.alunosPCDPorTurma[turmaAtualNome] ?? []).map((a) => ({
             nome: a.primeiro_nome,
@@ -2618,9 +2609,9 @@ export function Planejamento() {
         stats,
         relatorio_anterior: relAnterior,
         alunos_pcd: alunosPcdTurma,
-        curriculo_municipal: curriculoParaRelatorio
-          ? { municipio: curriculoParaRelatorio.municipio, habilidades: curriculoParaRelatorio.habilidades || [] }
-          : null,
+        // Regra: relatórios/pareceres seguem SEMPRE a BNCC, independente do
+        // currículo municipal vinculado à turma.
+        curriculo_municipal: null,
         entries: m6RelEntries.map((e) => ({
           emoji: e.emoji,
           title: e.title,
@@ -3679,12 +3670,6 @@ export function Planejamento() {
                   </div>
                 </div>
 
-                {/* Seletor de referencial curricular */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 4px" }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>Referencial:</span>
-                  <SeletorCurriculo curriculos={curriculosAtivos} value={curriculoPlanoId} onChange={setCurriculoPlanoId} />
-                </div>
-
                 {m2Total > 0 && (
                   <div style={{ marginTop: 12, padding: 14, border: "1px solid var(--line)", borderRadius: 12, background: "#fff", display: "grid", gap: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -3933,12 +3918,6 @@ export function Planejamento() {
                     <button className="pl-btn" onClick={restaurarPlanoOriginal}><RefreshCw size={14} /> Restaurar original</button>
                     <button className="pl-btn primary" onClick={() => showToast("Alterações salvas. ✓")}><Check size={14} /> Salvar alterações</button>
                   </div>
-                </div>
-
-                {/* Seletor de referencial curricular */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 4px" }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>Referencial:</span>
-                  <SeletorCurriculo curriculos={curriculosAtivos} value={curriculoPlanoId} onChange={setCurriculoPlanoId} />
                 </div>
 
                 <div className="pl-chat">
@@ -4759,14 +4738,6 @@ export function Planejamento() {
                   </select>
                 </label>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>Rede de ensino:</span>
-                  <SeletorCurriculo
-                    curriculos={curriculosAtivos}
-                    value={curriculoPlanoId}
-                    onChange={setCurriculoPlanoId}
-                  />
-                </div>
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--muted)", marginBottom: 4 }}>
                   <span>Progresso ({M6_PERIODO_META[m6Periodo].label.toLowerCase()})</span>
