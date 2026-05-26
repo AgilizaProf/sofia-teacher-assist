@@ -758,7 +758,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, ParecerNarrativo>>("rel_parecer", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
   const creditosGate = useCreditosGate();
-  const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
+  const [formatoParecer, setFormatoParecer] = useState<"" | "topicos" | "texto">("");
   type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
   const [tipoPeriodo, setTipoPeriodo] = usePersistentState<TipoPeriodo>("rel_tipo_periodo", "Bimestral");
   // Configuração por turma — sobrescreve o padrão global quando definida.
