@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
+import { sanitizarTextoSofia } from "../_shared/sanitize-texto.ts";
 
 type Entry = {
   emoji?: string;
@@ -127,6 +128,7 @@ Responda APENAS com JSON válido neste formato:
     const raw = r.text || "{}";
     let parsed: Record<string, unknown> = {};
     try { parsed = JSON.parse(raw); } catch { parsed = { resumo: raw }; }
+    parsed = sanitizarTextoSofia(parsed) as Record<string, unknown>;
     return new Response(JSON.stringify({ relatorio: parsed, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
