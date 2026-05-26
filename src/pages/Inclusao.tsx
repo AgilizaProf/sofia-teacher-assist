@@ -1625,8 +1625,9 @@ ${corpo}
 
   const imprimirParecer = () => {
     if (!parecerAtual || !selected) return;
-    const w = window.open("", "_blank");
-    if (!w) return;
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
     const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
     const ul = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : "";
     const corpo = parecerAtual.formato === "texto" && parecerAtual.texto
