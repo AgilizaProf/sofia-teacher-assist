@@ -835,6 +835,11 @@ export function Agenda() {
   const calendarFileRef = useRef<HTMLInputElement>(null);
   const [calendarioInfo, setCalendarioInfo] = useState<{ uploadedAt: string; sizeKb: number } | null>(null);
   const [removendoCalendario, setRemovendoCalendario] = useState(false);
+const [eventosPendentes, setEventosPendentes] = useState<Array<{
+  titulo: string; data: string; hora?: string | null;
+  tipo: "meeting" | "eval" | "report" | "plan" | "personal"; descricao?: string | null;
+}>>([]);
+const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
 
   useEffect(() => {
     void (async () => {
