@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from "react";
 import { AlunoCard } from "@/components/inclusao/AlunoCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSearch, useNavigate } from "@tanstack/react-router";
+import { useSearch, useNavigate, Link } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
   ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb,
