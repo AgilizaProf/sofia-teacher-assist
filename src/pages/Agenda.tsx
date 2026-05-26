@@ -951,7 +951,7 @@ const deleteCalendar = async () => {
         .delete()
         .eq("user_id", user.id)
         .contains("data", { origem: "calendario" });
-      await refresh();
+      await refetch();
       setCalendarioInfo(null);
       toast.success("Calendário e eventos importados removidos.");
     } catch {
