@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 // Catálogo central de eventos — use sempre estas constantes em vez de strings soltas.
 // Isso garante consistência nos nomes e facilita buscas no Admin.
 export const EVENTOS = {
