@@ -200,6 +200,31 @@ function RootComponent() {
   useHighContrast();
   const { ready, authed, isPublicRoute } = useAuthGuard();
   const showSofia = ready && authed && !isPublicRoute;
+
+  if (!ready && !isPublicRoute) {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center", gap: 16,
+        background: "linear-gradient(135deg,#1B2A4E,#0F1B36)",
+        fontFamily: "'Inter',-apple-system,sans-serif",
+      }}>
+        <div style={{ fontFamily: "'Fraunces',Georgia,serif", fontWeight: 900, fontSize: 38, color: "#fff", letterSpacing: "-.03em" }}>
+          Agiliza<span style={{ color: "#FF7A45" }}>Prof</span>
+        </div>
+        <div style={{
+          width: 34, height: 34,
+          border: "2.5px solid rgba(255,122,69,.25)",
+          borderTopColor: "#FF7A45",
+          borderRadius: "50%",
+          animation: "ap-spin .9s linear infinite",
+        }} />
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.6)" }}>Conectando à sua sala de aula…</div>
+        <style>{`@keyframes ap-spin{to{transform:rotate(360deg);}}`}</style>
+      </div>
+    );
+  }
+
   return (
     <RootErrorBoundary>
       <QueryClientProvider client={queryClient}>
