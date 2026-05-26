@@ -367,8 +367,15 @@ export function TrilhasPanel() {
   };
   const limparSelecaoSemanas = () => setSelSemanas(new Set());
 
-  // Limpa seleção quando troca de trilha aberta.
-  useEffect(() => { setSelSemanas(new Set()); setBulkProgresso(null); }, [selected]);
+  // Limpa todo o estado visual quando troca de trilha aberta.
+  useEffect(() => {
+    setSelSemanas(new Set());
+    setBulkProgresso(null);
+    setMenuAberto(null);
+    setPlanoAberto(null);
+    setDraggingId(null);
+    setDragOverId(null);
+  }, [selected]);
 
   // Fecha o menu ⋮ ao clicar em qualquer lugar fora dele.
   useEffect(() => {
