@@ -1090,12 +1090,17 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
       professorNome: user.name,
       docType: "parecer",
     });
-    const w = window.open("", "_blank", "width=900,height=1000");
-    if (!w) { toast.error("Permita pop-ups para imprimir."); return; }
-    w.document.open(); w.document.write(html); w.document.close();
-    w.focus();
-    setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 400);
-    toast.success(`Abrindo impressão de ${alunos.length} parecer(es) — escolha 'Salvar como PDF' se preferir.`);
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+    iframe.contentDocument!.open();
+    iframe.contentDocument!.write(html);
+    iframe.contentDocument!.close();
+    iframe.onload = () => {
+      try { iframe.contentWindow!.focus(); iframe.contentWindow!.print(); } catch { /* ignore */ }
+      setTimeout(() => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 1000);
+    };
+    toast.success(`Imprimindo ${alunos.length} parecer(es) — escolha 'Salvar como PDF' se preferir.`);
   };
 
   // Deriva valores do SofiaContext (fallback) — os valores REAIS são recalculados
