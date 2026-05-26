@@ -149,8 +149,8 @@ const askSofiaServer = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     if (data.messages.length === 0) throw new Error("Nenhuma mensagem foi enviada para a Sofia.");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada");
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    if (!apiKey) throw new Error("Variável de ambiente ausente: GOOGLE_AI_API_KEY. Configure no seu ambiente (.env ou painel de deploy).");
 
     let conversationId = data.conversationId ?? null;
 
@@ -221,30 +221,37 @@ const askSofiaServer = createServerFn({ method: "POST" })
     }
 
     const system = buildSystemPrompt(data.routeContext, data.userContext);
-    const response = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`,
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: messages.map((m: { role: string; content: string }) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      })),
-      generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
-    }),
-  }
-);
-const data = await response.json();
-const result = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`AI gateway ${res.status}: ${text.slice(0, 200)}`);
+    const messagesParaGoogle = [
+      { role: "user" as const, parts: [{ text: system }] },
+      { role: "model" as const, parts: [{ text: "Entendido. Estou pronta para ajudar." }] },
+      ...data.messages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({
+          role: m.role === "assistant" ? ("model" as const) : ("user" as const),
+          parts: [{ text: m.content }],
+        })),
+    ];
+
+    const googleRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: messagesParaGoogle,
+          generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
+        }),
+      }
+    );
+
+    if (!googleRes.ok) {
+      const text = await googleRes.text().catch(() => "");
+      throw new Error(`Google AI ${googleRes.status}: ${text.slice(0, 200)}`);
     }
 
-    const json = await res.json();
-    const content: string = json?.choices?.[0]?.message?.content ?? "";
+    const googleJson = await googleRes.json();
+    const content: string = googleJson?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
     // Roda o validator para P3 (linguagem), P2 (BNCC) e P6 (transparência)
     const { validateSofiaOutput } = await import("@/lib/sofia-validator");
