@@ -705,6 +705,10 @@ function PlanoSemanal({ plano, trilha, semana }: { plano: unknown; trilha: Trilh
     ponte_proxima_semana?: string;
   };
   const [dias, setDias] = useState<DiaPlano[]>(pInicial.dias || []);
+// Re-sincroniza quando o plano é regenerado (prop muda)
+useEffect(() => {
+  setDias(pInicial.dias || []);
+}, [plano]);
   const objetivoGeral = pInicial.objetivo_geral || "";
   const avaliacao = pInicial.avaliacao_formativa || "";
   const ponte = pInicial.ponte_proxima_semana || "";
