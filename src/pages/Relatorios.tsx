@@ -758,7 +758,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, ParecerNarrativo>>("rel_parecer", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
   const creditosGate = useCreditosGate();
-  const [formatoParecer, setFormatoParecer] = useState<"topicos" | "texto">("topicos");
+  const [formatoParecer, setFormatoParecer] = useState<"" | "topicos" | "texto">("");
   type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
   const [tipoPeriodo, setTipoPeriodo] = usePersistentState<TipoPeriodo>("rel_tipo_periodo", "Bimestral");
   // Configuração por turma — sobrescreve o padrão global quando definida.
@@ -772,6 +772,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
   const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }) => {
+    if (formatoParecer !== "topicos" && formatoParecer !== "texto") {
+      toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar.");
+      return;
+    }
     const okGate = await creditosGate.checar({ custo: CUSTOS.parecer_descritivo, acao: `Parecer descritivo — ${a.nome}` });
     if (!okGate) return;
     setGerandoParecerId(a.id);
@@ -840,7 +844,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           diagnostico: a.pcd || "",
           periodo: tipoPeriodoAluno,
           intervalo: periodoLabel,
-          formato: formatoParecer,
+          formato: formatoParecer || "topicos",
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
           registros: registrosDoAluno,
@@ -858,7 +862,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       const parecer: ParecerNarrativo = {
         ...((data as { parecer?: ParecerNarrativo })?.parecer || {}),
         periodoLabel,
-        formato: formatoParecer,
+        formato: (formatoParecer || "topicos") as "topicos" | "texto",
         geradoEm: new Date().toLocaleString("pt-BR"),
         tipo_relatorio: tipoRelatorio,
         nivel_ensino: nivelEnsino,
@@ -2349,14 +2353,16 @@ ${parecerHtml}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
-                        <select value={formatoParecer} onChange={(e) => setFormatoParecer(e.target.value as "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--line-soft)", fontSize: 13, background: "#fff" }}>
+                        <select value={formatoParecer} onChange={(e) => setFormatoParecer(e.target.value as "" | "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: formatoParecer ? "1px solid var(--line-soft)" : "1px solid #F97316", fontSize: 13, background: "#fff" }}>
+                          <option value="" disabled>Escolha o formato…</option>
                           <option value="topicos">Tópicos (estruturado)</option>
                           <option value="texto">Texto corrido</option>
                         </select>
                       </div>
                       <button
                         className="rel-btn-card accent"
-                        disabled={gerando}
+                        disabled={gerando || !formatoParecer}
+                        title={!formatoParecer ? "Escolha o formato antes de gerar" : undefined}
                         onClick={() => handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
                       >
                         <Sparkles size={13} /> {gerando ? "Gerando…" : (parecerAluno ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
