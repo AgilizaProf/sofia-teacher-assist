@@ -689,7 +689,7 @@ export function Agenda() {
   }, [nowTick]);
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
-  const { events: rawEvents, create, update, remove, loading: agendaLoading, refetch } = useAgenda();
+  const { events: rawEvents, create, update, remove, loading: agendaLoading, refresh } = useAgenda();
   const events = rawEvents as unknown as Event[];
   const [openDate, setOpenDate] = useState<string | null>(null);
   const ALL_TYPES: EventType[] = ["meeting", "eval", "report", "plan", "pcd", "personal"];
@@ -951,7 +951,7 @@ const deleteCalendar = async () => {
         .delete()
         .eq("user_id", user.id)
         .contains("data", { origem: "calendario" });
-      await refetch();
+      await refresh();
       setCalendarioInfo(null);
       toast.success("Calendário e eventos importados removidos.");
     } catch {
