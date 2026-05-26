@@ -23,10 +23,19 @@ export const EVENTOS = {
   SOFIA_CHAT_MENSAGEM: "sofia_chat_mensagem",
 
   DOCUMENTO_EXPORTADO: "documento_exportado",
+  DOCUMENTO_VISUALIZADO: "documento_visualizado",
   CREDITOS_INSUFICIENTES: "creditos_insuficientes",
   UPGRADE_CLICK: "upgrade_click",
   SOFIA_CARD_TOGGLED: "sofia_card_toggled",
   IA_FALHA: "ia_falha",
+  SOFIA_FEEDBACK: "sofia_feedback",
+  ONBOARDING_ETAPA: "onboarding_etapa",
+  BUSCA_REALIZADA: "busca_realizada",
+  FILTRO_APLICADO: "filtro_aplicado",
+  FORM_ABANDONADO: "form_abandonado",
+  SESSAO_INICIADA: "sessao_iniciada",
+  COMPARTILHAMENTO: "compartilhamento",
+  FIRST_VALUE_EVENT: "first_value_event",
 } as const;
 
 function uaInfo() {
