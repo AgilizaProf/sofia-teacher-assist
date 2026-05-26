@@ -1387,10 +1387,16 @@ ${corpo}
       professorNome: user.name,
       docType: "plano-adaptado",
     });
-    const w = window.open("", "_blank", "width=900,height=700");
-    if (!w) { toast.error("Bloqueador de pop-up impediu a impressão."); return; }
-    w.document.write(html);
-    w.document.close();
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+    iframe.contentDocument!.open();
+    iframe.contentDocument!.write(html);
+    iframe.contentDocument!.close();
+    iframe.onload = () => {
+      try { iframe.contentWindow!.focus(); iframe.contentWindow!.print(); } catch { /* ignore */ }
+      setTimeout(() => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 1000);
+    };
   };
 
   const agendarPlanos = async () => {
