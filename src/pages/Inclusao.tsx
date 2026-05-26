@@ -1677,7 +1677,40 @@ ${corpo}
     setView("detail");
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, view: "detail", aluno: id }) as never, replace: true });
   }, [navigate]);
-  const selected = students.find((s) => s.id === selectedId) || null;
+  // Injeta o aluno selecionado no contexto da Sofia para que ela responda
+  // de forma contextualizada quando a professora fizer perguntas no chat.
+  useEffect(() => {
+    if (!selected) {
+      // @ts-ignore — aluno_atual é null quando nenhum aluno está selecionado
+      sofiaCtx.entity.aluno_atual = null;
+      return;
+    }
+    const anamData = anamByStudent[selected.id] || [];
+    const eixosPreenchidos = anamData.filter(
+      (e: { items: Array<{ s: string }>; obs: string }) =>
+        e.items.some((i) => i.s !== "naoObservado") || (e.obs && e.obs.trim())
+    ).length;
+    const peiObj = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
+    const peiKeys = ["diagnostico", "caracterizacao", "habilidadesDesenvolvidas", "adaptacoesCurriculares", "formasAvaliacao", "familiaParticipacao"];
+    const peiPreenchido = peiKeys.filter((k) => String(peiObj[k] || "").trim().length > 5).length;
+    const peiStatus = peiPreenchido >= 6 ? "completo" : peiPreenchido > 0 ? "rascunho" : "nao_criado";
+    const totalRegs = (regByStudent[selected.id] || []).length;
+    // @ts-ignore — injeta diretamente no entity para o useRouteContext capturar
+    sofiaCtx.entity.aluno_atual = {
+      id: selected.id,
+      nome: selected.name,
+      primeiro_nome: selected.name.split(" ")[0],
+      ano_escolar: selected.anoEscolar || "",
+      turma: selected.turma || "",
+      cid: selected.cid || null,
+      condicao_label: selected.diag || null,
+      mediadora: null,
+      anamnese_eixos_preenchidos: eixosPreenchidos,
+      anamnese_eixos_total: anamData.length || 14,
+      pei_status: peiStatus,
+      adaptacoes_registradas: totalRegs,
+    };
+  }, [selected, anamByStudent, peiByStudent, regByStudent, sofiaCtx]);
 
   /**
    * Garante que TODOS os CIDs do(a) aluno(a) selecionado(a) sejam enviados
