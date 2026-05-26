@@ -93,7 +93,23 @@ function useRouteContext() {
   return useMemo(() => {
     const p = loc.pathname;
     let tela = "Você está na Página inicial (painel do(a) educador(a)).";
-    if (p.startsWith("/inclusao")) tela = "Você está na tela Inclusão (PEI, anamnese, pareceres).";
+    if (p.startsWith("/inclusao")) {
+      const alunoAtual = sofia?.entity?.aluno_atual;
+      if (alunoAtual) {
+        tela = [
+          `Você está na tela Inclusão, com o aluno(a) "${alunoAtual.nome}" aberto(a).`,
+          `Diagnóstico/condição: ${alunoAtual.condicao_label || "não informado"}.`,
+          `Ano escolar: ${alunoAtual.ano_escolar || "não informado"}.`,
+          `Turma: ${alunoAtual.turma || "não informada"}.`,
+          `Anamnese: ${alunoAtual.anamnese_eixos_preenchidos}/${alunoAtual.anamnese_eixos_total} eixos preenchidos.`,
+          `PEI: ${alunoAtual.pei_status === "completo" ? "completo" : alunoAtual.pei_status === "rascunho" ? "em rascunho" : "não criado"}.`,
+          `Adaptações registradas: ${alunoAtual.adaptacoes_registradas}.`,
+          `Quando a professora fizer perguntas sobre este aluno(a), responda sempre no contexto do perfil acima.`,
+        ].join(" ");
+      } else {
+        tela = "Você está na tela Inclusão (PEI, anamnese, pareceres).";
+      }
+    }
     else if (p.startsWith("/planejamento")) tela = "Você está na tela Planejamento (planos de aula, BNCC).";
     else if (p.startsWith("/relatorios")) tela = "Você está na tela Relatórios.";
     else if (p.startsWith("/agenda")) tela = "Você está na Agenda escolar.";
