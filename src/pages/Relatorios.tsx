@@ -813,6 +813,25 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           : "",
         `${ei ? "Observações por Campos de Experiência (BNCC Infantil)" : "Avaliação BNCC do bimestre por área"}:\n${linhas}${instrucoesEI}`,
       ].filter(Boolean).join("\n");
+      // Busca dados reais do aluno cadastrados em /inclusao
+      const anamData = anamByStudent[a.id];
+      const anamResumoTexto = anamData
+        ? Object.entries(anamData)
+            .filter(([, v]) => v && typeof v === "object")
+            .map(([k, v]) => `${k}: ${JSON.stringify(v).slice(0, 200)}`)
+            .join("\n")
+        : "";
+      const peiDoAluno = peiByStudent[a.id];
+      const peiResumoCompleto = peiDoAluno
+        ? [
+            peiDoAluno.objetivos ? `Objetivos: ${peiDoAluno.objetivos}` : "",
+            peiDoAluno.estrategias ? `Estratégias: ${peiDoAluno.estrategias}` : "",
+            peiDoAluno.adaptacoes ? `Adaptações: ${peiDoAluno.adaptacoes}` : "",
+            peiResumo,
+          ].filter(Boolean).join("\n")
+        : peiResumo;
+      const registrosDoAluno = (regByStudent[a.id] || []).slice(0, 50);
+
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
           aluno: a.nome,
@@ -820,9 +839,9 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           periodo: tipoPeriodoAluno,
           intervalo: periodoLabel,
           formato: formatoParecer,
-          anamneseResumo: "",
-          peiResumo,
-          registros: [],
+          anamneseResumo: anamResumoTexto,
+          peiResumo: peiResumoCompleto,
+          registros: registrosDoAluno,
           nivel_ensino: nivelEnsino,
           tipo_relatorio: tipoRelatorio,
           anoEscolar: cls?.grade || "",
@@ -831,6 +850,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           // do currículo municipal anexado/vinculado à turma. Os currículos
           // anexados são usados apenas no Planejamento e no chat da Sofia.
           curriculo_municipal: null,
+        },
+      });
         },
       });
       if (error) throw error;
