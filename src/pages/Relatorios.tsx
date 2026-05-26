@@ -2146,12 +2146,17 @@ ${parecerHtml}
         };
         const exportPdf = () => {
           const html = buildReportHtml();
-          const w = window.open("", "_blank", "width=900,height=1000");
-          if (!w) { toast.error("Permita pop-ups para gerar o PDF."); return; }
-          w.document.open(); w.document.write(html); w.document.close();
-          w.focus();
-          setTimeout(() => { try { w.print(); } catch { /* ignore */ } }, 350);
-          toast.success("Abrindo janela de impressão (escolha 'Salvar como PDF').");
+          const iframe = document.createElement("iframe");
+          iframe.style.display = "none";
+          document.body.appendChild(iframe);
+          iframe.contentDocument!.open();
+          iframe.contentDocument!.write(html);
+          iframe.contentDocument!.close();
+          iframe.onload = () => {
+            try { iframe.contentWindow!.focus(); iframe.contentWindow!.print(); } catch { /* ignore */ }
+            setTimeout(() => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 1000);
+          };
+          toast.success("Imprimindo relatório — escolha 'Salvar como PDF'.");
         };
         const exportWord = () => {
           // Layout simplificado e legível para Word (.doc): fontes seguras
