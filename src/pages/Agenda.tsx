@@ -831,6 +831,8 @@ export function Agenda() {
   const [m4ImportOpen, setM4ImportOpen] = useState(false);
   const [m4Items, setM4Items] = useState<M4ImportItem[]>([]);
   const [m4Importing, setM4Importing] = useState(false);
+  const [importandoCalendario, setImportandoCalendario] = useState(false);
+  const calendarFileRef = useRef<HTMLInputElement>(null);
   const [calendarioInfo, setCalendarioInfo] = useState<{ uploadedAt: string; sizeKb: number } | null>(null);
   const [removendoCalendario, setRemovendoCalendario] = useState(false);
 
