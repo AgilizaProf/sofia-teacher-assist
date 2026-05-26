@@ -2659,15 +2659,16 @@ export function Planejamento() {
         const newTitle = words || x.title || "Registro rápido";
         const dayLabel = (x.date.split(" · ")[0] || "Hoje").replace(/\s*\(editado\)\s*$/, "");
         return {
-          ...x,
-          emoji: m6Emoji || x.emoji,
-          title: newTitle,
-          text: trimmed,
-          tags: [...m6Tags],
-          date: `${dayLabel} · ${now} (editado)`,
-          atividadeId: m6AtividadeId || undefined,
-          atividadeTitulo: atividadeRef?.titulo,
-        };
+  ...x,
+  emoji: m6Emoji || x.emoji,
+  title: newTitle,
+  text: trimmed,
+  tags: [...m6Tags],
+  date: `${dayLabel} · ${now} (editado)`,
+  atividadeId: m6AtividadeId || undefined,
+  atividadeTitulo: atividadeRef?.titulo,
+  alunoIds: x.alunoIds ?? [],
+};
       }));
       m6ResetForm();
       showToast("✓ Registro atualizado.");
