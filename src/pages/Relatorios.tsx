@@ -824,13 +824,10 @@ export function Relatorios() {
           tipo_relatorio: tipoRelatorio,
           anoEscolar: cls?.grade || "",
           anoReferenciaPedagogico: yearOverride[a.id] || cls?.grade || "",
-          curriculo_municipal: (() => {
-            const tDb = turmasDb.find((t) => (t.name || "").trim().toLowerCase() === (a.turma || "").trim().toLowerCase());
-            // Regra estrita: turma vinculada a um currículo => usa o currículo.
-            // Turma sem vínculo => BNCC (curriculo_municipal=null). Não cai em padrão global.
-            const cur = tDb?.curriculo_id ? curriculosAtivos.find((c) => c.id === tDb.curriculo_id) : null;
-            return cur ? { municipio: cur.municipio, habilidades: cur.habilidades || [] } : null;
-          })(),
+          // Regra: relatórios e pareceres SEMPRE seguem a BNCC, independente
+          // do currículo municipal anexado/vinculado à turma. Os currículos
+          // anexados são usados apenas no Planejamento e no chat da Sofia.
+          curriculo_municipal: null,
         },
       });
       if (error) throw error;
