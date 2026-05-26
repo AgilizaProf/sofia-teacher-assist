@@ -937,7 +937,29 @@ export function Agenda() {
     if (ok > 0) toast.success(`${ok} atividade(s) trazida(s) do calendário M4 para a agenda.`);
     else toast.error("Não foi possível importar as atividades.");
   };
-
+const deleteCalendar = async () => {
+    if (!window.confirm("Remover o calendário escolar? O arquivo PDF será apagado e os eventos importados por ele serão removidos da agenda.")) return;
+    setRemovendoCalendario(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.storage
+        .from("documentos-professor")
+        .remove([`calendario-${user.id}.pdf`]);
+      await supabase
+        .from("agenda_eventos")
+        .delete()
+        .eq("user_id", user.id)
+        .contains("data", { origem: "calendario" });
+      await refresh();
+      setCalendarioInfo(null);
+      toast.success("Calendário e eventos importados removidos.");
+    } catch {
+      toast.error("Não foi possível remover o calendário.");
+    } finally {
+      setRemovendoCalendario(false);
+    }
+  };
   const handleCalendarioFile = async (file: File) => {
     const MAX = 15 * 1024 * 1024;
     if (file.size > MAX) { toast.error("O arquivo deve ter no máximo 15 MB."); return; }
