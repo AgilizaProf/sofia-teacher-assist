@@ -1669,13 +1669,17 @@ ${corpo}
       </div>
       <div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
     `;
-    w.document.write(wrapStandardPrintHtml(`Parecer · ${esc(selected.name)}`, inner, {
+    iframe.contentDocument!.open();
+    iframe.contentDocument!.write(wrapStandardPrintHtml(`Parecer · ${esc(selected.name)}`, inner, {
       extraCss: extra,
       professorNome: user.name,
       docType: "plano-adaptado",
     }));
-    w.document.close();
-    setTimeout(() => w.focus(), 200);
+    iframe.contentDocument!.close();
+    iframe.onload = () => {
+      try { iframe.contentWindow!.focus(); iframe.contentWindow!.print(); } catch { /* ignore */ }
+      setTimeout(() => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 1000);
+    };
   };
 
   const goView = (v: ViewKey) => {
