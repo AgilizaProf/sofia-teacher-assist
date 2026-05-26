@@ -268,34 +268,36 @@ export async function maybePolishTitlesWithAI(
       "Responda APENAS com a lista numerada, um título por linha, sem comentários.",
     ].join("\n");
     const prompt = buildSofiaPrompt(task, `Títulos atuais:\n${titles}`);
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: prompt },
-          { role: "user", content: titles },
-        ],
-      }),
-    });
-    metrics.latencyMs = Date.now() - startedAt;
-    if (!res.ok) {
-      metrics.error = `http_${res.status}`;
-      return { items, metrics };
-    }
-    const json = (await res.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
-    };
-    const usage = json.usage || {};
-    metrics.promptTokens = usage.prompt_tokens ?? 0;
-    metrics.completionTokens = usage.completion_tokens ?? 0;
-    metrics.totalTokens = usage.total_tokens ?? metrics.promptTokens + metrics.completionTokens;
-    metrics.estimatedCostUSD =
-      (metrics.promptTokens / 1_000_000) * GEMINI_25_FLASH_USD_PER_M.input +
-      (metrics.completionTokens / 1_000_000) * GEMINI_25_FLASH_USD_PER_M.output;
-    const content = json.choices?.[0]?.message?.content || "";
+    const res = await fetch(
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+  {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        { role: "user", parts: [{ text: prompt + "\n\n" + titles }] },
+      ],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+    }),
+  }
+);
+metrics.latencyMs = Date.now() - startedAt;
+if (!res.ok) {
+  metrics.error = `http_${res.status}`;
+  return { items, metrics };
+}
+const json = (await res.json()) as {
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number };
+};
+const usage = json.usageMetadata || {};
+metrics.promptTokens = usage.promptTokenCount ?? 0;
+metrics.completionTokens = usage.candidatesTokenCount ?? 0;
+metrics.totalTokens = usage.totalTokenCount ?? metrics.promptTokens + metrics.completionTokens;
+metrics.estimatedCostUSD =
+  (metrics.promptTokens / 1_000_000) * GEMINI_25_FLASH_USD_PER_M.input +
+  (metrics.completionTokens / 1_000_000) * GEMINI_25_FLASH_USD_PER_M.output;
+const content = json.candidates?.[0]?.content?.parts?.[0]?.text || "";
     const { sanitized } = validateSofiaOutput(content);
     const lines = sanitized
       .split("\n")
