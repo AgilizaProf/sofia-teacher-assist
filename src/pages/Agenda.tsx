@@ -1013,6 +1013,16 @@ const deleteCalendar = async () => {
         return;
       }
 
+      // Remove eventos anteriores deste calendário para evitar duplicatas ao reimportar
+      const { data: { user: userAtual } } = await supabase.auth.getUser();
+      if (userAtual) {
+        await supabase
+          .from("agenda_eventos")
+          .delete()
+          .eq("user_id", userAtual.id)
+          .contains("data", { origem: "calendario" });
+      }
+
       let criados = 0;
       for (const ev of eventos) {
         try {
@@ -1022,12 +1032,18 @@ const deleteCalendar = async () => {
             time: ev.hora || "",
             type: ev.tipo,
             notes: ev.descricao || "",
+            data: { origem: "calendario", importadoEm: new Date().toISOString() },
           });
           criados++;
         } catch (e) {
           console.error("[Agenda] falha ao criar evento do calendário:", e);
         }
       }
+
+      setCalendarioInfo({
+        uploadedAt: new Date().toISOString(),
+        sizeKb: Math.round(file.size / 1024),
+      });
 
       toast.success(
         `${criados} evento${criados !== 1 ? "s" : ""} importado${criados !== 1 ? "s" : ""} do calendário escolar.`,
