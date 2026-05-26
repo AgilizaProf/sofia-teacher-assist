@@ -336,24 +336,22 @@ export function TrilhasPanel() {
     if (alvo.length === 0) return;
     if (!confirm(`Gerar planos para ${alvo.length} semana(s)? Cada plano consome créditos.`)) return;
     setBulkProgresso({ feito: 0, total: alvo.length, falhou: 0 });
-    let feito = 0;
+    let sucesso = 0;
     let falhou = 0;
     for (const s of alvo) {
       try {
         await gerarPlanoSemana(trilha, s);
+        sucesso += 1;
       } catch (e) {
         falhou += 1;
-        feito += 1;
-        setBulkProgresso({ feito, total: alvo.length, falhou });
-        // Se o limite mensal de IA foi atingido, interrompe o lote.
-        if ((e as { blocked?: boolean })?.blocked) break;
-        continue;
+        if ((e as { blocked?: boolean })?.blocked) {
+          setBulkProgresso({ feito: sucesso, total: alvo.length, falhou });
+          break;
+        }
       }
-      feito += 1;
-      setBulkProgresso({ feito, total: alvo.length, falhou });
+      setBulkProgresso({ feito: sucesso, total: alvo.length, falhou });
     }
     setSelSemanas(new Set());
-    // Mantém o aviso final por alguns segundos para o usuário ver o resultado.
     setTimeout(() => setBulkProgresso(null), 3500);
   };
 
