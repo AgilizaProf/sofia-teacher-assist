@@ -1056,6 +1056,36 @@ const deleteCalendar = async () => {
     }
   };
 
+  const confirmarImportacaoCalendario = async () => {
+    const { data: { user: userAtual } } = await supabase.auth.getUser();
+    if (userAtual) {
+      await supabase
+        .from("agenda_eventos")
+        .delete()
+        .eq("user_id", userAtual.id)
+        .contains("data", { origem: "calendario" });
+    }
+    let criados = 0;
+    for (const ev of eventosPendentes) {
+      try {
+        await create({
+          date: ev.data,
+          title: ev.titulo,
+          time: ev.hora || "",
+          type: ev.tipo,
+          notes: ev.descricao || "",
+          data: { origem: "calendario", importadoEm: new Date().toISOString() },
+        });
+        criados++;
+      } catch (e) {
+        console.error("[Agenda] falha ao criar evento do calendário:", e);
+      }
+    }
+    setModalRevisaoAberto(false);
+    setEventosPendentes([]);
+    toast.success(`${criados} evento${criados !== 1 ? "s" : ""} importado${criados !== 1 ? "s" : ""} do calendário escolar.`);
+  };
+
   const tomorrowKey = useMemo(() => {
     const t = new Date(today);
     t.setDate(t.getDate() + 1);
