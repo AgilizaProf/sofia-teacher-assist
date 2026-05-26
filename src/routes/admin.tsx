@@ -11,12 +11,12 @@ export const Route = createFileRoute("/admin")({
     if (typeof window === "undefined") return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      await supabase.from("logs_acesso_admin").insert({
-        rota: "/admin",
+      await supabase.from("activity_events").insert({
+        event_type: "admin_acesso_negado",
+        route: "/admin",
         user_id: null,
-        motivo: "sem_sessao",
-        created_at: new Date().toISOString(),
-      }).then(() => {});
+        metadata: { motivo: "sem_sessao" },
+      });
       throw redirect({ to: "/auth" });
     }
     const { data } = await supabase
@@ -26,12 +26,12 @@ export const Route = createFileRoute("/admin")({
       .eq("role", "admin")
       .maybeSingle();
     if (!data) {
-      await supabase.from("logs_acesso_admin").insert({
-        rota: "/admin",
+      await supabase.from("activity_events").insert({
+        event_type: "admin_acesso_negado",
+        route: "/admin",
         user_id: user.id,
-        motivo: "sem_permissao",
-        created_at: new Date().toISOString(),
-      }).then(() => {});
+        metadata: { motivo: "sem_permissao" },
+      });
       throw redirect({ to: "/" });
     }
   },

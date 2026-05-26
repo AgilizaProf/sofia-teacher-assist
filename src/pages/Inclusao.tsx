@@ -1556,8 +1556,9 @@ ${corpo}
       const peiReferenciaId = temPei ? `${selected.id}::${(pei.atualizadoEm as string) || "sem-data"}` : "";
       const m6DoAluno = (m6EntriesGlobal || [])
   .filter((e) => {
-    if (e.alunoIds && Array.isArray(e.alunoIds)) {
-      return e.alunoIds.includes(selected.id);
+    const alunoIds = (e as unknown as { alunoIds?: unknown }).alunoIds;
+    if (Array.isArray(alunoIds)) {
+      return (alunoIds as string[]).includes(selected.id);
     }
     // fallback para entradas antigas que ainda não têm alunoIds
     const nomeAluno = selected.name.toLowerCase().trim();
