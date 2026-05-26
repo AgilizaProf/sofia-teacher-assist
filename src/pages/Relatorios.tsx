@@ -707,6 +707,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   // Estado de expansão do campo de observações no modal BNCC.
   // Começa sempre recolhido (Set vazio) para liberar espaço visual.
   const [bnccObsExpanded, setBnccObsExpanded] = useState<Set<string>>(new Set());
+  // Observações livres do(a) professor(a) por aluno
+  const [bnccObsByAluno, setBnccObsByAluno] = usePersistentState<Record<string, string>>("rel_bncc_obs", {});
   // Sempre que o modal abre para outro aluno, garantimos início recolhido.
   useEffect(() => {
     if (bnccOpen) setBnccObsExpanded(new Set());
