@@ -59,6 +59,15 @@ export function CreditosGateProvider({ children }: { children: ReactNode }) {
       return false;
     }
     if (saldo >= custo) return true;
+    // Trackeia bloqueio por créditos — sinal valioso para conversão Pro
+    void import("@/lib/admin/track").then(({ trackEvent }) =>
+      trackEvent("creditos_insuficientes", {
+        acao,
+        custo_acao: custo,
+        saldo_atual: saldo,
+        faltam: custo - saldo,
+      })
+    );
     setState({ open: true, custo, saldo, acao });
     return false;
   }, []);
