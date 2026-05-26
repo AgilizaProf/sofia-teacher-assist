@@ -2353,14 +2353,16 @@ ${parecerHtml}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
-                        <select value={formatoParecer} onChange={(e) => setFormatoParecer(e.target.value as "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--line-soft)", fontSize: 13, background: "#fff" }}>
+                        <select value={formatoParecer} onChange={(e) => setFormatoParecer(e.target.value as "" | "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: formatoParecer ? "1px solid var(--line-soft)" : "1px solid #F97316", fontSize: 13, background: "#fff" }}>
+                          <option value="" disabled>Escolha o formato…</option>
                           <option value="topicos">Tópicos (estruturado)</option>
                           <option value="texto">Texto corrido</option>
                         </select>
                       </div>
                       <button
                         className="rel-btn-card accent"
-                        disabled={gerando}
+                        disabled={gerando || !formatoParecer}
+                        title={!formatoParecer ? "Escolha o formato antes de gerar" : undefined}
                         onClick={() => handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
                       >
                         <Sparkles size={13} /> {gerando ? "Gerando…" : (parecerAluno ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
