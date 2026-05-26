@@ -44,6 +44,7 @@ function uiToPayload(input: AgendaEventInput) {
     hora: input.time ?? null,
     tipo: input.type ?? null,
     notas: input.notes ?? null,
+    data: input.data ?? null,
   };
 }
 
