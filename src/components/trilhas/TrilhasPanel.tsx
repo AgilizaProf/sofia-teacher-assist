@@ -588,8 +588,13 @@ export function TrilhasPanel() {
                             title="Gera, uma de cada vez, os planos das semanas selecionadas"
                           >
                             {rodando ? <Loader2 size={11} className="animate-spin" /> : <Wand2 size={11} />}
-                            {rodando ? `Gerando ${bulkProgresso!.feito + 1}/${bulkProgresso!.total}…` : `Gerar ${selecionadas.length || ""} plano(s) selecionado(s)`}
-                          </button>
+                            {rodando
+  ? `Gerando ${bulkProgresso!.feito + 1}/${bulkProgresso!.total}…`
+  : selecionadas.length === 0
+    ? "Gerar planos em lote"
+    : selecionadas.length === 1
+      ? "Gerar 1 plano selecionado"
+      : `Gerar ${selecionadas.length} planos selecionados`}
                         </div>
                       );
                     })()}
