@@ -1018,42 +1018,13 @@ const deleteCalendar = async () => {
         return;
       }
 
-      // Remove eventos anteriores deste calendário para evitar duplicatas ao reimportar
-      const { data: { user: userAtual } } = await supabase.auth.getUser();
-      if (userAtual) {
-        await supabase
-          .from("agenda_eventos")
-          .delete()
-          .eq("user_id", userAtual.id)
-          .contains("data", { origem: "calendario" });
-      }
-
-      let criados = 0;
-      for (const ev of eventos) {
-        try {
-          await create({
-            date: ev.data,
-            title: ev.titulo,
-            time: ev.hora || "",
-            type: ev.tipo,
-            notes: ev.descricao || "",
-            data: { origem: "calendario", importadoEm: new Date().toISOString() },
-          });
-          criados++;
-        } catch (e) {
-          console.error("[Agenda] falha ao criar evento do calendário:", e);
-        }
-      }
-
+      setEventosPendentes(eventos);
+      setModalRevisaoAberto(true);
       setCalendarioInfo({
         uploadedAt: new Date().toISOString(),
         sizeKb: Math.round(file.size / 1024),
       });
-
-      toast.success(
-        `${criados} evento${criados !== 1 ? "s" : ""} importado${criados !== 1 ? "s" : ""} do calendário escolar.`,
-        { description: data?.ano ? `Ano letivo ${data.ano}` : undefined }
-      );
+      toast.success(`${eventos.length} evento(s) encontrado(s) — revise antes de confirmar.`);
     } catch (e) {
       const msg = (e as { context?: { error?: string } })?.context?.error
         || (e as Error)?.message || "Erro ao processar o calendário.";
