@@ -61,9 +61,14 @@ export async function createAgendaEvent(input: AgendaEventInput): Promise<Agenda
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
   if (!userId) throw new Error("Usuário não autenticado");
+  const payload = uiToPayload(input);
   const { data, error } = await supabase
     .from("agenda_eventos")
-    .insert({ ...uiToPayload(input), user_id: userId } as never)
+    .insert({
+      ...payload,
+      user_id: userId,
+      data: payload.data as unknown as import("@/integrations/supabase/types").Json,
+    })
     .select()
     .single();
   if (error) throw error;
