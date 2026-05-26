@@ -3920,12 +3920,6 @@ export function Planejamento() {
                   </div>
                 </div>
 
-                {/* Seletor de referencial curricular */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 4px" }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--muted)" }}>Referencial:</span>
-                  <SeletorCurriculo curriculos={curriculosAtivos} value={curriculoPlanoId} onChange={setCurriculoPlanoId} />
-                </div>
-
                 <div className="pl-chat">
                   <div className="pl-chat-card">
                     <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 360, minHeight: 240, overflowY: "auto", padding: 4 }}>
