@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
+import { sanitizarTextoSofia } from "../_shared/sanitize-texto.ts";
 
 type Registro = { when?: string; cat?: string; body?: string };
 
@@ -123,6 +124,7 @@ ${formato === "texto" ? `Responda APENAS com JSON válido neste formato:
     const raw = r.text || "{}";
     let parecer: Record<string, unknown> = {};
     try { parecer = JSON.parse(raw); } catch { parecer = { resumo: raw }; }
+    parecer = sanitizarTextoSofia(parecer) as Record<string, unknown>;
     return new Response(JSON.stringify({ parecer, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
