@@ -831,8 +831,23 @@ export function Agenda() {
   const [m4ImportOpen, setM4ImportOpen] = useState(false);
   const [m4Items, setM4Items] = useState<M4ImportItem[]>([]);
   const [m4Importing, setM4Importing] = useState(false);
-  const [importandoCalendario, setImportandoCalendario] = useState(false);
-  const calendarFileRef = useRef<HTMLInputElement>(null);
+  const [calendarioInfo, setCalendarioInfo] = useState<{ uploadedAt: string; sizeKb: number } | null>(null);
+  const [removendoCalendario, setRemovendoCalendario] = useState(false);
+
+  useEffect(() => {
+    void (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.storage.from("documentos-professor").list("");
+      const cal = (data ?? []).find((f) => f.name === `calendario-${user.id}.pdf`);
+      if (cal) {
+        setCalendarioInfo({
+          uploadedAt: cal.updated_at || cal.created_at || "",
+          sizeKb: Math.round((cal.metadata?.size ?? 0) / 1024),
+        });
+      }
+    })();
+  }, []);
   const [m4Tick, setM4Tick] = useState(0);
   // Considera um evento M4 como "já na agenda" se houver evento na mesma
   // data com o mesmo título (case-insensitive, trim). Isto permite que o
