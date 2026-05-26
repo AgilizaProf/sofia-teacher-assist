@@ -69,6 +69,9 @@ export async function createTurma(input: TurmaInput): Promise<TurmaUI> {
     .select()
     .single();
   if (error) throw error;
+  void import("@/lib/admin/track").then(({ trackEvent }) =>
+    trackEvent("turma_criada", { ano: input.grade ?? null, turno: input.shift ?? null })
+  );
   return rowToUI(data as TurmaRow);
 }
 
