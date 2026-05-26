@@ -1695,7 +1695,7 @@ export function Planejamento() {
               v: "port",
               tag: op?.tipo || "Atividade",
               title: op?.titulo || `Atividade ${idx}`,
-              bncc: op?.codigo_hab || curriculoMunicipalDados.municipio,
+              bncc: op?.codigo_hab || "",
               minutos: m1Modo === "tempo" ? Math.round(m1Min / perDay) : 40,
               foco: focosSelecionados[0] || "Municipal",
               motivo: op?.resumo || "",
@@ -1706,7 +1706,7 @@ export function Planejamento() {
         const total = (Object.values(plan) as M1Card[][]).flat().length;
         showToast(total > 0 ? `Sofia montou ${total} atividade(s) com o currículo de ${curriculoMunicipalDados.municipio}. ✨` : "Não consegui gerar atividades agora. Tente novamente.");
       } catch (e) {
-        showToast("Não consegui gerar com o currículo municipal agora. Usando BNCC como fallback.");
+        showToast(`Não consegui gerar com o currículo de ${curriculoMunicipalDados.municipio} agora. Usando BNCC como fallback.`);
         const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
         const plan = sofiaGenerateWeek({ tema: m1Tema, focos: focosLimitados, intensidade: pillsInt, diasISO: m1Week.days.map((d) => d.iso), quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined, minutosPorDia: m1Modo === "tempo" ? m1Min : undefined });
         setM1Plan(plan);
