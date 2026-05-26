@@ -602,6 +602,7 @@ export function TrilhasPanel() {
     : selecionadas.length === 1
       ? "Gerar 1 plano selecionado"
       : `Gerar ${selecionadas.length} planos selecionados`}
+                          </button>
                         </div>
                       );
                     })()}

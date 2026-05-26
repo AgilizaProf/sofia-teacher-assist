@@ -852,8 +852,6 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           curriculo_municipal: null,
         },
       });
-        },
-      });
       if (error) throw error;
       const parecer: ParecerNarrativo = {
         ...((data as { parecer?: ParecerNarrativo })?.parecer || {}),
