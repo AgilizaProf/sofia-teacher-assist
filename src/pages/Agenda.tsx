@@ -1984,6 +1984,38 @@ const deleteCalendar = async () => {
           </div>
         )}
       </div>
+      {modalRevisaoAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background rounded-xl shadow-xl w-full max-w-lg mx-4 p-6">
+            <h2 className="text-lg font-semibold mb-1">Revisar eventos importados</h2>
+            <p className="text-sm text-muted-foreground mb-4">{eventosPendentes.length} evento(s) encontrado(s). Remova os que não deseja importar.</p>
+            <div className="max-h-72 overflow-y-auto space-y-2 mb-4">
+              {eventosPendentes.map((ev, i) => (
+                <div key={i} className="flex items-center justify-between p-2 border rounded-lg text-sm">
+                  <div>
+                    <p className="font-medium">{ev.titulo}</p>
+                    <p className="text-muted-foreground">{ev.data}{ev.hora ? ` · ${ev.hora}` : ""}</p>
+                  </div>
+                  <button
+                    onClick={() => setEventosPendentes((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="text-destructive hover:opacity-70 ml-2 text-lg leading-none"
+                  >✕</button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => { setModalRevisaoAberto(false); setEventosPendentes([]); }}
+                className="px-4 py-2 rounded-lg border text-sm hover:bg-muted"
+              >Cancelar</button>
+              <button
+                onClick={confirmarImportacaoCalendario}
+                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90"
+              >Confirmar {eventosPendentes.length} evento(s)</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
