@@ -1547,13 +1547,17 @@ ${corpo}
         : "";
       const temPei = Boolean(peiResumo);
       const peiReferenciaId = temPei ? `${selected.id}::${(pei.atualizadoEm as string) || "sem-data"}` : "";
-      const nomeAluno = selected.name.toLowerCase().trim();
-      const primeiroNome = nomeAluno.split(" ")[0];
       const m6DoAluno = (m6EntriesGlobal || [])
-        .filter((e) => {
-          const txt = `${e.title || ""} ${e.text || ""} ${e.atividadeTitulo || ""}`.toLowerCase();
-          return txt.includes(primeiroNome) || txt.includes(nomeAluno);
-        })
+  .filter((e) => {
+    if (e.alunoIds && Array.isArray(e.alunoIds)) {
+      return e.alunoIds.includes(selected.id);
+    }
+    // fallback para entradas antigas que ainda não têm alunoIds
+    const nomeAluno = selected.name.toLowerCase().trim();
+    const primeiroNome = nomeAluno.split(" ")[0];
+    const txt = `${e.title || ""} ${e.text || ""} ${e.atividadeTitulo || ""}`.toLowerCase();
+    return txt.includes(primeiroNome) || txt.includes(nomeAluno);
+  })
         .slice(0, 20)
         .map((e) => ({ when: e.date || "—", cat: "diario", body: `${e.emoji || ""} ${e.title || ""}${e.text ? ` — ${e.text}` : ""}${e.tags?.length ? ` [${e.tags.join(", ")}]` : ""}` }));
       const anamSnaps = anamHistByStudent[selected.id] ?? [];
