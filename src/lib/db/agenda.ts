@@ -8,6 +8,7 @@ export type AgendaEventUI = {
   time?: string;
   type: string;            // EventType na UI; persistido como text
   notes?: string;
+  data?: Record<string, unknown>; // metadados extras (ex: { origem: "calendario" })
 };
 
 export type AgendaEventInput = Omit<AgendaEventUI, "id">;
