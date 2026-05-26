@@ -2676,16 +2676,17 @@ export function Planejamento() {
     }
     const turmaAtual = m5Turma || M5_TURMAS[0] || "";
     const entry: M6Entry = {
-      id: `e-${Date.now()}`,
-      emoji: m6Emoji || "🙂",
-      title: words || atividadeRef?.titulo || "Registro rápido",
-      text: trimmed,
-      tags: [...m6Tags],
-      date: `Hoje · ${now}`,
-      turma: turmaAtual,
-      atividadeId: m6AtividadeId || undefined,
-      atividadeTitulo: atividadeRef?.titulo,
-    };
+  id: `e-${Date.now()}`,
+  emoji: m6Emoji || "🙂",
+  title: words || atividadeRef?.titulo || "Registro rápido",
+  text: trimmed,
+  tags: [...m6Tags],
+  date: `Hoje · ${now}`,
+  turma: turmaAtual,
+  atividadeId: m6AtividadeId || undefined,
+  atividadeTitulo: atividadeRef?.titulo,
+  alunoIds: [],
+};
     setM6Entries((prev) => [entry, ...prev]);
     m6ResetForm();
     // Sofia interpreta o registro e propõe um ajuste para a próxima aula.
