@@ -39,6 +39,7 @@ import { Route as AdminProRouteImport } from './routes/admin.pro'
 import { Route as AdminManutencaoRouteImport } from './routes/admin.manutencao'
 import { Route as AdminInfraRouteImport } from './routes/admin.infra'
 import { Route as AdminIaRouteImport } from './routes/admin.ia'
+import { Route as AdminFunilRouteImport } from './routes/admin.funil'
 import { Route as AdminErrosRouteImport } from './routes/admin.erros'
 import { Route as AdminConversaoRouteImport } from './routes/admin.conversao'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
@@ -198,6 +199,11 @@ const AdminIaRoute = AdminIaRouteImport.update({
   path: '/ia',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFunilRoute = AdminFunilRouteImport.update({
+  id: '/funil',
+  path: '/funil',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminErrosRoute = AdminErrosRouteImport.update({
   id: '/erros',
   path: '/erros',
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/erros': typeof AdminErrosRoute
+  '/admin/funil': typeof AdminFunilRoute
   '/admin/ia': typeof AdminIaRoute
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
@@ -291,6 +298,7 @@ export interface FileRoutesByTo {
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/erros': typeof AdminErrosRoute
+  '/admin/funil': typeof AdminFunilRoute
   '/admin/ia': typeof AdminIaRoute
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
@@ -330,6 +338,7 @@ export interface FileRoutesById {
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/erros': typeof AdminErrosRoute
+  '/admin/funil': typeof AdminFunilRoute
   '/admin/ia': typeof AdminIaRoute
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
@@ -370,6 +379,7 @@ export interface FileRouteTypes {
     | '/admin/atividades'
     | '/admin/conversao'
     | '/admin/erros'
+    | '/admin/funil'
     | '/admin/ia'
     | '/admin/infra'
     | '/admin/manutencao'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/admin/atividades'
     | '/admin/conversao'
     | '/admin/erros'
+    | '/admin/funil'
     | '/admin/ia'
     | '/admin/infra'
     | '/admin/manutencao'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/admin/atividades'
     | '/admin/conversao'
     | '/admin/erros'
+    | '/admin/funil'
     | '/admin/ia'
     | '/admin/infra'
     | '/admin/manutencao'
@@ -697,6 +709,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIaRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/funil': {
+      id: '/admin/funil'
+      path: '/funil'
+      fullPath: '/admin/funil'
+      preLoaderRoute: typeof AdminFunilRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/erros': {
       id: '/admin/erros'
       path: '/erros'
@@ -746,6 +765,7 @@ interface AdminRouteChildren {
   AdminAtividadesRoute: typeof AdminAtividadesRoute
   AdminConversaoRoute: typeof AdminConversaoRoute
   AdminErrosRoute: typeof AdminErrosRoute
+  AdminFunilRoute: typeof AdminFunilRoute
   AdminIaRoute: typeof AdminIaRoute
   AdminInfraRoute: typeof AdminInfraRoute
   AdminManutencaoRoute: typeof AdminManutencaoRoute
@@ -760,6 +780,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAtividadesRoute: AdminAtividadesRoute,
   AdminConversaoRoute: AdminConversaoRoute,
   AdminErrosRoute: AdminErrosRoute,
+  AdminFunilRoute: AdminFunilRoute,
   AdminIaRoute: AdminIaRoute,
   AdminInfraRoute: AdminInfraRoute,
   AdminManutencaoRoute: AdminManutencaoRoute,
