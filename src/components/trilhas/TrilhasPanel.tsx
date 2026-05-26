@@ -85,7 +85,8 @@ type Semana = {
 
 export function TrilhasPanel() {
   const { turmas: turmasCadastradas } = useTurmas();
-  const { curriculo: curriculoMunicipal, isAtivo: curriculoMunicipalAtivo } = useCurriculoMunicipal();
+  const { curriculos } = useCurriculoMunicipal();
+  const curriculosAtivos = curriculos.filter((c) => c.status === "ativo" && c.ativo && c.usar_municipal);
   const creditosGate = useCreditosGate();
   const [trilhas, setTrilhas] = useState<Trilha[]>([]);
   const [semanas, setSemanas] = useState<Semana[]>([]);
@@ -100,6 +101,18 @@ export function TrilhasPanel() {
     semestre: "1º semestre",
     contexto: "",
   });
+  // Resolve currículo vinculado à turma selecionada no formulário.
+  // Regra: planejamento respeita o currículo da turma; sem vínculo => BNCC.
+  const curriculoDaTurma = (() => {
+    const t = turmasCadastradas.find(
+      (x) => x.id === form.turmaId || (x.name || "").trim().toLowerCase() === (form.turma || "").trim().toLowerCase(),
+    );
+    const cid = t?.curriculo_id;
+    if (!cid) return null;
+    return curriculosAtivos.find((c) => c.id === cid) ?? null;
+  })();
+  const curriculoMunicipal = curriculoDaTurma;
+  const curriculoMunicipalAtivo = curriculoDaTurma !== null;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gerandoSemana, setGerandoSemana] = useState<string | null>(null);
