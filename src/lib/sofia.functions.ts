@@ -221,14 +221,22 @@ const askSofiaServer = createServerFn({ method: "POST" })
     }
 
     const system = buildSystemPrompt(data.routeContext, data.userContext);
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "system", content: system }, ...data.messages],
-      }),
-    });
+    const response = await fetch(
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: messages.map((m: { role: string; content: string }) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      })),
+      generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
+    }),
+  }
+);
+const data = await response.json();
+const result = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
