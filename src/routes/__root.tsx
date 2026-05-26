@@ -105,18 +105,42 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
+        <style dangerouslySetInnerHTML={{ __html: `
+          #ap-splash{position:fixed;inset:0;background:linear-gradient(135deg,#1B2A4E 0%,#0F1B36 100%);
+            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;
+            transition:opacity .4s ease;font-family:'Inter',-apple-system,sans-serif;}
+          #ap-splash.hide{opacity:0;pointer-events:none;}
+          #ap-splash .ap-logo{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:40px;color:#fff;letter-spacing:-.03em;}
+          #ap-splash .ap-logo span{color:#FF7A45;}
+          #ap-splash .ap-sub{font-size:13px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.04em;}
+          #ap-splash .ap-ring{width:36px;height:36px;border:2.5px solid rgba(255,122,69,.25);border-top-color:#FF7A45;
+            border-radius:50%;animation:ap-spin 0.9s linear infinite;}
+          @keyframes ap-spin{to{transform:rotate(360deg);}}
+        `}} />
       </head>
       <body>
+        <div id="ap-splash">
+          <div className="ap-logo">Agiliza<span>Prof</span></div>
+          <div className="ap-ring"></div>
+          <div className="ap-sub">Conectando à sua sala de aula…</div>
+        </div>
         {children}
         <Scripts />
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.addEventListener('load', function(){
+            setTimeout(function(){
+              var s = document.getElementById('ap-splash');
+              if(s){s.classList.add('hide');setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},450);}
+            }, 300);
+          });
+        `}} />
       </body>
     </html>
   );
 }
-
 function RealtimeSyncMount() {
   useRealtimeSync();
   return null;
