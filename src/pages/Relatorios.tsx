@@ -699,7 +699,10 @@ export function Relatorios() {
   // Override de ano de referência por aluno (sobretudo PCD)
   const [yearOverride, setYearOverride] = usePersistentState<Record<string, string>>("rel_bncc_year", {});
   // Observações livres do(a) professor(a) por aluno (persistido junto à avaliação BNCC)
-  const [bnccObsByAluno, setBnccObsByAluno] = usePersistentState<Record<string, string>>("rel_bncc_obs", {});
+  // ← NOVO: lê dados do /inclusao para alimentar a Sofia no parecer
+const [anamByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_anam", {});
+const [peiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
+const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; cat: string; body: string }>>>("inc_reg", {});
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
   // Estado de expansão do campo de observações no modal BNCC.
   // Começa sempre recolhido (Set vazio) para liberar espaço visual.
