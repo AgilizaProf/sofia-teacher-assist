@@ -205,7 +205,7 @@ export function setCached(key: string, value: SofiaSuggestion[]) {
 }
 
 // ---------- Métricas do polimento (latência + custo) ----------
-// Preços aproximados do Gemini 2.5 Flash via Lovable AI Gateway
+// Preços aproximados do Gemini 2.5 Flash via Google AI API
 // (USD por 1M tokens — ajuste se a tabela oficial mudar).
 const GEMINI_25_FLASH_USD_PER_M = { input: 0.075, output: 0.30 };
 
