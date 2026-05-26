@@ -1580,6 +1580,25 @@ const deleteCalendar = async () => {
                 importandoCalendario={importandoCalendario}
               />
 
+              {calendarioInfo && (
+                <div style={{ marginTop: 10, padding: "10px 12px", background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, fontSize: 12.5, display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 18 }}>✅</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: "#15803D" }}>Calendário escolar ativo</div>
+                    <div style={{ color: "#166534", opacity: .8, marginTop: 2 }}>
+                      {calendarioInfo.sizeKb} KB · enviado em {new Date(calendarioInfo.uploadedAt).toLocaleDateString("pt-BR")}
+                    </div>
+                  </div>
+                  <button
+                    onClick={deleteCalendar}
+                    disabled={removendoCalendario}
+                    style={{ background: "transparent", border: "1px solid #FCA5A5", color: "#991B1B", padding: "4px 10px", borderRadius: 6, fontSize: 11.5, cursor: "pointer", fontWeight: 600, whiteSpace: "nowrap" }}
+                  >
+                    {removendoCalendario ? "Removendo…" : "Remover"}
+                  </button>
+                </div>
+              )}
+
               <div className="ag-up-card">
                 <div className="ag-up-head">
                   <div className="ag-up-title">Próximos compromissos</div>
