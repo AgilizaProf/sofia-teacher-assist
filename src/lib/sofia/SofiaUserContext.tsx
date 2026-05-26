@@ -29,15 +29,7 @@ type AgendaEvent = {
 type M1Plan = unknown;
 type M2Step = { id: string; titulo?: string; status?: string; data?: string; previstaPara?: string };
 type Week = unknown;
-type M6Entry = {
-  id: string;
-  emoji: string;
-  title: string;
-  text: string;
-  tags: string[];
-  date: string;
-  pinned?: boolean;
-};
+type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; turma?: string; atividadeId?: string; atividadeTitulo?: string; alunoIds?: string[] };
 
 // ----- Shapes expostos pelo contexto (normalizados) -----
 export type SofiaTurmaInfo = {
