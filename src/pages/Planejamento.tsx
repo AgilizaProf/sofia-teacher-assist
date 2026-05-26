@@ -2592,15 +2592,6 @@ export function Planejamento() {
       const anoTurmaAtual = turmaAtualInfo?.ano || "";
       // Currículo correto para a turma do relatório: prioriza o currículo
       // vinculado à turma (anexo), caindo no global apenas se a turma não tiver.
-      const turmaDbAtual = turmaAtualNome
-        ? turmasDb.find((t) => (t.name || "").trim().toLowerCase() === turmaAtualNome.trim().toLowerCase())
-        : null;
-      const curriculoDaTurma = turmaDbAtual?.curriculo_id
-        ? curriculosAtivos.find((c) => c.id === turmaDbAtual.curriculo_id) ?? null
-        : null;
-      // Regra estrita: o relatório segue o currículo vinculado à turma do registro.
-      // Sem vínculo => BNCC (não cai no padrão global do usuário).
-      const curriculoParaRelatorio = curriculoDaTurma;
       const alunosPcdTurma = turmaAtualNome
         ? (sofiaUser.alunosPCDPorTurma[turmaAtualNome] ?? []).map((a) => ({
             nome: a.primeiro_nome,
@@ -2618,9 +2609,9 @@ export function Planejamento() {
         stats,
         relatorio_anterior: relAnterior,
         alunos_pcd: alunosPcdTurma,
-        curriculo_municipal: curriculoParaRelatorio
-          ? { municipio: curriculoParaRelatorio.municipio, habilidades: curriculoParaRelatorio.habilidades || [] }
-          : null,
+        // Regra: relatórios/pareceres seguem SEMPRE a BNCC, independente do
+        // currículo municipal vinculado à turma.
+        curriculo_municipal: null,
         entries: m6RelEntries.map((e) => ({
           emoji: e.emoji,
           title: e.title,
