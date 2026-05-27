@@ -16,6 +16,8 @@ type Referral = {
   credited: boolean;
 };
 
+const PUBLIC_SITE_URL = "https://agilizaprof.app.br";
+
 function daysUntil(iso: string): number {
   const ms = new Date(iso).getTime() - Date.now();
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
@@ -34,8 +36,7 @@ export function ReferralCard() {
 
   const link = useMemo(() => {
     if (!code) return "";
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return `${origin}/auth?ref=${code}`;
+    return `${PUBLIC_SITE_URL}/auth?ref=${code}`;
   }, [code]);
 
   async function load() {
