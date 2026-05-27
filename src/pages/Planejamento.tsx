@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { SeletorCurriculo } from "@/components/shared/SeletorCurriculo";
 import { consumirCreditos } from "@/lib/creditos/consume";
+import { acumularTempo } from "@/lib/tempo/acumular";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useHydrated } from "@/hooks/useHydrated";
