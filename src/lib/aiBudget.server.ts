@@ -79,16 +79,7 @@ export async function recordUsage(args: {
     cost_brl: cost,
   });
   if (error) console.error("[aiBudget] insert error:", error);
-  try {
-    const qtd = costToCredits(cost);
-    const { error: consErr } = await supabaseAdmin.rpc("consumir_creditos", {
-      _user_id: args.userId,
-      _quantidade: qtd,
-      _descricao: `IA: ${args.task} (${args.model})`,
-    });
-    if (consErr) console.error("[aiBudget] consumir_creditos error:", consErr);
-  } catch (e) {
-    console.error("[aiBudget] consumir_creditos exception:", e);
-  }
+  // O consumo de créditos é controlado no cliente, por custo fixo da funcionalidade
+  // (CUSTOS em src/lib/creditos/policy.ts). Aqui apenas registramos uso técnico.
   return cost;
 }

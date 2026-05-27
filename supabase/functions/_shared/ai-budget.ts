@@ -83,17 +83,8 @@ export async function recordUsage(args: {
     cost_brl: cost,
   });
   if (error) console.error("[ai-budget] insert usage error:", error);
-  // Desconta créditos do plano do usuário.
-  try {
-    const qtd = costToCredits(cost);
-    const { error: consErr } = await admin.rpc("consumir_creditos", {
-      _user_id: args.userId,
-      _quantidade: qtd,
-      _descricao: `IA: ${args.task} (${args.model})`,
-    });
-    if (consErr) console.error("[ai-budget] consumir_creditos error:", consErr);
-  } catch (e) {
-    console.error("[ai-budget] consumir_creditos exception:", e);
-  }
+  // O consumo de créditos do plano é feito no cliente por custo fixo da funcionalidade
+  // (ver src/lib/creditos/policy.ts → CUSTOS). Aqui apenas registramos uso técnico
+  // para analytics, sem descontar créditos nem referenciar o provedor.
   return cost;
 }

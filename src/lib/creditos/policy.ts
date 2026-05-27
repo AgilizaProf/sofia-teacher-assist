@@ -4,19 +4,21 @@
 export type PlanoAtual = "anual" | "mensal" | "free";
 
 export const CUSTOS = {
-  parecer_descritivo: 10,
+  parecer_descritivo: 20,
   relatorio_inclusao: 20,
   pei_completo: 50,
   plano_aula: 10,
   adaptacao_pcd: 10,
-  anamnese: 10,
+  anamnese: 20,
   atividade_gerada: 10,
   atividade_pcd: 10,
-  planejamento_semanal: 15,
-  trilha_semestral: 50,
+  planejamento_semanal: 10,
+  trilha_semestral: 10, // + créditos das atividades geradas na trilha
   chat_sofia_bloco: 1, // 1 crédito a cada 10 mensagens (chat curto)
   chat_sofia_msgs_por_bloco: 10,
   chat_sofia_longa: 5, // geração longa no chat
+  anexar_rede: 100,     // anexar arquivo de Rede (currículo municipal)
+  anexar_agenda: 30,    // anexar arquivo de Agenda (calendário escolar)
   exportacao: 0,
 } as const;
 
