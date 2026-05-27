@@ -883,6 +883,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         }
       );
       void consumirCreditos(CUSTOS.parecer_descritivo, descricaoDoc("Parecer descritivo", a.nome));
+      void acumularTempo("relatorio_aluno", `Relatório — ${a.nome}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Não foi possível gerar o parecer. ${msg}`);
