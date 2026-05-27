@@ -1527,6 +1527,10 @@ ${corpo}
 
   const handleGerarParecer = async () => {
     if (!selected) return;
+    if (relFormato !== "topicos" && relFormato !== "texto") {
+      toast.error("Selecione o formato (texto corrido ou estruturado) antes de gerar.");
+      return;
+    }
     const okGate = await creditosGate.checar({
       custo: CUSTOS.relatorio_inclusao,
       acao: descricaoDoc("Relatório de inclusão", selected.name),
