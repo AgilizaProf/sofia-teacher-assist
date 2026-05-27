@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
+import { acumularTempo } from "@/lib/tempo/acumular";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -1617,6 +1618,7 @@ ${corpo}
         })
       );
       void consumirCreditos(CUSTOS.relatorio_inclusao, descricaoDoc("Relatório de inclusão", selected?.name));
+      void acumularTempo("relatorio_pcd", `Relatório PCD — ${selected?.name ?? ""}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Não foi possível gerar o parecer. ${msg}`);
