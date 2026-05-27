@@ -146,6 +146,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
     const plano = (data as { plano?: GeradoItem["plano"] })?.plano ?? null;
     if (plano) {
       void consumirCreditos(CUSTOS.planejamento_semanal, descricaoDoc(`Planejamento semanal (${disciplina})`, aluno?.name));
+      void (await import("@/lib/tempo/acumular")).acumularTempo("planejamento_inclusao", `Planejamento inclusão (${disciplina}) — ${aluno?.name ?? ""}`);
     }
     return plano;
   }
