@@ -943,6 +943,7 @@ const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
     setM4ImportOpen(false);
     setM4Tick((n) => n + 1);
     if (ok > 0) toast.success(`${ok} atividade(s) trazida(s) do calendário M4 para a agenda.`);
+    if (ok > 0) void acumularTempo("atividade_m4", "Atividades trazidas do M4 para a agenda", { multiplicador: ok });
     else toast.error("Não foi possível importar as atividades.");
   };
 const deleteCalendar = async () => {
