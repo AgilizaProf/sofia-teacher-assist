@@ -333,6 +333,7 @@ export type Database = {
           data_renovacao: string
           mes_referencia: number
           plano_snapshot: string
+          trial_ate: string | null
           ultimo_bonus_ano: number | null
           ultimo_bonus_mes: number | null
           updated_at: string
@@ -347,6 +348,7 @@ export type Database = {
           data_renovacao?: string
           mes_referencia: number
           plano_snapshot?: string
+          trial_ate?: string | null
           ultimo_bonus_ano?: number | null
           ultimo_bonus_mes?: number | null
           updated_at?: string
@@ -361,6 +363,7 @@ export type Database = {
           data_renovacao?: string
           mes_referencia?: number
           plano_snapshot?: string
+          trial_ate?: string | null
           ultimo_bonus_ano?: number | null
           ultimo_bonus_mes?: number | null
           updated_at?: string
