@@ -93,16 +93,16 @@ export function AuthPage() {
   };
 
   const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
-    if (result.error) {
+    if (error) {
       toast.error("Não foi possível entrar com o Google. Tente novamente.");
-      return;
     }
-    if (!result.redirected) navigate({ to: await postLoginRoute() });
   };
-
   const apple = async () => {
     const result = await lovable.auth.signInWithOAuth("apple", {
       redirect_uri: window.location.origin,
