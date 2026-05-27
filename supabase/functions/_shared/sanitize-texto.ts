@@ -23,22 +23,33 @@ const SUBSTITUICOES_DIRETAS: Array<[RegExp, string]> = [
 ];
 
 const SIMBOLOS_PROIBIDOS: Array<[RegExp, string]> = [
-  // Travessão (— e –) usado como separador → vírgula
-  [/\s*[—–]\s*/g, ", "],
-  // Hífen entre espaços usado como separador → vírgula
+  // Travessão (— e –) usado como separador → vírgula.
+  // Só substitui quando há espaço de pelo menos um lado, preservando
+  // intervalos colados como "5–6 anos" e códigos como "EM15-LP01".
+  [/\s+[—–]\s*/g, ", "],
+  [/\s*[—–]\s+/g, ", "],
+  // Hífen entre espaços usado como separador → vírgula (preserva hífen
+  // de palavras compostas como "socioemocional-afetivo" e códigos).
   [/\s+-\s+/g, ", "],
   // Aspas tipográficas e angulares → aspas simples
   [/[«»“”„]/g, '"'],
   [/[‘’‚‛]/g, "'"],
-  // Barras / e \ entre palavras → " ou "
-  [/\s*\/\s*/g, " ou "],
-  [/\s*\\\s*/g, " "],
-  // Sinais de maior/menor, colchetes, chaves, pipes, arroba, sustenido,
-  // asteriscos remanescentes, underscores soltos.
-  [/[<>{}|@#*]/g, ""],
+  // Barra "/" entre palavras → " ou ". Preserva datas (27/05/2026),
+  // frações ("3/4"), códigos ("EM15LP01/02") e siglas coladas: só
+  // converte quando há espaço de pelo menos um lado.
+  [/\s+\/\s*/g, " ou "],
+  [/\s*\/\s+/g, " ou "],
+  // Contrabarra "\" entre tokens → espaço (preserva quando colada).
+  [/\s+\\\s*/g, " "],
+  [/\s*\\\s+/g, " "],
+  // Sinais decorativos remanescentes (asteriscos, pipes, colchetes,
+  // chaves, sustenido, sinais de maior/menor). NÃO remove "@" para
+  // não destruir e-mails e menções legítimas.
+  [/[<>{}|#*]/g, ""],
   [/\[([^\]]*)\]/g, "$1"],
-  [/(?<=\s)_+(?=\s)/g, ""],
-  [/_+/g, " "],
+  // Underscores só viram espaço quando estão soltos (entre espaços ou
+  // pontuação). Preserva identificadores como "PEI_2024" ou "ano_1".
+  [/(?<=\s)_+(?=\s)/g, " "],
 ];
 
 function limparTexto(s: string): string {
