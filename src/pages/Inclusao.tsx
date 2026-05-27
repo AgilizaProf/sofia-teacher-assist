@@ -1077,8 +1077,16 @@ export function Inclusao() {
     if (!parecerAtual || !selected) return;
     const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
     const ul = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : "";
-    const corpo = parecerAtual.formato === "texto" && parecerAtual.texto
-      ? `<div>${esc(parecerAtual.texto).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 10pt;">${p}</p>`).join("")}</div>`
+    const textoFallback = parecerAtual.texto || [
+      parecerAtual.resumo,
+      parecerAtual.pedagogico,
+      parecerAtual.comportamental,
+      parecerAtual.sensorial,
+      parecerAtual.familia,
+      parecerAtual.comunicacao_familias,
+    ].filter(Boolean).join("\n\n");
+    const corpo = parecerAtual.formato === "texto" && textoFallback
+      ? `<div>${esc(textoFallback).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 10pt;">${p}</p>`).join("")}</div>`
       : `
         ${parecerAtual.resumo ? `<p><b>Resumo:</b> ${esc(parecerAtual.resumo)}</p>` : ""}
         ${parecerAtual.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAtual.pedagogico)}</p>` : ""}
@@ -1638,8 +1646,16 @@ ${corpo}
     document.body.appendChild(iframe);
     const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
     const ul = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : "";
-    const corpo = parecerAtual.formato === "texto" && parecerAtual.texto
-      ? `<div class="texto">${esc(parecerAtual.texto).split(/\n+/).map((p) => `<p>${p}</p>`).join("")}</div>`
+    const textoFallback = parecerAtual.texto || [
+      parecerAtual.resumo,
+      parecerAtual.pedagogico,
+      parecerAtual.comportamental,
+      parecerAtual.sensorial,
+      parecerAtual.familia,
+      parecerAtual.comunicacao_familias,
+    ].filter(Boolean).join("\n\n");
+    const corpo = parecerAtual.formato === "texto" && textoFallback
+      ? `<div class="texto">${esc(textoFallback).split(/\n+/).map((p) => `<p>${p}</p>`).join("")}</div>`
       : `
         ${parecerAtual.resumo ? `<p><b>Resumo:</b> ${esc(parecerAtual.resumo)}</p>` : ""}
         ${parecerAtual.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAtual.pedagogico)}</p>` : ""}
