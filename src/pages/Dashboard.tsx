@@ -28,6 +28,8 @@ import { useAgenda } from "@/hooks/useAgenda";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import type { StudentInput } from "@/lib/db/inclusao";
 import { toast } from "sonner";
+import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
+import { acumularTempo, TEMPO_MIN } from "@/lib/tempo/acumular";
 
 type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
 type AgendaEvent = {
