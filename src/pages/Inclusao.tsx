@@ -1958,6 +1958,23 @@ ${corpo}
       trendTone,
     });
 
+    // Tempo devolvido — Anamnese (idempotente por aluno)
+    if (label === "Anamnese" && eixosTotal > 0 && eixosOk > 0) {
+      const pct = eixosOk / eixosTotal;
+      const keyBaixa = `tempo:anamnese:baixa:${selected.id}`;
+      const keyAlta = `tempo:anamnese:alta:${selected.id}`;
+      try {
+        if (!localStorage.getItem(keyBaixa)) {
+          localStorage.setItem(keyBaixa, "1");
+          void acumularTempo("anamnese_baixa", `Anamnese iniciada — ${selected.name}`);
+        }
+        if (pct >= 0.5 && !localStorage.getItem(keyAlta)) {
+          localStorage.setItem(keyAlta, "1");
+          void acumularTempo("anamnese_alta", `Anamnese ≥ 50% — ${selected.name}`);
+        }
+      } catch { /* localStorage indisponível */ }
+    }
+
     toast.success(`${label} salvo`, { description: `Sincronizado para ${selected.name}.` });
   };
 
