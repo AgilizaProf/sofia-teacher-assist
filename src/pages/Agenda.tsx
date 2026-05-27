@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaListPrint";
 import { consumirCreditos } from "@/lib/creditos/consume";
+import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 
 // ---- Integração M4 → Agenda --------------------------------------------------
