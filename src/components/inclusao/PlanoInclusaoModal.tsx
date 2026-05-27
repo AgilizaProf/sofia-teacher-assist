@@ -361,6 +361,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
     const plano = (data as { plano?: PlanoCore })?.plano ?? null;
     if (plano) {
       void consumirCreditos(CUSTOS.adaptacao_pcd, descricaoDoc("Adaptação inclusiva (PCD)", aluno?.name));
+      void (await import("@/lib/tempo/acumular")).acumularTempo("planejamento_inclusao", `Adaptação PCD — ${aluno?.name ?? ""}`);
     }
     return plano;
   }
