@@ -1440,6 +1440,54 @@ export type Database = {
         }
         Relationships: []
       }
+      tempo_economizado: {
+        Row: {
+          created_at: string
+          minutos_totais: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          minutos_totais?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          minutos_totais?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tempo_economizado_historico: {
+        Row: {
+          acao: string
+          created_at: string
+          id: string
+          minutos: number
+          motivo: string
+          user_id: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          id?: string
+          minutos: number
+          motivo: string
+          user_id: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          id?: string
+          minutos?: number
+          motivo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trilha_semanas: {
         Row: {
           concluida_em: string | null
@@ -1678,6 +1726,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acumular_tempo_economizado: {
+        Args: {
+          _acao: string
+          _minutos: number
+          _motivo: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       admin_grant_pro: {
         Args: {
           _ciclo: string
