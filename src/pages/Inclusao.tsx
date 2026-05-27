@@ -3288,8 +3288,8 @@ ${corpo}
                         <button
                           className="btn btn-primary bg-orange-400 text-orange-400"
                           onClick={handleGerarParecer}
-                          disabled={gerandoParecer || semDados}
-                          title={semDados ? "Preencha a anamnese, o PEI ou adicione registros para gerar o parecer." : ""}
+                          disabled={gerandoParecer || semDados || !relFormato}
+                          title={!relFormato ? "Escolha o formato (texto corrido ou estruturado) antes de gerar." : (semDados ? "Preencha a anamnese, o PEI ou adicione registros para gerar o parecer." : "")}
                         >
                           <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
                         </button>
