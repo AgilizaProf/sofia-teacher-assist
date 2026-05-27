@@ -320,7 +320,7 @@ serve(async (req) => {
   } catch (e) {
     return new Response(
       JSON.stringify({ error: (e as Error)?.message || "Erro interno." }),
-      { status: 500, headers: { ...cors, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }
 });
