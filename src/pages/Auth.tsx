@@ -91,15 +91,21 @@ export function AuthPage() {
     }
   };
 
-  const google = async () => {
+ const google = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: false,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
     if (error) {
       toast.error("Não foi possível entrar com o Google. Tente novamente.");
+      console.error("OAuth error:", error);
     }
   };
   const apple = async () => {
