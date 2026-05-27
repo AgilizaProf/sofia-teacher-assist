@@ -231,6 +231,7 @@ export function PeiPdi() {
       setVersao(next);
       toast.success("PEI gerado pela Sofia");
       void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
+      void acumularTempo("pei_aluno", `PEI — ${aluno?.name ?? "aluno"}`);
     } catch (e) {
       const msg = (e as Error).message || "Falha ao gerar PEI";
       console.error("[PEI] erro final:", e);
@@ -258,6 +259,7 @@ export function PeiPdi() {
           setCurrentId(null);
           toast.success("PEI gerado pela Sofia (em 2 partes)");
           void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
+          void acumularTempo("pei_aluno", `PEI — ${aluno?.name ?? "aluno"}`);
           return;
         } catch (e2) {
           console.error("[PEI] split também falhou:", e2);
