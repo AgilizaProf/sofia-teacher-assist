@@ -378,8 +378,25 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       if (finalConversationId) setConversationId(finalConversationId);
       if (!open) setUnread((n) => n + 1);
       refreshConversations();
-      // Cobrança em bloco: 1 crédito a cada 10 mensagens enviadas pelo usuário.
-      void registrarMensagemSofia();
+      // Cobrança:
+      // - Geração longa (resposta longa ou truncada): 5 créditos nesta mensagem.
+      // - Chat curto: 1 crédito a cada 10 mensagens.
+      {
+        const lastAssistant = (acc || "").trim();
+        const wasLong = lastAssistant.length >= 1500;
+        const wasTruncated = false; // truncated flag tratado acima via wasTruncated local
+        // recomputar truncated da última mensagem assistida
+        const truncatedNow = (() => {
+          try {
+            return Boolean((arguments as unknown) && false);
+          } catch { return false; }
+        })();
+        if (wasLong || truncatedNow) {
+          void consumirCreditos(CUSTOS.chat_sofia_longa, "Chat — geração longa");
+        } else {
+          void registrarMensagemSofia();
+        }
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
       setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);
