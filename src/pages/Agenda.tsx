@@ -1020,6 +1020,7 @@ const deleteCalendar = async () => {
         return;
       }
 
+      void consumirCreditos(CUSTOS.anexar_agenda, "Anexo de Agenda (calendário escolar)");
       setEventosPendentes(eventos);
       setModalRevisaoAberto(true);
       setCalendarioInfo({
