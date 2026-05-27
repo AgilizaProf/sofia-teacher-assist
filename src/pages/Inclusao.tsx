@@ -3207,7 +3207,8 @@ ${corpo}
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                           <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
-                          <select value={relFormato} onChange={(e) => setRelFormato(e.target.value as "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                          <select value={relFormato} onChange={(e) => setRelFormato(e.target.value as "" | "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: relFormato ? "1px solid var(--border)" : "1px solid #F97316", fontSize: 13, background: "#fff" }}>
+                            <option value="" disabled>Escolha o formato…</option>
                             <option value="topicos">Tópicos (estruturado)</option>
                             <option value="texto">Texto corrido</option>
                           </select>
