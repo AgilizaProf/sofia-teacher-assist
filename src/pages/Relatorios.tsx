@@ -2391,9 +2391,9 @@ ${parecerHtml}
                     </div>
                     {!editandoParecer ? (
                       <>
-                        {parecerAluno.formato === "texto" && parecerAluno.texto ? (
+                        {parecerAluno.formato === "texto" && textoFallback ? (
                           <div style={{ fontSize: 13, lineHeight: 1.6, textAlign: "justify" }}>
-                            {parecerAluno.texto.split(/\n+/).map((p, i) => <p key={i} style={{ margin: "0 0 8px" }}>{p}</p>)}
+                            {textoFallback.split(/\n+/).map((p, i) => <p key={i} style={{ margin: "0 0 8px" }}>{p}</p>)}
                           </div>
                         ) : (
                           <>
