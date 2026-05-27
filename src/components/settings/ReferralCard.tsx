@@ -36,7 +36,7 @@ export function ReferralCard() {
 
   const link = useMemo(() => {
     if (!code) return "";
-    return `${PUBLIC_SITE_URL}/auth?ref=${code}`;
+    return `${PUBLIC_SITE_URL}/${code}`;
   }, [code]);
 
   async function load() {
