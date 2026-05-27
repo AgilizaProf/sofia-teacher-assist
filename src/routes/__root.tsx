@@ -240,7 +240,7 @@ function RootComponent() {
           Componentes filhos sempre dentro dos providers que eles consomem. */}
       <SofiaContextProvider>
         <SofiaUserDataProvider>
-          {/* <SofiaNotificationsProvider> */}
+          <SofiaNotificationsProvider>
             <SofiaProvider>
               <CreditosGateProvider>
                 <MaintenanceBanner />
