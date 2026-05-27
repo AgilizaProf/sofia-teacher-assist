@@ -27,6 +27,7 @@ import { Route as AtividadeRouteImport } from './routes/atividade'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as RefRouteImport } from './routes/$ref'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
@@ -140,6 +141,11 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RefRoute = RefRouteImport.update({
+  id: '/$ref',
+  path: '/$ref',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -245,6 +251,7 @@ const ApiPublicWebhooksMercadopagoTestRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$ref': typeof RefRoute
   '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
@@ -285,6 +292,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$ref': typeof RefRoute
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/atividade': typeof AtividadeRoute
@@ -325,6 +333,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$ref': typeof RefRoute
   '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$ref'
     | '/admin'
     | '/agenda'
     | '/assistente'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$ref'
     | '/agenda'
     | '/assistente'
     | '/atividade'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/$ref'
     | '/admin'
     | '/agenda'
     | '/assistente'
@@ -487,6 +499,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RefRoute: typeof RefRoute
   AdminRoute: typeof AdminRouteWithChildren
   AgendaRoute: typeof AgendaRoute
   AssistenteRoute: typeof AssistenteRoute
@@ -635,6 +648,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$ref': {
+      id: '/$ref'
+      path: '/$ref'
+      fullPath: '/$ref'
+      preLoaderRoute: typeof RefRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -865,6 +885,7 @@ const ApiPublicWebhooksMercadopagoRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RefRoute: RefRoute,
   AdminRoute: AdminRouteWithChildren,
   AgendaRoute: AgendaRoute,
   AssistenteRoute: AssistenteRoute,
