@@ -1488,7 +1488,7 @@ ${corpo}
     return Math.min(4, Math.floor(m / 3) + 1);
   });
   const [relAno, setRelAno] = useState<number>(new Date().getFullYear());
-  const [relFormato, setRelFormato] = useState<"topicos" | "texto">("topicos");
+  const [relFormato, setRelFormato] = useState<"" | "topicos" | "texto">("");
 
   const relMaxNumero = relTipo === "bimestre" ? 4 : relTipo === "trimestre" ? 3 : relTipo === "semestre" ? 2 : 1;
   // Garante que o número não ultrapassa o máximo do tipo
@@ -1527,6 +1527,10 @@ ${corpo}
 
   const handleGerarParecer = async () => {
     if (!selected) return;
+    if (relFormato !== "topicos" && relFormato !== "texto") {
+      toast.error("Selecione o formato (texto corrido ou estruturado) antes de gerar.");
+      return;
+    }
     const okGate = await creditosGate.checar({
       custo: CUSTOS.relatorio_inclusao,
       acao: descricaoDoc("Relatório de inclusão", selected.name),
@@ -3207,7 +3211,8 @@ ${corpo}
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                           <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
-                          <select value={relFormato} onChange={(e) => setRelFormato(e.target.value as "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 13, background: "#fff" }}>
+                          <select value={relFormato} onChange={(e) => setRelFormato(e.target.value as "" | "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: relFormato ? "1px solid var(--border)" : "1px solid #F97316", fontSize: 13, background: "#fff" }}>
+                            <option value="" disabled>Escolha o formato…</option>
                             <option value="topicos">Tópicos (estruturado)</option>
                             <option value="texto">Texto corrido</option>
                           </select>
@@ -3287,8 +3292,8 @@ ${corpo}
                         <button
                           className="btn btn-primary bg-orange-400 text-orange-400"
                           onClick={handleGerarParecer}
-                          disabled={gerandoParecer || semDados}
-                          title={semDados ? "Preencha a anamnese, o PEI ou adicione registros para gerar o parecer." : ""}
+                          disabled={gerandoParecer || semDados || !relFormato}
+                          title={!relFormato ? "Escolha o formato (texto corrido ou estruturado) antes de gerar." : (semDados ? "Preencha a anamnese, o PEI ou adicione registros para gerar o parecer." : "")}
                         >
                           <Sparkles size={14} /> {gerandoParecer ? "Gerando…" : (parecerAtual ? "Regenerar com a Sofia" : "Gerar com a Sofia")}
                         </button>
