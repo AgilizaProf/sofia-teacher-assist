@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 
@@ -91,16 +91,19 @@ Responda APENAS em JSON válido neste formato:
 
     const user = isEdInfantil ? userEI : userBase;
 
-    const r = await callAI({ userId, tipo: "trilha_geracao", system: sys, user, json: true, maxTokens: 6000 });
+    const r = await callAI({ userId, tipo: "trilha_geracao", system: sys, user, json: true, maxTokens: 8000 });
     if (!r.ok) return aiErrorResponse(r);
-    let trilha: Record<string, unknown> = {};
-    try { trilha = JSON.parse(r.text || "{}"); } catch { trilha = { erro: "JSON inválido", raw: r.text }; }
+    const trilha = parseAiJson<Record<string, unknown>>(r.text || "{}");
+    if ((trilha as { _truncated?: boolean })._truncated) {
+      console.warn("[gerar-trilha] JSON truncado mesmo após reparo");
+    }
     return new Response(JSON.stringify({ trilha, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
+    console.error("[gerar-trilha] erro interno", e);
+    return new Response(JSON.stringify({ ok: false, error: "Falha ao gerar trilha.", detail: String((e as Error)?.message || e).slice(0, 500) }), {
+      status: 200, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 });
