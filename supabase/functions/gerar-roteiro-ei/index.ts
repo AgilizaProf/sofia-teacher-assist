@@ -96,7 +96,7 @@ Regras:
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
-      status: 500, headers: { ...cors, "Content-Type": "application/json" },
+      status: 200, headers: { ...cors, "Content-Type": "application/json" },
     });
   }
 });
