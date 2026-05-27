@@ -23,8 +23,11 @@ export const TEMPO_MIN = {
   relatorio_aluno: 45,               // 45 min por aluno na página de relatórios
 
   // Inclusão
-  anamnese_alta: 120,                // ≥ 50% concluída → 2 h
-  anamnese_baixa: 60,                // < 50% concluída → 1 h
+  // Anamnese é creditada em dois patamares incrementais por aluno:
+  //  - ao salvar com qualquer preenchimento (< 50%) → +1 h (baixa)
+  //  - ao salvar atingindo ≥ 50% → +1 h adicional (alta), totalizando 2 h
+  anamnese_baixa: 60,                // primeira hora (preenchimento < 50%)
+  anamnese_alta: 60,                 // segunda hora (ao cruzar 50%)
   pei_aluno: 180,                    // 3 h por PEI realizado
   planejamento_inclusao: 20,         // 20 min por atividade gerada (inclusão)
   registro: 5,                       // 5 min por registro salvo
