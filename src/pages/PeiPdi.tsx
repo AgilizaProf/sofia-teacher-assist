@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 
@@ -230,6 +231,7 @@ export function PeiPdi() {
       setVersao(next);
       toast.success("PEI gerado pela Sofia");
       void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
+      void acumularTempo("pei_aluno", `PEI — ${aluno?.name ?? "aluno"}`);
     } catch (e) {
       const msg = (e as Error).message || "Falha ao gerar PEI";
       console.error("[PEI] erro final:", e);
@@ -257,6 +259,7 @@ export function PeiPdi() {
           setCurrentId(null);
           toast.success("PEI gerado pela Sofia (em 2 partes)");
           void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
+          void acumularTempo("pei_aluno", `PEI — ${aluno?.name ?? "aluno"}`);
           return;
         } catch (e2) {
           console.error("[PEI] split também falhou:", e2);

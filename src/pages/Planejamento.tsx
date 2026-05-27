@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { SeletorCurriculo } from "@/components/shared/SeletorCurriculo";
 import { consumirCreditos } from "@/lib/creditos/consume";
+import { acumularTempo } from "@/lib/tempo/acumular";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -1705,6 +1706,7 @@ export function Planejamento() {
         setM1Plan(plan);
         const total = (Object.values(plan) as M1Card[][]).flat().length;
         showToast(total > 0 ? `Sofia montou ${total} atividade(s) com o currículo de ${curriculoMunicipalDados.municipio}. ✨` : "Não consegui gerar atividades agora. Tente novamente.");
+        if (total > 0) void acumularTempo("atividade_m1_m2", "Atividades geradas (M1) — currículo municipal", { multiplicador: total });
       } catch (e) {
         showToast(`Não consegui gerar com o currículo de ${curriculoMunicipalDados.municipio} agora. Usando BNCC como fallback.`);
         const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
@@ -1733,6 +1735,7 @@ export function Planejamento() {
       setM1Generating(false);
       const total = (Object.values(plan) as M1Card[][]).flat().length;
       showToast(total > 0 ? `Sofia montou ${total} atividade(s) na semana. Revise e ajuste. ✨` : "Selecione ao menos um foco para a Sofia gerar.");
+      if (total > 0) void acumularTempo("atividade_m1_m2", "Atividades geradas (M1)", { multiplicador: total });
     }, 350);
   };
   const limparSemanaM1 = () => {
@@ -2639,6 +2642,7 @@ export function Planejamento() {
         }));
       }
       void consumirCreditos(CUSTOS.parecer_descritivo, "Relatório pedagógico (M6)");
+      void acumularTempo("relatorio_ia", "Relatório pedagógico gerado pela IA");
     } catch (e) {
       setM6AIErro((e as Error)?.message || "Falha ao gerar relatório.");
     } finally {

@@ -12,6 +12,7 @@ import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useDashClasses } from "@/hooks/useDashLegacyData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { acumularTempo } from "@/lib/tempo/acumular";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { isEducacaoInfantilGrade, EI_GRADE_LABELS, formatTurmaGrade } from "@/lib/turmaGrade";
@@ -882,6 +883,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         }
       );
       void consumirCreditos(CUSTOS.parecer_descritivo, descricaoDoc("Parecer descritivo", a.nome));
+      void acumularTempo("relatorio_aluno", `Relatório — ${a.nome}`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Não foi possível gerar o parecer. ${msg}`);

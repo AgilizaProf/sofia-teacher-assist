@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { acumularTempo } from "@/lib/tempo/acumular";
 
 export type TurmaUI = {
   id: string;
@@ -72,6 +73,7 @@ export async function createTurma(input: TurmaInput): Promise<TurmaUI> {
   void import("@/lib/admin/track").then(({ trackEvent }) =>
     trackEvent("turma_criada", { ano: input.grade ?? null, turno: input.shift ?? null })
   );
+  void acumularTempo("cadastrar_turma", `Cadastro de turma — ${input.name}`);
   return rowToUI(data as TurmaRow);
 }
 
