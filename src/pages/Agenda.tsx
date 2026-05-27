@@ -12,6 +12,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaListPrint";
+import { consumirCreditos } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 
 // ---- Integração M4 → Agenda --------------------------------------------------
 // Eventos do calendário M4 (Planejamento) são persistidos em localStorage sob
