@@ -1488,7 +1488,7 @@ ${corpo}
     return Math.min(4, Math.floor(m / 3) + 1);
   });
   const [relAno, setRelAno] = useState<number>(new Date().getFullYear());
-  const [relFormato, setRelFormato] = useState<"topicos" | "texto">("topicos");
+  const [relFormato, setRelFormato] = useState<"" | "topicos" | "texto">("");
 
   const relMaxNumero = relTipo === "bimestre" ? 4 : relTipo === "trimestre" ? 3 : relTipo === "semestre" ? 2 : 1;
   // Garante que o número não ultrapassa o máximo do tipo
