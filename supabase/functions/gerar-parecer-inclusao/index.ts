@@ -131,12 +131,35 @@ ${formato === "texto" ? `Responda APENAS com JSON válido neste formato:
   "comunicacao_familias": "1 parágrafo curto pronto para enviar à família"
 }`}`;
 
-    const r = await callAI({ userId, tipo: "parecer", system: sys, user, json: true, maxTokens: 4000 });
+    const r = await callAI({ userId, tipo: "parecer", system: sys, user, json: true, maxTokens: 8000 });
     if (!r.ok) return aiErrorResponse(r);
     let parecer = parseAiJson<Record<string, unknown>>(r.text || "{}");
     if ((parecer as { _truncated?: boolean })._truncated) {
       console.warn("[gerar-parecer-inclusao] JSON truncado/inválido — devolvendo fallback");
-      parecer = { resumo: String((parecer as { _raw?: string })._raw || "").slice(0, 1500) };
+      // Fallback: tenta extrair o conteúdo bruto preservando o formato escolhido.
+      // Para "texto", grava no campo texto; para "topicos", grava em resumo.
+      const raw = String((parecer as { _raw?: string })._raw || "");
+      // Remove cercas de markdown e tenta extrair apenas o valor das chaves esperadas.
+      const cleanRaw = raw.replace(/^```(?:json)?\s*/i, "").replace(/```$/g, "").trim();
+      const extraiCampo = (campo: string): string => {
+        const m = cleanRaw.match(new RegExp(`"${campo}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)`, "i"));
+        if (!m) return "";
+        try { return JSON.parse('"' + m[1] + '"'); } catch { return m[1]; }
+      };
+      if (formato === "texto") {
+        const texto = extraiCampo("texto") || cleanRaw.slice(0, 4000);
+        parecer = { titulo: extraiCampo("titulo") || "Parecer descritivo", texto };
+      } else {
+        parecer = {
+          titulo: extraiCampo("titulo") || "Parecer descritivo",
+          resumo: extraiCampo("resumo") || cleanRaw.slice(0, 1500),
+          pedagogico: extraiCampo("pedagogico"),
+          comportamental: extraiCampo("comportamental"),
+          sensorial: extraiCampo("sensorial"),
+          familia: extraiCampo("familia"),
+          comunicacao_familias: extraiCampo("comunicacao_familias"),
+        };
+      }
     }
     parecer = sanitizarTextoSofia(parecer) as Record<string, unknown>;
     return new Response(JSON.stringify({ parecer, model: r.model }), {
