@@ -1020,7 +1020,7 @@ export function Dashboard() {
                 <span className="tier-emoji" aria-hidden>{currentTier.icon}</span>
               </div>
               <div className="hero-metric-value">
-                <span>{h}</span>h<span className="hero-metric-unit"><span>{m}</span>min</span>
+                <span>{tempoH}</span>h<span className="hero-metric-unit"><span>{tempoM}</span>min</span>
               </div>
               <div className="hero-metric-label">
                 <span style={{ marginRight: 6 }}>{currentTier.icon}</span>
@@ -1125,7 +1125,7 @@ export function Dashboard() {
             >
               <div className="stat-icon s4"><Svg c={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} /></div>
               <div className="stat-body">
-                <div className="stat-value">{h}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>h</span>{m > 0 && <>{m}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>min</span></>}</div>
+                <div className="stat-value">{tempoH}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>h</span>{tempoM > 0 && <>{tempoM}<span className="hero-metric-unit" style={{ fontSize: 14, color: "var(--text-muted)" }}>min</span></>}</div>
                 <div className="stat-label">Horas economizadas</div>
               </div>
             </button>
