@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 import { sanitizarTextoSofia } from "../_shared/sanitize-texto.ts";
@@ -123,18 +123,21 @@ Responda APENAS com JSON válido neste formato:
   "comunicacao_familias": "1 parágrafo curto pronto para enviar às famílias, com menção à evolução quando houver histórico"
 }`;
 
-    const r = await callAI({ userId, tipo: "relatorio_bimestral", system: sys, user, json: true, maxTokens: 3000 });
+    const r = await callAI({ userId, tipo: "relatorio_bimestral", system: sys, user, json: true, maxTokens: 4000 });
     if (!r.ok) return aiErrorResponse(r);
-    const raw = r.text || "{}";
-    let parsed: Record<string, unknown> = {};
-    try { parsed = JSON.parse(raw); } catch { parsed = { resumo: raw }; }
+    let parsed = parseAiJson<Record<string, unknown>>(r.text || "{}");
+    if ((parsed as { _truncated?: boolean })._truncated) {
+      console.warn("[gerar-relatorio] JSON truncado/inválido — devolvendo fallback");
+      parsed = { resumo: String((parsed as { _raw?: string })._raw || "").slice(0, 1500) };
+    }
     parsed = sanitizarTextoSofia(parsed) as Record<string, unknown>;
     return new Response(JSON.stringify({ relatorio: parsed, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
-      status: 500,
+    console.error("[gerar-relatorio] erro interno", e);
+    return new Response(JSON.stringify({ ok: false, error: "Falha ao gerar relatório.", detail: String((e as Error)?.message || e).slice(0, 500) }), {
+      status: 200,
       headers: { ...cors, "Content-Type": "application/json" },
     });
   }
