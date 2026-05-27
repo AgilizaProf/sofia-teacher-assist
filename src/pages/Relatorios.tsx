@@ -2113,9 +2113,13 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
         const parecerAluno = parecerByAluno[a.id] || null;
         const gerando = gerandoParecerId === a.id;
         const ulHtml = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+        const textoFallback = parecerAluno?.texto
+          || (parecerAluno?.formato === "texto"
+                ? [parecerAluno.resumo, parecerAluno.pedagogico, parecerAluno.comportamental, parecerAluno.sensorial, parecerAluno.familia, parecerAluno.comunicacao_familias].filter(Boolean).join("\n\n")
+                : "");
         const parecerHtml = parecerAluno
-          ? (parecerAluno.formato === "texto" && parecerAluno.texto
-              ? `<section><h2>Parecer descritivo</h2><div>${esc(parecerAluno.texto).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 8pt;">${p}</p>`).join("")}</div></section>`
+          ? (parecerAluno.formato === "texto" && textoFallback
+              ? `<section><h2>Parecer descritivo</h2><div>${esc(textoFallback).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 8pt;">${p}</p>`).join("")}</div></section>`
               : `<section><h2>Parecer descritivo</h2>
                   ${parecerAluno.resumo ? `<p><b>Resumo:</b> ${esc(parecerAluno.resumo)}</p>` : ""}
                   ${parecerAluno.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
