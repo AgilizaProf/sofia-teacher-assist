@@ -59,7 +59,8 @@ function limparTexto(s: string): string {
   // Normaliza espaços e pontuação
   out = out
     .replace(/[ \t]+/g, " ")
-    .replace(/ ?, ?,/g, ",")
+    .replace(/(?:\s*,\s*){2,}/g, ", ")
+    .replace(/,\s*([.;:!?])/g, "$1")
     .replace(/ +([.,;:!?])/g, "$1")
     .replace(/\(\s+/g, "(")
     .replace(/\s+\)/g, ")")
