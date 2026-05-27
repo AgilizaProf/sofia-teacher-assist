@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Printer, Download, Edit3, Save, X, GripVertical } from "lucide-react";
 import { useTurmas } from "@/hooks/useTurmas";
 import { consumirCreditos } from "@/lib/creditos/consume";
+import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
@@ -241,6 +242,10 @@ export function TrilhasPanel() {
       setSelected(trilhaRow!.id);
       setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", interdisciplinar: true, semestre: "1º semestre", contexto: "" });
       void consumirCreditos(CUSTOS.trilha_semestral, `Trilha semestral · ${tema.titulo || form.semestre}`);
+      // 20 min por atividade da trilha (1 atividade-tipo por semana)
+      if (semanasArr.length > 0) {
+        void acumularTempo("trilha_atividade", `Trilha semestral · ${tema.titulo || form.semestre}`, { multiplicador: semanasArr.length });
+      }
       void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("trilha_gerada", { turma: form.turma, ano: form.ano, semestre: form.semestre, tema: tema.titulo ?? null, semanas: semanasArr.length }));
     } catch (e) {
       setError((e as Error).message || "Não consegui gerar a trilha agora. Tente em instantes.");
@@ -316,6 +321,7 @@ export function TrilhasPanel() {
       setSemanas((novas as Semana[]) || []);
       setPlanoAberto(s.id);
       void consumirCreditos(CUSTOS.planejamento_semanal, `Planejamento semanal · Semana ${s.semana}`);
+      void acumularTempo("planejamento_ia", `Planejamento semanal · Semana ${s.semana}`);
     } catch (e) {
       alert((e as Error).message || "Não consegui gerar o plano agora.");
       throw e;
