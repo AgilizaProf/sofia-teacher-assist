@@ -62,7 +62,7 @@ serve(async (req) => {
     if (!KEY) {
       return new Response(
         JSON.stringify({ error: "LOVABLE_API_KEY ausente no servidor." }),
-        { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
@@ -441,7 +441,7 @@ serve(async (req) => {
       }
       return new Response(
         JSON.stringify({ error: "Erro ao gerar atividade." }),
-        { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
@@ -468,7 +468,7 @@ serve(async (req) => {
     if (!parsed) {
       return new Response(
         JSON.stringify({ error: "Sofia não conseguiu estruturar a resposta." }),
-        { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
 
@@ -530,7 +530,7 @@ serve(async (req) => {
     console.error("gerar-atividade error", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }),
-      { status: 500, headers: { ...cors, "Content-Type": "application/json" } },
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }
 });
