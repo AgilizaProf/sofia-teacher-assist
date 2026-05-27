@@ -580,20 +580,16 @@ export function Dashboard() {
   const totalSchools = baseSchools + schools.length;
   const totalClasses = baseClasses + classes.length;
   const totalStudents = baseStudents + students.length;
-  // Conta documentos realmente produzidos pela professora (planos de
-  // atividade regular/PCD, planos de inclusão por aluno e registros M6).
-  // Assim a barra de "Tempo devolvido" cresce em tempo real conforme ela
-  // gera materiais, sem depender de mocks.
+  // Contadores locais usados para outras métricas (pendências, onboarding).
+  // O cálculo de "Tempo devolvido" foi removido daqui e agora vem do banco
+  // via `useTempoEconomizado()` (saldo único acumulado pelas ações reais).
   const [atvHistRegular] = usePersistentState<unknown[]>("plan_atividade_regular_hist_v1", []);
   const [atvHistPcd] = usePersistentState<unknown[]>("plan_atividade_pcd_hist_v1", []);
   const [incPlans] = usePersistentState<Record<string, unknown[]>>("inc_plans", {});
   const [m6Entries] = usePersistentState<unknown[]>("plan_m6_entries", []);
-  // Quantos alunos foram cadastrados em massa (cadastro individual NÃO conta
-  // pro tempo devolvido, conforme regra do produto).
-  const [bulkStudentsCount, setBulkStudentsCount] = usePersistentState<number>(
-    "bulk_students_count_v1",
-    0,
-  );
+  // Contador local de alunos cadastrados em massa (mantido só para UX local;
+  // o tempo correspondente agora vai direto ao saldo via acumularTempo).
+  const [, setBulkStudentsCount] = usePersistentState<number>("bulk_students_count_v1", 0);
   const generatedDocsCount = useMemo(() => {
     const incTotal = Object.values(incPlans || {}).reduce(
       (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0,
@@ -606,41 +602,11 @@ export function Dashboard() {
     );
   }, [atvHistRegular, atvHistPcd, incPlans, m6Entries]);
   const documentsGenerated = Math.max(user.documentsGenerated, generatedDocsCount);
-  // Tempo devolvido — regras de produto:
-  //   • Cada aluno vinculado a uma turma: 1 min (individual ou em massa).
-  //   • Cada planejamento de aula: 60 min × quantidade.
-  //   • Cada relatório/parecer escrito: 45 min × quantidade.
-  //   • Cada PEI: 300 min (5 h) × quantidade.
-  const lessonPlansCount =
-    (Array.isArray(atvHistRegular) ? atvHistRegular.length : 0) +
-    (Array.isArray(atvHistPcd) ? atvHistPcd.length : 0);
-  const peiCount = useMemo(
-    () =>
-      Object.values(incPlans || {}).reduce(
-        (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0),
-        0,
-      ),
-    [incPlans],
-  );
-  // Pareceres finalizados: usamos o counter mock (`user.documentsGenerated`)
-  // como proxy do que foi escrito de fato em Relatórios.
-  const reportsCount = Math.max(0, user.documentsGenerated);
-  // Conta todos os alunos efetivamente vinculados a uma turma.
-  const studentsWithClassCount = useMemo(
-    () => students.filter((s) => (s.classRef || "").trim().length > 0).length,
-    [students],
-  );
-  const earnedMinutes =
-    Math.max(studentsWithClassCount, bulkStudentsCount) * 1 +
-    lessonPlansCount * 60 +
-    reportsCount * 45 +
-    peiCount * 300;
-  const totalMinutes = user.hoursSavedTotal * 60 + earnedMinutes;
-  const h = Math.floor(totalMinutes / 60);
-  const m = totalMinutes % 60;
+  // Saldo de tempo devolvido (fonte única no banco, atualizado em tempo real).
+  const { minutos: tempoMinutos } = useTempoEconomizado();
+  const tempoH = Math.floor(tempoMinutos / 60);
+  const tempoM = tempoMinutos % 60;
   // Faixas (tiers) para a mensagem do contador "Tempo devolvido".
-  // Baseadas no total de horas acumuladas — escolhemos a faixa onde
-  // `h` cai (min ≤ h ≤ max). 500h tem mensagem própria de marco histórico.
   const HOUR_TIERS = [
     { min: 0,   max: 3,    icon: "🌱",  name: "Semente",        tone: "tier-0", text: "Você já começou. Esse tempo que voltou pra você é só o início." },
     { min: 4,   max: 7,    icon: "☕",  name: "Manhã livre",    tone: "tier-1", text: "Uma manhã inteira de volta. Tempo que foi pro café, pro descanso, pra você." },
@@ -652,7 +618,7 @@ export function Dashboard() {
     { min: 200, max: 499,  icon: "🏆",  name: "Extraordinário", tone: "tier-7", text: "200 horas. Cada uma delas foi escolhida por você — não tomada pela papelada." },
     { min: 500, max: 9999, icon: "🌟",  name: "Lendário",       tone: "tier-8", text: "500 horas de volta pra você. Obrigado por confiar na gente pra cuidar do que era burocracia, enquanto você cuidava do que importa." },
   ] as const;
-  const currentTier = HOUR_TIERS.find((t) => h >= t.min && h <= t.max) || HOUR_TIERS[0];
+  const currentTier = HOUR_TIERS.find((t) => tempoH >= t.min && tempoH <= t.max) || HOUR_TIERS[0];
   const onboardingDone = totalClasses > 0 && totalStudents > 0 && documentsGenerated > 0;
 
   // Cálculo: alunos sem parecer no bimestre.
