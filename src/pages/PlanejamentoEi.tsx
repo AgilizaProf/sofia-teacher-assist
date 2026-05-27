@@ -166,11 +166,17 @@ export function PlanejamentoEi() {
     const { data, error } = currentId
       ? await supabase.from("roteiros_ei").update(payload).eq("id", currentId).select("id").single()
       : await supabase.from("roteiros_ei").insert([payload]).select("id").single();
+    const isNovo = !currentId;
     setSaving(false);
     if (error) { toast.error("Falha ao salvar: " + error.message); return; }
     if (data?.id) setCurrentId(data.id);
     toast.success("Roteiro salvo");
     void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent(currentId ? "roteiro_ei_atualizado" : "roteiro_ei_gerado", { turma, faixa_etaria: faixa, tema, tipo_experiencia: tipo, duracao }));
+    if (isNovo) {
+      void import("@/lib/tempo/acumular").then(({ acumularTempo }) =>
+        acumularTempo("atividade_m1_m2", `Roteiro EI · ${tema || faixa}`),
+      );
+    }
     loadList();
   };
 
