@@ -123,7 +123,7 @@ Responda APENAS com JSON válido neste formato:
   "comunicacao_familias": "1 parágrafo curto pronto para enviar às famílias, com menção à evolução quando houver histórico"
 }`;
 
-    const r = await callAI({ userId, tipo: "relatorio_bimestral", system: sys, user, json: true, maxTokens: 4000 });
+    const r = await callAI({ userId, tipo: "relatorio_bimestral", system: sys, user, json: true, maxTokens: 8000 });
     if (!r.ok) return aiErrorResponse(r);
     let parsed = parseAiJson<Record<string, unknown>>(r.text || "{}");
     if ((parsed as { _truncated?: boolean })._truncated) {
