@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
 import { shouldShowOnboarding } from "@/lib/onboarding";
@@ -91,32 +92,30 @@ export function AuthPage() {
     }
   };
 
- const google = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        skipBrowserRedirect: false,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
-      },
+  const google = async () => {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
-    if (error) {
+    if (result.error) {
       toast.error("Não foi possível entrar com o Google. Tente novamente.");
-      console.error("OAuth error:", error);
+      console.error("OAuth error:", result.error);
+      return;
+    }
+    if (result.redirected) {
+      return;
     }
   };
   const apple = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin,
     });
-    if (error) {
+    if (result.error) {
       toast.error("Não foi possível entrar com a Apple.");
+      console.error("OAuth error:", result.error);
+      return;
+    }
+    if (result.redirected) {
+      return;
     }
   };
 
