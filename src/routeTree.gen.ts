@@ -32,6 +32,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
 import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
 import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AdminStorageRouteImport } from './routes/admin.storage'
 import { Route as AdminRetencaoRouteImport } from './routes/admin.retencao'
@@ -164,6 +165,11 @@ const InclusaoPeiRoute = InclusaoPeiRouteImport.update({
   path: '/pei',
   getParentRoute: () => InclusaoRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
   id: '/usuarios',
   path: '/usuarios',
@@ -243,7 +249,7 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/atividade': typeof AtividadeRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/admin/retencao': typeof AdminRetencaoRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
@@ -281,7 +288,7 @@ export interface FileRoutesByTo {
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/atividade': typeof AtividadeRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/admin/retencao': typeof AdminRetencaoRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
@@ -321,7 +329,7 @@ export interface FileRoutesById {
   '/agenda': typeof AgendaRoute
   '/assistente': typeof AssistenteRoute
   '/atividade': typeof AtividadeRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/configuracoes': typeof ConfiguracoesRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/admin/retencao': typeof AdminRetencaoRoute
   '/admin/storage': typeof AdminStorageRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
     | '/admin/retencao'
     | '/admin/storage'
     | '/admin/usuarios'
+    | '/auth/callback'
     | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/planejamento/ei'
@@ -425,6 +435,7 @@ export interface FileRouteTypes {
     | '/admin/retencao'
     | '/admin/storage'
     | '/admin/usuarios'
+    | '/auth/callback'
     | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/planejamento/ei'
@@ -464,6 +475,7 @@ export interface FileRouteTypes {
     | '/admin/retencao'
     | '/admin/storage'
     | '/admin/usuarios'
+    | '/auth/callback'
     | '/inclusao/pei'
     | '/planejamento/atividade'
     | '/planejamento/ei'
@@ -479,7 +491,7 @@ export interface RootRouteChildren {
   AgendaRoute: typeof AgendaRoute
   AssistenteRoute: typeof AssistenteRoute
   AtividadeRoute: typeof AtividadeRoute
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   EiRoute: typeof EiRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
@@ -660,6 +672,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InclusaoPeiRouteImport
       parentRoute: typeof InclusaoRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/admin/usuarios': {
       id: '/admin/usuarios'
       path: '/usuarios'
@@ -793,6 +812,16 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 interface InclusaoRouteChildren {
   InclusaoPeiRoute: typeof InclusaoPeiRoute
 }
@@ -840,7 +869,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgendaRoute: AgendaRoute,
   AssistenteRoute: AssistenteRoute,
   AtividadeRoute: AtividadeRoute,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ConfiguracoesRoute: ConfiguracoesRoute,
   EiRoute: EiRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
