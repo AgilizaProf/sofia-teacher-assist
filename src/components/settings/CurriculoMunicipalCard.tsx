@@ -2,6 +2,8 @@ import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal, type CurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { toast } from "sonner";
+import { consumirCreditos } from "@/lib/creditos/consume";
+import { CUSTOS } from "@/lib/creditos/policy";
 
 const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB total no bucket (compartilhado entre currículos + calendário)
 // Sem limite fixo por arquivo individual — o limite é o total disponível
@@ -107,6 +109,7 @@ export function CurriculoMunicipalCard() {
       await supabase.functions.invoke("processar-curriculo", {
         body: { curriculo_id: row.id, arquivo_path: path, municipio: municipio.trim(), ordem },
       });
+      void consumirCreditos(CUSTOS.anexar_rede, `Anexo de Rede — ${municipio.trim()}`);
       toast.info("Arquivo enviado! Processando habilidades em background...");
       void import("@/lib/admin/track").then(({ trackEvent }) =>
         trackEvent("curriculo_municipal_upload", {
