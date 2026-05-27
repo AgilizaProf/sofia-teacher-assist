@@ -77,7 +77,7 @@ const TOKEN_LIMITS: Record<SofiaTaskType, number> = {
   parecer:            4000,
   relatorio_bimestral:4000,
   trilha_relatorio:   4000,
-  trilha_geracao:     4000,
+  trilha_geracao:     8000,
   pei: 8000,
   pdi: 8000,
 };
@@ -131,6 +131,12 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
 
   if (!resp.ok) {
     const txt = await resp.text();
+    console.error("[sofia-router] upstream Google error", {
+      status: resp.status,
+      model: route.model,
+      task: args.tipo,
+      body: txt?.slice(0, 1200),
+    });
     return { ok: false, status: resp.status, text: "", error: txt, ...route };
   }
 
@@ -174,37 +180,71 @@ export const corsHeaders = {
 };
 
 export function aiErrorResponse(r: CallAIResult): Response {
+  // Sempre devolvemos HTTP 200 com envelope { ok:false, error } para que o
+  // cliente (supabase.functions.invoke) nunca dispare "Edge Function returned
+  // a non-2xx status code". Os callers devem checar `data.ok === false`.
+  let mensagem = "Estou com dificuldade de conexão com a IA. Tente em instantes.";
   if (r.blocked) {
-    return new Response(
-      JSON.stringify({
-        error: `Você não tem créditos disponíveis (${r.usedBrl ?? 0}/${r.limitBrl ?? 0} usados). Aguarde a renovação do seu plano ou faça upgrade.`,
-        blocked: true,
-        usedBrl: r.usedBrl,
-        limitBrl: r.limitBrl,
-      }),
-      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-  if (r.status === 429) {
-    return new Response(
-      JSON.stringify({ error: "Estou com muitas conversas agora. Tente em instantes." }),
-      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-  if (r.status === 402) {
-    return new Response(
-      JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos no workspace." }),
-      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-  if (r.status === 401 || r.status === 403) {
-    return new Response(
-      JSON.stringify({ error: "Estou com dificuldade de conexão com a IA. Tente em instantes." }),
-      { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    mensagem = `Você não tem créditos disponíveis (${r.usedBrl ?? 0}/${r.limitBrl ?? 0} usados). Aguarde a renovação do seu plano ou faça upgrade.`;
+  } else if (r.status === 429) {
+    mensagem = "Estou com muitas conversas agora. Tente em instantes.";
+  } else if (r.status === 402) {
+    mensagem = "Créditos de IA esgotados. Adicione créditos no workspace.";
+  } else if (r.status === 401 || r.status === 403) {
+    mensagem = "Estou com dificuldade de conexão com a IA. Tente em instantes.";
+  } else if (r.status >= 500) {
+    mensagem = "A IA demorou para responder. Tente novamente em alguns segundos.";
   }
   return new Response(
-    JSON.stringify({ error: "Estou com dificuldade de conexão. Tente em instantes." }),
-    { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    JSON.stringify({
+      ok: false,
+      error: mensagem,
+      detail: r.error ? String(r.error).slice(0, 500) : undefined,
+      blocked: r.blocked || undefined,
+      usedBrl: r.usedBrl,
+      limitBrl: r.limitBrl,
+      upstreamStatus: r.status,
+    }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
+}
+
+// ---------------------------------------------------------------------------
+// Helper: parseia JSON da IA tolerando truncamento por MAX_TOKENS.
+// Tenta JSON.parse direto; se falhar, fecha aspas/colchetes/chaves abertos
+// e tenta novamente; se ainda falhar, devolve { _raw, _truncated:true }.
+// ---------------------------------------------------------------------------
+export function parseAiJson<T = Record<string, unknown>>(raw: string): T {
+  const txt = (raw || "").trim();
+  if (!txt) return {} as T;
+  try { return JSON.parse(txt) as T; } catch { /* tenta reparar */ }
+
+  let s = txt;
+  // remove vírgula final pendente
+  s = s.replace(/,\s*$/, "");
+  // se a última linha está cortada no meio de uma string, descarta tudo após a última vírgula segura
+  // conta aspas não-escapadas para saber se estamos dentro de uma string
+  let inStr = false;
+  let esc = false;
+  const stack: string[] = [];
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (esc) { esc = false; continue; }
+    if (c === "\\") { esc = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === "{" || c === "[") stack.push(c);
+    else if (c === "}" && stack[stack.length - 1] === "{") stack.pop();
+    else if (c === "]" && stack[stack.length - 1] === "[") stack.pop();
+  }
+  if (inStr) s += '"';
+  // remove vírgulas finais antes de fechar
+  s = s.replace(/,\s*$/, "");
+  while (stack.length) {
+    const o = stack.pop();
+    s += o === "{" ? "}" : "]";
+  }
+  try { return JSON.parse(s) as T; } catch {
+    return { _truncated: true, _raw: txt } as unknown as T;
+  }
 }
