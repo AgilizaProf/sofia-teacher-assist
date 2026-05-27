@@ -2160,8 +2160,13 @@ export function Dashboard() {
                 for (const name of novos) {
                   await createDbStudent(buildStudentInput({ name, classRef, birth: "", pcd, notes: "" }));
                 }
-                // Cada aluno em massa vale 1 min de tempo devolvido.
                 setBulkStudentsCount((n) => (Number.isFinite(n) ? n : 0) + novos.length);
+                // +1 minuto por aluno cadastrado em massa.
+                void acumularTempo(
+                  "aluno_em_massa_unit",
+                  `Cadastro em massa de ${novos.length} aluno(s)`,
+                  { multiplicador: novos.length },
+                );
                 toast.success(
                   duplicados > 0
                     ? `${novos.length} aluno(s) cadastrado(s) · ${duplicados} já existia(m)`
