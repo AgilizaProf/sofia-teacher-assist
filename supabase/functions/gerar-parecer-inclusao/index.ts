@@ -22,7 +22,7 @@ serve(async (req) => {
       peiAnteriorResumo = "",
       anamAnteriorResumo = "",
       registros = [] as Registro[],
-      formato = "topicos", // "topicos" | "texto"
+      formato = "", // "topicos" | "texto" — obrigatório, sem default
       intervalo = "",
       anoEscolar = "",
       anoReferenciaPedagogico = "",
@@ -31,6 +31,18 @@ serve(async (req) => {
         | { municipio: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string }> }
         | null,
     } = body || {};
+
+    // Bloqueio: nunca gerar parecer/relatório antes de o usuário escolher o formato
+    if (formato !== "topicos" && formato !== "texto") {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: "formato_obrigatorio",
+          message: "Selecione o formato do relatório (texto corrido ou estruturado) antes de gerar.",
+        }),
+        { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
 
     const linhas = (registros as Registro[])
       .slice(0, 80)
