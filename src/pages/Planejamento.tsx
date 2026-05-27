@@ -1256,6 +1256,8 @@ export function Planejamento() {
     setM5Generating(true);
     setTimeout(() => {
       const before = week;
+      const diasVazios = (["seg","ter","qua","qui","sex"] as DayKey[])
+        .filter((d) => (before[d] || []).length === 0).length;
       setWeek((w) => {
         const next = { ...w };
         const fillers: Record<DayKey, Card[]> = {
@@ -1273,6 +1275,9 @@ export function Planejamento() {
       m5LogHistory("Gerou semana com Sofia", () => setWeek(before));
       setM5Generating(false);
       showToast("Sofia preencheu os dias vazios. ✨");
+      if (diasVazios > 0) {
+        void acumularTempo("sofia_semana_atividade", "Sofia preencheu a semana", { multiplicador: diasVazios });
+      }
     }, 1500);
   };
   const m5TrocarTurma = (t: string) => {
@@ -1371,6 +1376,7 @@ export function Planejamento() {
     m5LogHistory(`Replicou semana em ${sel.length} turma(s)`);
     showToast(`Semana replicada em ${sel.length} turma(s). ✓`);
     setM5ReplicaOpen(false);
+    void acumularTempo("replicar_em_turmas", `Semana replicada em ${sel.length} turma(s)`);
   };
 
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
@@ -3032,6 +3038,7 @@ export function Planejamento() {
     if (movedCard) {
       const card = movedCard as Card;
       setM5UndoMove({ card, from: fromDay, to });
+      void acumularTempo("drag_and_drop", `Atividade movida — ${card.title}`);
       m5LogHistory(`Moveu "${card.title}" de ${fromDay.toUpperCase()} para ${to.toUpperCase()}`, () => {
         setWeek((w) => ({ ...w, [to]: w[to].filter((c) => c.id !== card.id), [fromDay]: [...w[fromDay], card] }));
       });
