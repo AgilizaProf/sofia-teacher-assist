@@ -4,6 +4,7 @@ import { useCurriculoMunicipal, type CurriculoMunicipal } from "@/hooks/useCurri
 import { toast } from "sonner";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { acumularTempo } from "@/lib/tempo/acumular";
 
 const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB total no bucket (compartilhado entre currículos + calendário)
 // Sem limite fixo por arquivo individual — o limite é o total disponível
@@ -110,6 +111,7 @@ export function CurriculoMunicipalCard() {
         body: { curriculo_id: row.id, arquivo_path: path, municipio: municipio.trim(), ordem },
       });
       void consumirCreditos(CUSTOS.anexar_rede, `Anexo de Rede — ${municipio.trim()}`);
+      void acumularTempo("curriculo_municipio", `Currículo Municipal — ${municipio.trim()}`);
       toast.info("Arquivo enviado! Processando habilidades em background...");
       void import("@/lib/admin/track").then(({ trackEvent }) =>
         trackEvent("curriculo_municipal_upload", {
