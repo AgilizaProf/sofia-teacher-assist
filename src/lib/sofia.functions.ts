@@ -149,8 +149,8 @@ const askSofiaServer = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     if (data.messages.length === 0) throw new Error("Nenhuma mensagem foi enviada para a Sofia.");
 
-    const apiKey = process.env.GOOGLE_AI_API_KEY;
-    if (!apiKey) throw new Error("Variável de ambiente ausente: GOOGLE_AI_API_KEY. Configure no seu ambiente (.env ou painel de deploy).");
+    const apiKey = process.env.GOOGLE_API_KEY ?? process.env.GOOGLE_AI_API_KEY;
+    if (!apiKey) throw new Error("Variável de ambiente ausente: GOOGLE_API_KEY.");
 
     let conversationId = data.conversationId ?? null;
 
