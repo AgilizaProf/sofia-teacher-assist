@@ -1321,7 +1321,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       p.fechamento ? `Fechamento\n${p.fechamento}` : "",
     ].filter(Boolean).join("\n\n")));
     if (p.habilidades.length > 0) {
-      partes.push(editorialSection("Habilidades BNCC"));
+      partes.push(editorialSection(
+        municipalAtivo && curriculoMunicipalDados
+          ? `Habilidades — Currículo de ${curriculoMunicipalDados.municipio}`
+          : "Habilidades BNCC",
+      ));
       partes.push(editorialLongField(
         p.habilidades.map((h) => {
           const cod = h.codigo?.trim();
