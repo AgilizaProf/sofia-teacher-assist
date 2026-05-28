@@ -149,8 +149,8 @@ const askSofiaServer = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     if (data.messages.length === 0) throw new Error("Nenhuma mensagem foi enviada para a Sofia.");
 
-    const apiKey = process.env.GOOGLE_API_KEY ?? process.env.GOOGLE_AI_API_KEY;
-    if (!apiKey) throw new Error("Variável de ambiente ausente: GOOGLE_API_KEY.");
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("Variável de ambiente ausente: LOVABLE_API_KEY.");
 
     let conversationId = data.conversationId ?? null;
 
@@ -222,36 +222,39 @@ const askSofiaServer = createServerFn({ method: "POST" })
 
     const system = buildSystemPrompt(data.routeContext, data.userContext);
 
-    const messagesParaGoogle = [
-      { role: "user" as const, parts: [{ text: system }] },
-      { role: "model" as const, parts: [{ text: "Entendido. Estou pronta para ajudar." }] },
+    const chatMessages = [
+      { role: "system" as const, content: system },
       ...data.messages
         .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => ({
-          role: m.role === "assistant" ? ("model" as const) : ("user" as const),
-          parts: [{ text: m.content }],
-        })),
+        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     ];
 
-    const googleRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: messagesParaGoogle,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
-        }),
-      }
-    );
+    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: chatMessages,
+        temperature: 0.7,
+      }),
+    });
 
-    if (!googleRes.ok) {
-      const text = await googleRes.text().catch(() => "");
-      throw new Error(`Google AI ${googleRes.status}: ${text.slice(0, 200)}`);
+    if (!aiRes.ok) {
+      const text = await aiRes.text().catch(() => "");
+      if (aiRes.status === 429) {
+        throw new Error("Limite de uso da IA atingido. Aguarde alguns instantes e tente novamente.");
+      }
+      if (aiRes.status === 402) {
+        throw new Error("Créditos de IA esgotados no workspace. Adicione créditos para continuar.");
+      }
+      throw new Error(`IA ${aiRes.status}: ${text.slice(0, 200)}`);
     }
 
-    const googleJson = await googleRes.json();
-    const content: string = googleJson?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const aiJson = await aiRes.json();
+    const content: string = aiJson?.choices?.[0]?.message?.content ?? "";
 
     // Roda o validator para P3 (linguagem), P2 (BNCC) e P6 (transparência)
     const { validateSofiaOutput } = await import("@/lib/sofia-validator");
