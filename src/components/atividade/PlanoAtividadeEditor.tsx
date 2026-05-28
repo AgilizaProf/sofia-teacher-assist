@@ -1893,6 +1893,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           plano={plano}
           modo={modo}
           alunosPCDCount={alunosPCDDaTurma.length}
+          curriculoNome={municipalAtivo && curriculoMunicipalDados ? curriculoMunicipalDados.municipio : null}
           missing={missing}
           regenField={regenField}
           onChange={setField}
