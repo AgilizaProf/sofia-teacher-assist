@@ -357,6 +357,9 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
         tipoAtividade,
         incluirPCD: true,
         alunoFoco: { nome: aluno.name, codigo: condicaoLabel || "PCD", anotacoes: anotacoesCombinadas },
+        curriculo_municipal: municipalAtivo && curriculoMunicipalDados
+          ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+          : null,
       },
     });
     if (error) throw error;
