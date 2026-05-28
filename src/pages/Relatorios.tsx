@@ -13,6 +13,7 @@ import { useDashClasses } from "@/hooks/useDashLegacyData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
+import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { isEducacaoInfantilGrade, EI_GRADE_LABELS, formatTurmaGrade } from "@/lib/turmaGrade";
@@ -1113,13 +1114,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   // mais abaixo a partir da `alunosLista` desta página (estado real do usuário).
   const alunosCount = combinedStudents.length > 0 ? combinedStudents.length : ctx.dataState.alunos_count;
 
-  // Mesmo cálculo da página inicial (Tempo devolvido)
-  const earnedMinutes =
-    dashSchools.length * 10 +
-    dashClasses.length * 20 +
-    dbStudents.length * 5 +
-    (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 45;
-  const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
+  // Tempo economizado nesta página = soma das ações de relatórios realizadas
+  // pelo usuário (fonte única: `tempo_economizado_historico`). Esse valor já está
+  // incluído no contador global "Tempo devolvido a você" do Dashboard.
+  const { minutos: totalSavedMin } = useTempoEconomizado({
+    acoes: ["relatorio_aluno", "relatorio_ia", "relatorio_pcd"],
+  });
   const animatedMin = useAnimatedNumber(totalSavedMin, 900);
   const savedH = Math.floor(animatedMin / 60);
   const savedM = Math.round(animatedMin % 60);
@@ -1421,11 +1421,10 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               <div className="kpi-tip" role="tooltip">
                 <div className="kpi-tip-title">Como calculamos</div>
                 <ul className="kpi-tip-list">
-                  <li><span>Baseline semanal</span><b>{user.hoursSavedWeek}h {String(user.minutesSavedWeek).padStart(2,"0")}min</b></li>
-                  <li><span>Escolas cadastradas · {dashSchools.length} × 10min</span><b>{dashSchools.length * 10}min</b></li>
-                  <li><span>Turmas cadastradas · {dashClasses.length} × 20min</span><b>{dashClasses.length * 20}min</b></li>
-                  <li><span>Alunos cadastrados · {dbStudents.length} × 5min</span><b>{dbStudents.length * 5}min</b></li>
-                  <li><span>Documentos finalizados · {(user.documentsGenerated || finalizados)} × 30min</span><b>{(user.documentsGenerated || finalizados) * 30}min</b></li>
+                  <li><span>Relatório por aluno · 45min cada</span><b>—</b></li>
+                  <li><span>Relatório gerado pela IA · 35min cada</span><b>—</b></li>
+                  <li><span>Relatório PCD (Inclusão) · 45min cada</span><b>—</b></li>
+                  <li><span>Integra o contador global no Painel</span><b>↑</b></li>
                 </ul>
                 <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
                 <span className="kpi-tip-arrow" aria-hidden />

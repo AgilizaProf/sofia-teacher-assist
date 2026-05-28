@@ -16,6 +16,7 @@ import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { acumularTempo } from "@/lib/tempo/acumular";
+import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaSuggestionList } from "@/components/sofia/SofiaSuggestionCard";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -1016,6 +1017,17 @@ export function Inclusao() {
   const selected = students.find((s) => s.id === selectedId) ?? null;
   const studentRegs = regByStudent[studentKey] || [];
   const selectedForAnam = students.find((s) => s.id === selectedId);
+  // Tempo economizado neste aluno (escopo Inclusão): soma ações com o nome do
+  // aluno no `motivo`. Esses minutos já fazem parte do contador global
+  // "Tempo devolvido a você" do Painel.
+  const { minutos: tempoAlunoMin } = useTempoEconomizado(
+    selected?.name
+      ? {
+          acoes: ["anamnese_baixa", "anamnese_alta", "pei_aluno", "planejamento_inclusao", "registro", "relatorio_pcd"],
+          motivoContains: selected.name,
+        }
+      : undefined,
+  );
   const isEISelected = isEducacaoInfantilSerie(selectedForAnam?.anoEscolar);
   const buildBlankAnam = () => {
     const base = isEISelected ? ANAMNESE_EIXOS_EI : ANAMNESE_EIXOS;
@@ -2220,8 +2232,15 @@ ${corpo}
                 <div className="kpis">
                   <div className="kpi kpi-accent">
                     <div className="kpi-label">Tempo economizado neste aluno</div>
-                    <div className="kpi-value">0h</div>
-                    <div className="kpi-sub">comece a usar a Sofia para acumular ganhos</div>
+                    <div className="kpi-value">
+                      {Math.floor(tempoAlunoMin / 60)}h
+                      <span className="small"> {String(tempoAlunoMin % 60).padStart(2, "0")}min</span>
+                    </div>
+                    <div className="kpi-sub">
+                      {tempoAlunoMin > 0
+                        ? "integra o contador do Painel"
+                        : "comece a usar a Sofia para acumular ganhos"}
+                    </div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Aulas adaptadas</div>
