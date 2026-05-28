@@ -2365,7 +2365,7 @@ function PlanoBody(props: {
       {/* 2. Habilidades BNCC — logo abaixo do objetivo pra evitar espaços vazios */}
       <section className={`atv-card${has("habilidades") || has("habilidades_incompletas") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>② Habilidades BNCC</h3>
+          <h3>② {props.curriculoNome ? `Habilidades — Currículo de ${props.curriculoNome}` : "Habilidades BNCC"}</h3>
           <RegenBtn field="habilidades" label="habilidades" />
         </div>
         <div className="atv-chips">
