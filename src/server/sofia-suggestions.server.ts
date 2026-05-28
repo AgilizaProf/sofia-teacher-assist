@@ -247,7 +247,7 @@ export async function maybePolishTitlesWithAI(
 ): Promise<{ items: SofiaSuggestion[]; metrics: PolishMetrics }> {
   const metrics: PolishMetrics = { ...EMPTY_METRICS, enabled: opts.enabled, itemsIn: items.length, itemsOut: items.length };
   if (!opts.enabled || items.length === 0) return { items, metrics };
-  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  const apiKey = process.env.GOOGLE_API_KEY ?? process.env.GOOGLE_AI_API_KEY;
   if (!apiKey) {
     metrics.error = "missing_api_key";
     return { items, metrics };
