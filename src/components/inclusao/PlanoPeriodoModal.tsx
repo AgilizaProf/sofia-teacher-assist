@@ -142,6 +142,9 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
         tipoAtividade: "Aula adaptada",
         incluirPCD: true,
         alunoFoco: { nome: aluno.name, codigo: condicaoLabel || "PCD", anotacoes },
+        curriculo_municipal: municipalAtivo && curriculoMunicipalDados
+          ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+          : null,
       },
     });
     if (error) throw error;
