@@ -68,6 +68,13 @@ const empty: Roteiro = {
 export function PlanejamentoEi() {
   const navigate = useNavigate();
   const [students] = usePersistentState<Student[]>("inc_students", []);
+  const { curriculos } = useCurriculoMunicipal();
+  const curriculoPadrao = useMemo(
+    () => curriculos.find((c) => c.eh_padrao && c.status === "ativo" && c.usar_municipal)
+       ?? curriculos.find((c) => c.status === "ativo" && c.usar_municipal)
+       ?? null,
+    [curriculos],
+  );
 
   const [turma, setTurma] = useState("");
   const [faixa, setFaixa] = useState(FAIXAS[2]);
@@ -114,12 +121,27 @@ export function PlanejamentoEi() {
     setGenerating(true);
     try {
       const camposNomes = campos.map((id) => CAMPOS.find((c) => c.id === id)?.nome || id);
+      // Currículo municipal anexado: filtra habilidades relevantes à EI
+      let curriculo_municipal: { municipio: string; estado: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string; eixo?: string }> } | null = null;
+      if (curriculoPadrao) {
+        const norm = (s: string) => (s || "").toLowerCase();
+        const habs = (curriculoPadrao.habilidades || []).filter((h) => {
+          const blob = `${norm(h.ano)} ${norm(h.disciplina)} ${norm(h.eixo ?? "")}`;
+          return /infantil|creche|pr[ée]/.test(blob);
+        }).slice(0, 60);
+        curriculo_municipal = {
+          municipio: curriculoPadrao.municipio,
+          estado: curriculoPadrao.estado,
+          habilidades: habs,
+        };
+      }
       const { data, error } = await supabase.functions.invoke("gerar-roteiro-ei", {
         body: {
           turma, faixa_etaria: faixa,
           campos_experiencia: camposNomes,
           tema, tipo_experiencia: tipo, duracao,
           alunos_pcd: pcdsTurma,
+          curriculo_municipal,
         },
       });
       if (error) throw error;
