@@ -1421,11 +1421,10 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               <div className="kpi-tip" role="tooltip">
                 <div className="kpi-tip-title">Como calculamos</div>
                 <ul className="kpi-tip-list">
-                  <li><span>Baseline semanal</span><b>{user.hoursSavedWeek}h {String(user.minutesSavedWeek).padStart(2,"0")}min</b></li>
-                  <li><span>Escolas cadastradas · {dashSchools.length} × 10min</span><b>{dashSchools.length * 10}min</b></li>
-                  <li><span>Turmas cadastradas · {dashClasses.length} × 20min</span><b>{dashClasses.length * 20}min</b></li>
-                  <li><span>Alunos cadastrados · {dbStudents.length} × 5min</span><b>{dbStudents.length * 5}min</b></li>
-                  <li><span>Documentos finalizados · {(user.documentsGenerated || finalizados)} × 30min</span><b>{(user.documentsGenerated || finalizados) * 30}min</b></li>
+                  <li><span>Relatório por aluno · 45min cada</span><b>—</b></li>
+                  <li><span>Relatório gerado pela IA · 35min cada</span><b>—</b></li>
+                  <li><span>Relatório PCD (Inclusão) · 45min cada</span><b>—</b></li>
+                  <li><span>Integra o contador global no Painel</span><b>↑</b></li>
                 </ul>
                 <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
                 <span className="kpi-tip-arrow" aria-hidden />
