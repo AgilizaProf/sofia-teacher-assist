@@ -678,6 +678,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         incluirPCD: true,
         disciplinasInter: disciplina === "Interdisciplinar" ? disciplinasInter : [],
         opcoesSelecionadas: [],
+        curriculo_municipal: municipalAtivo && curriculoMunicipalDados
+          ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+          : null,
         alunosPCD: alunosPCDDaTurma.map((x) => ({
           nome: x.primeiro_nome,
           tipo: x.pcd_codigo || "PCD",
