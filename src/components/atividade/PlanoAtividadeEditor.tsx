@@ -2787,6 +2787,9 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-regen .spin{animation:atv-spin 1s linear infinite;}
 @keyframes atv-spin{to{transform:rotate(360deg);}}
 .atv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.atv-chips{flex-direction:column;align-items:flex-start;gap:8px;}
+.atv-hab-item{display:flex;flex-direction:column;gap:4px;width:100%;}
+.atv-hab-desc{margin:0;font-size:12.5px;color:#334155;line-height:1.45;padding-left:2px;}
 .atv-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(59,130,246,.12);color:#1E40AF;padding:4px 8px 4px 10px;border-radius:14px;font-size:11.5px;font-weight:700;font-family:'JetBrains Mono',monospace;cursor:help;}
 .atv-chip button{background:none;border:none;color:inherit;cursor:pointer;padding:2px;display:flex;align-items:center;border-radius:4px;}
 .atv-chip button:hover{background:rgba(0,0,0,.1);}
