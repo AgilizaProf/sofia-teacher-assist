@@ -25,12 +25,12 @@ import { RealtimeStatusBadge } from "@/components/RealtimeStatusBadge";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useTurmas } from "@/hooks/useTurmas";
 import { useAgenda } from "@/hooks/useAgenda";
-import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import type { StudentInput } from "@/lib/db/inclusao";
 import { toast } from "sonner";
 import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
 import { acumularTempo, TEMPO_MIN } from "@/lib/tempo/acumular";
-
+import { supabase } from "@/integrations/supabase/client";
+import { attachPendingReferral } from "@/lib/referral";
 type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
 type AgendaEvent = {
   id: string;
