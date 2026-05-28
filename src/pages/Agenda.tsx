@@ -15,6 +15,7 @@ import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaLis
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 // ---- Integração M4 → Agenda --------------------------------------------------
 // Eventos do calendário M4 (Planejamento) são persistidos em localStorage sob
@@ -859,6 +860,10 @@ const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
     })();
   }, []);
   const [m4Tick, setM4Tick] = useState(0);
+  // Hidrata o store M4 do localStorage E do snapshot remoto (Supabase).
+  // Sem isso, ao abrir a Agenda em outro dispositivo / após limpar cache,
+  // os eventos do calendário M4 não apareciam para importar.
+  const [m4Store] = usePersistentState<M4UserStore>("plan_m4_user_events", {});
   // Considera um evento M4 como "já na agenda" se houver evento na mesma
   // data com o mesmo título (case-insensitive, trim). Isto permite que o
   // botão "Trazer atividades agendadas (M4)" mostre tudo do calendário M4
@@ -871,7 +876,7 @@ const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
   }, [events]);
   const m4Pending = useMemo(() => {
     void m4Tick;
-    const store = readM4Store();
+    const store = { ...readM4Store(), ...m4Store };
     let n = 0;
     for (const [date, arr] of Object.entries(store)) {
       for (const ev of arr) {
@@ -880,7 +885,7 @@ const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
       }
     }
     return n;
-  }, [m4Tick, agendaKeySet]);
+  }, [m4Tick, agendaKeySet, m4Store]);
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key === M4_STORE_KEY || e.key === `aprof:${M4_IMPORTED_KEY}`) setM4Tick((n) => n + 1);
@@ -889,7 +894,9 @@ const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
   const openM4Import = () => {
-    const store = readM4Store();
+    // Mescla localStorage + estado hidratado do remoto (m4Store) para garantir
+    // que itens só presentes na nuvem também apareçam.
+    const store = { ...readM4Store(), ...m4Store };
     const items: M4ImportItem[] = [];
     for (const [date, arr] of Object.entries(store)) {
       for (const evt of arr) {
