@@ -7,6 +7,7 @@ import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 
 export type PlanoInclusao = {
   id: string;
@@ -277,6 +278,7 @@ type PlanoItem = {
 export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSaved }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
   const creditosGate = useCreditosGate();
+  const { isAtivo: municipalAtivo, curriculo: curriculoMunicipalDados } = useCurriculoMunicipal();
   useKeyboardAwareModal(modalRef, open);
   useEffect(() => {
     if (!open) return;
@@ -355,6 +357,9 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
         tipoAtividade,
         incluirPCD: true,
         alunoFoco: { nome: aluno.name, codigo: condicaoLabel || "PCD", anotacoes: anotacoesCombinadas },
+        curriculo_municipal: municipalAtivo && curriculoMunicipalDados
+          ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+          : null,
       },
     });
     if (error) throw error;

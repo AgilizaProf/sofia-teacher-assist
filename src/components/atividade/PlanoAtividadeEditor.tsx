@@ -678,6 +678,9 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         incluirPCD: true,
         disciplinasInter: disciplina === "Interdisciplinar" ? disciplinasInter : [],
         opcoesSelecionadas: [],
+        curriculo_municipal: municipalAtivo && curriculoMunicipalDados
+          ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+          : null,
         alunosPCD: alunosPCDDaTurma.map((x) => ({
           nome: x.primeiro_nome,
           tipo: x.pcd_codigo || "PCD",
@@ -1318,7 +1321,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       p.fechamento ? `Fechamento\n${p.fechamento}` : "",
     ].filter(Boolean).join("\n\n")));
     if (p.habilidades.length > 0) {
-      partes.push(editorialSection("Habilidades BNCC"));
+      partes.push(editorialSection(
+        municipalAtivo && curriculoMunicipalDados
+          ? `Habilidades — Currículo de ${curriculoMunicipalDados.municipio}`
+          : "Habilidades BNCC",
+      ));
       partes.push(editorialLongField(
         p.habilidades.map((h) => {
           const cod = h.codigo?.trim();
@@ -1886,6 +1893,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           plano={plano}
           modo={modo}
           alunosPCDCount={alunosPCDDaTurma.length}
+          curriculoNome={municipalAtivo && curriculoMunicipalDados ? curriculoMunicipalDados.municipio : null}
           missing={missing}
           regenField={regenField}
           onChange={setField}
@@ -2212,6 +2220,7 @@ function PlanoBody(props: {
   plano: PlanoAtividade;
   modo: "regular" | "pcd";
   alunosPCDCount: number;
+  curriculoNome?: string | null;
   peiResumoByStudent?: Record<string, string>;
   anamneseResumoByStudent?: Record<string, string>;
   missing: string[];
@@ -2356,7 +2365,7 @@ function PlanoBody(props: {
       {/* 2. Habilidades BNCC — logo abaixo do objetivo pra evitar espaços vazios */}
       <section className={`atv-card${has("habilidades") || has("habilidades_incompletas") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>② Habilidades BNCC</h3>
+          <h3>② {props.curriculoNome ? `Habilidades — Currículo de ${props.curriculoNome}` : "Habilidades BNCC"}</h3>
           <RegenBtn field="habilidades" label="habilidades" />
         </div>
         <div className="atv-chips">
