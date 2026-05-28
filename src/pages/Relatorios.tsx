@@ -1114,13 +1114,12 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
   // mais abaixo a partir da `alunosLista` desta página (estado real do usuário).
   const alunosCount = combinedStudents.length > 0 ? combinedStudents.length : ctx.dataState.alunos_count;
 
-  // Mesmo cálculo da página inicial (Tempo devolvido)
-  const earnedMinutes =
-    dashSchools.length * 10 +
-    dashClasses.length * 20 +
-    dbStudents.length * 5 +
-    (user.documentsGenerated || ctx.dataState.pareceres_finalizados) * 45;
-  const totalSavedMin = (user.hoursSavedWeek * 60) + user.minutesSavedWeek + earnedMinutes;
+  // Tempo economizado nesta página = soma das ações de relatórios realizadas
+  // pelo usuário (fonte única: `tempo_economizado_historico`). Esse valor já está
+  // incluído no contador global "Tempo devolvido a você" do Dashboard.
+  const { minutos: totalSavedMin } = useTempoEconomizado({
+    acoes: ["relatorio_aluno", "relatorio_ia", "relatorio_pcd"],
+  });
   const animatedMin = useAnimatedNumber(totalSavedMin, 900);
   const savedH = Math.floor(animatedMin / 60);
   const savedM = Math.round(animatedMin % 60);
