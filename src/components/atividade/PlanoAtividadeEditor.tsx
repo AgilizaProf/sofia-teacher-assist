@@ -2220,6 +2220,7 @@ function PlanoBody(props: {
   plano: PlanoAtividade;
   modo: "regular" | "pcd";
   alunosPCDCount: number;
+  curriculoNome?: string | null;
   peiResumoByStudent?: Record<string, string>;
   anamneseResumoByStudent?: Record<string, string>;
   missing: string[];
