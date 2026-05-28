@@ -30,7 +30,8 @@ import type { StudentInput } from "@/lib/db/inclusao";
 import { toast } from "sonner";
 import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
 import { acumularTempo, TEMPO_MIN } from "@/lib/tempo/acumular";
-
+import { supabase } from "@/integrations/supabase/client";
+import { attachPendingReferral } from "@/lib/referral";
 type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
 type AgendaEvent = {
   id: string;
@@ -464,6 +465,47 @@ export function Dashboard() {
   const { turmas: classes, create: createTurmaDb, update: updateTurmaDb, remove: removeTurmaDb } = useTurmas();
   const baseClasses = 0;
   const [studentOpen, setStudentOpen] = useState(false);
+  const [referralCode, setReferralCode] = useState<string>("");
+  const referralLink = useMemo(() => {
+    if (!referralCode) return "";
+    return `https://agilizaprof.app.br/${referralCode}`;
+  }, [referralCode]);
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCode() {
+      try {
+        const { data: u } = await supabase.auth.getUser();
+        const uid = u?.user?.id;
+        if (!uid) return;
+        await attachPendingReferral(uid);
+        const { data: codeData } = await supabase.rpc("ensure_referral_code", { _uid: uid });
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("referral_code")
+          .eq("user_id", uid)
+          .maybeSingle();
+        const code = (prof?.referral_code as string) || (codeData as string) || "";
+        if (!cancelled) setReferralCode(code);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadCode();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleShareLink = async () => {
+    if (!referralLink) {
+      toast.error("Link de indicação não disponível. Tente novamente.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      toast.success("Link copiado! Compartilhe com colegas educadores.");
+    } catch {
+      toast.error("Não consegui copiar — selecione e copie manualmente.");
+    }
+  };
 
   // Foco automático no primeiro campo + Esc para fechar (turma / aluno)
   useEffect(() => {
@@ -1627,9 +1669,9 @@ export function Dashboard() {
               <div className="viral-title">Convide outro(a) educador(a) e <strong>ganhe 1 mês grátis</strong> · quem você indicar também ganha 30 dias</div>
               <div className="viral-sub">Compartilhe seu link único com colegas que também sofrem com pareceres no fim do bimestre.</div>
             </div>
-            <button className="viral-action">
+            <button className="viral-action" onClick={handleShareLink}>
               Compartilhar link
-              <Svg strokeWidth={2.5} c={<><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></>} />
+              <Svg strokeWidth={2.5} c={<> <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></>} />
             </button>
           </div>
 
