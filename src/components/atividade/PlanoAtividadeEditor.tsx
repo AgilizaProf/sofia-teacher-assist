@@ -2370,12 +2370,15 @@ function PlanoBody(props: {
         </div>
         <div className="atv-chips">
           {plano.habilidades.map((h, i) => (
-            <span className="atv-chip" key={`${h.codigo}-${i}`} title={h.descricao}>
-              {h.codigo}
-              <button onClick={() => props.onRemoveHab(i)} aria-label="Remover">
-                <X size={11} />
-              </button>
-            </span>
+            <div className="atv-hab-item" key={`${h.codigo}-${i}`}>
+              <span className="atv-chip" title={h.descricao}>
+                {h.codigo}
+                <button onClick={() => props.onRemoveHab(i)} aria-label="Remover">
+                  <X size={11} />
+                </button>
+              </span>
+              {h.descricao && <p className="atv-hab-desc">{h.descricao}</p>}
+            </div>
           ))}
           {plano.habilidades.length === 0 && (
             <span className="atv-empty-chip">Nenhuma habilidade. Adicione abaixo.</span>
