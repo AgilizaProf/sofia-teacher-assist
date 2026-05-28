@@ -7,6 +7,7 @@ import { buildAnoReferenciaPromptBlock } from "@/lib/inclusao/anoReferencia";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 
 type Aluno = {
   id: string;
@@ -68,6 +69,7 @@ function isoFromOffset(weeks: number): string {
 }
 
 export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSavedMany }: Props) {
+  const { isAtivo: municipalAtivo, curriculo: curriculoMunicipalDados } = useCurriculoMunicipal();
   const modalRef = useRef<HTMLDivElement | null>(null);
   const creditosGate = useCreditosGate();
   useEffect(() => {
