@@ -7,6 +7,8 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { toast } from "sonner";
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
+import { listTurmas, type TurmaUI } from "@/lib/db/turmas";
 
 /**
  * Página de criação de atividade pedagógica alinhada à BNCC.
@@ -125,6 +127,18 @@ export function PlanejamentoAtividade() {
   const search = useSearch({ from: "/planejamento/atividade" });
   const navigate = useNavigate();
   const sofia = useSofia();
+  const { curriculos } = useCurriculoMunicipal();
+  const [turmasDb, setTurmasDb] = useState<TurmaUI[]>([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const list = await listTurmas();
+        if (active) setTurmasDb(list);
+      } catch { /* ignore */ }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const [etapa, setEtapa] = usePersistentState<string>("plan_atv_etapa", "fund1");
   const [ano, setAno] = usePersistentState<string>("plan_atv_ano", "2º");
@@ -184,6 +198,18 @@ export function PlanejamentoAtividade() {
   const anos = useMemo(() => ANOS_BY_ETAPA[etapa] || [], [etapa]);
   const isEI = etapa === "infantil";
 
+  // Resolve currículo municipal vinculado à turma selecionada (sem fallback global).
+  const curriculoMunicipal = useMemo(() => {
+    const nome = (turma || "").trim().toLowerCase();
+    if (!nome) return null;
+    const t = turmasDb.find((x) => (x.name || "").trim().toLowerCase() === nome);
+    const cid = t?.curriculo_id;
+    if (!cid) return null;
+    const cur = curriculos.find((c) => c.id === cid);
+    if (!cur || cur.status !== "ativo" || !cur.usar_municipal) return null;
+    return cur;
+  }, [turma, turmasDb, curriculos]);
+
   // Deriva os campos selecionados do estado persistido (apenas quando EI).
   const camposSelecionados = useMemo<string[]>(() => {
     if (componenteState.tipo_componente === "campo_experiencia") {
@@ -231,6 +257,25 @@ export function PlanejamentoAtividade() {
     const componenteLabel = isEI
       ? (camposSelecionados.length > 0 ? camposSelecionados.join(" + ") : "—")
       : componente;
+    // Currículo municipal: filtra as habilidades pelo ano e componente quando possível
+    // para caber no prompt, e limita o total para não estourar o contexto.
+    let curriculoBloco: string[] = [];
+    if (curriculoMunicipal) {
+      const norm = (s: string) => (s || "").toLowerCase();
+      const habs = (curriculoMunicipal.habilidades || []).filter((h) => {
+        const okAno = !h.ano || norm(h.ano).includes(norm(ano)) || norm(ano).includes(norm(h.ano));
+        const okDisc = isEI || !h.disciplina || norm(h.disciplina).includes(norm(componente)) || norm(componente).includes(norm(h.disciplina));
+        return okAno && okDisc;
+      }).slice(0, 40);
+      const linhas = habs.map((h) => `  - [${h.codigo}] ${h.descricao}${h.eixo ? ` (eixo: ${h.eixo})` : ""}`);
+      curriculoBloco = [
+        `\n## Currículo municipal anexado — PRIORITÁRIO sobre a BNCC`,
+        `- Município: ${curriculoMunicipal.municipio}${curriculoMunicipal.estado ? ` (${curriculoMunicipal.estado})` : ""}`,
+        `- Use as habilidades do currículo municipal abaixo como referência principal. Cite o código municipal e, quando houver correspondência, também o código BNCC.`,
+        habs.length > 0 ? `- Habilidades municipais aplicáveis (${ano}${isEI ? "" : ` · ${componente}`}):` : `- (Sem habilidades municipais filtradas para este recorte — mantenha BNCC e cite o currículo municipal como base regional.)`,
+        ...linhas,
+      ];
+    }
     return [
       `Gere um PLANO DE ATIVIDADE PEDAGÓGICA ALINHADA À BNCC com a estrutura abaixo.`,
       `\n## Contexto`,
@@ -252,15 +297,16 @@ export function PlanejamentoAtividade() {
       objetivo ? `- Objetivo de aprendizagem: ${objetivo}` : "",
       recursos ? `- Recursos disponíveis: ${recursos}` : "",
       adapt ? `- Adaptações / observações de inclusão: ${adapt}` : "",
+      ...curriculoBloco,
       `\n## Estrutura obrigatória da resposta`,
       `1. **Identificação** (componente, ano, tema, duração).`,
-      `2. **Habilidade(s) BNCC** — cite o(s) código(s) (ex.: EF02LP01) e descreva a habilidade na linguagem da BNCC.${isEI ? " Use os Campos de Experiência selecionados e os Direitos de Aprendizagem (conviver, brincar, participar, explorar, expressar, conhecer-se)." : ""}`,
+      `2. **Habilidade(s)** — ${curriculoMunicipal ? `cite primeiro o código do currículo municipal de ${curriculoMunicipal.municipio} e, em seguida, o código BNCC equivalente. Use a descrição oficial.` : `cite o(s) código(s) BNCC (ex.: EF02LP01) e descreva a habilidade na linguagem da BNCC.`}${isEI ? " Use os Campos de Experiência selecionados e os Direitos de Aprendizagem (conviver, brincar, participar, explorar, expressar, conhecer-se)." : ""}`,
       `3. **Objetivos de aprendizagem** (1 a 3, mensuráveis).`,
       `4. **Sequência didática** (introdução, desenvolvimento, fechamento) com tempos.`,
       `5. **Recursos e materiais.**`,
       `6. **Adaptações para inclusão / PCD** (TEA, TDAH, dislexia, deficiência intelectual etc., quando pertinente — sempre com linguagem não-capacitista).`,
       `7. **Avaliação formativa** (como observar evidências da aprendizagem).`,
-      `8. **Bloco final de transparência:** Fontes do conteúdo, Habilidades BNCC, Apoio teórico (1–2 autores) e Base legal aplicável.`,
+      `8. **Bloco final de transparência:** Fontes do conteúdo, Habilidades${curriculoMunicipal ? " (municipais + BNCC)" : " BNCC"}, Apoio teórico (1–2 autores) e Base legal aplicável.`,
       `\nSe faltar informação essencial, pergunte antes de produzir o documento (Princípio 1).`,
     ].filter(Boolean).join("\n");
   };
@@ -279,7 +325,11 @@ export function PlanejamentoAtividade() {
       return;
     }
     sofia.openSofia({ prompt: buildPrompt(), send: true });
-    toast.success("Sofia está montando sua atividade alinhada à BNCC ✨");
+    toast.success(
+      curriculoMunicipal
+        ? `Sofia está montando sua atividade com o currículo de ${curriculoMunicipal.municipio} ✨`
+        : "Sofia está montando sua atividade alinhada à BNCC ✨",
+    );
   };
 
   return (
