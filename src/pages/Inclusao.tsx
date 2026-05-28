@@ -1017,6 +1017,17 @@ export function Inclusao() {
   const selected = students.find((s) => s.id === selectedId) ?? null;
   const studentRegs = regByStudent[studentKey] || [];
   const selectedForAnam = students.find((s) => s.id === selectedId);
+  // Tempo economizado neste aluno (escopo Inclusão): soma ações com o nome do
+  // aluno no `motivo`. Esses minutos já fazem parte do contador global
+  // "Tempo devolvido a você" do Painel.
+  const { minutos: tempoAlunoMin } = useTempoEconomizado(
+    selected?.name
+      ? {
+          acoes: ["anamnese_baixa", "anamnese_alta", "pei_aluno", "planejamento_inclusao", "registro", "relatorio_pcd"],
+          motivoContains: selected.name,
+        }
+      : undefined,
+  );
   const isEISelected = isEducacaoInfantilSerie(selectedForAnam?.anoEscolar);
   const buildBlankAnam = () => {
     const base = isEISelected ? ANAMNESE_EIXOS_EI : ANAMNESE_EIXOS;
