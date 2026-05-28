@@ -7,6 +7,7 @@ import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 
 export type PlanoInclusao = {
   id: string;
