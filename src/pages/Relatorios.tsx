@@ -917,11 +917,14 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   );
   const labelAvaliacaoParaTurma = useCallback(
     (turma?: string | null) => {
+      // EI: rótulo dedicado, independente de currículo municipal.
+      const cls = turmaByName(turma || "");
+      if (isEi || isEiTurma(cls?.grade)) return "Avaliar Campos de Experiência";
       const curriculo = curriculoParaTurma(turma);
       if (!curriculo) return "Avaliar BNCC";
       return `Avaliar ${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}`;
     },
-    [curriculoParaTurma],
+    [curriculoParaTurma, turmaByName, isEi],
   );
   // EI por aluno: usa o grade da turma (ex.: "pre-2", "maternal-1").
   const isEiAluno = (turma: string): boolean => {
@@ -936,6 +939,14 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     (statusListFor(turma).find((x) => x.k === k)?.label) || "Não observada";
 
   const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
+    // Educação Infantil tem prioridade absoluta: sempre usar os Campos de
+    // Experiência da BNCC Infantil, mesmo quando há currículo municipal
+    // configurado (currículos costumam ser do Ensino Fundamental).
+    if (isEiAluno(turma)) {
+      const base = EI_CAMPOS_EXPERIENCIA;
+      if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
+      return base;
+    }
     const curriculoDaTurma = curriculoParaTurma(turma);
     // Quando há currículo municipal ativo, agrupa as habilidades por disciplina
     // e usa como competências no modal — substituindo a lista BNCC hardcoded.
@@ -955,12 +966,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
       return base;
     }
-    // Fallback: BNCC hardcoded (sem currículo municipal)
-    if (isEiAluno(turma)) {
-      const base = EI_CAMPOS_EXPERIENCIA;
-      if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
-      return base;
-    }
+    // Fallback: BNCC hardcoded por ano do Ensino Fundamental.
     const base = bnccAreasFor(yearForAluno(id, turma));
     if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
     return base;
