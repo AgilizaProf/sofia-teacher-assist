@@ -2159,28 +2159,6 @@ ${corpo}
                   <div className="hero-l">
                     <button className="back" onClick={() => goView("list")}><ArrowLeft size={13} /> Voltar à lista</button>
                     <h1>{selected.name} <span className="age">· {selected.age} · {selected.turma}</span></h1>
-                    <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-                      <Link
-                        to="/relatorios"
-                        search={{ turma: selected.turma, pcd: "apenas" } as never}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: 12, fontWeight: 600, textDecoration: "none" }}
-                      >
-                        📊 Parecer em Relatórios
-                      </Link>
-                      <Link
-                        to="/planejamento"
-                        search={{ turma: selected.turma } as never}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: 12, fontWeight: 600, textDecoration: "none" }}
-                      >
-                        📚 Ver planos da turma
-                      </Link>
-                      <Link
-                        to="/agenda"
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 7, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.08)", color: "#fff", fontSize: 12, fontWeight: 600, textDecoration: "none" }}
-                      >
-                        📅 Agenda
-                      </Link>
-                    </div>
                     <div className="tag-row">
                       <span className="diagnostic"><span className="pulse" />{selected.diag}</span>
                       {selected.anoEscolar && <span className="tag"><b>Ano escolar:</b> {selected.anoEscolar}</span>}
