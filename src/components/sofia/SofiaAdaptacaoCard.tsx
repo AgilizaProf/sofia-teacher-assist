@@ -7,7 +7,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { useDashStudents } from "@/hooks/useDashLegacyData";
 
-type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+type DashStudent = { id?: string; name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
 type Variant = "port" | "mat" | "aval" | "esc" | "ci";
 type Card = { id: string; v: Variant; tag: string; title: string; meta: string; locked?: boolean };
 type DayKey = "seg" | "ter" | "qua" | "qui" | "sex";
@@ -44,6 +44,7 @@ function necessidadeLabel(pcd: string): string {
 }
 
 function studentId(s: DashStudent): string {
+  if (s.id) return s.id;
   return `dash-${(s.createdAt || s.name).replace(/\s+/g, "-")}-${s.name.toLowerCase().replace(/\s+/g, "-")}`;
 }
 
