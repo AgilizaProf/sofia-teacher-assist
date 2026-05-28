@@ -2232,8 +2232,15 @@ ${corpo}
                 <div className="kpis">
                   <div className="kpi kpi-accent">
                     <div className="kpi-label">Tempo economizado neste aluno</div>
-                    <div className="kpi-value">0h</div>
-                    <div className="kpi-sub">comece a usar a Sofia para acumular ganhos</div>
+                    <div className="kpi-value">
+                      {Math.floor(tempoAlunoMin / 60)}h
+                      <span className="small"> {String(tempoAlunoMin % 60).padStart(2, "0")}min</span>
+                    </div>
+                    <div className="kpi-sub">
+                      {tempoAlunoMin > 0
+                        ? "integra o contador do Painel"
+                        : "comece a usar a Sofia para acumular ganhos"}
+                    </div>
                   </div>
                   <div className="kpi">
                     <div className="kpi-label">Aulas adaptadas</div>
