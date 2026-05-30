@@ -1738,87 +1738,114 @@ export function Planejamento() {
     }
     setM1Generating(true);
 
-    // Quando há currículo municipal ativo, delega à edge function para que
-    // a Sofia gere atividades alinhadas às habilidades do município.
-    if (curriculoMunicipalAtivo && curriculoMunicipalDados) {
-      try {
-        const diasISO = m1Week.days.map((d) => d.iso);
-        const perDay = m1Modo === "quantidade" ? m1Qtd : m1Modo === "tempo" ? Math.max(1, Math.round(m1Min / 35)) : pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
-        const totalAtiv = diasISO.length * perDay;
-        const { data, error: fnErr } = await supabase.functions.invoke("gerar-atividade", {
-          body: {
-            etapa: "opcoes",
-            tema: m1Tema || "tema da semana",
-            anoEscolar: ctxResolvido.anoLabel,
-            disciplina: focosSelecionados.join(", ") || "Geral",
-            turma: ctxResolvido.turma,
-            curriculo_municipal: {
-              municipio: curriculoMunicipalDados.municipio,
-              habilidades: curriculoMunicipalDados.habilidades || [],
-            },
-            tipoAtividade: "variadas",
-            duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
-            opcoesSelecionadas: Array.from({ length: totalAtiv }, (_, i) => ({ titulo: `Atividade ${i + 1}` })),
-          },
-        });
-        if (fnErr) throw fnErr;
-        const opcoes = (data as { opcoes?: Array<{ titulo?: string; resumo?: string; codigo_hab?: string; tipo?: string }> })?.opcoes ?? [];
-        const dayKeys: DayKey[] = ["seg", "ter", "qua", "qui", "sex"];
-        const plan: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
-        let idx = 0;
-        for (let d = 0; d < 5; d++) {
-          for (let k = 0; k < perDay; k++) {
-            const op = opcoes[idx % Math.max(1, opcoes.length)];
-            idx++;
-            plan[dayKeys[d]].push({
-              id: `m1_${diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}`,
-              v: "port",
-              tag: op?.tipo || "Atividade",
-              title: op?.titulo || `Atividade ${idx}`,
-              bncc: op?.codigo_hab || "",
-              minutos: m1Modo === "tempo" ? Math.round(m1Min / perDay) : 40,
-              foco: focosSelecionados[0] || "Municipal",
-              motivo: op?.resumo || "",
-            });
-          }
-        }
-        setM1Plan(plan);
-        const total = (Object.values(plan) as M1Card[][]).flat().length;
-        showToast(total > 0 ? `Sofia montou ${total} atividade(s) com o currículo de ${curriculoMunicipalDados.municipio}. ✨` : "Não consegui gerar atividades agora. Tente novamente.");
-        if (total > 0) void acumularTempo("atividade_m1_m2", "Atividades geradas (M1) — currículo municipal", { multiplicador: total });
-      } catch (e) {
-        showToast(`Não consegui gerar com o currículo de ${curriculoMunicipalDados.municipio} agora. Usando BNCC como fallback.`);
-        const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
-        const plan = sofiaGenerateWeekBNCC({ etapa: ctxResolvido.etapa, anoIdx: ctxResolvido.anoIdx, tema: m1Tema, focos: focosLimitados, intensidade: pillsInt, diasISO: m1Week.days.map((d) => d.iso), quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined, minutosPorDia: m1Modo === "tempo" ? m1Min : undefined });
-        setM1Plan(plan);
-      } finally {
-        setM1Generating(false);
-      }
-      return;
-    }
+    const diasISO = m1Week.days.map((d) => d.iso);
+    const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
+    const perDay = m1Modo === "quantidade" ? m1Qtd : m1Modo === "tempo" ? Math.max(1, Math.round(m1Min / 35)) : pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
+    const turmaNome = ctxResolvido.turma || "";
 
-    // Geração local com BNCC (sem currículo municipal), agora respeitando
-    // etapa + ano selecionados (Educação Infantil, EF1/EF2/EM por ano).
-    setTimeout(() => {
-      const focosLimitados = m1MaxFocos === "all"
-        ? focosSelecionados
-        : focosSelecionados.slice(0, m1MaxFocos);
-      const plan = sofiaGenerateWeekBNCC({
-        etapa: ctxResolvido.etapa,
-        anoIdx: ctxResolvido.anoIdx,
-        tema: m1Tema,
-        focos: focosLimitados,
-        intensidade: pillsInt,
-        diasISO: m1Week.days.map((d) => d.iso),
-        quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined,
-        minutosPorDia: m1Modo === "tempo" ? m1Min : undefined,
+    // 1) BASE pelo banco BNCC — instantânea, correta por etapa/ano. O professor
+    //    já vê uma semana válida de imediato, e ela serve de rede de segurança
+    //    caso a personalização por IA não esteja disponível.
+    const planoBanco = sofiaGenerateWeekBNCC({
+      etapa: ctxResolvido.etapa,
+      anoIdx: ctxResolvido.anoIdx,
+      tema: m1Tema,
+      focos: focosLimitados,
+      intensidade: pillsInt,
+      diasISO,
+      quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined,
+      minutosPorDia: m1Modo === "tempo" ? m1Min : undefined,
+    });
+    setM1Plan(planoBanco);
+
+    // 2) PERSONALIZAÇÃO pela IA — sempre roda, considerando turma, ano, etapa,
+    //    disciplinas e alunos PCD da turma (e currículo municipal, se ativo).
+    //    O resultado substitui a base do banco por atividades pensadas para
+    //    ESTA turma. Se a IA falhar, mantemos a base do banco.
+    const alunosPCD = turmaNome
+      ? (sofiaUser.alunosPCDPorTurma[turmaNome] ?? []).map((a) => ({
+          nome: a.primeiro_nome,
+          tipo: a.pcd_codigo ?? "",
+        }))
+      : [];
+    try {
+      const totalAtiv = diasISO.length * perDay;
+      const { data, error: fnErr } = await supabase.functions.invoke("gerar-atividade", {
+        body: {
+          etapa: "opcoes",
+          tema: m1Tema || "tema da semana",
+          anoEscolar: ctxResolvido.anoLabel,
+          disciplina: focosSelecionados.join(", ") || "Geral",
+          turma: turmaNome,
+          alunosPCD,
+          incluirPCD: alunosPCD.length > 0,
+          curriculo_municipal: (curriculoMunicipalAtivo && curriculoMunicipalDados)
+            ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+            : null,
+          tipoAtividade: "variadas",
+          duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
+          opcoesSelecionadas: Array.from({ length: totalAtiv }, (_, i) => ({ titulo: `Atividade ${i + 1}` })),
+        },
       });
+
+      // Sem créditos de IA: avisa (conforme decidido) e mantém a base do banco.
+      const blocked = (data as { blocked?: boolean } | null)?.blocked === true
+        || (fnErr && /402|cr[ée]dito/i.test(String((fnErr as { message?: string })?.message || "")));
+      if (blocked) {
+        setM1Generating(false);
+        showToast(`Seus créditos de IA acabaram. Mantive a semana de ${ctxResolvido.anoLabel} montada pela BNCC — recarregue para personalizar com a Sofia. ✨`);
+        return;
+      }
+      if (fnErr) throw fnErr;
+
+      const opcoes = (data as { opcoes?: Array<{ titulo?: string; resumo?: string; codigo_hab?: string; tipo?: string }> })?.opcoes ?? [];
+      if (opcoes.length === 0) {
+        // IA não retornou nada utilizável: mantém a base do banco, sem alarme.
+        setM1Generating(false);
+        showToast(`Sofia montou a semana para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}). Revise e ajuste. ✨`);
+        return;
+      }
+
+      const dayKeys: DayKey[] = ["seg", "ter", "qua", "qui", "sex"];
+      const plan: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
+      let idx = 0;
+      for (let d = 0; d < 5; d++) {
+        for (let k = 0; k < perDay; k++) {
+          const op = opcoes[idx % Math.max(1, opcoes.length)];
+          idx++;
+          const base: M1Card = {
+            id: `m1_${diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}`,
+            v: "port",
+            tag: op?.tipo || focosSelecionados[0] || "Atividade",
+            title: op?.titulo || `Atividade ${idx}`,
+            bncc: op?.codigo_hab || "",
+            minutos: m1Modo === "tempo" ? Math.round(m1Min / perDay) : 40,
+            foco: focosSelecionados[0] || "Personalizada",
+            // O "motivo" aparece no card com um ✨, deixando explícito ao
+            // professor que aquela atividade foi pensada para a turma dele.
+            motivo: op?.resumo
+              || `Pensada para ${turmaNome || ctxResolvido.anoLabel}${alunosPCD.length ? `, considerando ${alunosPCD.length} aluno(s) com PCD` : ""}.`,
+          };
+          plan[dayKeys[d]].push(enrichM1Card(base, m1Tema));
+        }
+      }
       setM1Plan(plan);
       setM1Generating(false);
       const total = (Object.values(plan) as M1Card[][]).flat().length;
-      showToast(total > 0 ? `Sofia montou ${total} atividade(s) para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}). Revise e ajuste. ✨` : "Não há competências para este ano/etapa. Selecione outro foco ou ano.");
-      if (total > 0) void acumularTempo("atividade_m1_m2", "Atividades geradas (M1)", { multiplicador: total });
-    }, 350);
+      const ondeContexto = turmaNome ? `a turma ${turmaNome}` : `${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel})`;
+      const pcdNota = alunosPCD.length ? `, com adaptações para ${alunosPCD.length} aluno(s) PCD` : "";
+      const munNota = (curriculoMunicipalAtivo && curriculoMunicipalDados) ? `, alinhada ao currículo de ${curriculoMunicipalDados.municipio}` : "";
+      showToast(total > 0
+        ? `Sofia personalizou ${total} atividade(s) para ${ondeContexto}${pcdNota}${munNota}. ✨`
+        : `Sofia montou a semana para ${ctxResolvido.anoLabel}. Revise e ajuste.`);
+      if (total > 0) void acumularTempo("atividade_m1_m2", "Atividades personalizadas pela Sofia (M1)", { multiplicador: total });
+    } catch {
+      // Falha técnica da IA (rede etc.): mantém a base do banco silenciosamente,
+      // mas deixa claro que a base é válida e por que não personalizou agora.
+      setM1Generating(false);
+      const total = (Object.values(planoBanco) as M1Card[][]).flat().length;
+      showToast(`Sofia montou ${total} atividade(s) para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}) pela BNCC. A personalização extra não está disponível agora.`);
+    }
   };
   const limparSemanaM1 = () => {
     setM1Plan(EMPTY_M1_PLAN);
@@ -3451,7 +3478,7 @@ export function Planejamento() {
                       className="pl-btn primary"
                       onClick={gerarComSofia}
                       disabled={m1Generating}
-                    ><Sparkles size={14} /> {m1Generating ? "Sofia montando…" : (m1Stats.atividades === 0 ? "Gerar com a Sofia" : "Aceitar semana toda")}</button>
+                    ><Sparkles size={14} /> {m1Generating ? "Sofia personalizando…" : (m1Stats.atividades === 0 ? "Gerar com a Sofia" : "Aceitar semana toda")}</button>
                   </div>
                 </div>
 
@@ -3725,7 +3752,7 @@ export function Planejamento() {
                         className="pl-btn primary pl-replica-cta"
                         onClick={gerarComSofia}
                         disabled={m1Generating}
-                      ><Sparkles size={14} /> {m1Generating ? "Sofia montando…" : "Gerar com esses parâmetros"}</button>
+                      ><Sparkles size={14} /> {m1Generating ? "Sofia personalizando…" : "Gerar com esses parâmetros"}</button>
                     </div>
 
                     <div className="pl-panel">
