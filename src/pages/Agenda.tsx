@@ -63,7 +63,7 @@ const css = `
 }
 .ag-root *{box-sizing:border-box;}
 .ag-app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-@media(max-width:820px){.ag-app{grid-template-columns:1fr;}.ag-sidebar{display:none;}.ag-content{padding-top:74px;}}
+@media(max-width:820px){.ag-app{grid-template-columns:1fr;}.ag-sidebar{display:none;}.ag-content{padding-top:18px;}}
 .ag-main{padding:0;display:flex;flex-direction:column;min-width:0;}
 
 .ag-topbar{padding:18px 32px 16px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;}

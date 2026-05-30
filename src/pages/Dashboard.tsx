@@ -351,7 +351,7 @@ const css = `
 .school-clickable{cursor:pointer;transition:transform .15s, box-shadow .15s;}
 .school-clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
 @media(max-width:1200px){.hero{grid-template-columns:1fr;gap:22px;padding:24px;}.grid-2{grid-template-columns:1fr;}}
-@media(max-width:820px){.ap-app{grid-template-columns:1fr;}.ap-sidebar{display:none;}.ap-main{padding:74px 18px 18px;}}
+@media(max-width:820px){.ap-app{grid-template-columns:1fr;}.ap-sidebar{display:none;}.ap-main{padding:18px 18px 18px;}}
 @media(max-width:820px){
   .hero-metric{position:relative;}
   .hero-metric-tag{flex-wrap:nowrap;gap:6px;}

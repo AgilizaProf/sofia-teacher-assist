@@ -46,7 +46,7 @@ const css = `
 .pl-root p{margin:0;}
 
 .pl-app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-@media(max-width:820px){.pl-app{grid-template-columns:1fr;}.pl-sidebar{display:none;}.pl-workspace{padding-top:74px;}}
+@media(max-width:820px){.pl-app{grid-template-columns:1fr;}.pl-sidebar{display:none;}.pl-workspace{padding-top:18px;}}
 .pl-main{display:flex;flex-direction:column;min-width:0;}
 
 .pl-topbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40;}
