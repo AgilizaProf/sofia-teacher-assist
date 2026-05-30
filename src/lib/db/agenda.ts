@@ -75,6 +75,19 @@ export async function createAgendaEvent(input: AgendaEventInput): Promise<Agenda
   void import("@/lib/admin/track").then(({ trackEvent }) =>
     trackEvent("agenda_evento_criado", { tipo: input.type ?? "outro" })
   );
+  // Fallback: se o INSERT funcionou mas o SELECT-after-insert não devolveu a
+  // linha (ex.: timing de RLS de leitura), monta o objeto a partir do payload
+  // enviado em vez de lançar erro. O refresh posterior reconcilia com o banco.
+  if (!data) {
+    return {
+      id: `tmp_${Date.now()}`,
+      date: input.date,
+      title: input.title,
+      time: input.time ?? undefined,
+      type: input.type ?? "meeting",
+      notes: input.notes ?? undefined,
+    };
+  }
   return rowToUI(data as AgendaRow);
 }
 
