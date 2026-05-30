@@ -19,6 +19,7 @@ export function enforceSessionPersistence() {
     const noPersist = localStorage.getItem("sofia_no_persist") === "1";
     const tabAlive = sessionStorage.getItem("sofia_tab_alive") === "1";
     if (noPersist && !tabAlive) {
+      clearLocalAppData();
       void supabase.auth.signOut();
     }
     sessionStorage.setItem("sofia_tab_alive", "1");
