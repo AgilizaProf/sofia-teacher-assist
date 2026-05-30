@@ -9,7 +9,7 @@ import { ReferralCard } from "@/components/settings/ReferralCard";
 import { PlanoCard } from "@/components/settings/PlanoCard";
 import { useReducedMotion, type ReducedMotionMode } from "@/hooks/useReducedMotion";
 import { useFontSize, useHighContrast, type FontSizeMode, type HighContrastMode } from "@/hooks/useA11y";
-
+import { useSofiaTips } from "@/hooks/useA11y";
 const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: string }> = [
   { n: 1, emoji: "📋", name: "Dados reais", summary: "A Sofia só usa o que você cadastrou. Nunca inventa." },
   { n: 2, emoji: "📚", name: "BNCC", summary: "Todo plano e parecer cita habilidades BNCC oficiais." },
