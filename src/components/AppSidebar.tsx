@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type React from "react";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { supabase } from "@/integrations/supabase/client";
+import { clearLocalAppData } from "@/lib/persist/clearLocalData";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useIsAdmin } from "@/lib/admin/useIsAdmin";
 import logoImg from "@/assets/agilizaprof-logo.webp";
