@@ -816,10 +816,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         cls?.grade ? `Ano/Etapa: ${cls.grade}` : "",
         `Nível de ensino: ${nivelEnsino}`,
         aluno?.notes ? `Observações: ${aluno.notes}` : "",
-        bnccObsByAluno[a.id]?.trim()
-          ? `Observações do professor sobre o aluno: ${bnccObsByAluno[a.id].trim()}`
-          : "",
-        `${ei ? "Observações por Campos de Experiência (BNCC Infantil)" : "Avaliação BNCC do bimestre por área"}:\n${linhas}${instrucoesEI}`,
+        instrucoesEI,
       ].filter(Boolean).join("\n");
       // Busca dados reais do aluno cadastrados em /inclusao
       const anamData = anamByStudent[a.id];
@@ -849,6 +846,9 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           formato: formatoParecer || "topicos",
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
+          observacoesProfessor: bnccObsByAluno[a.id]?.trim() || "",
+          avaliacaoBncc: linhas,
+          temPeiReal: Boolean(peiByStudent[a.id]),
           registros: registrosDoAluno,
           nivel_ensino: nivelEnsino,
           tipo_relatorio: tipoRelatorio,
