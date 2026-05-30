@@ -148,6 +148,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   }, [usingInternal]);
 
   const handleLogout = async () => {
+    clearLocalAppData();
     try { await supabase.auth.signOut(); } catch { /* ignore */ }
     navigate({ to: "/auth" });
   };
