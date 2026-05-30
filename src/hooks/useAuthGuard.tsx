@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
-const PUBLIC_ROUTES = ["/auth", "/reset-password"];
+const PUBLIC_ROUTES = ["/auth", "/reset-password", "/termos", "/privacidade"];
 
 function isPublic(path: string) {
   return PUBLIC_ROUTES.some((p) => path === p || path.startsWith(p + "/"));
