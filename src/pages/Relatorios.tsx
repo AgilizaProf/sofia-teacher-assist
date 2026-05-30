@@ -838,7 +838,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
             peiResumo,
           ].filter(Boolean).join("\n")
         : peiResumo;
-      const registrosDoAluno = (regByStudent[a.id] || []).slice(0, 50);
+      // Registros do diário de inclusão (inc_reg) também só entram para PCD.
+      const registrosDoAluno = ehPcd ? (regByStudent[a.id] || []).slice(0, 50) : [];
 
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
