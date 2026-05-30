@@ -818,15 +818,18 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         aluno?.notes ? `Observações: ${aluno.notes}` : "",
         instrucoesEI,
       ].filter(Boolean).join("\n");
-      // Busca dados reais do aluno cadastrados em /inclusao
-      const anamData = anamByStudent[a.id];
+      // Inclusão (anamnese/PEI) só entra para alunos PCD. Para não-PCD,
+      // ignoramos esses dados na geração — sem apagá-los (Opção B).
+      const ehPcd = !!(a.pcd && a.pcd.trim());
+      // Busca dados reais do aluno cadastrados em /inclusao (apenas se PCD)
+      const anamData = ehPcd ? anamByStudent[a.id] : undefined;
       const anamResumoTexto = anamData
         ? Object.entries(anamData)
             .filter(([, v]) => v && typeof v === "object")
             .map(([k, v]) => `${k}: ${JSON.stringify(v).slice(0, 200)}`)
             .join("\n")
         : "";
-      const peiDoAluno = peiByStudent[a.id];
+      const peiDoAluno = ehPcd ? peiByStudent[a.id] : undefined;
       const peiResumoCompleto = peiDoAluno
         ? [
             peiDoAluno.objetivos ? `Objetivos: ${peiDoAluno.objetivos}` : "",
