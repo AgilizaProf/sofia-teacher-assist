@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Search, Home, Sparkles, BookOpen, FileText, Heart, Calendar, Settings, LogOut, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { clearLocalAppData } from "@/lib/persist/clearLocalData";
 
 type Action = {
   id: string;
