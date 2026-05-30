@@ -50,7 +50,7 @@ export function Configuracoes() {
   const { mode: rmMode, setMode: setRmMode } = useReducedMotion();
   const { mode: fsMode, setMode: setFsMode } = useFontSize();
   const { mode: hcMode, setMode: setHcMode } = useHighContrast();
-
+  const { mode: sofiaTips, setMode: setSofiaTips } = useSofiaTips();
   const RM_OPTS: Array<{ v: ReducedMotionMode; label: string; desc: string }> = [
     { v: "system", label: "Seguir sistema", desc: "Usa a preferência do seu dispositivo." },
     { v: "on", label: "Ativado", desc: "Reduz animações em todo o app." },
