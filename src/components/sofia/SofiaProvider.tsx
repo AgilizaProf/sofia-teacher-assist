@@ -480,6 +480,14 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const pushProactive = useCallback((p: Omit<SofiaProactive, "id"> & { id?: string }) => {
+    // Respeita a preferência "Mostrar cartões da Sofia ao navegar" (Configurações).
+    // Se desligada, não exibimos os cartões proativos — o resto da Sofia segue normal.
+    try {
+      if (typeof window !== "undefined") {
+        const raw = window.localStorage.getItem("aprof:ui_sofia_tips");
+        if (raw && JSON.parse(raw) === "off") return;
+      }
+    } catch { /* se falhar a leitura, mantém o padrão (mostrar) */ }
     if (proactiveTimer.current) clearTimeout(proactiveTimer.current);
     const item: SofiaProactive = { id: p.id ?? crypto.randomUUID(), message: p.message, action: p.action };
     setProactive(item);
