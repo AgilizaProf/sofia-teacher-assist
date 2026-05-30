@@ -26,7 +26,7 @@ export const appHeaderCss = `
 .app-header .ah-user .nm{font-size:11.5px;font-weight:700;color:#1B2A4E;line-height:1.2;}
 .app-header .ah-user .pl{font-size:9px;color:#FF7A45;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-top:1px;}
 @media(max-width:820px){
-  .app-header{padding:8px 14px;gap:8px;min-height:auto;margin-top:56px;}
+  .app-header{padding:8px 14px;gap:8px;min-height:auto;}
   .app-header .ah-left{min-width:0;flex:1 1 100%;order:1;}
   .app-header .ah-crumbs{font-size:11px;flex-wrap:nowrap;overflow:hidden;max-width:100%;}
   .app-header .ah-crumbs span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
