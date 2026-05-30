@@ -27,3 +27,14 @@ export function useHighContrast() {
   }, [mode]);
   return { mode, setMode };
 }
+export type SofiaTipsMode = "on" | "off";
+
+/**
+ * Preferência: exibir (ou não) os cartões proativos de boas-vindas/dicas da
+ * Sofia que aparecem ao navegar entre as páginas. Controla SOMENTE esses
+ * cartões — chat, sugestões, geração e botão flutuante seguem intactos.
+ */
+export function useSofiaTips() {
+  const [mode, setMode] = usePersistentState<SofiaTipsMode>("ui_sofia_tips", "on");
+  return { mode, setMode };
+}
