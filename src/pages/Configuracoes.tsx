@@ -196,6 +196,33 @@ export function Configuracoes() {
             )}
 </section>
 
+          <section className="cfg-section" aria-labelledby="sofia-cards-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
+            <h2 id="sofia-cards-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: "0 0 4px" }}>
+              ✨ Cartões da Sofia
+            </h2>
+            <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 16px" }}>
+              Controle os cartões de boas-vindas e dicas que a Sofia mostra ao navegar entre as páginas. Isso não afeta o chat, as sugestões nem a geração de conteúdo — a Sofia continua funcionando normalmente.
+            </p>
+            <div role="radiogroup" aria-label="Mostrar cartões da Sofia ao navegar" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Mostrar cartões da Sofia ao navegar</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
+                {([
+                  { v: "on" as const, label: "Mostrar", desc: "Exibe os cartões de boas-vindas e dicas da Sofia." },
+                  { v: "off" as const, label: "Não mostrar", desc: "Oculta os cartões. A Sofia segue disponível normalmente." },
+                ]).map((opt) => {
+                  const on = sofiaTips === opt.v;
+                  return (
+                    <button key={opt.v} type="button" role="radio" aria-checked={on} onClick={() => setSofiaTips(opt.v)}
+                      style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0", background: on ? "#FFF1E8" : "#fff", color: "#1B2A4E", cursor: "pointer" }}>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
+                      <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
           <section className="cfg-section" aria-labelledby="curriculo-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <h2 id="curriculo-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
