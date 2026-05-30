@@ -63,7 +63,7 @@ const css = `
 .inc-root input,.inc-root textarea,.inc-root select{font-family:inherit;font-size:13px;}
 
 .inc-app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-@media(max-width:820px){.inc-app{grid-template-columns:1fr;}.inc-sidebar{display:none;}.inc-main{padding-top:74px;}}
+@media(max-width:820px){.inc-app{grid-template-columns:1fr;}.inc-sidebar{display:none;}.inc-main{padding-top:18px;}}
 .inc-main{display:flex;flex-direction:column;min-width:0;}
 
 .inc-topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 26px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50;flex-wrap:wrap;}

@@ -72,7 +72,7 @@ const css = `
 .ap-root a{color:inherit;text-decoration:none;}
 .ap-root p{margin:0;}
 .ai-app{display:grid;grid-template-columns:240px 1fr 320px;min-height:100vh;transition:grid-template-columns .25s ease;}
-@media(max-width:820px){.ai-app{grid-template-columns:1fr;}.ai-sidebar{display:none;}.convo{padding-top:74px;}}
+@media(max-width:820px){.ai-app{grid-template-columns:1fr;}.ai-sidebar{display:none;}.convo{padding-top:18px;}}
 .ai-app.collapsed{grid-template-columns:240px 1fr 56px;}
 
 /* Main */
