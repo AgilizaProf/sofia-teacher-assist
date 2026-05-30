@@ -46,7 +46,7 @@ const css = `
 .pl-root p{margin:0;}
 
 .pl-app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-@media(max-width:820px){.pl-app{grid-template-columns:1fr;}.pl-sidebar{display:none;}.pl-workspace{padding-top:18px;}}
+@media(max-width:820px){.pl-app{grid-template-columns:1fr;}.pl-sidebar{display:none;}.pl-workspace{padding-top:74px;}}
 .pl-main{display:flex;flex-direction:column;min-width:0;}
 
 .pl-topbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40;}
@@ -1158,6 +1158,79 @@ function sofiaGenerateWeek(opts: {
   return plan;
 }
 
+// Geração da semana a partir do banco BNCC REAL por etapa/ano (Educação
+// Infantil por Campos de Experiência, EF1/EF2/EM por ano e disciplina).
+// Diferente de sofiaGenerateWeek (que usava um banco fixo de 2º ano), aqui as
+// competências vêm de BNCC_BY_ETAPA[etapa].anos[anoIdx], respeitando o
+// segmento e o ano selecionados pelo professor. Os `focos` selecionados são
+// usados para filtrar por disciplina/área quando possível.
+function sofiaGenerateWeekBNCC(opts: {
+  etapa: Etapa;
+  anoIdx: number;
+  tema: string;
+  focos: string[];
+  intensidade: "Leve" | "Equilibrada" | "Densa";
+  diasISO: string[];
+  quantidadePorDia?: number;
+  minutosPorDia?: number;
+}): M1Plan {
+  const tema = (opts.tema || "tema do mês").trim() || "tema do mês";
+  const etapaData = BNCC_BY_ETAPA[opts.etapa];
+  const anoData = etapaData?.anos[Math.min(opts.anoIdx, (etapaData?.anos.length ?? 1) - 1)];
+  if (!anoData) return EMPTY_M1_PLAN;
+
+  // Monta o pool de competências do ano. Se o professor selecionou focos que
+  // batem com nomes de disciplinas/áreas, prioriza essas; senão usa todas.
+  const focosLower = opts.focos.map((f) => f.toLowerCase().trim());
+  const disciplinasFiltradas = focosLower.length > 0
+    ? anoData.disciplinas.filter((d) =>
+        focosLower.some((f) => d.nome.toLowerCase().includes(f) || f.includes(d.nome.toLowerCase())))
+    : [];
+  const disciplinasUsar = disciplinasFiltradas.length > 0 ? disciplinasFiltradas : anoData.disciplinas;
+
+  // Pool de cards-base (sem id), intercalando disciplinas para variar os dias.
+  const pool: Array<Omit<M1Card, "id">> = [];
+  const maxComp = Math.max(...disciplinasUsar.map((d) => d.competencias.length), 0);
+  for (let ci = 0; ci < maxComp; ci++) {
+    disciplinasUsar.forEach((disc) => {
+      const comp = disc.competencias[ci];
+      if (!comp) return;
+      pool.push({
+        v: comp.v,
+        tag: comp.tag,
+        title: `${comp.tag}: ${tema}`,
+        bncc: comp.code,
+        minutos: comp.minutos,
+        foco: disc.nome,
+        motivo: comp.desc,
+      });
+    });
+  }
+  if (pool.length === 0) return EMPTY_M1_PLAN;
+
+  const baseDay = opts.intensidade === "Leve" ? 1 : opts.intensidade === "Densa" ? 3 : 2;
+  let perDay = baseDay;
+  if (typeof opts.quantidadePorDia === "number" && opts.quantidadePorDia > 0) {
+    perDay = Math.max(1, Math.floor(opts.quantidadePorDia));
+  } else if (typeof opts.minutosPorDia === "number" && opts.minutosPorDia > 0) {
+    perDay = Math.max(1, Math.round(opts.minutosPorDia / 35));
+  }
+
+  const dayKeys: DayKey[] = ["seg", "ter", "qua", "qui", "sex"];
+  const plan: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
+  let i = 0;
+  for (let d = 0; d < 5; d++) {
+    const cardsDoDia: M1Card[] = [];
+    for (let k = 0; k < perDay; k++) {
+      const t = pool[i % pool.length];
+      i++;
+      cardsDoDia.push({ ...t, id: `m1_${opts.diasISO[d]}_${k}_${Math.random().toString(36).slice(2, 7)}` });
+    }
+    plan[dayKeys[d]] = scaleToTarget(cardsDoDia, opts.minutosPorDia).map((c) => enrichM1Card(c, tema));
+  }
+  return plan;
+}
+
 export function Planejamento() {
   const search = useSearch({ from: "/planejamento" }) as {
     m?: MKey;
@@ -1716,7 +1789,7 @@ export function Planejamento() {
       } catch (e) {
         showToast(`Não consegui gerar com o currículo de ${curriculoMunicipalDados.municipio} agora. Usando BNCC como fallback.`);
         const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
-        const plan = sofiaGenerateWeek({ tema: m1Tema, focos: focosLimitados, intensidade: pillsInt, diasISO: m1Week.days.map((d) => d.iso), quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined, minutosPorDia: m1Modo === "tempo" ? m1Min : undefined });
+        const plan = sofiaGenerateWeekBNCC({ etapa: ctxResolvido.etapa, anoIdx: ctxResolvido.anoIdx, tema: m1Tema, focos: focosLimitados, intensidade: pillsInt, diasISO: m1Week.days.map((d) => d.iso), quantidadePorDia: m1Modo === "quantidade" ? m1Qtd : undefined, minutosPorDia: m1Modo === "tempo" ? m1Min : undefined });
         setM1Plan(plan);
       } finally {
         setM1Generating(false);
@@ -1724,12 +1797,15 @@ export function Planejamento() {
       return;
     }
 
-    // Geração local com BNCC (sem currículo municipal)
+    // Geração local com BNCC (sem currículo municipal), agora respeitando
+    // etapa + ano selecionados (Educação Infantil, EF1/EF2/EM por ano).
     setTimeout(() => {
       const focosLimitados = m1MaxFocos === "all"
         ? focosSelecionados
         : focosSelecionados.slice(0, m1MaxFocos);
-      const plan = sofiaGenerateWeek({
+      const plan = sofiaGenerateWeekBNCC({
+        etapa: ctxResolvido.etapa,
+        anoIdx: ctxResolvido.anoIdx,
         tema: m1Tema,
         focos: focosLimitados,
         intensidade: pillsInt,
@@ -1740,7 +1816,7 @@ export function Planejamento() {
       setM1Plan(plan);
       setM1Generating(false);
       const total = (Object.values(plan) as M1Card[][]).flat().length;
-      showToast(total > 0 ? `Sofia montou ${total} atividade(s) na semana. Revise e ajuste. ✨` : "Selecione ao menos um foco para a Sofia gerar.");
+      showToast(total > 0 ? `Sofia montou ${total} atividade(s) para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}). Revise e ajuste. ✨` : "Não há competências para este ano/etapa. Selecione outro foco ou ano.");
       if (total > 0) void acumularTempo("atividade_m1_m2", "Atividades geradas (M1)", { multiplicador: total });
     }, 350);
   };
