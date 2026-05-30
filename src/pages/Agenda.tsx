@@ -916,42 +916,65 @@ const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
   const confirmM4Import = async () => {
     const toImport = m4Items.filter((it) => it.selected);
     if (toImport.length === 0) { setM4ImportOpen(false); return; }
-    setM4Importing(true);
+   setM4Importing(true);
     const imported = readM4Imported(); // lê do localStorage com prefixo aprof:
-    let ok = 0;
-    for (const it of toImport) {
-      const evType: EventType = it.evt.cat === "aval" ? "eval" : "plan";
-      const notesParts: string[] = [];
-      if (it.evt.turma) notesParts.push(`Turma: ${it.evt.turma}`);
-      if (it.evt.disciplina) notesParts.push(it.evt.disciplina);
-      if (it.evt.minutos) notesParts.push(`${it.evt.minutos} min`);
-      if (it.evt.meta) notesParts.push(it.evt.meta);
-      try {
-        await create({
+
+    // Importação resiliente: cada item é independente. Um que falhe NÃO
+    // derruba os outros (Promise.allSettled). A agenda é recarregada UMA
+    // única vez ao final (refresh), evitando race conditions de múltiplas
+    // invalidações simultâneas — causa da instabilidade anterior.
+    const results = await Promise.allSettled(
+      toImport.map((it) => {
+        const evType: EventType = it.evt.cat === "aval" ? "eval" : "plan";
+        const notesParts: string[] = [];
+        if (it.evt.turma) notesParts.push(`Turma: ${it.evt.turma}`);
+        if (it.evt.disciplina) notesParts.push(it.evt.disciplina);
+        if (it.evt.minutos) notesParts.push(`${it.evt.minutos} min`);
+        if (it.evt.meta) notesParts.push(it.evt.meta);
+        return create({
           date: it.date,
           title: it.evt.title,
           time: "",
           type: evType,
           notes: notesParts.join(" · "),
         });
-        imported.add(it.evt.id);
+      }),
+    );
+
+    let ok = 0;
+    let fail = 0;
+    results.forEach((r, i) => {
+      if (r.status === "fulfilled") {
+        imported.add(toImport[i].evt.id);
         ok++;
-      } catch (e) {
-        console.error("[Agenda] falha ao importar M4:", e);
+      } else {
+        fail++;
+        console.error("[Agenda] falha ao importar M4:", r.reason);
       }
-    }
+    });
+
     writeM4Imported(imported);
     // Sync remoto via usePersistentState — dispara evento para outros dispositivos
     window.dispatchEvent(new StorageEvent("storage", {
       key: `aprof:${M4_IMPORTED_KEY}`,
       newValue: JSON.stringify([...imported]),
     }));
+    // Recarrega a agenda uma única vez ao final, garantindo lista consistente.
+    await refresh();
     setM4Importing(false);
     setM4ImportOpen(false);
     setM4Tick((n) => n + 1);
-    if (ok > 0) toast.success(`${ok} atividade(s) trazida(s) do calendário M4 para a agenda.`);
-    if (ok > 0) void acumularTempo("atividade_m4", "Atividades trazidas do M4 para a agenda", { multiplicador: ok });
-    else toast.error("Não foi possível importar as atividades.");
+
+    if (ok > 0) {
+      void acumularTempo("atividade_m4", "Atividades trazidas do M4 para a agenda", { multiplicador: ok });
+      toast.success(
+        fail > 0
+          ? `${ok} atividade(s) trazida(s); ${fail} não puderam ser importadas — tente novamente.`
+          : `${ok} atividade(s) trazida(s) do calendário M4 para a agenda.`,
+      );
+    } else {
+      toast.error("Não foi possível importar as atividades. Tente novamente em instantes.");
+    }
   };
 const deleteCalendar = async () => {
     if (!window.confirm("Remover o calendário escolar? O arquivo PDF será apagado e os eventos importados por ele serão removidos da agenda.")) return;
