@@ -67,11 +67,11 @@ export function MobileTopBar() {
     to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(to);
 
   const handleLogout = async () => {
+    clearLocalAppData();
     try { await supabase.auth.signOut(); } catch { /* ignore */ }
     setOpen(false);
     navigate({ to: "/auth" });
   };
-
   return (
     <>
       <div className="mtb-bar" role="banner">
