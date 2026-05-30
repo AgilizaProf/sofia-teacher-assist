@@ -25,7 +25,6 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
-import { SeletorCurriculo } from "@/components/shared/SeletorCurriculo";
 import { useTurmas } from "@/hooks/useTurmas";
 import { matchAnoCurriculo } from "@/lib/curriculo/matchAno";
 import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
