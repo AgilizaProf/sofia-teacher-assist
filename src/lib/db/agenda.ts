@@ -70,7 +70,7 @@ export async function createAgendaEvent(input: AgendaEventInput): Promise<Agenda
       data: payload.data as unknown as import("@/integrations/supabase/types").Json,
     })
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw error;
   void import("@/lib/admin/track").then(({ trackEvent }) =>
     trackEvent("agenda_evento_criado", { tipo: input.type ?? "outro" })
