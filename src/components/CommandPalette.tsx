@@ -42,7 +42,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         label: "Sair da conta",
         group: "Conta",
         icon: LogOut,
-        run: async () => {
+       run: async () => {
+          clearLocalAppData();
           try { await supabase.auth.signOut(); } catch { /* ignore */ }
           navigate({ to: "/auth" });
           onClose();
