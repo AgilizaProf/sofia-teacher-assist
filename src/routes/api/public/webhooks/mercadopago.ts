@@ -239,6 +239,50 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
               },
               { onConflict: "user_id" }
             );
+
+          // ---- Convide e ganhe: registra a indicação na 1ª compra paga ----
+          // Só cria se o comprador foi indicado por alguém e ainda não tem
+          // uma indicação registrada (UNIQUE em referred_user_id garante isso).
+          try {
+            const { data: buyerProfile } = await supabaseAdmin
+              .from("profiles")
+              .select("referred_by_code")
+              .eq("user_id", userId)
+              .maybeSingle();
+            const refCode = buyerProfile?.referred_by_code || null;
+            if (refCode) {
+              const { data: referrer } = await supabaseAdmin
+                .from("profiles")
+                .select("user_id")
+                .eq("referral_code", refCode)
+                .maybeSingle();
+              if (referrer?.user_id && referrer.user_id !== userId) {
+                const dias = ciclo === "anual" ? 30 : 7;
+                const creditos = ciclo === "anual" ? 1500 : 375;
+                const purchased = new Date();
+                // Carência de 7 dias (período de confirmação/reembolso) antes
+                // de liberar o bônus — process_due_referrals credita após isso.
+                const creditAt = new Date(purchased.getTime() + 7 * 24 * 60 * 60 * 1000);
+                await supabaseAdmin.from("referrals").insert({
+                  referrer_user_id: referrer.user_id,
+                  referred_user_id: userId,
+                  referral_code: refCode,
+                  plan: ciclo,
+                  purchased_at: purchased.toISOString(),
+                  credit_at: creditAt.toISOString(),
+                  referrer_bonus_days: dias,
+                  referred_bonus_days: dias,
+                  referrer_bonus_credits: creditos,
+                  referred_bonus_credits: creditos,
+                  source: "webhook",
+                });
+                // onConflict não disponível aqui; o UNIQUE(referred_user_id)
+                // simplesmente rejeita duplicatas — erro é ignorado de propósito.
+              }
+            }
+          } catch (e) {
+            console.warn("[mp-webhook] referral insert skipped", e);
+          }
         } else if (status === "paused" || status === "cancelled") {
           // Keep current_period_end so the user retains access until paid period ends.
           await supabaseAdmin
