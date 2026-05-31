@@ -278,43 +278,17 @@ export function Configuracoes() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {PRINCIPLES.map((p) => {
-                const isOpen = !!open[p.n];
-                return (
-                  <div key={p.n} style={{ border: "1px solid #E4E8F0", borderRadius: 12, background: "#FBFAF6" }}>
-                    <div style={{ padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 12 }}>
-                      <div style={{ fontSize: 22, lineHeight: 1 }} aria-hidden>{p.emoji}</div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>
-                          {p.n}. {p.name}
-                        </div>
-                        <div style={{ color: "#6B7691", fontSize: 13, marginTop: 2 }}>{p.summary}</div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => toggle(p.n)}
-                        aria-expanded={isOpen}
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 6,
-                          background: isOpen ? "#FF7A45" : "transparent",
-                          color: isOpen ? "#fff" : "#FF7A45",
-                          border: "1px solid #FF7A45",
-                          padding: "6px 10px", borderRadius: 8, fontWeight: 600, fontSize: 12,
-                          cursor: "pointer", whiteSpace: "nowrap",
-                        }}
-                      >
-                        {isOpen ? "Recolher" : "Ler na íntegra"}
-                        <ChevronDown size={14} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: ".2s" }} />
-                      </button>
+              {PRINCIPLES.map((p) => (
+                <div key={p.n} style={{ border: "1px solid #E4E8F0", borderRadius: 12, background: "#FBFAF6", padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ fontSize: 22, lineHeight: 1 }} aria-hidden>{p.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>
+                      {p.n}. {p.name}
                     </div>
-                    {isOpen && (
-                      <div style={{ padding: "0 14px 14px 48px", color: "#1B2A4E", fontSize: 13.5, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                        {getPrincipleBody(p.n)}
-                      </div>
-                    )}
+                    <div style={{ color: "#6B7691", fontSize: 13, marginTop: 2 }}>{p.summary}</div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
             </div>
             )}
