@@ -6,6 +6,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       className="toaster group"
+      mobileOffset={{ left: 12, right: 12, top: 12 }}
       toastOptions={{
         classNames: {
           toast:
@@ -14,6 +15,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },
+        // Em telas estreitas o toast precisa caber na largura disponível, em vez
+        // de encostar na borda e quebrar o texto verticalmente.
+        style: { maxWidth: "calc(100vw - 24px)", wordBreak: "normal", overflowWrap: "anywhere" },
       }}
       {...props}
     />
