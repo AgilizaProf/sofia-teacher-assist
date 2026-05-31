@@ -1897,9 +1897,9 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                         const key = `${ai}.${ci}`;
                         const cur = rub[key];
                         return (
-                          <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "1px solid var(--line-soft)", borderRadius: 10, background: "#fff" }}>
-                            <div style={{ flex: 1, fontSize: 13, color: "var(--text)" }}>{comp}</div>
-                            <div style={{ display: "inline-flex", gap: 4 }}>
+                          <div key={key} className="rel-bncc-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "1px solid var(--line-soft)", borderRadius: 10, background: "#fff" }}>
+                            <div style={{ flex: 1, minWidth: 0, fontSize: 13, color: "var(--text)", overflowWrap: "break-word", wordBreak: "normal" }}>{comp}</div>
+                            <div className="rel-bncc-btns" style={{ display: "inline-flex", gap: 4 }}>
                               {STATUS.map((s) => {
                                 const active = cur === s.k;
                                 return (
