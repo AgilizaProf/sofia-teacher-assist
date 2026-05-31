@@ -439,8 +439,8 @@ export function TrilhasPanel() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 18 }}>
-      <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: 20 }}>
+    <div style={{ display: "grid", gap: 18, minWidth: 0, maxWidth: "100%" }}>
+      <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: 20, minWidth: 0, maxWidth: "100%" }}>
         <h2 style={{ fontSize: 18, marginBottom: 4 }}>Nova trilha semestral <small style={{ color: "var(--muted)", fontWeight: 400, fontSize: 12.5, marginLeft: 6 }}>· Sofia distribui ~20 semanas com BNCC</small></h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10, marginTop: 14 }}>
           <select
@@ -553,22 +553,22 @@ export function TrilhasPanel() {
         </div>
       </div>
 
-      <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: 20 }}>
+      <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 14, padding: 20, minWidth: 0, maxWidth: "100%" }}>
         <h2 style={{ fontSize: 18, marginBottom: 12 }}>Suas trilhas</h2>
         {trilhas.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhuma trilha ainda. Crie a primeira acima.</p>}
         <div style={{ display: "grid", gap: 10 }}>
           {trilhas.map((t) => (
-            <div key={t.id} style={{ border: "1px solid var(--line)", borderRadius: 10, padding: 14, cursor: "pointer", background: selected === t.id ? "#FFF7ED" : "#fff" }} onClick={() => setSelected(selected === t.id ? null : t.id)}>
+            <div key={t.id} style={{ border: "1px solid var(--line)", borderRadius: 10, padding: 14, cursor: "pointer", background: selected === t.id ? "#FFF7ED" : "#fff", minWidth: 0, maxWidth: "100%", overflowWrap: "break-word" }} onClick={() => setSelected(selected === t.id ? null : t.id)}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}><BookOpen size={14} style={{ display: "inline", marginRight: 6 }} />{t.tema_central}</div>
-                  <div style={{ color: "var(--muted)", fontSize: 12.5, marginTop: 4 }}>{t.turma} · {t.ano_escolar} · {t.disciplina} · {t.semestre}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14, overflowWrap: "break-word", wordBreak: "normal" }}><BookOpen size={14} style={{ display: "inline", marginRight: 6 }} />{t.tema_central}</div>
+                  <div style={{ color: "var(--muted)", fontSize: 12.5, marginTop: 4, overflowWrap: "break-word" }}>{t.turma} · {t.ano_escolar} · {t.disciplina} · {t.semestre}</div>
                 </div>
                 <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); excluir(t.id); }} title="Excluir trilha"><Trash2 size={14} /></button>
               </div>
               {selected === t.id && (
                 <div style={{ marginTop: 14, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
-                  {t.justificativa && <p style={{ fontSize: 13, color: "var(--ink-2)", marginBottom: 12 }}>{t.justificativa}</p>}
+                  {t.justificativa && <p style={{ fontSize: 13, color: "var(--ink-2)", marginBottom: 12, overflowWrap: "break-word", wordBreak: "normal" }}>{t.justificativa}</p>}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
                     <h3 style={{ fontSize: 14, margin: 0 }}>
                       <Calendar size={14} style={{ display: "inline", marginRight: 6 }} />{semanas.length} semana(s)
