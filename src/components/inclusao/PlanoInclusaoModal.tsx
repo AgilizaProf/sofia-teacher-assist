@@ -41,12 +41,27 @@ type Aluno = {
   turma?: string;
 };
 
+type DiarioBordoItem = {
+  emoji?: string;
+  titulo?: string;
+  texto?: string;
+  tags?: string[];
+  data?: string;
+  turma?: string;
+  atividadeTitulo?: string;
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
   aluno: Aluno | null;
   anamneseResumo: string;
   peiResumo?: string;
+  /** Resumos das atividades já realizadas com este aluno (para a Sofia não
+   *  repetir e construir progressão). Mesmo formato usado no editor regular. */
+  historico?: string[];
+  /** Registros recentes do diário de bordo da turma do aluno. */
+  diarioBordo?: DiarioBordoItem[];
   onSaved: (plano: PlanoInclusao) => void;
 };
 
@@ -275,7 +290,7 @@ type PlanoItem = {
   incluir: boolean;
 };
 
-export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSaved }: Props) {
+export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiResumo, historico = [], diarioBordo = [], onSaved }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
   const creditosGate = useCreditosGate();
   const { isAtivo: municipalAtivo, curriculo: curriculoMunicipalDados } = useCurriculoMunicipal();
@@ -360,6 +375,10 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
         curriculo_municipal: municipalAtivo && curriculoMunicipalDados
           ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
           : null,
+        // Mesmos sinais que o editor regular envia: atividades já realizadas
+        // (para progressão / não repetir) e diário de bordo recente da turma.
+        historico,
+        diarioBordo,
       },
     });
     if (error) throw error;
