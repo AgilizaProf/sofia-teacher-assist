@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Shield, ChevronDown } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
-import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
+import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
 import { ReferralCard } from "@/components/settings/ReferralCard";
@@ -26,25 +26,7 @@ const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: strin
   { n: 13, emoji: "📈", name: "Progressividade", summary: "A Sofia não vê retratos. Vê percursos. Compara registros anteriores para revelar avanços." },
 ];
 
-function getPrincipleBody(idx: number): string {
-  // Split SOFIA_CONSTITUTION by numbered headers "1.", "2." ... "8." or "REGRA DE OURO"
-  const text = SOFIA_CONSTITUTION;
-  const re = /(^|\n)(\d+)\.\s/g;
-  const matches: Array<{ n: number; start: number }> = [];
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
-    matches.push({ n: parseInt(m[2], 10), start: m.index + (m[1] ? 1 : 0) });
-  }
-  const target = matches.find((x) => x.n === idx);
-  if (!target) return "";
-  const next = matches.find((x) => x.start > target.start);
-  const end = next ? next.start : text.indexOf("\nREGRA DE OURO", target.start);
-  return text.slice(target.start, end > target.start ? end : text.length).trim();
-}
-
 export function Configuracoes() {
-  const [open, setOpen] = useState<Record<number, boolean>>({});
-  const toggle = (n: number) => setOpen((o) => ({ ...o, [n]: !o[n] }));
   const [principlesOpen, setPrinciplesOpen] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const { mode: rmMode, setMode: setRmMode } = useReducedMotion();
@@ -278,43 +260,17 @@ export function Configuracoes() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {PRINCIPLES.map((p) => {
-                const isOpen = !!open[p.n];
-                return (
-                  <div key={p.n} style={{ border: "1px solid #E4E8F0", borderRadius: 12, background: "#FBFAF6" }}>
-                    <div style={{ padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 12 }}>
-                      <div style={{ fontSize: 22, lineHeight: 1 }} aria-hidden>{p.emoji}</div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>
-                          {p.n}. {p.name}
-                        </div>
-                        <div style={{ color: "#6B7691", fontSize: 13, marginTop: 2 }}>{p.summary}</div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => toggle(p.n)}
-                        aria-expanded={isOpen}
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 6,
-                          background: isOpen ? "#FF7A45" : "transparent",
-                          color: isOpen ? "#fff" : "#FF7A45",
-                          border: "1px solid #FF7A45",
-                          padding: "6px 10px", borderRadius: 8, fontWeight: 600, fontSize: 12,
-                          cursor: "pointer", whiteSpace: "nowrap",
-                        }}
-                      >
-                        {isOpen ? "Recolher" : "Ler na íntegra"}
-                        <ChevronDown size={14} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: ".2s" }} />
-                      </button>
+              {PRINCIPLES.map((p) => (
+                <div key={p.n} style={{ border: "1px solid #E4E8F0", borderRadius: 12, background: "#FBFAF6", padding: "12px 14px", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{ fontSize: 22, lineHeight: 1 }} aria-hidden>{p.emoji}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>
+                      {p.n}. {p.name}
                     </div>
-                    {isOpen && (
-                      <div style={{ padding: "0 14px 14px 48px", color: "#1B2A4E", fontSize: 13.5, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-                        {getPrincipleBody(p.n)}
-                      </div>
-                    )}
+                    <div style={{ color: "#6B7691", fontSize: 13, marginTop: 2 }}>{p.summary}</div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
             </div>
             )}
