@@ -26,7 +26,7 @@ type M4UserEvt = {
   cat: "aulas" | "aval";
   title: string;
   meta?: string;
-  source: "atv" | "pcd";
+  source: "atv" | "pcd" | "m3" | "trilha";
   turma?: string;
   disciplina?: string;
   minutos?: number;
