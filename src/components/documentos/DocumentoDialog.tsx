@@ -6,66 +6,83 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Printer, FileText, Loader2, History, Trash2 } from "lucide-react";
+import { Printer, FileText, Loader2, History, Trash2, Package } from "lucide-react";
 import { toast } from "sonner";
 import { useTurmas } from "@/hooks/useTurmas";
-import { useAgenda } from "@/hooks/useAgenda";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { supabase } from "@/integrations/supabase/client";
-import { buildDocumento, type FonteAtividade } from "@/lib/documentos/builders";
-import { imprimirDocumento } from "@/lib/documentos/print";
-import { exportarDocx } from "@/lib/documentos/docx";
-import { saveDocumento, listDocumentos, deleteDocumento, type DocumentoSalvo } from "@/lib/db/documentos";
-import type { DocumentoModo, DocumentoPlanejamento, DocumentoTipo } from "@/lib/documentos/types";
-import { DocumentoPreview } from "./DocumentoPreview";
+import { buildRelatorioBase, decidirTipoRelatorio } from "@/lib/documentos/relatorioBuilder";
+import {
+  exportarRelatoriosZip,
+} from "@/lib/documentos/relatorioDocx";
+import {
+  imprimirRelatorioEditorial,
+  exportarRelatorioEditorialWord,
+} from "@/lib/documentos/relatorioEditorial";
+import {
+  saveRelatorioDoc,
+  listRelatoriosDoc,
+  deleteRelatorioDoc,
+  type RelatorioSalvo,
+} from "@/lib/db/relatoriosDoc";
+import type {
+  RelatorioDocumento,
+  RelatorioModo,
+  RelatorioTipo,
+} from "@/lib/documentos/relatorioTypes";
+import {
+  PERIODOS_RELATORIO,
+  datasDoPeriodo,
+  type RelatorioPeriodoTipo,
+} from "@/lib/documentos/relatorioPeriodo";
+import { RelatorioPreview } from "./RelatorioPreview";
 
-type Props = {
+export type RelatorioDialogProps = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  tipo: DocumentoTipo;
-  /** Pré-seleção opcional. */
-  defaultTurmaId?: string | null;
+  /** Pré-seleção opcional do(a) aluno(a) (clientId = id do Inclusão / hash). */
+  defaultAlunoClientId?: string | null;
+  /** Forçar tipo (se omitido, é inferido pelo nível da turma + flag PCD). */
+  forcarTipo?: RelatorioTipo;
 };
 
-const TITULOS: Record<DocumentoTipo, string> = {
-  atividades: "Planejamento de Atividades",
-  pcd: "Planejamento de Atividades PCD",
-  trilhas: "Planejamento — Trilha Semestral",
-  sofia: "Planejamento — Sugestões da Sofia",
+const TITULOS: Record<RelatorioTipo, string> = {
+  geral: "Relatório de Desempenho",
+  ei: "Parecer Descritivo (EI)",
+  pcd: "Relatório de Inclusão (PCD)",
+  semestral: "Relatório Semestral",
 };
 
-function todayISO(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
-function addDaysISO(iso: string, days: number): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  const dt = new Date(y, (m ?? 1) - 1, d ?? 1);
-  dt.setDate(dt.getDate() + days);
-  const mm = String(dt.getMonth() + 1).padStart(2, "0");
-  const dd = String(dt.getDate()).padStart(2, "0");
-  return `${dt.getFullYear()}-${mm}-${dd}`;
-}
-
-export function DocumentoDialog({ open, onOpenChange, tipo, defaultTurmaId }: Props) {
+export function RelatorioDialog({
+  open,
+  onOpenChange,
+  defaultAlunoClientId,
+  forcarTipo,
+}: RelatorioDialogProps) {
   const { turmas } = useTurmas();
-  const { events } = useAgenda();
   const { students } = useInclusaoStudents();
 
   const [escola, setEscola] = useState("");
   const [professor, setProfessor] = useState("");
-  const [turmaId, setTurmaId] = useState<string>(defaultTurmaId ?? "");
-  const [dataInicio, setDataInicio] = useState(todayISO());
-  const [dataFim, setDataFim] = useState(addDaysISO(todayISO(), 7));
-  const [modo, setModo] = useState<DocumentoModo>("completo");
-  const [doc, setDoc] = useState<DocumentoPlanejamento | null>(null);
+  const [alunoId, setAlunoId] = useState<string>(defaultAlunoClientId ?? "");
+  const [periodoTipo, setPeriodoTipo] = useState<RelatorioPeriodoTipo>("1bim");
+  const [ano, setAno] = useState<number>(new Date().getFullYear());
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
+  const [modo, setModo] = useState<RelatorioModo>("completo");
+  const [doc, setDoc] = useState<RelatorioDocumento | null>(null);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<"form" | "preview" | "historico">("form");
-  const [historico, setHistorico] = useState<DocumentoSalvo[]>([]);
+  const [historico, setHistorico] = useState<RelatorioSalvo[]>([]);
 
-  // Preenche escola/professor a partir do perfil quando abre.
+  // Sincroniza período/ano → datas (editáveis depois).
+  useEffect(() => {
+    const { inicio, fim } = datasDoPeriodo(periodoTipo, ano);
+    setDataInicio(inicio);
+    setDataFim(fim);
+  }, [periodoTipo, ano]);
+
+  // Pré-preenche escola/professor pelo perfil.
   useEffect(() => {
     if (!open) return;
     (async () => {
@@ -84,84 +101,86 @@ export function DocumentoDialog({ open, onOpenChange, tipo, defaultTurmaId }: Pr
   }, [open]);
 
   useEffect(() => {
+    if (defaultAlunoClientId && !alunoId) setAlunoId(defaultAlunoClientId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultAlunoClientId]);
+
+  useEffect(() => {
     if (open && tab === "historico") {
-      void listDocumentos({ tipo, turmaId: turmaId || undefined })
+      void listRelatoriosDoc({ alunoClientId: alunoId || undefined })
         .then(setHistorico)
         .catch(() => setHistorico([]));
     }
-  }, [open, tab, tipo, turmaId]);
+  }, [open, tab, alunoId]);
 
-  const turma = useMemo(() => turmas.find((t) => t.id === turmaId) ?? null, [turmas, turmaId]);
+  const aluno = useMemo(() => students.find((s) => s.id === alunoId) ?? null, [students, alunoId]);
+  const turma = useMemo(() => {
+    if (!aluno) return null;
+    return turmas.find((t) => (t.name || "").toLowerCase() === (aluno.turma || "").toLowerCase()) ?? null;
+  }, [turmas, aluno]);
 
-  const podeGerar = !!(escola.trim() && professor.trim() && turmaId && dataInicio && dataFim && dataFim >= dataInicio);
+  const tipo: RelatorioTipo = useMemo(() => {
+    if (forcarTipo) return forcarTipo;
+    const pcd = !!(aluno && ((aluno.cids && aluno.cids.length > 0) || aluno.cid || aluno.diag));
+    return decidirTipoRelatorio({
+      nivelTexto: turma?.grade ?? aluno?.anoEscolar ?? null,
+      pcd,
+      semestral: periodoTipo === "1sem" || periodoTipo === "2sem",
+    });
+  }, [forcarTipo, aluno, turma, periodoTipo]);
 
-  const fontesParaTurma = useMemo<FonteAtividade[]>(() => {
-    if (!turma) return [];
-    // Filtra eventos da agenda pelo período e turma (turma aparece no título/notas).
-    const turmaNome = turma.name.toLowerCase();
-    return events
-      .filter((e) => e.date >= dataInicio && e.date <= dataFim)
-      .filter((e) =>
-        (e.title || "").toLowerCase().includes(turmaNome) ||
-        (e.notes || "").toLowerCase().includes(turmaNome),
-      )
-      .map((e) => ({
-        data: e.date,
-        titulo: e.title,
-        notas: e.notes,
-      }));
-  }, [events, turma, dataInicio, dataFim]);
-
-  const cidsAlunos = useMemo(() => {
-    if (tipo !== "pcd" || !turma) return [];
-    return students
-      .filter((s) => (s.turma || "").toLowerCase() === turma.name.toLowerCase())
-      .flatMap((s) => s.cids ?? (s.cid ? [s.cid] : []));
-  }, [tipo, turma, students]);
+  const podeGerar = !!(escola.trim() && professor.trim() && aluno && dataInicio && dataFim && dataFim >= dataInicio);
 
   async function gerar() {
-    if (!podeGerar || !turma) return;
+    if (!podeGerar || !aluno) return;
     setBusy(true);
     try {
-      const built = buildDocumento({
+      const periodoLabel =
+        PERIODOS_RELATORIO.find((p) => p.value === periodoTipo)?.label ?? periodoTipo;
+      const base = buildRelatorioBase({
         tipo,
-        escola,
-        turmaId,
-        turmaNome: turma.name,
-        nivelTexto: turma.grade,
-        professor,
+        modo,
+        periodo: periodoLabel,
         dataInicio,
         dataFim,
-        modo,
-        fontes: fontesParaTurma,
-        cidsAlunos,
+        escola,
+        professor,
+        turmaId: turma?.id ?? null,
+        turmaNome: aluno.turma || turma?.name || "",
+        nivelTexto: turma?.grade ?? aluno.anoEscolar ?? null,
+        alunoClientId: aluno.id,
+        alunoNome: aluno.name,
+        anoReferencia: String(ano),
+        diagnostico: aluno.diag || null,
+        cids: aluno.cids ?? (aluno.cid ? [aluno.cid] : []),
+        curriculoId: turma?.curriculo_id ?? null,
       });
-      const saved = await saveDocumento(built);
+      const saved = await saveRelatorioDoc(base);
       setDoc(saved.conteudo);
       setTab("preview");
-      toast.success("Documento gerado e salvo.");
+      toast.success("Relatório gerado e salvo.");
     } catch (e) {
       console.error(e);
-      toast.error("Não foi possível gerar o documento.");
+      toast.error("Não foi possível gerar o relatório.");
     } finally {
       setBusy(false);
     }
   }
 
-  async function salvar(next: DocumentoPlanejamento) {
+  async function salvar(next: RelatorioDocumento) {
     setDoc(next);
     try {
-      await saveDocumento(next);
+      await saveRelatorioDoc(next);
     } catch (e) {
       console.error(e);
     }
   }
 
-  function abrirHistorico(item: DocumentoSalvo) {
+  function abrirHistorico(item: RelatorioSalvo) {
     setDoc(item.conteudo);
     setEscola(item.conteudo.escola);
     setProfessor(item.conteudo.professor);
-    setTurmaId(item.conteudo.turmaId ?? "");
+    setAlunoId(item.alunoClientId);
     setDataInicio(item.dataInicio);
     setDataFim(item.dataFim);
     setModo(item.modo);
@@ -169,21 +188,31 @@ export function DocumentoDialog({ open, onOpenChange, tipo, defaultTurmaId }: Pr
   }
 
   async function removerHistorico(id: string) {
-    if (!confirm("Excluir este documento?")) return;
+    if (!confirm("Excluir este relatório?")) return;
     try {
-      await deleteDocumento(id);
+      await deleteRelatorioDoc(id);
       setHistorico((prev) => prev.filter((d) => d.id !== id));
-      toast.success("Documento excluído.");
+      toast.success("Relatório excluído.");
     } catch {
       toast.error("Falha ao excluir.");
     }
+  }
+
+  async function exportarZipHistorico() {
+    const itens = await listRelatoriosDoc({ alunoClientId: alunoId || undefined });
+    if (itens.length === 0) {
+      toast.error("Nenhum relatório salvo para exportar.");
+      return;
+    }
+    await exportarRelatoriosZip(itens.map((i) => i.conteudo));
+    toast.success(`ZIP gerado com ${itens.length} arquivo(s).`);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl w-[95vw] max-h-[92vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>📄 {TITULOS[tipo]}</DialogTitle>
+          <DialogTitle>📝 {TITULOS[tipo]}</DialogTitle>
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="flex-1 flex flex-col overflow-hidden">
@@ -204,22 +233,24 @@ export function DocumentoDialog({ open, onOpenChange, tipo, defaultTurmaId }: Pr
                 <Input value={professor} onChange={(e) => setProfessor(e.target.value)} placeholder="Maria Souza" />
               </div>
               <div className="space-y-1.5">
-                <Label>Turma</Label>
-                <Select value={turmaId} onValueChange={setTurmaId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione a turma" /></SelectTrigger>
+                <Label>Aluno(a)</Label>
+                <Select value={alunoId} onValueChange={setAlunoId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o(a) aluno(a)" /></SelectTrigger>
                   <SelectContent>
-                    {turmas.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name} {t.grade ? `· ${t.grade}` : ""}</SelectItem>
+                    {students.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name} {s.turma ? `· ${s.turma}` : ""}
+                      </SelectItem>
                     ))}
-                    {turmas.length === 0 ? (
-                      <SelectItem value="__none" disabled>Nenhuma turma cadastrada</SelectItem>
+                    {students.length === 0 ? (
+                      <SelectItem value="__none" disabled>Nenhum(a) aluno(a) cadastrado(a)</SelectItem>
                     ) : null}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Modo de exibição</Label>
-                <RadioGroup value={modo} onValueChange={(v) => setModo(v as DocumentoModo)} className="flex gap-4 pt-2">
+                <Label>Modo</Label>
+                <RadioGroup value={modo} onValueChange={(v) => setModo(v as RelatorioModo)} className="flex gap-4 pt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <RadioGroupItem value="completo" /> Completo
                   </label>
@@ -227,6 +258,21 @@ export function DocumentoDialog({ open, onOpenChange, tipo, defaultTurmaId }: Pr
                     <RadioGroupItem value="simplificado" /> Simplificado
                   </label>
                 </RadioGroup>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Período</Label>
+                <Select value={periodoTipo} onValueChange={(v) => setPeriodoTipo(v as RelatorioPeriodoTipo)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PERIODOS_RELATORIO.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Ano</Label>
+                <Input type="number" value={ano} onChange={(e) => setAno(Number(e.target.value) || ano)} />
               </div>
               <div className="space-y-1.5">
                 <Label>Data de início</Label>
@@ -250,33 +296,43 @@ export function DocumentoDialog({ open, onOpenChange, tipo, defaultTurmaId }: Pr
             {doc ? (
               <>
                 <div className="flex flex-wrap justify-end gap-2 px-4 pt-2">
-                  <Button variant="outline" size="sm" onClick={imprimirDocumento}>
+                  <Button variant="outline" size="sm" onClick={() => imprimirRelatorioEditorial(doc)}>
                     <Printer className="w-4 h-4 mr-2" /> Imprimir / Salvar PDF
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => exportarDocx(doc)}>
+                  <Button variant="outline" size="sm" onClick={() => exportarRelatorioEditorialWord(doc)}>
                     <FileText className="w-4 h-4 mr-2" /> Exportar Word
                   </Button>
                 </div>
-                <DocumentoPreview doc={doc} editable onChange={salvar} />
+                <RelatorioPreview doc={doc} editable onChange={salvar} />
               </>
             ) : (
-              <p className="p-6 text-sm text-muted-foreground">Gere o documento na aba "Dados".</p>
+              <p className="p-6 text-sm text-muted-foreground">Gere o relatório na aba "Dados".</p>
             )}
           </TabsContent>
 
-          <TabsContent value="historico" className="flex-1 overflow-auto px-6 pb-6">
+          <TabsContent value="historico" className="flex-1 overflow-auto px-6 pb-6 space-y-3">
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={exportarZipHistorico} disabled={historico.length === 0}>
+                <Package className="w-4 h-4 mr-2" /> Baixar todos (ZIP)
+              </Button>
+            </div>
             {historico.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum documento salvo ainda para este tipo.</p>
+              <p className="text-sm text-muted-foreground">Nenhum relatório salvo ainda.</p>
             ) : (
               <ul className="divide-y border rounded-md">
                 {historico.map((item) => (
                   <li key={item.id} className="flex items-center justify-between px-3 py-2">
                     <button className="text-left flex-1 hover:underline" onClick={() => abrirHistorico(item)}>
-                      <div className="font-medium text-sm">{item.conteudo.turmaNome} — {item.dataInicio} a {item.dataFim}</div>
+                      <div className="font-medium text-sm">
+                        {item.alunoNome} — {item.periodo}
+                      </div>
                       <div className="text-xs text-muted-foreground">
-                        {item.modo === "completo" ? "Completo" : "Simplificado"} · salvo {new Date(item.updatedAt).toLocaleString("pt-BR")}
+                        {TITULOS[item.tipo]} · {item.modo === "completo" ? "Completo" : "Simplificado"} · v{item.versao} · {new Date(item.updatedAt).toLocaleString("pt-BR")}
                       </div>
                     </button>
+                    <Button variant="ghost" size="sm" onClick={() => exportarRelatorioEditorialWord(item.conteudo)} aria-label="Exportar Word">
+                      <FileText className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => removerHistorico(item.id)} aria-label="Excluir">
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -291,12 +347,15 @@ export function DocumentoDialog({ open, onOpenChange, tipo, defaultTurmaId }: Pr
   );
 }
 
-/** Botão pronto para abrir o DocumentoDialog. */
-export function GerarDocumentoButton({
-  tipo, defaultTurmaId, label = "Gerar Documento", className,
+/** Botão pronto para abrir o RelatorioDialog. */
+export function GerarRelatorioButton({
+  defaultAlunoClientId,
+  forcarTipo,
+  label = "Editor de Relatório",
+  className,
 }: {
-  tipo: DocumentoTipo;
-  defaultTurmaId?: string | null;
+  defaultAlunoClientId?: string | null;
+  forcarTipo?: RelatorioTipo;
   label?: string;
   className?: string;
 }) {
@@ -304,9 +363,14 @@ export function GerarDocumentoButton({
   return (
     <>
       <Button variant="outline" size="sm" className={className} onClick={() => setOpen(true)}>
-        <FileText className="w-4 h-4 mr-2" /> 📄 {label}
+        <FileText className="w-4 h-4 mr-2" /> 📝 {label}
       </Button>
-      <DocumentoDialog open={open} onOpenChange={setOpen} tipo={tipo} defaultTurmaId={defaultTurmaId} />
+      <RelatorioDialog
+        open={open}
+        onOpenChange={setOpen}
+        defaultAlunoClientId={defaultAlunoClientId}
+        forcarTipo={forcarTipo}
+      />
     </>
   );
 }
