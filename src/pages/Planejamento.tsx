@@ -508,6 +508,10 @@ type M1Card = {
   conceitos?: string[];
   extensoes?: string[];
   licaoCasa?: string;
+  // Quando true, este card NÃO deve gerar um evento espelho no calendário M4.
+  // Usado por cards agendados a partir do editor de Atividades (M1/M2), que já
+  // criam seu próprio evento atv/pcd na data exata — evita duplicata no M4.
+  noM4Sync?: boolean;
 };
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1_PLAN: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
@@ -1953,7 +1957,7 @@ export function Planejamento() {
     cat: M4Cat;
     title: string;
     meta?: string;
-    source: "atv" | "pcd" | "m3";
+    source: "atv" | "pcd" | "m3" | "trilha";
     m3Dia?: DayKey;
     m3CardId?: string;
   };
@@ -2154,6 +2158,9 @@ export function Planejamento() {
         const iso = isoByDia[dia];
         if (!iso) return;
         m1Plan[dia].forEach((c) => {
+          // Cards agendados pelo editor M1/M2 já têm seu próprio evento atv/pcd
+          // na data exata — não duplicar no calendário.
+          if (c.noM4Sync) return;
           const evt: M4UserEvt = {
             id: `m3:${dia}:${c.id}`,
             cat: "aulas",
@@ -4271,6 +4278,7 @@ export function Planejamento() {
                                         {e.source === "m3" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(255,122,69,.15)", color: "#9A3412", fontWeight: 700, letterSpacing: ".04em" }}>M3 · Sofia</span>}
                                         {e.source === "atv" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(59,130,246,.15)", color: "#1d4ed8", fontWeight: 700, letterSpacing: ".04em" }}>M1 · Atividade</span>}
                                         {e.source === "pcd" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(16,185,129,.15)", color: "#047857", fontWeight: 700, letterSpacing: ".04em" }}>M2 · PCD</span>}
+                                        {e.source === "trilha" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(139,92,246,.15)", color: "#6d28d9", fontWeight: 700, letterSpacing: ".04em" }}>M7 · Trilha</span>}
                                       </div>
                                     </div>
                                     {e.source === "m3" && e.m3Dia && e.m3CardId ? (
