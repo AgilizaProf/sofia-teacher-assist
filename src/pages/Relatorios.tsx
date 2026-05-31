@@ -241,6 +241,15 @@ const css = `
   /* Card proativo da Sofia ("X alunos prontos pra parecer…") oculto no mobile
    * a pedido — ele cobria/quebrava em telas pequenas. Permanece no desktop. */
   .rel-sofia-bubble{display:none!important;}
+  /* Avaliação BNCC: empilha a descrição da habilidade acima dos botões de
+   * status (NO/NA/ED/CO), para o texto não quebrar letra a letra. */
+  .rel-bncc-row{flex-direction:column;align-items:stretch!important;gap:8px!important;}
+  .rel-bncc-btns{justify-content:flex-start;flex-wrap:wrap;}
+  /* Rodapé: botões em largura total, sem esmagar. */
+  .rel-bncc-foot{flex-direction:column;align-items:stretch;}
+  .rel-bncc-foot > button,.rel-bncc-foot > div{width:100%;}
+  .rel-bncc-foot > div{flex-direction:column;}
+  .rel-bncc-foot > div > button{width:100%;justify-content:center;}
 }
 @media (max-width:480px){
   .rel-page{padding:14px 12px;}
