@@ -275,7 +275,7 @@ export const Route = createFileRoute("/api/public/webhooks/mercadopago")({
                   referrer_bonus_credits: creditos,
                   referred_bonus_credits: creditos,
                   source: "webhook",
-                });
+                } as any);
                 // onConflict não disponível aqui; o UNIQUE(referred_user_id)
                 // simplesmente rejeita duplicatas — erro é ignorado de propósito.
               }
