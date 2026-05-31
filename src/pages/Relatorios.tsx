@@ -238,6 +238,9 @@ const css = `
   .rel-bulk{grid-column:span 1;}
   .rel-hero h1{font-size:28px;}
   .rel-page{padding:18px;}
+  /* Card proativo da Sofia ("X alunos prontos pra parecer…") oculto no mobile
+   * a pedido — ele cobria/quebrava em telas pequenas. Permanece no desktop. */
+  .rel-sofia-bubble{display:none!important;}
 }
 @media (max-width:480px){
   .rel-page{padding:14px 12px;}
@@ -1444,7 +1447,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           </div>
 
           {bubbleMsg && (
-            <div style={{ marginTop: 18, background: "linear-gradient(135deg,#1E1B2E 0%,#15131F 100%)", border: "1px solid #2A2438", borderRadius: 14, padding: "16px 18px", color: "#fff", display: "flex", gap: 14, alignItems: "center" }}>
+            <div className="rel-sofia-bubble" style={{ marginTop: 18, background: "linear-gradient(135deg,#1E1B2E 0%,#15131F 100%)", border: "1px solid #2A2438", borderRadius: 14, padding: "16px 18px", color: "#fff", display: "flex", gap: 14, alignItems: "center" }}>
               <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#F97316,#EA580C)", display: "grid", placeItems: "center" }}><Sparkles size={16} color="#fff" /></div>
               <div style={{ flex: 1, fontSize: 14, lineHeight: 1.5 }}>{bubbleMsg}</div>
               <button onClick={goLote} style={{ background: "linear-gradient(135deg,#F97316,#EA580C)", color: "#fff", padding: "9px 14px", borderRadius: 10, fontWeight: 700, fontSize: 13, border: 0, cursor: "pointer" }}>Continuar com a Sofia</button>
