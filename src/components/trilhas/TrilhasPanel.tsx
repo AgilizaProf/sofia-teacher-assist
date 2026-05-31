@@ -737,6 +737,42 @@ useEffect(() => {
   const persistKey = `trilha_plano_${trilha.id}_${semana.id}`;
   const [formato, setFormato] = usePersistentState<"completo" | "topicos">(`${persistKey}_formato`, "completo");
   const [selIds, setSelIds] = usePersistentState<number[]>(`${persistKey}_sel`, dias.map((_, i) => i));
+
+  // ===== Integração com o calendário M4 (camadas) =====
+  // Mesma chave usada em src/pages/Planejamento.tsx (módulo M4) e lida na
+  // Agenda. Ao salvar um dia da trilha com data atribuída, espelhamos um
+  // evento source="trilha" na data exata — assim a atividade da trilha (M7)
+  // aparece no calendário, como já acontece com M1/M2/M3.
+  type M4TrilhaEvt = {
+    id: string;
+    cat: "aulas" | "aval" | "eventos" | "feriados" | "bncc" | "sofia";
+    title: string;
+    meta?: string;
+    source: "atv" | "pcd" | "m3" | "trilha";
+    turma?: string;
+    disciplina?: string;
+    minutos?: number;
+    m3Dia?: string;
+    m3CardId?: string;
+  };
+  type M4TrilhaStore = Record<string, M4TrilhaEvt[]>;
+  const [, setM4UserEvents] = usePersistentState<M4TrilhaStore>("plan_m4_user_events", {});
+  // Insere/atualiza um evento de trilha no calendário por id determinístico.
+  // Remove qualquer ocorrência anterior do mesmo id (inclusive em outra data,
+  // caso a professora tenha mudado o dia) antes de inserir na data atual.
+  const upsertM4Trilha = (iso: string, evt: M4TrilhaEvt) => {
+    if (!iso) return;
+    setM4UserEvents((store) => {
+      const next: M4TrilhaStore = {};
+      Object.entries(store).forEach(([d, list]) => {
+        const filtered = list.filter((e) => e.id !== evt.id);
+        if (filtered.length) next[d] = filtered;
+      });
+      next[iso] = [...(next[iso] ?? []), evt];
+      return next;
+    });
+  };
+
   const selecionados = useMemo(() => new Set(selIds), [selIds]);
   const setSelecionados = (updater: Set<number> | ((prev: Set<number>) => Set<number>)) => {
     const next = typeof updater === "function" ? (updater as (p: Set<number>) => Set<number>)(new Set(selIds)) : updater;
@@ -964,6 +1000,17 @@ useEffect(() => {
       const { error } = await supabase.from("planos_aula").insert([payload]);
       if (error) throw error;
       setSalvos((x) => ({ ...x, [i]: "ok" }));
+      // Espelha no calendário M4 na data atribuída (id determinístico por
+      // trilha/semana/dia para não duplicar em re-salvamentos).
+      upsertM4Trilha(dataDia, {
+        id: `trilha:${trilha.id}:${semana.id}:${i}`,
+        cat: "aulas",
+        title: titulo,
+        meta: [trilha.disciplina, trilha.turma, `S${semana.semana}`].filter(Boolean).join(" · "),
+        source: "trilha",
+        turma: trilha.turma || undefined,
+        disciplina: trilha.disciplina || undefined,
+      });
       void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("plano_aula_salvo", { origem: "trilha", semana: semana.semana, disciplina: trilha.disciplina, ano: trilha.ano_escolar }));
     } catch (e) {
       setSalvos((x) => ({ ...x, [i]: (e as Error).message || "Erro" }));
