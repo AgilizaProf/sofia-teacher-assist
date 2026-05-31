@@ -206,8 +206,8 @@ const css = `
 .pl-ai.mat .sub{color:#8B5CF6;}
 .pl-ai.ci .sub{color:#0891B2;}
 .pl-ai.aval .sub{color:#B45309;}
-.pl-ai .tt{color:var(--ink);font-weight:600;line-height:1.3;font-size:11.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;word-break:break-word;overflow-wrap:anywhere;}
-.pl-ai .mn{color:var(--muted);font-size:10px;margin-top:2px;font-family:'JetBrains Mono',monospace;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word;overflow-wrap:anywhere;}
+.pl-ai .tt{color:var(--ink);font-weight:600;line-height:1.3;font-size:11.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;word-break:normal;overflow-wrap:break-word;}
+.pl-ai .mn{color:var(--muted);font-size:10px;margin-top:2px;font-family:'JetBrains Mono',monospace;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:normal;overflow-wrap:break-word;}
 .pl-ai .sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 .pl-field{display:flex;flex-direction:column;gap:5px;margin-top:11px;}
@@ -371,7 +371,7 @@ const css = `
   .pl-panel{padding:12px;border-radius:11px;}
   .pl-cal-card,.pl-chain-card,.pl-chat-card,.pl-diary-card,.pl-d6-card{padding:12px;}
   .pl-week,.pl-cal-grid{grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;padding:10px;gap:10px;}
-  .pl-day,.pl-cal-day{min-height:0;height:auto;padding:10px;overflow:visible;}
+  .pl-day,.pl-cal-day{min-height:0;height:auto;padding:10px;overflow:hidden;}
   .pl-cal-day .pl-ai{white-space:normal;}
   .pl-generic{padding:30px 16px;}
   .pl-generic h3{font-size:20px;}
@@ -380,8 +380,11 @@ const css = `
   .pl-step .day{font-size:10px;padding-right:4px;}
   .pl-step .body{padding:12px;}
   .pl-chain-card{padding:14px;}
-  .pl-layers-bar{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;}
+  .pl-layers-bar{flex-wrap:wrap;overflow-x:visible;}
   .pl-lay{white-space:nowrap;}
+  /* O aviso flutuante (toast) cobria o calendário e quebrava no mobile —
+   * ocultado em telas pequenas a pedido. Continua normal no desktop. */
+  .pl-toast{display:none!important;}
   .pl-diary-row{grid-template-columns:1fr;}
   .pl-mood{flex-wrap:wrap;}
   .pl-d6-emojis button{width:42px;height:42px;font-size:20px;}
