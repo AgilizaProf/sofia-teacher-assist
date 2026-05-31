@@ -3460,6 +3460,14 @@ ${corpo}
         aluno={selected ? { id: selected.id, name: selected.name, diag: selected.diag, cid: selected.cid, anoEscolar: selected.anoEscolar, anoReferenciaPedagogico: selected.anoReferenciaPedagogico, turma: selected.turma } : null}
         anamneseResumo={anamneseResumo}
         peiResumo={selectedId ? buildPEIContext(peiByStudent[selectedId] as PEIData || {}) : ""}
+        historico={studentPlans.slice(0, 6).map((p) => {
+          const habs = (p.habilidades ?? []).map((h) => h.codigo).filter(Boolean).join(", ");
+          return `${p.data ?? ""} — "${p.tema || p.disciplina || "atividade"}"${habs ? ` [${habs}]` : ""}`;
+        })}
+        diarioBordo={m6EntriesGlobal
+          .filter((e) => !selected?.turma || e.turma === selected.turma)
+          .slice(0, 8)
+          .map((e) => ({ emoji: e.emoji, titulo: e.title, texto: e.text, tags: e.tags, data: e.date, turma: e.turma, atividadeTitulo: e.atividadeTitulo }))}
         onSaved={(novo) => {
           setPlansByStudent((all) => ({ ...all, [novo.alunoId]: [novo, ...(all[novo.alunoId] || [])] }));
         }}
