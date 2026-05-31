@@ -2743,12 +2743,18 @@ function BlockWithRegen({
 /* ─────────────────────────── Styles ─────────────────────────── */
 
 const css = `
-.atv-root{display:flex;flex-direction:column;gap:16px;}
+.atv-root{display:flex;flex-direction:column;gap:16px;min-width:0;max-width:100%;}
 .atv-root *{box-sizing:border-box;}
 .atv-toolbar{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,.05);}
 .atv-toolbar-row{display:grid;grid-template-columns:1.2fr 1fr 1fr .8fr .8fr 2fr;gap:10px;align-items:end;}
 .atv-toolbar-row.second{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px;flex-wrap:wrap;}
 @media(max-width:1100px){.atv-toolbar-row{grid-template-columns:1fr 1fr;}}
+/* Mobile: formulário do M1/M2 em coluna única e mensagem de inclusão flexível
+ * (o min-width fixo da mensagem empurrava a largura em telas estreitas). */
+@media(max-width:560px){
+  .atv-toolbar-row{grid-template-columns:1fr;}
+  .atv-incl-msg{min-width:0;}
+}
 .atv-field{display:flex;flex-direction:column;gap:4px;min-width:0;}
 .atv-field.grow{min-width:0;}
 .atv-field label{font-size:11px;font-weight:600;color:var(--muted,#64748B);text-transform:uppercase;letter-spacing:.05em;}
@@ -2777,7 +2783,7 @@ const css = `
 .atv-empty h3{font-size:18px;color:var(--ink,#0F172A);margin:8px 0 4px;}
 .atv-empty p{max-width:520px;margin:0 auto;font-size:13.5px;line-height:1.5;}
 .atv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;grid-auto-rows:min-content;}
-.atv-grid > *{align-self:start;height:auto;min-height:0;}
+.atv-grid > *{align-self:start;height:auto;min-height:0;min-width:0;}
 @media(max-width:980px){.atv-grid{grid-template-columns:1fr;}}
 /* Mobile: título da atividade mais compacto e menos espaçado. */
 @media(max-width:640px){
@@ -2785,7 +2791,7 @@ const css = `
   .atv-inline{line-height:1.35;}
   .atv-card.title .atv-meta{font-size:11px;}
 }
-.atv-card{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);height:auto;align-self:start;}
+.atv-card{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);height:auto;align-self:start;min-width:0;overflow-wrap:anywhere;}
 .atv-card.atv-invalid{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.12);}
 .atv-card.title{grid-column:1/-1;}
 .atv-incl-banner{grid-column:1/-1;padding:12px 14px;border-radius:12px;border:1px solid;}
@@ -2805,7 +2811,7 @@ const css = `
 .atv-collapser:disabled{cursor:default;}
 .atv-muted{color:var(--muted,#64748B);font-size:13px;margin:0;}
 .atv-inline{cursor:text;border-radius:6px;padding:4px 6px;margin:-4px -6px;display:block;line-height:1.5;color:var(--ink,#0F172A);font-size:14px;}
-h2.atv-inline{font-size:22px;font-weight:600;font-family:'Fraunces',Georgia,serif;letter-spacing:-.01em;min-width:0;flex:1 1 0%;overflow-wrap:break-word;word-break:break-word;}
+h2.atv-inline{font-size:22px;font-weight:600;font-family:'Fraunces',Georgia,serif;letter-spacing:-.01em;min-width:0;flex:1 1 0%;overflow-wrap:break-word;word-break:normal;}
 .atv-inline:hover{background:#F8FAFC;}
 .atv-inline-icon{opacity:0;margin-left:6px;color:var(--muted,#64748B);}
 .atv-inline:hover .atv-inline-icon{opacity:1;}
