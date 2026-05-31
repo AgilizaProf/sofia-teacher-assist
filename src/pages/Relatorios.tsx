@@ -1561,8 +1561,6 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
             </div>
           </div>
 
-          </div>
-
           {/* Cards grid */}
 
           {/* Cards grid */}
