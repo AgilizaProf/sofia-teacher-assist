@@ -150,6 +150,9 @@ type Variant = "port" | "mat" | "aval" | "esc" | "ci";
 type M1Card = {
   id: string; v: Variant; tag: string; title: string;
   bncc: string; minutos: number; foco: string; motivo?: string;
+  // Marca cards agendados pelo editor para que o calendário M4 não crie um
+  // segundo evento espelho (o editor já grava o evento atv/pcd na data exata).
+  noM4Sync?: boolean;
 };
 type M1Plan = Record<DayKey, M1Card[]>;
 const EMPTY_M1: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
@@ -993,6 +996,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         minutos: DUR_TO_MIN[duracao] ?? 45,
         foco: plano.objetivo.slice(0, 80),
         motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (${modo === "pcd" ? "PCD" : "regular"}).`,
+        noM4Sync: true,
       };
       setM1Plan({ ...m1Plan, [alvo]: [...(m1Plan[alvo] || []), card] });
     }
@@ -1141,6 +1145,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             minutos: DUR_TO_MIN[duracao] ?? 45,
             foco: p.objetivo.slice(0, 80),
             motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (lote · ${modo === "pcd" ? "PCD" : "regular"}).`,
+            noM4Sync: true,
           };
           m1Acc[alvo] = [...(m1Acc[alvo] || []), card];
         }
