@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Gift, Check, Sparkles, Share2, Loader2, Clock } from "lucide-react";
+import { Copy, Gift, Check, Share2, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { attachPendingReferral } from "@/lib/referral";
@@ -31,7 +31,6 @@ export function ReferralCard() {
   const [bonusTotal, setBonusTotal] = useState<number>(0);
   const [refs, setRefs] = useState<Referral[]>([]);
   const [myReferral, setMyReferral] = useState<Referral | null>(null);
-  const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const link = useMemo(() => {
@@ -107,54 +106,9 @@ export function ReferralCard() {
     copyLink();
   }
 
-  async function simularCompra(plan: "mensal" | "anual") {
-    if (!userId) return;
-    if (myReferral) {
-      toast.info("Você já registrou uma compra de indicação.");
-      return;
-    }
-    if (!referredBy) {
-      toast.error("Você não foi indicado(a) por ninguém.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const { data: refProf, error: refErr } = await supabase
-        .from("profiles")
-        .select("user_id, referral_code")
-        .eq("referral_code", referredBy)
-        .maybeSingle();
-      if (refErr) throw refErr;
-      if (!refProf || refProf.user_id === userId) {
-        toast.error("Código de indicação inválido.");
-        return;
-      }
-      const bonus = plan === "anual" ? 30 : 7;
-      const purchased = new Date();
-      const credit = new Date(purchased.getTime() + 7 * 24 * 60 * 60 * 1000);
-      const { error } = await supabase.from("referrals").insert({
-        referrer_user_id: refProf.user_id,
-        referred_user_id: userId,
-        referral_code: referredBy,
-        plan,
-        purchased_at: purchased.toISOString(),
-        credit_at: credit.toISOString(),
-        referrer_bonus_days: bonus,
-        referred_bonus_days: bonus,
-      });
-      if (error) throw error;
-      toast.success(
-        `Compra registrada! Em 7 dias, você e quem te indicou ganham +${bonus} dias.`,
-      );
-      load();
-    } catch (e) {
-      toast.error("Não foi possível registrar a compra simulada.", {
-        description: e instanceof Error ? e.message : undefined,
-      });
-    } finally {
-      setBusy(false);
-    }
-  }
+  // A indicação agora é criada automaticamente pelo webhook do Mercado Pago
+  // quando o indicado faz a 1ª compra paga (e, em casos especiais, por um
+  // admin). Não há mais registro manual de compra pelo próprio usuário.
 
   const pendentes = refs.filter((r) => !r.credited).length;
   const creditadas = refs.filter((r) => r.credited).length;
@@ -176,7 +130,7 @@ export function ReferralCard() {
       </div>
       <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 14px" }}>
         Quem você indicar também ganha. Quando o(a) educador(a) indicado(a) fizer a 1ª compra, ambos(as) recebem o bônus
-        após 7 dias de confirmação. Plano <b>anual</b>: <b>+30 dias</b>. Plano <b>mensal</b>: <b>+7 dias</b>.
+        após 7 dias de confirmação. Plano <b>anual</b>: <b>+30 dias de acesso e 1.500 créditos</b>. Plano <b>mensal</b>: <b>+7 dias de acesso e 375 créditos</b>.
       </p>
 
       {loading ? (
@@ -276,19 +230,9 @@ export function ReferralCard() {
               <div style={{ fontSize: 12.5, color: "#1B2A4E", marginBottom: 8 }}>
                 Você foi indicada com o código <b style={{ fontFamily: "'JetBrains Mono',monospace", color: "#B8410E" }}>{referredBy}</b>.
                 {myReferral
-                  ? " Compra já registrada — bônus libera no prazo."
-                  : " Registre sua 1ª compra para liberar o bônus de quem te indicou (e o seu)."}
+                  ? " Compra registrada — o bônus libera após o período de confirmação (7 dias)."
+                  : " Assine um plano para liberar o bônus de quem te indicou e o seu (acesso + créditos)."}
               </div>
-              {!myReferral && (
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  <button type="button" disabled={busy} onClick={() => simularCompra("mensal")} style={btn("ghost")}>
-                    <Sparkles size={13} /> Registrei plano mensal (+7 dias)
-                  </button>
-                  <button type="button" disabled={busy} onClick={() => simularCompra("anual")} style={btn("primary")}>
-                    <Sparkles size={13} /> Registrei plano anual (+30 dias)
-                  </button>
-                </div>
-              )}
             </div>
           )}
         </>
