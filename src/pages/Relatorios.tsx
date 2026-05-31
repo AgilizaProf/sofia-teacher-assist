@@ -1980,7 +1980,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 })()}
               </div>
 
-              <div style={{ display: "flex", gap: 8, justifyContent: "space-between", padding: "14px 20px", borderTop: "1px solid var(--line-soft)", background: "#fff" }}>
+              <div className="rel-bncc-foot" style={{ display: "flex", gap: 8, justifyContent: "space-between", padding: "14px 20px", borderTop: "1px solid var(--line-soft)", background: "#fff", flexWrap: "wrap" }}>
                 <button
                   onClick={() => { setBnccByAluno((p) => { const cp = { ...p }; delete cp[id]; return cp; }); }}
                   style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "var(--text-soft)", cursor: "pointer" }}
