@@ -5545,6 +5545,7 @@ function M1EditCardModal(props: {
         color: tab === k ? "#fff" : "var(--ink, #0F172A)",
         fontWeight: tab === k ? 700 : 500, fontSize: 12.5,
         display: "inline-flex", alignItems: "center", gap: 6,
+        whiteSpace: "nowrap", flex: "0 0 auto",
       }}
     >
       {label}
@@ -5614,7 +5615,7 @@ function M1EditCardModal(props: {
             </button>
           </div>
 
-          <div style={{ display: "flex", gap: 4, marginTop: 12, padding: 4, background: "#F1F5F9", borderRadius: 10 }}>
+          <div style={{ display: "flex", gap: 4, marginTop: 12, padding: 4, background: "#F1F5F9", borderRadius: 10, overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
             <Tab k="visao" label="Visão geral" />
             <Tab k="plano" label="Plano de aula" count={(card.passos ?? []).length || undefined} />
             <Tab k="inclusao" label="Inclusão" />
