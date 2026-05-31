@@ -4682,14 +4682,14 @@ export function Planejamento() {
         <div key={toast.key} className="pl-toast show">
           <Move size={14} className="ic" />
           <span>{toast.msg}</span>
-          <button onClick={() => {
-            if (m5UndoMove) {
+          {m5UndoMove && (
+            <button onClick={() => {
               const { card, from, to } = m5UndoMove;
               setWeek((w) => ({ ...w, [to]: w[to].filter((c) => c.id !== card.id), [from]: [...w[from], card] }));
               setM5UndoMove(null);
-            }
-            setToast(null);
-          }}>Desfazer</button>
+              setToast(null);
+            }}>Desfazer</button>
+          )}
         </div>
       )}
 
