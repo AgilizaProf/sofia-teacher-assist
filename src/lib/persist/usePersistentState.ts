@@ -22,6 +22,13 @@ export function usePersistentState<T>(key: string, initial: T) {
   // e que pushRemote sempre rode após hidratação independente da ordem.
   const userTouchedRef = useRef(false);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Identidade única desta instância do hook. Usada para que uma instância
+  // não reaja ao próprio broadcast de gravação local (evita loop).
+  const idRef = useRef(Math.random().toString(36).slice(2));
+  // Quando true, o próximo write veio de uma sincronização entre instâncias
+  // (mesma aba ou outra aba) e NÃO deve ser re-anunciado nem empurrado ao
+  // remoto — quem originou a mudança já cuida disso.
+  const externalApplyRef = useRef(false);
 
   // Restore from localStorage after hydration (client-only).
   const restoredRef = useRef(false);
@@ -76,7 +83,55 @@ export function usePersistentState<T>(key: string, initial: T) {
       window.localStorage.setItem(lsKey, JSON.stringify(state));
       window.localStorage.setItem(lsKey + ":ts", String(Date.now()));
     } catch { /* ignore */ }
+    // Se esta mudança veio de uma sincronização entre instâncias, apenas
+    // consome a flag e NÃO re-anuncia (evita tempestade de broadcasts).
+    if (externalApplyRef.current) {
+      externalApplyRef.current = false;
+      return;
+    }
+    // Anuncia para as outras instâncias do MESMO key, na MESMA aba, que o
+    // localStorage mudou. Sem isso, dois componentes que usam a mesma chave
+    // (ex.: Planejamento M3/M4 e o editor de Atividades M1/M2) ficam com
+    // cópias divergentes e um sobrescreve o outro.
+    try {
+      window.dispatchEvent(
+        new CustomEvent("aprof:ls-write", { detail: { key, senderId: idRef.current } }),
+      );
+    } catch { /* ignore */ }
   }, [state, lsKey]);
+
+  // Mantém todas as instâncias do mesmo key sincronizadas DENTRO da aba
+  // (CustomEvent "aprof:ls-write") e ENTRE abas (evento nativo "storage").
+  // Ao receber, re-lê o localStorage e aplica sem re-anunciar nem empurrar
+  // ao remoto (externalApplyRef).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const applyFromRaw = (raw: string | null) => {
+      if (raw == null) return;
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        const mismatch = detectShapeMismatch(parsed, initialRef.current);
+        if (mismatch) return;
+        externalApplyRef.current = true;
+        setState(parsed as T);
+      } catch { /* ignore */ }
+    };
+    const onLocalWrite = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ key?: string; senderId?: string }>).detail;
+      if (!detail || detail.key !== key || detail.senderId === idRef.current) return;
+      applyFromRaw(window.localStorage.getItem(lsKey));
+    };
+    const onStorage = (ev: StorageEvent) => {
+      if (ev.key !== lsKey) return;
+      applyFromRaw(ev.newValue);
+    };
+    window.addEventListener("aprof:ls-write", onLocalWrite);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("aprof:ls-write", onLocalWrite);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [key, lsKey]);
 
   const pullRemote = useCallback(async (uid: string) => {
     try {
