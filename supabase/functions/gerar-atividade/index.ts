@@ -118,7 +118,7 @@ serve(async (req) => {
       : null;
 
     const systemPrompt = usandoMunicipal
-     ? `Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade alinhados ao CURRÍCULO MUNICIPAL de ${curriculo_municipal!.municipio}, em PT-BR, claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. Não invente dados sobre alunos.\n\nREGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "diário", "anamnese", "PEI", "laudo", "planejamento" ou qualquer outra fonte. Escreva sempre como conhecimento direto sobre o(a) aluno(a). Evite: "de acordo com o PEI", "de acordo com a anamnese", "conforme o PEI", "com base na anamnese", "o PEI prevê", "as anotações indicam" — descreva os fatos diretamente.\n\nREGRAS DO CURRÍCULO MUNICIPAL (invioláveis):\n`
+     ? `Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade alinhados ao CURRÍCULO MUNICIPAL de ${curriculo_municipal!.municipio}, em PT-BR, claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. Não invente dados sobre alunos.\n\nREGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "diário", "anamnese", "PEI", "laudo", "planejamento" ou qualquer outra fonte. Escreva sempre como conhecimento direto sobre o(a) aluno(a). Evite: "de acordo com o PEI", "de acordo com a anamnese", "conforme o PEI", "com base na anamnese", "o PEI prevê", "as anotações indicam" — descreva os fatos diretamente.\n\nREGRAS DO CURRÍCULO MUNICIPAL (invioláveis):\n1) Use EXCLUSIVAMENTE as habilidades e os códigos do currículo municipal fornecido na lista do usuário. É PROIBIDO usar, citar ou converter para códigos da BNCC (ex.: NÃO gere EF03MA07, EF05LP12 etc.).\n2) O campo 'habilidades[].codigo' DEVE ser um código do currículo municipal, copiado EXATAMENTE como aparece na lista fornecida.\n3) A 'descricao' de cada habilidade deve reproduzir, em PT-BR, o enunciado da habilidade municipal correspondente.\n4) Se nenhuma habilidade municipal couber perfeitamente, escolha a mais próxima da lista fornecida — NUNCA invente um código e NUNCA recorra à BNCC.\n5) 'titulo', 'objetivo' e 'desenvolvimento' devem refletir os objetos de conhecimento e a terminologia do currículo municipal, mobilizando explicitamente a(s) habilidade(s) municipal(is) citada(s).`
       : "Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade " +
       "ESTRITAMENTE alinhados à BNCC (Base Nacional Comum Curricular), em PT-BR, " +
       "claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. " +
@@ -286,6 +286,13 @@ serve(async (req) => {
           : `NÃO inclua adaptações PCD (devolva array vazio em "adaptacoes").`),
     ].join("\n");
 
+    // A descrição do campo `codigo` é o sinal MAIS forte para o modelo no
+    // function-calling. Quando há currículo municipal ativo, ela DEVE pedir
+    // o código municipal — senão o modelo devolve BNCC mesmo no modo municipal.
+    const codigoDesc = usandoMunicipal
+      ? `Código do CURRÍCULO MUNICIPAL de ${curriculo_municipal!.municipio}, copiado EXATAMENTE da lista de habilidades municipais fornecida no prompt. NUNCA use códigos da BNCC (ex.: NÃO use EF03MA03) — use somente os códigos do município.`
+      : "Código BNCC, ex.: EF03MA03";
+
     const toolPlano = {
       type: "function",
       function: {
@@ -304,7 +311,7 @@ serve(async (req) => {
               items: {
                 type: "object",
                 properties: {
-                  codigo: { type: "string", description: "Código BNCC, ex.: EF03MA03" },
+                  codigo: { type: "string", description: codigoDesc },
                   descricao: { type: "string" },
                 },
                 required: ["codigo", "descricao"],
