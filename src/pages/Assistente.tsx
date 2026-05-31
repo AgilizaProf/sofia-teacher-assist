@@ -13,6 +13,7 @@ import { useSofia } from "@/components/sofia/SofiaProvider";
 import { SofiaActiveChip } from "@/components/sofia/SofiaActiveChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { gerarFalaSofia } from "@/lib/sofia/gerarFala";
+import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 import { Header as AppHeader } from "@/components/Header";
 import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -1151,7 +1152,14 @@ export function Assistente() {
                     const pcdTxt = turmaSelecionada.pcds.length
                       ? ` Alunos PCD: ${turmaSelecionada.pcds.map((p) => `${p.name} (${p.pcd})`).join(", ")}.`
                       : " Sem alunos PCD registrados.";
-                    partes.push(`Foque na turma ${turmaSelecionada.name} com ${turmaSelecionada.alunos.length} alunos.${pcdTxt}`);
+                    // Deriva o nível/segmento da turma para a Sofia NÃO perguntar
+                    // de novo a modalidade de ensino.
+                    const nivel = inferirNivelEnsino(turmaSelecionada.grade) ?? inferirNivelEnsino(turmaSelecionada.name);
+                    const gradeTxt = turmaSelecionada.grade ? ` Ano/série: ${turmaSelecionada.grade}.` : "";
+                    const nivelTxt = nivel
+                      ? ` Nível/modalidade de ensino: ${nivel} — use SEMPRE este nível e NÃO pergunte a modalidade ao gerar atividades.`
+                      : "";
+                    partes.push(`Foque na turma ${turmaSelecionada.name}.${gradeTxt}${nivelTxt} Total de ${turmaSelecionada.alunos.length} alunos.${pcdTxt}`);
                   }
                   if (ctxBimestre) partes.push(`Etapa atual: ${ctxBimestre}.`);
                   if (ctxDuracao) partes.push(`Duração típica da aula: ${ctxDuracao}.`);
