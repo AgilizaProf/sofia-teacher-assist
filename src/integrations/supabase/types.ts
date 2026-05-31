@@ -329,6 +329,7 @@ export type Database = {
           ciclo_snapshot: string | null
           created_at: string
           creditos_totais: number
+          creditos_bonus_persistente: number
           creditos_utilizados: number
           data_renovacao: string
           mes_referencia: number
@@ -344,6 +345,7 @@ export type Database = {
           ciclo_snapshot?: string | null
           created_at?: string
           creditos_totais?: number
+          creditos_bonus_persistente?: number
           creditos_utilizados?: number
           data_renovacao?: string
           mes_referencia: number
@@ -359,6 +361,7 @@ export type Database = {
           ciclo_snapshot?: string | null
           created_at?: string
           creditos_totais?: number
+          creditos_bonus_persistente?: number
           creditos_utilizados?: number
           data_renovacao?: string
           mes_referencia?: number
@@ -1140,6 +1143,11 @@ export type Database = {
           referred_user_id: string
           referrer_bonus_days: number
           referrer_user_id: string
+          referred_bonus_credits: number
+          referrer_bonus_credits: number
+          referred_credited: boolean
+          referrer_credited: boolean
+          source: string
         }
         Insert: {
           created_at?: string
@@ -1154,6 +1162,11 @@ export type Database = {
           referred_user_id: string
           referrer_bonus_days: number
           referrer_user_id: string
+          referred_bonus_credits?: number
+          referrer_bonus_credits?: number
+          referred_credited?: boolean
+          referrer_credited?: boolean
+          source?: string
         }
         Update: {
           created_at?: string
@@ -1168,6 +1181,11 @@ export type Database = {
           referred_user_id?: string
           referrer_bonus_days?: number
           referrer_user_id?: string
+          referred_bonus_credits?: number
+          referrer_bonus_credits?: number
+          referred_credited?: boolean
+          referrer_credited?: boolean
+          source?: string
         }
         Relationships: []
       }
@@ -1772,6 +1790,10 @@ export type Database = {
       }
       mp_expire_subscriptions: { Args: never; Returns: number }
       process_due_referrals: { Args: { _uid: string }; Returns: number }
+      adicionar_creditos_bonus_persistente: { Args: { _user_id: string; _quantidade: number; _descricao: string }; Returns: Json }
+      conceder_acesso_bonus_dias: { Args: { _user_id: string; _dias: number }; Returns: string }
+      admin_conceder_indicacao: { Args: { _referrer: string; _referred: string; _plan: string }; Returns: Json }
+      expire_referral_bonus_subscriptions: { Args: Record<string, never>; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
