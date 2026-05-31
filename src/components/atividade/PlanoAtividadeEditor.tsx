@@ -5,6 +5,7 @@ import {
   Search, Trash2, FileText, Star, Printer, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { logActivity } from "@/lib/activity/activityLog";
@@ -2253,6 +2254,11 @@ function PlanoBody(props: {
   const [novaHabCod, setNovaHabCod] = useState("");
   const [novaHabDesc, setNovaHabDesc] = useState("");
   const [copiado, setCopiado] = useState(false);
+  const isMobile = useIsMobile();
+  // No mobile, a lista de habilidades começa recolhida (são muitos itens e
+  // empurram o conteúdo). No desktop, sempre visível.
+  const [habAberta, setHabAberta] = useState(false);
+  const habVisivel = !isMobile || habAberta;
 
   const has = (k: string) => missing.includes(k);
   const isRegen = (f: string) => regenField === f;
@@ -2371,8 +2377,23 @@ function PlanoBody(props: {
       <section className={`atv-card${has("habilidades") || has("habilidades_incompletas") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
           <h3>② {props.curriculoNome ? `Habilidades — Currículo de ${props.curriculoNome}` : "Habilidades BNCC"}</h3>
-          <RegenBtn field="habilidades" label="habilidades" />
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {isMobile && (
+              <button
+                type="button"
+                className="atv-hab-toggle"
+                onClick={() => setHabAberta((v) => !v)}
+                aria-expanded={habVisivel}
+                aria-label={habVisivel ? "Recolher habilidades" : "Mostrar habilidades"}
+              >
+                {habVisivel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {habVisivel ? "Recolher" : `Mostrar (${plano.habilidades.length})`}
+              </button>
+            )}
+            <RegenBtn field="habilidades" label="habilidades" />
+          </div>
         </div>
+        {habVisivel && (<>
         <div className="atv-chips">
           {plano.habilidades.map((h, i) => (
             <div className="atv-hab-item" key={`${h.codigo}-${i}`}>
@@ -2401,6 +2422,7 @@ function PlanoBody(props: {
             <Plus size={13} /> Adicionar
           </button>
         </div>
+        </>)}
       </section>
 
       {/* 3. Contribuições interdisciplinares — logo após as habilidades BNCC */}
@@ -2746,6 +2768,7 @@ const css = `
 .atv-btn.danger{background:#EF4444;border-color:#EF4444;color:#fff;}
 .atv-btn.danger:hover{background:#DC2626;}
 .atv-btn:disabled{opacity:.5;cursor:not-allowed;}
+.atv-hab-toggle{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;font-weight:600;font-size:12px;border:1px solid var(--line,#E2E8F0);background:#F8FAFC;color:var(--ink,#0F172A);cursor:pointer;font-family:inherit;white-space:nowrap;}
 .atv-warn{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(245,158,11,.10);color:#92400E;display:flex;align-items:center;gap:8px;font-size:12.5px;}
 .atv-error{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(239,68,68,.10);color:#991B1B;display:flex;align-items:center;gap:8px;font-size:12.5px;}
 .atv-error--flash{animation:atvErrFlash 1.6s ease;box-shadow:0 0 0 2px rgba(239,68,68,.45);}
@@ -2756,6 +2779,12 @@ const css = `
 .atv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;grid-auto-rows:min-content;}
 .atv-grid > *{align-self:start;height:auto;min-height:0;}
 @media(max-width:980px){.atv-grid{grid-template-columns:1fr;}}
+/* Mobile: título da atividade mais compacto e menos espaçado. */
+@media(max-width:640px){
+  h2.atv-inline{font-size:17px;line-height:1.25;letter-spacing:-.02em;}
+  .atv-inline{line-height:1.35;}
+  .atv-card.title .atv-meta{font-size:11px;}
+}
 .atv-card{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);height:auto;align-self:start;}
 .atv-card.atv-invalid{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.12);}
 .atv-card.title{grid-column:1/-1;}
@@ -2833,6 +2862,19 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-x{background:none;border:none;color:var(--muted,#64748B);cursor:pointer;padding:4px;border-radius:4px;display:flex;align-items:center;}
 .atv-x:hover{background:rgba(239,68,68,.1);color:#EF4444;}
 .atv-actionbar{position:sticky;bottom:0;display:flex;gap:8px;justify-content:flex-end;padding:12px 14px;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border:1px solid var(--line,#E2E8F0);border-radius:12px;box-shadow:0 -4px 12px rgba(15,23,42,.06);z-index:5;}
+/* Faixa intermediária (ex.: iPhone 14 Pro Max ~430px): mantém lado a lado,
+ * mas permite quebrar de forma organizada se faltar espaço, em vez de espremer. */
+@media(min-width:401px) and (max-width:560px){
+  .atv-actionbar{flex-wrap:wrap;justify-content:stretch;}
+  .atv-actionbar .atv-btn{flex:1 1 auto;justify-content:center;}
+}
+/* Mobile estreito (ex.: Galaxy Z Fold fechado ~344px): os 3 botões não cabem
+ * lado a lado e quebram. Empilha em coluna apenas nos bem estreitos — celulares
+ * maiores (ex.: iPhone 14 Pro Max ~430px) mantêm os botões lado a lado. */
+@media(max-width:400px){
+  .atv-actionbar{flex-direction:column;align-items:stretch;gap:8px;padding:10px;}
+  .atv-actionbar .atv-btn{width:100%;justify-content:center;padding:11px 12px;font-size:13.5px;}
+}
 .atv-hist{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,.05);}
 .atv-hist-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
 .atv-hist-head h3{font-size:13.5px;font-weight:700;color:var(--ink,#0F172A);margin:0;display:flex;align-items:center;gap:6px;}
