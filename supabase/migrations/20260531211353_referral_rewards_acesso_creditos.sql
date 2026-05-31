@@ -12,6 +12,26 @@
 --          manual/admin. O crédito efetivo acontece após credit_at (carência).
 -- =====================================================================
 
+-- 0) AMPLIA o CHECK de subscriptions.source -------------------------
+--    O CHECK original era fechado em ('signup','admin_grant','stripe','paddle').
+--    A produção já usa 'mercadopago' (webhook) e agora precisamos de
+--    'referral_bonus' para o Pro temporário de indicação. Recriamos o CHECK
+--    de forma idempotente incluindo todos os valores conhecidos. Sem isso, a
+--    concessão de acesso por indicação a usuários free quebraria no INSERT.
+ALTER TABLE public.subscriptions DROP CONSTRAINT IF EXISTS subscriptions_source_check;
+ALTER TABLE public.subscriptions
+  ADD CONSTRAINT subscriptions_source_check
+  CHECK (source = ANY (ARRAY['signup','admin_grant','stripe','paddle','mercadopago','referral_bonus']));
+
+-- 0b) creditos_historico.tipo precisa aceitar 'reset_semanal' -----------
+--    garantir_creditos_usuario insere tipo='reset_semanal' na renovação do
+--    plano free, mas o CHECK original não previa esse valor (bomba-relógio:
+--    quebraria a renovação semanal). Recriamos o CHECK incluindo-o.
+ALTER TABLE public.creditos_historico DROP CONSTRAINT IF EXISTS creditos_historico_tipo_check;
+ALTER TABLE public.creditos_historico
+  ADD CONSTRAINT creditos_historico_tipo_check
+  CHECK (tipo = ANY (ARRAY['uso','bonus','renovacao','reset_mensal','reset_semanal','compra','ajuste']));
+
 -- 1) Saldo de bônus PERSISTENTE em creditos_usuario -------------------
 ALTER TABLE public.creditos_usuario
   ADD COLUMN IF NOT EXISTS creditos_bonus_persistente integer NOT NULL DEFAULT 0;
