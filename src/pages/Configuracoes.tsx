@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Shield, ChevronDown } from "lucide-react";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
-import { SOFIA_CONSTITUTION, SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
+import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
 import { ReferralCard } from "@/components/settings/ReferralCard";
@@ -26,25 +26,7 @@ const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: strin
   { n: 13, emoji: "📈", name: "Progressividade", summary: "A Sofia não vê retratos. Vê percursos. Compara registros anteriores para revelar avanços." },
 ];
 
-function getPrincipleBody(idx: number): string {
-  // Split SOFIA_CONSTITUTION by numbered headers "1.", "2." ... "8." or "REGRA DE OURO"
-  const text = SOFIA_CONSTITUTION;
-  const re = /(^|\n)(\d+)\.\s/g;
-  const matches: Array<{ n: number; start: number }> = [];
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
-    matches.push({ n: parseInt(m[2], 10), start: m.index + (m[1] ? 1 : 0) });
-  }
-  const target = matches.find((x) => x.n === idx);
-  if (!target) return "";
-  const next = matches.find((x) => x.start > target.start);
-  const end = next ? next.start : text.indexOf("\nREGRA DE OURO", target.start);
-  return text.slice(target.start, end > target.start ? end : text.length).trim();
-}
-
 export function Configuracoes() {
-  const [open, setOpen] = useState<Record<number, boolean>>({});
-  const toggle = (n: number) => setOpen((o) => ({ ...o, [n]: !o[n] }));
   const [principlesOpen, setPrinciplesOpen] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const { mode: rmMode, setMode: setRmMode } = useReducedMotion();
