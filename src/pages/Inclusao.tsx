@@ -285,6 +285,10 @@ const css = `
 
 @media (max-width: 640px){
   .inc-modal-overlay{padding:0;align-items:flex-end;}
+  /* Abas (Visão de hoje / Anamnese / …): em vez de rolar para o lado,
+   * dispõem-se em grade de 2 por linha (2+2+1). */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;overflow-x:visible;}
+  .tab{flex:none;width:100%;}
   .inc-modal{max-width:100% !important;max-height:100dvh;height:100dvh;border-radius:14px 14px 0 0;}
   .inc-modal-head{padding:14px 16px;gap:10px;}
   .inc-modal-head h2{font-size:17px;line-height:1.25;}
