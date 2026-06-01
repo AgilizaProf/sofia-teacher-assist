@@ -178,7 +178,7 @@ const css = `
 .btn-ghost-dark:hover{border-color:var(--accent);color:var(--accent);}
 
 .section{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px 20px;}
-.section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.section-head h3{font-family:'Fraunces',serif;font-weight:700;font-size:18px;letter-spacing:-.2px;flex:1 1 100%;min-width:0;overflow-wrap:break-word;word-break:normal;}
 .section-head h3{font-family:'Fraunces',serif;font-weight:700;font-size:18px;letter-spacing:-.2px;flex:1;}
 .section-head .legal{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);background:var(--bg);padding:4px 8px;border-radius:6px;font-weight:500;}
 .section-head .more{color:var(--muted);font-size:12px;font-weight:600;}
