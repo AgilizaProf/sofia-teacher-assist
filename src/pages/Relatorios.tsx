@@ -1881,7 +1881,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                 {areas.map((area, ai) => (
                   <div key={area.area} style={{ marginTop: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-soft)", flex: 1 }}>{area.area}</div>
+                      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--text-soft)", flex: "1 1 100%", minWidth: 0, overflowWrap: "break-word", wordBreak: "normal" }}>{area.area}</div>
                       <div style={{ display: "inline-flex", gap: 4 }}>
                         <span style={{ fontSize: 10, color: "var(--text-soft)", alignSelf: "center", marginRight: 4 }}>Aplicar a todos:</span>
                         {STATUS.map((s) => (
