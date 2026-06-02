@@ -70,6 +70,9 @@ export type SofiaContext = {
     fim_de_bimestre_em_dias: number | null;
     eh_inicio_de_mes: boolean;
   };
+  /** Define (ou limpa, com null) o aluno em foco. Dispara re-render para o
+   *  contexto da Sofia ser recomputado de forma determinística. */
+  setAlunoAtual: (aluno: SofiaAluno | null) => void;
 };
 
 // ----- Resultado de gerarFalaSofia -----
