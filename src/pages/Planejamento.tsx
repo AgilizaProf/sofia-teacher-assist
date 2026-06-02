@@ -31,6 +31,8 @@ import { useTurmas } from "@/hooks/useTurmas";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const css = `
+.pl-m2-add{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#FAFBFD;display:grid;grid-template-columns:90px 150px minmax(0,1fr);gap:8px;align-items:center;}
+@media(max-width:640px){.pl-m2-add{grid-template-columns:1fr;}}
 .pl-root{
   --primary:#1B2A4E;--primary-dark:#0F1B36;
   --navy:#1B2A4E;--navy-2:#243762;--navy-deep:#0F1A36;--navy-darker:#0A1228;
