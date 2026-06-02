@@ -241,8 +241,8 @@ function getTemaSugestoes(disciplinas: string[], ano?: string): string[] {
 }
 
 function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: string[]; onPick: (t: string) => void; label?: string }) {
-  if (!items.length) return null;
   const [open, setOpen] = useState(false);
+  if (!items.length) return null;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8, padding: "8px 10px", background: "var(--bg)", borderRadius: 8, border: "1px dashed var(--border)" }}>
       <button
