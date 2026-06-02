@@ -1982,15 +1982,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                 {planosParaSalvar.map((p, i) => (
                   <div
                     key={i}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "minmax(0, 1fr) 140px 120px",
-                      gap: 8,
-                      alignItems: "center",
-                      padding: 8,
-                      border: "1px solid var(--line,#E2E8F0)",
-                      borderRadius: 8,
-                    }}
+                    className="atv-save-row"
                   >
                     <div style={{ fontSize: 12, color: "#0F172A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       <strong>{i + 1}.</strong> {p.titulo || "Sem título"}
