@@ -3841,7 +3841,7 @@ export function Planejamento() {
                   <div className="pl-chain-card">
                     <h3 style={{ fontSize: 16 }}>Sequência didática</h3>
                     {/* Formulário de adição */}
-                    <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line)", borderRadius: 11, background: "#FAFBFD", display: "grid", gridTemplateColumns: "90px 150px minmax(0, 1fr)", gap: 8, alignItems: "center" }}>
+                    <div className="pl-m2-add">
                       <select
                         value={m2Form.d}
                         onChange={(e) => setM2Form((f) => ({ ...f, d: e.target.value }))}
