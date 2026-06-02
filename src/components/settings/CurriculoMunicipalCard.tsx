@@ -4,6 +4,7 @@ import { useCurriculoMunicipal, type CurriculoMunicipal } from "@/hooks/useCurri
 import { toast } from "sonner";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { acumularTempo } from "@/lib/tempo/acumular";
 
 const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB total no bucket (compartilhado entre currículos + calendário)
