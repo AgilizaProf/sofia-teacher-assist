@@ -1363,7 +1363,7 @@
   function skipOnboarding(){
     if(confirm('Pular o onboarding? Você pode acessá-lo depois pelo menu.')){
       try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-      try{ (window.parent||window).postMessage({type:'agp_onboarding_done'},'*'); }catch(_){}
+      try{ (window.parent||window).postMessage({type:'agp_onboarding_done',lead:leadData},'*'); }catch(_){}
       (window.top || window).location.href = '/';
     }
   }
@@ -1660,7 +1660,7 @@
     const route = NEXT_CARDS[where]?.route || '/';
     try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
     try{ localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    try{ (window.parent||window).postMessage({type:'agp_onboarding_done'},'*'); }catch(_){}
+    try{ (window.parent||window).postMessage({type:'agp_onboarding_done',lead:leadData},'*'); }catch(_){}
     try{ (window.top || window.parent || window).location.assign(route); }
     catch(_){ window.location.assign(route); }
   }
@@ -1670,7 +1670,7 @@
     const route = (cfg && cfg.realCtaRoute) || '/';
     try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
     try{ localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    try{ (window.parent||window).postMessage({type:'agp_onboarding_done'},'*'); }catch(_){}
+    try{ (window.parent||window).postMessage({type:'agp_onboarding_done',lead:leadData},'*'); }catch(_){}
     try{ (window.top || window.parent || window).location.assign(route); }
     catch(_){ window.location.assign(route); }
   }
@@ -1680,7 +1680,7 @@
     // (a página vive dentro de um <iframe> em /onboarding).
     try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
     try{ localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    try{ (window.parent||window).postMessage({type:'agp_onboarding_done'},'*'); }catch(_){}
+    try{ (window.parent||window).postMessage({type:'agp_onboarding_done',lead:leadData},'*'); }catch(_){}
     try{
       const top = window.top || window.parent || window;
       top.location.assign('/');

@@ -43,7 +43,11 @@ function OnboardingPage() {
       const d = e?.data;
       if (d && typeof d === "object" && d.type === "agp_onboarding_done") {
         // fire-and-forget; do not block iframe navigation
-        void markOnboardingDone();
+        const lead = (d.lead && typeof d.lead === "object")
+          ? { name: typeof d.lead.name === "string" ? d.lead.name : undefined,
+              phone: typeof d.lead.phone === "string" ? d.lead.phone : undefined }
+          : undefined;
+        void markOnboardingDone(lead);
       }
     }
     window.addEventListener("message", onMsg);
