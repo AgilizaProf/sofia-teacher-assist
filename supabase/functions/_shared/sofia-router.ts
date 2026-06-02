@@ -96,12 +96,16 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
 
   if (args.userId) {
     const b = await isBudgetExceeded(args.userId);
-    if (b.exceeded) {
+    // Bloqueia quando o saldo não cobre o custo desta operação.
+    // Sem custoCreditos informado, custo = 1 → equivale ao comportamento antigo
+    // (bloquear apenas quando o saldo está zerado).
+    const custo = args.custoCreditos && args.custoCreditos > 0 ? args.custoCreditos : 1;
+    if (b.creditos < custo) {
       return {
         ok: false,
         status: 402,
         text: "",
-        error: `Você não tem créditos disponíveis (${b.usedBrl}/${b.limitBrl} usados).`,
+        error: `Créditos insuficientes para esta ação (precisa de ${custo}, você tem ${b.creditos}).`,
         blocked: true,
         usedBrl: b.usedBrl,
         limitBrl: b.limitBrl,
