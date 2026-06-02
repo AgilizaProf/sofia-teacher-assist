@@ -53,6 +53,7 @@ export type SofiaContext = {
     turma_atual: SofiaTurma | null;
     aluno_atual: SofiaAluno | null;
     todos_alunos_pcd: Array<{ nome: string; condicao: string }>;
+    nivel_ensino?: string | null;
   };
   dataState: {
     turmas_count: number;
