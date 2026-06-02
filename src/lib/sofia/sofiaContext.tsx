@@ -169,9 +169,10 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
       return {
         route,
         user,
-        entity: { turma_atual: null, aluno_atual: null, todos_alunos_pcd: [] },
+        entity: { turma_atual: null, aluno_atual: alunoAtual, todos_alunos_pcd: [] },
         dataState: { turmas_count: 0, alunos_count: 0, pareceres_finalizados: 0, pareceres_total_bimestre: 0, eventos_agenda_mes: 0, proxima_aula: null },
         temporal: temp,
+        setAlunoAtual,
       };
     }
 
