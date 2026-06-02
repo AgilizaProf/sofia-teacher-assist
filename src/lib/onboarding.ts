@@ -23,9 +23,13 @@ export async function markOnboardingDone(lead?: { name?: string; phone?: string 
     const { data } = await supabase.auth.getUser();
     const uid = data.user?.id;
     if (!uid) return;
-    const patch: Record<string, unknown> = { onboarding_concluido: true };
     const name = lead?.name?.trim();
     const phone = lead?.phone?.trim();
+    const patch: {
+      onboarding_concluido: boolean;
+      display_name?: string;
+      telefone?: string;
+    } = { onboarding_concluido: true };
     if (name) patch.display_name = name;
     if (phone) patch.telefone = phone;
     await supabase
