@@ -333,6 +333,7 @@ export type Database = {
           data_renovacao: string
           mes_referencia: number
           plano_snapshot: string
+          sofia_msg_counter: number
           trial_ate: string | null
           ultimo_bonus_ano: number | null
           ultimo_bonus_mes: number | null
@@ -348,6 +349,7 @@ export type Database = {
           data_renovacao?: string
           mes_referencia: number
           plano_snapshot?: string
+          sofia_msg_counter?: number
           trial_ate?: string | null
           ultimo_bonus_ano?: number | null
           ultimo_bonus_mes?: number | null
@@ -363,6 +365,7 @@ export type Database = {
           data_renovacao?: string
           mes_referencia?: number
           plano_snapshot?: string
+          sofia_msg_counter?: number
           trial_ate?: string | null
           ultimo_bonus_ano?: number | null
           ultimo_bonus_mes?: number | null
@@ -1772,6 +1775,7 @@ export type Database = {
       }
       mp_expire_subscriptions: { Args: never; Returns: number }
       process_due_referrals: { Args: { _uid: string }; Returns: number }
+      registrar_mensagem_sofia: { Args: { _user_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"
