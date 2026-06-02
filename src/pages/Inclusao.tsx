@@ -1732,12 +1732,14 @@ ${corpo}
     setView("detail");
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, view: "detail", aluno: id }) as never, replace: true });
   }, [navigate]);
-  // Injeta o aluno selecionado no contexto da Sofia para que ela responda
+   // Injeta o aluno selecionado no contexto da Sofia para que ela responda
   // de forma contextualizada quando a professora fizer perguntas no chat.
+  // setAlunoAtual é estável (setter de useState), então pode ser dependência
+  // do efeito sem causar re-execução em loop a cada recálculo do contexto.
+  const { setAlunoAtual } = sofiaCtx;
   useEffect(() => {
     if (!selected) {
-      // @ts-ignore — aluno_atual é null quando nenhum aluno está selecionado
-      sofiaCtx.entity.aluno_atual = null;
+      setAlunoAtual(null);
       return;
     }
     const anamData = anamByStudent[selected.id] || [];
