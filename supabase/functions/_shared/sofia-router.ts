@@ -45,6 +45,9 @@ export type CallAIArgs = {
   json?: boolean;
   maxTokens?: number;
   userId?: string | null;
+  /** Custo em créditos desta operação. Se informado, o gate bloqueia quando o
+   *  saldo for menor que o custo (e não apenas quando estiver zerado). */
+  custoCreditos?: number;
 };
 
 export type CallAIResult = {
