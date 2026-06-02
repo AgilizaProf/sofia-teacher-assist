@@ -1765,8 +1765,8 @@ ${corpo}
       anamnese_eixos_total: anamData.length || 14,
       pei_status: peiStatus,
       adaptacoes_registradas: totalRegs,
-    };
-  }, [selected, anamByStudent, peiByStudent, regByStudent, sofiaCtx]);
+    });
+  }, [selected, anamByStudent, peiByStudent, regByStudent, setAlunoAtual]);
 
   /**
    * Garante que TODOS os CIDs do(a) aluno(a) selecionado(a) sejam enviados
