@@ -30,27 +30,24 @@ export async function consumirCreditos(
   return { ok: true, saldo };
 }
 
-// Contador de mensagens do chat Sofia.
-// A cada 10 mensagens enviadas pelo usuário, desconta 1 crédito.
-const CHAT_COUNTER_KEY = "agp:sofia_msg_counter:v2";
-const CHAT_MSGS_POR_BLOCO = 10;
-const CHAT_CUSTO_BLOCO = 1;
-
+// Contador de mensagens do chat Sofia — agora autoritativo no servidor.
+// A RPC registrar_mensagem_sofia incrementa o contador por usuário (no banco,
+// sob lock) e desconta 1 crédito a cada 10 mensagens. Substitui o antigo
+// contador em localStorage, que era burlável (limpar o storage = chat grátis).
 export async function registrarMensagemSofia(): Promise<void> {
-  if (typeof localStorage === "undefined") return;
-  const cur = Number(localStorage.getItem(CHAT_COUNTER_KEY) ?? 0);
-  const next = cur + 1;
-  if (next >= CHAT_MSGS_POR_BLOCO) {
-    localStorage.setItem(CHAT_COUNTER_KEY, "0");
-    const r = await consumirCreditos(
-      CHAT_CUSTO_BLOCO,
-      `Chat Sofia (${CHAT_MSGS_POR_BLOCO} mensagens)`,
-    );
-    if (!r.ok && r.motivo === "insuficiente") {
-      toast.warning("Créditos insuficientes para o bloco do chat.");
-    }
-  } else {
-    localStorage.setItem(CHAT_COUNTER_KEY, String(next));
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data, error } = await supabase.rpc("registrar_mensagem_sofia" as any, {
+    _user_id: user.id,
+  });
+  if (error) {
+    // Não derruba o chat por falha de contagem; apenas registra.
+    console.warn("[registrarMensagemSofia] erro:", error.message);
+    return;
+  }
+  const res = data as { charged?: boolean; reason?: string } | null;
+  if (res?.charged === false && res?.reason === "creditos_insuficientes") {
+    toast.warning("Créditos insuficientes para o bloco do chat.");
   }
 }
 
