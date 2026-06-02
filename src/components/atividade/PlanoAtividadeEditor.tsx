@@ -2743,6 +2743,8 @@ function BlockWithRegen({
 /* ─────────────────────────── Styles ─────────────────────────── */
 
 const css = `
+.atv-save-row{display:grid;grid-template-columns:minmax(0,1fr) 140px 120px;gap:8px;align-items:center;padding:8px;border:1px solid var(--line,#E2E8F0);border-radius:8px;}
+@media(max-width:560px){.atv-save-row{grid-template-columns:1fr;}}   
 .atv-root{display:flex;flex-direction:column;gap:16px;min-width:0;max-width:100%;}
 .atv-root *{box-sizing:border-box;}
 .atv-toolbar{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:14px;box-shadow:0 1px 2px rgba(15,23,42,.05);}
