@@ -5634,7 +5634,7 @@ function M1EditCardModal(props: {
               <ListField label="Conceitos-chave" icon="💡" items={card.conceitos ?? []} onChange={(v) => upd({ conceitos: v })} />
               <ListField label="Perguntas para a turma" icon="❓" items={card.perguntasChave ?? []} onChange={(v) => upd({ perguntasChave: v })} />
               {edit && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 160px", gap: 10, marginTop: 4 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10, marginTop: 4 }}>
                   <Field label="Tag" value={card.tag} onChange={(v) => upd({ tag: v })} rows={1} />
                   <Field label="Minutos" value={String(card.minutos)} onChange={(v) => upd({ minutos: Math.max(5, parseInt(v || "0", 10) || 0) })} rows={1} />
                   <Field label="Código BNCC" value={card.bncc} onChange={(v) => upd({ bncc: v })} rows={1} mono />
