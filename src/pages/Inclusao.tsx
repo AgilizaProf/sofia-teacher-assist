@@ -1752,8 +1752,7 @@ ${corpo}
     const peiPreenchido = peiKeys.filter((k) => String(peiObj[k] || "").trim().length > 5).length;
     const peiStatus = peiPreenchido >= 6 ? "completo" : peiPreenchido > 0 ? "rascunho" : "nao_criado";
     const totalRegs = (regByStudent[selected.id] || []).length;
-    // @ts-ignore — injeta diretamente no entity para o useRouteContext capturar
-    sofiaCtx.entity.aluno_atual = {
+    setAlunoAtual({
       id: selected.id,
       nome: selected.name,
       primeiro_nome: selected.name.split(" ")[0],
