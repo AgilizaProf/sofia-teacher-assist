@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useLocation } from "@tanstack/react-router";
-import type { SofiaContext, RouteKey, SofiaUser, DiaSemana, Periodo } from "./types";
+import type { SofiaContext, RouteKey, SofiaUser, SofiaAluno, DiaSemana, Periodo } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { useSofiaUserDataOptional } from "@/lib/sofia/SofiaUserContext";
 import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
