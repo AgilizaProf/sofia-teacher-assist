@@ -216,9 +216,8 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
       user,
       entity: {
         turma_atual,
-        aluno_atual: null,
+        aluno_atual: alunoAtual,
         todos_alunos_pcd,
-        // @ts-ignore — campo extra para o useRouteContext usar nivel
         nivel_ensino: nivel,
       },
       dataState: {
