@@ -228,10 +228,11 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         eventos_agenda_mes,
         proxima_aula: null,
       },
-      temporal: temp,
+     temporal: temp,
+      setAlunoAtual,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [route, authUser, planInfo, userData, tick]);
+  }, [route, authUser, planInfo, userData, tick, alunoAtual]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
