@@ -1984,7 +1984,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
                     key={i}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 140px 120px",
+                      gridTemplateColumns: "minmax(0, 1fr) 140px 120px",
                       gap: 8,
                       alignItems: "center",
                       padding: 8,
