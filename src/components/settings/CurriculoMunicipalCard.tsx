@@ -14,6 +14,7 @@ type Ordem = 1 | 2;
 
 export function CurriculoMunicipalCard() {
   const { curriculos, loading, load, definirPadrao, removerPorId, reprocessar } = useCurriculoMunicipal();
+  const creditosGate = useCreditosGate();
   const [uploading, setUploading] = useState(false);
   const [formOrdem, setFormOrdem] = useState<Ordem | null>(null);
   const [municipio, setMunicipio] = useState("");
