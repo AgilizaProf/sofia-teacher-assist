@@ -109,6 +109,9 @@ export function CurriculoMunicipalCard() {
 
       fecharForm();
 
+      const okGate = await creditosGate.checar({ custo: CUSTOS.anexar_rede, acao: `Anexo de Rede — ${municipio.trim()}` });
+      if (!okGate) return;
+
       await supabase.functions.invoke("processar-curriculo", {
         body: { curriculo_id: row.id, arquivo_path: path, municipio: municipio.trim(), ordem },
       });
