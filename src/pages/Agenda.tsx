@@ -15,6 +15,7 @@ import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaLis
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
+import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 
 // ---- Integração M4 → Agenda --------------------------------------------------
