@@ -695,6 +695,7 @@ export function Agenda() {
   const [view, setView] = useState<ViewMode>("mes");
   const [cursor, setCursor] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   const { events: rawEvents, create, update, remove, loading: agendaLoading, refresh } = useAgenda();
+  const events = rawEvents as unknown as Event[];
   const creditosGate = useCreditosGate();
   const [openDate, setOpenDate] = useState<string | null>(null);
   const ALL_TYPES: EventType[] = ["meeting", "eval", "report", "plan", "pcd", "personal"];
