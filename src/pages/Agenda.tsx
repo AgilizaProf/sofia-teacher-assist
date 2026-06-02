@@ -1037,6 +1037,9 @@ const deleteCalendar = async () => {
         reader.readAsDataURL(file);
       });
 
+      const okGate = await creditosGate.checar({ custo: CUSTOS.anexar_agenda, acao: "Anexo de Agenda (calendário escolar)" });
+      if (!okGate) return;
+
       const { data, error } = await supabase.functions.invoke("processar-calendario", {
         body: { pdf_base64: base64 },
       });
