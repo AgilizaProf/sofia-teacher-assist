@@ -45,6 +45,9 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
   const [authUser, setAuthUser] = useState<{ nome: string; primeiro_nome: string } | null>(null);
   const [planInfo, setPlanInfo] = useState<{ plano: "free" | "pro"; ciclo: "mensal" | "anual" | null } | null>(null);
   const [tick, setTick] = useState(0);
+  // Aluno em foco — estado real (antes era mutado direto no objeto memoizado,
+  // o que dependia de re-renders incidentais e era apagado pelo tick de 60s).
+  const [alunoAtual, setAlunoAtual] = useState<SofiaAluno | null>(null);
 
   // ✅ Dados reais do Supabase
   const userData = useSofiaUserDataOptional();
