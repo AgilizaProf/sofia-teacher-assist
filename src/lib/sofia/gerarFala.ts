@@ -100,7 +100,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       estado: "urgente-foco",
       saudacao: saudacao(ctx),
       texto: interp(
-        `Sua próxima aula de <em>{{dataState.proxima_aula.disciplina}}</em> com a <em>{{entity.turma_atual.nome}}</em> é em <em>{{dataState.proxima_aula.minutos_ate}} min</em>. Quer que eu adapte para ${pcd.nome} (${pcd.condicao}) agora? Vamos juntos(as)?`
+        `Sua próxima aula de <em>{{dataState.proxima_aula.disciplina}}</em> com a <em>{{entity.turma_atual.nome}}</em> é em <em>{{dataState.proxima_aula.minutos_ate}} min</em>. Quer que eu adapte para ${esc(pcd.nome)} (${esc(pcd.condicao)}) agora? Vamos juntos(as)?`
       , ctx),
       acoes,
       contexto_chip: interp("vendo o planejamento da {{entity.turma_atual.nome}}", ctx),
