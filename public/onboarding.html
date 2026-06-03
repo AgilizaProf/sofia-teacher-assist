@@ -1689,17 +1689,9 @@
   }
 
   function goHome(){
-    // Marca onboarding como concluído e força a navegação no top-level
-    // (a página vive dentro de um <iframe> em /onboarding).
-    try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    try{ localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    try{ (window.parent||window).postMessage({type:'agp_onboarding_done',lead:leadData},'*'); }catch(_){}
-    try{
-      const top = window.top || window.parent || window;
-      top.location.assign('/');
-    }catch(_){
-      window.location.assign('/');
-    }
+    // Conclui o onboarding pelo app pai (persiste antes de navegar).
+    // A página vive dentro de um <iframe> em /onboarding.
+    finishOnboarding('/');
     return false;
   }
 
