@@ -4,7 +4,7 @@ import { Relatorios } from "@/pages/Relatorios";
 export const Route = createFileRoute("/relatorios")({
   // Sanitiza search params: qualquer valor inválido/ausente cai pro padrão
   // (tab=all, sem turma/pcd/focus) sem lançar erro — a página renderiza normalmente.
-  validateSearch: (s: Record<string, unknown>) => {
+  validateSearch: (s: Record<string, unknown>): { tab?: "all" | "todo" | "draft" | "review" | "done"; turma?: string; pcd?: "todos" | "apenas"; focus?: "turmas" | "alunos" | "pareceres" | "horas"; range?: "week" } => {
     const safe = (s ?? {}) as Record<string, unknown>;
     const ALLOWED_TABS = ["all", "todo", "draft", "review", "done"] as const;
     type Tab = (typeof ALLOWED_TABS)[number];
