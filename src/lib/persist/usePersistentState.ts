@@ -77,8 +77,21 @@ export function usePersistentState<T>(key: string, initial: T) {
   }, [lsKey]);
 
   // Persist to localStorage on every change
+  const firstPersistRef = useRef(true);
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // NÃO grava o valor inicial sintético do useState no mount. Antes desta
+    // guarda, o efeito (a) sobrescrevia um valor válido já presente no
+    // localStorage com o default e (b) bumpava o ":ts" para "agora", fazendo
+    // o pullRemote nunca "ganhar" a comparação de timestamp — então o snapshot
+    // remoto era descartado em qualquer dispositivo cujo localStorage estivesse
+    // vazio para esta chave, e a preferência (ex.: "Não mostrar" os cartões da
+    // Sofia) voltava ao default a cada carregamento. Só persistimos a partir da
+    // 1ª mudança REAL de estado (restore do localStorage ou ação do usuário).
+    if (firstPersistRef.current) {
+      firstPersistRef.current = false;
+      return;
+    }
     try {
       window.localStorage.setItem(lsKey, JSON.stringify(state));
       window.localStorage.setItem(lsKey + ":ts", String(Date.now()));
