@@ -35,27 +35,53 @@ export function useAuthGuard() {
   const location = useLocation();
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
+  // Garante que a checagem de onboarding rode UMA vez por sessão/usuário
+  // (não a cada navegação). Reseta no logout.
+  const onboardingCheckedRef = useRef<string | null>(null);
 
   useEffect(() => {
     enforceSessionPersistence();
     let mounted = true;
+
+    // Manda o usuário pro onboarding no PRIMEIRO acesso, independentemente de
+    // como entrou (e-mail/senha OU Google/Apple). O fluxo OAuth caía direto em
+    // "/" e pulava o onboarding. shouldShowOnboarding falha "fail-safe" (retorna
+    // false em erro), então nunca prende o usuário. Não roda em rotas públicas
+    // nem na própria /onboarding (evita loop). A gravação confiável de
+    // onboarding_concluido (correção da corrida na conclusão) evita reaparecer.
+    const gateOnboarding = (uid: string, pathname: string) => {
+      if (isPublic(pathname) || pathname === "/onboarding") return;
+      if (onboardingCheckedRef.current === uid) return;
+      onboardingCheckedRef.current = uid;
+      void shouldShowOnboarding(uid).then((show) => {
+        if (mounted && show) navigate({ to: "/onboarding" });
+      });
+    };
 
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
       const has = !!data.session;
       setAuthed(has);
       setReady(true);
-      if (!has && !isPublic(location.pathname)) {
-        navigate({ to: "/auth" });
+      if (!has) {
+        onboardingCheckedRef.current = null;
+        if (!isPublic(location.pathname)) navigate({ to: "/auth" });
+        return;
       }
+      const uid = data.session?.user?.id;
+      if (uid) gateOnboarding(uid, location.pathname);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const has = !!session;
       setAuthed(has);
-      if (!has && !isPublic(window.location.pathname)) {
-        navigate({ to: "/auth" });
+      if (!has) {
+        onboardingCheckedRef.current = null;
+        if (!isPublic(window.location.pathname)) navigate({ to: "/auth" });
+        return;
       }
+      const uid = session?.user?.id;
+      if (uid) gateOnboarding(uid, window.location.pathname);
     });
 
     return () => {
