@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { clearLocalAppData } from "@/lib/persist/clearLocalData";
+import { shouldShowOnboarding } from "@/lib/onboarding";
 
 const PUBLIC_ROUTES = ["/auth", "/reset-password", "/termos", "/privacidade"];
 
