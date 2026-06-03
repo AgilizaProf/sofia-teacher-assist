@@ -147,7 +147,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "vigia-radar",
       saudacao: saudacao(ctx),
-      texto: `Você tem <em>${entity.todos_alunos_pcd.length}</em> aluno(s) com laudo. Quer começar por ${pcd.nome} (${pcd.condicao})?`,
+      texto: `Você tem <em>${entity.todos_alunos_pcd.length}</em> aluno(s) com laudo. Quer começar por ${esc(pcd.nome)} (${esc(pcd.condicao)})?`,
       acoes: [{ label: `Abrir ${pcd.nome}`, intent: `abrir_aluno:${pcd.nome}` }],
       contexto_chip: `vendo ${entity.todos_alunos_pcd.length} aluno(s) PCD`,
     };
