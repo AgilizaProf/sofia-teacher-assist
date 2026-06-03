@@ -42,12 +42,19 @@ function OnboardingPage() {
     function onMsg(e: MessageEvent) {
       const d = e?.data;
       if (d && typeof d === "object" && d.type === "agp_onboarding_done") {
-        // fire-and-forget; do not block iframe navigation
         const lead = (d.lead && typeof d.lead === "object")
           ? { name: typeof d.lead.name === "string" ? d.lead.name : undefined,
               phone: typeof d.lead.phone === "string" ? d.lead.phone : undefined }
           : undefined;
-        void markOnboardingDone(lead);
+        const route = typeof d.route === "string" && d.route.startsWith("/") ? d.route : "/";
+        // Persiste ANTES de navegar. Como a navegação é de página inteira
+        // (o conteúdo vive num <iframe>), navegar antes abortava o UPDATE no
+        // Supabase — daí nome/telefone às vezes não chegavam e o onboarding
+        // reaparecia. Aguardamos a gravação e, dê certo ou não, seguimos.
+        void (async () => {
+          try { await markOnboardingDone(lead); }
+          finally { window.location.assign(route); }
+        })();
       }
     }
     window.addEventListener("message", onMsg);
