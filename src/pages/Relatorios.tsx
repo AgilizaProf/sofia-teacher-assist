@@ -27,7 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useTurmas } from "@/hooks/useTurmas";
 import { matchAnoCurriculo } from "@/lib/curriculo/matchAno";
-import { wrapEditorialPrintHtml as wrapStandardPrintHtml } from "@/lib/print/editorialPrint";
+import { wrapParecerPrintHtml as wrapStandardPrintHtml } from "@/lib/print/parecerPrintPlanejamento";
 import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
 
 const css = `
