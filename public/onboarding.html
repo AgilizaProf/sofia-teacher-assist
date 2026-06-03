@@ -1362,9 +1362,7 @@
   function goBack(){if(currentStep>0){currentStep--;updateUI();}}
   function skipOnboarding(){
     if(confirm('Pular o onboarding? Você pode acessá-lo depois pelo menu.')){
-      try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-      try{ (window.parent||window).postMessage({type:'agp_onboarding_done',lead:leadData},'*'); }catch(_){}
-      (window.top || window).location.href = '/';
+      finishOnboarding('/');
     }
   }
 
