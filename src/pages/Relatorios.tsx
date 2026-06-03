@@ -2153,6 +2153,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           const cls = dashClasses.find((c) => c.name === a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
           const bodyInner = `
+<article class="report">
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
 ${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
