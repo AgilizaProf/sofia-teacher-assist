@@ -53,7 +53,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "acolhedora-onboarding",
       saudacao: saudacao(ctx),
-      texto: interp(
+      texto: interpHtml(
         "Antes de eu sugerir qualquer coisa, preciso te conhecer um pouco. Quantas turmas você dá aula este ano?"
       , ctx),
       acoes: [
@@ -71,7 +71,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "propositiva-onboarding",
       saudacao: saudacao(ctx),
-      texto: interp(
+      texto: interpHtml(
         "Sua turma <em>{{entity.turma_atual.nome}}</em> está pronta. Vamos juntos(as) cadastrar os primeiros alunos? Leva uns 4 minutos."
       , ctx),
       acoes: [
@@ -99,7 +99,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "urgente-foco",
       saudacao: saudacao(ctx),
-      texto: interp(
+      texto: interpHtml(
         `Sua próxima aula de <em>{{dataState.proxima_aula.disciplina}}</em> com a <em>{{entity.turma_atual.nome}}</em> é em <em>{{dataState.proxima_aula.minutos_ate}} min</em>. Quer que eu adapte para ${esc(pcd.nome)} (${esc(pcd.condicao)}) agora? Vamos juntos(as)?`
       , ctx),
       acoes,
@@ -114,7 +114,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "mentora-tecnica",
       saudacao: saudacao(ctx),
-      texto: interp(
+      texto: interpHtml(
         peiPendente
           ? "Vi que o PEI de <em>{{entity.aluno_atual.primeiro_nome}}</em> ({{entity.aluno_atual.condicao_label}}) ainda está em <em>{{entity.aluno_atual.pei_status}}</em>. Vamos juntos(as) finalizar agora? Leva uns 8 minutos."
           : "Estou olhando o PEI de <em>{{entity.aluno_atual.primeiro_nome}}</em> ({{entity.aluno_atual.condicao_label}}). {{entity.aluno_atual.adaptacoes_registradas}} adaptações registradas. Quer que eu sugira a próxima?"
@@ -167,7 +167,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "parceira-fluxo",
       saudacao: saudacao(ctx),
-      texto: interp(
+      texto: interpHtml(
         "Estou olhando o planejamento da <em>{{entity.turma_atual.nome}}</em>. Quer que eu rascunhe a aula da próxima semana? Vamos juntos(as)?"
       , ctx),
       acoes: [
@@ -237,7 +237,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "parceira-fluxo",
       saudacao: saudacao(ctx),
-      texto: interp(
+      texto: interpHtml(
         "Estou aqui pra te ajudar com <em>{{entity.turma_atual.nome}}</em> ({{dataState.alunos_count}} alunos). O que vamos fazer agora?"
       , ctx),
       acoes: [
@@ -254,7 +254,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
       return {
         estado: "celebradora",
         saudacao: saudacao(ctx),
-        texto: interp(
+        texto: interpHtml(
           "<em>{{user.streak_dias}} dias</em> seguidos por aqui! Você já economizou <em>{{user.horas_economizadas_mes}}h</em> este mês. Bora manter o ritmo?"
         , ctx),
         acoes: [{ label: "Ver foco de hoje", intent: "ver_foco_hoje" }],
@@ -264,7 +264,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
     return {
       estado: "parceira-fluxo",
       saudacao: saudacao(ctx),
-      texto: interp(
+      texto: interpHtml(
         "Estou de olho na <em>{{entity.turma_atual.nome}}</em>. Por onde vamos começar: parecer, planejamento ou inclusão?"
       , ctx),
       acoes: [
