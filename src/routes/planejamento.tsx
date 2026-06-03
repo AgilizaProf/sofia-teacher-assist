@@ -5,7 +5,11 @@ import { sanitizeFilter } from "@/lib/sofia/m6Filters";
 // Sanitização compartilhada vive em @/lib/sofia/m6Filters — também é
 // reaproveitada pela página ao restaurar o estado persistido em localStorage.
 
-type MKey = "atv" | "pcd" | "m1" | "m4" | "m5" | "m6" | "trilhas";
+// Tipo de ENTRADA do parâmetro ?m= : aceita tanto os rótulos visíveis ao
+// usuário (m1..m7) quanto as chaves internas (atv/pcd/m4/m5/m6/trilhas),
+// porque normalizePlanejamentoTab() converte ambos. É o contrato dos
+// deep-links da Sofia e do Dashboard ("Ir a M3" → abre a aba certa).
+type MKey = "atv" | "pcd" | "m1" | "m2" | "m3" | "m4" | "m5" | "m6" | "m7" | "trilhas";
 type Search = {
   m?: MKey;
   /** Filtro por tag do diário (M6). */
