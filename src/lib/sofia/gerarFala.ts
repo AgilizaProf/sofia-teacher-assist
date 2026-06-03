@@ -1,19 +1,41 @@
 import type { SofiaContext, FalaSofia, SofiaAcao } from "./types";
 
-// Interpola {{caminho.com.pontos}} em strings, usando o context como fonte.
-function interp(template: string, ctx: SofiaContext): string {
-  return template.replace(/\{\{([^}]+)\}\}/g, (_m, path: string) => {
-    const parts = path.trim().split(".");
-    let cur: unknown = ctx;
-    for (const k of parts) {
-      if (cur && typeof cur === "object" && k in (cur as Record<string, unknown>)) {
-        cur = (cur as Record<string, unknown>)[k];
-      } else {
-        return ""; // dado ausente → string vazia (a personalidade já deveria ter trocado de fala)
-      }
+// Escapa HTML. Usado nos VALORES dinâmicos que entram no campo `texto`, que é
+// renderizado via dangerouslySetInnerHTML no balão da Sofia. Sem isso, um nome
+// de turma/aluno/condição (digitado no cadastro) contendo HTML seria injetado.
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Resolve {{caminho.com.pontos}} no context. Retorna "" se o dado faltar.
+function resolve(path: string, ctx: SofiaContext): string {
+  const parts = path.trim().split(".");
+  let cur: unknown = ctx;
+  for (const k of parts) {
+    if (cur && typeof cur === "object" && k in (cur as Record<string, unknown>)) {
+      cur = (cur as Record<string, unknown>)[k];
+    } else {
+      return ""; // dado ausente → string vazia
     }
-    return cur == null ? "" : String(cur);
-  });
+  }
+  return cur == null ? "" : String(cur);
+}
+
+// Interpola {{...}} SEM escapar — use só em campos renderizados como TEXTO
+// (ex.: contexto_chip), nunca em HTML.
+function interp(template: string, ctx: SofiaContext): string {
+  return template.replace(/\{\{([^}]+)\}\}/g, (_m, path: string) => resolve(path, ctx));
+}
+
+// Igual a interp(), mas ESCAPA os valores — use no campo `texto`, que vira HTML.
+// Mantém o <em> estático do template (não é substituído) e escapa só os dados.
+function interpHtml(template: string, ctx: SofiaContext): string {
+  return template.replace(/\{\{([^}]+)\}\}/g, (_m, path: string) => esc(resolve(path, ctx)));
 }
 
 function saudacao(ctx: SofiaContext): string {
