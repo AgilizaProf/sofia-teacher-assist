@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Dashboard } from "@/pages/Dashboard";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { open?: string; target?: string; m?: "m1" | "m3" | "m5" } => ({
     open: typeof s.open === "string" ? (s.open as string) : undefined,
     target: typeof s.target === "string" ? (s.target as string) : undefined,
     m: typeof s.m === "string" && ["m1", "m3", "m5"].includes(s.m as string)
