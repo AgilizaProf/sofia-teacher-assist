@@ -2163,7 +2163,8 @@ ${parecerHtml}
   <div>Coordenação pedagógica</div>
   <div>Família / Responsável</div>
 </div>
-<div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Pareceres descritivos</div>`;
+<div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Pareceres descritivos</div>
+</article>`;
           return wrapStandardPrintHtml(`Parecer · ${esc(a.nome)}`, bodyInner, {
             extraCss: PRINT_CSS,
             professorNome: user.name,
