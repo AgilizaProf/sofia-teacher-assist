@@ -2083,6 +2083,40 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           </div>
         );
       })()}
+      {lote.itens.length > 0 && (
+        <div className="rel-modal-bg" role="dialog" aria-modal="true">
+          <div className="rel-modal" style={{ maxWidth: 520, width: "100%" }}>
+            <h3>Gerando pareceres em lote</h3>
+            <div className="rel-modal-meta">
+              {lote.ativo
+                ? `Gerando ${lote.feitos} de ${lote.total}…`
+                : `Concluído · ${lote.itens.filter((i) => i.status === "ok").length} de ${lote.total} gerado(s)`}
+            </div>
+            <div style={{ height: 8, background: "#F1EFE8", borderRadius: 999, overflow: "hidden", margin: "0 0 14px" }}>
+              <div style={{ height: "100%", width: `${lote.total ? Math.round((lote.feitos / lote.total) * 100) : 0}%`, background: "linear-gradient(90deg,#FF6A2C,#FF8A4C)", borderRadius: 999, transition: "width .3s" }} />
+            </div>
+            <div className="rel-modal-body" style={{ maxHeight: 320, overflowY: "auto" }}>
+              {lote.itens.map((it) => {
+                const c = it.status === "ok" ? ["#E7F6EE", "#16A36B", "pronto ✓"]
+                  : it.status === "gerando" ? ["#FCF1DC", "#9a6a12", "gerando…"]
+                  : it.status === "erro" ? ["#FDECEC", "#DC2626", "erro"]
+                  : ["#EFEDE7", "#7c8597", "na fila"];
+                return (
+                  <div key={it.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 2px", borderBottom: "1px solid #F1EFE8" }}>
+                    <span style={{ flex: 1, fontSize: 13.5, fontWeight: 600 }}>{it.nome}</span>
+                    <span style={{ background: c[0], color: c[1], fontSize: 11.5, fontWeight: 700, padding: "3px 9px", borderRadius: 999, whiteSpace: "nowrap" }}>{c[2]}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="rel-modal-foot">
+              <button className="rel-btn-card" disabled={lote.ativo} onClick={() => setLote({ ativo: false, feitos: 0, total: 0, itens: [] })}>
+                {lote.ativo ? "Gerando…" : "Fechar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {novoAlunoOpen && (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) fecharModalAluno(); }}
