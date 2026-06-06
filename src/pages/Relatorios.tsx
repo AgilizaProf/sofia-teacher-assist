@@ -850,6 +850,19 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       const periodoLabel = `${pTituloLower} · ${new Date().getFullYear()}`;
       const gradeRaw = (nivelTexto || cls?.grade || "").trim();
       const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${anoEscolar} ${a.turma}`);
+      // Converte slugs do formulário ("pre-2", "bercario-1", "2") em rótulos
+      // legíveis ("Pré II (EI)", "Berçário I (EI)", "2º ano EF") antes de
+      // enviar à Sofia. Sem isso, o modelo recebe o slug cru e não entende
+      // que se trata de Educação Infantil.
+      const prettyGrade = (raw?: string | null) => {
+        const t = (raw || "").trim();
+        if (!t) return "";
+        const fmt = formatTurmaGrade(t);
+        return fmt || t;
+      };
+      const anoEscolarLabel = prettyGrade(anoEscolar);
+      const anoReferenciaPedagogicoLabel = prettyGrade(anoReferenciaPedagogico) || anoEscolarLabel;
+      const nivelTextoLabel = prettyGrade(nivelTexto) || nivelTexto;
       const nivelEnsino = ei ? "Educação Infantil"
         : isMedio ? "Ensino Médio" : "Ensino Fundamental";
       const tipoRelatorio: ParecerNarrativo["tipo_relatorio"] = ei
@@ -860,7 +873,9 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         : `\n\nINSTRUÇÕES OBRIGATÓRIAS (regra de redação inviolável):\nNUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "anotações", "diário", "anamnese", "PEI", "rubrica BNCC" ou "notas do(a) professor(a)". Escreva sempre como conhecimento direto e consolidado sobre o(a) aluno(a). Evite expressões como "segundo as observações", "de acordo com os registros", "conforme observado", "com base na anamnese" ou "as anotações indicam" — descreva os fatos diretamente, sem citar a origem.`;
       const peiResumo = [
         a.pcd ? `Condição/PCD: ${a.pcd}` : "",
-        (anoReferenciaPedagogico || anoEscolar || nivelTexto) ? `Ano/Etapa: ${anoReferenciaPedagogico || anoEscolar || nivelTexto}` : "",
+        (anoReferenciaPedagogicoLabel || anoEscolarLabel || nivelTextoLabel)
+          ? `Ano/Etapa: ${anoReferenciaPedagogicoLabel || anoEscolarLabel || nivelTextoLabel}`
+          : "",
         `Nível de ensino: ${nivelEnsino}`,
         aluno?.notes ? `Observações: ${aluno.notes}` : "",
         instrucoesEI,
@@ -920,10 +935,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           registros: registrosDoAluno,
           nivel_ensino: nivelEnsino,
           tipo_relatorio: tipoRelatorio,
-          anoEscolar: anoEscolar || "",
-          anoReferenciaPedagogico: anoReferenciaPedagogico || "",
+          anoEscolar: anoEscolarLabel || "",
+          anoReferenciaPedagogico: anoReferenciaPedagogicoLabel || "",
           anoReferenciaInstrucao: ei
-            ? "Trata-se de Educação Infantil. Não converter para ano do Ensino Fundamental. Estruture o parecer exclusivamente pelos Campos de Experiência e pelos Direitos de Aprendizagem da BNCC."
+            ? `Trata-se de Educação Infantil${anoReferenciaPedagogicoLabel ? ` (${anoReferenciaPedagogicoLabel})` : ""}. NÃO converter para ano do Ensino Fundamental. Estruture o parecer exclusivamente pelos Campos de Experiência e pelos Direitos de Aprendizagem da BNCC, com linguagem afetiva e narrativa adequada à faixa etária.`
             : "",
           // Regra: relatórios e pareceres SEMPRE seguem a BNCC, independente
           // do currículo municipal anexado/vinculado à turma. Os currículos
