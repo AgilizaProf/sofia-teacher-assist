@@ -891,6 +891,11 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         nivel_ensino: nivelEnsino,
       };
       setParecerByAluno((all) => ({ ...all, [a.id]: parecer }));
+      // Histórico: 1 parecer por período — substitui o mesmo período, preserva os anteriores.
+      setParecerHist((h) => ({
+        ...h,
+        [a.id]: [...(h[a.id] || []).filter((p) => p.periodoLabel !== parecer.periodoLabel), parecer],
+      }));
       const fontesUsadas: string[] = [];
       if (registrosDoAluno.length > 0) fontesUsadas.push(`${registrosDoAluno.length} registros`);
       if (anamResumoTexto) fontesUsadas.push("anamnese");
