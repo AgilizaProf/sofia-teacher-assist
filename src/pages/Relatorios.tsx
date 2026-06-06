@@ -858,6 +858,21 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       // Registros do diário de inclusão (inc_reg) também só entram para PCD.
       const registrosDoAluno = ehPcd ? (regByStudent[a.id] || []).slice(0, 50) : [];
 
+      // Parecer do período anterior (do histórico) p/ a IA descrever a evolução (longitudinal).
+      const anteriores = (parecerHist[a.id] || []).filter((p) => p.periodoLabel && p.periodoLabel !== periodoLabel);
+      const parecerAnterior = anteriores.length ? anteriores[anteriores.length - 1] : null;
+      const parecerAnteriorTexto = parecerAnterior
+        ? (parecerAnterior.formato === "texto" && parecerAnterior.texto
+            ? parecerAnterior.texto
+            : [
+                parecerAnterior.resumo, parecerAnterior.pedagogico, parecerAnterior.comportamental,
+                parecerAnterior.sensorial, parecerAnterior.familia,
+                parecerAnterior.avancos?.length ? `Avanços: ${parecerAnterior.avancos.join("; ")}` : "",
+                parecerAnterior.desafios?.length ? `Desafios: ${parecerAnterior.desafios.join("; ")}` : "",
+                parecerAnterior.comunicacao_familias,
+              ].filter(Boolean).join("\n"))
+        : "";
+
       const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
         body: {
           aluno: a.nome,
