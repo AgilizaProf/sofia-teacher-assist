@@ -831,10 +831,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     try {
       const areas = areasFor(a.id, a.turma, a.pcd);
       const rub = getAlunoRubric(a.id);
-      const ei = isEiAluno(a.turma);
+      const ei = isEiAluno(a.turma, a.id);
       const linhas = areas.map((area, ai) => {
         const itens = area.comps.map((c, ci) => {
-          const lbl = statusLabel(a.turma, rub[`${ai}.${ci}`]);
+            const lbl = statusLabel(a.turma, rub[`${ai}.${ci}`], a.id);
           return `  - ${c}: ${lbl}`;
         }).join("\n");
         return `${area.area}\n${itens}`;
@@ -1790,9 +1790,9 @@ ${parecerHtml}
                   <button
                     className="rel-btn-card"
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
-                    aria-label={`${isEiAluno(a.turma) ? "Avaliar por Campos de Experiência" : "Avaliar competências"} de ${a.nome}`}
+                    aria-label={`${isEiAluno(a.turma, a.id) ? "Avaliar por Campos de Experiência" : "Avaliar competências"} de ${a.nome}`}
                   >
-                   <ClipboardList size={13} /> {isEiAluno(a.turma) ? "Avaliar Campos" : labelAvaliacaoParaTurma(a.turma)}
+                   <ClipboardList size={13} /> {isEiAluno(a.turma, a.id) ? "Avaliar Campos" : labelAvaliacaoParaTurma(a.turma, a.id)}
                   </button>
                   {a.status === "todo" && (
                     <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
@@ -1950,8 +1950,8 @@ ${parecerHtml}
         const cls = turmaByName(turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
-        const ei = isEiAluno(turma);
-        const STATUS = ei ? BNCC_STATUS_EI : BNCC_STATUS;
+        const ei = isEiAluno(turma, id);
+        const STATUS = statusListFor(turma, id);
         const curriculoModal = curriculoParaTurma(turma);
         const nomeMunicipioModal = curriculoModal
           ? `${curriculoModal.municipio}${curriculoModal.estado ? ` (${curriculoModal.estado})` : ""}`
