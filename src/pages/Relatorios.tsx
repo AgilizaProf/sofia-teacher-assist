@@ -2515,6 +2515,7 @@ ${parecerHtml}
                               partes.push(p.texto);
                             } else {
                               if (p.resumo) partes.push(`Resumo:\n${p.resumo}\n`);
+                              if (p.campos?.length) p.campos.forEach((c) => partes.push(`${c.campo}:\n${c.texto}\n`));
                               if (p.pedagogico) partes.push(`Pedagógico:\n${p.pedagogico}\n`);
                               if (p.comportamental) partes.push(`Comportamental:\n${p.comportamental}\n`);
                               if (p.sensorial) partes.push(`Sensorial:\n${p.sensorial}\n`);
