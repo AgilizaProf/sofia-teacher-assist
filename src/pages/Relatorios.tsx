@@ -2653,7 +2653,42 @@ ${parecerHtml}
                           <button className="rel-btn-card dark" onClick={exportPdf}>
                             <Download size={13} /> Imprimir / PDF
                           </button>
+                          <button
+                            className="rel-btn-card accent"
+                            disabled={gerandoFamiliaId === a.id}
+                            onClick={() => handleGerarVersaoFamilia({ id: a.id, nome: a.nome, turma: a.turma }, parecerAluno)}
+                            title="Gerar uma versão curta e calorosa do parecer para a família"
+                          >
+                            <Sparkles size={13} /> {gerandoFamiliaId === a.id ? "Gerando…" : (parecerAluno.versao_familia ? "Refazer versão família" : "Gerar versão p/ família")}
+                          </button>
                         </div>
+                        {parecerAluno.versao_familia && (
+                          <div style={{ marginTop: 4, padding: 12, background: "linear-gradient(180deg,#FFFDF9,#FBF3EA)", border: "1px solid #F1E4D2", borderRadius: 10 }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                              <b style={{ fontFamily: "'Fraunces',serif", fontSize: 14 }}>Versão para a família</b>
+                              <button
+                                className="rel-btn-card"
+                                onClick={() => {
+                                  const vf = parecerAluno.versao_familia!;
+                                  const txt = [vf.texto, vf.destaques?.length ? `\nDestaques: ${vf.destaques.join(" · ")}` : ""].filter(Boolean).join("\n");
+                                  navigator.clipboard.writeText(txt).then(() => toast.success("Versão da família copiada."));
+                                }}
+                              >
+                                <Copy size={13} /> Copiar
+                              </button>
+                            </div>
+                            {parecerAluno.versao_familia.texto.split(/\n+/).map((linha, i) => (
+                              <p key={i} style={{ margin: "0 0 8px", fontSize: 13, lineHeight: 1.6, color: "#3a342c" }}>{linha}</p>
+                            ))}
+                            {parecerAluno.versao_familia.destaques?.length ? (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                                {parecerAluno.versao_familia.destaques.map((d, i) => (
+                                  <span key={i} style={{ background: "#fff", border: "1px solid #F0E2D0", color: "#6a4a2a", fontSize: 11.5, fontWeight: 600, padding: "4px 10px", borderRadius: 999 }}>{d}</span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        )}
                       </>
                     ) : (
                       <>
