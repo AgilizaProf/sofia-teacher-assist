@@ -2442,6 +2442,7 @@ ${parecerHtml}
                           </div>
                         ) : (
                           <>
+                            {parecerAluno.evolucao && (<div><b style={{ fontSize: 12 }}>Evolução no período</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.evolucao}</p></div>)}
                             {parecerAluno.resumo && <p style={{ margin: 0, fontSize: 13 }}>{parecerAluno.resumo}</p>}
                             {parecerAluno.pedagogico && (<div><b style={{ fontSize: 12 }}>Pedagógico</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.pedagogico}</p></div>)}
                             {parecerAluno.comportamental && (<div><b style={{ fontSize: 12 }}>Comportamental</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.comportamental}</p></div>)}
