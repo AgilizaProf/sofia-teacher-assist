@@ -2018,7 +2018,8 @@ export function Dashboard() {
               <div className="school-row">
                 <div className="school-field">
                   <label htmlFor="edit-class-grade">Série / Ano</label>
-                  <select id="edit-class-grade" name="grade" defaultValue={classes[editingClassIdx].grade || "2"}>
+                  <select id="edit-class-grade" name="grade" defaultValue={classes[editingClassIdx].grade || ""} required>
+                    <option value="" disabled>Selecione a etapa / ano</option>
                     <optgroup label="Educação Infantil">
                       <option value="bercario-1">Berçário I (0–1 ano)</option>
                       <option value="bercario-2">Berçário II (1–2 anos)</option>
