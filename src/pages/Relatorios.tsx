@@ -818,6 +818,24 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     if (turma && tipoPeriodoByTurma[turma]) return tipoPeriodoByTurma[turma];
     return tipoPeriodo;
   };
+  // Override de período por aluno — dá autonomia para antecipar/voltar
+  // (avaliar o 1º bim do próximo aluno, refazer o 3º trimestre, etc.).
+  type PeriodoAlunoOverride = { tipo: TipoPeriodo; num: number; ano: number };
+  const [periodoByAluno, setPeriodoByAluno] = usePersistentState<Record<string, PeriodoAlunoOverride>>("rel_periodo_por_aluno", {});
+  const qtdPeriodos = (t: TipoPeriodo) => t === "Bimestral" ? 4 : t === "Trimestral" ? 3 : t === "Semestral" ? 2 : 1;
+  const nomePeriodo = (t: TipoPeriodo) => t === "Bimestral" ? "bimestre" : t === "Trimestral" ? "trimestre" : t === "Semestral" ? "semestre" : "ano letivo";
+  function resolvePeriodoAluno(alunoId: string, turma?: string | null) {
+    const ov = periodoByAluno[alunoId];
+    const tipo: TipoPeriodo = ov?.tipo ?? getTipoPeriodoFor(turma);
+    const qtd = qtdPeriodos(tipo);
+    const numAuto = (() => { const m = new Date().getMonth() + 1; return Math.min(qtd, Math.ceil((m * qtd) / 12)); })();
+    const num = Math.min(qtd, Math.max(1, ov?.num ?? numAuto));
+    const ano = ov?.ano ?? new Date().getFullYear();
+    const nome = nomePeriodo(tipo);
+    const tituloLower = tipo === "Anual" ? "ano letivo" : `${num}º ${nome}`;
+    const label = `${tituloLower} · ${ano}`;
+    return { tipo, qtd, num, ano, nome, tituloLower, label };
+  }
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
