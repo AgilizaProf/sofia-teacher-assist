@@ -759,7 +759,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
 
   // ===== Parecer descritivo (mesmo modelo da aba Relatórios da Inclusão) =====
   type ParecerNarrativo = {
-    titulo?: string; resumo?: string; evolucao?: string;
+   titulo?: string; resumo?: string; evolucao?: string;
+    campos?: { campo: string; texto: string }[];
     pedagogico?: string; comportamental?: string; sensorial?: string; familia?: string;
     avancos?: string[]; desafios?: string[]; encaminhamentos?: string[];
     comunicacao_familias?: string;
