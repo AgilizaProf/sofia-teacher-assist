@@ -44,6 +44,25 @@ serve(async (req) => {
     // É Educação Infantil? Define a estrutura de saída por campos de experiência.
     const ehEI = tipo_relatorio === "parecer_descritivo" || /infantil/i.test(String(nivel_ensino));
 
+    // Modo família: reescreve um parecer JÁ pronto numa mensagem curta e calorosa p/ os responsáveis.
+    if (modo === "familia") {
+      const sysFam =
+        "Você reescreve um parecer pedagógico já pronto em uma mensagem curta e calorosa para a FAMÍLIA da criança. " +
+        "Regras: tom acolhedor, em primeira pessoa (a professora falando com a família); 2 a 3 parágrafos curtos; " +
+        "linguagem simples, SEM jargão pedagógico, SEM códigos da BNCC, SEM termos clínicos ou diagnósticos; " +
+        "honesto, mas afetuoso; nunca compare a criança com outras; linguagem não capacitista. " +
+        'Responda APENAS com JSON: {"texto": "2-3 parágrafos", "destaques": ["3 a 4 destaques curtos e positivos do período"]}';
+      const userFam =
+        `Nome da criança: ${aluno || "a criança"}\nPeríodo: ${intervalo || periodo}\n\n` +
+        `Parecer base (já revisado pela professora) — reescreva para a família:\n${String(textoBaseFamilia || "").trim()}`;
+      const rf = await callAI({ userId, tipo: "parecer", system: sysFam, user: userFam, json: true, maxTokens: 1200 });
+      if (!rf.ok) return aiErrorResponse(rf);
+      const vf = parseAiJson<{ texto?: string; destaques?: string[] }>(rf.text || "{}");
+      return new Response(JSON.stringify({ versao_familia: vf, model: rf.model }), {
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     // Bloqueio: nunca gerar parecer/relatório antes de o usuário escolher o formato
     if (formato !== "topicos" && formato !== "texto") {
       return new Response(
