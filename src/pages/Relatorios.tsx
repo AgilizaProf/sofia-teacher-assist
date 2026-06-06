@@ -918,7 +918,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       if (registrosDoAluno.length > 0) fontesUsadas.push(`${registrosDoAluno.length} registros`);
       if (anamResumoTexto) fontesUsadas.push("anamnese");
       if (peiDoAluno) fontesUsadas.push("PEI");
-      toast.success(
+     if (!opts?.silent) toast.success(
         ei ? "Parecer descritivo gerado pela Sofia." : "Parecer gerado pela Sofia.",
         {
           description: fontesUsadas.length > 0
