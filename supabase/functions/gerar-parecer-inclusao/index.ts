@@ -130,7 +130,7 @@ ${formato === "texto" ? `Responda APENAS com JSON válido neste formato:
 {
   "titulo": "Parecer descritivo · ${periodo}",
   "resumo": "2-3 frases de contexto do(a) aluno(a) no período",
-  "pedagogico": "1 parágrafo sobre desempenho pedagógico",
+${(parecerAnteriorTexto || "").trim() ? `  "evolucao": "1 parágrafo comparando com o período anterior (${parecerAnteriorIntervalo || "anterior"}): o que avançou e o que permanece em desenvolvimento — sem linguagem comparativa entre crianças nem capacitista",\n` : ""}  "pedagogico": "1 parágrafo sobre desempenho pedagógico",
   "comportamental": "1 parágrafo sobre aspectos comportamentais e socioafetivos",
   "sensorial": "1 parágrafo sobre aspectos sensoriais (ou 'sem registros' se não houver)",
   "familia": "1 parágrafo sobre comunicação com a família",
