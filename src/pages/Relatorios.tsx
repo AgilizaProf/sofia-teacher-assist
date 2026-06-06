@@ -777,6 +777,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   // segue sendo o "mais recente" usado pelas telas atuais; aqui guardamos a série.
   const [parecerHist, setParecerHist] = usePersistentState<Record<string, ParecerNarrativo[]>>("rel_parecer_hist", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
+  // Estado do "gerar em lote" (progresso da turma/filtro atual).
+  const [lote, setLote] = useState<{ ativo: boolean; feitos: number; total: number }>({ ativo: false, feitos: 0, total: 0 });
   const creditosGate = useCreditosGate();
   const [formatoParecer, setFormatoParecer] = useState<"" | "topicos" | "texto">("");
   type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
