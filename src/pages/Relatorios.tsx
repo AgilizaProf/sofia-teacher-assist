@@ -1064,15 +1064,24 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     [curriculosAtivos, turmaByName],
   );
   const labelAvaliacaoParaTurma = useCallback(
-    (turma?: string | null) => {
+    (turma?: string | null, alunoId?: string) => {
       // EI: rótulo dedicado, independente de currículo municipal.
       const cls = turmaByName(turma || "");
-      if (isEi || isEiTurma(cls?.grade)) return "Avaliar Campos de Experiência";
+      const aluno = alunoId ? getStudentById(alunoId) : null;
+      if (
+        isEi
+        || isEiTurma(cls?.grade)
+        || isEiTurma(aluno?.anoReferenciaPedagogico)
+        || isEiTurma(aluno?.anoEscolar)
+        || inferirNivelEnsino(turma || "") === "Educação Infantil"
+      ) {
+        return "Avaliar Campos de Experiência";
+      }
       const curriculo = curriculoParaTurma(turma);
       if (!curriculo) return "Avaliar BNCC";
       return `Avaliar ${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}`;
     },
-    [curriculoParaTurma, turmaByName, isEi],
+    [curriculoParaTurma, turmaByName, isEi, getStudentById],
   );
   // EI por aluno: usa o grade da turma (ex.: "pre-2", "maternal-1").
   const isEiAluno = (turma: string, alunoId?: string): boolean => {
