@@ -771,6 +771,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     nivel_ensino?: string;
   };
   const [parecerByAluno, setParecerByAluno] = usePersistentState<Record<string, ParecerNarrativo>>("rel_parecer", {});
+  // Histórico de pareceres por aluno × período. Base do parecer longitudinal
+  // (comparar com o período anterior) e do lote. Aditivo: o rel_parecer acima
+  // segue sendo o "mais recente" usado pelas telas atuais; aqui guardamos a série.
+  const [parecerHist, setParecerHist] = usePersistentState<Record<string, ParecerNarrativo[]>>("rel_parecer_hist", {});
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
   const creditosGate = useCreditosGate();
   const [formatoParecer, setFormatoParecer] = useState<"" | "topicos" | "texto">("");
