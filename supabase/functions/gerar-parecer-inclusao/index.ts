@@ -35,7 +35,12 @@ serve(async (req) => {
       curriculo_municipal = null as
         | { municipio: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string }> }
         | null,
+      nivel_ensino = "",
+      tipo_relatorio = "",
     } = body || {};
+
+    // É Educação Infantil? Define a estrutura de saída por campos de experiência.
+    const ehEI = tipo_relatorio === "parecer_descritivo" || /infantil/i.test(String(nivel_ensino));
 
     // Bloqueio: nunca gerar parecer/relatório antes de o usuário escolher o formato
     if (formato !== "topicos" && formato !== "texto") {
