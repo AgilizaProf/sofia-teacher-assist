@@ -1034,8 +1034,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         body: { modo: "familia", textoBaseFamilia: base, aluno: a.nome, periodo: p.periodoLabel || "Bimestral", intervalo: p.periodoLabel || "" },
       });
       if (error) throw error;
-      const vf = (data as { versao_familia?: { texto?: string; destaques?: string[] } })?.versao_familia;
-      if (!vf?.texto) throw new Error("Resposta vazia.");
+      const env = data as { ok?: boolean; error?: string; versao_familia?: { texto?: string; destaques?: string[] } };
+      if (env?.ok === false) throw new Error(env.error || "Falha ao gerar.");
+      const vf = env?.versao_familia;
+      if (!vf?.texto) throw new Error("A IA não retornou texto. Tente novamente.");
       const versao_familia = { texto: vf.texto, destaques: vf.destaques || [], geradoEm: new Date().toLocaleString("pt-BR") };
       setParecerByAluno((all) => ({ ...all, [a.id]: { ...(all[a.id] || p), versao_familia } }));
       setParecerHist((h) => ({
