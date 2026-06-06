@@ -939,6 +939,29 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     }
   };
 
+  // Gera o parecer de todos os alunos do filtro atual que ainda não têm parecer.
+  // Sequencial (1 por vez), respeitando o gate de créditos; grava cada um no histórico.
+  const handleGerarLote = async () => {
+    if (formatoParecer !== "topicos" && formatoParecer !== "texto") {
+      toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar em lote.");
+      return;
+    }
+    const pendentes = alunosFiltered.filter((a) => !parecerByAluno[a.id]);
+    if (pendentes.length === 0) {
+      toast.info("Todos os alunos do filtro atual já têm parecer. Ajuste o filtro para gerar outros.");
+      return;
+    }
+    setLote({ ativo: true, feitos: 0, total: pendentes.length });
+    let ok = 0;
+    for (const a of pendentes) {
+      await handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }, { silent: true });
+      ok += 1;
+      setLote((l) => ({ ...l, feitos: ok }));
+    }
+    setLote({ ativo: false, feitos: 0, total: 0 });
+    toast.success(`Lote concluído: ${ok} parecer(es) processado(s).`);
+  };
+
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
     const cls = turmaByName(turma);
