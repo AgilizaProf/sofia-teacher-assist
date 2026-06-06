@@ -18,7 +18,12 @@ function isPublic(path: string) {
 function isPreviewHost() {
   if (typeof window === "undefined") return false;
   const h = window.location.hostname;
-  return h.includes("id-preview--") || h.endsWith(".lovable.dev");
+  return (
+    h.includes("id-preview--") ||
+    h.endsWith(".lovableproject.com") ||
+    h.endsWith(".lovable.dev") ||
+    h === "localhost"
+  );
 }
 
 /**
