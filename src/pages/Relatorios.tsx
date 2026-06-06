@@ -2288,6 +2288,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
                   ${parecerAluno.desafios?.length ? `<h3>Desafios</h3>${ulHtml(parecerAluno.desafios)}` : ""}
                   ${parecerAluno.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ulHtml(parecerAluno.encaminhamentos)}` : ""}
                   ${parecerAluno.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAluno.comunicacao_familias)}</p>` : ""}
+                  <div style="margin-top:14px;border:1px solid #555;border-radius:6px;padding:7px 10px;font-size:10px;color:#333;line-height:1.4;">Gerado a partir de registros · sem invenção de fatos · estruturado ${(parecerAluno.tipo_relatorio === "parecer_descritivo" || /infantil/i.test(String(parecerAluno.nivel_ensino || ""))) ? "pelos campos de experiência da BNCC" : "pela BNCC"} · revisado pela professora.</div>
                 </section>`)
           : "";
         const buildReportHtml = () => {
