@@ -860,13 +860,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       }).join("\n\n");
       const contextoPedagogico = pedagogicalContextForAluno(a.id, a.turma);
       const { aluno, cls, nivelTexto, anoEscolar, anoReferenciaPedagogico } = contextoPedagogico;
-      // Periodicidade específica da turma do aluno (cai no padrão global se não configurada).
-      const tipoPeriodoAluno = getTipoPeriodoFor(a.turma);
-      const pQtd = tipoPeriodoAluno === "Bimestral" ? 4 : tipoPeriodoAluno === "Trimestral" ? 3 : tipoPeriodoAluno === "Semestral" ? 2 : 1;
-      const pNum = (() => { const m = new Date().getMonth() + 1; return Math.min(pQtd, Math.ceil((m * pQtd) / 12)); })();
-      const pNome = tipoPeriodoAluno === "Bimestral" ? "bimestre" : tipoPeriodoAluno === "Trimestral" ? "trimestre" : tipoPeriodoAluno === "Semestral" ? "semestre" : "ano letivo";
-      const pTituloLower = tipoPeriodoAluno === "Anual" ? "ano letivo" : `${pNum}º ${pNome}`;
-      const periodoLabel = `${pTituloLower} · ${new Date().getFullYear()}`;
+      // Período resolvido por aluno (override individual > padrão da turma > padrão global).
+      const periodoResolvido = resolvePeriodoAluno(a.id, a.turma);
+      const tipoPeriodoAluno = periodoResolvido.tipo;
+      const periodoLabel = periodoResolvido.label;
       const gradeRaw = (nivelTexto || cls?.grade || "").trim();
       const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${anoEscolar} ${a.turma}`);
       // Converte slugs do formulário ("pre-2", "bercario-1", "2") em rótulos
