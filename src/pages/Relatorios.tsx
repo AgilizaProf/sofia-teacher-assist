@@ -2163,6 +2163,7 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
           ? (parecerAluno.formato === "texto" && textoFallback
               ? `<section><h2>Parecer descritivo</h2><div>${esc(textoFallback).split(/\n+/).map((p) => `<p style="text-align:justify;margin:0 0 8pt;">${p}</p>`).join("")}</div></section>`
               : `<section><h2>Parecer descritivo</h2>
+                  ${parecerAluno.evolucao ? `<h3>Evolução no período</h3><p>${esc(parecerAluno.evolucao)}</p>` : ""}
                   ${parecerAluno.resumo ? `<p><b>Resumo:</b> ${esc(parecerAluno.resumo)}</p>` : ""}
                   ${parecerAluno.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
                   ${parecerAluno.comportamental ? `<h3>Comportamental</h3><p>${esc(parecerAluno.comportamental)}</p>` : ""}
