@@ -1987,6 +1987,11 @@ ${parecerHtml}
               </div>
 
               <div style={{ overflowY: "auto", padding: "8px 20px 16px" }}>
+                {!ei && areas.length === 0 && (
+                  <div style={{ margin: "16px 0", padding: 14, background: "#FCF1DC", border: "1px solid #E9A23B", borderRadius: 10, fontSize: 13, color: "#7a5a12" }}>
+                    Esta turma ainda não tem <b>etapa/ano</b> definidos. Defina em <b>Início → Turmas</b> (Educação Infantil ou o ano do Fundamental) para a avaliação usar a base correta da BNCC.
+                  </div>
+                )}
                 {areas.map((area, ai) => (
                   <div key={area.area} style={{ marginTop: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
