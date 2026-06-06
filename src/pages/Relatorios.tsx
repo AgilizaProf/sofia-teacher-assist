@@ -954,6 +954,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       toast.info("Todos os alunos do filtro atual já têm parecer. Ajuste o filtro para gerar outros.");
       return;
     }
+    if (!window.confirm(`Gerar agora o parecer de ${pendentes.length} aluno(s)? Isso consome créditos e pode levar alguns minutos.`)) return;
     setLote({ ativo: true, feitos: 0, total: pendentes.length, itens: pendentes.map((a) => ({ id: a.id, nome: a.nome, status: "fila" as const })) });
     let ok = 0;
     for (const a of pendentes) {
