@@ -885,6 +885,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           observacoesProfessor: bnccObsByAluno[a.id]?.trim() || "",
           avaliacaoBncc: linhas,
           temPeiReal: Boolean(peiByStudent[a.id]),
+          parecerAnteriorTexto,
+          parecerAnteriorIntervalo: parecerAnterior?.periodoLabel || "",
           registros: registrosDoAluno,
           nivel_ensino: nivelEnsino,
           tipo_relatorio: tipoRelatorio,
