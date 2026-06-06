@@ -1531,12 +1531,20 @@ article.report > section{ page-break-inside:avoid; break-inside:avoid; }
               >
                 <Settings size={13} /> Período de avaliação
               </button>
-              <button
+             <button
                 className="rel-pill"
                 onClick={abrirImpressaoLote}
                 title="Selecionar vários alunos e imprimir/exportar em PDF de uma só vez"
               >
                 <Download size={13} /> Imprimir vários
+              </button>
+              <button
+                className="rel-pill"
+                onClick={() => void handleGerarLote()}
+                disabled={lote.ativo}
+                title="Gerar o parecer de todos os alunos do filtro atual que ainda não têm parecer"
+              >
+                <Sparkles size={13} /> {lote.ativo ? `Gerando ${lote.feitos}/${lote.total}…` : "Gerar pareceres em lote"}
               </button>
               <GerarRelatorioButton label="Editor de Relatório" />
               <button
