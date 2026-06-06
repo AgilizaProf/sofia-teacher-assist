@@ -37,6 +37,8 @@ serve(async (req) => {
         | null,
       nivel_ensino = "",
       tipo_relatorio = "",
+      modo = "",
+      textoBaseFamilia = "",
     } = body || {};
 
     // É Educação Infantil? Define a estrutura de saída por campos de experiência.
