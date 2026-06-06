@@ -761,6 +761,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   type ParecerNarrativo = {
    titulo?: string; resumo?: string; evolucao?: string;
     campos?: { campo: string; texto: string }[];
+    versao_familia?: { texto: string; destaques?: string[]; geradoEm?: string };
     pedagogico?: string; comportamental?: string; sensorial?: string; familia?: string;
     avancos?: string[]; desafios?: string[]; encaminhamentos?: string[];
     comunicacao_familias?: string;
