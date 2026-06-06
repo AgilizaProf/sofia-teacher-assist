@@ -970,6 +970,42 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     toast.success(`Lote concluído: ${ok} de ${pendentes.length} gerado(s).`);
   };
 
+  // Versão família: reescreve o parecer JÁ finalizado numa mensagem curta e calorosa.
+  const [gerandoFamiliaId, setGerandoFamiliaId] = useState<string | null>(null);
+  const handleGerarVersaoFamilia = async (a: { id: string; nome: string; turma: string }, p: ParecerNarrativo) => {
+    const base = p.formato === "texto" && p.texto
+      ? p.texto
+      : [
+          p.resumo,
+          ...(p.campos?.length ? p.campos.map((c) => `${c.campo}: ${c.texto}`) : [p.pedagogico, p.comportamental, p.sensorial, p.familia]),
+          p.avancos?.length ? `Avanços: ${p.avancos.join("; ")}` : "",
+          p.desafios?.length ? `Pontos de atenção: ${p.desafios.join("; ")}` : "",
+          p.comunicacao_familias,
+        ].filter(Boolean).join("\n");
+    if (!base.trim()) { toast.error("Gere o parecer antes de criar a versão para a família."); return; }
+    setGerandoFamiliaId(a.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
+        body: { modo: "familia", textoBaseFamilia: base, aluno: a.nome, periodo: p.periodoLabel || "Bimestral", intervalo: p.periodoLabel || "" },
+      });
+      if (error) throw error;
+      const vf = (data as { versao_familia?: { texto?: string; destaques?: string[] } })?.versao_familia;
+      if (!vf?.texto) throw new Error("Resposta vazia.");
+      const versao_familia = { texto: vf.texto, destaques: vf.destaques || [], geradoEm: new Date().toLocaleString("pt-BR") };
+      setParecerByAluno((all) => ({ ...all, [a.id]: { ...(all[a.id] || p), versao_familia } }));
+      setParecerHist((h) => ({
+        ...h,
+        [a.id]: (h[a.id] || []).map((x) => (x.periodoLabel === p.periodoLabel ? { ...x, versao_familia } : x)),
+      }));
+      toast.success("Versão para a família gerada.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Não foi possível gerar a versão da família. ${msg}`);
+    } finally {
+      setGerandoFamiliaId(null);
+    }
+  };
+
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
     const cls = turmaByName(turma);
