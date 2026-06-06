@@ -114,6 +114,7 @@ ${anamneseResumo || "(sem dados de anamnese)"}${anamProgressBlock}
 PEI (resumo${peiAtualizadoEm ? ` · atualizado em ${peiAtualizadoEm}` : ""}):
 ${peiResumo || "(sem PEI cadastrado — gere o parecer com base em anamnese e registros)"}
 ${peiAnteriorResumo ? `\nPEI ANTERIOR (para comparar evolução):\n${peiAnteriorResumo}\n` : ""}
+${(parecerAnteriorTexto || "").trim() ? `\nPARECER DO PERÍODO ANTERIOR (${parecerAnteriorIntervalo || "período anterior"}) — base para descrever a EVOLUÇÃO (avanços e o que permanece), sem comparar com outras crianças:\n${parecerAnteriorTexto.trim()}\n` : ""}
 
 Intervalo considerado: ${intervalo || periodo}
 Registros do diário no período (${(registros as Registro[]).length}):
