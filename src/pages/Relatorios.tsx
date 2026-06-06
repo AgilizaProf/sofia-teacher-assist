@@ -839,8 +839,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         }).join("\n");
         return `${area.area}\n${itens}`;
       }).join("\n\n");
-      const aluno = getStudentById(a.id);
-      const cls = turmaByName(a.turma);
+      const contextoPedagogico = pedagogicalContextForAluno(a.id, a.turma);
+      const { aluno, cls, nivelTexto, anoEscolar, anoReferenciaPedagogico } = contextoPedagogico;
       // Periodicidade específica da turma do aluno (cai no padrão global se não configurada).
       const tipoPeriodoAluno = getTipoPeriodoFor(a.turma);
       const pQtd = tipoPeriodoAluno === "Bimestral" ? 4 : tipoPeriodoAluno === "Trimestral" ? 3 : tipoPeriodoAluno === "Semestral" ? 2 : 1;
@@ -848,8 +848,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       const pNome = tipoPeriodoAluno === "Bimestral" ? "bimestre" : tipoPeriodoAluno === "Trimestral" ? "trimestre" : tipoPeriodoAluno === "Semestral" ? "semestre" : "ano letivo";
       const pTituloLower = tipoPeriodoAluno === "Anual" ? "ano letivo" : `${pNum}º ${pNome}`;
       const periodoLabel = `${pTituloLower} · ${new Date().getFullYear()}`;
-      const gradeRaw = (cls?.grade || "").trim();
-      const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${a.turma}`);
+      const gradeRaw = (nivelTexto || cls?.grade || "").trim();
+      const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${anoEscolar} ${a.turma}`);
       const nivelEnsino = ei ? "Educação Infantil"
         : isMedio ? "Ensino Médio" : "Ensino Fundamental";
       const tipoRelatorio: ParecerNarrativo["tipo_relatorio"] = ei
@@ -860,7 +860,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         : `\n\nINSTRUÇÕES OBRIGATÓRIAS (regra de redação inviolável):\nNUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "anotações", "diário", "anamnese", "PEI", "rubrica BNCC" ou "notas do(a) professor(a)". Escreva sempre como conhecimento direto e consolidado sobre o(a) aluno(a). Evite expressões como "segundo as observações", "de acordo com os registros", "conforme observado", "com base na anamnese" ou "as anotações indicam" — descreva os fatos diretamente, sem citar a origem.`;
       const peiResumo = [
         a.pcd ? `Condição/PCD: ${a.pcd}` : "",
-        cls?.grade ? `Ano/Etapa: ${cls.grade}` : "",
+        (anoReferenciaPedagogico || anoEscolar || nivelTexto) ? `Ano/Etapa: ${anoReferenciaPedagogico || anoEscolar || nivelTexto}` : "",
         `Nível de ensino: ${nivelEnsino}`,
         aluno?.notes ? `Observações: ${aluno.notes}` : "",
         instrucoesEI,
@@ -920,8 +920,11 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           registros: registrosDoAluno,
           nivel_ensino: nivelEnsino,
           tipo_relatorio: tipoRelatorio,
-          anoEscolar: cls?.grade || "",
-          anoReferenciaPedagogico: yearOverride[a.id] || cls?.grade || "",
+          anoEscolar: anoEscolar || "",
+          anoReferenciaPedagogico: anoReferenciaPedagogico || "",
+          anoReferenciaInstrucao: ei
+            ? "Trata-se de Educação Infantil. Não converter para ano do Ensino Fundamental. Estruture o parecer exclusivamente pelos Campos de Experiência e pelos Direitos de Aprendizagem da BNCC."
+            : "",
           // Regra: relatórios e pareceres SEMPRE seguem a BNCC, independente
           // do currículo municipal anexado/vinculado à turma. Os currículos
           // anexados são usados apenas no Planejamento e no chat da Sofia.
@@ -1033,20 +1036,6 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     }
   };
 
-  const yearForAluno = (id: string, turma: string): string => {
-    if (yearOverride[id]) return yearOverride[id];
-    const aluno = getStudentById(id);
-    const cls = turmaByName(turma);
-    const nivelAluno = [
-      cls?.grade,
-      aluno?.anoReferenciaPedagogico,
-      aluno?.anoEscolar,
-      turma,
-    ].find((v) => typeof v === "string" && v.trim().length > 0) ?? "";
-    if (isEiTurma(nivelAluno)) return ""; // Educação Infantil não usa ano do Fundamental
-    const g = nivelAluno.replace(/\D/g, "");
-    return g && YEAR_OPTIONS.includes(g) ? g : ""; // sem chute para o 2º ano
-  };
   const turmaByName = useCallback(
     (turma?: string | null) => {
       const nome = normalizeTurmaName(turma);
@@ -1055,6 +1044,48 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     },
     [turmasDb],
   );
+  const pedagogicalContextForAluno = useCallback(
+    (id: string, turma?: string | null) => {
+      const aluno = getStudentById(id);
+      const cls = turmaByName(turma);
+      const candidatos = [
+        yearOverride[id],
+        aluno?.anoReferenciaPedagogico,
+        aluno?.anoEscolar,
+        cls?.grade,
+        turma,
+      ]
+        .map((v) => (v || "").trim())
+        .filter(Boolean);
+      const ehEi =
+        isEi
+        || isEiTurma(aluno?.anoReferenciaPedagogico)
+        || isEiTurma(aluno?.anoEscolar)
+        || isEiTurma(cls?.grade)
+        || inferirNivelEnsino(turma || "") === "Educação Infantil";
+      const nivelTexto =
+        candidatos.find((v) => ehEi ? isEiTurma(v) : (inferirNivelEnsino(v) !== null || /^\d{1,2}$/.test(v)))
+        ?? candidatos[0]
+        ?? "";
+      const anoEscolar = (aluno?.anoEscolar || cls?.grade || aluno?.anoReferenciaPedagogico || "").trim();
+      const anoReferenciaPedagogico = (
+        yearOverride[id]
+        || aluno?.anoReferenciaPedagogico
+        || (ehEi ? aluno?.anoEscolar : "")
+        || cls?.grade
+        || aluno?.anoEscolar
+        || ""
+      ).trim();
+      return { aluno, cls, ehEi, nivelTexto, anoEscolar, anoReferenciaPedagogico };
+    },
+    [getStudentById, isEi, turmaByName, yearOverride],
+  );
+  const yearForAluno = (id: string, turma: string): string => {
+    const { ehEi, anoReferenciaPedagogico, anoEscolar, nivelTexto } = pedagogicalContextForAluno(id, turma);
+    if (ehEi) return ""; // Educação Infantil não usa ano do Fundamental
+    const g = (anoReferenciaPedagogico || anoEscolar || nivelTexto).replace(/\D/g, "");
+    return g && YEAR_OPTIONS.includes(g) ? g : ""; // sem chute para o 2º ano
+  };
   const curriculoParaTurma = useCallback(
     (turma?: string | null) => {
       const turmaAtual = turmaByName(turma);
@@ -1067,12 +1098,11 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     (turma?: string | null, alunoId?: string) => {
       // EI: rótulo dedicado, independente de currículo municipal.
       const cls = turmaByName(turma || "");
-      const aluno = alunoId ? getStudentById(alunoId) : null;
+      const contextoAluno = alunoId ? pedagogicalContextForAluno(alunoId, turma) : null;
       if (
-        isEi
+        contextoAluno?.ehEi
+        || isEi
         || isEiTurma(cls?.grade)
-        || isEiTurma(aluno?.anoReferenciaPedagogico)
-        || isEiTurma(aluno?.anoEscolar)
         || inferirNivelEnsino(turma || "") === "Educação Infantil"
       ) {
         return "Avaliar Campos de Experiência";
@@ -1081,17 +1111,14 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       if (!curriculo) return "Avaliar BNCC";
       return `Avaliar ${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}`;
     },
-    [curriculoParaTurma, turmaByName, isEi, getStudentById],
+    [curriculoParaTurma, turmaByName, pedagogicalContextForAluno, isEi],
   );
   // EI por aluno: usa o grade da turma (ex.: "pre-2", "maternal-1").
   const isEiAluno = (turma: string, alunoId?: string): boolean => {
     if (isEi) return true; // perfil docente em EI: trata tudo como EI
+    if (alunoId) return pedagogicalContextForAluno(alunoId, turma).ehEi;
     const cls = turmaByName(turma);
-    const aluno = alunoId ? getStudentById(alunoId) : combinedStudents.find((s) => s.classRef === turma);
-    return isEiTurma(cls?.grade)
-      || isEiTurma(aluno?.anoReferenciaPedagogico)
-      || isEiTurma(aluno?.anoEscolar)
-      || inferirNivelEnsino(turma) === "Educação Infantil";
+    return isEiTurma(cls?.grade) || inferirNivelEnsino(turma) === "Educação Infantil";
   };
   // Status (rubrica) adaptado por nível.
   const statusListFor = (turma: string, alunoId?: string) =>
