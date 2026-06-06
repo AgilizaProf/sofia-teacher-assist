@@ -840,7 +840,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         return `${area.area}\n${itens}`;
       }).join("\n\n");
       const aluno = getStudentById(a.id);
-      const cls = dashClasses.find((c) => c.name === a.turma);
+      const cls = turmaByName(a.turma);
       // Periodicidade específica da turma do aluno (cai no padrão global se não configurada).
       const tipoPeriodoAluno = getTipoPeriodoFor(a.turma);
       const pQtd = tipoPeriodoAluno === "Bimestral" ? 4 : tipoPeriodoAluno === "Trimestral" ? 3 : tipoPeriodoAluno === "Semestral" ? 2 : 1;
@@ -2347,7 +2347,7 @@ ${parecerHtml}
         const buildReportHtml = () => {
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = getStudentById(a.id);
-          const cls = dashClasses.find((c) => c.name === a.turma);
+          const cls = turmaByName(a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
           const bodyInner = `
 <article class="report">
@@ -2388,7 +2388,7 @@ ${parecerHtml}
           // moderno nem Google Fonts. Layout em 2 colunas via <table>.
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = getStudentById(a.id);
-          const cls = dashClasses.find((c) => c.name === a.turma);
+          const cls = turmaByName(a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
 
           const ACCENT = "#1F3A5F";
