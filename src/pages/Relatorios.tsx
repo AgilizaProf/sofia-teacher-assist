@@ -17,6 +17,7 @@ import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { isEducacaoInfantilGrade, EI_GRADE_LABELS, formatTurmaGrade } from "@/lib/turmaGrade";
+import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
@@ -498,7 +499,12 @@ function bnccAreasFor(year: string): BnccArea[] {
 }
 
 function isEiTurma(grade?: string | null): boolean {
-  return isEducacaoInfantilGrade(grade || "");
+  const g = (grade || "").trim();
+  if (!g) return false;
+  if (isEducacaoInfantilGrade(g)) return true;
+  // Aceita também texto livre como "Pré II", "Maternal", "Berçário I",
+  // "Educação Infantil", "Creche" — qualquer coisa que infere EI.
+  return inferirNivelEnsino(g) === "Educação Infantil";
 }
 
 export function Relatorios() {
