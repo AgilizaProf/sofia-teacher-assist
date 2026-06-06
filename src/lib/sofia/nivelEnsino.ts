@@ -1,5 +1,5 @@
 // Deriva o nível de ensino a partir do texto livre do campo `ano` da turma
-// (ex.: "Pré II", "3º ano", "5º ano EF", "8º ano", "1º EM", "2ª série EM")
+// (ex.: "Pré II", "Pré 2", "3º ano", "5º ano EF", "8º ano", "1º EM", "2ª série EM")
 // ou de campos de perfil como `etapa_ensino` / `nivel_ensino`.
 //
 // Retorna um dos rótulos canônicos usados nas instruções da Sofia, ou null
@@ -28,7 +28,7 @@ export function inferirNivelEnsino(input?: string | null): NivelEnsino | null {
 
   // Sinais explícitos
   if (/(^|\b)(em|ensino medio|medio|2o\s*grau|nivel medio)(\b|$)/.test(s)) return "Ensino Médio";
-  if (/(infantil|bercario|berc[áa]rio|maternal|pre[- ]?escola|jardim|pre\s*i+|creche|0\s*a\s*5)/.test(s)) {
+  if (/(infantil|bercario|berc[áa]rio|maternal|pre[- ]?escola|jardim|pre[- ]?(?:i{1,2}|1|2)\b|creche|0\s*a\s*5)/.test(s)) {
     return "Educação Infantil";
   }
   if (/(fundamental|ef\b|1o\s*grau|nivel fundamental)/.test(s)) {
