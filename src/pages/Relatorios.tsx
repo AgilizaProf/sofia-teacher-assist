@@ -953,15 +953,20 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       toast.info("Todos os alunos do filtro atual já têm parecer. Ajuste o filtro para gerar outros.");
       return;
     }
-    setLote({ ativo: true, feitos: 0, total: pendentes.length });
+    setLote({ ativo: true, feitos: 0, total: pendentes.length, itens: pendentes.map((a) => ({ id: a.id, nome: a.nome, status: "fila" as const })) });
     let ok = 0;
     for (const a of pendentes) {
-      await handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }, { silent: true });
-      ok += 1;
-      setLote((l) => ({ ...l, feitos: ok }));
+      setLote((l) => ({ ...l, itens: l.itens.map((it) => (it.id === a.id ? { ...it, status: "gerando" as const } : it)) }));
+      const sucesso = await handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }, { silent: true });
+      if (sucesso) ok += 1;
+      setLote((l) => ({
+        ...l,
+        feitos: l.feitos + 1,
+        itens: l.itens.map((it) => (it.id === a.id ? { ...it, status: sucesso ? ("ok" as const) : ("erro" as const) } : it)),
+      }));
     }
-    setLote({ ativo: false, feitos: 0, total: 0 });
-    toast.success(`Lote concluído: ${ok} parecer(es) processado(s).`);
+    setLote((l) => ({ ...l, ativo: false }));
+    toast.success(`Lote concluído: ${ok} de ${pendentes.length} gerado(s).`);
   };
 
   const yearForAluno = (id: string, turma: string): string => {
