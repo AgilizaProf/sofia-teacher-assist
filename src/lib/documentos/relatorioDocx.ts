@@ -2,13 +2,17 @@ import {
   AlignmentType, BorderStyle, Document, HeadingLevel, PageOrientation,
   Packer, Paragraph, TextRun,
 } from "docx";
-import type { RelatorioDocumento, RelatorioBnccItem, RelatorioAreaSimples } from "./relatorioTypes";
+import type { RelatorioDocumento, RelatorioAreaSimples } from "./relatorioTypes";
 import { tituloRelatorio, nomeArquivo } from "./relatorioTypes";
 import { formatarDataBR } from "./relatorioPeriodo";
 import { formatarFraseLegalRelatorio } from "./relatorioLeis";
 
 const ARIAL = "Arial";
 const FRAUNCES = "Fraunces";
+const BASE_SIZE = 22; // 11pt (half-points)
+const LINE_15 = { line: 360, lineRule: "auto" as const };
+
+const hasText = (v?: string | null): v is string => !!(v && v.trim() && v.trim() !== "—");
 
 function run(text: string, opts: { bold?: boolean; size?: number; font?: string; color?: string; italics?: boolean } = {}) {
   return new TextRun({
@@ -16,7 +20,7 @@ function run(text: string, opts: { bold?: boolean; size?: number; font?: string;
     bold: opts.bold,
     italics: opts.italics,
     color: opts.color,
-    size: opts.size ?? 24,
+    size: opts.size ?? BASE_SIZE,
     font: opts.font ?? ARIAL,
   });
 }
@@ -28,7 +32,7 @@ function p(
   return new Paragraph({
     children,
     alignment: opts.align ?? AlignmentType.JUSTIFIED,
-    spacing: { after: opts.spacingAfter ?? 80 },
+    spacing: { after: opts.spacingAfter ?? 80, ...LINE_15 },
     pageBreakBefore: opts.pageBreakBefore,
     border: opts.borderTop
       ? { top: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 6 } }
@@ -48,24 +52,11 @@ function texto(text: string) {
   return p([run(text || "—")]);
 }
 
-function bnccItens(itens: RelatorioBnccItem[], simples = false): Paragraph[] {
-  if (!itens.length) return [texto("—")];
-  return itens.map((it) =>
-    new Paragraph({
-      children: [
-        run(`• ${it.codigo}`, { bold: true }),
-        ...(it.descricao && !simples ? [run(` — ${it.descricao}`)] : []),
-      ],
-      spacing: { after: 40 },
-    }),
-  );
-}
-
 function areaItens(itens: RelatorioAreaSimples[]): Paragraph[] {
-  if (!itens.length) return [texto("—")];
+  if (!itens.length) return [];
   return itens.map((a) => new Paragraph({
     children: [run(`• ${a.nome}: `), run(a.status, { bold: true })],
-    spacing: { after: 40 },
+    spacing: { after: 40, ...LINE_15 },
   }));
 }
 
@@ -98,47 +89,56 @@ function buildSection(doc: RelatorioDocumento, opts: { pageBreakBefore?: boolean
   }
 
   if (doc.modo === "completo") {
-    corpo.push(secaoTitulo("Desenvolvimento Global:"));
-    corpo.push(texto(doc.desenvolvimentoGlobal));
-
-    corpo.push(secaoTitulo(`${labelCampos}:`));
-    for (const c of doc.campos) {
-      corpo.push(p(
-        [run(`${c.nome}: `, { bold: true }), run(c.descricao || "—")],
-        { spacingAfter: 60 },
-      ));
+    if (hasText(doc.desenvolvimentoGlobal)) {
+      corpo.push(secaoTitulo("Desenvolvimento Global:"));
+      corpo.push(texto(doc.desenvolvimentoGlobal));
     }
 
-    corpo.push(secaoTitulo("Habilidades BNCC Trabalhadas:"));
-    corpo.push(...bnccItens(doc.bncc));
+    const camposPreenchidos = (doc.campos || []).filter((c) => hasText(c.nome) || hasText(c.descricao));
+    if (camposPreenchidos.length > 0) {
+      corpo.push(secaoTitulo(`${labelCampos}:`));
+      for (const c of camposPreenchidos) {
+        corpo.push(p(
+          [run(`${c.nome}: `, { bold: true }), run(c.descricao || "—")],
+          { spacingAfter: 60 },
+        ));
+      }
+    }
 
-    corpo.push(secaoTitulo("Observações do(a) Professor(a):"));
-    corpo.push(texto(doc.observacoes));
+    if (hasText(doc.observacoes)) {
+      corpo.push(secaoTitulo("Observações do(a) Professor(a):"));
+      corpo.push(texto(doc.observacoes));
+    }
 
-    corpo.push(secaoTitulo("Avanços e Conquistas:"));
-    corpo.push(texto(doc.avancos));
+    if (hasText(doc.avancos)) {
+      corpo.push(secaoTitulo("Avanços e Conquistas:"));
+      corpo.push(texto(doc.avancos));
+    }
 
-    corpo.push(secaoTitulo("Próximos Passos:"));
-    corpo.push(texto(doc.proximosPassos));
+    if (hasText(doc.proximosPassos)) {
+      corpo.push(secaoTitulo("Próximos Passos:"));
+      corpo.push(texto(doc.proximosPassos));
+    }
 
     if (isPcd) {
-      corpo.push(secaoTitulo("Adaptações Realizadas:"));
-      corpo.push(texto(doc.adaptacoes || ""));
-      corpo.push(secaoTitulo("Evolução em Relação ao PEI:"));
-      corpo.push(texto(doc.evolucaoPei || ""));
-    }
-
-    if (doc.apoioTeorico) {
-      corpo.push(p([run("Apoio Teórico:", { bold: true, size: 22 })], { align: AlignmentType.LEFT, spacingAfter: 40 }));
-      corpo.push(p([new TextRun({ text: doc.apoioTeorico, size: 20, italics: true, color: "666666", font: ARIAL })]));
+      if (hasText(doc.adaptacoes)) {
+        corpo.push(secaoTitulo("Adaptações Realizadas:"));
+        corpo.push(texto(doc.adaptacoes!));
+      }
+      if (hasText(doc.evolucaoPei)) {
+        corpo.push(secaoTitulo("Evolução em Relação ao PEI:"));
+        corpo.push(texto(doc.evolucaoPei!));
+      }
     }
   } else {
-    corpo.push(secaoTitulo("Avaliação por Área:"));
-    corpo.push(...areaItens(doc.areas ?? []));
-    corpo.push(secaoTitulo("Habilidades BNCC:"));
-    corpo.push(...bnccItens(doc.bncc, true));
-    corpo.push(secaoTitulo("Observações:"));
-    corpo.push(texto(doc.observacoes));
+    if ((doc.areas ?? []).length > 0) {
+      corpo.push(secaoTitulo("Avaliação por Área:"));
+      corpo.push(...areaItens(doc.areas ?? []));
+    }
+    if (hasText(doc.observacoes)) {
+      corpo.push(secaoTitulo("Observações:"));
+      corpo.push(texto(doc.observacoes));
+    }
   }
 
   corpo.push(p([run("Assinatura do(a) Professor(a):", { bold: true })], { align: AlignmentType.LEFT, spacingAfter: 400 }));
@@ -163,7 +163,7 @@ function buildSection(doc: RelatorioDocumento, opts: { pageBreakBefore?: boolean
 
 function pageProps() {
   const cmToTwips = (cm: number) => Math.round((cm / 2.54) * 1440);
-  const margin = cmToTwips(2);
+  const margin = cmToTwips(2.5);
   const border = { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 24 };
   return {
     margin: { top: margin, bottom: margin, left: margin, right: margin },
@@ -187,7 +187,7 @@ export async function exportarRelatorioDocx(doc: RelatorioDocumento): Promise<vo
   const corpo = buildSection(doc);
   const document = new Document({
     creator: "AgilizaProf",
-    styles: { default: { document: { run: { font: ARIAL, size: 24 } } } },
+    styles: { default: { document: { run: { font: ARIAL, size: BASE_SIZE }, paragraph: { spacing: LINE_15 } } } },
     sections: [{ properties: { page: pageProps() }, children: corpo }],
   });
   const blob = await Packer.toBlob(document);
@@ -201,7 +201,7 @@ export async function exportarRelatoriosDocxLote(docs: RelatorioDocumento[]): Pr
   docs.forEach((d, i) => children.push(...buildSection(d, { pageBreakBefore: i > 0 })));
   const document = new Document({
     creator: "AgilizaProf",
-    styles: { default: { document: { run: { font: ARIAL, size: 24 } } } },
+    styles: { default: { document: { run: { font: ARIAL, size: BASE_SIZE }, paragraph: { spacing: LINE_15 } } } },
     sections: [{ properties: { page: pageProps() }, children }],
   });
   const blob = await Packer.toBlob(document);
@@ -213,7 +213,7 @@ export async function gerarBlobRelatorioDocx(doc: RelatorioDocumento): Promise<B
   const corpo = buildSection(doc);
   const document = new Document({
     creator: "AgilizaProf",
-    styles: { default: { document: { run: { font: ARIAL, size: 24 } } } },
+    styles: { default: { document: { run: { font: ARIAL, size: BASE_SIZE }, paragraph: { spacing: LINE_15 } } } },
     sections: [{ properties: { page: pageProps() }, children: corpo }],
   });
   return Packer.toBlob(document);

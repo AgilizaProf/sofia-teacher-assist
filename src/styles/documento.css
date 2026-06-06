@@ -2,8 +2,8 @@
 .documento-wrap{background:#f3f4f6;padding:24px;display:flex;justify-content:center;}
 .documento{
   width:21cm;min-height:29.7cm;background:#fff;color:#000;
-  border:1px solid #000;padding:2cm;
-  font:12px/1.45 Arial, Helvetica, sans-serif;
+  border:1px solid #000;padding:2.5cm;
+  font:11pt/1.5 Arial, Helvetica, sans-serif;
   text-align:justify;box-shadow:0 4px 18px rgba(0,0,0,.12);
   box-sizing:border-box;
 }
@@ -44,10 +44,10 @@
   body.documento-printing .documento-wrap{background:#fff;padding:0;}
   body.documento-printing .documento{
     width:auto;min-height:0;border:1px solid #000;
-    padding:1cm;margin:0;box-shadow:none;
+    padding:1.5cm;margin:0;box-shadow:none;
   }
   /* Borda do documento a 1cm da borda da página;
-     o texto fica a 2cm da borda (1cm de @page + 1cm de padding interno). */
+     o texto fica a 2,5cm da borda (1cm de @page + 1,5cm de padding interno). */
   @page{size:A4;margin:1cm;}
   body.documento-printing .documento [contenteditable="true"]{outline:none !important;background:transparent !important;}
   body.documento-printing .semana-break{break-before:page;}
