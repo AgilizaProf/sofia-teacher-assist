@@ -55,9 +55,26 @@ serve(async (req) => {
       const userFam =
         `Nome da criança: ${aluno || "a criança"}\nPeríodo: ${intervalo || periodo}\n\n` +
         `Parecer base (já revisado pela professora) — reescreva para a família:\n${String(textoBaseFamilia || "").trim()}`;
+      if (!String(textoBaseFamilia || "").trim()) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Texto base vazio. Gere o parecer antes de criar a versão para a família." }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
       const rf = await callAI({ userId, tipo: "parecer", system: sysFam, user: userFam, json: true, maxTokens: 1200 });
       if (!rf.ok) return aiErrorResponse(rf);
-      const vf = parseAiJson<{ texto?: string; destaques?: string[] }>(rf.text || "{}");
+      let vf = parseAiJson<{ texto?: string; destaques?: string[] }>(rf.text || "{}");
+      if (!vf || !vf.texto) {
+        // Fallback: usa o texto bruto da IA como mensagem se o JSON não veio no formato esperado.
+        const fallback = (rf.text || "").trim();
+        if (fallback) vf = { texto: fallback, destaques: [] };
+      }
+      if (!vf?.texto) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "A IA não retornou texto. Tente novamente." }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
       return new Response(JSON.stringify({ versao_familia: vf, model: rf.model }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
