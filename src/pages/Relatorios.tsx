@@ -2447,6 +2447,7 @@ ${parecerHtml}
                           <>
                             {parecerAluno.evolucao && (<div><b style={{ fontSize: 12 }}>Evolução no período</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.evolucao}</p></div>)}
                             {parecerAluno.resumo && <p style={{ margin: 0, fontSize: 13 }}>{parecerAluno.resumo}</p>}
+                            {parecerAluno.campos?.length ? parecerAluno.campos.map((c, i) => (<div key={i}><b style={{ fontSize: 12 }}>{c.campo}</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{c.texto}</p></div>)) : null}
                             {parecerAluno.pedagogico && (<div><b style={{ fontSize: 12 }}>Pedagógico</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.pedagogico}</p></div>)}
                             {parecerAluno.comportamental && (<div><b style={{ fontSize: 12 }}>Comportamental</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.comportamental}</p></div>)}
                             {parecerAluno.sensorial && (<div><b style={{ fontSize: 12 }}>Sensorial</b><p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.sensorial}</p></div>)}
