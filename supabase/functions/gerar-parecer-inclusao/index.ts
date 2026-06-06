@@ -136,9 +136,16 @@ ${formato === "texto" ? `Responda APENAS com JSON válido neste formato:
   "titulo": "Parecer descritivo · ${periodo}",
   "resumo": "2-3 frases de contexto do(a) aluno(a) no período",
 ${(parecerAnteriorTexto || "").trim() ? `  "evolucao": "1 parágrafo comparando com o período anterior (${parecerAnteriorIntervalo || "anterior"}): o que avançou e o que permanece em desenvolvimento — sem linguagem comparativa entre crianças nem capacitista",\n` : ""}  "pedagogico": "1 parágrafo sobre desempenho pedagógico",
+  ${ehEI ? `  "campos": [
+    {"campo": "O eu, o outro e o nós", "texto": "1 parágrafo sobre o desenvolvimento da criança neste campo de experiência, a partir do que foi observado no brincar e na rotina"},
+    {"campo": "Corpo, gestos e movimentos", "texto": "1 parágrafo neste campo de experiência"},
+    {"campo": "Traços, sons, cores e formas", "texto": "1 parágrafo neste campo de experiência"},
+    {"campo": "Escuta, fala, pensamento e imaginação", "texto": "1 parágrafo neste campo de experiência"},
+    {"campo": "Espaços, tempos, quantidades, relações e transformações", "texto": "1 parágrafo neste campo de experiência"}
+  ],` : `  "pedagogico": "1 parágrafo sobre desempenho pedagógico",
   "comportamental": "1 parágrafo sobre aspectos comportamentais e socioafetivos",
   "sensorial": "1 parágrafo sobre aspectos sensoriais (ou 'sem registros' se não houver)",
-  "familia": "1 parágrafo sobre comunicação com a família",
+  "familia": "1 parágrafo sobre comunicação com a família",`}
   "avancos": ["3 a 5 avanços percebidos no período, descritos diretamente sem citar a origem da informação"],
   "desafios": ["2 a 4 pontos de atenção concretos"],
   "encaminhamentos": ["3 a 5 encaminhamentos práticos para o próximo período"],
