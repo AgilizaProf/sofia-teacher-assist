@@ -1010,8 +1010,9 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
     const cls = turmaByName(turma);
+    if (isEiTurma(cls?.grade)) return ""; // Educação Infantil não usa ano do Fundamental
     const g = cls?.grade?.replace(/\D/g, "");
-    return g && YEAR_OPTIONS.includes(g) ? g : "2";
+    return g && YEAR_OPTIONS.includes(g) ? g : ""; // sem chute para o 2º ano
   };
   const turmaByName = useCallback(
     (turma?: string | null) => {
