@@ -1075,26 +1075,26 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     [curriculoParaTurma, turmaByName, isEi],
   );
   // EI por aluno: usa o grade da turma (ex.: "pre-2", "maternal-1").
-  const isEiAluno = (turma: string): boolean => {
+  const isEiAluno = (turma: string, alunoId?: string): boolean => {
     if (isEi) return true; // perfil docente em EI: trata tudo como EI
     const cls = turmaByName(turma);
-    const aluno = combinedStudents.find((s) => s.classRef === turma);
+    const aluno = alunoId ? getStudentById(alunoId) : combinedStudents.find((s) => s.classRef === turma);
     return isEiTurma(cls?.grade)
       || isEiTurma(aluno?.anoReferenciaPedagogico)
       || isEiTurma(aluno?.anoEscolar)
       || inferirNivelEnsino(turma) === "Educação Infantil";
   };
   // Status (rubrica) adaptado por nível.
-  const statusListFor = (turma: string) =>
-    isEiAluno(turma) ? BNCC_STATUS_EI : BNCC_STATUS;
-  const statusLabel = (turma: string, k?: BnccStatus) =>
-    (statusListFor(turma).find((x) => x.k === k)?.label) || "Não observada";
+  const statusListFor = (turma: string, alunoId?: string) =>
+    isEiAluno(turma, alunoId) ? BNCC_STATUS_EI : BNCC_STATUS;
+  const statusLabel = (turma: string, k?: BnccStatus, alunoId?: string) =>
+    (statusListFor(turma, alunoId).find((x) => x.k === k)?.label) || "Não observada";
 
   const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
     // Educação Infantil tem prioridade absoluta: sempre usar os Campos de
     // Experiência da BNCC Infantil, mesmo quando há currículo municipal
     // configurado (currículos costumam ser do Ensino Fundamental).
-    if (isEiAluno(turma)) {
+    if (isEiAluno(turma, id)) {
       const base = EI_CAMPOS_EXPERIENCIA;
       if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
       return base;
