@@ -125,7 +125,7 @@ Formato de saída solicitado: ${formato === "texto" ? "TEXTO CORRIDO (um único 
 ${formato === "texto" ? `Responda APENAS com JSON válido neste formato:
 {
   "titulo": "Parecer descritivo · ${periodo}",
-  "texto": "Parecer descritivo completo em 4 a 6 parágrafos contínuos, citando o período (${intervalo || periodo}), pedagógico, comportamental, sensorial, família, avanços, desafios e encaminhamentos. Sem títulos internos, sem bullets, em texto corrido."
+ "texto": "Parecer descritivo completo em 4 a 6 parágrafos contínuos, citando o período (${intervalo || periodo}), pedagógico, comportamental, sensorial, família, avanços, desafios e encaminhamentos. Sem títulos internos, sem bullets, em texto corrido.${(parecerAnteriorTexto || "").trim() ? ` Comece com um parágrafo sobre a evolução em relação ao período anterior (${parecerAnteriorIntervalo || "anterior"}).` : ""}"
 }` : `Responda APENAS com JSON válido neste formato:
 {
   "titulo": "Parecer descritivo · ${periodo}",
