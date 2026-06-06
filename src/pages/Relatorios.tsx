@@ -2405,6 +2405,7 @@ ${parecerHtml}
               if (parecerAluno.desafios?.length) parecerWord += subTitle("Desafios") + ulList(parecerAluno.desafios);
               if (parecerAluno.encaminhamentos?.length) parecerWord += subTitle("Encaminhamentos") + ulList(parecerAluno.encaminhamentos);
               if (parecerAluno.comunicacao_familias) parecerWord += subTitle("Comunicação à família") + para(parecerAluno.comunicacao_familias);
+              parecerWord += `<p style="font-family:Arial,sans-serif;font-size:9pt;color:#555;border:1px solid #999;padding:6pt 8pt;margin:14pt 0 0;">Gerado a partir de registros · sem invenção de fatos · estruturado ${(parecerAluno.tipo_relatorio === "parecer_descritivo" || /infantil/i.test(String(parecerAluno.nivel_ensino || ""))) ? "pelos campos de experiência da BNCC" : "pela BNCC"} · revisado pela professora.</p>`;
             }
           }
 
