@@ -22,6 +22,7 @@ import {
   Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
   MessageSquare, Download, Copy, X, ClipboardList, UserPlus, RefreshCw, Trash2, Settings,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -817,6 +818,24 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     if (turma && tipoPeriodoByTurma[turma]) return tipoPeriodoByTurma[turma];
     return tipoPeriodo;
   };
+  // Override de período por aluno — dá autonomia para antecipar/voltar
+  // (avaliar o 1º bim do próximo aluno, refazer o 3º trimestre, etc.).
+  type PeriodoAlunoOverride = { tipo: TipoPeriodo; num: number; ano: number };
+  const [periodoByAluno, setPeriodoByAluno] = usePersistentState<Record<string, PeriodoAlunoOverride>>("rel_periodo_por_aluno", {});
+  const qtdPeriodos = (t: TipoPeriodo) => t === "Bimestral" ? 4 : t === "Trimestral" ? 3 : t === "Semestral" ? 2 : 1;
+  const nomePeriodo = (t: TipoPeriodo) => t === "Bimestral" ? "bimestre" : t === "Trimestral" ? "trimestre" : t === "Semestral" ? "semestre" : "ano letivo";
+  function resolvePeriodoAluno(alunoId: string, turma?: string | null) {
+    const ov = periodoByAluno[alunoId];
+    const tipo: TipoPeriodo = ov?.tipo ?? getTipoPeriodoFor(turma);
+    const qtd = qtdPeriodos(tipo);
+    const numAuto = (() => { const m = new Date().getMonth() + 1; return Math.min(qtd, Math.ceil((m * qtd) / 12)); })();
+    const num = Math.min(qtd, Math.max(1, ov?.num ?? numAuto));
+    const ano = ov?.ano ?? new Date().getFullYear();
+    const nome = nomePeriodo(tipo);
+    const tituloLower = tipo === "Anual" ? "ano letivo" : `${num}º ${nome}`;
+    const label = `${tituloLower} · ${ano}`;
+    return { tipo, qtd, num, ano, nome, tituloLower, label };
+  }
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
@@ -841,13 +860,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       }).join("\n\n");
       const contextoPedagogico = pedagogicalContextForAluno(a.id, a.turma);
       const { aluno, cls, nivelTexto, anoEscolar, anoReferenciaPedagogico } = contextoPedagogico;
-      // Periodicidade específica da turma do aluno (cai no padrão global se não configurada).
-      const tipoPeriodoAluno = getTipoPeriodoFor(a.turma);
-      const pQtd = tipoPeriodoAluno === "Bimestral" ? 4 : tipoPeriodoAluno === "Trimestral" ? 3 : tipoPeriodoAluno === "Semestral" ? 2 : 1;
-      const pNum = (() => { const m = new Date().getMonth() + 1; return Math.min(pQtd, Math.ceil((m * pQtd) / 12)); })();
-      const pNome = tipoPeriodoAluno === "Bimestral" ? "bimestre" : tipoPeriodoAluno === "Trimestral" ? "trimestre" : tipoPeriodoAluno === "Semestral" ? "semestre" : "ano letivo";
-      const pTituloLower = tipoPeriodoAluno === "Anual" ? "ano letivo" : `${pNum}º ${pNome}`;
-      const periodoLabel = `${pTituloLower} · ${new Date().getFullYear()}`;
+      // Período resolvido por aluno (override individual > padrão da turma > padrão global).
+      const periodoResolvido = resolvePeriodoAluno(a.id, a.turma);
+      const tipoPeriodoAluno = periodoResolvido.tipo;
+      const periodoLabel = periodoResolvido.label;
       const gradeRaw = (nivelTexto || cls?.grade || "").trim();
       const isMedio = /medio|médio|EM\b/i.test(`${gradeRaw} ${anoEscolar} ${a.turma}`);
       // Converte slugs do formulário ("pre-2", "bercario-1", "2") em rótulos
@@ -2616,6 +2632,77 @@ ${parecerHtml}
                 {/* Geração com a Sofia — mesmo modelo da Inclusão */}
                 {!isDone && (
                   <div style={{ marginTop: 16, padding: 12, background: "#FBFAF6", border: "1px solid var(--line-soft)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                    {(() => {
+                      const per = resolvePeriodoAluno(a.id, a.turma);
+                      const override = periodoByAluno[a.id];
+                      const setOv = (next: Partial<PeriodoAlunoOverride>) => {
+                        setPeriodoByAluno((prev) => ({
+                          ...prev,
+                          [a.id]: {
+                            tipo: next.tipo ?? per.tipo,
+                            num: Math.min(qtdPeriodos(next.tipo ?? per.tipo), Math.max(1, next.num ?? per.num)),
+                            ano: next.ano ?? per.ano,
+                          },
+                        }));
+                      };
+                      const limparOv = () => setPeriodoByAluno((prev) => { const cp = { ...prev }; delete cp[a.id]; return cp; });
+                      const labelPeriodo = per.tipo === "Anual" ? "Ano letivo" : `${per.num}º ${per.nome}`;
+                      return (
+                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: 8, background: "#fff", border: "1px solid var(--line-soft)", borderRadius: 8 }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Período avaliado</span>
+                          <select
+                            value={per.tipo}
+                            onChange={(e) => setOv({ tipo: e.target.value as TipoPeriodo, num: 1 })}
+                            style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid var(--line-soft)", fontSize: 12, background: "#fff" }}
+                            aria-label="Tipo de período"
+                          >
+                            <option value="Bimestral">Bimestral</option>
+                            <option value="Trimestral">Trimestral</option>
+                            <option value="Semestral">Semestral</option>
+                            <option value="Anual">Anual</option>
+                          </select>
+                          {per.tipo !== "Anual" && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <button
+                                type="button"
+                                onClick={() => setOv({ num: per.num - 1 })}
+                                disabled={per.num <= 1}
+                                aria-label="Período anterior"
+                                style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 6, padding: 4, cursor: per.num <= 1 ? "not-allowed" : "pointer", opacity: per.num <= 1 ? 0.4 : 1 }}
+                              ><ChevronLeft size={14} /></button>
+                              <b style={{ fontSize: 13, minWidth: 90, textAlign: "center" }}>{labelPeriodo}</b>
+                              <button
+                                type="button"
+                                onClick={() => setOv({ num: per.num + 1 })}
+                                disabled={per.num >= per.qtd}
+                                aria-label="Próximo período"
+                                style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 6, padding: 4, cursor: per.num >= per.qtd ? "not-allowed" : "pointer", opacity: per.num >= per.qtd ? 0.4 : 1 }}
+                              ><ChevronRight size={14} /></button>
+                            </span>
+                          )}
+                          <label style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--muted)" }}>
+                            Ano
+                            <input
+                              type="number"
+                              value={per.ano}
+                              onChange={(e) => setOv({ ano: Number(e.target.value) || per.ano })}
+                              style={{ width: 72, padding: "4px 6px", borderRadius: 6, border: "1px solid var(--line-soft)", fontSize: 12 }}
+                            />
+                          </label>
+                          {override && (
+                            <button
+                              type="button"
+                              onClick={limparOv}
+                              style={{ background: "transparent", border: 0, color: "var(--muted)", cursor: "pointer", fontSize: 11, textDecoration: "underline" }}
+                              title="Voltar ao período padrão"
+                            >resetar</button>
+                          )}
+                          <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }}>
+                            Salvo como <b>{per.label}</b>
+                          </span>
+                        </div>
+                      );
+                    })()}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
