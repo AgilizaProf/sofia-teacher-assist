@@ -1106,6 +1106,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           : `<section><h2>Parecer descritivo</h2>
               ${parecerAluno.evolucao ? `<h3>Evolução no período</h3><p>${esc(parecerAluno.evolucao)}</p>` : ""}
               ${parecerAluno.resumo ? `<p><b>Resumo:</b> ${esc(parecerAluno.resumo)}</p>` : ""}
+              ${parecerAluno.campos?.length ? parecerAluno.campos.map((c) => `<h3>${esc(c.campo)}</h3><p>${esc(c.texto)}</p>`).join("") : ""}
               ${parecerAluno.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAluno.pedagogico)}</p>` : ""}
               ${parecerAluno.comportamental ? `<h3>Comportamental</h3><p>${esc(parecerAluno.comportamental)}</p>` : ""}
               ${parecerAluno.sensorial ? `<h3>Sensorial</h3><p>${esc(parecerAluno.sensorial)}</p>` : ""}
