@@ -11,6 +11,17 @@ function isPublic(path: string) {
 }
 
 /**
+ * Em ambientes de prévia do Lovable, liberamos o acesso ao app sem exigir
+ * login para facilitar testes de fluxo (ex.: Educação Infantil em Relatórios).
+ * Não afeta produção (domínios *.app.br / agilizaprof-app-br.lovable.app).
+ */
+function isPreviewHost() {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h.includes("id-preview--") || h.endsWith(".lovable.dev");
+}
+
+/**
  * Enforce session-only persistence when the user did NOT check
  * "Permanecer conectado". Implementation: on first boot of a tab,
  * if the flag says no-persist and there's no in-tab marker, sign out.
@@ -42,6 +53,13 @@ export function useAuthGuard() {
   useEffect(() => {
     enforceSessionPersistence();
     let mounted = true;
+
+    // Bypass de autenticação SOMENTE em hosts de prévia.
+    if (isPreviewHost()) {
+      setAuthed(true);
+      setReady(true);
+      return () => { mounted = false; };
+    }
 
     // Manda o usuário pro onboarding no PRIMEIRO acesso, independentemente de
     // como entrou (e-mail/senha OU Google/Apple). O fluxo OAuth caía direto em
