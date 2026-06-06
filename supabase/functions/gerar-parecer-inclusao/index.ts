@@ -30,6 +30,8 @@ serve(async (req) => {
       observacoesProfessor = "",
       avaliacaoBncc = "",
       temPeiReal = false,
+      parecerAnteriorTexto = "",
+      parecerAnteriorIntervalo = "",
       curriculo_municipal = null as
         | { municipio: string; habilidades: Array<{ codigo: string; descricao: string; ano: string; disciplina: string }> }
         | null,
