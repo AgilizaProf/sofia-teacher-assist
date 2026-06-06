@@ -1,5 +1,5 @@
 import { useCallback, type ReactNode } from "react";
-import type { RelatorioDocumento, RelatorioCampo, RelatorioBnccItem, RelatorioAreaSimples } from "@/lib/documentos/relatorioTypes";
+import type { RelatorioDocumento, RelatorioCampo, RelatorioAreaSimples } from "@/lib/documentos/relatorioTypes";
 import { tituloRelatorio } from "@/lib/documentos/relatorioTypes";
 import { formatarDataBR } from "@/lib/documentos/relatorioPeriodo";
 import { formatarFraseLegalRelatorio } from "@/lib/documentos/relatorioLeis";
@@ -212,22 +212,6 @@ export function RelatorioPreview({ doc, editable = false, onChange }: Props): Re
         </div>
       </div>
     </div>
-  );
-}
-
-function BnccList({ itens, simples }: { itens: RelatorioBnccItem[]; simples?: boolean }) {
-  if (!itens.length) return <p style={{ margin: 0 }}>—</p>;
-  return (
-    <ul className="doc-bullets">
-      {itens.map((it, i) => (
-        <li key={i}>
-          <span className="bullet">•</span>
-          <span className="label">
-            <b>{it.codigo}</b>{!simples && it.descricao ? ` — ${it.descricao}` : ""}
-          </span>
-        </li>
-      ))}
-    </ul>
   );
 }
 
