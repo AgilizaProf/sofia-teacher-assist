@@ -1208,7 +1208,7 @@ ${parecerHtml}
   const PRINT_CSS = `
 .report{page-break-after:always;}
 .report:last-of-type{page-break-after:auto;}
-article.report > section{ page-break-inside:avoid; break-inside:avoid; }
+.sig{ page-break-inside:avoid; break-inside:avoid; }
 `;
 
   const printBatchReports = (alunos: { id: string; nome: string; turma: string; pcd: string }[]) => {
