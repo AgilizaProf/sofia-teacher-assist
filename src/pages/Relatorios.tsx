@@ -507,6 +507,15 @@ function isEiTurma(grade?: string | null): boolean {
   return inferirNivelEnsino(g) === "Educação Infantil";
 }
 
+function normalizeTurmaName(value?: string | null): string {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 export function Relatorios() {
   const user = useUser();
   const ctx = useSofiaContext();
@@ -590,7 +599,16 @@ export function Relatorios() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [routeSearch.focus]);
 
-  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  type DashStudent = {
+    name: string;
+    classRef: string;
+    birth: string;
+    pcd: string;
+    notes: string;
+    createdAt?: string;
+    anoEscolar?: string;
+    anoReferenciaPedagogico?: string;
+  };
   // Identidade estável por aluno — usada como CHAVE para todas as avaliações
   // (BNCC, observações, parecer, ano de referência) persistidas em localStorage.
   // CRÍTICO: jamais derivar este id de índices de array; sempre vincular ao
@@ -623,6 +641,8 @@ export function Relatorios() {
           pcd: s.diag || s.pcd || "nao",
           notes: s.notes ?? "",
           createdAt: s.createdAt,
+          anoEscolar: s.anoEscolar,
+          anoReferenciaPedagogico: s.anoReferenciaPedagogico,
         },
         `db:${s.id}`,
       ),
@@ -811,16 +831,16 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     try {
       const areas = areasFor(a.id, a.turma, a.pcd);
       const rub = getAlunoRubric(a.id);
-      const ei = isEiAluno(a.turma);
+      const ei = isEiAluno(a.turma, a.id);
       const linhas = areas.map((area, ai) => {
         const itens = area.comps.map((c, ci) => {
-          const lbl = statusLabel(a.turma, rub[`${ai}.${ci}`]);
+            const lbl = statusLabel(a.turma, rub[`${ai}.${ci}`], a.id);
           return `  - ${c}: ${lbl}`;
         }).join("\n");
         return `${area.area}\n${itens}`;
       }).join("\n\n");
       const aluno = getStudentById(a.id);
-      const cls = dashClasses.find((c) => c.name === a.turma);
+      const cls = turmaByName(a.turma);
       // Periodicidade específica da turma do aluno (cai no padrão global se não configurada).
       const tipoPeriodoAluno = getTipoPeriodoFor(a.turma);
       const pQtd = tipoPeriodoAluno === "Bimestral" ? 4 : tipoPeriodoAluno === "Trimestral" ? 3 : tipoPeriodoAluno === "Semestral" ? 2 : 1;
@@ -1015,16 +1035,23 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
 
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
+    const aluno = getStudentById(id);
     const cls = turmaByName(turma);
-    if (isEiTurma(cls?.grade)) return ""; // Educação Infantil não usa ano do Fundamental
-    const g = cls?.grade?.replace(/\D/g, "");
+    const nivelAluno = [
+      cls?.grade,
+      aluno?.anoReferenciaPedagogico,
+      aluno?.anoEscolar,
+      turma,
+    ].find((v) => typeof v === "string" && v.trim().length > 0) ?? "";
+    if (isEiTurma(nivelAluno)) return ""; // Educação Infantil não usa ano do Fundamental
+    const g = nivelAluno.replace(/\D/g, "");
     return g && YEAR_OPTIONS.includes(g) ? g : ""; // sem chute para o 2º ano
   };
   const turmaByName = useCallback(
     (turma?: string | null) => {
-      const nome = (turma || "").trim().toLowerCase();
+      const nome = normalizeTurmaName(turma);
       if (!nome) return null;
-      return turmasDb.find((t) => (t.name || "").trim().toLowerCase() === nome) ?? null;
+      return turmasDb.find((t) => normalizeTurmaName(t.name) === nome) ?? null;
     },
     [turmasDb],
   );
@@ -1037,33 +1064,46 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     [curriculosAtivos, turmaByName],
   );
   const labelAvaliacaoParaTurma = useCallback(
-    (turma?: string | null) => {
+    (turma?: string | null, alunoId?: string) => {
       // EI: rótulo dedicado, independente de currículo municipal.
       const cls = turmaByName(turma || "");
-      if (isEi || isEiTurma(cls?.grade)) return "Avaliar Campos de Experiência";
+      const aluno = alunoId ? getStudentById(alunoId) : null;
+      if (
+        isEi
+        || isEiTurma(cls?.grade)
+        || isEiTurma(aluno?.anoReferenciaPedagogico)
+        || isEiTurma(aluno?.anoEscolar)
+        || inferirNivelEnsino(turma || "") === "Educação Infantil"
+      ) {
+        return "Avaliar Campos de Experiência";
+      }
       const curriculo = curriculoParaTurma(turma);
       if (!curriculo) return "Avaliar BNCC";
       return `Avaliar ${curriculo.municipio}${curriculo.estado ? ` (${curriculo.estado})` : ""}`;
     },
-    [curriculoParaTurma, turmaByName, isEi],
+    [curriculoParaTurma, turmaByName, isEi, getStudentById],
   );
   // EI por aluno: usa o grade da turma (ex.: "pre-2", "maternal-1").
-  const isEiAluno = (turma: string): boolean => {
+  const isEiAluno = (turma: string, alunoId?: string): boolean => {
     if (isEi) return true; // perfil docente em EI: trata tudo como EI
     const cls = turmaByName(turma);
-    return isEiTurma(cls?.grade);
+    const aluno = alunoId ? getStudentById(alunoId) : combinedStudents.find((s) => s.classRef === turma);
+    return isEiTurma(cls?.grade)
+      || isEiTurma(aluno?.anoReferenciaPedagogico)
+      || isEiTurma(aluno?.anoEscolar)
+      || inferirNivelEnsino(turma) === "Educação Infantil";
   };
   // Status (rubrica) adaptado por nível.
-  const statusListFor = (turma: string) =>
-    isEiAluno(turma) ? BNCC_STATUS_EI : BNCC_STATUS;
-  const statusLabel = (turma: string, k?: BnccStatus) =>
-    (statusListFor(turma).find((x) => x.k === k)?.label) || "Não observada";
+  const statusListFor = (turma: string, alunoId?: string) =>
+    isEiAluno(turma, alunoId) ? BNCC_STATUS_EI : BNCC_STATUS;
+  const statusLabel = (turma: string, k?: BnccStatus, alunoId?: string) =>
+    (statusListFor(turma, alunoId).find((x) => x.k === k)?.label) || "Não observada";
 
   const areasFor = (id: string, turma: string, pcd?: string): BnccArea[] => {
     // Educação Infantil tem prioridade absoluta: sempre usar os Campos de
     // Experiência da BNCC Infantil, mesmo quando há currículo municipal
     // configurado (currículos costumam ser do Ensino Fundamental).
-    if (isEiAluno(turma)) {
+    if (isEiAluno(turma, id)) {
       const base = EI_CAMPOS_EXPERIENCIA;
       if (pcd) return [...base, { area: "Inclusão (PEI)", comps: BNCC_INCLUSAO }];
       return base;
@@ -1759,9 +1799,9 @@ ${parecerHtml}
                   <button
                     className="rel-btn-card"
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
-                    aria-label={`${isEiAluno(a.turma) ? "Avaliar por Campos de Experiência" : "Avaliar competências"} de ${a.nome}`}
+                    aria-label={`${isEiAluno(a.turma, a.id) ? "Avaliar por Campos de Experiência" : "Avaliar competências"} de ${a.nome}`}
                   >
-                   <ClipboardList size={13} /> {isEiAluno(a.turma) ? "Avaliar Campos" : labelAvaliacaoParaTurma(a.turma)}
+                   <ClipboardList size={13} /> {isEiAluno(a.turma, a.id) ? "Avaliar Campos" : labelAvaliacaoParaTurma(a.turma, a.id)}
                   </button>
                   {a.status === "todo" && (
                     <button className="rel-btn-card accent" onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}>
@@ -1919,8 +1959,8 @@ ${parecerHtml}
         const cls = turmaByName(turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
-        const ei = isEiAluno(turma);
-        const STATUS = ei ? BNCC_STATUS_EI : BNCC_STATUS;
+        const ei = isEiAluno(turma, id);
+        const STATUS = statusListFor(turma, id);
         const curriculoModal = curriculoParaTurma(turma);
         const nomeMunicipioModal = curriculoModal
           ? `${curriculoModal.municipio}${curriculoModal.estado ? ` (${curriculoModal.estado})` : ""}`
@@ -2307,7 +2347,7 @@ ${parecerHtml}
         const buildReportHtml = () => {
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = getStudentById(a.id);
-          const cls = dashClasses.find((c) => c.name === a.turma);
+          const cls = turmaByName(a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
           const bodyInner = `
 <article class="report">
@@ -2348,7 +2388,7 @@ ${parecerHtml}
           // moderno nem Google Fonts. Layout em 2 colunas via <table>.
           const dataStr = new Date().toLocaleDateString("pt-BR");
           const aluno = getStudentById(a.id);
-          const cls = dashClasses.find((c) => c.name === a.turma);
+          const cls = turmaByName(a.turma);
           const escola = dashSchools.find((s) => s.name === cls?.school);
 
           const ACCENT = "#1F3A5F";
@@ -2753,7 +2793,7 @@ ${parecerHtml}
               </div>
               <div className="rel-modal-foot" style={{ flexWrap: "wrap" }}>
                 <button className="rel-btn-card" onClick={() => { setAlunoModal(null); setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }); }}>
-                  <ClipboardList size={13} /> {labelAvaliacaoParaTurma(a.turma)}
+                  <ClipboardList size={13} /> {labelAvaliacaoParaTurma(a.turma, a.id)}
                 </button>
                 {isDone && (
                   <>
