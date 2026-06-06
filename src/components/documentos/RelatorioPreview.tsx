@@ -46,6 +46,8 @@ export function RelatorioPreview({ doc, editable = false, onChange }: Props): Re
 
   const isPcd = doc.tipo === "pcd";
   const labelCampos = doc.tipo === "ei" ? "Campos de Experiência" : "Componentes Curriculares";
+  const hasText = (v?: string | null) => !!(v && v.trim() && v.trim() !== "—");
+  const camposPreenchidos = (doc.campos || []).filter((c) => hasText(c.nome) || hasText(c.descricao));
 
   return (
     <div className="documento-wrap documento-print-root">
@@ -98,91 +100,91 @@ export function RelatorioPreview({ doc, editable = false, onChange }: Props): Re
 
         {doc.modo === "completo" ? (
           <>
-            <div className="doc-secao">
-              <b>Desenvolvimento Global:</b>
-              <Editable as="p" value={doc.desenvolvimentoGlobal} editable={editable}
-                onCommit={(v) => update({ desenvolvimentoGlobal: v })} />
-            </div>
-
-            <div className="doc-secao">
-              <b>{labelCampos}:</b>
-              {doc.campos.map((c, i) => (
-                <div key={i} style={{ marginTop: 6 }}>
-                  <b style={{ display: "inline" }}>
-                    <Editable value={c.nome} editable={editable}
-                      onCommit={(v) => updateCampo(i, { nome: v })} />
-                    :
-                  </b>{" "}
-                  <Editable as="span" value={c.descricao} editable={editable}
-                    onCommit={(v) => updateCampo(i, { descricao: v })} />
-                </div>
-              ))}
-            </div>
-
-            <div className="doc-secao">
-              <b>Habilidades BNCC Trabalhadas:</b>
-              <BnccList itens={doc.bncc} />
-            </div>
-
-            <div className="doc-secao">
-              <b>Observações do(a) Professor(a):</b>
-              <Editable as="p" value={doc.observacoes} editable={editable}
-                onCommit={(v) => update({ observacoes: v })} />
-            </div>
-
-            <div className="doc-secao">
-              <b>Avanços e Conquistas:</b>
-              <Editable as="p" value={doc.avancos} editable={editable}
-                onCommit={(v) => update({ avancos: v })} />
-            </div>
-
-            <div className="doc-secao">
-              <b>Próximos Passos:</b>
-              <Editable as="p" value={doc.proximosPassos} editable={editable}
-                onCommit={(v) => update({ proximosPassos: v })} />
-            </div>
-
-            {isPcd ? (
-              <>
-                <div className="doc-secao">
-                  <b>Adaptações Realizadas:</b>
-                  <Editable as="p" value={doc.adaptacoes || ""} editable={editable}
-                    onCommit={(v) => update({ adaptacoes: v })} />
-                </div>
-                <div className="doc-secao">
-                  <b>Evolução em Relação ao PEI:</b>
-                  <Editable as="p" value={doc.evolucaoPei || ""} editable={editable}
-                    onCommit={(v) => update({ evolucaoPei: v })} />
-                </div>
-              </>
+            {hasText(doc.desenvolvimentoGlobal) ? (
+              <div className="doc-secao">
+                <b>Desenvolvimento Global:</b>
+                <Editable as="p" value={doc.desenvolvimentoGlobal} editable={editable}
+                  onCommit={(v) => update({ desenvolvimentoGlobal: v })} />
+              </div>
             ) : null}
 
-            {doc.apoioTeorico ? (
-              <div className="doc-secao" style={{ marginTop: 16 }}>
-                <b style={{ fontSize: 11 }}>Apoio Teórico:</b>
-                <Editable as="p"
-                  className="doc-apoio"
-                  value={doc.apoioTeorico} editable={editable}
-                  onCommit={(v) => update({ apoioTeorico: v })}
-                />
+            {camposPreenchidos.length > 0 ? (
+              <div className="doc-secao">
+                <b>{labelCampos}:</b>
+                {doc.campos.map((c, i) => (
+                  hasText(c.nome) || hasText(c.descricao) ? (
+                    <div key={i} style={{ marginTop: 6 }}>
+                      <b style={{ display: "inline" }}>
+                        <Editable value={c.nome} editable={editable}
+                          onCommit={(v) => updateCampo(i, { nome: v })} />
+                        :
+                      </b>{" "}
+                      <Editable as="span" value={c.descricao} editable={editable}
+                        onCommit={(v) => updateCampo(i, { descricao: v })} />
+                    </div>
+                  ) : null
+                ))}
               </div>
+            ) : null}
+
+            {hasText(doc.observacoes) ? (
+              <div className="doc-secao">
+                <b>Observações do(a) Professor(a):</b>
+                <Editable as="p" value={doc.observacoes} editable={editable}
+                  onCommit={(v) => update({ observacoes: v })} />
+              </div>
+            ) : null}
+
+            {hasText(doc.avancos) ? (
+              <div className="doc-secao">
+                <b>Avanços e Conquistas:</b>
+                <Editable as="p" value={doc.avancos} editable={editable}
+                  onCommit={(v) => update({ avancos: v })} />
+              </div>
+            ) : null}
+
+            {hasText(doc.proximosPassos) ? (
+              <div className="doc-secao">
+                <b>Próximos Passos:</b>
+                <Editable as="p" value={doc.proximosPassos} editable={editable}
+                  onCommit={(v) => update({ proximosPassos: v })} />
+              </div>
+            ) : null}
+
+            {isPcd && (hasText(doc.adaptacoes) || hasText(doc.evolucaoPei)) ? (
+              <>
+                {hasText(doc.adaptacoes) ? (
+                  <div className="doc-secao">
+                    <b>Adaptações Realizadas:</b>
+                    <Editable as="p" value={doc.adaptacoes || ""} editable={editable}
+                      onCommit={(v) => update({ adaptacoes: v })} />
+                  </div>
+                ) : null}
+                {hasText(doc.evolucaoPei) ? (
+                  <div className="doc-secao">
+                    <b>Evolução em Relação ao PEI:</b>
+                    <Editable as="p" value={doc.evolucaoPei || ""} editable={editable}
+                      onCommit={(v) => update({ evolucaoPei: v })} />
+                  </div>
+                ) : null}
+              </>
             ) : null}
           </>
         ) : (
           <>
-            <div className="doc-secao">
-              <b>Avaliação por Área:</b>
-              <AreasList itens={doc.areas ?? []} />
-            </div>
-            <div className="doc-secao">
-              <b>Habilidades BNCC:</b>
-              <BnccList itens={doc.bncc} simples />
-            </div>
-            <div className="doc-secao">
-              <b>Observações:</b>
-              <Editable as="p" value={doc.observacoes} editable={editable}
-                onCommit={(v) => update({ observacoes: v })} />
-            </div>
+            {(doc.areas ?? []).length > 0 ? (
+              <div className="doc-secao">
+                <b>Avaliação por Área:</b>
+                <AreasList itens={doc.areas ?? []} />
+              </div>
+            ) : null}
+            {hasText(doc.observacoes) ? (
+              <div className="doc-secao">
+                <b>Observações:</b>
+                <Editable as="p" value={doc.observacoes} editable={editable}
+                  onCommit={(v) => update({ observacoes: v })} />
+              </div>
+            ) : null}
           </>
         )}
 
