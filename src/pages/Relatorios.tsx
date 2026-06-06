@@ -494,7 +494,7 @@ const BNCC_BY_YEAR: Record<string, BnccArea[]> = {
 };
 const YEAR_OPTIONS = ["1","2","3","4","5","6","7","8","9"];
 function bnccAreasFor(year: string): BnccArea[] {
-  return BNCC_BY_YEAR[year] || BNCC_BY_YEAR["2"];
+  return BNCC_BY_YEAR[year] || [];
 }
 
 function isEiTurma(grade?: string | null): boolean {
