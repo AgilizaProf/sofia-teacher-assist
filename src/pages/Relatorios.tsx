@@ -791,7 +791,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
-  const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }) => {
+  const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }, opts?: { silent?: boolean }) => {
     if (formatoParecer !== "topicos" && formatoParecer !== "texto") {
       toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar.");
       return;
