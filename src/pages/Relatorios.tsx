@@ -599,7 +599,16 @@ export function Relatorios() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [routeSearch.focus]);
 
-  type DashStudent = { name: string; classRef: string; birth: string; pcd: string; notes: string; createdAt?: string };
+  type DashStudent = {
+    name: string;
+    classRef: string;
+    birth: string;
+    pcd: string;
+    notes: string;
+    createdAt?: string;
+    anoEscolar?: string;
+    anoReferenciaPedagogico?: string;
+  };
   // Identidade estável por aluno — usada como CHAVE para todas as avaliações
   // (BNCC, observações, parecer, ano de referência) persistidas em localStorage.
   // CRÍTICO: jamais derivar este id de índices de array; sempre vincular ao
@@ -632,6 +641,8 @@ export function Relatorios() {
           pcd: s.diag || s.pcd || "nao",
           notes: s.notes ?? "",
           createdAt: s.createdAt,
+          anoEscolar: s.anoEscolar,
+          anoReferenciaPedagogico: s.anoReferenciaPedagogico,
         },
         `db:${s.id}`,
       ),
