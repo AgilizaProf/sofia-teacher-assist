@@ -507,6 +507,15 @@ function isEiTurma(grade?: string | null): boolean {
   return inferirNivelEnsino(g) === "Educação Infantil";
 }
 
+function normalizeTurmaName(value?: string | null): string {
+  return (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 export function Relatorios() {
   const user = useUser();
   const ctx = useSofiaContext();
@@ -1015,16 +1024,23 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
 
   const yearForAluno = (id: string, turma: string): string => {
     if (yearOverride[id]) return yearOverride[id];
+    const aluno = getStudentById(id);
     const cls = turmaByName(turma);
-    if (isEiTurma(cls?.grade)) return ""; // Educação Infantil não usa ano do Fundamental
-    const g = cls?.grade?.replace(/\D/g, "");
+    const nivelAluno = [
+      cls?.grade,
+      aluno?.anoReferenciaPedagogico,
+      aluno?.anoEscolar,
+      turma,
+    ].find((v) => typeof v === "string" && v.trim().length > 0) ?? "";
+    if (isEiTurma(nivelAluno)) return ""; // Educação Infantil não usa ano do Fundamental
+    const g = nivelAluno.replace(/\D/g, "");
     return g && YEAR_OPTIONS.includes(g) ? g : ""; // sem chute para o 2º ano
   };
   const turmaByName = useCallback(
     (turma?: string | null) => {
-      const nome = (turma || "").trim().toLowerCase();
+      const nome = normalizeTurmaName(turma);
       if (!nome) return null;
-      return turmasDb.find((t) => (t.name || "").trim().toLowerCase() === nome) ?? null;
+      return turmasDb.find((t) => normalizeTurmaName(t.name) === nome) ?? null;
     },
     [turmasDb],
   );
@@ -1051,7 +1067,11 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const isEiAluno = (turma: string): boolean => {
     if (isEi) return true; // perfil docente em EI: trata tudo como EI
     const cls = turmaByName(turma);
-    return isEiTurma(cls?.grade);
+    const aluno = combinedStudents.find((s) => s.classRef === turma);
+    return isEiTurma(cls?.grade)
+      || isEiTurma(aluno?.anoReferenciaPedagogico)
+      || isEiTurma(aluno?.anoEscolar)
+      || inferirNivelEnsino(turma) === "Educação Infantil";
   };
   // Status (rubrica) adaptado por nível.
   const statusListFor = (turma: string) =>
