@@ -796,10 +796,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }, opts?: { silent?: boolean }) => {
     if (formatoParecer !== "topicos" && formatoParecer !== "texto") {
       toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar.");
-      return;
+      return false;
     }
     const okGate = await creditosGate.checar({ custo: CUSTOS.parecer_descritivo, acao: `Parecer descritivo — ${a.nome}` });
-    if (!okGate) return;
+    if (!okGate) return false;
     setGerandoParecerId(a.id);
     try {
       const areas = areasFor(a.id, a.turma, a.pcd);
