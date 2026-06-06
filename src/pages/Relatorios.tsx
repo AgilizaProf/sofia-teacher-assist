@@ -2283,6 +2283,7 @@ ${parecerHtml}
               parecerWord += parecerAluno.texto.split(/\n+/).map((p) => para(p)).join("");
             } else {
               if (parecerAluno.resumo) parecerWord += para(parecerAluno.resumo);
+              if (parecerAluno.campos?.length) parecerAluno.campos.forEach((c) => { parecerWord += subTitle(c.campo) + para(c.texto); });
               if (parecerAluno.pedagogico) parecerWord += subTitle("Pedagógico") + para(parecerAluno.pedagogico);
               if (parecerAluno.comportamental) parecerWord += subTitle("Comportamental") + para(parecerAluno.comportamental);
               if (parecerAluno.sensorial) parecerWord += subTitle("Sensorial") + para(parecerAluno.sensorial);
