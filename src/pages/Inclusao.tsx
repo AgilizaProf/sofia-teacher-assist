@@ -3580,6 +3580,18 @@ ${corpo}
                 );
               })}
             </div>
+            {periodoAg === "intervalo" && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
+                <label style={{ fontSize: 12, color: "var(--muted)", display: "flex", flexDirection: "column", gap: 4 }}>
+                  Início
+                  <input type="date" value={intervaloIni} onChange={(e) => setIntervaloIni(e.target.value)} style={{ padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13 }} />
+                </label>
+                <label style={{ fontSize: 12, color: "var(--muted)", display: "flex", flexDirection: "column", gap: 4 }}>
+                  Fim
+                  <input type="date" value={intervaloFim} min={intervaloIni || undefined} onChange={(e) => setIntervaloFim(e.target.value)} style={{ padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 13 }} />
+                </label>
+              </div>
+            )}
           </div>
           <div style={{ padding: "12px 18px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
             <button className="inc-btn-ghost" onClick={() => setAgendarPeriodOpen(false)}>Cancelar</button>
