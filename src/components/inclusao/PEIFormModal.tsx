@@ -31,6 +31,7 @@ export type MetaCurta = {
   meta: string;
   indicador: string;
   area: string; // cognitiva | social | motora | comunicacao | autonomia
+  status?: "a_fazer" | "em_construcao" | "realizado"; // progresso da meta (alimenta a KPI de Inclusão)
 };
 
 export type AreaAvaliacao =
