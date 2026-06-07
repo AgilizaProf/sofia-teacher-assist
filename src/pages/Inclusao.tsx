@@ -2051,11 +2051,11 @@ ${corpo}
     const peiCheck = ["diagnostico","caracterizacao","habilidadesDesenvolvidas","estrategias","adaptacoesCurriculares","adaptacoesAvaliativas","recursos","comunicacao"];
     let peiFilled = 0;
     peiCheck.forEach((k) => { if (String(peiDoAluno[k] || "").trim().length > 5) peiFilled++; });
-    if (Array.isArray(peiDoAluno.objetivos) && (peiDoAluno.objetivos as unknown[]).length > 0) peiFilled++;
+   if (objetivosDoPei(peiDoAluno).length > 0) peiFilled++;
     if (Array.isArray(peiDoAluno.equipe) && (peiDoAluno.equipe as unknown[]).length > 0) peiFilled++;
-    const objsArr = (Array.isArray(peiDoAluno.objetivos) ? peiDoAluno.objetivos : []) as Array<{ status?: string }>;
+    const objsArr = objetivosDoPei(peiDoAluno);
     const objsTotal = objsArr.length;
-    const objsAtingidos = objsArr.filter((o) => o.status === "realizado" || o.status === "atingido").length;
+    const objsAtingidos = objsArr.filter((o) => objetivoConcluido(o.status)).length;
     const trendTone: "ok" | "warn" | "muted" =
       objsTotal === 0 ? "muted" : objsAtingidos / objsTotal >= 0.5 ? "ok" : "warn";
     const trendLabel =
