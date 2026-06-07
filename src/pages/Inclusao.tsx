@@ -2311,8 +2311,8 @@ ${corpo}
                   </div>
                   {(() => {
                     const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
-                    const objs = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as Array<{ id: string; texto: string; status: string; prazo?: string }>;
-                    const atingidos = objs.filter((o) => o.status === "realizado" || o.status === "atingido").length;
+                    const objs = objetivosDoPei(peiSel);
+                    const atingidos = objs.filter((o) => objetivoConcluido(o.status)).length;
                     return (
                       <button
                         type="button"
