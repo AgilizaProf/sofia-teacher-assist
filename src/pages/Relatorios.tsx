@@ -807,6 +807,25 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
   // Estado do "gerar em lote" (progresso da turma/filtro atual).
  const [lote, setLote] = useState<{ ativo: boolean; feitos: number; total: number; itens: { id: string; nome: string; status: "fila" | "gerando" | "ok" | "erro" }[] }>({ ativo: false, feitos: 0, total: 0, itens: [] });
+  // Modal de seleção para gerar pareceres em lote (alunos + formato).
+  const [loteSelectOpen, setLoteSelectOpen] = useState(false);
+  const [loteSelected, setLoteSelected] = useState<Set<string>>(new Set());
+  const [loteFormato, setLoteFormato] = useState<"" | "topicos" | "texto">("");
+  const abrirLoteSelecao = () => {
+    // Pré-seleciona quem ainda não tem parecer no filtro atual.
+    const pendentes = (typeof alunosFiltered !== "undefined" ? alunosFiltered : alunosLista)
+      .filter((a) => !parecerByAluno[a.id])
+      .map((a) => a.id);
+    setLoteSelected(new Set(pendentes));
+    setLoteFormato(formatoParecer || "");
+    setLoteSelectOpen(true);
+  };
+  const toggleLoteSelected = (id: string) =>
+    setLoteSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   const creditosGate = useCreditosGate();
   const [formatoParecer, setFormatoParecer] = useState<"" | "topicos" | "texto">("");
   type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
