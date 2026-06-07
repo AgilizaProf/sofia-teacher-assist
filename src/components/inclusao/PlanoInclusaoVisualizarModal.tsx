@@ -27,7 +27,8 @@ export function PlanoInclusaoVisualizarModal({ open, plano, onClose, onSave }: P
 
   const appendText = (cur: string, add: string) =>
     cur && cur.trim() ? `${cur.trim()}\n${add}` : add;
-  const ano = form.anoEscolar || form.anoReferenciaPedagogico;
+  const ano = (form as { anoEscolar?: string; anoReferenciaPedagogico?: string }).anoEscolar
+    || (form as { anoReferenciaPedagogico?: string }).anoReferenciaPedagogico;
 
   const labelStyle: React.CSSProperties = {
     fontSize: 11, fontWeight: 700, color: "var(--muted)",
