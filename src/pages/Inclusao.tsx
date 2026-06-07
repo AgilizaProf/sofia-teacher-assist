@@ -2977,8 +2977,8 @@ ${corpo}
                     <div className="section-head">
                       <h3>Planejamento adaptado · {selected?.name || ""}</h3>
                       <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar novo plano adaptado</button>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeriodoOpen(true)}><Sparkles size={14} /> Atividades do período</button>
+                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar nova aula adaptada</button>
+                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeriodoOpen(true)}><Sparkles size={14} /> Atividades por períodos</button>
                       {studentPlans.length > 0 && (
                         <button
                           className="btn btn-primary bg-orange-400 text-orange-400"
