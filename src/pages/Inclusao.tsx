@@ -4071,7 +4071,7 @@ ${corpo}
           </div>
           <form className="inc-modal-body plain" onSubmit={handleSaveReg} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
-              Marque opções e/ou escreva em quantas categorias quiser. Ao salvar, cada categoria preenchida vira um registro próprio.
+              Marque opções e/ou escreva em quantas categorias quiser. Ao salvar, cada item marcado vira um registro próprio.
             </p>
             {(["ped","com","sen","fam"] as RegCat[]).map((k) => {
               const body = nrBodies[k] || "";
