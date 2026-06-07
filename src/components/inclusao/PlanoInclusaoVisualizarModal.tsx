@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { X, CheckCircle2 } from "lucide-react";
-import type { PlanoInclusao } from "./PlanoInclusaoModal";
+import {
+  ChipRow,
+  getMetodologiaSugestoes,
+  getAvaliacaoSugestoes,
+  getObservacoesSugestoes,
+  type PlanoInclusao,
+} from "./PlanoInclusaoModal";
 
 type Props = {
   open: boolean;
@@ -18,6 +24,10 @@ export function PlanoInclusaoVisualizarModal({ open, plano, onClose, onSave }: P
 
   const set = <K extends keyof PlanoInclusao>(k: K, v: PlanoInclusao[K]) =>
     setForm((f) => (f ? { ...f, [k]: v } : f));
+
+  const appendText = (cur: string, add: string) =>
+    cur && cur.trim() ? `${cur.trim()}\n${add}` : add;
+  const ano = form.anoEscolar || form.anoReferenciaPedagogico;
 
   const labelStyle: React.CSSProperties = {
     fontSize: 11, fontWeight: 700, color: "var(--muted)",
@@ -90,14 +100,26 @@ export function PlanoInclusaoVisualizarModal({ open, plano, onClose, onSave }: P
           <div>
             <label style={labelStyle}>Metodologia</label>
             <textarea style={taStyle} value={form.metodologia} onChange={(e) => set("metodologia", e.target.value)} />
+            <ChipRow
+              items={getMetodologiaSugestoes(form.disciplina, ano)}
+              onPick={(t) => set("metodologia", appendText(form.metodologia, t))}
+            />
           </div>
           <div>
             <label style={labelStyle}>Avaliação</label>
             <textarea style={taStyle} value={form.avaliacao} onChange={(e) => set("avaliacao", e.target.value)} />
+            <ChipRow
+              items={getAvaliacaoSugestoes(form.disciplina, ano)}
+              onPick={(t) => set("avaliacao", appendText(form.avaliacao, t))}
+            />
           </div>
           <div>
             <label style={labelStyle}>Observações</label>
             <textarea style={taStyle} value={form.observacoes} onChange={(e) => set("observacoes", e.target.value)} />
+            <ChipRow
+              items={getObservacoesSugestoes(form.disciplina, ano)}
+              onPick={(t) => set("observacoes", appendText(form.observacoes, t))}
+            />
           </div>
           {form.habilidades?.length > 0 && (
             <div>
