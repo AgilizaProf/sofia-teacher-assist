@@ -1856,6 +1856,50 @@ ${parecerHtml}
                   );
                 })()}
                 <div className="rel-card-foot" onClick={(e) => e.stopPropagation()}>
+                  {(() => {
+                    const per = resolvePeriodoAluno(a.id, a.turma);
+                    const override = periodoByAluno[a.id];
+                    const setOv = (next: Partial<PeriodoAlunoOverride>) => {
+                      setPeriodoByAluno((prev) => ({
+                        ...prev,
+                        [a.id]: {
+                          tipo: next.tipo ?? per.tipo,
+                          num: Math.min(qtdPeriodos(next.tipo ?? per.tipo), Math.max(1, next.num ?? per.num)),
+                          ano: next.ano ?? per.ano,
+                        },
+                      }));
+                    };
+                    const limparOv = () => setPeriodoByAluno((prev) => { const cp = { ...prev }; delete cp[a.id]; return cp; });
+                    const labelPeriodo = per.tipo === "Anual" ? "Ano letivo" : `${per.num}º ${per.nome}`;
+                    return (
+                      <div style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", background: "#FBFAF6", border: "1px solid var(--line-soft)", borderRadius: 8, marginBottom: 6 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Período</span>
+                        <button
+                          type="button"
+                          onClick={() => setOv({ num: per.num - 1 })}
+                          disabled={per.tipo === "Anual" || per.num <= 1}
+                          aria-label="Período anterior"
+                          style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 6, padding: 2, cursor: (per.tipo === "Anual" || per.num <= 1) ? "not-allowed" : "pointer", opacity: (per.tipo === "Anual" || per.num <= 1) ? 0.4 : 1 }}
+                        ><ChevronLeft size={13} /></button>
+                        <b style={{ fontSize: 12, minWidth: 86, textAlign: "center" }}>{labelPeriodo}</b>
+                        <button
+                          type="button"
+                          onClick={() => setOv({ num: per.num + 1 })}
+                          disabled={per.tipo === "Anual" || per.num >= per.qtd}
+                          aria-label="Próximo período"
+                          style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 6, padding: 2, cursor: (per.tipo === "Anual" || per.num >= per.qtd) ? "not-allowed" : "pointer", opacity: (per.tipo === "Anual" || per.num >= per.qtd) ? 0.4 : 1 }}
+                        ><ChevronRight size={13} /></button>
+                        {override && (
+                          <button
+                            type="button"
+                            onClick={limparOv}
+                            style={{ marginLeft: "auto", background: "transparent", border: 0, color: "var(--muted)", cursor: "pointer", fontSize: 10, textDecoration: "underline" }}
+                            title="Voltar ao período padrão da turma"
+                          >resetar</button>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <button
                     className="rel-btn-card"
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
