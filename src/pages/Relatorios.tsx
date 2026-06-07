@@ -839,8 +839,9 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
-  const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }, opts?: { silent?: boolean }) => {
-    if (formatoParecer !== "topicos" && formatoParecer !== "texto") {
+  const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }, opts?: { silent?: boolean; formatoOverride?: "topicos" | "texto" }) => {
+    const formatoEfetivo = opts?.formatoOverride ?? formatoParecer;
+    if (formatoEfetivo !== "topicos" && formatoEfetivo !== "texto") {
       toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar.");
       return false;
     }
@@ -940,7 +941,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           diagnostico: a.pcd || "",
           periodo: tipoPeriodoAluno,
           intervalo: periodoLabel,
-          formato: formatoParecer || "topicos",
+          formato: formatoEfetivo || "topicos",
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
           observacoesProfessor: bnccObsByAluno[a.id]?.trim() || "",
@@ -966,7 +967,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       const parecer: ParecerNarrativo = {
         ...((data as { parecer?: ParecerNarrativo })?.parecer || {}),
         periodoLabel,
-        formato: (formatoParecer || "topicos") as "topicos" | "texto",
+        formato: (formatoEfetivo || "topicos") as "topicos" | "texto",
         geradoEm: new Date().toLocaleString("pt-BR"),
         tipo_relatorio: tipoRelatorio,
         nivel_ensino: nivelEnsino,
