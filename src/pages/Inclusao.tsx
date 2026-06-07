@@ -3560,6 +3560,7 @@ ${corpo}
                 { k: "bimestre", l: "Bimestre", d: "Próximos 60 dias" },
                 { k: "trimestre", l: "Trimestre", d: "Próximos 90 dias" },
                 { k: "semestre", l: "Semestre", d: "Próximos 180 dias" },
+                { k: "intervalo", l: "Intervalo de datas", d: "Você escolhe início e fim" },
               ] as Array<{ k: PeriodoAg; l: string; d: string }>).map((opt) => {
                 const ativo = periodoAg === opt.k;
                 return (
