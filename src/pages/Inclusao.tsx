@@ -1464,6 +1464,10 @@ ${corpo}
       toast.error("Selecione ao menos uma atividade para agendar.");
       return;
     }
+    if (periodoAg === "intervalo" && (!intervaloIni || !intervaloFim || new Date(intervaloFim) < new Date(intervaloIni))) {
+      toast.error("Defina as datas de início e fim (o fim não pode ser antes do início).");
+      return;
+    }
     setAgendando(true);
     try {
       const datas = gerarDatasDistribuidas(escolhidos.length, periodoAg);
