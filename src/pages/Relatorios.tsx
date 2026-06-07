@@ -1715,7 +1715,7 @@ ${parecerHtml}
               </button>
               <button
                 className="rel-pill"
-                onClick={() => void handleGerarLote()}
+                onClick={abrirLoteSelecao}
                 disabled={lote.ativo}
                 title="Gerar o parecer de todos os alunos do filtro atual que ainda não têm parecer"
               >
