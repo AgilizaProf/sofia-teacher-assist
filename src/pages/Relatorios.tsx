@@ -2609,7 +2609,6 @@ ${parecerHtml}
     <tr><td style="padding:10pt 14pt;color:#FFFFFF;font-family:${titleFont};font-size:11pt;font-weight:bold;letter-spacing:1px;">AGILIZAPROF · PARECER DESCRITIVO</td></tr>
   </table>
   <div style="text-align:center;margin:0 0 18pt;">
-    <div style="font-family:${bodyFont};font-size:9pt;font-weight:bold;color:${ACCENT};letter-spacing:1px;">DOCUMENTO PEDAGÓGICO • AGILIZAPROF</div>
     <h1 style="font-family:${titleFont};font-size:24pt;color:${INK};margin:8pt 0 4pt;font-weight:bold;">Parecer Descritivo</h1>
     <div style="width:80pt;border-top:1.5pt solid ${GOLD};margin:6pt auto;"></div>
     <div style="font-family:${titleFont};font-style:italic;font-size:11pt;color:${GRAY};">${esc(a.nome)}</div>
