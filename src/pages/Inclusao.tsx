@@ -1413,7 +1413,6 @@ ${corpo}
       <h1>Atividades · ${esc(selected.name)}</h1>
       <div class="meta">${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")} · ${escolhidos.length} atividade(s) · modo ${planViewMode === "topicos" ? "tópicos" : "completo"}</div>
       ${blocos}
-      <script>setTimeout(function(){ window.print(); }, 400);</script>
     `;
     const html = wrapStandardPrintHtml(`Atividades · ${esc(selected.name)}`, inner, {
       extraCss: extra,
