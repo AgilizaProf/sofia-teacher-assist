@@ -813,9 +813,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [loteFormato, setLoteFormato] = useState<"" | "topicos" | "texto">("");
   const abrirLoteSelecao = () => {
     // Pré-seleciona quem ainda não tem parecer no filtro atual.
-    const pendentes = (typeof alunosFiltered !== "undefined" ? alunosFiltered : alunosLista)
-      .filter((a) => !parecerByAluno[a.id])
-      .map((a) => a.id);
+    const pendentes = alunosFiltered.filter((a) => !parecerByAluno[a.id]).map((a) => a.id);
     setLoteSelected(new Set(pendentes));
     setLoteFormato(formatoParecer || "");
     setLoteSelectOpen(true);
