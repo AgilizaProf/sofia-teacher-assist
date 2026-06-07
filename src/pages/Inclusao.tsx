@@ -849,6 +849,44 @@ function isEducacaoInfantilSerie(s?: string | null): boolean {
   return /(infantil|bercário|berçario|berc[aá]rio|maternal|pr[eé]\b|pr[eé]-escola|jardim|g[1-5]\b|creche)/.test(t);
 }
 
+// Objetivos do PEI exibidos na KPI/painel de status.
+// Fonte de verdade: metasCurtoPrazo (formulário atual do PEI). Mantém
+// compatibilidade com objetivos[] (campo legado). Sem isto, a KPI lê só o
+// legado (sempre vazio) e nada a alimenta.
+type PeiObjetivoView = { id: string; texto: string; status: string; prazo?: string; criterios?: string; origem: "meta" | "legado" };
+function objetivosDoPei(peiObj: Record<string, unknown> | null | undefined): PeiObjetivoView[] {
+  const pei = (peiObj || {}) as Record<string, unknown>;
+  const metas = (Array.isArray(pei.metasCurtoPrazo) ? pei.metasCurtoPrazo : []) as Array<Record<string, unknown>>;
+  const fromMetas: PeiObjetivoView[] = metas
+    .filter((m) => String(m?.meta || "").trim())
+    .map((m) => ({
+      id: String(m.id),
+      texto: String(m.meta || ""),
+      status: String(m.status || "a_fazer"),
+      criterios: String(m.indicador || ""),
+      prazo: "curto",
+      origem: "meta",
+    }));
+  const legado = (Array.isArray(pei.objetivos) ? pei.objetivos : []) as Array<Record<string, unknown>>;
+  const fromLegado: PeiObjetivoView[] = legado
+    .filter((o) => String(o?.texto || "").trim())
+    .map((o) => ({
+      id: String(o.id),
+      texto: String(o.texto || ""),
+      status: String(o.status || "a_fazer"),
+      criterios: o.criterios ? String(o.criterios) : undefined,
+      prazo: o.prazo ? String(o.prazo) : undefined,
+      origem: "legado",
+    }));
+  return [...fromMetas, ...fromLegado];
+}
+
+// "Concluído" cobre os dois vocabulários de status que circulam no app:
+// a_fazer/em_construcao/realizado (painel) e nao_iniciado/em_andamento/atingido (tipo legado).
+function objetivoConcluido(status: string): boolean {
+  return status === "realizado" || status === "atingido";
+}
+
 export function Inclusao() {
   const user = useUser();
   const search = useSearch({ from: "/inclusao" }) as { tab?: TabKey; view?: ViewKey; aluno?: string };
