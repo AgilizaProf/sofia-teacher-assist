@@ -2771,7 +2771,6 @@ ${corpo}
                       <h3>Anamnese · {eixosPreenchidos} de {anamData.length} eixos preenchidos</h3>
                       <span className="legal">{selected?.anoEscolar ? selected.anoEscolar + " · " : ""}{selected?.turma || ""} · {selected?.diag || ""}</span>
                       <button className="btn btn-secondary" onClick={() => { setAnamPrintMode("completo"); setAnamPrintOpen(true); }}><Printer size={14} /> Imprimir Anamnese</button>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400"><Sparkles size={14} /> Sugerir com a Sofia</button>
                       <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     {/* Ano de Referência Pedagógico — define o parâmetro
