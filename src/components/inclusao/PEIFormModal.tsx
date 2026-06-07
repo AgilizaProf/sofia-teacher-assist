@@ -421,6 +421,46 @@ function tabPreenchida(t: TabKey, d: PEIData): boolean {
   }
 }
 
+/**
+ * "O PEI tem conteúdo real?" — fonte única usada pelos cards de Inclusão.
+ * IMPORTANTE: ignora os campos semeados ao abrir o PEI (diagnostico/cid/serie),
+ * que vêm do cadastro do aluno e sozinhos NÃO significam que a professora
+ * escreveu algo. Considera metas + campos atuais + campos legados.
+ */
+export function peiTemConteudo(d: Partial<PEIData> | null | undefined): boolean {
+  if (!d) return false;
+  const has = (v?: string) => Boolean(v && v.trim().length > 1);
+  const ar = (v?: unknown[]) => Array.isArray(v) && v.length > 0;
+  // Identificação SEM os campos semeados (diagnostico/cid/serie ficam de fora).
+  const identReal = has(d.escola) || has(d.responsavelNome) || has(d.responsavelContato)
+    || ar(d.profissionaisEnvolvidos) || has(d.dataInicioPEI) || has(d.laudoData) || has(d.laudoProf);
+  return (
+    identReal
+    // 2. Perfil
+    || has(d.potencialidades) || has(d.interessesMotivacoes) || ar(d.estiloAprendizagem) || ar(d.formaComunicacao)
+    || has(d.nivelAutonomia) || has(d.nivelInteracaoSocial) || has(d.comportamentosRelevantes) || has(d.comoLidarCrises)
+    || has(d.percursoEscolar) || has(d.atendimentosExternos) || has(d.resultadosIntervencoes)
+    // 4. Avaliação pedagógica
+    || Object.values(d.avaliacaoPedagogica || {}).some((v) => v && (has(v.nivel) || has(v.obs)))
+    // 5. Objetivos e metas (atual + legado)
+    || has(d.objetivosLongoPrazo) || (d.metasCurtoPrazo || []).some((m) => has(m?.meta)) || (d.objetivos || []).some((o) => has(o?.texto))
+    // 6/7. Adaptações e estratégias
+    || has(d.adaptacoesConteudo) || has(d.adaptacoesMetodologicas) || has(d.adaptacoesAvaliacao) || has(d.adaptacoesTempo) || has(d.adaptacoesEspaco)
+    || has(d.estrategiasArea) || ar(d.recursosPedagogicos) || has(d.estrategiasInclusaoColetiva)
+    // 8. Tecnologia assistiva
+    || ar(d.recursosCAA) || has(d.softwaresAplicativos) || has(d.adaptacoesFisicasMateriais)
+    // 9/10. Apoios e família
+    || has(d.frequenciaAEE) || has(d.objetivosAEE) || has(d.temProfissionalApoio)
+    || has(d.comoFamiliaApoia) || has(d.combinadosFamilia) || has(d.frequenciaReunioes)
+    // 11. Revisão
+    || has(d.dataRevisao) || has(d.responsavelRevisao) || has(d.criteriosAtualizacao)
+    // Legado
+    || has(d.caracterizacao) || has(d.habilidadesDesenvolvidas) || has(d.pontosForca) || has(d.necessidadesApoio)
+    || has(d.adaptacoesCurriculares) || has(d.adaptacoesAvaliativas) || has(d.metodologias) || has(d.recursosApoio)
+    || has(d.formasAvaliacao) || has(d.familiaParticipacao) || has(d.acordosFamilia) || ar(d.equipe)
+  );
+}
+
 type Props = {
   open: boolean;
   onClose: () => void;
