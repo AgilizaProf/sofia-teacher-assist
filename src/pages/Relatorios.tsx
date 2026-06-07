@@ -1022,14 +1022,18 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
 
   // Gera o parecer de todos os alunos do filtro atual que ainda não têm parecer.
   // Sequencial (1 por vez), respeitando o gate de créditos; grava cada um no histórico.
-  const handleGerarLote = async () => {
-    if (formatoParecer !== "topicos" && formatoParecer !== "texto") {
+  const handleGerarLote = async (ids?: string[], formatoArg?: "topicos" | "texto") => {
+    const formatoEfetivo: "topicos" | "texto" | "" = formatoArg ?? formatoParecer;
+    if (formatoEfetivo !== "topicos" && formatoEfetivo !== "texto") {
       toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar em lote.");
       return;
     }
-    const pendentes = alunosFiltered.filter((a) => !parecerByAluno[a.id]);
+    const base = ids && ids.length
+      ? alunosLista.filter((a) => ids.includes(a.id))
+      : alunosFiltered.filter((a) => !parecerByAluno[a.id]);
+    const pendentes = base;
     if (pendentes.length === 0) {
-      toast.info("Todos os alunos do filtro atual já têm parecer. Ajuste o filtro para gerar outros.");
+      toast.info("Selecione ao menos um(a) aluno(a) para gerar em lote.");
       return;
     }
     if (!window.confirm(`Gerar agora o parecer de ${pendentes.length} aluno(s)? Isso consome créditos e pode levar alguns minutos.`)) return;
@@ -1037,7 +1041,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     let ok = 0;
     for (const a of pendentes) {
       setLote((l) => ({ ...l, itens: l.itens.map((it) => (it.id === a.id ? { ...it, status: "gerando" as const } : it)) }));
-      const sucesso = await handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }, { silent: true });
+      const sucesso = await handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }, { silent: true, formatoOverride: formatoEfetivo });
       if (sucesso) ok += 1;
       setLote((l) => ({
         ...l,
