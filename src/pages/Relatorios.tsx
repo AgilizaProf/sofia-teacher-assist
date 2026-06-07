@@ -807,6 +807,23 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [gerandoParecerId, setGerandoParecerId] = useState<string | null>(null);
   // Estado do "gerar em lote" (progresso da turma/filtro atual).
  const [lote, setLote] = useState<{ ativo: boolean; feitos: number; total: number; itens: { id: string; nome: string; status: "fila" | "gerando" | "ok" | "erro" }[] }>({ ativo: false, feitos: 0, total: 0, itens: [] });
+  // Modal de seleção para gerar pareceres em lote (alunos + formato).
+  const [loteSelectOpen, setLoteSelectOpen] = useState(false);
+  const [loteSelected, setLoteSelected] = useState<Set<string>>(new Set());
+  const [loteFormato, setLoteFormato] = useState<"" | "topicos" | "texto">("");
+  const abrirLoteSelecao = () => {
+    // Pré-seleciona quem ainda não tem parecer no filtro atual.
+    const pendentes = alunosFiltered.filter((a) => !parecerByAluno[a.id]).map((a) => a.id);
+    setLoteSelected(new Set(pendentes));
+    setLoteFormato(formatoParecer || "");
+    setLoteSelectOpen(true);
+  };
+  const toggleLoteSelected = (id: string) =>
+    setLoteSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   const creditosGate = useCreditosGate();
   const [formatoParecer, setFormatoParecer] = useState<"" | "topicos" | "texto">("");
   type TipoPeriodo = "Bimestral" | "Trimestral" | "Semestral" | "Anual";
@@ -839,8 +856,9 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
-  const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }, opts?: { silent?: boolean }) => {
-    if (formatoParecer !== "topicos" && formatoParecer !== "texto") {
+  const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }, opts?: { silent?: boolean; formatoOverride?: "topicos" | "texto" }) => {
+    const formatoEfetivo = opts?.formatoOverride ?? formatoParecer;
+    if (formatoEfetivo !== "topicos" && formatoEfetivo !== "texto") {
       toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar.");
       return false;
     }
@@ -940,7 +958,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           diagnostico: a.pcd || "",
           periodo: tipoPeriodoAluno,
           intervalo: periodoLabel,
-          formato: formatoParecer || "topicos",
+          formato: formatoEfetivo || "topicos",
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
           observacoesProfessor: bnccObsByAluno[a.id]?.trim() || "",
@@ -966,7 +984,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       const parecer: ParecerNarrativo = {
         ...((data as { parecer?: ParecerNarrativo })?.parecer || {}),
         periodoLabel,
-        formato: (formatoParecer || "topicos") as "topicos" | "texto",
+        formato: (formatoEfetivo || "topicos") as "topicos" | "texto",
         geradoEm: new Date().toLocaleString("pt-BR"),
         tipo_relatorio: tipoRelatorio,
         nivel_ensino: nivelEnsino,
@@ -1004,14 +1022,18 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
 
   // Gera o parecer de todos os alunos do filtro atual que ainda não têm parecer.
   // Sequencial (1 por vez), respeitando o gate de créditos; grava cada um no histórico.
-  const handleGerarLote = async () => {
-    if (formatoParecer !== "topicos" && formatoParecer !== "texto") {
+  const handleGerarLote = async (ids?: string[], formatoArg?: "topicos" | "texto") => {
+    const formatoEfetivo: "topicos" | "texto" | "" = formatoArg ?? formatoParecer;
+    if (formatoEfetivo !== "topicos" && formatoEfetivo !== "texto") {
       toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar em lote.");
       return;
     }
-    const pendentes = alunosFiltered.filter((a) => !parecerByAluno[a.id]);
+    const base = ids && ids.length
+      ? alunosLista.filter((a) => ids.includes(a.id))
+      : alunosFiltered.filter((a) => !parecerByAluno[a.id]);
+    const pendentes = base;
     if (pendentes.length === 0) {
-      toast.info("Todos os alunos do filtro atual já têm parecer. Ajuste o filtro para gerar outros.");
+      toast.info("Selecione ao menos um(a) aluno(a) para gerar em lote.");
       return;
     }
     if (!window.confirm(`Gerar agora o parecer de ${pendentes.length} aluno(s)? Isso consome créditos e pode levar alguns minutos.`)) return;
@@ -1019,7 +1041,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     let ok = 0;
     for (const a of pendentes) {
       setLote((l) => ({ ...l, itens: l.itens.map((it) => (it.id === a.id ? { ...it, status: "gerando" as const } : it)) }));
-      const sucesso = await handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }, { silent: true });
+      const sucesso = await handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }, { silent: true, formatoOverride: formatoEfetivo });
       if (sucesso) ok += 1;
       setLote((l) => ({
         ...l,
@@ -1693,7 +1715,7 @@ ${parecerHtml}
               </button>
               <button
                 className="rel-pill"
-                onClick={() => void handleGerarLote()}
+                onClick={abrirLoteSelecao}
                 disabled={lote.ativo}
                 title="Gerar o parecer de todos os alunos do filtro atual que ainda não têm parecer"
               >
@@ -3146,6 +3168,110 @@ ${parecerHtml}
                   }}
                 >
                   <Download size={13} strokeWidth={2.4} /> Imprimir {printSelected.size > 0 ? `(${printSelected.size})` : ""}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+      {loteSelectOpen && (() => {
+        const total = alunosLista.length;
+        const allSelected = total > 0 && loteSelected.size === total;
+        const jaTem = alunosLista.filter((a) => loteSelected.has(a.id) && parecerByAluno[a.id]).length;
+        return (
+          <div className="rel-modal-bg" role="dialog" aria-modal="true" onClick={() => setLoteSelectOpen(false)}>
+            <div className="rel-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>GERAR EM LOTE · {loteSelected.size}/{total}</div>
+                  <h3 style={{ margin: 0 }}>Selecione os alunos e o formato</h3>
+                  <div className="rel-modal-meta">A Sofia gera um parecer para cada aluno selecionado, consumindo créditos.</div>
+                </div>
+                <button onClick={() => setLoteSelectOpen(false)} aria-label="Fechar" style={{ background: "transparent", border: 0, cursor: "pointer", color: "var(--text-soft)" }}><X size={18} /></button>
+              </div>
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 8px" }}>
+                <button className="rel-btn-card" onClick={() => setLoteSelected(new Set(alunosLista.map((a) => a.id)))}>Selecionar todos</button>
+                <button className="rel-btn-card" onClick={() => setLoteSelected(new Set(alunosLista.filter((a) => !parecerByAluno[a.id]).map((a) => a.id)))}>Apenas sem parecer</button>
+                <button className="rel-btn-card" onClick={() => setLoteSelected(new Set())}>Limpar</button>
+                {allSelected && <span style={{ alignSelf: "center", fontSize: 12, color: "var(--muted)" }}>Todos selecionados</span>}
+              </div>
+
+              <div className="rel-modal-body" style={{ padding: 6, maxHeight: "42vh", overflow: "auto" }}>
+                {alunosLista.length === 0 ? (
+                  <div style={{ padding: 18, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>Nenhum aluno cadastrado ainda.</div>
+                ) : (
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+                    {alunosLista.map((a) => {
+                      const checked = loteSelected.has(a.id);
+                      const tem = Boolean(parecerByAluno[a.id]);
+                      return (
+                        <li key={a.id}>
+                          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: checked ? "rgba(255,106,44,.06)" : "#fff", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleLoteSelected(a.id)}
+                              style={{ width: 16, height: 16, accentColor: "var(--accent)" }}
+                            />
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                              <span style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{a.nome}</span>
+                              <span style={{ fontSize: 12, color: "var(--muted)" }}>{a.turma || "Sem turma"} · {a.statusLabel}{a.pcd ? ` · PCD: ${a.pcd}` : ""}</span>
+                            </div>
+                            {tem && (
+                              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#1F6B3A", background: "#ECFDF3", padding: "2px 8px", borderRadius: 999 }}>Já tem parecer</span>
+                            )}
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line-soft)", borderRadius: 12, background: "var(--paper-2)" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Formato do parecer
+                </div>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 10, border: loteFormato === "topicos" ? "1.5px solid var(--accent)" : "1px solid var(--line-soft)", background: "#fff", cursor: "pointer", fontSize: 13 }}>
+                    <input type="radio" name="lote-formato" checked={loteFormato === "topicos"} onChange={() => setLoteFormato("topicos")} />
+                    <span><strong>Estruturado</strong> · por tópicos</span>
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 10, border: loteFormato === "texto" ? "1.5px solid var(--accent)" : "1px solid var(--line-soft)", background: "#fff", cursor: "pointer", fontSize: 13 }}>
+                    <input type="radio" name="lote-formato" checked={loteFormato === "texto"} onChange={() => setLoteFormato("texto")} />
+                    <span><strong>Texto corrido</strong> · narrativo</span>
+                  </label>
+                </div>
+              </div>
+
+              {jaTem > 0 && (
+                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#FFF7ED", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
+                  {jaTem} aluno(s) selecionado(s) já têm parecer — serão regenerados e substituirão o atual.
+                </div>
+              )}
+
+              <div className="rel-modal-foot">
+                <button className="rel-btn-card" onClick={() => setLoteSelectOpen(false)}>Cancelar</button>
+                <button
+                  className="rel-btn-card dark"
+                  disabled={loteSelected.size === 0 || (loteFormato !== "topicos" && loteFormato !== "texto") || lote.ativo}
+                  onClick={() => {
+                    if (loteFormato !== "topicos" && loteFormato !== "texto") {
+                      toast.error("Escolha o formato (estruturado ou texto corrido).");
+                      return;
+                    }
+                    if (loteSelected.size === 0) {
+                      toast.error("Selecione ao menos um(a) aluno(a).");
+                      return;
+                    }
+                    const ids = Array.from(loteSelected);
+                    setFormatoParecer(loteFormato);
+                    setLoteSelectOpen(false);
+                    void handleGerarLote(ids, loteFormato);
+                  }}
+                >
+                  <Sparkles size={13} strokeWidth={2.4} /> Gerar {loteSelected.size > 0 ? `(${loteSelected.size})` : ""}
                 </button>
               </div>
             </div>
