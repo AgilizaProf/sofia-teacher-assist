@@ -813,6 +813,33 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   <input style={inputCss} value={m.indicador} onChange={(e) => updMeta(m.id, { indicador: e.target.value })}
                     placeholder="Critério observável para considerar a meta atingida" />
                   <PEISuggestions fieldKey="meta_indicador" onPick={(t) => updMeta(m.id, { indicador: appendText(m.indicador, t) })} />
+                  <label style={{ ...labelCss, marginTop: 8 }}>Progresso</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {([
+                      { v: "a_fazer", l: "A fazer", color: "#6B7280" },
+                      { v: "em_construcao", l: "Em construção", color: "#B45309" },
+                      { v: "realizado", l: "Realizado", color: "#166534" },
+                    ] as const).map((s) => {
+                      const cur = m.status || "a_fazer";
+                      const on = cur === s.v;
+                      return (
+                        <button
+                          key={s.v}
+                          type="button"
+                          onClick={() => updMeta(m.id, { status: s.v })}
+                          style={{
+                            fontSize: 11, padding: "4px 10px", borderRadius: 999,
+                            border: on ? `1.5px solid ${s.color}` : "1px solid var(--border)",
+                            background: on ? `${s.color}18` : "#fff",
+                            color: on ? s.color : "var(--text)",
+                            cursor: "pointer", fontWeight: on ? 700 : 500,
+                          }}
+                        >
+                          {s.l}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               ))}
             </div>
