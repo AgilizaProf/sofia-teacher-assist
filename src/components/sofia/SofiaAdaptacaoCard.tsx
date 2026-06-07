@@ -99,6 +99,7 @@ export function SofiaAdaptacaoCard({ showEmptyFallback = false }: { showEmptyFal
     const safeWeek: Week = (week && typeof week === "object") ? { ...EMPTY_WEEK, ...week } : EMPTY_WEEK;
     const safeDash: DashStudent[] = Array.isArray(dashStudents) ? dashStudents : [];
     const safeAdapt: Record<string, string[]> = (adaptDone && typeof adaptDone === "object") ? adaptDone : {};
+    const safePlans: Record<string, Array<{ data?: string; disciplina?: string }>> = (incPlans && typeof incPlans === "object") ? incPlans : {};
     const dayKey = tomorrowKey();
     const cards = Array.isArray(safeWeek[dayKey]) ? safeWeek[dayKey] : [];
     if (cards.length === 0) return { pendentes: [] };
