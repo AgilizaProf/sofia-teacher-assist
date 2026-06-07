@@ -2606,7 +2606,7 @@ ${parecerHtml}
 <body>
 <div class="Section1">
   <table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:${ACCENT};margin:0 0 18pt;">
-    <tr><td style="padding:10pt 14pt;color:#FFFFFF;font-family:${titleFont};font-size:11pt;font-weight:bold;letter-spacing:1px;">AGILIZAPROF · RELATÓRIO PEDAGÓGICO</td></tr>
+    <tr><td style="padding:10pt 14pt;color:#FFFFFF;font-family:${titleFont};font-size:11pt;font-weight:bold;letter-spacing:1px;">AGILIZAPROF · PARECER DESCRITIVO</td></tr>
   </table>
   <div style="text-align:center;margin:0 0 18pt;">
     <div style="font-family:${bodyFont};font-size:9pt;font-weight:bold;color:${ACCENT};letter-spacing:1px;">DOCUMENTO PEDAGÓGICO • AGILIZAPROF</div>
