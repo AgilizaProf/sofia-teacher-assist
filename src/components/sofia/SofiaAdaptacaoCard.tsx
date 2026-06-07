@@ -92,6 +92,7 @@ export function SofiaAdaptacaoCard({ showEmptyFallback = false }: { showEmptyFal
   const dashStudents = useDashStudents();
   const [week] = usePersistentState<Week>("plan_week", EMPTY_WEEK);
   const [adaptDone] = usePersistentState<Record<string, string[]>>("inc_adapt_done", {});
+  const [incPlans] = usePersistentState<Record<string, Array<{ data?: string; disciplina?: string }>>>("inc_plans", {});
 
   const result = useMemo(() => {
     if (!hydrated) return { pendentes: [] as Array<{ id: string; nome: string; necessidade: string; disciplina: string; turma: string }> };
