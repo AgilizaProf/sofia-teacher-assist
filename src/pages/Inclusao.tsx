@@ -3817,14 +3817,21 @@ ${corpo}
         ];
         const PRAZO_LBL: Record<string, string> = { curto: "Curto prazo", medio: "Médio prazo", longo: "Longo prazo" };
         const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
-        const objs = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as Array<{ id: string; texto: string; status: string; prazo?: string; criterios?: string }>;
-        const atingidos = objs.filter((o) => o.status === "realizado" || o.status === "atingido").length;
+        const objs = objetivosDoPei(peiSel);
+        const atingidos = objs.filter((o) => objetivoConcluido(o.status)).length;
         const setStatus = (id: string, status: string) => {
           setPeiByStudent((all) => {
             const cur = (all[selected.id] || {}) as Record<string, unknown>;
-            const arr = (Array.isArray(cur.objetivos) ? cur.objetivos : []) as Array<Record<string, unknown>>;
-            const next = arr.map((o) => (o.id === id ? { ...o, status } : o));
-            return { ...all, [selected.id]: { ...cur, objetivos: next, atualizadoEm: new Date().toISOString() } };
+            // Grava o status na fonte correta: metasCurtoPrazo (formulário atual)
+            // ou objetivos[] (legado), conforme onde o objetivo existe.
+            const metas = (Array.isArray(cur.metasCurtoPrazo) ? cur.metasCurtoPrazo : []) as Array<Record<string, unknown>>;
+            if (metas.some((m) => String(m.id) === id)) {
+              const nextMetas = metas.map((m) => (String(m.id) === id ? { ...m, status } : m));
+              return { ...all, [selected.id]: { ...cur, metasCurtoPrazo: nextMetas, atualizadoEm: new Date().toISOString() } };
+            }
+            const legado = (Array.isArray(cur.objetivos) ? cur.objetivos : []) as Array<Record<string, unknown>>;
+            const nextLeg = legado.map((o) => (String(o.id) === id ? { ...o, status } : o));
+            return { ...all, [selected.id]: { ...cur, objetivos: nextLeg, atualizadoEm: new Date().toISOString() } };
           });
         };
         return (
