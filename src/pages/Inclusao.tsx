@@ -3897,7 +3897,6 @@ ${corpo}
             <div id="anam-print-area">
               <div className="inc-a4">
                 <div className="inc-a4-head">
-                  <div className="inc-a4-logo">A</div>
                   <div className="center">
                     <b>Documento de Anamnese Pedagógica</b>
                     <span>AgilizaProf · Educação Inclusiva<br />Conforme Lei 14.254/2021 · BNCC Inclusão</span>
