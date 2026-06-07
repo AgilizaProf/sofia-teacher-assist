@@ -1855,7 +1855,51 @@ ${parecerHtml}
                     </div>
                   );
                 })()}
-                <div className="rel-card-foot" onClick={(e) => e.stopPropagation()}>
+                <div className="rel-card-foot" style={{ flexWrap: "wrap" }} onClick={(e) => e.stopPropagation()}>
+                  {(() => {
+                    const per = resolvePeriodoAluno(a.id, a.turma);
+                    const override = periodoByAluno[a.id];
+                    const setOv = (next: Partial<PeriodoAlunoOverride>) => {
+                      setPeriodoByAluno((prev) => ({
+                        ...prev,
+                        [a.id]: {
+                          tipo: next.tipo ?? per.tipo,
+                          num: Math.min(qtdPeriodos(next.tipo ?? per.tipo), Math.max(1, next.num ?? per.num)),
+                          ano: next.ano ?? per.ano,
+                        },
+                      }));
+                    };
+                    const limparOv = () => setPeriodoByAluno((prev) => { const cp = { ...prev }; delete cp[a.id]; return cp; });
+                    const labelPeriodo = per.tipo === "Anual" ? "Ano letivo" : `${per.num}º ${per.nome}`;
+                    return (
+                      <div style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", background: "#FBFAF6", border: "1px solid var(--line-soft)", borderRadius: 8, marginBottom: 6 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Período</span>
+                        <button
+                          type="button"
+                          onClick={() => setOv({ num: per.num - 1 })}
+                          disabled={per.tipo === "Anual" || per.num <= 1}
+                          aria-label="Período anterior"
+                          style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 6, padding: 2, cursor: (per.tipo === "Anual" || per.num <= 1) ? "not-allowed" : "pointer", opacity: (per.tipo === "Anual" || per.num <= 1) ? 0.4 : 1 }}
+                        ><ChevronLeft size={13} /></button>
+                        <b style={{ fontSize: 12, minWidth: 86, textAlign: "center" }}>{labelPeriodo}</b>
+                        <button
+                          type="button"
+                          onClick={() => setOv({ num: per.num + 1 })}
+                          disabled={per.tipo === "Anual" || per.num >= per.qtd}
+                          aria-label="Próximo período"
+                          style={{ background: "transparent", border: "1px solid var(--line-soft)", borderRadius: 6, padding: 2, cursor: (per.tipo === "Anual" || per.num >= per.qtd) ? "not-allowed" : "pointer", opacity: (per.tipo === "Anual" || per.num >= per.qtd) ? 0.4 : 1 }}
+                        ><ChevronRight size={13} /></button>
+                        {override && (
+                          <button
+                            type="button"
+                            onClick={limparOv}
+                            style={{ marginLeft: "auto", background: "transparent", border: 0, color: "var(--muted)", cursor: "pointer", fontSize: 10, textDecoration: "underline" }}
+                            title="Voltar ao período padrão da turma"
+                          >resetar</button>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <button
                     className="rel-btn-card"
                     onClick={() => setBnccOpen({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd })}
@@ -3150,8 +3194,18 @@ ${parecerHtml}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
                     {dashClasses.map((c) => {
                       const atual = tipoPeriodoByTurma[c.name] ?? "";
+                      const tipoEfetivo = (atual || tipoPeriodo) as TipoPeriodo;
+                      const qtdAlunosTurma = alunosLista.filter((a) => a.turma === c.name).length;
+                      const aplicarATodosDaTurma = () => {
+                        setPeriodoByAluno((prev) => {
+                          const next = { ...prev };
+                          alunosLista.forEach((a) => { if (a.turma === c.name) delete next[a.id]; });
+                          return next;
+                        });
+                        toast.success(`Período aplicado a todos os alunos de ${c.name}.`);
+                      };
                       return (
-                        <div key={c.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff" }}>
+                        <div key={c.name} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff" }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: 13.5, color: "var(--text)" }}>{c.name}</div>
                             <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{c.grade || "—"}{c.school ? ` · ${c.school}` : ""}</div>
@@ -3175,6 +3229,16 @@ ${parecerHtml}
                             <option value="Semestral">Semestral</option>
                             <option value="Anual">Anual</option>
                           </select>
+                          <button
+                            type="button"
+                            className="rel-btn-card"
+                            onClick={aplicarATodosDaTurma}
+                            disabled={qtdAlunosTurma === 0}
+                            title={qtdAlunosTurma === 0 ? "Nenhum aluno cadastrado nesta turma" : `Remove overrides individuais e aplica ${tipoEfetivo} a todos os alunos de ${c.name}`}
+                            style={{ fontSize: 12 }}
+                          >
+                            Aplicar a todos da turma
+                          </button>
                         </div>
                       );
                     })}
