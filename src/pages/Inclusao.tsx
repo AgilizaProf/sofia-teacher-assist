@@ -1011,7 +1011,14 @@ export function Inclusao() {
     if (cats.length === 0) return;
     const now = new Date();
     const when = now.toLocaleDateString("pt-BR") + " · " + now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    const items: RegItem[] = cats.map((c, i) => ({ id: `r_${Date.now()}_${i}`, when, who: "Você", cat: c, body: nrBodies[c].trim() }));
+    const items: RegItem[] = [];
+    cats.forEach((c) => {
+      // cada item marcado (e cada frase escrita) vira um registro próprio
+      const partes = nrBodies[c].split(/\.\s+/).map((p) => p.replace(/\.$/, "").trim()).filter(Boolean);
+      (partes.length > 0 ? partes : [nrBodies[c].trim()]).forEach((frase, i) => {
+        items.push({ id: `r_${Date.now()}_${c}_${i}`, when, who: "Você", cat: c, body: frase });
+      });
+    });
     setRegByStudent((all) => ({ ...all, [studentKey]: [...items, ...(all[studentKey] || [])] }));
     setNrBodies({ ped: "", com: "", sen: "", fam: "" });
     setRegModalOpen(false);
