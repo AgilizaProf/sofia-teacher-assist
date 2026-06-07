@@ -1855,7 +1855,7 @@ ${parecerHtml}
                     </div>
                   );
                 })()}
-                <div className="rel-card-foot" onClick={(e) => e.stopPropagation()}>
+                <div className="rel-card-foot" style={{ flexWrap: "wrap" }} onClick={(e) => e.stopPropagation()}>
                   {(() => {
                     const per = resolvePeriodoAluno(a.id, a.turma);
                     const override = periodoByAluno[a.id];
