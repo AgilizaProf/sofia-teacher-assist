@@ -3194,8 +3194,18 @@ ${parecerHtml}
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto" }}>
                     {dashClasses.map((c) => {
                       const atual = tipoPeriodoByTurma[c.name] ?? "";
+                      const tipoEfetivo = (atual || tipoPeriodo) as TipoPeriodo;
+                      const qtdAlunosTurma = alunosLista.filter((a) => a.turma === c.name).length;
+                      const aplicarATodosDaTurma = () => {
+                        setPeriodoByAluno((prev) => {
+                          const next = { ...prev };
+                          alunosLista.forEach((a) => { if (a.turma === c.name) delete next[a.id]; });
+                          return next;
+                        });
+                        toast.success(`Período aplicado a todos os alunos de ${c.name}.`);
+                      };
                       return (
-                        <div key={c.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff" }}>
+                        <div key={c.name} style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", background: "#fff" }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: 13.5, color: "var(--text)" }}>{c.name}</div>
                             <div style={{ fontSize: 11.5, color: "var(--muted)" }}>{c.grade || "—"}{c.school ? ` · ${c.school}` : ""}</div>
@@ -3219,6 +3229,16 @@ ${parecerHtml}
                             <option value="Semestral">Semestral</option>
                             <option value="Anual">Anual</option>
                           </select>
+                          <button
+                            type="button"
+                            className="rel-btn-card"
+                            onClick={aplicarATodosDaTurma}
+                            disabled={qtdAlunosTurma === 0}
+                            title={qtdAlunosTurma === 0 ? "Nenhum aluno cadastrado nesta turma" : `Remove overrides individuais e aplica ${tipoEfetivo} a todos os alunos de ${c.name}`}
+                            style={{ fontSize: 12 }}
+                          >
+                            Aplicar a todos da turma
+                          </button>
                         </div>
                       );
                     })}
