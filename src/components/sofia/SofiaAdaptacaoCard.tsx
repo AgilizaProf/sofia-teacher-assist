@@ -108,7 +108,17 @@ export function SofiaAdaptacaoCard({ showEmptyFallback = false }: { showEmptyFal
     const primeiraDisciplina = disciplinasAmanha[0] || "aula";
     const pcdStudents = safeDash.filter((s) => s && s.pcd && s.pcd !== "nao" && s.pcd !== "nao_informado");
     const pendentes = pcdStudents
-      .filter((s) => !(safeAdapt[studentId(s)] || []).includes(`${tomorrow}-any`))
+      .filter((s) => {
+        const sid = studentId(s);
+        if ((safeAdapt[sid] || []).includes(`${tomorrow}-any`)) return false;
+        const planos = Array.isArray(safePlans[sid]) ? safePlans[sid] : [];
+        // Já existe atividade adaptada para amanhã (por data) ou para a disciplina de amanhã.
+        const jaTem = planos.some((p) => p && (
+          p.data === tomorrow ||
+          (p.disciplina && disciplinasAmanha.some((d) => d.toLowerCase() === String(p.disciplina).toLowerCase()))
+        ));
+        return !jaTem;
+      })
       .map((s) => ({
         id: studentId(s),
         nome: s.name,
