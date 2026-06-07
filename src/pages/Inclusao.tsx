@@ -3365,11 +3365,7 @@ ${corpo}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {(() => {
                           const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
-                          const temPEI = Boolean(
-                            (Array.isArray(peiSel.objetivos) && peiSel.objetivos.length) ||
-                            peiSel.caracterizacao || peiSel.habilidadesDesenvolvidas ||
-                            peiSel.adaptacoesCurriculares || peiSel.metodologias
-                          );
+                          const temPEI = peiTemConteudo(peiSel as Partial<PEIData>);
                           const semDados = regsDoPeriodo.length === 0 && !anamneseResumo && !temPEI;
                           return (
                         <button
