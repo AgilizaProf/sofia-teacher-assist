@@ -3314,17 +3314,14 @@ ${corpo}
                       </p>
                       {(() => {
                         const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
-                        const objsArr = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as unknown[];
-                        const temPEI = Boolean(
-                          objsArr.length || peiSel.caracterizacao || peiSel.habilidadesDesenvolvidas ||
-                          peiSel.adaptacoesCurriculares || peiSel.metodologias
-                        );
+                        const peiObjs = objetivosDoPei(peiSel);
+                        const temPEI = peiTemConteudo(peiSel as Partial<PEIData>);
                         const temAnam = Boolean(anamneseResumo);
                         const temRegs = regsDoPeriodo.length > 0;
                         const items = [
                           { ok: temAnam, label: "Anamnese", detail: temAnam ? "eixos preenchidos" : "ainda não preenchida" },
                           { ok: temRegs, label: "Registros do período", detail: temRegs ? `${regsDoPeriodo.length} registro(s)` : "nenhum no período" },
-                          { ok: temPEI, label: "PEI", detail: temPEI ? `${objsArr.length} objetivo(s)` : "ainda não cadastrado" },
+                          { ok: temPEI, label: "PEI", detail: temPEI ? (peiObjs.length ? `${peiObjs.length} objetivo(s)` : "preenchido") : "ainda não cadastrado" },
                         ];
                         return (
                           <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 10, padding: 12, margin: "10px 0", display: "flex", flexDirection: "column", gap: 8 }}>
