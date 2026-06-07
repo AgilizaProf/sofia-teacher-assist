@@ -127,7 +127,7 @@ export function SofiaAdaptacaoCard({ showEmptyFallback = false }: { showEmptyFal
         turma: s.classRef || "Sem turma",
       }));
     return { pendentes };
-  }, [hydrated, dashStudents, week, adaptDone]);
+  }, [hydrated, dashStudents, week, adaptDone, incPlans]);
 
   if (!hydrated) return null;
 
