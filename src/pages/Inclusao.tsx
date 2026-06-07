@@ -1317,6 +1317,28 @@ ${corpo}
 
   // Gera N datas distribuídas em dias úteis dentro da janela do período.
   const gerarDatasDistribuidas = (n: number, periodo: PeriodoAg): string[] => {
+    const toIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (periodo === "intervalo") {
+      if (!intervaloIni || !intervaloFim) return [];
+      const ini = new Date(intervaloIni + "T00:00:00");
+      const fim = new Date(intervaloFim + "T00:00:00");
+      if (isNaN(ini.getTime()) || isNaN(fim.getTime()) || fim < ini) return [];
+      const uteisInt: Date[] = [];
+      const cur = new Date(ini);
+      while (cur <= fim) {
+        if (cur.getDay() !== 0 && cur.getDay() !== 6) uteisInt.push(new Date(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
+      if (uteisInt.length === 0) return [];
+      const res: string[] = [];
+      if (n <= uteisInt.length) {
+        const step = uteisInt.length / n;
+        for (let i = 0; i < n; i++) res.push(toIso(uteisInt[Math.min(uteisInt.length - 1, Math.floor(i * step))]));
+      } else {
+        for (let i = 0; i < n; i++) res.push(toIso(uteisInt[i % uteisInt.length]));
+      }
+      return res;
+    }
     const start = nextWeekday(new Date());
     if (periodo === "dia") {
       const iso = start.toISOString().slice(0, 10);
