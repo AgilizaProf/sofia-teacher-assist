@@ -1307,11 +1307,12 @@ ${corpo}
 
   // Janela total de dias para cada período (a partir de hoje)
   const PERIODO_DIAS: Record<PeriodoAg, number> = {
-    dia: 1, semana: 7, mes: 30, bimestre: 60, trimestre: 90, semestre: 180,
+    dia: 1, semana: 7, mes: 30, bimestre: 60, trimestre: 90, semestre: 180, intervalo: 0,
   };
   const PERIODO_LABEL: Record<PeriodoAg, string> = {
     dia: "no mesmo dia", semana: "ao longo da semana", mes: "ao longo do mês",
     bimestre: "ao longo do bimestre", trimestre: "ao longo do trimestre", semestre: "ao longo do semestre",
+    intervalo: "no período escolhido",
   };
 
   // Gera N datas distribuídas em dias úteis dentro da janela do período.
