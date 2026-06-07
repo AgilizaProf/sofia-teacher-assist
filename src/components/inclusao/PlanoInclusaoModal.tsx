@@ -93,7 +93,7 @@ function disciplinaPrimaria(d: string): string {
   return (d || "").split("+")[0].trim();
 }
 
-function getMetodologiaSugestoes(disciplina: string, ano?: string): string[] {
+export function getMetodologiaSugestoes(disciplina: string, ano?: string): string[] {
   const d = disciplinaPrimaria(disciplina);
   const ei = isEducacaoInfantil(ano);
   const especificas: Record<string, string[]> = {
@@ -116,7 +116,7 @@ function getMetodologiaSugestoes(disciplina: string, ano?: string): string[] {
   return [...extra, ...(ei ? METODOLOGIA_BASE.slice(0, 3) : METODOLOGIA_BASE)].slice(0, 7);
 }
 
-function getAvaliacaoSugestoes(disciplina: string, ano?: string): string[] {
+export function getAvaliacaoSugestoes(disciplina: string, ano?: string): string[] {
   const d = disciplinaPrimaria(disciplina);
   const ei = isEducacaoInfantil(ano);
   const especificas: Record<string, string[]> = {
@@ -134,7 +134,7 @@ function getAvaliacaoSugestoes(disciplina: string, ano?: string): string[] {
   return [...extra, ...(ei ? AVALIACAO_BASE.slice(0, 2) : AVALIACAO_BASE)].slice(0, 7);
 }
 
-function getObservacoesSugestoes(disciplina: string, _ano?: string): string[] {
+export function getObservacoesSugestoes(disciplina: string, _ano?: string): string[] {
   const d = disciplinaPrimaria(disciplina);
   const especificas: Record<string, string[]> = {
     "Língua Portuguesa": ["Ainda confunde sons semelhantes; reforçar consciência fonológica", "Avançou na leitura de palavras simples"],
@@ -240,7 +240,7 @@ function getTemaSugestoes(disciplinas: string[], ano?: string): string[] {
     : ["Frações", "Sistema solar", "Verbos", "Independência do Brasil", "Cartografia"];
 }
 
-function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: string[]; onPick: (t: string) => void; label?: string }) {
+export function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { items: string[]; onPick: (t: string) => void; label?: string }) {
   const [open, setOpen] = useState(false);
   if (!items.length) return null;
   return (
