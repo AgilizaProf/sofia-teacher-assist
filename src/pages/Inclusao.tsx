@@ -2257,11 +2257,7 @@ ${corpo}
                       <span className="tag"><b>{selected.aee}</b></span>
                       {(() => {
                         const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
-                        const objsArr = (Array.isArray(peiSel.objetivos) ? peiSel.objetivos : []) as unknown[];
-                        const temPEI = Boolean(
-                          objsArr.length || peiSel.caracterizacao || peiSel.habilidadesDesenvolvidas ||
-                          peiSel.adaptacoesCurriculares || peiSel.metodologias
-                        );
+                        const temPEI = peiTemConteudo(peiSel as Partial<PEIData>);
                         if (!temPEI) return null;
                         const at = typeof peiSel.atualizadoEm === "string" && peiSel.atualizadoEm
                           ? new Date(peiSel.atualizadoEm).toLocaleDateString("pt-BR")
