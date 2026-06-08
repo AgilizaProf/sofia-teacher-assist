@@ -43,6 +43,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
   const route = routeKeyOf(loc.pathname);
 
   const [authUser, setAuthUser] = useState<{ nome: string; primeiro_nome: string } | null>(null);
+  const [etapaEnsino, setEtapaEnsino] = useState<string | null>(null);
   const [planInfo, setPlanInfo] = useState<{ plano: "free" | "pro"; ciclo: "mensal" | "anual" | null } | null>(null);
   const [tick, setTick] = useState(0);
   // Aluno em foco — estado real (antes era mutado direto no objeto memoizado,
@@ -62,10 +63,10 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
     let mounted = true;
 
     async function loadProfile(uid: string, fallbackEmail: string | null, metaName: string | null) {
-      type ProfileRow = { display_name: string | null; email: string | null };
+      type ProfileRow = { display_name: string | null; email: string | null; etapa_ensino: string | null };
       let data: ProfileRow | null = null;
       try {
-        const res = await supabase.from("profiles").select("display_name, email").eq("user_id", uid).maybeSingle();
+        const res = await supabase.from("profiles").select("display_name, email, etapa_ensino").eq("user_id", uid).maybeSingle();
         data = (res.data ?? null) as ProfileRow | null;
       } catch (err) {
         console.warn("[SofiaContext] loadProfile falhou:", err);
@@ -78,6 +79,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         (fallbackEmail && fallbackEmail.split("@")[0]) ||
         "Educador(a)";
       setAuthUser({ nome, primeiro_nome: nome.split(" ")[0] });
+      setEtapaEnsino((data?.etapa_ensino && data.etapa_ensino.trim()) || null);
     }
 
     async function loadPlan(uid: string) {
