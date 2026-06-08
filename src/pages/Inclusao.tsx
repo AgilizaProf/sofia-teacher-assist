@@ -1428,58 +1428,47 @@ ${corpo}
     const esc = (s: string) =>
       String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
     const fmtData = (d: string) => (d ? d.split("-").reverse().join("/") : "—");
+    const dataStr = new Date().toLocaleDateString("pt-BR");
     const blocos = escolhidos.map((p) => {
+      const metaLinha = `<p style="color:#444;font-size:11px;margin:0 0 6px;">${esc(fmtData(p.data))} · ${esc(p.disciplina || "")}${p.duracao ? " · " + esc(p.duracao) : ""}</p>`;
       if (planViewMode === "topicos") {
-        return `
-          <article class="topico">
-            <header>
-              <span class="data">${esc(fmtData(p.data))}</span>
-              <span class="disc">${esc(p.disciplina || "")}</span>
-            </header>
-            <h2>${esc(p.titulo || "")}</h2>
-            ${p.tema ? `<p class="tema"><b>Conteúdo:</b> ${esc(p.tema)}</p>` : ""}
-          </article>`;
+        return `<section>
+  <h2>${esc(p.titulo || "")}</h2>
+  ${metaLinha}
+  ${p.tema ? `<p><b>Conteúdo:</b> ${esc(p.tema)}</p>` : ""}
+</section>`;
       }
-      return `
-        <article class="plano">
-          <header>
-            <span class="data">${esc(fmtData(p.data))}</span>
-            <span class="disc">${esc(p.disciplina || "")} · ${esc(p.duracao || "")}</span>
-          </header>
-          <h2>${esc(p.titulo || "")}</h2>
-          ${p.tema ? `<p><b>Conteúdo:</b> ${esc(p.tema)}</p>` : ""}
-          ${p.objetivo ? `<p><b>Objetivo:</b> ${esc(p.objetivo)}</p>` : ""}
-          ${p.abertura ? `<p><b>Abertura:</b> ${esc(p.abertura)}</p>` : ""}
-          ${p.desenvolvimento ? `<p><b>Desenvolvimento:</b> ${esc(p.desenvolvimento)}</p>` : ""}
-          ${p.fechamento ? `<p><b>Fechamento:</b> ${esc(p.fechamento)}</p>` : ""}
-          ${p.materiais?.length ? `<p><b>Materiais:</b> ${p.materiais.map(esc).join(", ")}</p>` : ""}
-          ${p.metodologia ? `<p><b>Metodologia:</b> ${esc(p.metodologia)}</p>` : ""}
-          ${p.avaliacao ? `<p><b>Avaliação:</b> ${esc(p.avaliacao)}</p>` : ""}
-          ${p.habilidades?.length ? `<p><b>BNCC:</b> ${p.habilidades.map((h) => esc(h.codigo) + " — " + esc(h.descricao)).join("; ")}</p>` : ""}
-          ${p.adaptacoes?.length ? `<p><b>Adaptações:</b> ${p.adaptacoes.map((a) => esc(a.categoria) + ": " + esc(a.texto)).join("; ")}</p>` : ""}
-          ${p.observacoes ? `<p><b>Observações:</b> ${esc(p.observacoes)}</p>` : ""}
-        </article>`;
-    }).join("");
-    const extra = `
-      h1{font-size:16pt;margin:0 0 4mm;}
-      .meta{color:#6B7691;font-size:11pt;margin-bottom:8mm;}
-      article{border:1px solid #E4E8F0;border-radius:6px;padding:6mm;margin-bottom:5mm;}
-      article.topico{padding:4mm 5mm;}
-      article header{display:flex;justify-content:space-between;font-size:11pt;color:#6B7691;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2mm;}
-      article .disc{font-weight:700;color:#B8410E;}
-      article h2{font-size:13pt;margin:0 0 3mm;}
-      article p{margin:1.5mm 0;}
-      .toolbar{position:fixed;top:8px;right:8px;}
-      .toolbar button{padding:8px 14px;background:#FF7A45;color:#fff;border:0;border-radius:6px;font-weight:600;cursor:pointer;}
-    `;
-    const inner = `
-      <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
-      <h1>Atividades · ${esc(selected.name)}</h1>
-      <div class="meta">${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")} · ${escolhidos.length} atividade(s) · modo ${planViewMode === "topicos" ? "tópicos" : "completo"}</div>
-      ${blocos}
-    `;
+      return `<section>
+  <h2>${esc(p.titulo || "")}</h2>
+  ${metaLinha}
+  ${p.tema ? `<p><b>Conteúdo:</b> ${esc(p.tema)}</p>` : ""}
+  ${p.objetivo ? `<p><b>Objetivo:</b> ${esc(p.objetivo)}</p>` : ""}
+  ${p.abertura ? `<p><b>Abertura:</b> ${esc(p.abertura)}</p>` : ""}
+  ${p.desenvolvimento ? `<p><b>Desenvolvimento:</b> ${esc(p.desenvolvimento)}</p>` : ""}
+  ${p.fechamento ? `<p><b>Fechamento:</b> ${esc(p.fechamento)}</p>` : ""}
+  ${p.materiais?.length ? `<p><b>Materiais:</b> ${p.materiais.map(esc).join(", ")}</p>` : ""}
+  ${p.metodologia ? `<p><b>Metodologia:</b> ${esc(p.metodologia)}</p>` : ""}
+  ${p.avaliacao ? `<p><b>Avaliação:</b> ${esc(p.avaliacao)}</p>` : ""}
+  ${p.habilidades?.length ? `<p><b>BNCC:</b> ${p.habilidades.map((h) => esc(h.codigo) + " — " + esc(h.descricao)).join("; ")}</p>` : ""}
+  ${p.adaptacoes?.length ? `<p><b>Adaptações:</b> ${p.adaptacoes.map((a) => esc(a.categoria) + ": " + esc(a.texto)).join("; ")}</p>` : ""}
+  ${p.observacoes ? `<p><b>Observações:</b> ${esc(p.observacoes)}</p>` : ""}
+</section>`;
+    }).join("\n");
+    const identFields: Array<{ label: string; value: string }> = [];
+    identFields.push({ label: "Estudante", value: selected.name });
+    if (selected.turma) identFields.push({ label: "Turma", value: selected.turma });
+    if (selected.anoEscolar) identFields.push({ label: "Ano/Série", value: selected.anoEscolar });
+    if (user.name) identFields.push({ label: "Professor(a)", value: user.name });
+    identFields.push({ label: "Atividades", value: `${escolhidos.length} (modo ${planViewMode === "topicos" ? "tópicos" : "completo"})` });
+    const ident = `<div class="grid-2">${identFields.map((f) => `<div class="field-box"><div class="field-label">${esc(f.label)}</div><div class="field-value">${esc(f.value)}</div></div>`).join("")}</div>`;
+    const inner = `<article class="report">
+<h1>Atividades · ${esc(selected.name)}</h1>
+${ident}
+${blocos}
+<div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Atividades</div>
+</article>`;
     const html = wrapStandardPrintHtml(`Atividades · ${esc(selected.name)}`, inner, {
-      extraCss: extra,
+      extraCss: `.report{page-break-after:always;}.report:last-of-type{page-break-after:auto;}`,
       professorNome: user.name,
       docType: "plano-adaptado",
     });
