@@ -224,6 +224,7 @@ export function buildPEIContext(pei: Partial<PEIData> | null | undefined): strin
   if (s(pei.dataInicioPEI)) ident.push(`Início do PEI: ${s(pei.dataInicioPEI)}`);
   if (s(pei.vigencia?.fim)) ident.push(`Vigência até: ${s(pei.vigencia?.fim)}`);
   if (arr(pei.profissionaisEnvolvidos).length) ident.push(`Profissionais envolvidos: ${arr(pei.profissionaisEnvolvidos).join(", ")}`);
+  if (s(pei.profissionaisNomes)) ident.push(`Nomes dos profissionais: ${s(pei.profissionaisNomes).replace(/\n+/g, "; ")}`);
   if (ident.length) sections.push("IDENTIFICAÇÃO:\n" + ident.join("\n"));
 
   // 2. Perfil
