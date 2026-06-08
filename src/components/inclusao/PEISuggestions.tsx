@@ -156,6 +156,62 @@ export const PEI_SUGGESTIONS: Record<string, string[]> = {
     "Apresenta defasagem em relação ao ano de referência.",
     "Demonstra avanço consistente nas últimas semanas.",
   ],
+  "aval_obs:leitura_escrita": [
+    "Reconhece e nomeia as letras do próprio nome.",
+    "Faz correspondência som-letra com apoio.",
+    "Lê palavras simples (sílabas canônicas) com mediação.",
+    "Produz escrita espontânea em nível pré-silábico/silábico.",
+    "Apresenta defasagem na leitura em relação ao ano de referência.",
+  ],
+  "aval_obs:raciocinio_logico": [
+    "Conta oralmente e associa quantidade ao numeral até 10 com apoio.",
+    "Resolve problemas simples com material concreto.",
+    "Identifica e continua padrões e sequências.",
+    "Compreende noções de mais/menos, maior/menor.",
+    "Necessita de manipuláveis para operações básicas.",
+  ],
+  "aval_obs:motor_fino": [
+    "Segura o lápis com preensão ainda em desenvolvimento.",
+    "Recorta com tesoura seguindo linha reta com apoio.",
+    "Realiza traçado e cobertura de letras com mediação.",
+    "Encaixa e manipula peças pequenas com precisão crescente.",
+    "Cansa-se rápido em tarefas de escrita prolongada.",
+  ],
+  "aval_obs:motor_grosso": [
+    "Corre, salta e sobe degraus com equilíbrio adequado.",
+    "Participa de brincadeiras motoras com os pares.",
+    "Apresenta descoordenação em movimentos amplos.",
+    "Necessita de apoio para equilíbrio em circuitos.",
+    "Demonstra boa consciência corporal no espaço.",
+  ],
+  "aval_obs:linguagem_oral": [
+    "Comunica necessidades por frases curtas.",
+    "Amplia vocabulário em contextos de interesse.",
+    "Usa CAA/pictogramas para se comunicar.",
+    "Apresenta fala pouco inteligível para desconhecidos.",
+    "Compreende ordens simples; ordens complexas com apoio.",
+  ],
+  "aval_obs:atencao": [
+    "Mantém foco por curtos períodos com mediação.",
+    "Distrai-se com estímulos do ambiente.",
+    "Sustenta atenção em atividades de interesse.",
+    "Necessita de pausas e tarefas fracionadas.",
+    "Melhora o foco com rotina visual e antecipação.",
+  ],
+  "aval_obs:memoria": [
+    "Recupera rotinas e sequências conhecidas.",
+    "Memoriza com apoio de pistas visuais.",
+    "Retém informação nova com repetição espaçada.",
+    "Esquece instruções de múltiplos passos.",
+    "Lembra de combinados quando há suporte visual.",
+  ],
+  "aval_obs:socializacao": [
+    "Interage com 1 ou 2 colegas em situações estruturadas.",
+    "Participa de brincadeiras em grupo com mediação.",
+    "Respeita combinados e turnos com lembretes.",
+    "Prefere brincar sozinho(a); aproxima-se com apoio.",
+    "Demonstra empatia e busca o adulto de referência.",
+  ],
 
   // Metas curto prazo
   meta_texto: [
