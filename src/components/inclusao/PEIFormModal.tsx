@@ -484,18 +484,31 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
   const [savedAt, setSavedAt] = useState<string>("");
   const autosaveTimer = useRef<number | null>(null);
 
-  // hidratação ao abrir
+ // hidratação ao abrir
   useEffect(() => {
     if (open && aluno) {
+      // Limpa rótulos do cadastro: "CID F84.0" -> "F84.0"; "não informado" -> "".
+      const limpaDiag = (v?: string) => { const t = (v || "").trim(); return /não informado/i.test(t) ? "" : t; };
+      const limpaCid = (v?: string) => { const t = (v || "").trim().replace(/^cid\s+/i, ""); return /não informado/i.test(t) ? "" : t; };
+      const seedDiag = limpaDiag(aluno.diag);
+      const seedCid = limpaCid(aluno.cid);
+      const seedSerie = (aluno.anoEscolar || "").trim();
       const existing = peiByStudent[aluno.id];
       if (existing) {
-        setDraft({ ...blankPEI(), ...existing });
+        setDraft({
+          ...blankPEI(),
+          ...existing,
+          // Mostra o diagnóstico/CID/série do cadastro quando o PEI salvo não os tem.
+          diagnostico: (existing.diagnostico || "").trim() ? existing.diagnostico : seedDiag,
+          cid: (existing.cid || "").trim() ? existing.cid : seedCid,
+          serie: (existing.serie || "").trim() ? existing.serie : seedSerie,
+        });
         setSavedAt(existing.atualizadoEm || "");
       } else {
         const seed = blankPEI();
-        seed.diagnostico = aluno.diag || "";
-        seed.cid = aluno.cid || "";
-        seed.serie = aluno.anoEscolar || "";
+        seed.diagnostico = seedDiag;
+        seed.cid = seedCid;
+        seed.serie = seedSerie;
         setDraft(seed);
         setSavedAt("");
       }
