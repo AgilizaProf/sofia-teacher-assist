@@ -238,7 +238,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
       setAlunoAtual,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [route, authUser, planInfo, userData, tick, alunoAtual]);
+  }, [route, authUser, etapaEnsino, planInfo, userData, tick, alunoAtual]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
