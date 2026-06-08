@@ -248,12 +248,12 @@ body{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12pt;line-heigh
 .documento .doc-secao p{margin:0 0 6px;text-align:justify;}
 .documento .doc-secao + .doc-secao{border-top:1px solid #000;padding-top:8px;margin-top:10px;}
 
-.documento .doc-assinaturas{margin-top:2.5cm;text-align:left;}
-.documento .doc-assinaturas .assinatura{margin:2.5cm 0;}
+.documento .doc-assinaturas{margin-top:2.5cm;text-align:center;}
+.documento .doc-assinaturas .assinatura{margin:2.5cm auto;max-width:70%;}
 .documento .doc-assinaturas .assinatura:first-child{margin-top:0;}
 .documento .doc-assinaturas .assinatura:last-child{margin-bottom:0;}
 .documento .doc-assinaturas .titulo{font-weight:700;margin-bottom:18px;}
-.documento .doc-assinaturas .linha{border-bottom:1px solid #000;height:1px;margin:0 0 4px;}
+.documento .doc-assinaturas .linha{border-bottom:1px solid #000;height:1px;width:60%;margin:0 auto 4px;}
 .documento .doc-assinaturas .legenda{font-size:11pt;}
 
 .documento .rodape-sep{border:0;border-top:1px solid #000;margin:24px 0 12px;}
