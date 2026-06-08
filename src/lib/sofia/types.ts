@@ -14,6 +14,10 @@ export type SofiaUser = {
   horas_economizadas_mes: number;
   creditos_usados: number;
   creditos_total: number;
+  /** Etapa/segmento de ensino salva no perfil (ex.: "Educação Infantil",
+   *  "Ensino Fundamental - Anos Iniciais"). Usada como fallback quando
+   *  a turma em foco não permite inferir o nível. */
+  etapa_ensino?: string | null;
 };
 
 export type SofiaTurma = {
