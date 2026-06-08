@@ -9,7 +9,7 @@ import { useIsAdmin } from "@/lib/admin/useIsAdmin";
 import logoImg from "@/assets/agilizaprof-logo.webp";
 
 export const sidebarCss = `
-.ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%) !important;color:#fff;display:flex;flex-direction:column;position:sticky !important;top:0 !important;height:100vh !important;max-height:100vh !important;overflow:hidden !important;width:240px;flex-shrink:0;align-self:flex-start !important;z-index:30;}
+.ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%) !important;color:#fff;display:flex !important;flex-direction:column !important;position:fixed !important;top:0 !important;left:0 !important;bottom:0 !important;height:100vh !important;max-height:100vh !important;overflow:hidden !important;width:240px !important;z-index:40;}
 .ap-sidebar::before{content:"";position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(255,122,69,.14) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
 .sb-head{padding:18px 18px 12px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
 .sb-logo-icon{width:34px;height:34px;border-radius:9px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(255,122,69,.40);flex-shrink:0;background:#1B2A4E;}
