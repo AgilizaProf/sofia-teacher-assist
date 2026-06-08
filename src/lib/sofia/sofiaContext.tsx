@@ -163,6 +163,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
       horas_economizadas_mes: 0,
       creditos_usados: 0,
       creditos_total: 3000,
+      etapa_ensino: etapaEnsino,
     };
 
     // ── Dados reais do Supabase ─────────────────────────────────────────
@@ -195,8 +196,11 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
 
     // Nível de ensino para o routeContext
     const nivel = turma_atual
-      ? inferirNivelEnsino(turma_atual.ano) ?? inferirNivelEnsino(turma_atual.nome)
-      : null;
+      ? inferirNivelEnsino(turma_atual.ano)
+        ?? inferirNivelEnsino(turma_atual.nome)
+        ?? inferirNivelEnsino(etapaEnsino)
+        ?? (etapaEnsino || null)
+      : inferirNivelEnsino(etapaEnsino) ?? (etapaEnsino || null);
 
     // Todos alunos PCD com nome e condição
     const todos_alunos_pcd = alunosPCD.map((a) => ({
