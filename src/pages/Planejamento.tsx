@@ -2085,17 +2085,35 @@ export function Planejamento() {
     const evt = fromList.find((e) => e.id === id);
     if (evt?.source === "m3" && evt.m3Dia && evt.m3CardId) {
       const targetDay = m1Week.days.find((d) => d.iso === toIso);
-      if (!targetDay) return; // só permite drop em dias da semana corrente
-      if (targetDay.k === evt.m3Dia) return;
-      setM1Plan((p) => {
-        const card = p[evt.m3Dia!].find((c) => c.id === evt.m3CardId);
-        if (!card) return p;
-        return {
-          ...p,
-          [evt.m3Dia!]: p[evt.m3Dia!].filter((c) => c.id !== evt.m3CardId),
-          [targetDay.k]: [...p[targetDay.k], card],
-        };
+      if (targetDay) {
+        // Dentro da semana corrente: move o card no m1Plan (re-sincroniza pelo useEffect).
+        if (targetDay.k === evt.m3Dia) return;
+        setM1Plan((p) => {
+          const card = p[evt.m3Dia!].find((c) => c.id === evt.m3CardId);
+          if (!card) return p;
+          return {
+            ...p,
+            [evt.m3Dia!]: p[evt.m3Dia!].filter((c) => c.id !== evt.m3CardId),
+            [targetDay.k]: [...p[targetDay.k], card],
+          };
+        });
+        return;
+      }
+      // Fora da semana corrente: o calendário é mensal, então a aula sai do
+      // plano da semana e vira uma atividade avulsa na data escolhida.
+      const m3Dia = evt.m3Dia;
+      const m3CardId = evt.m3CardId;
+      const titulo = evt.title;
+      const meta = evt.meta;
+      setM1Plan((p) => ({ ...p, [m3Dia]: p[m3Dia].filter((c) => c.id !== m3CardId) }));
+      setM4UserEvents((s) => {
+        const item: M4UserEvt = { id: `atv:${Date.now()}:${m3CardId}`, cat: "aulas", title: titulo, meta, source: "atv" };
+        const next: Record<string, M4UserEvt[]> = { ...s };
+        next[toIso] = [...(next[toIso] ?? []), item];
+        return next;
       });
+      const [yy, mm, dd] = toIso.split("-");
+      showToast(`Aula movida para ${dd}/${mm}/${yy} (fora da semana atual).`);
       return;
     }
     setM4UserEvents((s) => {
