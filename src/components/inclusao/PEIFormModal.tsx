@@ -698,6 +698,9 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   value={draft.profissionaisEnvolvidos}
                   onChange={(v) => set("profissionaisEnvolvidos", v as string[])}
                 />
+                <label style={{ ...labelCss, marginTop: 10 }}>Nomes dos profissionais (um por linha — aparece no documento)</label>
+                <textarea style={{ ...inputCss, minHeight: 60 }} value={draft.profissionaisNomes} onChange={(e) => set("profissionaisNomes", e.target.value)}
+                  placeholder={"Ex.:\nMariana Souza — Professora regente\nDra. Ana Lima — Fonoaudióloga"} />
               </div>
             </div>
           )}
