@@ -269,9 +269,10 @@ const css = `
 .h-item{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:10px;cursor:pointer;text-align:left;width:100%;}
 .h-item:hover{background:#fff;}
 .h-item{position:relative;}
-.h-item .h-del{position:absolute;top:6px;right:6px;opacity:0;background:transparent;border:0;border-radius:6px;padding:4px;color:#9aa1b3;cursor:pointer;display:grid;place-items:center;transition:opacity .15s ease, background .15s ease, color .15s ease;}
+.h-item .h-del{position:absolute;top:6px;right:6px;opacity:.7;background:transparent;border:0;border-radius:6px;padding:4px;color:#9aa1b3;cursor:pointer;display:grid;place-items:center;transition:opacity .15s ease, background .15s ease, color .15s ease;}
 .h-item:hover .h-del,.h-item:focus-within .h-del{opacity:1;}
 .h-item .h-del:hover{background:#FEE2E2;color:#B91C1C;}
+@media (hover: none){.h-item .h-del{opacity:1;}}
 .btn-clear-all{background:transparent;border:0;color:#9aa1b3;cursor:pointer;padding:4px;border-radius:6px;display:grid;place-items:center;}
 .btn-clear-all:hover{background:#FEE2E2;color:#B91C1C;}
 .h-icon{width:26px;height:26px;border-radius:7px;background:#fff;border:1px solid var(--line-soft);

@@ -1758,6 +1758,7 @@ ${blocos}
     const ident = identFields.length
       ? `<div class="grid-2">${identFields.map((f) => `<div class="field-box"><div class="field-label">${esc(f.label)}</div><div class="field-value">${esc(f.value)}</div></div>`).join("")}</div>`
       : "";
+    const dataStr = new Date().toLocaleDateString("pt-BR");
     const inner = `<article class="report">
 <h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
 ${ident}
