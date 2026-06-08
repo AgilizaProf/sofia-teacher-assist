@@ -149,6 +149,7 @@ function blankPEI(): PEIData {
     responsavelContato: "",
     dataInicioPEI: "",
     profissionaisEnvolvidos: [],
+    profissionaisNomes: "",
     potencialidades: "",
     interessesMotivacoes: "",
     estiloAprendizagem: [],
