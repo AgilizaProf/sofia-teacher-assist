@@ -87,6 +87,7 @@ function buildIdentificacao(pei: Partial<PEIData>, alunoName: string, professorN
     row("Turma", pei.serie || ""),
     row("Nome do(a) Professor(a)", professorNome || ""),
     row("Profissionais Envolvidos", profs),
+    row("Profissionais (nomes)", (pei.profissionaisNomes || "").trim().replace(/\n+/g, "; ")),
     row("Data de Início do PEI", d(pei.dataInicioPEI)),
     row("Vigência", vig),
   ].filter(Boolean).join("\n");
