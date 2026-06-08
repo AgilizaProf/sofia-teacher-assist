@@ -119,7 +119,12 @@ function useRouteContext() {
 
     const turma = sofia?.entity?.turma_atual;
     const pcd = sofia?.entity?.todos_alunos_pcd ?? [];
-    const nivel = inferirNivelEnsino(turma?.ano) ?? inferirNivelEnsino(turma?.nome);
+    const etapaPerfil = sofia?.user?.etapa_ensino ?? null;
+    const nivel =
+      inferirNivelEnsino(turma?.ano)
+      ?? inferirNivelEnsino(turma?.nome)
+      ?? inferirNivelEnsino(etapaPerfil)
+      ?? (etapaPerfil && etapaPerfil.trim() ? etapaPerfil.trim() : null);
     const ds = sofia?.dataState;
     const linhas = [tela];
 
