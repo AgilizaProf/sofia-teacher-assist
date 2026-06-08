@@ -9,6 +9,7 @@ import { useIsAdmin } from "@/lib/admin/useIsAdmin";
 import logoImg from "@/assets/agilizaprof-logo.webp";
 
 export const sidebarCss = `
+.ap-sidebar-shell{position:relative !important;width:240px !important;min-width:240px !important;flex:0 0 240px !important;align-self:stretch !important;}
 .ap-sidebar{background:linear-gradient(180deg,#1B2A4E 0%,#0F1B36 100%) !important;color:#fff;display:flex !important;flex-direction:column !important;position:fixed !important;top:0 !important;left:0 !important;bottom:0 !important;height:100vh !important;max-height:100vh !important;overflow:hidden !important;width:240px !important;z-index:40;}
 .ap-sidebar::before{content:"";position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(255,122,69,.14) 0%,transparent 65%);border-radius:50%;pointer-events:none;}
 .sb-head{padding:18px 18px 12px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
@@ -64,7 +65,7 @@ export const sidebarCss = `
 .sb-bruna-locked{margin:0 10px 10px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.16);border-radius:10px;padding:9px 10px;font-size:10.5px;color:rgba(255,255,255,.55);line-height:1.35;}
 .sb-bruna-locked b{color:rgba(255,255,255,.85);font-weight:700;display:block;font-size:11px;margin-bottom:2px;}
 @media(max-width:1100px){.ap-sidebar{width:240px;}}
-@media(max-width:820px){.ap-sidebar{display:none;}}
+@media(max-width:820px){.ap-sidebar,.ap-sidebar-shell{display:none !important;}}
 `;
 
 const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGElement>) => (
@@ -156,6 +157,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
   return (
     <>
     {usingInternal && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />}
+    <div className="ap-sidebar-shell">
     <aside className="ap-sidebar">
       <div className="sb-head">
         <div className="sb-logo-icon"><img src={logoImg} alt="AgilizaProf" /></div>
@@ -275,6 +277,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
         </div>
       </div>
     </aside>
+    </div>
     </>
   );
 }
