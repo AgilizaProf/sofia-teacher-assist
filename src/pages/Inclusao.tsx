@@ -1744,8 +1744,8 @@ ${corpo}
       parecerAtual.familia,
       parecerAtual.comunicacao_familias,
     ].filter(Boolean).join("\n\n");
-    const corpo = parecerAtual.formato === "texto" && textoFallback
-      ? `<div class="texto">${esc(textoFallback).split(/\n+/).map((p) => `<p>${p}</p>`).join("")}</div>`
+    const corpoInterno = parecerAtual.formato === "texto" && textoFallback
+      ? `<div>${esc(textoFallback).split(/\n+/).map((p) => `<p>${p}</p>`).join("")}</div>`
       : `
         ${parecerAtual.resumo ? `<p><b>Resumo:</b> ${esc(parecerAtual.resumo)}</p>` : ""}
         ${parecerAtual.pedagogico ? `<h3>Pedagógico</h3><p>${esc(parecerAtual.pedagogico)}</p>` : ""}
@@ -1757,37 +1757,38 @@ ${corpo}
         ${parecerAtual.encaminhamentos?.length ? `<h3>Encaminhamentos</h3>${ul(parecerAtual.encaminhamentos)}` : ""}
         ${parecerAtual.comunicacao_familias ? `<h3>Comunicação à família</h3><p>${esc(parecerAtual.comunicacao_familias)}</p>` : ""}
       `;
-    const extra = `
-      h1{font-size:16pt;margin:0 0 6pt;border-bottom:2px solid #FF7A45;padding-bottom:4pt;}
-      h3{font-size:12pt;margin:12pt 0 4pt;color:#FF7A45;text-transform:uppercase;letter-spacing:.05em;}
-      .meta{font-size:11pt;color:#6B7691;margin-bottom:10pt;}
-      ul{margin:4pt 0 0 16pt;}
-      .texto p{text-align:justify;margin:0 0 8pt;}
-      .legal{margin-top:16pt;font-size:10pt;color:#6B7691;border-top:1px dashed #ccc;padding-top:6pt;}
-      .sig{margin-top:24pt;display:grid;grid-template-columns:1fr 1fr;gap:24pt;}
-      .sig div{border-top:1px solid #333;padding-top:4pt;font-size:11pt;text-align:center;}
-      .toolbar{position:fixed;top:8px;right:8px;}
-    `;
-    const inner = `
-      <div class="toolbar"><button onclick="window.print()">Imprimir</button></div>
-      <h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
-      <div class="meta">
-        <b>Aluno(a):</b> ${esc(selected.name)} · ${esc(selected.anoEscolar || "")} · ${esc(selected.turma || "")}<br/>
-        <b>Diagnóstico:</b> ${esc(selected.diag || "—")} ${selected.cid ? "· " + esc(selected.cid) : ""}<br/>
-        <b>Período:</b> ${esc(parecerAtual.periodoLabel || "")} · <b>Gerado em:</b> ${esc(parecerAtual.geradoEm || "")}
-      </div>
-      ${corpo}
-      <div class="sig">
-        <div>Professor(a) regente</div>
-        <div>Coordenação pedagógica</div>
-      </div>
-      <div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
-    `;
+    // Identificação no padrão dos relatórios (.grid-2 / .field-box).
+    const identFields: Array<{ label: string; value: string }> = [];
+    identFields.push({ label: "Estudante", value: selected.name });
+    if (selected.turma) identFields.push({ label: "Turma", value: selected.turma });
+    if (selected.anoEscolar) identFields.push({ label: "Ano/Série", value: selected.anoEscolar });
+    const diagTxt = [selected.diag, selected.cid].filter((x) => x && !/não informado/i.test(x)).join(" · ");
+    if (diagTxt) identFields.push({ label: "Diagnóstico/CID", value: diagTxt });
+    if (parecerAtual.periodoLabel) identFields.push({ label: "Período avaliado", value: parecerAtual.periodoLabel });
+    if (user.name) identFields.push({ label: "Professor(a)", value: user.name });
+    const ident = identFields.length
+      ? `<div class="grid-2">${identFields.map((f) => `<div class="field-box"><div class="field-label">${esc(f.label)}</div><div class="field-value">${esc(f.value)}</div></div>`).join("")}</div>`
+      : "";
+    const inner = `<article class="report">
+<h1>${esc(parecerAtual.titulo || "Parecer descritivo")}</h1>
+${ident}
+<section>
+  <h2>Parecer descritivo</h2>
+  ${corpoInterno}
+  <div style="margin-top:14px;border:1px solid #555;border-radius:6px;padding:7px 10px;font-size:10px;color:#333;line-height:1.4;">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC · a partir de registros, revisado pela professora.</div>
+</section>
+<div class="sig">
+  <div>Professor(a) responsável<br/>${esc(user.name || "")}</div>
+  <div>Coordenação pedagógica</div>
+  <div>Família / Responsável</div>
+</div>
+<div class="foot">Documento gerado em ${esc(dataStr)} · Sofia · Parecer descritivo</div>
+</article>`;
     iframe.contentDocument!.open();
     iframe.contentDocument!.write(wrapStandardPrintHtml(`Parecer · ${esc(selected.name)}`, inner, {
-      extraCss: extra,
+      extraCss: `.report{page-break-after:always;}.report:last-of-type{page-break-after:auto;}.sig{page-break-inside:avoid;break-inside:avoid;}`,
       professorNome: user.name,
-      docType: "plano-adaptado",
+      docType: "parecer",
     }));
     iframe.contentDocument!.close();
     iframe.onload = () => {
