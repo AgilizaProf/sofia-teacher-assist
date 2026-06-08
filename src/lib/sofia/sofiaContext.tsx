@@ -43,6 +43,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
   const route = routeKeyOf(loc.pathname);
 
   const [authUser, setAuthUser] = useState<{ nome: string; primeiro_nome: string } | null>(null);
+  const [etapaEnsino, setEtapaEnsino] = useState<string | null>(null);
   const [planInfo, setPlanInfo] = useState<{ plano: "free" | "pro"; ciclo: "mensal" | "anual" | null } | null>(null);
   const [tick, setTick] = useState(0);
   // Aluno em foco — estado real (antes era mutado direto no objeto memoizado,
@@ -62,10 +63,10 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
     let mounted = true;
 
     async function loadProfile(uid: string, fallbackEmail: string | null, metaName: string | null) {
-      type ProfileRow = { display_name: string | null; email: string | null };
+      type ProfileRow = { display_name: string | null; email: string | null; etapa_ensino: string | null };
       let data: ProfileRow | null = null;
       try {
-        const res = await supabase.from("profiles").select("display_name, email").eq("user_id", uid).maybeSingle();
+        const res = await supabase.from("profiles").select("display_name, email, etapa_ensino").eq("user_id", uid).maybeSingle();
         data = (res.data ?? null) as ProfileRow | null;
       } catch (err) {
         console.warn("[SofiaContext] loadProfile falhou:", err);
@@ -78,6 +79,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
         (fallbackEmail && fallbackEmail.split("@")[0]) ||
         "Educador(a)";
       setAuthUser({ nome, primeiro_nome: nome.split(" ")[0] });
+      setEtapaEnsino((data?.etapa_ensino && data.etapa_ensino.trim()) || null);
     }
 
     async function loadPlan(uid: string) {
@@ -161,6 +163,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
       horas_economizadas_mes: 0,
       creditos_usados: 0,
       creditos_total: 3000,
+      etapa_ensino: etapaEnsino,
     };
 
     // ── Dados reais do Supabase ─────────────────────────────────────────
@@ -193,8 +196,11 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
 
     // Nível de ensino para o routeContext
     const nivel = turma_atual
-      ? inferirNivelEnsino(turma_atual.ano) ?? inferirNivelEnsino(turma_atual.nome)
-      : null;
+      ? inferirNivelEnsino(turma_atual.ano)
+        ?? inferirNivelEnsino(turma_atual.nome)
+        ?? inferirNivelEnsino(etapaEnsino)
+        ?? (etapaEnsino || null)
+      : inferirNivelEnsino(etapaEnsino) ?? (etapaEnsino || null);
 
     // Todos alunos PCD com nome e condição
     const todos_alunos_pcd = alunosPCD.map((a) => ({
@@ -232,7 +238,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
       setAlunoAtual,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [route, authUser, planInfo, userData, tick, alunoAtual]);
+  }, [route, authUser, etapaEnsino, planInfo, userData, tick, alunoAtual]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
