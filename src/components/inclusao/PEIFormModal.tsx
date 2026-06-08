@@ -68,6 +68,7 @@ export type PEIData = {
   responsavelContato: string;
   dataInicioPEI: string;
   profissionaisEnvolvidos: string[];
+  profissionaisNomes: string; // nomes/funções por linha (aparece no documento impresso)
   // 2. Perfil
   potencialidades: string;
   interessesMotivacoes: string;
