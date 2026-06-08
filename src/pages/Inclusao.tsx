@@ -1138,6 +1138,7 @@ export function Inclusao() {
     if (!parecerAtual || !selected) return;
     const esc = (s: string) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
     const ul = (arr?: string[]) => arr && arr.length ? `<ul>${arr.map((a) => `<li>${esc(a)}</li>`).join("")}</ul>` : "";
+    const dataStr = new Date().toLocaleDateString("pt-BR");
     const textoFallback = parecerAtual.texto || [
       parecerAtual.resumo,
       parecerAtual.pedagogico,
