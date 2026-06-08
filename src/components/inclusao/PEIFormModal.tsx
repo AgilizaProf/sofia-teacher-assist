@@ -780,7 +780,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                     <textarea style={{ ...inputCss, minHeight: 48, marginTop: 8 }} value={v.obs}
                       onChange={(e) => setAval(a.key, { obs: e.target.value })}
                       placeholder="Observações sobre esta área (opcional)" />
-                    <PEISuggestions fieldKey="aval_obs" onPick={(t) => setAval(a.key, { obs: appendText(v.obs, t) })} />
+                    <PEISuggestions fieldKey={`aval_obs:${a.key}`} fallbackKey="aval_obs" prefix={etapaPrefix} label={`Sugestões — ${a.label}`} onPick={(t) => setAval(a.key, { obs: appendText(v.obs, t) })} />
                   </div>
                 );
               })}
