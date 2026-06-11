@@ -3,6 +3,7 @@ import { Copy, Gift, Check, Share2, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { attachPendingReferral } from "@/lib/referral";
+import { trackReferral } from "@/lib/tracking";
 
 type Referral = {
   id: string;
@@ -73,6 +74,7 @@ export function ReferralCard() {
 
   useEffect(() => {
     load();
+    trackReferral("ref_visualizar_secao");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -80,6 +82,7 @@ export function ReferralCard() {
     if (!link) return;
     try {
       await navigator.clipboard.writeText(link);
+      void trackReferral("ref_copiar_link", { code });
       setCopied(true);
       toast.success("Link copiado!");
       setTimeout(() => setCopied(false), 1800);
@@ -90,6 +93,7 @@ export function ReferralCard() {
 
   async function shareLink() {
     if (!link) return;
+    void trackReferral("ref_compartilhar", { code, meta: { method: typeof navigator !== "undefined" && "share" in navigator ? "native" : "clipboard" } });
     const text = `Conheça a Sofia, sua assistente pedagógica. Use meu link e ganhe dias grátis: ${link}`;
     if (typeof navigator !== "undefined" && "share" in navigator) {
       try {
