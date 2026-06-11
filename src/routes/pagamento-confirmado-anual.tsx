@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/tracking";
 
 export const Route = createFileRoute("/pagamento-confirmado-anual")({
   head: () => ({
@@ -14,6 +15,10 @@ export const Route = createFileRoute("/pagamento-confirmado-anual")({
 
 function PagamentoAnualPage() {
   const [src, setSrc] = useState<string>("/pagamento-confirmado-anual.html");
+
+  useEffect(() => {
+    trackEvent("plano_contratado", { location: "plan_page", plan: "anual", value: 247, currency: "BRL" });
+  }, []);
 
   useEffect(() => {
     (async () => {
