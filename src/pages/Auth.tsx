@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
 import { shouldShowOnboarding } from "@/lib/onboarding";
 import logoImg from "@/assets/agilizaprof-logo.webp";
+import { trackEvent } from "@/lib/tracking";
 
 async function postLoginRoute(): Promise<"/" | "/onboarding"> {
   try {
@@ -45,6 +46,14 @@ export function AuthPage() {
     });
   }, [navigate]);
 
+  useEffect(() => {
+    if (mode === "login") {
+      trackEvent("page_view_login", { location: "login_page" });
+    } else {
+      trackEvent("page_view_cadastro", { location: "register_page" });
+    }
+  }, [mode]);
+
   const checkStrength = (v: string) => {
     let s = 0;
     if (v.length >= 8) s++;
@@ -59,6 +68,7 @@ export function AuthPage() {
     setLoading(true);
     try {
       if (mode === "register") {
+        trackEvent("click_cadastrar_gratis", { location: "register_page" });
         const ref = getPendingReferral();
         const { error } = await supabase.auth.signUp({
           email,
@@ -69,8 +79,10 @@ export function AuthPage() {
           },
         });
         if (error) throw error;
+        trackEvent("cadastro_concluido", { location: "register_page" });
         toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       } else {
+        trackEvent("click_logar", { location: "login_page" });
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         try {
@@ -83,9 +95,14 @@ export function AuthPage() {
         } catch {
           /* ignore */
         }
+        trackEvent("login_concluido", { location: "login_page" });
         navigate({ to: await postLoginRoute() });
       }
     } catch (err) {
+      trackEvent("form_error", {
+        location: mode === "login" ? "login_page" : "register_page",
+        error: err instanceof Error ? err.message : "auth_error",
+      });
       toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
     } finally {
       setLoading(false);
@@ -177,7 +194,7 @@ export function AuthPage() {
           <div className="right-shell">
             <div className="tabs">
               <button type="button" className={`tab ${mode === "login" ? "active" : ""}`} onClick={() => setMode("login")}>Entrar</button>
-              <button type="button" className={`tab ${mode === "register" ? "active" : ""}`} onClick={() => setMode("register")}>Cadastrar grátis</button>
+              <button type="button" className={`tab ${mode === "register" ? "active" : ""}`} onClick={() => { trackEvent("click_cadastrar_gratis", { location: "login_page" }); setMode("register"); }}>Cadastrar grátis</button>
             </div>
 
             <h2 className="form-title">{mode === "login" ? "Bem-vindo(a) de volta" : "Comece grátis hoje"}</h2>
