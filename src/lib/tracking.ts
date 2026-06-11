@@ -62,6 +62,14 @@ export function trackEvent(eventName: string, props: TrackProps = {}) {
     // Tour / Onboarding
     onboarding_iniciado:    () => fbqSafe("track", "ViewContent", { content_name: "onboarding_start" }),
     onboarding_concluido:   () => fbqSafe("trackCustom", "OnboardingConcluido", defaultProps),
+    // Indicação (referral funnel)
+    ref_visualizar_secao:   () => fbqSafe("trackCustom", "RefViewSection", defaultProps),
+    ref_copiar_link:        () => fbqSafe("trackCustom", "RefCopyLink", defaultProps),
+    ref_compartilhar:       () => fbqSafe("trackCustom", "RefShare", defaultProps),
+    ref_cadastro_via_link:  () => fbqSafe("track", "Lead", { content_name: "ref_link", content_category: "referral", ...defaultProps }),
+    ref_registrado:         () => fbqSafe("trackCustom", "RefRegistered", defaultProps),
+    ref_registro_falhou:    () => fbqSafe("trackCustom", "RefRegisterFailed", defaultProps),
+    ref_conversao:          () => fbqSafe("track", "Purchase", { content_name: "ref_conversao", currency: "BRL", ...defaultProps }),
   };
 
   if (metaEventMap[eventName]) metaEventMap[eventName]();
@@ -71,5 +79,35 @@ export function trackEvent(eventName: string, props: TrackProps = {}) {
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "development") {
     // eslint-disable-next-line no-console
     console.log("[AgilizaProf Track]", eventName, defaultProps);
+  }
+}
+
+/**
+ * Dispara um evento do funil de indicação no Meta Pixel **e** persiste no
+ * backend (`referral_events`) para o painel interno do funil de indicação.
+ * Pode ser chamado anônimo (ex: visita /CODIGO) — o backend resolve o
+ * referrer pelo código.
+ */
+export async function trackReferral(
+  event:
+    | "ref_visualizar_secao"
+    | "ref_copiar_link"
+    | "ref_compartilhar"
+    | "ref_cadastro_via_link"
+    | "ref_registrado"
+    | "ref_registro_falhou"
+    | "ref_conversao",
+  opts: { code?: string | null; meta?: Record<string, unknown> } = {},
+) {
+  trackEvent(event, { location: "referral", code: opts.code ?? undefined, ...(opts.meta || {}) });
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    await supabase.rpc("log_referral_event", {
+      _event: event,
+      _code: opts.code ?? null,
+      _meta: (opts.meta ?? null) as never,
+    });
+  } catch {
+    /* best-effort — não bloqueia UX */
   }
 }
