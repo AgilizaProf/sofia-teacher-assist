@@ -99,7 +99,7 @@ export async function trackReferral(
     | "ref_conversao",
   opts: { code?: string | null; meta?: Record<string, unknown> } = {},
 ) {
-  trackEvent(event, { location: "referral", code: opts.code ?? undefined, ...(opts.meta || {}) });
+  trackEvent(event, { location: "referral", code: opts.code || undefined, ...(opts.meta || {}) });
   try {
     const { supabase } = await import("@/integrations/supabase/client");
     await supabase.rpc("log_referral_event", {
