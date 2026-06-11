@@ -32,6 +32,7 @@ import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
 import { acumularTempo, TEMPO_MIN } from "@/lib/tempo/acumular";
 import { supabase } from "@/integrations/supabase/client";
 import { attachPendingReferral } from "@/lib/referral";
+import { trackEvent } from "@/lib/tracking";
 type AgendaType = "meeting" | "eval" | "report" | "plan" | "pcd" | "personal";
 type AgendaEvent = {
   id: string;
@@ -431,6 +432,9 @@ export function Dashboard() {
   const sofiaCtx = useSofiaContext();
   const hydrated = useHydrated();
   const isEi = useEiMode();
+  useEffect(() => {
+    trackEvent("page_view_dashboard", { location: "dashboard" });
+  }, []);
   // Nome real do usuário logado (perfil) com fallback seguro pra SSR.
   const realName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || user.name || "").trim();
   // Tick a cada 30s pra manter o relógio em dia.
