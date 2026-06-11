@@ -6,6 +6,7 @@ import {
   cancelarAssinatura,
   type PlanoAtualDTO,
 } from "@/lib/plano.functions";
+import { trackEvent } from "@/lib/tracking";
 
 function fmtData(iso: string | null): string {
   if (!iso) return "—";
@@ -99,6 +100,7 @@ export function PlanoCard() {
 
   useEffect(() => {
     reload();
+    trackEvent("click_ver_planos", { location: "plan_page" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -247,6 +249,7 @@ function PlanoBody({
             href={data.checkout_mensal}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent("click_fazer_plano", { location: "plan_page", plan: "mensal", value: 34.90, currency: "BRL" })}
             style={cta(data.ciclo === "anual" && isMpActive ? "ghost" : "primary")}
           >
             Assinar mensal — R$ 34,90/mês
@@ -257,6 +260,7 @@ function PlanoBody({
             href={data.checkout_anual}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackEvent("click_fazer_plano", { location: "plan_page", plan: "anual", value: 247, currency: "BRL" })}
             style={cta("primary")}
           >
             {data.pode_migrar_anual
