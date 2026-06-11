@@ -102,10 +102,11 @@ export async function trackReferral(
   trackEvent(event, { location: "referral", code: opts.code || undefined, ...(opts.meta || {}) });
   try {
     const { supabase } = await import("@/integrations/supabase/client");
-    await supabase.rpc("log_referral_event", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.rpc as any)("log_referral_event", {
       _event: event,
       _code: opts.code ?? null,
-      _meta: (opts.meta ?? null) as never,
+      _meta: opts.meta ?? null,
     });
   } catch {
     /* best-effort — não bloqueia UX */
