@@ -138,7 +138,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
         `}} />
       </head>
       <body>
-        <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=966501615841208&ev=PageView&noscript=1"/>` }} />
+        <noscript>
+          <img height={1} width={1} style={{ display: "none" }} src="https://www.facebook.com/tr?id=966501615841208&ev=PageView&noscript=1" alt="" />
+        </noscript>
         <div id="ap-splash">
           <div className="ap-logo">Agiliza<span>Prof</span></div>
           <div className="ap-ring"></div>
