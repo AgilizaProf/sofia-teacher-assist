@@ -1,106 +1,74 @@
-## Substituir o modelo de exportação em Relatórios e Relatório IA (Inclusão)
 
-Adotar o mesmo padrão visual e fluxo do Planejamento (Fraunces no título, Arial 12 no corpo, margens 2 cm, borda 1 px) para todos os relatórios/pareceres gerados em:
+## Objetivo
+Instalar o Meta Pixel (Facebook/Instagram) com ID `966501615841208` e disparar eventos de tracking nas principais ações do app. Google Analytics fica para depois (não será incluído agora).
 
-- `src/pages/Relatorios.tsx` (parecer descritivo da turma — geral e Educação Infantil)
-- `src/pages/Inclusao.tsx` → aba **Relatório IA** (inclusão / aluno PCD)
+## 1. Injeção do Pixel
+O projeto é TanStack Start (SSR) — não há `index.html`. O HTML é montado em `src/routes/__root.tsx` (função `RootShell`). Vou adicionar dentro do `<head>` desse shell:
 
-O modelo atual (`wrapEditorialPrintHtml`, exportação Word inline ~2000 linhas, etc.) deixa de aparecer nessas duas páginas.
+- `<script>` com o snippet oficial do Meta Pixel já com `fbq('init', '966501615841208')` e `fbq('track', 'PageView')`.
+- `<noscript><img>` de fallback.
 
----
+Assim o pixel carrega em todas as rotas (públicas e autenticadas), e o splash screen continua intacto.
 
-### 1. Reaproveitar e estender a infra de documentos existente
+## 2. Utilitário de tracking
+Criar `src/lib/tracking.ts` com:
+- `declare const fbq: Function;`
+- Função `trackEvent(eventName, props?)` com o `metaEventMap` exatamente como pedido (login, cadastro, planos, engajamento, onboarding), porém **sem o bloco do `gtag`** (GA fica para depois).
+- Mantém o `fbq('trackCustom', eventName, defaultProps)` genérico ao final, e o `console.log` em dev.
+- Helper opcional `trackPageView()` que chama `fbq('track','PageView')` para reuso no route tracker.
 
-Já existe (do Planejamento):
-- `src/lib/documentos/types.ts` · `builders.ts` · `leis.ts` · `print.ts` · `docx.ts`
-- `src/components/documentos/DocumentoDialog.tsx` + `DocumentoPreview.tsx`
-- Tabela `documentos_planejamento` no Supabase
-- Componente `GerarDocumentoButton`
+## 3. Route tracker (SPA page views)
+Adicionar um pequeno componente `RouteTracker` dentro de `RootComponent` (em `__root.tsx`), usando o `useLocation` do `@tanstack/react-router` que já está importado. A cada mudança de `pathname`:
+- `trackEvent('page_view', { location: pathname, page_path: pathname, page_search: search })`
+- `fbq('track','PageView')`
 
-Vou criar uma camada irmã `documentos/relatorio*` que reaproveita CSS/print/leis e adiciona o tipo "relatório".
+Isso roda em paralelo ao `trackPageVisit` já existente (telemetria interna) — sem conflito.
 
-**Novos arquivos**
+## 4. Eventos nas telas
+Disparos pontuais a serem inseridos:
 
-- `src/lib/documentos/relatorioTypes.ts` — tipos `RelatorioTipo` (`geral` | `ei` | `pcd` | `semestral`), `RelatorioModo` (`completo` | `simplificado`), `RelatorioDocumento` (cabeçalho + dados do aluno + seções `desenvolvimentoGlobal`, `camposOuComponentes[]`, `bncc[]`, `observacoes`, `avancos`, `proximosPassos`, `adaptacoes?`, `evolucaoPei?`, `apoioTeorico?`).
-- `src/lib/documentos/relatorioBuilder.ts` — `buildRelatorio({ aluno, turma, periodo, modo, dadosCarregados, conteudoSofia })` retornando `RelatorioDocumento`. Decide o título por contexto:
-  - EI → "PARECER DESCRITIVO"
-  - Fund./Médio → "RELATÓRIO DE DESEMPENHO"
-  - PCD → "RELATÓRIO DE INCLUSÃO"
-  - Trilha semestral → "RELATÓRIO SEMESTRAL"
-- `src/lib/documentos/relatorioLeis.ts` — `escolherLeisRelatorio({ tipo, nivel, cidsAluno, frequentaAee })` cobrindo LDB, BNCC EI/EF/EM, LBI, TEA (F84), TDAH/Dislexia (F90/F81), AEE (Decreto 7.611/2011).
-- `src/components/documentos/RelatorioPreview.tsx` — versão WYSIWYG (todos os campos `contentEditable`), com modo completo e simplificado e bloco de assinaturas + "Ciente do(a) Responsável" quando PCD. Usa o mesmo CSS de impressão existente (já tem `documento`, `documento-wrap`, hr, h1 Fraunces, doc-rodape).
-- `src/components/documentos/RelatorioDialog.tsx` — diálogo com 3 abas (Dados / Pré-visualização / Histórico):
-  - **Dados**: Escola, Aluno (dropdown), Turma (auto), Professor, Período (`1º–4º Bimestre`, `1º–3º Trimestre`, `1º–2º Semestre`, Anual) com datas auto-preenchidas porém editáveis, Modo (Completo/Simplificado), checkbox "Gerar para toda a turma".
-  - **Pré-visualização**: edição inline; botões `Imprimir`, `Exportar PDF` (via print → salvar PDF), `Exportar Word`, e quando múltiplos alunos: `Exportar ZIP`.
-  - **Histórico**: lista por aluno + período; ao gerar novo do mesmo período pergunta "substituir ou nova versão".
-- `src/lib/db/relatoriosDoc.ts` — `saveRelatorio` / `listRelatorios` / `deleteRelatorio` usando nova tabela `relatorios_documento` (ver §3).
-- `src/lib/documentos/relatorioDocx.ts` — `exportarRelatorioDocx(doc)` reaproveitando padrões do `docx.ts` (Fraunces no título, Arial 12 corpo, borda na página).
-- `src/lib/documentos/relatorioZip.ts` — empacota múltiplos PDFs/DOCXs em `.zip` via `jszip`.
+**Auth (`src/pages/Auth.tsx`)**
+- Ao montar tela de login: `page_view_login` (location `login_page`).
+- Ao montar tela de cadastro: `page_view_cadastro` (location `register_page`).
+- Clique em "Entrar": `click_logar`.
+- Login bem-sucedido: `login_concluido`.
+- Clique em "Criar conta / Cadastrar grátis": `click_cadastrar_gratis`.
+- Submissão do form de cadastro: `click_cadastrar_gratis` (location `register_page`).
+- Cadastro concluído: `cadastro_concluido`.
+- Erro de form: `form_error` com `error` descritivo.
 
-**Server function**: `src/lib/documentos/relatorioGerar.functions.ts`
-- `gerarRelatorioComSofia` (`createServerFn` + `requireSupabaseAuth`):
-  - Inputs: `alunoClientId`, `turmaId`, `periodo`, `dataInicio`, `dataFim`, `modo`, `tipo`.
-  - Carrega do Supabase: avaliação BNCC do período, observações do professor, PEI mais recente (`pei_pdi`), CIDs (`alunos_inclusao`), ano de referência pedagógico, últimos 2 relatórios para Princípio 13 (Progressividade).
-  - Chama Lovable AI Gateway (`google/gemini-2.5-flash`) com prompt específico ao tipo (EI/Fund/PCD), pedindo retorno JSON com os campos do `RelatorioDocumento`.
-  - Retorna `{ documento, leisSugeridas, apoioTeorico }`.
+**Dashboard (`src/pages/Dashboard.tsx`)**
+- Ao montar: `page_view_dashboard`.
+- Botões/ações: `clicou_gerar_relatorio`, `clicou_criar_plano`, `adaptacao_inclusiva`, `clicou_sofia_chat`.
+- Sucesso de geração (onde houver callback de conclusão): `relatorio_gerado`, `plano_gerado`.
+- `abriu_explicacao_creditos` quando o modal/tour de créditos abre.
+- `creditos_baixos` (disparo único por sessão) quando o saldo cai abaixo de 20% do limite — integrado no `CreditosPainel`/`useCreditos`.
 
-**Dependências novas**: `jszip` (já temos `docx`, `file-saver`, `html2canvas` e `jspdf`).
+**Planos (`src/pages/Configuracoes.tsx` → `PlanoCard`)**
+- Ao exibir cards de plano: `click_ver_planos`.
+- Botão plano anual: `click_fazer_plano` com `{ plan: 'anual', value: 247 }`.
+- Botão plano mensal: `click_fazer_plano` com `{ plan: 'mensal', value: 34.90 }`.
+- Páginas `/pagamento-confirmado-anual` e `/pagamento-confirmado-mensal`: disparar `plano_contratado` com `plan` e `value` correspondentes ao montar.
 
----
+**Onboarding (`src/routes/onboarding.tsx`)**
+- Ao montar: `onboarding_iniciado`.
+- Ao receber mensagem `agp_onboarding_done` do iframe: `onboarding_concluido`.
+- (Etapas intermediárias não são acessíveis — o conteúdo vive em `public/onboarding.html` em iframe; etapas seriam tracking interno do iframe, fora do escopo desta plano.)
 
-### 2. Substituir o que aparece nas páginas
+**Extras**
+- `exportacao_documento` nos handlers de exportação PDF/Word em `RelatorioPedagogico`/`DocumentoPreview`/print utils.
+- `upload_curriculo_rede` no `CurriculoMunicipalCard`.
+- `editou_perfil` no `ProfileEditor` ao salvar.
+- `user_idle_30s`: hook leve no `__root` que dispara uma vez por janela de inatividade (>30s sem mousemove/keydown/click) e reseta no próximo evento.
 
-**`src/pages/Inclusao.tsx`** — aba "Relatório IA":
-- Remover a UI atual de exportação (Editor Word inline / `exportarParecer`) **no que toca ao documento final**.
-- O botão "Gerar relatório IA" passa a abrir o `RelatorioDialog` com `tipo="pcd"` e o aluno pré-selecionado.
-- A lógica antiga `gerar-parecer-inclusao` é substituída pela `gerarRelatorioComSofia`.
+## 5. Considerações
+- Como `fbq` é global injetado via script no head, o `typeof fbq !== 'undefined'` no util protege contra SSR/ambientes sem pixel. Nenhum import quebra build.
+- Nenhuma alteração em backend, schema, ou rotas existentes.
+- Eventos só ativam no client (após hydration); SSR ignora silenciosamente.
 
-**`src/pages/Relatorios.tsx`**:
-- Substituir as ações de exportação (`exportPdf`, `exportWord`, modal de impressão em lote, `wrapStandardPrintHtml`) por chamadas ao `RelatorioDialog`:
-  - Card de cada aluno: botão "Gerar com a Sofia" → `RelatorioDialog` (tipo `ei` se EI, `geral` caso contrário).
-  - Botão da topo "Imprimir vários" → abre `RelatorioDialog` com `lote=true` (gera 1 documento por aluno marcado, exporta em PDF único ou ZIP).
-- Listagem/cards (KPIs, status, navegação) permanecem como estão — só muda o motor de geração/exportação.
-- O componente antigo `RelatorioPedagogico.tsx` e as funções `exportPdf`/`exportWord` internas saem desses fluxos (manter o arquivo enquanto outra rota usar, mas remover imports e uso aqui).
+## Resumo dos arquivos
+- **Novo:** `src/lib/tracking.ts`.
+- **Editado:** `src/routes/__root.tsx` (pixel no head + RouteTracker + idle hook).
+- **Editado:** `src/pages/Auth.tsx`, `src/pages/Dashboard.tsx`, `src/pages/Configuracoes.tsx`, `src/components/settings/PlanoCard.tsx`, `src/components/settings/ProfileEditor.tsx`, `src/components/settings/CurriculoMunicipalCard.tsx`, `src/components/dashboard/CreditosPainel.tsx`, `src/routes/onboarding.tsx`, `src/routes/pagamento-confirmado-anual.tsx`, `src/routes/pagamento-confirmado-mensal.tsx`, e os componentes de exportação relevantes.
 
----
-
-### 3. Banco (Supabase)
-
-Nova migration (será proposta separadamente para aprovação):
-
-```sql
-create table public.relatorios_documento (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null,
-  aluno_client_id text not null,
-  aluno_nome text not null,
-  turma_id uuid,
-  tipo text not null,          -- geral|ei|pcd|semestral
-  modo text not null,          -- completo|simplificado
-  periodo text not null,       -- ex: "2º Bimestre"
-  data_inicio date not null,
-  data_fim date not null,
-  escola text,
-  professor text,
-  conteudo jsonb not null,     -- RelatorioDocumento
-  leis text[] not null default '{}',
-  versao int not null default 1,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-alter table public.relatorios_documento enable row level security;
--- policies próprios para auth.uid() = user_id (select/insert/update/delete)
-create index on public.relatorios_documento(user_id, aluno_client_id, periodo);
-```
-
-Detecção de "já existe" usa `(user_id, aluno_client_id, periodo)` → modal "Substituir / Nova versão" incrementa `versao`.
-
----
-
-### Pontos a confirmar antes de implementar
-
-1. **Geração via Sofia (IA) continua obrigatória** para os 2 fluxos, ou em alguns casos o usuário escreve manualmente? (Assumo: Sofia gera rascunho e o usuário edita no preview.)
-2. **Exportação em lote**: prefere `PDF único com page-break` por padrão, com a opção `.zip` de arquivos individuais como secundária? (Assumo sim.)
-3. **`src/components/RelatorioPedagogico.tsx`**: posso deixá-lo só onde a rota `/relatorio-pedagogico` o usa, removendo apenas dos fluxos de Relatórios e Inclusão? (Assumo sim — não é mencionado pelo usuário.)
-
-Se confirmar (ou só responder "ok"), implemento em sequência: tipos/builder/leis → server fn Sofia → preview/dialog → docx/zip → integração nas duas páginas → migration.
+Posso seguir e implementar?
