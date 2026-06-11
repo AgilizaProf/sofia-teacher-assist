@@ -182,6 +182,12 @@ export function ReferralCard() {
             </div>
           </div>
 
+          <div style={{ marginTop: 10, fontSize: 12.5 }}>
+            <a href="/indicacoes" style={{ color: "#B8410E", fontWeight: 700, textDecoration: "underline" }}>
+              Ver funil de indicação →
+            </a>
+          </div>
+
           {refs.length > 0 && (
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: "#1B2A4E", marginBottom: 6 }}>
