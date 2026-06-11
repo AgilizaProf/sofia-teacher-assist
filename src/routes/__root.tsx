@@ -25,6 +25,7 @@ import { syncOnboardingFlagIfPending } from "@/lib/onboarding";
 import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
 import { useLocation } from "@tanstack/react-router";
 import { MobileTopBar } from "@/components/MobileTopBar";
+import { trackEvent, trackPageView } from "@/lib/tracking";
 
 import appCss from "../styles.css?url";
 
@@ -111,6 +112,18 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="pt-BR">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: `
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '966501615841208');
+          fbq('track', 'PageView');
+        `}} />
         <style dangerouslySetInnerHTML={{ __html: `
           #ap-splash{position:fixed;inset:0;background:linear-gradient(135deg,#1B2A4E 0%,#0F1B36 100%);
             display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;
@@ -125,6 +138,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         `}} />
       </head>
       <body>
+        <noscript dangerouslySetInnerHTML={{ __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=966501615841208&ev=PageView&noscript=1"/>` }} />
         <div id="ap-splash">
           <div className="ap-logo">Agiliza<span>Prof</span></div>
           <div className="ap-ring"></div>
@@ -146,6 +160,45 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 function RealtimeSyncMount() {
   useRealtimeSync();
+  return null;
+}
+
+function RouteTracker() {
+  const loc = useLocation();
+  useEffect(() => {
+    trackEvent("page_view", {
+      location: loc.pathname,
+      page_path: loc.pathname,
+      page_search: loc.search ? JSON.stringify(loc.search) : "",
+    });
+    trackPageView();
+  }, [loc.pathname]);
+  return null;
+}
+
+function IdleTracker() {
+  const loc = useLocation();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let fired = false;
+    const reset = () => {
+      if (timer) clearTimeout(timer);
+      fired = false;
+      timer = setTimeout(() => {
+        if (fired) return;
+        fired = true;
+        trackEvent("user_idle_30s", { location: window.location.pathname });
+      }, 30000);
+    };
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    reset();
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, reset));
+    };
+  }, [loc.pathname]);
   return null;
 }
 
@@ -232,6 +285,8 @@ function RootComponent() {
     <RootErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <RealtimeSyncMount />
+        <RouteTracker />
+        <IdleTracker />
       {/* Ordem dos providers (externo → interno):
           1. SofiaContextProvider     — contexto base (rota, turma, aluno)
           2. SofiaUserDataProvider    — dados do usuário (depende do contexto base)
