@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { trackReferral } from "@/lib/tracking";
 
 const KEY = "pending_ref_code";
 
@@ -29,19 +30,34 @@ export function clearPendingReferral() {
 export async function attachPendingReferral(userId: string) {
   const code = getPendingReferral();
   if (!code) return;
-  const { data: prof } = await supabase
-    .from("profiles")
-    .select("referred_by_code, referral_code")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!prof) return;
-  // Don't allow self-referral
-  if (prof.referral_code && prof.referral_code === code) {
+  try {
+    const { data: prof, error: profErr } = await supabase
+      .from("profiles")
+      .select("referred_by_code, referral_code")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (profErr) throw profErr;
+    if (!prof) {
+      void trackReferral("ref_registro_falhou", { code, meta: { reason: "profile_not_found" } });
+      return;
+    }
+    if (prof.referral_code && prof.referral_code === code) {
+      void trackReferral("ref_registro_falhou", { code, meta: { reason: "self_referral" } });
+      clearPendingReferral();
+      return;
+    }
+    if (!prof.referred_by_code) {
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ referred_by_code: code })
+        .eq("user_id", userId);
+      if (updErr) throw updErr;
+      void trackReferral("ref_registrado", { code });
+    } else if (prof.referred_by_code !== code) {
+      void trackReferral("ref_registro_falhou", { code, meta: { reason: "already_referred", existing: prof.referred_by_code } });
+    }
     clearPendingReferral();
-    return;
+  } catch (err) {
+    void trackReferral("ref_registro_falhou", { code, meta: { reason: "exception", error: err instanceof Error ? err.message : String(err) } });
   }
-  if (!prof.referred_by_code) {
-    await supabase.from("profiles").update({ referred_by_code: code }).eq("user_id", userId);
-  }
-  clearPendingReferral();
 }

@@ -1129,6 +1129,39 @@ export type Database = {
           },
         ]
       }
+      referral_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          meta: Json | null
+          referral_code: string | null
+          referred_email: string | null
+          referred_user_id: string | null
+          referrer_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          meta?: Json | null
+          referral_code?: string | null
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          meta?: Json | null
+          referral_code?: string | null
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_user_id?: string | null
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string
@@ -1772,6 +1805,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_referral_event: {
+        Args: { _code?: string; _event: string; _meta?: Json }
+        Returns: string
       }
       mp_expire_subscriptions: { Args: never; Returns: number }
       process_due_referrals: { Args: { _uid: string }; Returns: number }

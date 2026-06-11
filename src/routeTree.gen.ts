@@ -19,6 +19,7 @@ import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagamento-confirmado-mensal'
 import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento-confirmado-anual'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as IndicacoesRouteImport } from './routes/indicacoes'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as EiRouteImport } from './routes/ei'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
@@ -99,6 +100,11 @@ const PagamentoConfirmadoAnualRoute =
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndicacoesRoute = IndicacoesRouteImport.update({
+  id: '/indicacoes',
+  path: '/indicacoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InclusaoRoute = InclusaoRouteImport.update({
@@ -260,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof ConfiguracoesRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
+  '/indicacoes': typeof IndicacoesRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
@@ -300,6 +307,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof ConfiguracoesRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
+  '/indicacoes': typeof IndicacoesRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
@@ -342,6 +350,7 @@ export interface FileRoutesById {
   '/configuracoes': typeof ConfiguracoesRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
+  '/indicacoes': typeof IndicacoesRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/ei'
     | '/inclusao'
+    | '/indicacoes'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
@@ -425,6 +435,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/ei'
     | '/inclusao'
+    | '/indicacoes'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
@@ -466,6 +477,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/ei'
     | '/inclusao'
+    | '/indicacoes'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
@@ -508,6 +520,7 @@ export interface RootRouteChildren {
   ConfiguracoesRoute: typeof ConfiguracoesRoute
   EiRoute: typeof EiRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
+  IndicacoesRoute: typeof IndicacoesRoute
   OnboardingRoute: typeof OnboardingRoute
   PagamentoConfirmadoAnualRoute: typeof PagamentoConfirmadoAnualRoute
   PagamentoConfirmadoMensalRoute: typeof PagamentoConfirmadoMensalRoute
@@ -592,6 +605,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/indicacoes': {
+      id: '/indicacoes'
+      path: '/indicacoes'
+      fullPath: '/indicacoes'
+      preLoaderRoute: typeof IndicacoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inclusao': {
@@ -894,6 +914,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracoesRoute: ConfiguracoesRoute,
   EiRoute: EiRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
+  IndicacoesRoute: IndicacoesRoute,
   OnboardingRoute: OnboardingRoute,
   PagamentoConfirmadoAnualRoute: PagamentoConfirmadoAnualRoute,
   PagamentoConfirmadoMensalRoute: PagamentoConfirmadoMensalRoute,

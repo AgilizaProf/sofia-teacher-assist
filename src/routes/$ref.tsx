@@ -12,6 +12,10 @@ export const Route = createFileRoute("/$ref")({
       } catch {
         /* ignore */
       }
+      // Fire-and-forget — não atrasa o redirect.
+      void import("@/lib/tracking").then(({ trackReferral }) =>
+        trackReferral("ref_cadastro_via_link", { code, meta: { referrer: typeof document !== "undefined" ? document.referrer : "" } }),
+      );
     }
     throw redirect({ to: "/auth", search: { ref: code } as never });
   },
