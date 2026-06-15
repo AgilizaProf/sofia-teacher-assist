@@ -27,6 +27,18 @@ function ErrPage() {
     if (error) toast.error(error.message); else { toast.success("Marcado como resolvido"); load(); }
   };
 
+  const resolveAll = async () => {
+    const abertos = items.filter(i => !i.resolved_at);
+    if (abertos.length === 0) { toast.info("Não há erros abertos"); return; }
+    if (!confirm(`Marcar ${abertos.length} erro(s) como resolvido(s)?`)) return;
+    const { error } = await supabase
+      .from("platform_errors")
+      .update({ resolved_at: new Date().toISOString() })
+      .in("id", abertos.map(i => i.id));
+    if (error) toast.error(error.message);
+    else { toast.success(`${abertos.length} marcado(s) como resolvido(s)`); load(); }
+  };
+
   return (
     <AdminLayout title="Erros da plataforma" subtitle={`${items.length} ${showResolved ? "registros" : "abertos"}`}>
       <div className="ad-card" style={{marginBottom:14}}>
@@ -38,6 +50,10 @@ function ErrPage() {
           </div>
           <div className="ad-field"><label>Resolvidos</label>
             <label style={{display:"flex",alignItems:"center",gap:6,fontSize:13}}><input type="checkbox" checked={showResolved} onChange={e=>setShowResolved(e.target.checked)}/> mostrar</label>
+          </div>
+          <div className="ad-field" style={{marginLeft:"auto",justifyContent:"flex-end"}}>
+            <label>&nbsp;</label>
+            <button className="ad-btn" onClick={resolveAll}>Marcar tudo como resolvido</button>
           </div>
         </div>
       </div>
