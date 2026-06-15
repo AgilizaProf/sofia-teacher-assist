@@ -2889,7 +2889,13 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-hist-info{display:flex;flex-direction:column;min-width:0;}
 .atv-hist-title{font-weight:600;font-size:13px;color:var(--ink,#0F172A);overflow-wrap:break-word;}
 .atv-hist-meta{font-size:11px;color:var(--muted,#64748B);font-family:'JetBrains Mono',monospace;}
-.atv-hist-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.atv-hist-actions{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.atv-hist-actions .atv-btn{white-space:nowrap;}
+@media(max-width:560px){
+  .atv-hist-item{flex-wrap:wrap;}
+  .atv-hist-main{flex:1 1 auto;}
+  .atv-hist-actions{flex:1 1 100%;justify-content:flex-end;}
+}
 .atv-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.2);}
 .atv-opcoes{background:#fff;border:1px solid var(--line,#E2E8F0);border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);}
 .atv-opcoes-head{margin-bottom:12px;}
