@@ -2887,7 +2887,7 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-hist-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(255,122,69,.15);color:#9A3412;font-family:'JetBrains Mono',monospace;letter-spacing:.04em;}
 .atv-hist-badge.pcd{background:rgba(139,92,246,.15);color:#5B21B6;}
 .atv-hist-info{display:flex;flex-direction:column;min-width:0;}
-.atv-hist-title{font-weight:600;font-size:13px;color:var(--ink,#0F172A);}
+.atv-hist-title{font-weight:600;font-size:13px;color:var(--ink,#0F172A);overflow-wrap:break-word;}
 .atv-hist-meta{font-size:11px;color:var(--muted,#64748B);font-family:'JetBrains Mono',monospace;}
 .atv-hist-actions{display:flex;gap:6px;flex-wrap:wrap;}
 .atv-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.2);}
