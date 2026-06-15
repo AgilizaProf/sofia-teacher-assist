@@ -24,6 +24,17 @@ function UsersPage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all"|"pro"|"free"|"active"|"inactive">("all");
   const [drawer, setDrawer] = useState<Row | null>(null);
+  const [sortKey, setSortKey] = useState<"plano"|"last_seen"|"events_month"|null>(null);
+  const [sortDir, setSortDir] = useState<"asc"|"desc">("desc");
+
+  const toggleSort = (key: "plano"|"last_seen"|"events_month") => {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -60,7 +71,7 @@ function UsersPage() {
 
   const filtered = useMemo(() => {
     const ql = q.toLowerCase();
-    return rows.filter(r => {
+    const base = rows.filter(r => {
       if (ql && !(r.display_name?.toLowerCase().includes(ql) || r.email?.toLowerCase().includes(ql))) return false;
       if (filter === "pro" && r.plano !== "pro") return false;
       if (filter === "free" && r.plano !== "free") return false;
@@ -68,7 +79,20 @@ function UsersPage() {
       if (filter === "inactive" && r.last_seen) return false;
       return true;
     });
-  }, [rows, q, filter]);
+    if (!sortKey) return base;
+    const planoRank = (r: Row) => r.plano === "pro" ? (r.ciclo === "anual" ? 3 : r.ciclo === "cortesia" ? 2 : 1) : 0;
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...base].sort((a, b) => {
+      let va: number | string = 0, vb: number | string = 0;
+      if (sortKey === "plano") { va = planoRank(a); vb = planoRank(b); }
+      else if (sortKey === "last_seen") { va = a.last_seen ? Date.parse(a.last_seen) : 0; vb = b.last_seen ? Date.parse(b.last_seen) : 0; }
+      else if (sortKey === "events_month") { va = a.events_month; vb = b.events_month; }
+      return va < vb ? -1 * dir : va > vb ? 1 * dir : 0;
+    });
+  }, [rows, q, filter, sortKey, sortDir]);
+
+  const arrow = (key: "plano"|"last_seen"|"events_month") =>
+    sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : " ⇅";
 
   return (
     <AdminLayout title="Usuários" subtitle={`${rows.length} cadastrados — ${filtered.length} exibidos`}>
@@ -94,7 +118,26 @@ function UsersPage() {
         <div className="ad-table-wrap">
           <table className="ad-table">
             <thead><tr>
-              <th>Nome</th><th>E-mail</th><th>Telefone</th><th>Plano</th><th>Último acesso</th><th>Eventos (mês)</th><th></th>
+              <th>Nome</th><th>E-mail</th><th>Telefone</th>
+              <th>
+                <button type="button" onClick={() => toggleSort("plano")}
+                  style={{background:"transparent",border:0,padding:0,font:"inherit",color:"inherit",cursor:"pointer",fontWeight:700}}>
+                  Plano{arrow("plano")}
+                </button>
+              </th>
+              <th>
+                <button type="button" onClick={() => toggleSort("last_seen")}
+                  style={{background:"transparent",border:0,padding:0,font:"inherit",color:"inherit",cursor:"pointer",fontWeight:700}}>
+                  Último acesso{arrow("last_seen")}
+                </button>
+              </th>
+              <th>
+                <button type="button" onClick={() => toggleSort("events_month")}
+                  style={{background:"transparent",border:0,padding:0,font:"inherit",color:"inherit",cursor:"pointer",fontWeight:700}}>
+                  Eventos (mês){arrow("events_month")}
+                </button>
+              </th>
+              <th></th>
             </tr></thead>
             <tbody>
               {filtered.map(r => (
