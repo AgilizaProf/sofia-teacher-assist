@@ -54,6 +54,7 @@ function FunilPage() {
           <div className="ad-field">
             <label>Período</label>
             <select className="ad-select" value={periodo} onChange={(e) => setPeriodo(Number(e.target.value))}>
+              <option value={1}>Últimas 24 horas</option>
               <option value={7}>Últimos 7 dias</option>
               <option value={30}>Últimos 30 dias</option>
               <option value={90}>Últimos 90 dias</option>
