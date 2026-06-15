@@ -40,7 +40,7 @@ const monthKey = () => {
 };
 
 const fmtBRL = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 4 });
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function IaPage() {
   const [rows, setRows] = useState<Row[]>([]);
