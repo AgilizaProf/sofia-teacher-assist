@@ -5638,7 +5638,7 @@ function M1EditCardModal(props: {
             </button>
           </div>
 
-          <div style={{ display: "flex", gap: 4, marginTop: 12, padding: 4, background: "#F1F5F9", borderRadius: 10, overflowX: "auto", WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginTop: 12, padding: 4, background: "#F1F5F9", borderRadius: 10 }}>
             <Tab k="visao" label="Visão geral" />
             <Tab k="plano" label="Plano de aula" count={(card.passos ?? []).length || undefined} />
             <Tab k="inclusao" label="Inclusão" />
