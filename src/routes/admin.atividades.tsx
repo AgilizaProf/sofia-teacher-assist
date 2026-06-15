@@ -9,19 +9,11 @@ type Ev = { id: string; user_id: string | null; event_type: string; route: strin
 
 function ActPage() {
   const [events, setEvents] = useState<Ev[]>([]);
-  const [emails, setEmails] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.from("activity_events").select("id,user_id,event_type,route,created_at").order("created_at",{ascending:false}).limit(150);
       setEvents((data ?? []) as Ev[]);
-      const ids = Array.from(new Set((data ?? []).map(e=>e.user_id).filter(Boolean))) as string[];
-      if (ids.length) {
-        const { data: ps } = await supabase.from("profiles").select("user_id,email,display_name").in("user_id", ids);
-        const m: Record<string,string> = {};
-        (ps ?? []).forEach(p => { m[p.user_id] = p.display_name ?? p.email ?? p.user_id.slice(0,8); });
-        setEmails(m);
-      }
     };
     load();
     const ch = supabase.channel("act-watch").on("postgres_changes",{event:"INSERT",schema:"public",table:"activity_events"}, load).subscribe();
