@@ -626,7 +626,7 @@ export function TrilhasPanel() {
                         onDragOver={(e) => { if (draggingId && draggingId !== s.id) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverId(s.id); } }}
                         onDragLeave={() => { if (dragOverId === s.id) setDragOverId(null); }}
                         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); const fromId = e.dataTransfer.getData("text/plain") || draggingId; setDragOverId(null); setDraggingId(null); if (fromId) void reordenarSemanas(fromId, s.id, t.id); }}
-                        style={{ background: isOver ? "#FFF7ED" : checado ? "#FFF7ED" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : checado ? "1px solid var(--orange)" : "none", transition: "background .12s ease" }}
+                        style={{ background: isOver ? "#FFF7ED" : checado ? "#FFF7ED" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : checado ? "1px solid var(--orange)" : "none", transition: "background .12s ease", minWidth: 0, maxWidth: "100%" }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, flexWrap: isMobile ? "wrap" : "nowrap" }}>
                           {/* Esquerda: alça de drag + checkbox */}
@@ -694,7 +694,7 @@ export function TrilhasPanel() {
                           </div>
                         </div>
                         {planoAberto === s.id && s.plano_gerado != null && (
-                          <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8, padding: 10, background: "#fff", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12.5, color: "var(--ink-2)" }}>
+                          <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8, padding: 10, background: "#fff", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12.5, color: "var(--ink-2)", minWidth: 0, maxWidth: "100%", overflowWrap: "break-word" }}>
                             <PlanoSemanal plano={s.plano_gerado} trilha={t} semana={s} />
                           </div>
                         )}
@@ -1425,7 +1425,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
           ? <ul style={{ margin: "4px 0", paddingLeft: 18 }}>{children}</ul>
           : <>{children}</>;
         return (
-          <div key={i} style={{ borderLeft: `3px solid ${sel ? "var(--orange)" : "#E2E8F0"}`, paddingLeft: 8, opacity: sel ? 1 : 0.6 }}>
+          <div key={i} style={{ borderLeft: `3px solid ${sel ? "var(--orange)" : "#E2E8F0"}`, paddingLeft: 8, opacity: sel ? 1 : 0.6, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input type="checkbox" checked={sel} onChange={() => toggleSel(i)} style={{ width: 14, height: 14, accentColor: "var(--orange)" }} />
               {isEditing ? (
@@ -1434,7 +1434,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
                   <input value={(rascunho[i]?.titulo ?? d.titulo ?? "")} onChange={(e) => setRascunhoCampo(i, "titulo", e.target.value)} placeholder="Título" style={{ ...inputStyle, fontSize: 12.5, padding: "4px 8px", flex: 1 }} />
                 </>
               ) : (
-                <div style={{ fontWeight: 600, flex: 1 }}>{d.dia}{d.dia && d.titulo ? " — " : ""}{d.titulo}</div>
+                <div style={{ fontWeight: 600, flex: 1, minWidth: 0 }}>{d.dia}{d.dia && d.titulo ? " — " : ""}{d.titulo}</div>
               )}
               {isEditing ? (
                 <>
