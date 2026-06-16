@@ -88,7 +88,14 @@ const css = `
 @media(max-width:1180px){.ag-content{grid-template-columns:1fr;}.ag-col-side{position:static;}}
 
 .ag-radar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-@media(max-width:1100px){.ag-radar{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:640px){
+  .ag-radar{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .ag-radar-card{padding:10px 12px;border-radius:11px;}
+  .ag-radar-label{font-size:9.5px;}
+  .ag-radar-count{font-size:22px;margin-top:6px;}
+  .ag-radar-count small{font-size:11px;}
+  .ag-radar-desc{font-size:11px;margin-top:3px;}
+}
 .ag-radar-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 15px;position:relative;overflow:hidden;cursor:pointer;transition:.18s;}
 .ag-radar-card:hover{border-color:#cdd4e0;transform:translateY(-1px);box-shadow:0 6px 18px rgba(27,42,78,.06);}
 .ag-radar-card.urgent{border-color:rgba(239,68,68,.35);background:linear-gradient(135deg,#FFF5F5 0%,#fff 60%);}
