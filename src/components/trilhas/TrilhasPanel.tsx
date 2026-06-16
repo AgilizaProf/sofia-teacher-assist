@@ -11,6 +11,7 @@ import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { feriadosNacionaisBR } from "@/lib/calendar/feriadosBR";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DISCIPLINAS_COMUNS = [
   "Português", "Matemática", "Ciências", "História", "Geografia",
@@ -89,6 +90,7 @@ export function TrilhasPanel() {
   const { curriculos } = useCurriculoMunicipal();
   const curriculosAtivos = curriculos.filter((c) => c.status === "ativo" && c.ativo && c.usar_municipal);
   const creditosGate = useCreditosGate();
+  const isMobile = useIsMobile();
   const [trilhas, setTrilhas] = useState<Trilha[]>([]);
   const [semanas, setSemanas] = useState<Semana[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -626,7 +628,7 @@ export function TrilhasPanel() {
                         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); const fromId = e.dataTransfer.getData("text/plain") || draggingId; setDragOverId(null); setDraggingId(null); if (fromId) void reordenarSemanas(fromId, s.id, t.id); }}
                         style={{ background: isOver ? "#FFF7ED" : checado ? "#FFF7ED" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : checado ? "1px solid var(--orange)" : "none", transition: "background .12s ease" }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, flexWrap: isMobile ? "wrap" : "nowrap" }}>
                           {/* Esquerda: alça de drag + checkbox */}
                           <span title="Arraste para reordenar" style={{ cursor: "grab", color: "var(--muted)", display: "inline-flex", alignItems: "center", padding: "2px 0", touchAction: "none", flexShrink: 0 }} aria-label="Arrastar semana">
                             <GripVertical size={14} />
@@ -642,7 +644,8 @@ export function TrilhasPanel() {
                           />
                           {/* Centro: número + título + badge status */}
                           <span style={{ minWidth: 28, fontWeight: 600, color: "var(--orange)", flexShrink: 0 }}>S{s.semana}</span>
-                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.titulo}</span>
+                          <span style={{ flex: 1, minWidth: 0, ...(isMobile ? { overflowWrap: "break-word" } : { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }) }}>{s.titulo}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, ...(isMobile ? { flexBasis: "100%", justifyContent: "flex-end" } : { marginLeft: "auto" }) }}>
                           <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 99, flexShrink: 0, background: s.status === "concluida" ? "#D1FAE5" : s.status === "em_andamento" ? "#DBEAFE" : "#F1F5F9", color: s.status === "concluida" ? "#065F46" : s.status === "em_andamento" ? "#1E40AF" : "#64748B" }}>
                             {s.status === "concluida" ? "✓ concluída" : s.status === "em_andamento" ? "em andamento" : "pendente"}
                           </span>
@@ -687,6 +690,7 @@ export function TrilhasPanel() {
                                 </button>
                               </div>
                             )}
+                          </div>
                           </div>
                         </div>
                         {planoAberto === s.id && s.plano_gerado != null && (
