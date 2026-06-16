@@ -332,7 +332,12 @@ const css = `
 
 @media(max-width:720px){.inc-app{grid-template-columns:1fr;}}
 @media(max-width:480px){
-  .kpis{grid-template-columns:1fr;}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+  .kpi{padding:10px 12px;border-radius:10px;}
+  .kpi-value{font-size:19px;}
+  .kpi-value .small{font-size:12px;}
+  .kpi-label{font-size:10px;margin-bottom:4px;}
+  .kpi-sub{font-size:10.5px;margin-top:3px;}
   .list-grid{grid-template-columns:1fr;gap:10px;}
   .plan-hero{padding:16px;}
   .plan-hero h3{font-size:18px;}
