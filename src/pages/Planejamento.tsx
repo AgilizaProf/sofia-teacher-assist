@@ -24,6 +24,7 @@ import { acumularTempo } from "@/lib/tempo/acumular";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useHydrated } from "@/hooks/useHydrated";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { PlanoAtividadeEditor } from "@/components/atividade/PlanoAtividadeEditor";
 import { TrilhasPanel } from "@/components/trilhas/TrilhasPanel";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
@@ -2062,6 +2063,7 @@ export function Planejamento() {
     while (cells.length % 7 !== 0) cells.push({ day: null });
     return cells;
   }, [m4Month]);
+  const isMobile = useIsMobile();
   const m4ChangeMonth = (delta: number) => {
     setM4Month((s) => {
       const nm = s.m + delta;
@@ -4177,6 +4179,67 @@ export function Planejamento() {
                   ))}
                 </div>
                 <div ref={m4PrintRef} style={{ marginTop: 12, padding: 12, background: "#fff", border: "1px solid var(--line)", borderRadius: 12 }}>
+                  {isMobile ? (() => {
+                    const agendaDays = Array.from(new Set([
+                      ...Object.keys(M4_EVENTS_BY_DAY).map(Number),
+                      ...Object.keys(m4UserByDay).map(Number),
+                    ])).filter((d) => {
+                      const u = (m4UserByDay[d] ?? []).filter((e) => layers[e.cat]);
+                      const b = (M4_EVENTS_BY_DAY[d] ?? []).filter((e) => layers[e.cat]);
+                      return u.length + b.length > 0;
+                    }).sort((a, b) => a - b);
+                    if (agendaDays.length === 0) {
+                      return (
+                        <p style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", padding: "28px 8px", margin: 0 }}>
+                          Nenhuma atividade agendada em {m4Label}.
+                        </p>
+                      );
+                    }
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {agendaDays.map((day) => {
+                          const evts = [
+                            ...(M4_EVENTS_BY_DAY[day] ?? []),
+                            ...(m4UserByDay[day] ?? []),
+                          ].filter((e) => layers[e.cat]);
+                          const dObj = new Date(m4Month.y, m4Month.m, day);
+                          const wd = dObj.toLocaleDateString("pt-BR", { weekday: "long" });
+                          const isSel = day === m4SelectedDay;
+                          return (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => setM4SelectedDay(isSel ? null : day)}
+                              style={{
+                                width: "100%", textAlign: "left", cursor: "pointer",
+                                border: isSel ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)",
+                                borderRadius: 12, background: "#fff", padding: 0, overflow: "hidden",
+                                display: "flex", flexDirection: "column",
+                              }}
+                            >
+                              <span style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#FAFBFD", borderBottom: "1px solid var(--line)" }}>
+                                <span style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minWidth: 44, padding: "4px 0", borderRadius: 8, background: "#fff", border: "1px solid var(--line)" }}>
+                                  <span style={{ fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", color: "var(--ink)", lineHeight: 1 }}>{day}</span>
+                                  <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: .4, color: "var(--muted)" }}>{wd.slice(0, 3)}</span>
+                                </span>
+                                <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: "var(--muted)", textTransform: "capitalize" }}>
+                                  {wd} · {evts.length} {evts.length === 1 ? "atividade" : "atividades"}
+                                </span>
+                              </span>
+                              <span style={{ display: "flex", flexDirection: "column", gap: 6, padding: "8px 12px" }}>
+                                {evts.map((e, j) => (
+                                  <span key={j} style={{ display: "flex", flexDirection: "column", gap: 1, padding: "6px 8px", borderRadius: 8, background: M4_CAT_META[e.cat].color + "14", borderLeft: `3px solid ${M4_CAT_META[e.cat].color}` }}>
+                                    <span style={{ fontSize: 12.5, fontWeight: 600, color: "#1f2937", overflowWrap: "break-word" }}>{e.title}</span>
+                                    {e.meta && <span style={{ fontSize: 11, color: "var(--muted)" }}>{e.meta}</span>}
+                                  </span>
+                                ))}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })() : (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
                     {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
                       <div key={d} style={{ fontSize: 11, fontWeight: 700, letterSpacing: .4, textTransform: "uppercase", color: "var(--muted)", textAlign: "center", padding: "6px 0" }}>{d}</div>
@@ -4251,6 +4314,7 @@ export function Planejamento() {
                       );
                     })}
                   </div>
+                  )}
                   {m4SelectedDay && (() => {
                     const baseEvts = (M4_EVENTS_BY_DAY[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
                     const userEvts = (m4UserByDay[m4SelectedDay] ?? []).filter((e) => layers[e.cat]);
