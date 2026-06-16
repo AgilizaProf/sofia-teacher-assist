@@ -370,7 +370,7 @@ const css = `
   .hero-metric-value{font-size:36px;}
   .hero-cta-row{display:flex;flex-wrap:wrap;gap:10px;width:100%;}
   .hero-cta,.hero-cta-ghost{width:100%;max-width:100%;justify-content:center;white-space:normal;flex:1 1 auto;min-width:0;}
-  .stats{grid-template-columns:1fr;gap:10px;}
+  .stats{grid-template-columns:repeat(2,1fr);gap:10px;}
   .school-row{grid-template-columns:1fr;}
   .grid-2{gap:12px;}
 }
