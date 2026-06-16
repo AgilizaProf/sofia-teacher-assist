@@ -302,6 +302,8 @@ const css = `
   .inc-modal-body.plain > div > div[style*="display: flex"]{flex-wrap:wrap;}
   .inc-modal-body.plain select,
   .inc-modal-body.plain input{font-size:16px !important;}
+  .hero-r{flex-direction:column;align-items:stretch;}
+  .hero-r .btn{width:100%;justify-content:center;}
 }
 
 .inc-tut-step{display:grid;grid-template-columns:36px 1fr;gap:14px;padding:14px;border:1px solid var(--border);border-radius:11px;background:linear-gradient(180deg,#fff,#FAFBFE);margin-bottom:8px;}
