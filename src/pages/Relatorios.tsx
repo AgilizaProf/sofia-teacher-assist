@@ -265,7 +265,13 @@ const css = `
   .rel-kpi-label{font-size:10.5px;}
   .rel-kpi-foot{font-size:10.5px;}
   .rel-kpi-icon{width:26px;height:26px;}
-  .rel-card{padding:13px 14px;border-radius:13px;}
+  .rel-h-row{grid-template-columns:36px 1fr auto;grid-template-areas:"av name arrow" "av tags arrow";align-items:start;row-gap:4px;column-gap:12px;}
+  .rel-h-av{grid-area:av;}
+  .rel-h-name{grid-area:name;min-width:0;}
+  .rel-h-name b{overflow-wrap:break-word;}
+  .rel-status{grid-area:tags;justify-self:start;align-self:start;}
+  .rel-h-date{display:none;}
+  .rel-h-actions{grid-area:arrow;align-self:center;}
   .rel-modal{padding:18px;border-radius:14px;max-height:92dvh;}
   .rel-modal h3{font-size:18px;}
   .rel-modal .rel-modal-meta{font-size:12px;}
