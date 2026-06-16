@@ -382,7 +382,7 @@ const css = `
   .hero-metric-unit{font-size:16px !important;}
   .hero-metric{padding:12px;}
   .hero-cta,.hero-cta-ghost{font-size:12px;padding:9px 12px;}
-  .stats{grid-template-columns:1fr !important;}
+  .stats{grid-template-columns:repeat(2,1fr) !important;}
   .hero-metric-tag{font-size:9px;}
   .filter-pills{flex-wrap:wrap;gap:4px;}
   .filter-pill{font-size:11px;padding:5px 10px;}
