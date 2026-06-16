@@ -353,8 +353,12 @@ button[aria-label="Dispensar"] > * {
 
 /* === Mobile fine-tunes (≤480px) === */
 @media (max-width: 480px) {
-  /* Agenda — KPIs em 1 coluna */
-  .ag-radar { grid-template-columns: 1fr !important; }
+  /* Agenda — KPIs 2 a 2 e compactos no celular */
+  .ag-radar { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .ag-radar-card { padding: 10px 12px !important; }
+  .ag-radar-count { font-size: 22px !important; }
+  .ag-radar-label { font-size: 9.5px !important; }
+  .ag-radar-desc { font-size: 11px !important; }
   /* Agenda — barra de ações empilha sem scroll horizontal */
   .ag-actions { flex-wrap: wrap; gap: 8px; width: 100%; }
   .ag-actions > * { flex: 1 1 auto; min-width: 0; }
