@@ -191,7 +191,7 @@ const css = `
 .rel-meta .sep{width:3px;height:3px;border-radius:50%;background:#cfd4e1;}
 
 .rel-card-foot{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line-soft);}
-.rel-btn-card{flex:1;padding:9px 10px;border-radius:10px;font-size:12.5px;font-weight:600;
+.rel-btn-card{flex:1 1 auto;white-space:nowrap;padding:9px 10px;border-radius:10px;font-size:12.5px;font-weight:600;
   display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line-soft);background:#fff;color:var(--text);transition:background .15s,filter .15s;}
 .rel-btn-card:hover{background:#F8F6F0;}
 .rel-root .rel-btn-card.dark{background:#0B1220;color:#fff;border-color:#0B1220;}
