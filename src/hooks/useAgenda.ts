@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   listAgendaEvents,
@@ -45,8 +45,13 @@ export function useAgenda() {
     await qc.invalidateQueries({ queryKey: AGENDA_KEY });
   }, [qc]);
 
+  const events = useMemo<AgendaEventUI[]>(
+    () => (query.data ?? []) as AgendaEventUI[],
+    [query.data],
+  );
+
   return {
-    events: (query.data ?? []) as AgendaEventUI[],
+    events,
     loading: query.isLoading,
     error: query.error ? "Não foi possível carregar a agenda." : null,
     refresh,
