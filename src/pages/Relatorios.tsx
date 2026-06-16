@@ -259,6 +259,13 @@ const css = `
   .rel-hero h1{font-size:clamp(22px,6vw,26px);line-height:1.18;}
   .rel-hero p,.rel-hero .sub{font-size:13px;}
   .rel-kpis,.rel-grid{gap:10px;}
+  .rel-kpi{padding:11px 12px;}
+  .rel-kpi-num{font-size:22px;}
+  .rel-kpi-num small{font-size:12px;}
+  .rel-kpi-label{font-size:10.5px;}
+  .rel-kpi-foot{font-size:10.5px;}
+  .rel-kpi-icon{width:26px;height:26px;}
+  .rel-card{padding:13px 14px;border-radius:13px;}
   .rel-modal{padding:18px;border-radius:14px;max-height:92dvh;}
   .rel-modal h3{font-size:18px;}
   .rel-modal .rel-modal-meta{font-size:12px;}
