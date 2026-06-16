@@ -406,7 +406,7 @@ const css = `
   .pl-hero .hbc{padding:7px 10px;font-size:11.5px;}
   .pl-workspace{padding:12px 10px 90px;}
   .pl-week,.pl-cal-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
-  .pl-stats{grid-template-columns:1fr;}
+  .pl-stats{grid-template-columns:1fr 1fr;}
 }
 
 @media(max-width:380px){
