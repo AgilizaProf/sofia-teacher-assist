@@ -236,7 +236,8 @@ const css = `
   .rel-bulk{grid-column:span 2;}
 }
 @media (max-width:720px){
-  .rel-grid,.rel-kpis{grid-template-columns:1fr;}
+  .rel-grid{grid-template-columns:1fr;}
+  .rel-kpis{grid-template-columns:repeat(2,1fr);}
   .rel-bulk{grid-column:span 1;}
   .rel-hero h1{font-size:28px;}
   .rel-page{padding:18px;}
