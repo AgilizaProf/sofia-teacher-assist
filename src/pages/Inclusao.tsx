@@ -2577,10 +2577,15 @@ ${ident}
                     </div>
                   </div>
 
-                  <div className="section">
+                  <div className={`section${isMobile && colTimeline ? " m-collapsed" : ""}`}>
                     <div className="section-head">
                       <h3>Linha do tempo pedagógica</h3>
                       <button className="more" onClick={() => setActiveTab("reg")}>Todos os {studentRegs.length} registros →</button>
+                      {isMobile && (
+                        <button type="button" className="incl-mcol-btn" aria-label={colTimeline ? "Expandir" : "Recolher"} onClick={() => setColTimeline((v) => !v)}>
+                          <ChevronDown size={18} style={{ transform: colTimeline ? "rotate(0deg)" : "rotate(180deg)", transition: "transform .15s" }} />
+                        </button>
+                      )}
                     </div>
                     <div className="tl">
                       {studentRegs.length === 0 ? (
