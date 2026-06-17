@@ -24,6 +24,7 @@ import {
   MessageSquare, Download, Copy, X, ClipboardList, UserPlus, RefreshCw, Trash2, Settings,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -191,6 +192,8 @@ const css = `
 .rel-meta .sep{width:3px;height:3px;border-radius:50%;background:#cfd4e1;}
 
 .rel-card-foot{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line-soft);}
+.rel-mcol-btn{margin-left:auto;flex-shrink:0;background:none;border:none;cursor:pointer;padding:2px;color:var(--text-soft);display:inline-flex;align-items:center;}
+.rel-card.m-collapsed > :not(.rel-card-head):not(.rel-status){display:none;}
 .rel-btn-card{flex:1 1 auto;white-space:nowrap;padding:9px 10px;border-radius:10px;font-size:12.5px;font-weight:600;
   display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line-soft);background:#fff;color:var(--text);transition:background .15s,filter .15s;}
 .rel-btn-card:hover{background:#F8F6F0;}
@@ -265,6 +268,7 @@ const css = `
   .rel-kpi-label{font-size:10.5px;}
   .rel-kpi-foot{font-size:10.5px;}
   .rel-kpi-icon{width:26px;height:26px;}
+  .rel-card{padding:13px 14px;border-radius:13px;}
   .rel-h-row{grid-template-columns:36px 1fr auto;grid-template-areas:"av name arrow" "av tags arrow";align-items:start;row-gap:4px;column-gap:12px;}
   .rel-h-av{grid-area:av;}
   .rel-h-name{grid-area:name;min-width:0;}
@@ -778,6 +782,15 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
 
   // Modal de status (A FAZER / EM RASCUNHO / FINALIZADOS) acionado nos KPIs
   const [statusModal, setStatusModal] = useState<"todo" | "draft" | "done" | null>(null);
+  const isMobile = useIsMobile();
+  // Cards de aluno começam recolhidos no mobile; expandir adiciona o id ao set.
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const toggleCard = (id: string) =>
+    setExpandedCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   // Impressão em lote
   const [printSelectOpen, setPrintSelectOpen] = useState(false);
@@ -1857,7 +1870,7 @@ ${parecerHtml}
             {!studentsLoading && alunosFiltered.map((a) => (
               <article
                 key={a.id}
-                className="rel-card"
+                className={`rel-card${isMobile && !expandedCards.has(a.id) ? " m-collapsed" : ""}`}
                 onClick={() => setAlunoModal({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd, status: a.status, statusLabel: a.statusLabel })}
                 style={{ cursor: "pointer" }}
               >
@@ -1868,6 +1881,16 @@ ${parecerHtml}
                     <small>{a.turma || ctx.entity.turma_atual?.nome || "Sem turma"} · {bimestreNum}º bimestre</small>
                   </div>
                   {a.pcd && <span className="rel-badge pcd">PCD</span>}
+                  {isMobile && (
+                    <button
+                      type="button"
+                      className="rel-mcol-btn"
+                      aria-label={expandedCards.has(a.id) ? "Recolher" : "Expandir"}
+                      onClick={(e) => { e.stopPropagation(); toggleCard(a.id); }}
+                    >
+                      <ChevronDown size={18} style={{ transform: expandedCards.has(a.id) ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .15s" }} />
+                    </button>
+                  )}
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
