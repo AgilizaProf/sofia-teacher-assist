@@ -26,7 +26,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  *                    and report what the real webhook would do
  *     fetch=0     -> skip the upstream MP API call
  */
-export const Route = createFileRoute("/api/public/webhooks/mercadopago/test")({
+export const Route = createFileRoute("/api/public/webhooks/mercadopago/debug")({
   server: {
     handlers: {
       POST: async ({ request }) => {
