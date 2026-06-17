@@ -7,6 +7,7 @@ import { ProfileEditor } from "@/components/settings/ProfileEditor";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
 import { ReferralCard } from "@/components/settings/ReferralCard";
 import { PlanoCard } from "@/components/settings/PlanoCard";
+import { PromoCodeRedeem } from "@/components/PromoCodeRedeem";
 import { useReducedMotion, type ReducedMotionMode } from "@/hooks/useReducedMotion";
 import { useFontSize, useHighContrast, type FontSizeMode, type HighContrastMode } from "@/hooks/useA11y";
 import { useSofiaTips } from "@/hooks/useA11y";
