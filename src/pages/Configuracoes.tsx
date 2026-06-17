@@ -91,6 +91,8 @@ export function Configuracoes() {
 
           <PlanoCard />
 
+          <PromoCodeRedeem />
+
           <section id="convide" aria-labelledby="indique-title" style={{ marginBottom: 18, scrollMarginTop: 80 }}>
             <h2 id="indique-title" style={{ position: "absolute", left: -9999 }}>Programa de indicação</h2>
             <ReferralCard />
