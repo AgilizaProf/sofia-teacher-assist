@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/admin/cupons" as any)({ component: CuponsPage });
+export const Route = createFileRoute("/admin/cupons")({ component: CuponsPage });
 
 type Cupom = {
   id: string;
