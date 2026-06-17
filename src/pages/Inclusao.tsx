@@ -941,7 +941,7 @@ export function Inclusao() {
   // Recolher no mobile (começam recolhidos). Só têm efeito quando isMobile=true.
   const [colPei, setColPei] = useState(true);
   const [colCtx, setColCtx] = useState(true);
-  const [colSkills, setColSkills] = useState(true);
+  const [colTimeline, setColTimeline] = useState(true);
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
   const [nsAnoEscolar, setNsAnoEscolar] = useState("");
