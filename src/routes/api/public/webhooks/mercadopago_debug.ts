@@ -14,7 +14,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  * only someone who already holds the webhook secret can use it.
  *
  * Usage:
- *   POST /api/public/webhooks/mercadopago/test
+ *   POST /api/public/webhooks/mercadopago/debug
  *     Headers:
  *       x-debug-token: <MP_WEBHOOK_SECRET>
  *       x-signature:   ts=...,v1=...        (optional — set ?simulate=1 to auto-sign)
@@ -26,7 +26,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  *                    and report what the real webhook would do
  *     fetch=0     -> skip the upstream MP API call
  */
-export const Route = createFileRoute("/api/public/webhooks/mercadopago/debug")({
+export const Route = createFileRoute("/api/public/webhooks/mercadopago_debug")({
   server: {
     handlers: {
       POST: async ({ request }) => {
