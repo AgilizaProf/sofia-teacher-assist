@@ -97,10 +97,10 @@ vi.mock("@/integrations/supabase/client.server", () => ({
 }));
 
 import { Route as ProdRoute } from "@/routes/api/public/webhooks/mercadopago";
-import { Route as TestRoute } from "@/routes/api/public/webhooks/mercadopago.test";
+import { Route as TestRoute } from "@/routes/api/public/webhooks/mercadopago_debug";
 
 const URL_PROD = "https://x.test/api/public/webhooks/mercadopago";
-const URL_DRY = "https://x.test/api/public/webhooks/mercadopago/test";
+const URL_DRY = "https://x.test/api/public/webhooks/mercadopago_debug";
 
 function callProd(req: Request): Promise<Response> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -363,7 +363,7 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
 /* =============================================================
  * DRY-RUN endpoint
  * ============================================================= */
-describe("POST /api/public/webhooks/mercadopago/test (dry-run)", () => {
+describe("POST /api/public/webhooks/mercadopago_debug (dry-run)", () => {
   it("returns 401 when x-debug-token is missing/wrong", async () => {
     const req = new Request(URL_DRY + "?fetch=0", {
       method: "POST",
