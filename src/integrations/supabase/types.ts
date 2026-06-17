@@ -1129,6 +1129,45 @@ export type Database = {
           },
         ]
       }
+      promo_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          label: string | null
+          max_uses: number | null
+          url_anual: string | null
+          url_mensal: string | null
+          used_count: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          label?: string | null
+          max_uses?: number | null
+          url_anual?: string | null
+          url_mensal?: string | null
+          used_count?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          label?: string | null
+          max_uses?: number | null
+          url_anual?: string | null
+          url_mensal?: string | null
+          used_count?: number
+        }
+        Relationships: []
+      }
       referral_events: {
         Row: {
           created_at: string
@@ -1812,6 +1851,13 @@ export type Database = {
       }
       mp_expire_subscriptions: { Args: never; Returns: number }
       process_due_referrals: { Args: { _uid: string }; Returns: number }
+      redeem_promo_code: {
+        Args: { p_code: string }
+        Returns: {
+          url_anual: string
+          url_mensal: string
+        }[]
+      }
       registrar_mensagem_sofia: { Args: { _user_id: string }; Returns: Json }
     }
     Enums: {
