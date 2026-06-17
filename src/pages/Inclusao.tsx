@@ -4,9 +4,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
-  ChevronRight, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb,
+  ChevronRight, ChevronDown, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb,
   Pencil, Save, FileDown,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
@@ -238,6 +239,11 @@ const css = `
 
 /* Skills card */
 .skills-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+.incl-mcol-btn{flex-shrink:0;background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);display:inline-flex;align-items:center;}
+.section.m-collapsed > :not(.section-head){display:none;}
+.context-card.m-collapsed > :not(h4){display:none;}
+.skills-card.m-collapsed > :not(h4){display:none;}
+@media (max-width:768px){.ac-body{display:none;}}
 .skills-card h4{font-family:'Fraunces',serif;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
 .skills-card h4 .badge{margin-left:auto;font-family:'Inter',sans-serif;font-size:10.5px;font-weight:700;background:#DCFCE7;color:#14532D;padding:3px 7px;border-radius:6px;}
 .skill{margin-bottom:11px;}
@@ -932,6 +938,11 @@ export function Inclusao() {
   // explícita do(a) professor(a). O cadastro em Inclusão é a fonte oficial.
   const [view, setView] = useState<ViewKey>(students.length === 0 ? "list" : (search.view || "list"));
   const [selectedId, setSelectedId] = useState<string | null>(search.aluno || null);
+  const isMobile = useIsMobile();
+  // Recolher no mobile (começam recolhidos). Só têm efeito quando isMobile=true.
+  const [colPei, setColPei] = useState(true);
+  const [colCtx, setColCtx] = useState(true);
+  const [colSkills, setColSkills] = useState(true);
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
   const [nsAnoEscolar, setNsAnoEscolar] = useState("");
@@ -2541,11 +2552,16 @@ ${ident}
                     })()}
                   </div>
 
-                  <div className="section">
+                  <div className={`section${isMobile && colPei ? " m-collapsed" : ""}`}>
                     <div className="section-head">
                       <h3>Plano Educacional Individualizado · Eixos ativos</h3>
                       <span className="legal">Lei 14.254/2021 · BNCC Inclusão</span>
                       <button className="more" onClick={() => setPeiOpen(true)}>Ver completo →</button>
+                      {isMobile && (
+                        <button type="button" className="incl-mcol-btn" aria-label={colPei ? "Expandir" : "Recolher"} onClick={() => setColPei((v) => !v)}>
+                          <ChevronDown size={18} style={{ transform: colPei ? "rotate(0deg)" : "rotate(180deg)", transition: "transform .15s" }} />
+                        </button>
+                      )}
                     </div>
                     <div className="pei-grid">
                       {PEI_EIXOS.map((e) => (
@@ -2624,8 +2640,15 @@ ${ident}
                          }}
                        />
 
-                      <div className="context-card">
-                        <h4>Contexto rápido</h4>
+                      <div className={`context-card${isMobile && colCtx ? " m-collapsed" : ""}`}>
+                        <h4 style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          Contexto rápido
+                          {isMobile && (
+                            <button type="button" className="incl-mcol-btn" style={{ marginLeft: "auto" }} aria-label={colCtx ? "Expandir" : "Recolher"} onClick={() => setColCtx((v) => !v)}>
+                              <ChevronDown size={18} style={{ transform: colCtx ? "rotate(0deg)" : "rotate(180deg)", transition: "transform .15s" }} />
+                            </button>
+                          )}
+                        </h4>
                         {eixosPreenchidos === 0 ? (
                           <>
                             {([
@@ -2741,13 +2764,18 @@ ${ident}
                         })()}
                       </div>
 
-                      <div className="skills-card">
+                      <div className={`skills-card${isMobile && colSkills ? " m-collapsed" : ""}`}>
                         <h4 style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <Sparkles size={14} style={{ color: "var(--accent)" }} />
                           Habilidades · evolução
                           <span style={{ fontSize: 10, fontWeight: 500, color: "var(--muted)", marginLeft: "auto" }}>
                             base Anamnese + {studentRegs.length} registro{studentRegs.length === 1 ? "" : "s"}
                           </span>
+                          {isMobile && (
+                            <button type="button" className="incl-mcol-btn" aria-label={colSkills ? "Expandir" : "Recolher"} onClick={() => setColSkills((v) => !v)}>
+                              <ChevronDown size={18} style={{ transform: colSkills ? "rotate(0deg)" : "rotate(180deg)", transition: "transform .15s" }} />
+                            </button>
+                          )}
                         </h4>
                         {(() => {
                           const MIN_REGS = 3;
