@@ -942,6 +942,7 @@ export function Inclusao() {
   const [colPei, setColPei] = useState(true);
   const [colCtx, setColCtx] = useState(true);
   const [colTimeline, setColTimeline] = useState(true);
+  const [colSkills, setColSkills] = useState(true);
   const [nsName, setNsName] = useState("");
   const [nsTurma, setNsTurma] = useState("");
   const [nsAnoEscolar, setNsAnoEscolar] = useState("");
