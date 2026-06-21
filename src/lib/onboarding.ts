@@ -31,7 +31,7 @@ export async function markOnboardingDone(lead?: { name?: string; phone?: string 
     if (!uid) return false;
     const name = lead?.name?.trim();
     const phone = lead?.phone?.trim();
-    if (!hasValidPhone(phone)) return false;
+    if (!phone || !hasValidPhone(phone)) return false;
     const patch: {
       onboarding_concluido: boolean;
       display_name?: string;
