@@ -52,6 +52,33 @@ export async function markOnboardingDone(lead?: { name?: string; phone?: string 
   }
 }
 
+/** Persists the captured phone (and name) WITHOUT marking onboarding as
+ *  concluded. Used to save lead data the moment the user submits step 0,
+ *  so the number reaches the admin panel even if they abandon the flow. */
+export async function saveLeadCapture(lead: { name?: string; phone?: string }): Promise<boolean> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+    const uid = user?.id;
+    if (!uid) return false;
+    const phone = lead?.phone?.trim();
+    if (!phone || !hasValidPhone(phone)) return false;
+    const name = lead?.name?.trim();
+    const patch: { user_id: string; telefone: string; email?: string | null; display_name?: string } = {
+      user_id: uid,
+      telefone: phone,
+      email: user.email ?? null,
+    };
+    if (name) patch.display_name = name;
+    const { error } = await supabase
+      .from("profiles")
+      .upsert(patch, { onConflict: "user_id" });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 /** Deprecated: onboarding state is now Supabase-only. Kept as no-op for compat. */
 export async function syncOnboardingFlagIfPending(): Promise<void> {
   // no-op: kept for backward compatibility with existing callers
