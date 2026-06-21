@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { markOnboardingDone, shouldShowOnboarding } from "@/lib/onboarding";
+import { markOnboardingDone, saveLeadCapture, shouldShowOnboarding } from "@/lib/onboarding";
 import { trackEvent } from "@/lib/tracking";
 
 export const Route = createFileRoute("/onboarding")({
@@ -43,6 +43,14 @@ function OnboardingPage() {
   useEffect(() => {
     function onMsg(e: MessageEvent) {
       const d = e?.data;
+      if (d && typeof d === "object" && d.type === "agp_lead_capture") {
+        const lead = (d.lead && typeof d.lead === "object")
+          ? { name: typeof d.lead.name === "string" ? d.lead.name : undefined,
+              phone: typeof d.lead.phone === "string" ? d.lead.phone : undefined }
+          : undefined;
+        if (lead) void saveLeadCapture(lead);
+        return;
+      }
       if (d && typeof d === "object" && d.type === "agp_onboarding_done") {
         trackEvent("onboarding_concluido", { location: "onboarding" });
         const lead = (d.lead && typeof d.lead === "object")
