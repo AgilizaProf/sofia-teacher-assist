@@ -1300,8 +1300,15 @@
     if(ok){
       leadData.name = name;
       leadData.phone = document.getElementById('leadPhone').value;
-      // 📡 Aqui é onde você envia ao seu backend / CRM:
-      // fetch('/api/lead', { method:'POST', body: JSON.stringify(leadData) })
+      // Persiste o telefone imediatamente no app pai (Supabase), mesmo que
+      // o usuário abandone os passos seguintes — assim o número já fica
+      // disponível no painel admin.
+      try {
+        (window.parent || window).postMessage(
+          { type: 'agp_lead_capture', lead: leadData },
+          '*'
+        );
+      } catch(_e) { /* noop */ }
       console.log('✅ LEAD CAPTURADO:', leadData);
     }
     return ok;
