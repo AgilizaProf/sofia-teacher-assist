@@ -38,10 +38,9 @@ export async function markOnboardingDone(lead?: { name?: string; phone?: string 
       email?: string | null;
       telefone?: string;
       user_id: string;
-    } = { onboarding_concluido: true };
+    } = { onboarding_concluido: true, user_id: uid };
     if (name) patch.display_name = name;
     patch.telefone = phone;
-    patch.user_id = uid;
     patch.email = user.email ?? null;
     const { error } = await supabase
       .from("profiles")
