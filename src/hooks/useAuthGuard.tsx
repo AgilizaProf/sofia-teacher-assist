@@ -43,18 +43,20 @@ export function useAuthGuard() {
     enforceSessionPersistence();
     let mounted = true;
 
-    // Manda o usuário pro onboarding no PRIMEIRO acesso, independentemente de
-    // como entrou (e-mail/senha OU Google/Apple). O fluxo OAuth caía direto em
-    // "/" e pulava o onboarding. shouldShowOnboarding falha "fail-safe" (retorna
-    // false em erro), então nunca prende o usuário. Não roda em rotas públicas
-    // nem na própria /onboarding (evita loop). A gravação confiável de
-    // onboarding_concluido (correção da corrida na conclusão) evita reaparecer.
+    // Manda o usuário pro onboarding quando ainda não concluiu OU quando não
+    // há telefone válido salvo. Só marca a checagem como resolvida quando o
+    // perfil já está completo; assim ninguém volta ao app sem telefone.
     const gateOnboarding = (uid: string, pathname: string) => {
       if (isPublic(pathname) || pathname === "/onboarding") return;
       if (onboardingCheckedRef.current === uid) return;
-      onboardingCheckedRef.current = uid;
       void shouldShowOnboarding(uid).then((show) => {
-        if (mounted && show) navigate({ to: "/onboarding" });
+        if (!mounted) return;
+        if (show) {
+          onboardingCheckedRef.current = null;
+          navigate({ to: "/onboarding" });
+          return;
+        }
+        onboardingCheckedRef.current = uid;
       });
     };
 
