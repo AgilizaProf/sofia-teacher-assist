@@ -50,13 +50,12 @@ function OnboardingPage() {
               phone: typeof d.lead.phone === "string" ? d.lead.phone : undefined }
           : undefined;
         const route = typeof d.route === "string" && d.route.startsWith("/") ? d.route : "/";
-        // Persiste ANTES de navegar. Como a navegação é de página inteira
-        // (o conteúdo vive num <iframe>), navegar antes abortava o UPDATE no
-        // Supabase — daí nome/telefone às vezes não chegavam e o onboarding
-        // reaparecia. Aguardamos a gravação e, dê certo ou não, seguimos.
+        // Persiste ANTES de navegar. Se o telefone não for salvo/validado, não
+        // libera a entrada no app; o usuário permanece no onboarding.
         void (async () => {
-          try { await markOnboardingDone(lead); }
-          finally { window.location.assign(route); }
+          const saved = await markOnboardingDone(lead);
+          if (saved) window.location.assign(route);
+          else window.alert("Informe um WhatsApp válido para continuar.");
         })();
       }
     }
