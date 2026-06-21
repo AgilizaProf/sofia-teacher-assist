@@ -1657,21 +1657,15 @@
   // e deixa ELE persistir no Supabase (onboarding_concluido + nome + telefone)
   // e só então navegar. Navegar aqui na hora abortava o request em andamento —
   // por isso o nome/telefone às vezes não chegava e o onboarding reaparecia.
-  // Fallback: se o pai não navegar em 2s (mensagem perdida), navegamos nós.
+  // Não há fallback de navegação: sair do onboarding depende do app pai salvar
+  // o telefone com sucesso no perfil do usuário.
   function finishOnboarding(route){
     var dest = (typeof route === 'string' && route) ? route : '/';
     try{ (window.top||window).localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
     try{ localStorage.setItem('agp_onboarding_completed','1'); }catch(_){}
-    var navigated = false;
-    function fallback(){
-      if(navigated) return; navigated = true;
-      try{ (window.top || window.parent || window).location.assign(dest); }
-      catch(_){ window.location.assign(dest); }
-    }
     try{
       (window.parent||window).postMessage({type:'agp_onboarding_done',lead:leadData,route:dest},'*');
-    }catch(_){ fallback(); return; }
-    setTimeout(fallback, 2000);
+    }catch(_){ alert('Não foi possível salvar seu telefone agora. Tente novamente.'); }
   }
 
   function goToApp(e,where){
