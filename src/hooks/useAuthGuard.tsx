@@ -46,32 +46,36 @@ export function useAuthGuard() {
     // Manda o usuário pro onboarding quando ainda não concluiu OU quando não
     // há telefone válido salvo. Só marca a checagem como resolvida quando o
     // perfil já está completo; assim ninguém volta ao app sem telefone.
-    const gateOnboarding = (uid: string, pathname: string) => {
-      if (isPublic(pathname) || pathname === "/onboarding") return;
-      if (onboardingCheckedRef.current === uid) return;
-      void shouldShowOnboarding(uid).then((show) => {
-        if (!mounted) return;
-        if (show) {
-          onboardingCheckedRef.current = null;
-          navigate({ to: "/onboarding" });
-          return;
-        }
-        onboardingCheckedRef.current = uid;
-      });
+    const gateOnboarding = async (uid: string, pathname: string) => {
+      if (isPublic(pathname) || pathname === "/onboarding") return false;
+      if (onboardingCheckedRef.current === uid) return false;
+      const show = await shouldShowOnboarding(uid);
+      if (!mounted) return false;
+      if (show) {
+        onboardingCheckedRef.current = null;
+        navigate({ to: "/onboarding" });
+        return true;
+      }
+      onboardingCheckedRef.current = uid;
+      return false;
     };
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return;
       const has = !!data.session;
       setAuthed(has);
-      setReady(true);
       if (!has) {
         onboardingCheckedRef.current = null;
+        setReady(true);
         if (!isPublic(location.pathname)) navigate({ to: "/auth" });
         return;
       }
       const uid = data.session?.user?.id;
-      if (uid) gateOnboarding(uid, location.pathname);
+      if (uid) {
+        const redirected = await gateOnboarding(uid, location.pathname);
+        if (redirected) return;
+      }
+      setReady(true);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
