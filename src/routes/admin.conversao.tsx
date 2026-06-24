@@ -40,7 +40,7 @@ function ConvPage() {
   }, [periodo]);
   const conv = data && data.loginVisits ? ((data.signups / data.loginVisits) * 100).toFixed(1) : "0";
   return (
-    <AdminLayout title="Conversão" subtitle={periodoLabel[periodo]}>
+    <AdminLayout title="Quem virou cliente" subtitle={periodoLabel[periodo]}>
       <div className="ad-card" style={{marginBottom:14}}>
         <div className="ad-row">
           <div className="ad-field">
@@ -58,15 +58,15 @@ function ConvPage() {
       ) : (
       <>
       <div className="ad-stat-grid" style={{marginBottom:18}}>
-        <div className="ad-stat"><div className="ad-stat-label">Visitantes únicos</div><div className="ad-stat-val">{data.siteVisits}</div></div>
-        <div className="ad-stat"><div className="ad-stat-label">Visitas /auth</div><div className="ad-stat-val">{data.loginVisits}</div></div>
-        <div className="ad-stat"><div className="ad-stat-label">Cadastros</div><div className="ad-stat-val">{data.signups}</div></div>
-        <div className="ad-stat"><div className="ad-stat-label">Taxa de conversão</div><div className="ad-stat-val ad-stat-accent">{conv}%</div></div>
+        <div className="ad-stat"><div className="ad-stat-label">Pessoas que visitaram o site</div><div className="ad-stat-val">{data.siteVisits}</div></div>
+        <div className="ad-stat"><div className="ad-stat-label">Abriram a tela de login</div><div className="ad-stat-val">{data.loginVisits}</div></div>
+        <div className="ad-stat"><div className="ad-stat-label">Criaram uma conta</div><div className="ad-stat-val">{data.signups}</div></div>
+        <div className="ad-stat"><div className="ad-stat-label">% que virou cadastro</div><div className="ad-stat-val ad-stat-accent">{conv}%</div></div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:14}}>
-        <Group title="Dispositivo" data={data.devices}/>
-        <Group title="Sistema operacional" data={data.os}/>
-        <Group title="Navegador" data={data.browser}/>
+        <Group title="Em qual aparelho acessam" data={data.devices}/>
+        <Group title="Em qual sistema (Windows, Android, iPhone…)" data={data.os}/>
+        <Group title="Em qual navegador (Chrome, Safari…)" data={data.browser}/>
       </div>
       </>
       )}
