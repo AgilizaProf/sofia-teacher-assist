@@ -204,6 +204,46 @@ function IdleTracker() {
   return null;
 }
 
+function GlobalClickTracker() {
+  const loc = useLocation();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (ev: MouseEvent) => {
+      const target = ev.target as HTMLElement | null;
+      if (!target) return;
+      const el = target.closest(
+        'button, a, [role="button"], [role="link"], [data-track]',
+      ) as HTMLElement | null;
+      if (!el) return;
+      const text = (el.innerText || el.getAttribute("aria-label") || el.getAttribute("title") || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80);
+      const href = el.getAttribute("href") || undefined;
+      const id = el.id || undefined;
+      const dataTrack = el.getAttribute("data-track") || undefined;
+      const tag = el.tagName.toLowerCase();
+      const role = el.getAttribute("role") || undefined;
+      try {
+        trackEvent("click", {
+          location: window.location.pathname,
+          label: text || dataTrack || id || tag,
+          tag,
+          role,
+          href,
+          element_id: id,
+          data_track: dataTrack,
+        });
+      } catch {
+        /* noop */
+      }
+    };
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [loc.pathname]);
+  return null;
+}
+
 function RootComponent() {
   const [queryClient] = useState(
     () =>
@@ -289,6 +329,7 @@ function RootComponent() {
         <RealtimeSyncMount />
         <RouteTracker />
         <IdleTracker />
+        <GlobalClickTracker />
       {/* Ordem dos providers (externo → interno):
           1. SofiaContextProvider     — contexto base (rota, turma, aluno)
           2. SofiaUserDataProvider    — dados do usuário (depende do contexto base)
