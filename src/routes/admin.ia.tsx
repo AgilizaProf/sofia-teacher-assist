@@ -127,7 +127,7 @@ function IaPage() {
   }, []);
 
   return (
-    <AdminLayout title="Consumo de IA" subtitle={`Tempo real · limite por usuário R$ ${LIMIT_BRL.toFixed(2)}/mês`}>
+    <AdminLayout title="Quanto a IA está custando" subtitle={`Atualizado em tempo real · cada pessoa pode gastar até R$ ${LIMIT_BRL.toFixed(2)} por mês`}>
       <div className="ad-row" style={{ marginBottom: 18 }}>
         <div className="ad-field" style={{ minWidth: 180 }}>
           <label>Mês</label>
@@ -144,30 +144,30 @@ function IaPage() {
         <div className="ad-stat">
           <div className="ad-stat-label">Gasto total no mês</div>
           <div className="ad-stat-val ad-stat-accent">{fmtBRL(stats.totalBrl)}</div>
-          <div className="ad-stat-hint">{stats.calls} chamadas</div>
+          <div className="ad-stat-hint">{stats.calls} pedidos feitos à IA</div>
         </div>
         <div className="ad-stat">
-          <div className="ad-stat-label">Usuários ativos</div>
+          <div className="ad-stat-label">Pessoas que usaram IA</div>
           <div className="ad-stat-val">{stats.users}</div>
-          <div className="ad-stat-hint">com pelo menos 1 chamada</div>
+          <div className="ad-stat-hint">pediram algo à IA pelo menos 1 vez</div>
         </div>
         <div className="ad-stat">
-          <div className="ad-stat-label">Média por usuário</div>
+          <div className="ad-stat-label">Média gasta por pessoa</div>
           <div className="ad-stat-val">{fmtBRL(stats.avgPerUser)}</div>
-          <div className="ad-stat-hint">{((stats.avgPerUser / LIMIT_BRL) * 100).toFixed(1)}% do limite</div>
+          <div className="ad-stat-hint">{((stats.avgPerUser / LIMIT_BRL) * 100).toFixed(1)}% do limite mensal</div>
         </div>
         <div className="ad-stat">
-          <div className="ad-stat-label">Tokens (in / out)</div>
+          <div className="ad-stat-label">Palavras enviadas / recebidas</div>
           <div className="ad-stat-val" style={{ fontSize: 20 }}>{stats.totalIn.toLocaleString("pt-BR")} / {stats.totalOut.toLocaleString("pt-BR")}</div>
-          <div className="ad-stat-hint">consumo agregado</div>
+          <div className="ad-stat-hint">soma de tudo que foi processado</div>
         </div>
       </div>
 
       <div className="ad-card" style={{ padding: 0, overflow: "hidden", marginBottom: 18 }}>
-        <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E9F2" }}><h3 style={{ margin: 0 }}>Gasto por modelo de IA</h3></div>
+        <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E9F2" }}><h3 style={{ margin: 0 }}>Quanto cada IA custou</h3></div>
         <div className="ad-table-wrap">
           <table className="ad-table">
-            <thead><tr><th>Modelo</th><th>Provider</th><th>Chamadas</th><th>Usuários</th><th>Tokens in</th><th>Tokens out</th><th>Custo</th><th style={{ width: 200 }}>Participação</th></tr></thead>
+            <thead><tr><th>Modelo de IA</th><th>Fornecedor</th><th>Pedidos</th><th>Pessoas</th><th>Palavras enviadas</th><th>Palavras recebidas</th><th>Custo</th><th style={{ width: 200 }}>Fatia do total</th></tr></thead>
             <tbody>
               {loading && <tr><td colSpan={8} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Carregando…</td></tr>}
               {!loading && stats.models.length === 0 && <tr><td colSpan={8} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Sem chamadas neste mês.</td></tr>}
@@ -192,10 +192,10 @@ function IaPage() {
       </div>
 
       <div className="ad-card" style={{ padding: 0, overflow: "hidden" }}>
-        <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E9F2" }}><h3 style={{ margin: 0 }}>Top usuários — gasto no mês</h3></div>
+        <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E9F2" }}><h3 style={{ margin: 0 }}>Quem mais gastou neste mês</h3></div>
         <div className="ad-table-wrap">
           <table className="ad-table">
-            <thead><tr><th>Usuário</th><th>Chamadas</th><th>Custo</th><th style={{ width: 220 }}>% do limite</th></tr></thead>
+            <thead><tr><th>Pessoa</th><th>Pedidos</th><th>Custo</th><th style={{ width: 220 }}>Quanto já usou do limite</th></tr></thead>
             <tbody>
               {!loading && stats.topUsers.length === 0 && <tr><td colSpan={4} style={{ textAlign: "center", padding: 24, color: "#6B7280" }}>Sem dados.</td></tr>}
               {stats.topUsers.map((u) => {

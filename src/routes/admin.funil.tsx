@@ -48,7 +48,7 @@ function FunilPage() {
   }, [periodo]);
 
   return (
-    <AdminLayout title="Funil de ativação" subtitle="Onde as professoras travam no caminho para o valor">
+    <AdminLayout title="Caminho do usuário até o primeiro resultado" subtitle="Em qual passo as professoras estão parando antes de aproveitar o app">
       <div className="ad-card" style={{ marginBottom: 14 }}>
         <div className="ad-row">
           <div className="ad-field">

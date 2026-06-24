@@ -114,39 +114,39 @@ function RetencaoPage() {
     : 0;
 
   return (
-    <AdminLayout title="Retenção" subtitle="Cohort semanal — quantos voltaram após o cadastro">
+    <AdminLayout title="Quem volta a usar o app" subtitle="Para cada semana de cadastro, quantas pessoas voltaram nas semanas seguintes">
       <div className="ad-stat-grid" style={{ marginBottom: 18 }}>
         <div className="ad-stat">
-          <div className="ad-stat-label">Cohorts analisados</div>
+          <div className="ad-stat-label">Semanas analisadas</div>
           <div className="ad-stat-val">{cohorts.length}</div>
           <div className="ad-stat-hint">últimas 12 semanas</div>
         </div>
         <div className="ad-stat">
-          <div className="ad-stat-label">Retenção média S+1</div>
+          <div className="ad-stat-label">Voltam na semana seguinte</div>
           <div className={`ad-stat-val ${avgRetS1 >= 40 ? "ad-stat-accent" : ""}`}>{avgRetS1}%</div>
-          <div className="ad-stat-hint">voltou na semana seguinte</div>
+          <div className="ad-stat-hint">de cada 100 cadastros, quantas voltam 1 semana depois</div>
         </div>
         <div className="ad-stat">
-          <div className="ad-stat-label">Total de cadastros</div>
+          <div className="ad-stat-label">Pessoas cadastradas no período</div>
           <div className="ad-stat-val">{cohorts.reduce((s, c) => s + c.cadastros, 0)}</div>
-          <div className="ad-stat-hint">no período analisado</div>
+          <div className="ad-stat-hint">somando todas as semanas analisadas</div>
         </div>
       </div>
 
       <div className="ad-card" style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E9F2" }}>
-          <h3 style={{ margin: 0 }}>Tabela de cohorts</h3>
+          <h3 style={{ margin: 0 }}>Tabela: quem voltou semana após semana</h3>
         </div>
         <div className="ad-table-wrap">
           <table className="ad-table">
             <thead>
               <tr>
-                <th>Semana cadastro</th>
-                <th>Cadastros</th>
-                <th>Voltou S+1</th>
-                <th>Voltou S+2</th>
-                <th>Voltou S+3</th>
-                <th>Voltou S+4</th>
+                <th>Semana do cadastro</th>
+                <th>Pessoas cadastradas</th>
+                <th>Voltaram após 1 semana</th>
+                <th>Voltaram após 2 semanas</th>
+                <th>Voltaram após 3 semanas</th>
+                <th>Voltaram após 4 semanas</th>
               </tr>
             </thead>
             <tbody>

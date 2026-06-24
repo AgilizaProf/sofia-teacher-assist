@@ -26,7 +26,7 @@ function ActPage() {
   const max = Math.max(1, ...top.map(([,v]) => v));
 
   return (
-    <AdminLayout title="Atividades" subtitle="Stream em tempo real das ações dos usuários">
+    <AdminLayout title="O que está acontecendo agora" subtitle="Lista em tempo real das ações que as pessoas estão fazendo no app">
       <div className="ad-card">
         <h3>Funções mais usadas pelos usuários</h3>
         {top.length === 0 ? (

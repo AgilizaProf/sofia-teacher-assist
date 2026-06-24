@@ -40,7 +40,7 @@ function ErrPage() {
   };
 
   return (
-    <AdminLayout title="Erros da plataforma" subtitle={`${items.length} ${showResolved ? "registros" : "abertos"}`}>
+    <AdminLayout title="Problemas que aconteceram no app" subtitle={`${items.length} ${showResolved ? "registros no total" : "ainda sem solução"}`}>
       <div className="ad-card" style={{marginBottom:14}}>
         <div className="ad-row">
           <div className="ad-field"><label>Severidade</label>

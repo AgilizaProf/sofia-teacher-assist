@@ -70,14 +70,14 @@ function AdminOverview() {
   return (
     <AdminLayout title="Visão geral" subtitle="Saúde da plataforma em tempo real">
       <div className="ad-stat-grid" style={{marginBottom:18}}>
-        <Stat label="Total de usuários" value={s.total} />
-        <Stat label="Ativos · 7 dias" value={s.active7} hint={`${s.active30} em 30d`} />
-        <Stat label="Docs gerados (mês)" value={s.docsTotalMonth} hint={`média ${s.docsAvgPerUser.toFixed(1)}/usuário`} />
-        <Stat label="Pro mensal" value={s.pro_mensal} accent />
-        <Stat label="Pro anual" value={s.pro_anual} accent />
-        <Stat label="Cortesia" value={s.cortesia} />
-        <Stat label="MRR estimado" value={`R$ ${mrr.toFixed(0)}`} hint={`${proTotal} assinantes`} />
-        <Stat label="Plano gratuito" value={s.free} />
+        <Stat label="Total de pessoas cadastradas" value={s.total} />
+        <Stat label="Usaram nos últimos 7 dias" value={s.active7} hint={`${s.active30} usaram nos últimos 30 dias`} />
+        <Stat label="Documentos criados este mês" value={s.docsTotalMonth} hint={`média de ${s.docsAvgPerUser.toFixed(1)} por pessoa`} />
+        <Stat label="Assinantes do plano mensal" value={s.pro_mensal} accent />
+        <Stat label="Assinantes do plano anual" value={s.pro_anual} accent />
+        <Stat label="Cortesias liberadas" value={s.cortesia} />
+        <Stat label="Receita prevista por mês" value={`R$ ${mrr.toFixed(0)}`} hint={`${proTotal} assinantes pagantes`} />
+        <Stat label="Usando o plano gratuito" value={s.free} />
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:18}}>

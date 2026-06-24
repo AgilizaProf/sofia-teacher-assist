@@ -25,16 +25,16 @@ function InfraPage() {
   }, []);
 
   return (
-    <AdminLayout title="Monitor de infraestrutura" subtitle="Saúde do backend">
+    <AdminLayout title="Saúde do sistema" subtitle="Se o app está respondendo bem e quantos registros já temos">
       <div className="ad-stat-grid" style={{marginBottom:18}}>
-        <div className="ad-stat"><div className="ad-stat-label">Latência total</div><div className="ad-stat-val">{latency ?? "…"}<span style={{fontSize:14,color:"#6B7280"}}> ms</span></div><div className="ad-stat-hint">{TABLES.length} consultas paralelas</div></div>
-        <div className="ad-stat"><div className="ad-stat-label">Status</div><div className="ad-stat-val ad-stat-accent">Online</div><div className="ad-stat-hint">AgilizaProf Cloud</div></div>
+        <div className="ad-stat"><div className="ad-stat-label">Tempo de resposta</div><div className="ad-stat-val">{latency ?? "…"}<span style={{fontSize:14,color:"#6B7280"}}> ms</span></div><div className="ad-stat-hint">verificando {TABLES.length} áreas ao mesmo tempo</div></div>
+        <div className="ad-stat"><div className="ad-stat-label">Situação atual</div><div className="ad-stat-val ad-stat-accent">No ar</div><div className="ad-stat-hint">tudo funcionando normalmente</div></div>
       </div>
       <div className="ad-card" style={{padding:0,overflow:"hidden"}}>
-        <div style={{padding:"14px 16px",borderBottom:"1px solid #E5E9F2"}}><h3 style={{margin:0}}>Tabelas — contagem de linhas</h3></div>
+        <div style={{padding:"14px 16px",borderBottom:"1px solid #E5E9F2"}}><h3 style={{margin:0}}>Quantos registros temos em cada área</h3></div>
         <div className="ad-table-wrap">
           <table className="ad-table">
-            <thead><tr><th>Tabela</th><th>Linhas</th></tr></thead>
+            <thead><tr><th>Área do sistema</th><th>Quantidade</th></tr></thead>
             <tbody>{TABLES.map(t => <tr key={t}><td style={{fontFamily:"'JetBrains Mono',monospace"}}>{t}</td><td style={{fontWeight:700}}>{counts[t] ?? "…"}</td></tr>)}</tbody>
           </table>
         </div>
