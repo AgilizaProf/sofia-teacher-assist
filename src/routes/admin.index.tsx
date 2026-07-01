@@ -17,8 +17,12 @@ type Stats = {
   nextMaint: { title: string; starts_at: string } | null;
 };
 
+const APP_URL = "https://agilizaprof.app.br";
+
 function AdminOverview() {
   const [s, setS] = useState<Stats | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
