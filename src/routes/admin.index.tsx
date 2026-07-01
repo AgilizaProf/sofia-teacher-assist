@@ -90,7 +90,7 @@ function AdminOverview() {
         <Stat label="Usando o plano gratuito" value={s.free} />
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:18}}>
+      <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr",gap:18}}>
         <div className="ad-card">
           <h3>Modalidade mais usada (mês)</h3>
           {s.topEvents.length === 0 ? <p style={{fontSize:13,color:"#6B7280"}}>Sem dados ainda.</p> :
@@ -115,6 +115,24 @@ function AdminOverview() {
               <p style={{fontSize:12,color:"#6B7280",marginTop:6}}>{new Date(s.nextMaint.starts_at).toLocaleString("pt-BR")}</p>
             </div>
           ) : <p style={{fontSize:13,color:"#6B7280"}}>Nenhuma agendada.</p>}
+        </div>
+        <div className="ad-card" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
+          <h3 style={{margin:0}}>Acesso ao app</h3>
+          {qrDataUrl ? (
+            <img src={qrDataUrl} alt="QR Code do aplicativo" style={{width:150,height:150,borderRadius:8,border:"1px solid #E5E7EB"}} />
+          ) : (
+            <div style={{width:150,height:150,borderRadius:8,border:"1px solid #E5E7EB",display:"flex",alignItems:"center",justifyContent:"center",color:"#6B7280",fontSize:12}}>Gerando QR…</div>
+          )}
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(APP_URL).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+            }}
+            style={{display:"flex",alignItems:"center",gap:6,fontSize:12,padding:"6px 12px",borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",color:"#0F1B36"}}
+          >
+            {copied ? <Check size={14} color="#16A34A" /> : <Copy size={14} />}
+            {copied ? "Copiado!" : "Copiar link"}
+          </button>
+          <p style={{fontSize:11,color:"#6B7280",margin:0,textAlign:"center",wordBreak:"break-all"}}>{APP_URL}</p>
         </div>
       </div>
     </AdminLayout>
