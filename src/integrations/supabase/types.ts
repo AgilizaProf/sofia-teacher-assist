@@ -1017,6 +1017,7 @@ export type Database = {
           etapa_ensino: string | null
           faixa_etaria: string | null
           id: string
+          last_seen_at: string | null
           nivel_ensino: string | null
           onboarding_concluido: boolean
           preferencias: Json
@@ -1042,6 +1043,7 @@ export type Database = {
           etapa_ensino?: string | null
           faixa_etaria?: string | null
           id?: string
+          last_seen_at?: string | null
           nivel_ensino?: string | null
           onboarding_concluido?: boolean
           preferencias?: Json
@@ -1067,6 +1069,7 @@ export type Database = {
           etapa_ensino?: string | null
           faixa_etaria?: string | null
           id?: string
+          last_seen_at?: string | null
           nivel_ensino?: string | null
           onboarding_concluido?: boolean
           preferencias?: Json
@@ -1859,6 +1862,7 @@ export type Database = {
         }[]
       }
       registrar_mensagem_sofia: { Args: { _user_id: string }; Returns: Json }
+      touch_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
