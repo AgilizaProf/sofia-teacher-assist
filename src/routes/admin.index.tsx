@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
+import QRCode from "qrcode";
+import { Copy, Check } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminOverview,
