@@ -40,7 +40,7 @@ function UsersPage() {
     (async () => {
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const [profilesQ, subsQ, evQ] = await Promise.all([
-        supabase.from("profiles").select("user_id,display_name,email,telefone,created_at"),
+        supabase.from("profiles").select("user_id,display_name,email,telefone,created_at,last_seen_at"),
         supabase.from("subscriptions").select("user_id,plano,ciclo,status,current_period_end"),
         supabase.from("activity_events").select("user_id,created_at").gte("created_at", monthStart),
       ]);
@@ -55,13 +55,16 @@ function UsersPage() {
       });
       const out: Row[] = (profilesQ.data ?? []).map(p => {
         const sub = subsMap.get(p.user_id);
+        const evLast = lastMap.get(p.user_id) ?? null;
+        const profLast = (p as { last_seen_at?: string | null }).last_seen_at ?? null;
+        const last = [evLast, profLast].filter(Boolean).sort().pop() ?? null;
         return {
           user_id: p.user_id,
           display_name: p.display_name, email: p.email, telefone: p.telefone,
           created_at: p.created_at,
           plano: sub?.plano ?? "free", ciclo: sub?.ciclo ?? null, status: sub?.status ?? "active",
           current_period_end: sub?.current_period_end ?? null,
-          last_seen: lastMap.get(p.user_id) ?? null,
+          last_seen: last,
           events_month: cntMap.get(p.user_id) ?? 0,
         };
       });
