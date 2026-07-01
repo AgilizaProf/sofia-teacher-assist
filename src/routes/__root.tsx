@@ -174,6 +174,7 @@ function RouteTracker() {
       page_search: loc.search ? JSON.stringify(loc.search) : "",
     });
     trackPageView();
+    void supabase.rpc("touch_last_seen" as never).then(() => {}, () => {});
   }, [loc.pathname]);
   return null;
 }
