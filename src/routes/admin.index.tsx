@@ -68,6 +68,10 @@ function AdminOverview() {
     })();
   }, []);
 
+  useEffect(() => {
+    QRCode.toDataURL(APP_URL, { width: 180, margin: 2 }).then(setQrDataUrl).catch(() => setQrDataUrl(""));
+  }, []);
+
   if (!s) return <AdminLayout title="Visão geral"><div className="ad-card">Carregando…</div></AdminLayout>;
   const proTotal = s.pro_mensal + s.pro_anual + s.cortesia;
   const mrr = s.pro_mensal * 34.9 + (s.pro_anual * 247) / 12;
