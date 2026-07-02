@@ -18,11 +18,14 @@ type Stats = {
 };
 
 const APP_URL = "https://agilizaprof.app.br";
+const VENDAS_URL = "https://www.agilizaprof.com.br";
 
 function AdminOverview() {
   const [s, setS] = useState<Stats | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [copied, setCopied] = useState(false);
+  const [qrAppUrl, setQrAppUrl] = useState<string>("");
+  const [qrVendasUrl, setQrVendasUrl] = useState<string>("");
+  const [copiedApp, setCopiedApp] = useState(false);
+  const [copiedVendas, setCopiedVendas] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -69,7 +72,8 @@ function AdminOverview() {
   }, []);
 
   useEffect(() => {
-    QRCode.toDataURL(APP_URL, { width: 180, margin: 2 }).then(setQrDataUrl).catch(() => setQrDataUrl(""));
+    QRCode.toDataURL(APP_URL, { width: 180, margin: 2 }).then(setQrAppUrl).catch(() => setQrAppUrl(""));
+    QRCode.toDataURL(VENDAS_URL, { width: 180, margin: 2 }).then(setQrVendasUrl).catch(() => setQrVendasUrl(""));
   }, []);
 
   if (!s) return <AdminLayout title="Visão geral"><div className="ad-card">Carregando…</div></AdminLayout>;
@@ -117,22 +121,43 @@ function AdminOverview() {
           ) : <p style={{fontSize:13,color:"#6B7280"}}>Nenhuma agendada.</p>}
         </div>
         <div className="ad-card" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10}}>
-          <h3 style={{margin:0}}>Acesso ao app</h3>
-          {qrDataUrl ? (
-            <img src={qrDataUrl} alt="QR Code do aplicativo" style={{width:150,height:150,borderRadius:8,border:"1px solid #E5E7EB"}} />
-          ) : (
-            <div style={{width:150,height:150,borderRadius:8,border:"1px solid #E5E7EB",display:"flex",alignItems:"center",justifyContent:"center",color:"#6B7280",fontSize:12}}>Gerando QR…</div>
-          )}
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(APP_URL).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
-            }}
-            style={{display:"flex",alignItems:"center",gap:6,fontSize:12,padding:"6px 12px",borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",color:"#0F1B36"}}
-          >
-            {copied ? <Check size={14} color="#16A34A" /> : <Copy size={14} />}
-            {copied ? "Copiado!" : "Copiar link"}
-          </button>
-          <p style={{fontSize:11,color:"#6B7280",margin:0,textAlign:"center",wordBreak:"break-all"}}>{APP_URL}</p>
+          <h3 style={{margin:0}}>Links para compartilhar</h3>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,width:"100%"}}>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+              <span style={{fontSize:12,fontWeight:600,color:"#0F1B36"}}>Aplicativo</span>
+              {qrAppUrl ? (
+                <img src={qrAppUrl} alt="QR Code do aplicativo" style={{width:110,height:110,borderRadius:8,border:"1px solid #E5E7EB"}} />
+              ) : (
+                <div style={{width:110,height:110,borderRadius:8,border:"1px solid #E5E7EB",display:"flex",alignItems:"center",justifyContent:"center",color:"#6B7280",fontSize:12}}>Gerando QR…</div>
+              )}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(APP_URL).then(() => { setCopiedApp(true); setTimeout(() => setCopiedApp(false), 2000); });
+                }}
+                style={{display:"flex",alignItems:"center",gap:6,fontSize:11,padding:"5px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",color:"#0F1B36"}}
+              >
+                {copiedApp ? <Check size={12} color="#16A34A" /> : <Copy size={12} />}
+                {copiedApp ? "Copiado!" : "Copiar link"}
+              </button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+              <span style={{fontSize:12,fontWeight:600,color:"#0F1B36"}}>Site de vendas</span>
+              {qrVendasUrl ? (
+                <img src={qrVendasUrl} alt="QR Code do site de vendas" style={{width:110,height:110,borderRadius:8,border:"1px solid #E5E7EB"}} />
+              ) : (
+                <div style={{width:110,height:110,borderRadius:8,border:"1px solid #E5E7EB",display:"flex",alignItems:"center",justifyContent:"center",color:"#6B7280",fontSize:12}}>Gerando QR…</div>
+              )}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(VENDAS_URL).then(() => { setCopiedVendas(true); setTimeout(() => setCopiedVendas(false), 2000); });
+                }}
+                style={{display:"flex",alignItems:"center",gap:6,fontSize:11,padding:"5px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",color:"#0F1B36"}}
+              >
+                {copiedVendas ? <Check size={12} color="#16A34A" /> : <Copy size={12} />}
+                {copiedVendas ? "Copiado!" : "Copiar link"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </AdminLayout>
