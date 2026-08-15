@@ -8,7 +8,7 @@
         "@cloudflare/vite-plugin": "^1.25.5",
         "@hookform/resolvers": "^5.2.2",
         "@lovable.dev/cloud-auth-js": "^1.1.2",
-        "@lovable.dev/vite-tanstack-config": "2.13.1",
+        "@lovable.dev/vite-tanstack-config": "^1.4.0",
         "@radix-ui/react-accordion": "^1.2.12",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-aspect-ratio": "^1.1.8",
@@ -92,6 +92,10 @@
         "vitest": "^4.1.5",
       },
     },
+  },
+  "overrides": {
+    "seroval": "^1.6.2",
+    "seroval-plugins": "^1.6.2",
   },
   "packages": {
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],
@@ -1376,9 +1380,9 @@
 
     "semver": ["semver@6.3.1", "", { "bin": "bin/semver.js" }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
-    "seroval": ["seroval@1.5.2", "", {}, "sha512-xcRN39BdsnO9Tf+VzsE7b3JyTJASItIV1FVFewJKCFcW4s4haIKS3e6vj8PGB9qBwC7tnuOywQMdv5N4qkzi7Q=="],
+    "seroval": ["seroval@1.6.2", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/seroval/-/seroval-1.6.2.tgz", {}, "sha512-mPT+SD2TrlB6wvte1KkYOYUkubaTbd6pZ/6Kk3C9nxzrHmCZyhxOO7XGAeL7f+yLKZglzGtM9odUVvg/EhO+vQ=="],
 
-    "seroval-plugins": ["seroval-plugins@1.5.2", "", { "peerDependencies": { "seroval": "^1.0" } }, "sha512-qpY0Cl+fKYFn4GOf3cMiq6l72CpuVaawb6ILjubOQ+diJ54LfOWaSSPsaswN8DRPIPW4Yq+tE1k5aKd7ILyaFg=="],
+    "seroval-plugins": ["seroval-plugins@1.6.2", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/seroval-plugins/-/seroval-plugins-1.6.2.tgz", { "peerDependencies": { "seroval": "^1.0" } }, "sha512-TfxuUjlbBESzUOWdTkTKqvSmav0ABym+itetDXLK6mDz8SmrpdI30aF8RTXE8Bvq+tH/1yIDkvy3W0lfQb1ipQ=="],
 
     "set-blocking": ["set-blocking@2.0.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/set-blocking/-/set-blocking-2.0.0.tgz", {}, "sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw=="],
 
