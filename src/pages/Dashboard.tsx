@@ -106,6 +106,10 @@ const css = `
 .sb-plan h4{margin:3px 0 1px;font-family:'Fraunces',serif;font-weight:700;font-size:11px;color:#3a1f0b;line-height:1.2;}
 .sb-plan p{margin:0;font-size:9.5px;color:#5a3a20;line-height:1.3;}
 .ap-main{padding:22px 32px 48px;overflow-x:hidden;max-width:1320px;}
+.pro-access-banner{background:linear-gradient(135deg,#1B2A4E,#2A3D6B);border:1px solid rgba(255,122,69,.35);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:18px;box-shadow:0 8px 20px rgba(27,42,78,.12);}
+.pro-access-emoji{font-size:18px;line-height:1;}
+.pro-access-text{font-size:13px;color:#fff;line-height:1.45;}
+.pro-access-text strong{color:#FF7A45;font-weight:800;}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:18px;}
 .crumbs{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);font-weight:600;}
 .crumbs strong{color:var(--text);font-weight:700;}
