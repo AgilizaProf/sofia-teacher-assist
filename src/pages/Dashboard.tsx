@@ -1030,6 +1030,13 @@ export function Dashboard() {
   breadcrumb={[{ label: "Sua sala" }, { label: "Página inicial" }]}
 />
 
+          <div className="pro-access-banner" role="status">
+            <span className="pro-access-emoji">⭐</span>
+            <span className="pro-access-text">
+              <strong>Acesso PRO liberado</strong> para todos os usuários até <strong>12 de março de 2027</strong>.
+            </span>
+          </div>
+
           <section className="hero">
             <div className="hero-left">
               <h1 className="hero-title" suppressHydrationWarning>
