@@ -152,7 +152,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
           window.addEventListener('load', function(){
             setTimeout(function(){
               var s = document.getElementById('ap-splash');
-              if(s){s.classList.add('hide');setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},450);}
+              if(s){s.classList.add('hide');}
             }, 300);
           });
         `}} />
