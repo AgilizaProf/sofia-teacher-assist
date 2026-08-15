@@ -129,12 +129,11 @@ export function ReferralCard() {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <Gift size={20} color="#B8410E" />
         <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, margin: 0, color: "#1B2A4E" }}>
-          Convide outro(a) educador(a) e ganhe 1 mês grátis
+          CONVIDE OUTRO(A) EDUCADOR(A)
         </h3>
       </div>
       <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 14px" }}>
-        Quem você indicar também ganha. Quando o(a) educador(a) indicado(a) fizer a 1ª compra, ambos(as) recebem o bônus
-        após 7 dias de confirmação. Plano <b>anual</b>: <b>+30 dias de acesso e 1.500 créditos</b>. Plano <b>mensal</b>: <b>+7 dias de acesso e 375 créditos</b>.
+        Para usufruir da plataforma totalmente grátis.
       </p>
 
       {loading ? (
