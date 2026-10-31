@@ -64,6 +64,37 @@ export const sidebarCss = `
 .sb-bruna .live::before{content:"";width:5px;height:5px;border-radius:50%;background:#fff;animation:ap-pulse 2s infinite;}
 .sb-bruna-locked{margin:0 10px 10px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.16);border-radius:10px;padding:9px 10px;font-size:10.5px;color:rgba(255,255,255,.55);line-height:1.35;}
 .sb-bruna-locked b{color:rgba(255,255,255,.85);font-weight:700;display:block;font-size:11px;margin-bottom:2px;}
+/* ===== Tema claro profissional ===== */
+.ap-sidebar{background:#FFFFFF !important;color:#0F172A !important;border-right:1px solid #E5E7EB;}
+.ap-sidebar::before{display:none !important;}
+.ap-sidebar .sb-logo-text{color:#0F172A !important;}
+.ap-sidebar .sb-cmdk{background:#F8FAFC !important;border-color:#E5E7EB !important;color:#64748B !important;}
+.ap-sidebar .sb-cmdk:hover{background:#F1F5F9 !important;}
+.ap-sidebar .sb-cmdk-shortcut{background:#fff !important;color:#64748B !important;border:1px solid #E5E7EB;}
+.ap-sidebar .sb-section-label{color:#94A3B8 !important;}
+.ap-sidebar .sb-item{color:#334155 !important;font-weight:500;font-size:13.5px;padding:9px 10px;transition:background .15s,color .15s;}
+.ap-sidebar .sb-item .sb-icon{color:#64748B;}
+.ap-sidebar .sb-item:hover{background:#F1F5F9 !important;color:#0F172A !important;}
+.ap-sidebar .sb-item.active{background:#EFF4FF !important;color:#1D4ED8 !important;box-shadow:none !important;font-weight:600;}
+.ap-sidebar .sb-item.active .sb-icon{color:#2563EB;}
+.ap-sidebar .sb-item.active::before{background:#2563EB !important;}
+.ap-sidebar .sb-badge{background:#EFF4FF !important;color:#1D4ED8 !important;box-shadow:none !important;font-weight:700;}
+.ap-sidebar .sb-shortcut{color:#CBD5E1 !important;}
+.ap-sidebar .sb-foot{border-top-color:#E5E7EB !important;}
+.ap-sidebar .sb-version{color:#94A3B8 !important;}
+.ap-sidebar .sb-bruna{background:#F8FAFC !important;border-color:#E5E7EB !important;color:#0F172A !important;}
+.ap-sidebar .sb-bruna .sub{color:#64748B !important;}
+.ap-sidebar .sb-bruna-locked{background:#F8FAFC !important;border-color:#E5E7EB !important;color:#64748B !important;}
+.ap-sidebar .sb-bruna-locked b{color:#0F172A !important;}
+.ap-sidebar .sb-plan{background:#F8FAFC !important;border-color:#E5E7EB !important;color:#0F172A !important;}
+.ap-sidebar .sb-plan h4{color:#0F172A !important;}
+.ap-sidebar .sb-plan p{color:#64748B !important;}
+.ap-sidebar .sb-plan-tag{color:#2563EB !important;}
+.ap-sidebar .sb-plan-btn{background:#2563EB !important;box-shadow:none !important;}
+.ap-sidebar .sb-plan-btn:hover{background:#1D4ED8 !important;}
+.ap-sidebar .sb-plan-nav{color:#64748B !important;}
+.ap-sidebar .sb-plan-dot{background:#CBD5E1 !important;}
+.ap-sidebar .sb-plan-dot.active{background:#2563EB !important;}
 @media(max-width:1100px){.ap-sidebar{width:240px;}}
 @media(max-width:820px){.ap-sidebar,.ap-sidebar-shell{display:none !important;}}
 `;
@@ -72,7 +103,7 @@ const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGEleme
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...rest}>{c}</svg>
 );
 
-export type SidebarKey = "home" | "assistant" | "planning" | "documents" | "reports" | "inclusion" | "agenda" | "settings";
+export type SidebarKey = "home" | "sala" | "assistant" | "planning" | "documents" | "reports" | "inclusion" | "agenda" | "settings";
 
 export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: () => void }) {
   const cls = (k: SidebarKey) => "sb-item" + (active === k ? " active" : "");
@@ -174,6 +205,10 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <Svg className="sb-icon" c={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />
           <span>Página inicial</span><span className="sb-shortcut">H</span>
         </Link>
+        <Link to="/minha-sala" className={cls("sala")} aria-label="Minha sala">
+          <Svg className="sb-icon" c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />
+          <span>Minha sala</span>
+        </Link>
         <Link to="/assistente" className={cls("assistant")} aria-label="Assistente IA">
           <Svg className="sb-icon" c={<><path d="M12 2v3"/><path d="M12 19v3"/><circle cx="12" cy="12" r="6"/><path d="M5 12H2"/><path d="M22 12h-3"/></>} />
           <span>Assistente IA</span><span className="sb-badge">NOVO</span>
@@ -204,7 +239,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <span>Sair</span>
         </button>
         {isAdmin && (
-          <Link to="/admin" className="sb-item" aria-label="Painel administrativo" style={{marginTop:8,background:"rgba(255,122,69,.10)",color:"#FF7A45",fontWeight:700}}>
+          <Link to="/admin" className="sb-item" aria-label="Painel administrativo" style={{ marginTop: 8 }}>
             <Svg className="sb-icon" c={<><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></>} />
             <span>Admin</span>
           </Link>
