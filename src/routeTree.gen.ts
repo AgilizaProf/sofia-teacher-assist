@@ -19,6 +19,7 @@ import { Route as PlanejamentoRouteImport } from './routes/planejamento'
 import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagamento-confirmado-mensal'
 import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento-confirmado-anual'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as MinhaSalaRouteImport } from './routes/minha-sala'
 import { Route as IndicacoesRouteImport } from './routes/indicacoes'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as EiRouteImport } from './routes/ei'
@@ -31,8 +32,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as RefRouteImport } from './routes/$ref'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
-import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
+import { Route as PlanejamentoEiRouteImport } from './routes/planejamento_.ei'
+import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento_.atividade'
 import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
@@ -103,6 +104,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MinhaSalaRoute = MinhaSalaRouteImport.update({
+  id: '/minha-sala',
+  path: '/minha-sala',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndicacoesRoute = IndicacoesRouteImport.update({
   id: '/indicacoes',
   path: '/indicacoes',
@@ -164,14 +170,14 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   getParentRoute: () => AdminRoute,
 } as any)
 const PlanejamentoEiRoute = PlanejamentoEiRouteImport.update({
-  id: '/ei',
-  path: '/ei',
-  getParentRoute: () => PlanejamentoRoute,
+  id: '/planejamento_/ei',
+  path: '/planejamento/ei',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PlanejamentoAtividadeRoute = PlanejamentoAtividadeRouteImport.update({
-  id: '/atividade',
-  path: '/atividade',
-  getParentRoute: () => PlanejamentoRoute,
+  id: '/planejamento_/atividade',
+  path: '/planejamento/atividade',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const InclusaoPeiRoute = InclusaoPeiRouteImport.update({
   id: '/pei',
@@ -273,10 +279,11 @@ export interface FileRoutesByFullPath {
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
+  '/minha-sala': typeof MinhaSalaRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
-  '/planejamento': typeof PlanejamentoRouteWithChildren
+  '/planejamento': typeof PlanejamentoRoute
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
@@ -315,10 +322,11 @@ export interface FileRoutesByTo {
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
+  '/minha-sala': typeof MinhaSalaRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
-  '/planejamento': typeof PlanejamentoRouteWithChildren
+  '/planejamento': typeof PlanejamentoRoute
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
@@ -359,10 +367,11 @@ export interface FileRoutesById {
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
+  '/minha-sala': typeof MinhaSalaRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
   '/pagamento-confirmado-mensal': typeof PagamentoConfirmadoMensalRoute
-  '/planejamento': typeof PlanejamentoRouteWithChildren
+  '/planejamento': typeof PlanejamentoRoute
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
@@ -383,8 +392,8 @@ export interface FileRoutesById {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/inclusao/pei': typeof InclusaoPeiRoute
-  '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
-  '/planejamento/ei': typeof PlanejamentoEiRoute
+  '/planejamento_/atividade': typeof PlanejamentoAtividadeRoute
+  '/planejamento_/ei': typeof PlanejamentoEiRoute
   '/admin/': typeof AdminIndexRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
@@ -404,6 +413,7 @@ export interface FileRouteTypes {
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
+    | '/minha-sala'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
+    | '/minha-sala'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
+    | '/minha-sala'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
     | '/pagamento-confirmado-mensal'
@@ -513,8 +525,8 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/auth/callback'
     | '/inclusao/pei'
-    | '/planejamento/atividade'
-    | '/planejamento/ei'
+    | '/planejamento_/atividade'
+    | '/planejamento_/ei'
     | '/admin/'
     | '/api/sofia/suggestions'
     | '/api/public/webhooks/mercadopago'
@@ -533,16 +545,19 @@ export interface RootRouteChildren {
   EiRoute: typeof EiRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
   IndicacoesRoute: typeof IndicacoesRoute
+  MinhaSalaRoute: typeof MinhaSalaRoute
   OnboardingRoute: typeof OnboardingRoute
   PagamentoConfirmadoAnualRoute: typeof PagamentoConfirmadoAnualRoute
   PagamentoConfirmadoMensalRoute: typeof PagamentoConfirmadoMensalRoute
-  PlanejamentoRoute: typeof PlanejamentoRouteWithChildren
+  PlanejamentoRoute: typeof PlanejamentoRoute
   PlanejamentoPedagogicoRoute: typeof PlanejamentoPedagogicoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   RelatorioPedagogicoRoute: typeof RelatorioPedagogicoRoute
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermosRoute: typeof TermosRoute
+  PlanejamentoAtividadeRoute: typeof PlanejamentoAtividadeRoute
+  PlanejamentoEiRoute: typeof PlanejamentoEiRoute
   ApiSofiaSuggestionsRoute: typeof ApiSofiaSuggestionsRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
   ApiPublicWebhooksMercadopago_debugRoute: typeof ApiPublicWebhooksMercadopago_debugRoute
@@ -618,6 +633,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minha-sala': {
+      id: '/minha-sala'
+      path: '/minha-sala'
+      fullPath: '/minha-sala'
+      preLoaderRoute: typeof MinhaSalaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/indicacoes': {
@@ -704,19 +726,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/planejamento/ei': {
-      id: '/planejamento/ei'
-      path: '/ei'
+    '/planejamento_/ei': {
+      id: '/planejamento_/ei'
+      path: '/planejamento/ei'
       fullPath: '/planejamento/ei'
       preLoaderRoute: typeof PlanejamentoEiRouteImport
-      parentRoute: typeof PlanejamentoRoute
+      parentRoute: typeof rootRouteImport
     }
-    '/planejamento/atividade': {
-      id: '/planejamento/atividade'
-      path: '/atividade'
+    '/planejamento_/atividade': {
+      id: '/planejamento_/atividade'
+      path: '/planejamento/atividade'
       fullPath: '/planejamento/atividade'
       preLoaderRoute: typeof PlanejamentoAtividadeRouteImport
-      parentRoute: typeof PlanejamentoRoute
+      parentRoute: typeof rootRouteImport
     }
     '/inclusao/pei': {
       id: '/inclusao/pei'
@@ -896,20 +918,6 @@ const InclusaoRouteWithChildren = InclusaoRoute._addFileChildren(
   InclusaoRouteChildren,
 )
 
-interface PlanejamentoRouteChildren {
-  PlanejamentoAtividadeRoute: typeof PlanejamentoAtividadeRoute
-  PlanejamentoEiRoute: typeof PlanejamentoEiRoute
-}
-
-const PlanejamentoRouteChildren: PlanejamentoRouteChildren = {
-  PlanejamentoAtividadeRoute: PlanejamentoAtividadeRoute,
-  PlanejamentoEiRoute: PlanejamentoEiRoute,
-}
-
-const PlanejamentoRouteWithChildren = PlanejamentoRoute._addFileChildren(
-  PlanejamentoRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   RefRoute: RefRoute,
@@ -922,16 +930,19 @@ const rootRouteChildren: RootRouteChildren = {
   EiRoute: EiRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
   IndicacoesRoute: IndicacoesRoute,
+  MinhaSalaRoute: MinhaSalaRoute,
   OnboardingRoute: OnboardingRoute,
   PagamentoConfirmadoAnualRoute: PagamentoConfirmadoAnualRoute,
   PagamentoConfirmadoMensalRoute: PagamentoConfirmadoMensalRoute,
-  PlanejamentoRoute: PlanejamentoRouteWithChildren,
+  PlanejamentoRoute: PlanejamentoRoute,
   PlanejamentoPedagogicoRoute: PlanejamentoPedagogicoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   RelatorioPedagogicoRoute: RelatorioPedagogicoRoute,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermosRoute: TermosRoute,
+  PlanejamentoAtividadeRoute: PlanejamentoAtividadeRoute,
+  PlanejamentoEiRoute: PlanejamentoEiRoute,
   ApiSofiaSuggestionsRoute: ApiSofiaSuggestionsRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
   ApiPublicWebhooksMercadopago_debugRoute:

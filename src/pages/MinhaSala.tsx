@@ -419,6 +419,29 @@ const css = `
 /* Highlight visual quando a Sofia abre uma seção via deep-link. */
 .sofia-highlight{position:relative;outline:2px solid var(--accent, #FF7A45);outline-offset:3px;border-radius:14px;animation:sofiaPulseHighlight 1.6s ease-out 1;box-shadow:0 0 0 6px rgba(255,122,69,.15);}
 @keyframes sofiaPulseHighlight{0%{box-shadow:0 0 0 0 rgba(255,122,69,.55);}100%{box-shadow:0 0 0 14px rgba(255,122,69,0);}}
+/* ===== Tema claro e colorido ===== */
+.ap-root{--bg:#F8FAFC;}
+.pro-access-banner{background:#EFF4FF !important;border-color:#C7D7FE !important;box-shadow:none !important;}
+.pro-access-text{color:#1E3A8A !important;}
+.pro-access-text strong{color:#1D4ED8 !important;}
+.hero{background:#FFFFFF !important;border:1px solid #E2E8F0;color:#0F172A !important;}
+.hero::before{display:none !important;}
+.hero::after{display:none !important;}
+.ap-root .hero-title{font-family:Inter,-apple-system,sans-serif !important;font-weight:700 !important;font-size:30px !important;}
+.ap-root .hero-cta{background:#2563EB !important;box-shadow:none !important;}
+.hero-metric{background:#F8FAFC !important;border-color:#E2E8F0 !important;}
+.ap-root .hero-title{color:#1E293B !important;}
+.hero-title .accent{color:#2563EB !important;}
+.hero-title .accent::after{display:none !important;}
+.hero-greet,.hero-sub{color:#475569 !important;}
+.hero-cta-ghost{background:rgba(255,255,255,.7) !important;border-color:#E2E8F0 !important;color:#1E293B !important;}
+.hero-cta-ghost:hover{background:#fff !important;}
+.hero-metric{background:rgba(255,255,255,.75) !important;border-color:rgba(255,255,255,.9) !important;}
+.hero-metric-tag,.hero-metric-label,.hero-metric-foot{color:#64748B !important;}
+.hero-metric-value,.hero-tier-badge,.hero-tier-badge .tier-name{color:#1E293B !important;}
+.hero-metric-unit{color:#94A3B8 !important;}
+.hero-metric-bar{background:#E2E8F0 !important;}
+
 `;
 
 const CID_LABEL: Record<string, { label: string; cid: string }> = Object.fromEntries(
@@ -431,7 +454,7 @@ const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGEleme
   </svg>
 );
 
-export function Dashboard() {
+export function MinhaSala() {
   const user = useUser();
   const sofiaCtx = useSofiaContext();
   const hydrated = useHydrated();
@@ -439,8 +462,6 @@ export function Dashboard() {
   useEffect(() => {
     trackEvent("page_view_dashboard", { location: "dashboard" });
   }, []);
-  // Nome real do usuário logado (perfil) com fallback seguro pra SSR.
-  const realName = (sofiaCtx.user?.primeiro_nome || sofiaCtx.user?.nome || user.name || "").trim();
   // Tick a cada 30s pra manter o relógio em dia.
   const [, setClockTick] = useState(0);
   useEffect(() => {
@@ -448,18 +469,6 @@ export function Dashboard() {
     const id = setInterval(() => setClockTick((n) => n + 1), 30_000);
     return () => clearInterval(id);
   }, [hydrated]);
-  // Saudação Bom dia/Boa tarde/Boa noite usando hora real do dispositivo.
-  // Durante SSR usa um fallback estável pra evitar hydration mismatch.
-  const heroGreeting = useMemo(() => {
-    const nameNode = realName ? <span className="accent">{realName}</span> : null;
-    if (!hydrated) {
-      return nameNode ? <>Olá, {nameNode}</> : <>Olá</>;
-    }
-    const h = new Date().getHours();
-    const slot = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
-    return nameNode ? <>{slot}, {nameNode}</> : <>{slot}</>;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, realName]);
   const [cmdk, setCmdk] = useState(false);
   const [cmdkQuery, setCmdkQuery] = useState("");
   const [tutorialOpen, setTutorialOpen] = useState(false);
@@ -734,7 +743,7 @@ export function Dashboard() {
       parecer:      { label: "no parecer",            cta: "Voltar para os pareceres",   to: "/relatorios",   search: { tab: "todo" } },
       planejamento: { label: "no planejamento",       cta: "Continuar planejamento",     to: "/planejamento" },
       adaptacao:    { label: "nas adaptações",        cta: "Voltar para inclusão",       to: "/inclusao" },
-      aluno:        { label: "no cadastro de aluno",  cta: "Cadastrar próximo aluno",    to: "/" },
+      aluno:        { label: "no cadastro de aluno",  cta: "Cadastrar próximo aluno",    to: "/minha-sala" },
       exportacao:   { label: "na exportação",         cta: "Ver documentos",             to: "/relatorios" },
     };
     const recentMeta = recent ? (recentMap[recent.type] ?? recentMap.parecer) : null;
@@ -836,7 +845,7 @@ export function Dashboard() {
   // Lê ?open=schools|classes|students|agenda&target=<nome>, rola até a seção
   // correspondente, destaca-a e abre o modal certo. O target é casado por
   // nome (case-insensitive) com a turma ou aluno cadastrado pelo usuário.
-  const search = useSearch({ from: "/" }) as { open?: string; target?: string; m?: "m1" | "m3" | "m5" };
+  const search = useSearch({ from: "/minha-sala" }) as { open?: string; target?: string; m?: "m1" | "m3" | "m5" };
   const schoolsRef = useRef<HTMLElement | null>(null);
   const classesRef = useRef<HTMLElement | null>(null);
   const studentsRef = useRef<HTMLElement | null>(null);
@@ -952,7 +961,7 @@ export function Dashboard() {
     const tStudent = setTimeout(() => setHighlightedStudentIdx(null), 6000);
     // Remove os search params para não reabrir ao voltar.
     const cleanup = setTimeout(() => {
-      navigate({ to: "/", search: {}, replace: true });
+      navigate({ to: "/minha-sala", search: {}, replace: true });
     }, 600);
     return () => { clearTimeout(t); clearTimeout(tStudent); clearTimeout(cleanup); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1027,11 +1036,11 @@ export function Dashboard() {
     <div className="ap-root">
       <style dangerouslySetInnerHTML={{ __html: css + emptyStateCss + sidebarCss + appHeaderCss }} />
       <div className="ap-app">
-        <AppSidebar active="home" onCmdK={() => setCmdk(true)} />
+        <AppSidebar active="sala" onCmdK={() => setCmdk(true)} />
 
       <main className="ap-main">
   <AppHeader
-  breadcrumb={[{ label: "Sua sala" }, { label: "Página inicial" }]}
+  breadcrumb={[{ label: "Sua sala" }, { label: "Minha sala" }]}
 />
 
           <div className="pro-access-banner" role="status">
@@ -1044,7 +1053,7 @@ export function Dashboard() {
           <section className="hero">
             <div className="hero-left">
               <h1 className="hero-title" suppressHydrationWarning>
-                {heroGreeting}.
+                Minha sala.
                 {heroDynamic.titleExtra}
               </h1>
               <p className="hero-sub" suppressHydrationWarning>{heroDynamic.sub}</p>

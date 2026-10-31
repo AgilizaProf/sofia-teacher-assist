@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PlanejamentoEi } from "@/pages/PlanejamentoEi";
 
-export const Route = createFileRoute("/planejamento/ei")({
+export const Route = createFileRoute("/planejamento_/ei")({
   head: () => ({
     meta: [
       { title: "Roteiro de Experiência · Educação Infantil — AgilizaProf" },
