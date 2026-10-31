@@ -420,16 +420,19 @@ const css = `
 .sofia-highlight{position:relative;outline:2px solid var(--accent, #FF7A45);outline-offset:3px;border-radius:14px;animation:sofiaPulseHighlight 1.6s ease-out 1;box-shadow:0 0 0 6px rgba(255,122,69,.15);}
 @keyframes sofiaPulseHighlight{0%{box-shadow:0 0 0 0 rgba(255,122,69,.55);}100%{box-shadow:0 0 0 14px rgba(255,122,69,0);}}
 /* ===== Tema claro e colorido ===== */
-.ap-root{--bg:#FFFBF7;}
-.pro-access-banner{background:linear-gradient(120deg,#FFF3C4,#FFE8D6) !important;border-color:#FFD9A8 !important;box-shadow:none !important;}
-.pro-access-text{color:#3F2A12 !important;}
-.pro-access-text strong{color:#C2410C !important;}
-.hero{background:linear-gradient(120deg,#E9E4FF 0%,#DDF4FF 55%,#E3FBEF 100%) !important;color:#1E293B !important;}
-.hero::before{background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 60%) !important;}
-.hero::after{background:radial-gradient(circle,rgba(14,165,233,.14) 0%,transparent 65%) !important;}
+.ap-root{--bg:#F8FAFC;}
+.pro-access-banner{background:#EFF4FF !important;border-color:#C7D7FE !important;box-shadow:none !important;}
+.pro-access-text{color:#1E3A8A !important;}
+.pro-access-text strong{color:#1D4ED8 !important;}
+.hero{background:#FFFFFF !important;border:1px solid #E2E8F0;color:#0F172A !important;}
+.hero::before{display:none !important;}
+.hero::after{display:none !important;}
+.ap-root .hero-title{font-family:Inter,-apple-system,sans-serif !important;font-weight:700 !important;font-size:30px !important;}
+.ap-root .hero-cta{background:#2563EB !important;box-shadow:none !important;}
+.hero-metric{background:#F8FAFC !important;border-color:#E2E8F0 !important;}
 .ap-root .hero-title{color:#1E293B !important;}
-.hero-title .accent{color:#6366F1 !important;}
-.hero-title .accent::after{background:rgba(99,102,241,.16) !important;}
+.hero-title .accent{color:#2563EB !important;}
+.hero-title .accent::after{display:none !important;}
 .hero-greet,.hero-sub{color:#475569 !important;}
 .hero-cta-ghost{background:rgba(255,255,255,.7) !important;border-color:#E2E8F0 !important;color:#1E293B !important;}
 .hero-cta-ghost:hover{background:#fff !important;}

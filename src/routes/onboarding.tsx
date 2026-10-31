@@ -29,29 +29,23 @@ function formatPhone(raw: string): string {
 }
 
 const css = `
-.pa-root{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px;font-family:'Inter',-apple-system,sans-serif;color:#1E293B;background:#FFFBF5;position:relative;overflow:hidden;}
-.pa-blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;pointer-events:none;animation:pa-float 12s ease-in-out infinite alternate;}
-.pa-blob.b1{width:380px;height:380px;background:#FFD6A5;top:-120px;left:-100px;}
-.pa-blob.b2{width:340px;height:340px;background:#BDE0FE;bottom:-120px;right:-80px;animation-delay:-4s;}
-.pa-blob.b3{width:260px;height:260px;background:#CDB4DB;top:40%;left:60%;animation-delay:-8s;}
-@keyframes pa-float{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,-20px) scale(1.08);}}
-.pa-card{position:relative;z-index:1;width:100%;max-width:420px;background:#fff;border-radius:24px;padding:32px 28px;box-shadow:0 20px 50px rgba(30,41,59,.10);animation:pa-in .5s cubic-bezier(.2,.8,.2,1) both;}
+.pa-root{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px;font-family:'Inter',-apple-system,sans-serif;color:#0F172A;background:#F8FAFC;position:relative;overflow:hidden;}
+.pa-card{position:relative;z-index:1;width:100%;max-width:420px;background:#fff;border-radius:16px;padding:32px 28px;border:1px solid #E2E8F0;box-shadow:0 10px 30px rgba(15,23,42,.06);animation:pa-in .5s cubic-bezier(.2,.8,.2,1) both;}
 @keyframes pa-in{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
-.pa-logo{width:48px;height:48px;border-radius:14px;overflow:hidden;margin-bottom:18px;box-shadow:0 8px 20px rgba(255,122,69,.30);}
+.pa-logo{width:48px;height:48px;border-radius:14px;overflow:hidden;margin-bottom:18px;}
 .pa-logo img{width:100%;height:100%;object-fit:cover;display:block;}
-.pa-card h1{margin:0 0 6px;font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:26px;letter-spacing:-.02em;line-height:1.15;}
+.pa-card h1{margin:0 0 6px;font-weight:700;font-size:24px;letter-spacing:-.02em;line-height:1.15;}
 .pa-card p.sub{margin:0 0 24px;color:#64748B;font-size:14.5px;line-height:1.5;}
 .pa-field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
 .pa-field label{font-size:13px;font-weight:700;color:#334155;}
 .pa-field input{height:48px;border:1.5px solid #E2E8F0;border-radius:12px;padding:0 14px;font-size:16px;font-family:inherit;color:#1E293B;background:#F8FAFC;transition:border-color .15s,background .15s,box-shadow .15s;}
-.pa-field input:focus{outline:none;border-color:#FF7A45;background:#fff;box-shadow:0 0 0 4px rgba(255,122,69,.15);}
+.pa-field input:focus{outline:none;border-color:#2563EB;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.15);}
 .pa-hint{font-size:12px;color:#94A3B8;}
 .pa-error{font-size:13px;color:#DC2626;background:#FEF2F2;border-radius:10px;padding:10px 12px;margin-bottom:14px;}
-.pa-btn{width:100%;height:50px;border:0;border-radius:14px;font-family:inherit;font-size:15.5px;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(135deg,#FF7A45,#F59E0B);box-shadow:0 10px 24px rgba(255,122,69,.35);transition:transform .15s,box-shadow .15s,opacity .15s;}
-.pa-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(255,122,69,.40);}
-.pa-btn:disabled{opacity:.6;cursor:default;transform:none;}
-@media (prefers-reduced-motion: reduce){.pa-blob,.pa-card{animation:none;}}
-`;
+.pa-btn{width:100%;height:48px;border:0;border-radius:10px;font-family:inherit;font-size:15px;font-weight:600;color:#fff;cursor:pointer;background:#2563EB;transition:background .15s;}
+.pa-btn:hover{background:#1D4ED8;}
+.pa-btn:disabled{opacity:.6;cursor:default;}
+@media (prefers-reduced-motion: reduce){`;
 
 function PrimeiroAcessoPage() {
   const [ready, setReady] = useState(false);
@@ -129,15 +123,12 @@ function PrimeiroAcessoPage() {
   return (
     <div className="pa-root">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <div className="pa-blob b1" />
-      <div className="pa-blob b2" />
-      <div className="pa-blob b3" />
       <form className="pa-card" onSubmit={onSubmit} noValidate>
         <div className="pa-logo">
           <img src={logoImg} alt="AgilizaProf" />
         </div>
-        <h1>Que bom ter você aqui! 👋</h1>
-        <p className="sub">Só precisamos de duas informações para começar.</p>
+        <h1>Bem-vindo(a) ao AgilizaProf</h1>
+        <p className="sub">Antes de começar, confirme seu nome e WhatsApp.</p>
 
         <div className="pa-field">
           <label htmlFor="pa-nome">Seu nome</label>

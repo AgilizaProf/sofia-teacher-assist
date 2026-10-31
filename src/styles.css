@@ -342,12 +342,13 @@ button[aria-label="Dispensar"] > * {
   color:#475569;font-weight:600;font-size:15px;text-decoration:none;
   min-height:44px;transition:background .15s;background:transparent;border:none;width:100%;text-align:left;cursor:pointer;
 }
-.mtb-link:active,.mtb-link:hover{background:#FFF4EC;color:#1E293B;}
-.mtb-link svg{color:#FF7A45;}
-.mtb-link.active{background:#FFEDE2;color:#1E293B;font-weight:800;}
+.mtb-link:active,.mtb-link:hover{background:#F1F5F9;color:#0F172A;}
+.mtb-link svg{color:#64748B;}
+.mtb-link.active{background:#EFF4FF;color:#1D4ED8;font-weight:600;}
+.mtb-link.active svg{color:#2563EB;}
 .mtb-link svg{width:18px;height:18px;flex-shrink:0;}
 .mtb-link .badge{
-  margin-left:auto;background:#FF7A45;color:#fff;font-size:10px;font-weight:800;
+  margin-left:auto;background:#EFF4FF;color:#1D4ED8;font-size:10px;font-weight:700;
   padding:2px 8px;border-radius:100px;
 }
 
