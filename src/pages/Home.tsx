@@ -1,26 +1,25 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { Header as AppHeader, appHeaderCss } from "@/components/Header";
+import { TopNav, novoTokensCss } from "@/components/layout/TopNav";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useHydrated } from "@/hooks/useHydrated";
 import { trackEvent } from "@/lib/tracking";
 
-// Página inicial: saudação, três atalhos principais e todas as ferramentas
-// agrupadas pelo que o(a) professor(a) quer fazer. O antigo painel
-// (escolas, turmas, alunos) vive em /minha-sala.
+// Página inicial: saudação, três atalhos de tarefa e todas as ferramentas.
+// Sem barra lateral: a navegação fica no TopNav (desktop) e no MobileTopBar
+// (celular). O antigo painel (escolas, turmas, alunos) vive em /minha-sala.
 
-type Tool = { to: string; title: string; desc: string; icon: ReactNode; keywords?: string };
-type Group = { title: string; tint: string; tools: Tool[] };
+type Tool = {
+  to: string;
+  title: string;
+  desc: string;
+  tone: string;
+  soft: string;
+  icon: ReactNode;
+};
 
 const I = {
-  sofia: (
-    <>
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      <path d="M8 9h8M8 13h5" />
-    </>
-  ),
   calendar: (
     <>
       <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -67,12 +66,24 @@ const I = {
       <polyline points="12 6 12 12 16 14" />
     </>
   ),
+  chat: (
+    <>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d="M8 9h8M8 13h5" />
+    </>
+  ),
   users: (
     <>
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
+  gear: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
     </>
   ),
   gift: (
@@ -84,193 +95,121 @@ const I = {
       <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
     </>
   ),
-  gear: (
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.18V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-2.82-1.18l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.09 15H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </>
-  ),
+  arrow: <path d="M5 12h14M13 5l7 7-7 7" />,
 };
 
-const QUICK: Array<{ to: string; title: string; desc: string; icon: ReactNode }> = [
-  {
-    to: "/planejamento/atividade",
-    title: "Criar plano de aula",
-    desc: "Alinhado à BNCC em poucos minutos",
-    icon: I.pencil,
-  },
-  {
-    to: "/relatorios",
-    title: "Escrever parecer",
-    desc: "Pareceres descritivos dos alunos",
-    icon: I.doc,
-  },
-  {
-    to: "/assistente",
-    title: "Perguntar à Sofia",
-    desc: "Sua assistente pedagógica com IA",
-    icon: I.sofia,
-  },
-];
+const TEAL = ["var(--nv-primary)", "var(--nv-primary-soft)"];
+const SUN = ["#B7791F", "var(--nv-sun-soft)"];
+const CORAL = ["#C2553E", "var(--nv-coral-soft)"];
+const SKY = ["var(--nv-sky)", "var(--nv-sky-soft)"];
+const PLUM = ["var(--nv-plum)", "var(--nv-plum-soft)"];
 
-const GROUPS: Group[] = [
-  {
-    title: "Planejar aulas",
-    tint: "#2563EB",
-    tools: [
-      {
-        to: "/planejamento",
-        title: "Planejamento semanal",
-        desc: "Organize a semana e replique aulas entre turmas.",
-        icon: I.calendar,
-      },
-      {
-        to: "/planejamento/atividade",
-        title: "Plano de aula",
-        desc: "Crie uma atividade completa a partir do tema.",
-        icon: I.pencil,
-        keywords: "atividade bncc",
-      },
-      {
-        to: "/planejamento/ei",
-        title: "Educação Infantil",
-        desc: "Roteiros de experiência pelos campos da BNCC.",
-        icon: I.blocks,
-        keywords: "ei creche pré",
-      },
-    ],
-  },
-  {
-    title: "Acompanhar alunos",
-    tint: "#0D9488",
-    tools: [
-      {
-        to: "/relatorios",
-        title: "Relatórios e pareceres",
-        desc: "Pareceres descritivos prontos para revisar.",
-        icon: I.doc,
-        keywords: "parecer avaliação",
-      },
-      {
-        to: "/inclusao",
-        title: "Inclusão",
-        desc: "Alunos com laudo e adaptações de atividades.",
-        icon: I.heart,
-        keywords: "pcd laudo aee",
-      },
-      {
-        to: "/inclusao/pei",
-        title: "PEI / PDI",
-        desc: "Plano individualizado com metas e evidências.",
-        icon: I.target,
-        keywords: "pei pdi plano individual",
-      },
-    ],
-  },
-  {
-    title: "Organizar",
-    tint: "#D97706",
-    tools: [
-      {
-        to: "/agenda",
-        title: "Agenda escolar",
-        desc: "Reuniões, avaliações e entregas num só lugar.",
-        icon: I.clock,
-        keywords: "calendário prova",
-      },
-      {
-        to: "/minha-sala",
-        title: "Minha sala",
-        desc: "Escolas, turmas e alunos cadastrados.",
-        icon: I.users,
-        keywords: "turma aluno escola",
-      },
-      {
-        to: "/assistente",
-        title: "Sofia, assistente IA",
-        desc: "Tire dúvidas e peça ideias a qualquer hora.",
-        icon: I.sofia,
-        keywords: "ia chat ajuda",
-      },
-    ],
-  },
-  {
-    title: "Sua conta",
-    tint: "#475569",
-    tools: [
-      {
-        to: "/configuracoes",
-        title: "Configurações",
-        desc: "Perfil, plano, currículo municipal e acessibilidade.",
-        icon: I.gear,
-        keywords: "perfil plano conta",
-      },
-      {
-        to: "/indicacoes",
-        title: "Indique e ganhe",
-        desc: "Convide colegas e ganhe meses grátis.",
-        icon: I.gift,
-        keywords: "indicação convite",
-      },
-    ],
-  },
+const t = (
+  to: string,
+  title: string,
+  desc: string,
+  [tone, soft]: string[],
+  icon: ReactNode,
+): Tool => ({ to, title, desc, tone, soft, icon });
+
+const TOOLS: Tool[] = [
+  t(
+    "/planejamento",
+    "Planejamento semanal",
+    "Monte a semana e replique aulas entre turmas.",
+    TEAL,
+    I.calendar,
+  ),
+  t(
+    "/planejamento/atividade",
+    "Plano de aula",
+    "Atividade completa alinhada à BNCC.",
+    TEAL,
+    I.pencil,
+  ),
+  t(
+    "/planejamento/ei",
+    "Educação Infantil",
+    "Roteiros pelos campos de experiência.",
+    SUN,
+    I.blocks,
+  ),
+  t(
+    "/relatorios",
+    "Relatórios e pareceres",
+    "Pareceres descritivos prontos para revisar.",
+    SKY,
+    I.doc,
+  ),
+  t("/inclusao", "Inclusão", "Alunos com laudo e atividades adaptadas.", CORAL, I.heart),
+  t("/inclusao/pei", "PEI / PDI", "Plano individualizado com metas.", CORAL, I.target),
+  t("/agenda", "Agenda escolar", "Reuniões, provas e entregas.", SUN, I.clock),
+  t("/assistente", "Sofia", "Tire dúvidas e peça ideias à IA.", PLUM, I.chat),
 ];
 
 const css = `
-.hp-root{min-height:100vh;background:#F8FAFC;color:#0F172A;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
-.hp-grid{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-.hp-main{min-width:0;width:100%;}
-.hp-pad{padding:32px 40px 56px;max-width:1120px;}
-.hp-fade{opacity:0;animation:hp-in .4s ease-out forwards;animation-delay:var(--d,0ms);}
-@keyframes hp-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.hn-wrap{max-width:1200px;margin:0 auto;padding:28px 24px 64px;}
+.hn-in{opacity:0;animation:hn-up .45s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:var(--d,0ms);}
+@keyframes hn-up{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 
-.hp-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:28px;}
-.hp-date{font-size:13px;font-weight:500;color:#64748B;margin:0 0 6px;}
-.hp-hello{margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.2;color:#0F172A;}
-.hp-sub{margin:6px 0 0;font-size:15px;color:#475569;}
-.hp-search{position:relative;width:300px;max-width:100%;}
-.hp-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#94A3B8;pointer-events:none;}
-.hp-search input{width:100%;height:42px;border:1px solid #E2E8F0;border-radius:10px;background:#fff;padding:0 12px 0 36px;font:inherit;font-size:14px;color:#0F172A;transition:border-color .15s,box-shadow .15s;}
-.hp-search input:focus{outline:none;border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+.hn-hero{position:relative;overflow:hidden;border-radius:22px;padding:32px 32px 28px;background:var(--nv-primary-soft);
+  background-image:radial-gradient(rgba(15,118,110,.10) 1.2px,transparent 1.2px);background-size:18px 18px;margin-bottom:36px;}
+.hn-hero::after{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;background:var(--nv-sun);opacity:.16;}
+.hn-hero-top{position:relative;z-index:1;}
+.hn-date{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--nv-primary);margin-bottom:8px;}
+.hn-hello{margin:0;font-family:var(--nv-heading);font-weight:800;font-size:36px;letter-spacing:-.025em;line-height:1.1;color:var(--nv-ink);}
+.hn-sub{margin:8px 0 0;font-size:16px;color:var(--nv-ink-2);}
+.hn-actions{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:24px;}
+.hn-act{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid rgba(15,118,110,.14);text-decoration:none;color:var(--nv-ink);
+  transition:transform .15s,box-shadow .15s,border-color .15s;}
+.hn-act:hover,.hn-act:focus-visible{transform:translateY(-2px);box-shadow:var(--nv-shadow);border-color:var(--nv-primary);outline:none;}
+.hn-act .ai{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--nv-primary-soft);color:var(--nv-primary);flex-shrink:0;}
+.hn-act .ai svg{width:20px;height:20px;}
+.hn-act .at{font-weight:700;font-size:15px;line-height:1.25;}
+.hn-act .ad{font-size:12.5px;color:var(--nv-muted);margin-top:2px;}
+.hn-act .ar{margin-left:auto;width:18px;height:18px;color:var(--nv-line-2);transition:transform .15s,color .15s;flex-shrink:0;}
+.hn-act:hover .ar{color:var(--nv-primary);transform:translateX(3px);}
+.hn-act.main{background:var(--nv-primary);border-color:var(--nv-primary);color:#fff;}
+.hn-act.main .ai{background:rgba(255,255,255,.16);color:#fff;}
+.hn-act.main .ad{color:rgba(255,255,255,.78);}
+.hn-act.main .ar{color:rgba(255,255,255,.7);}
+.hn-act.main:hover{background:var(--nv-primary-dark);border-color:var(--nv-primary-dark);}
+.hn-act.main:hover .ar{color:#fff;}
 
-.hp-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:36px;}
-.hp-q{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:12px;text-decoration:none;color:#0F172A;background:#fff;border:1px solid #E2E8F0;transition:border-color .15s,box-shadow .15s,transform .15s;}
-.hp-q:hover,.hp-q:focus-visible{border-color:#93B4F5;box-shadow:0 6px 16px rgba(15,23,42,.06);transform:translateY(-1px);outline:none;}
-.hp-q .qi{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#EFF4FF;color:#2563EB;flex-shrink:0;}
-.hp-q.primary{background:#2563EB;border-color:#2563EB;color:#fff;}
-.hp-q.primary:hover,.hp-q.primary:focus-visible{background:#1D4ED8;border-color:#1D4ED8;box-shadow:0 8px 20px rgba(37,99,235,.25);}
-.hp-q.primary .qi{background:rgba(255,255,255,.16);color:#fff;}
-.hp-q .qi svg{width:20px;height:20px;}
-.hp-q .qt{font-size:15px;font-weight:600;line-height:1.3;}
-.hp-q .qd{font-size:12.5px;color:#64748B;margin-top:2px;}
-.hp-q.primary .qd{color:rgba(255,255,255,.8);}
+.hn-h2{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 14px;}
+.hn-h2 h2{margin:0;font-family:var(--nv-heading);font-weight:700;font-size:19px;letter-spacing:-.01em;color:var(--nv-ink);}
+.hn-h2 span{font-size:13px;color:var(--nv-muted);}
+.hn-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:36px;}
+.hn-tool{display:flex;flex-direction:column;gap:12px;padding:20px 18px;border-radius:var(--nv-radius);background:var(--nv-surface);border:1px solid var(--nv-line);text-decoration:none;color:inherit;
+  transition:transform .18s,box-shadow .18s,border-color .18s;}
+.hn-tool:hover,.hn-tool:focus-visible{transform:translateY(-3px);box-shadow:var(--nv-shadow);border-color:var(--tone);outline:none;}
+.hn-tool .ti{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--soft);color:var(--tone);transition:transform .2s;}
+.hn-tool:hover .ti{transform:scale(1.06);}
+.hn-tool .ti svg{width:21px;height:21px;}
+.hn-tool h3{margin:0;font-size:15.5px;font-weight:700;color:var(--nv-ink);line-height:1.3;}
+.hn-tool p{margin:0;font-size:13.5px;line-height:1.45;color:var(--nv-muted);}
 
-.hp-group{margin-bottom:28px;}
-.hp-group h2{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:13px;font-weight:600;color:#475569;}
-.hp-group h2::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--t);}
-.hp-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
-.hp-t{display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:12px;text-decoration:none;color:inherit;background:#fff;border:1px solid #E2E8F0;transition:border-color .15s,box-shadow .15s;}
-.hp-t:hover,.hp-t:focus-visible{border-color:color-mix(in srgb,var(--t) 45%,#fff);box-shadow:0 6px 16px rgba(15,23,42,.06);outline:none;}
-.hp-t .ti{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--t);background:color-mix(in srgb,var(--t) 10%,#fff);}
-.hp-t .ti svg{width:19px;height:19px;}
-.hp-t .tb{flex:1;min-width:0;}
-.hp-t h3{margin:0;font-size:14.5px;font-weight:600;color:#0F172A;line-height:1.3;}
-.hp-t p{margin:3px 0 0;font-size:13px;line-height:1.45;color:#64748B;}
-.hp-t .chev{width:16px;height:16px;color:#CBD5E1;flex-shrink:0;align-self:center;transition:transform .15s,color .15s;}
-.hp-t:hover .chev{color:var(--t);transform:translateX(2px);}
-.hp-empty{padding:28px;text-align:center;color:#64748B;font-size:14px;background:#fff;border:1px dashed #E2E8F0;border-radius:12px;}
+.hn-more{display:flex;flex-wrap:wrap;gap:10px;}
+.hn-chip{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:100px;background:#fff;border:1px solid var(--nv-line);font-size:14px;font-weight:500;color:var(--nv-ink-2);text-decoration:none;transition:border-color .15s,color .15s;}
+.hn-chip svg{width:16px;height:16px;color:var(--nv-muted);}
+.hn-chip:hover{border-color:var(--nv-primary);color:var(--nv-primary);}
+.hn-chip:hover svg{color:var(--nv-primary);}
 
-@media(max-width:1100px){.hp-tools{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:1060px){.hn-tools{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:820px){
-  .hp-grid{grid-template-columns:1fr;}
-  .hp-pad{padding:20px 16px 40px;}
-  .hp-head{margin-bottom:20px;}
-  .hp-hello{font-size:24px;}
-  .hp-search{width:100%;}
-  .hp-quick{grid-template-columns:1fr;gap:10px;margin-bottom:28px;}
-  .hp-tools{grid-template-columns:1fr;gap:10px;}
+  .hn-wrap{padding:16px 16px 48px;}
+  .hn-hero{padding:22px 18px 18px;border-radius:18px;margin-bottom:28px;}
+  .hn-hero::after{display:none;}
+  .hn-h2 span{display:none;}
+  .hn-hello{font-size:27px;}
+  .hn-sub{font-size:15px;}
+  .hn-actions{grid-template-columns:1fr;gap:10px;margin-top:18px;}
+  .hn-tools{gap:10px;}
+  .hn-tool{padding:16px 14px;gap:10px;}
+  .hn-tool p{font-size:12.5px;}
 }
-@media (prefers-reduced-motion: reduce){.hp-fade{animation:none;opacity:1;}}
+@media(max-width:400px){.hn-tool p{display:none;}}
+@media (prefers-reduced-motion: reduce){.hn-in{animation:none;opacity:1;}}
 `;
 
 const Svg = ({ children, className }: { children: ReactNode; className?: string }) => (
@@ -296,23 +235,13 @@ function saudacaoAgora(): string {
 }
 
 function dataHoje(): string {
-  const txt = new Date().toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-  return txt.charAt(0).toUpperCase() + txt.slice(1);
-}
-
-function norm(s: string): string {
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
 }
 
 export function Home() {
   const hydrated = useHydrated();
   const sofiaCtx = useSofiaContext();
   const nome = (sofiaCtx.user?.primeiro_nome || "").trim();
-  const [busca, setBusca] = useState("");
 
   // Mantém a saudação certa se a página ficar aberta na virada do período.
   const [, setTick] = useState(0);
@@ -326,108 +255,104 @@ export function Home() {
     trackEvent("page_view_dashboard", { location: "dashboard" });
   }, []);
 
-  const grupos = useMemo(() => {
-    const q = norm(busca.trim());
-    if (!q) return GROUPS;
-    return GROUPS.map((g) => ({
-      ...g,
-      tools: g.tools.filter((t) => norm(`${t.title} ${t.desc} ${t.keywords ?? ""}`).includes(q)),
-    })).filter((g) => g.tools.length > 0);
-  }, [busca]);
-
   // SSR/primeiro paint usa "Olá" pra não dar mismatch de hidratação.
   const slot = hydrated ? saudacaoAgora() : "Olá";
   const temNome = nome && nome !== "Educador(a)";
   let delay = 0;
-  const next = () => ({ ["--d" as string]: `${(delay += 30)}ms` }) as CSSProperties;
+  const d = () => ({ ["--d" as string]: `${(delay += 35)}ms` }) as CSSProperties;
 
   return (
-    <div className="hp-root">
-      <style dangerouslySetInnerHTML={{ __html: css + sidebarCss + appHeaderCss }} />
-      <div className="hp-grid">
-        <AppSidebar active="home" />
-        <main className="hp-main">
-          <AppHeader breadcrumb={[{ label: "Página inicial" }]} />
-          <div className="hp-pad">
-            <header className="hp-head hp-fade">
-              <div>
-                <p className="hp-date" suppressHydrationWarning>
-                  {hydrated ? dataHoje() : " "}
-                </p>
-                <h1 className="hp-hello" suppressHydrationWarning>
-                  {slot}
-                  {temNome ? `, ${nome}` : ""}
-                </h1>
-                <p className="hp-sub">Por onde você quer começar hoje?</p>
-              </div>
-              <label className="hp-search">
-                <Svg>
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </Svg>
-                <input
-                  type="search"
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Buscar ferramenta…"
-                  aria-label="Buscar ferramenta"
-                />
-              </label>
-            </header>
-
-            {!busca && (
-              <nav className="hp-quick" aria-label="Atalhos principais">
-                {QUICK.map((q, i) => (
-                  <Link
-                    key={q.title}
-                    to={q.to}
-                    className={`hp-q hp-fade${i === 0 ? " primary" : ""}`}
-                    style={next()}
-                  >
-                    <span className="qi">
-                      <Svg>{q.icon}</Svg>
-                    </span>
-                    <span>
-                      <div className="qt">{q.title}</div>
-                      <div className="qd">{q.desc}</div>
-                    </span>
-                  </Link>
-                ))}
-              </nav>
-            )}
-
-            {grupos.length === 0 && (
-              <div className="hp-empty">Nenhuma ferramenta encontrada para “{busca}”.</div>
-            )}
-
-            {grupos.map((g) => (
-              <section
-                key={g.title}
-                className="hp-group"
-                style={{ ["--t" as string]: g.tint } as CSSProperties}
-              >
-                <h2>{g.title}</h2>
-                <div className="hp-tools">
-                  {g.tools.map((t) => (
-                    <Link key={g.title + t.to} to={t.to} className="hp-t hp-fade" style={next()}>
-                      <span className="ti">
-                        <Svg>{t.icon}</Svg>
-                      </span>
-                      <span className="tb">
-                        <h3>{t.title}</h3>
-                        <p>{t.desc}</p>
-                      </span>
-                      <Svg className="chev">
-                        <polyline points="9 18 15 12 9 6" />
-                      </Svg>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            ))}
+    <div className="nv">
+      <style dangerouslySetInnerHTML={{ __html: novoTokensCss + css }} />
+      <TopNav />
+      <main className="hn-wrap">
+        <section className="hn-hero hn-in" aria-labelledby="hn-hello">
+          <div className="hn-hero-top">
+            <span className="hn-date" suppressHydrationWarning>
+              {hydrated ? dataHoje() : " "}
+            </span>
+            <h1 id="hn-hello" className="hn-hello" suppressHydrationWarning>
+              {slot}
+              {temNome ? `, ${nome}` : ""}!
+            </h1>
+            <p className="hn-sub">O que vamos preparar hoje?</p>
           </div>
-        </main>
-      </div>
+          <nav className="hn-actions" aria-label="Comece por aqui">
+            <Link to="/planejamento" className="hn-act main">
+              <span className="ai">
+                <Svg>{I.calendar}</Svg>
+              </span>
+              <span>
+                <div className="at">Planejar minha semana</div>
+                <div className="ad">Aulas organizadas por dia e turma</div>
+              </span>
+              <Svg className="ar">{I.arrow}</Svg>
+            </Link>
+            <Link to="/planejamento/atividade" className="hn-act">
+              <span className="ai">
+                <Svg>{I.pencil}</Svg>
+              </span>
+              <span>
+                <div className="at">Criar plano de aula</div>
+                <div className="ad">Pronto em poucos minutos</div>
+              </span>
+              <Svg className="ar">{I.arrow}</Svg>
+            </Link>
+            <Link to="/relatorios" className="hn-act">
+              <span className="ai">
+                <Svg>{I.doc}</Svg>
+              </span>
+              <span>
+                <div className="at">Escrever pareceres</div>
+                <div className="ad">Um por aluno, com a Sofia</div>
+              </span>
+              <Svg className="ar">{I.arrow}</Svg>
+            </Link>
+          </nav>
+        </section>
+
+        <div className="hn-h2 hn-in" style={d()}>
+          <h2>Ferramentas</h2>
+          <span>Tudo o que o AgilizaProf faz por você</span>
+        </div>
+        <nav className="hn-tools" aria-label="Ferramentas">
+          {TOOLS.map((tool) => (
+            <Link
+              key={tool.to}
+              to={tool.to}
+              className="hn-tool hn-in"
+              style={
+                {
+                  ...d(),
+                  ["--tone" as string]: tool.tone,
+                  ["--soft" as string]: tool.soft,
+                } as CSSProperties
+              }
+            >
+              <span className="ti">
+                <Svg>{tool.icon}</Svg>
+              </span>
+              <h3>{tool.title}</h3>
+              <p>{tool.desc}</p>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hn-h2 hn-in" style={d()}>
+          <h2>Sua conta</h2>
+        </div>
+        <nav className="hn-more hn-in" style={d()} aria-label="Sua conta">
+          <Link to="/minha-sala" className="hn-chip">
+            <Svg>{I.users}</Svg>Minha sala: escolas, turmas e alunos
+          </Link>
+          <Link to="/configuracoes" className="hn-chip">
+            <Svg>{I.gear}</Svg>Configurações
+          </Link>
+          <Link to="/indicacoes" className="hn-chip">
+            <Svg>{I.gift}</Svg>Indique e ganhe
+          </Link>
+        </nav>
+      </main>
     </div>
   );
 }

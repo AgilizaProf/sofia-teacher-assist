@@ -8,6 +8,7 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
+import { TopNav, novoTokensCss } from "@/components/layout/TopNav";
 
 type Student = { id: string; name: string; turma?: string; diag?: string };
 
@@ -226,8 +227,10 @@ export function PlanejamentoEi() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
-      <header className="sticky top-0 z-10 border-b bg-card px-6 py-3 flex items-center gap-3">
+    <div className="nv min-h-screen text-foreground" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
+      <style>{novoTokensCss}</style>
+      <TopNav />
+      <header className="border-b bg-card px-6 py-3 flex items-center gap-3">
         <button onClick={() => navigate({ to: "/planejamento" })} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft size={16} /> Planejamento
         </button>

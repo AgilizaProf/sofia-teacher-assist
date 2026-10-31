@@ -3,7 +3,7 @@ import { PlanejamentoAtividade } from "@/pages/PlanejamentoAtividade";
 
 type Search = { dia?: string; turma?: string };
 
-export const Route = createFileRoute("/planejamento/atividade")({
+export const Route = createFileRoute("/planejamento_/atividade")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     dia: typeof s.dia === "string" ? s.dia : undefined,
     turma: typeof s.turma === "string" ? s.turma : undefined,

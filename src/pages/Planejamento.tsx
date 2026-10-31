@@ -8,13 +8,12 @@ import {
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
   Link2, MessageSquare, Send, Layers, BookOpen, Smile, Frown, ArrowRight, ArrowDownUp, Download, Printer, Pencil,
 } from "lucide-react";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { TopNav, novoTokensCss } from "@/components/layout/TopNav";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
 import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaListPrint";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
-import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -412,6 +411,35 @@ const css = `
 @media(max-width:380px){
   .pl-tabbar{grid-template-columns:1fr;}
 }
+/* ===== Layout novo (sem barra lateral, paleta nova) ===== */
+.pl-root{
+  --primary:#0F766E;--primary-dark:#115E59;
+  --navy:#1C1917;--navy-2:#115E59;--navy-deep:#134E4A;--navy-darker:#0F3D3A;
+  --orange:#0F766E;--orange-2:#115E59;--orange-soft:#E6F2EF;--orange-soft-2:#D3EAE5;
+  --ink:#1C1917;--ink-2:#44403C;--muted:#78716C;--line:#E7E5E4;--bg:#F5F4EF;
+}
+.pl-root h1,.pl-root h2,.pl-root h3,.pl-root h4{font-family:'Plus Jakarta Sans','Inter',sans-serif !important;font-weight:700;}
+.pl-app{display:block !important;max-width:1200px;margin:0 auto;}
+.pl-hero{margin:24px 24px 0 !important;background:#E6F2EF !important;background-image:radial-gradient(rgba(15,118,110,.10) 1.2px,transparent 1.2px) !important;background-size:18px 18px !important;color:#1C1917 !important;box-shadow:none !important;border-radius:20px !important;}
+.pl-hero::after{background:#F2B33D !important;opacity:.22;}
+.pl-hero .badge{background:#fff !important;border-color:rgba(15,118,110,.18) !important;color:#0F766E !important;font-family:'Inter',sans-serif !important;}
+.pl-hero h1{color:#1C1917 !important;font-weight:800 !important;}
+.pl-hero h1 em{color:#0F766E !important;}
+.pl-hero .lead{color:#44403C !important;}
+.pl-hero .lead strong{color:#1C1917 !important;}
+.pl-hero .hbc.solid{background:#0F766E !important;color:#fff !important;}
+.pl-hero .hbc.solid:hover{background:#115E59 !important;}
+.pl-hero .hbc.outline{background:#fff !important;color:#1C1917 !important;border-color:#D6D3D1 !important;}
+.pl-hero .hbc.outline:hover{border-color:#0F766E !important;color:#0F766E !important;}
+@media(max-width:820px){.pl-hero{margin:14px 12px 0 !important;}.pl-hero::after{display:none !important;}}
+.pl-tabbar{background:#fff !important;border:1px solid #E7E5E4 !important;border-radius:14px !important;padding:6px !important;margin-top:20px !important;}
+.pl-tab{color:#57534E !important;font-size:13px !important;font-weight:500 !important;justify-content:center !important;text-align:center;padding:10px 8px !important;border-radius:10px !important;}
+.pl-tab .lbl{color:inherit !important;}
+.pl-tab .num{display:none !important;}
+.pl-tab:hover{background:#F5F4EF !important;color:#1C1917 !important;}
+.pl-tab.active{background:#E6F2EF !important;color:#0F766E !important;font-weight:700 !important;box-shadow:none !important;}
+@media(max-width:820px){.pl-tabbar{margin:14px 12px 0 !important;}.pl-tab{font-size:12.5px !important;}}
+
 `;
 
 type MKey = "m1" | "m2" | "m3" | "m4" | "m5" | "m6" | "atv" | "pcd" | "trilhas";
@@ -3207,14 +3235,14 @@ export function Planejamento() {
   return (
     !hydrated ? (
       <div
-        className="pl-root"
+        className="pl-root nv"
         data-testid="planejamento-skeleton"
         role="status"
         aria-busy="true"
         aria-live="polite"
         aria-label="Carregando planejamento"
       >
-        <style>{sidebarCss}</style>
+        <style>{novoTokensCss}</style>
         <style>{css}</style>
         <style>{emptyStateCss}</style>
         <style>{`
@@ -3226,10 +3254,9 @@ export function Planejamento() {
         <p className="pl-sr-only" data-testid="planejamento-skeleton-sr">
           Carregando o planejamento, por favor aguarde. O conteúdo aparecerá automaticamente assim que estiver pronto.
         </p>
+        <TopNav />
         <div className="pl-app" aria-hidden="true">
-          <AppSidebar active="planning" />
           <div className="pl-main">
-            <AppHeader breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }]} />
             <div className="pl-hero">
               <div className="pl-sk" style={{ width: 110, height: 22, marginBottom: 14 }} />
               <div className="pl-sk" style={{ width: "70%", height: 36, marginBottom: 10 }} />
@@ -3253,20 +3280,13 @@ export function Planejamento() {
         </div>
       </div>
     ) : (
-    <div className="pl-root">
-      <style>{sidebarCss}</style>
+    <div className="pl-root nv">
+      <style>{novoTokensCss}</style>
       <style>{css}</style>
       <style>{emptyStateCss}</style>
+      <TopNav />
       <div className="pl-app">
-        <AppSidebar active="planning" />
         <div className="pl-main">
-          <AppHeader
-            breadcrumb={[
-              { label: "Sua sala" },
-              { label: isEi ? "Roteiros de experiência" : "Planejamento" },
-              { label: isEi && cfg.crumb === "Diário de bordo" ? "Diário de observação" : cfg.crumb },
-            ]}
-          />
           {isEi && (
             <div style={{ background: "#ECFDF5", borderBottom: "1px solid #A7F3D0", color: "#065F46", padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
               🌱 <strong>Modo Educação Infantil ativo.</strong> Para roteiros de experiência com Campos de Experiência, abra o

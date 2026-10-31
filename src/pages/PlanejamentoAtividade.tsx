@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Sparkles, BookOpen, Target, Layers, Clock, Users, ChevronDown } from "lucide-react";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { Header as AppHeader } from "@/components/Header";
+import { TopNav, novoTokensCss } from "@/components/layout/TopNav";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -35,46 +34,59 @@ const css = `
 }
 .pa-main{display:flex;flex-direction:column;min-width:0;}
 .pa-back{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#64748B;font-weight:600;background:none;border:none;cursor:pointer;padding:6px 0;text-decoration:none;}
-.pa-back:hover{color:#FF7A45;}
-.pa-hero{margin:18px 24px 0;background:linear-gradient(135deg,#1B2A4E 0%,#243762 100%);border-radius:16px;padding:24px 28px;color:#fff;position:relative;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.08);}
-.pa-hero::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,122,69,.18) 0%,rgba(255,122,69,0) 70%);pointer-events:none;}
-.pa-hero .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,122,69,.15);border:1px solid rgba(255,122,69,.3);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;color:#FF7A45;letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.pa-back:hover{color:#0F766E;}
+.pa-hero{margin:18px 24px 0;background:linear-gradient(135deg,#0F766E 0%,#115E59 100%);border-radius:16px;padding:24px 28px;color:#fff;position:relative;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.08);}
+.pa-hero::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(15,118,110,.18) 0%,rgba(15,118,110,0) 70%);pointer-events:none;}
+.pa-hero .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(15,118,110,.15);border:1px solid rgba(15,118,110,.3);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;color:#0F766E;letter-spacing:.1em;text-transform:uppercase;font-family:'Inter',sans-serif;}
 .pa-hero h1{font-family:'Fraunces',Georgia,serif;font-size:28px;font-weight:600;color:#fff;margin:14px 0 0;line-height:1.15;letter-spacing:-.02em;}
-.pa-hero h1 em{color:#FF7A45;font-style:normal;display:block;}
+.pa-hero h1 em{color:#0F766E;font-style:normal;display:block;}
 .pa-hero p{margin-top:10px;color:#CBD5E1;font-size:13.5px;line-height:1.55;max-width:780px;}
 
 .pa-grid{margin:18px 24px 80px;display:grid;grid-template-columns:1fr 360px;gap:18px;}
 @media(max-width:1100px){.pa-grid{grid-template-columns:1fr;}}
 .pa-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:20px;box-shadow:0 1px 2px rgba(15,23,42,.06);}
 .pa-card h2{font-family:'Fraunces',Georgia,serif;font-size:17px;font-weight:600;color:#0F172A;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
-.pa-card h2 svg{color:#FF7A45;}
+.pa-card h2 svg{color:#0F766E;}
 .pa-card .sub{font-size:12.5px;color:#64748B;margin:0 0 16px;}
 
 .pa-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 @media(max-width:680px){.pa-row{grid-template-columns:1fr;}}
 .pa-field{display:flex;flex-direction:column;gap:5px;}
-.pa-field label{font-size:10.5px;color:#64748B;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.pa-field label{font-size:10.5px;color:#64748B;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'Inter',sans-serif;}
 .pa-input,.pa-select,.pa-text{width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:9px;font-size:13px;background:#fff;color:#0F172A;font-family:inherit;}
-.pa-input:focus,.pa-select:focus,.pa-text:focus{outline:none;border-color:#FF7A45;box-shadow:0 0 0 3px rgba(255,122,69,.12);}
+.pa-input:focus,.pa-select:focus,.pa-text:focus{outline:none;border-color:#0F766E;box-shadow:0 0 0 3px rgba(15,118,110,.12);}
 .pa-text{min-height:84px;resize:vertical;line-height:1.45;}
 .pa-help{font-size:11px;color:#94A3B8;margin-top:4px;}
 
 .pa-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
 .pa-pill{padding:6px 11px;border:1px solid #E2E8F0;background:#fff;border-radius:999px;font-size:11.5px;color:#334155;cursor:pointer;transition:.15s;}
 .pa-pill:hover{border-color:#CBD5E1;}
-.pa-pill.on{background:#1B2A4E;color:#fff;border-color:#1B2A4E;}
+.pa-pill.on{background:#0F766E;color:#fff;border-color:#0F766E;}
 
 .pa-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap;}
 .pa-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;border:1px solid #E2E8F0;background:#fff;color:#0F172A;cursor:pointer;transition:.15s;}
 .pa-btn:hover{border-color:#CBD5E1;background:#FBFBFD;}
-.pa-btn.primary{background:linear-gradient(135deg,#FF6A2C,#EA580C);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(255,106,44,.25);}
+.pa-btn.primary{background:#0F766E;color:#fff;border-color:transparent;box-shadow:none;}
+.pa-btn.primary:hover{background:#115E59;}
 .pa-btn.primary:hover{transform:translateY(-1px);}
 
 .pa-side h3{font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:600;color:#0F172A;margin:0 0 8px;display:flex;align-items:center;gap:7px;}
-.pa-side h3 svg{color:#FF7A45;}
+.pa-side h3 svg{color:#0F766E;}
 .pa-side ul{margin:0;padding-left:18px;color:#475569;font-size:12.5px;line-height:1.6;}
 .pa-side ul li{margin-bottom:4px;}
-.pa-side .tip{background:linear-gradient(135deg,#FFF4ED 0%,#FFFAF7 100%);border:1px solid #FED7C4;border-radius:12px;padding:14px;font-size:12.5px;color:#9A3412;line-height:1.5;}
+.pa-side .tip{background:linear-gradient(135deg,#FDF3DC 0%,#FFFCF5 100%);border:1px solid #F5DFA8;border-radius:12px;padding:14px;font-size:12.5px;color:#7A4E0E;line-height:1.5;}
+/* ===== Layout novo (sem barra lateral, paleta nova) ===== */
+.pa-root{background:#F5F4EF !important;color:#1C1917 !important;}
+.pa-root h1,.pa-root h2,.pa-root h3{font-family:'Plus Jakarta Sans','Inter',sans-serif !important;}
+.pa-app{display:block !important;max-width:1200px;margin:0 auto;}
+.pa-hero{background:#E6F2EF !important;background-image:radial-gradient(rgba(15,118,110,.10) 1.2px,transparent 1.2px) !important;background-size:18px 18px !important;color:#1C1917 !important;box-shadow:none !important;border-radius:20px !important;}
+.pa-hero::after{background:#F2B33D !important;opacity:.22;}
+@media(max-width:820px){.pa-hero::after{display:none !important;}}
+.pa-hero h1{color:#1C1917 !important;}
+.pa-hero h1 em{color:#0F766E !important;}
+.pa-hero p{color:#44403C !important;}
+.pa-hero .badge{background:#fff !important;border-color:rgba(15,118,110,.18) !important;color:#0F766E !important;}
+
 `;
 
 const ETAPAS = [
@@ -124,7 +136,7 @@ const COMPONENTE_INITIAL: ComponenteState = {
 };
 
 export function PlanejamentoAtividade() {
-  const search = useSearch({ from: "/planejamento/atividade" });
+  const search = useSearch({ from: "/planejamento_/atividade" });
   const navigate = useNavigate();
   const sofia = useSofia();
   const { curriculos } = useCurriculoMunicipal();
@@ -333,13 +345,12 @@ export function PlanejamentoAtividade() {
   };
 
   return (
-    <div className="pa-root">
-      <style>{sidebarCss}</style>
+    <div className="pa-root nv">
+      <style>{novoTokensCss}</style>
       <style>{css}</style>
+      <TopNav />
       <div className="pa-app">
-        <AppSidebar active="planning" />
         <div className="pa-main">
-          <AppHeader breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }, { label: "Nova atividade" }]} />
 
           <div style={{ padding: "10px 24px 0" }}>
             <Link to="/planejamento" className="pa-back"><ArrowLeft size={14} /> Voltar ao planejamento</Link>
@@ -373,7 +384,7 @@ export function PlanejamentoAtividade() {
                   {!loadingTurmas && minhasTurmas.length === 0 && (
                     <span className="pa-help">
                       Nenhuma turma encontrada no seu perfil.{" "}
-                      <Link to="/configuracoes" style={{ color: "#FF7A45", fontWeight: 700 }}>Cadastrar agora</Link>.
+                      <Link to="/configuracoes" style={{ color: "#0F766E", fontWeight: 700 }}>Cadastrar agora</Link>.
                     </span>
                   )}
                 </div>
