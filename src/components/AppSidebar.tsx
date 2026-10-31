@@ -64,6 +64,26 @@ export const sidebarCss = `
 .sb-bruna .live::before{content:"";width:5px;height:5px;border-radius:50%;background:#fff;animation:ap-pulse 2s infinite;}
 .sb-bruna-locked{margin:0 10px 10px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.16);border-radius:10px;padding:9px 10px;font-size:10.5px;color:rgba(255,255,255,.55);line-height:1.35;}
 .sb-bruna-locked b{color:rgba(255,255,255,.85);font-weight:700;display:block;font-size:11px;margin-bottom:2px;}
+/* ===== Tema claro e colorido ===== */
+.ap-sidebar{background:#FFFFFF !important;color:#1E293B !important;border-right:1px solid #EEF0F5;}
+.ap-sidebar::before{background:radial-gradient(circle,rgba(255,122,69,.10) 0%,transparent 65%) !important;}
+.ap-sidebar .sb-logo-text{color:#1E293B !important;}
+.ap-sidebar .sb-cmdk{background:#F6F7FB !important;border-color:#EEF0F5 !important;color:#64748B !important;}
+.ap-sidebar .sb-cmdk:hover{background:#EEF1F8 !important;}
+.ap-sidebar .sb-cmdk-shortcut{background:#fff !important;color:#64748B !important;border:1px solid #E2E8F0;}
+.ap-sidebar .sb-section-label{color:#94A3B8 !important;}
+.ap-sidebar .sb-item{--c:#64748B;color:#475569 !important;font-weight:600;transition:background .18s,color .18s,transform .18s;}
+.ap-sidebar .sb-item .sb-icon{color:var(--c);}
+.ap-sidebar .sb-item:hover{background:color-mix(in srgb,var(--c) 9%,#fff) !important;color:#1E293B !important;transform:translateX(2px);}
+.ap-sidebar .sb-item.active{background:color-mix(in srgb,var(--c) 14%,#fff) !important;color:#1E293B !important;box-shadow:none !important;font-weight:800;}
+.ap-sidebar .sb-item.active::before{background:var(--c) !important;}
+.ap-sidebar .sb-shortcut{color:#94A3B8 !important;}
+.ap-sidebar .sb-foot{border-top-color:#EEF0F5 !important;}
+.ap-sidebar .sb-version{color:#94A3B8 !important;}
+.ap-sidebar .sb-bruna{background:#F8FAFC !important;border-color:#EEF0F5 !important;color:#1E293B !important;}
+.ap-sidebar .sb-bruna .sub{color:#64748B !important;}
+.ap-sidebar .sb-bruna-locked{background:#F8FAFC !important;border-color:#E2E8F0 !important;color:#64748B !important;}
+.ap-sidebar .sb-bruna-locked b{color:#1E293B !important;}
 @media(max-width:1100px){.ap-sidebar{width:240px;}}
 @media(max-width:820px){.ap-sidebar,.ap-sidebar-shell{display:none !important;}}
 `;
@@ -72,7 +92,7 @@ const Svg = ({ c, ...rest }: { c: React.ReactNode } & React.SVGProps<SVGSVGEleme
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...rest}>{c}</svg>
 );
 
-export type SidebarKey = "home" | "assistant" | "planning" | "documents" | "reports" | "inclusion" | "agenda" | "settings";
+export type SidebarKey = "home" | "sala" | "assistant" | "planning" | "documents" | "reports" | "inclusion" | "agenda" | "settings";
 
 export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: () => void }) {
   const cls = (k: SidebarKey) => "sb-item" + (active === k ? " active" : "");
@@ -170,32 +190,36 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
       </button>
       <div className="sb-section-label">Sua sala</div>
       <nav className="sb-nav">
-        <Link to="/" className={cls("home")} aria-label="Página inicial">
+        <Link to="/" className={cls("home")} style={{ ["--c" as string]: "#FF7A45" }} aria-label="Página inicial">
           <Svg className="sb-icon" c={<><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />
           <span>Página inicial</span><span className="sb-shortcut">H</span>
         </Link>
-        <Link to="/assistente" className={cls("assistant")} aria-label="Assistente IA">
+        <Link to="/minha-sala" className={cls("sala")} aria-label="Minha sala" style={{ ["--c" as string]: "#6366F1" }}>
+          <Svg className="sb-icon" c={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />
+          <span>Minha sala</span>
+        </Link>
+        <Link to="/assistente" className={cls("assistant")} style={{ ["--c" as string]: "#8B5CF6" }} aria-label="Assistente IA">
           <Svg className="sb-icon" c={<><path d="M12 2v3"/><path d="M12 19v3"/><circle cx="12" cy="12" r="6"/><path d="M5 12H2"/><path d="M22 12h-3"/></>} />
           <span>Assistente IA</span><span className="sb-badge">NOVO</span>
         </Link>
-        <Link to="/planejamento" className={cls("planning")} aria-label="Planejamento">
+        <Link to="/planejamento" className={cls("planning")} style={{ ["--c" as string]: "#0EA5E9" }} aria-label="Planejamento">
           <Svg className="sb-icon" c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
           <span>Planejamento</span><span className="sb-shortcut">P</span>
         </Link>
-        <Link to="/relatorios" className={cls("reports")} aria-label="Relatórios">
+        <Link to="/relatorios" className={cls("reports")} style={{ ["--c" as string]: "#F59E0B" }} aria-label="Relatórios">
           <Svg className="sb-icon" c={<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></>} />
           <span>Relatórios</span><span className="sb-shortcut">R</span>
         </Link>
-        <Link to="/inclusao" className={cls("inclusion")} aria-label="Inclusão">
+        <Link to="/inclusao" className={cls("inclusion")} style={{ ["--c" as string]: "#EC4899" }} aria-label="Inclusão">
           <Svg className="sb-icon" c={<><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></>} />
           <span>Inclusão</span><span className="sb-badge exclusive">EXCLUSIVO</span>
         </Link>
-        <Link to="/agenda" className={cls("agenda")} aria-label="Agenda escolar">
+        <Link to="/agenda" className={cls("agenda")} style={{ ["--c" as string]: "#10B981" }} aria-label="Agenda escolar">
           <Svg className="sb-icon" c={<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></>} />
           <span>Agenda escolar</span><span className="sb-shortcut">A</span>
         </Link>
         <div className="sb-section-label" style={{ marginTop: 12 }}>Conta</div>
-        <Link to="/configuracoes" className={cls("settings")} aria-label="Configurações">
+        <Link to="/configuracoes" className={cls("settings")} style={{ ["--c" as string]: "#64748B" }} aria-label="Configurações">
           <Svg className="sb-icon" c={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>} />
           <span>Configurações</span>
         </Link>
@@ -204,7 +228,7 @@ export function AppSidebar({ active, onCmdK }: { active: SidebarKey; onCmdK?: ()
           <span>Sair</span>
         </button>
         {isAdmin && (
-          <Link to="/admin" className="sb-item" aria-label="Painel administrativo" style={{marginTop:8,background:"rgba(255,122,69,.10)",color:"#FF7A45",fontWeight:700}}>
+          <Link to="/admin" className="sb-item" aria-label="Painel administrativo" style={{ marginTop: 8, ["--c" as string]: "#FF7A45" }}>
             <Svg className="sb-icon" c={<><path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z"/></>} />
             <span>Admin</span>
           </Link>
