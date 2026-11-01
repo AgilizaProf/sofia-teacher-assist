@@ -81,7 +81,7 @@ export const Route = createRootRoute({
     { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     {
       rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap",
     },
   ],
 }),
@@ -299,6 +299,8 @@ function RootComponent() {
   useHighContrast();
   const { ready, authed, isPublicRoute } = useAuthGuard();
   const showSofia = ready && authed && !isPublicRoute;
+  // Páginas no novo visual "Painel" já têm navegação própria (PainelNav).
+  const isPainelPage = loc.pathname === "/";
 
   if (!ready && !isPublicRoute) {
     return (
@@ -343,7 +345,7 @@ function RootComponent() {
             <SofiaProvider>
               <CreditosGateProvider>
                 <MaintenanceBanner />
-                {showSofia && <MobileTopBar />}
+                {showSofia && !isPainelPage && <MobileTopBar />}
                 <Outlet />
               </CreditosGateProvider>
               {showSofia && (
