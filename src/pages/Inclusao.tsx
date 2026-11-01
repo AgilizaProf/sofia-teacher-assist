@@ -1966,6 +1966,30 @@ ${ident}
     ])
   ).sort();
   const diagsUnicos = Array.from(new Set(students.map((s) => s.diag).filter(Boolean))).sort();
+  // Resumo de todos os alunos PCD, mostrado no topo da lista.
+  const resumoTurma = useMemo(() => {
+    let anamCompletas = 0;
+    let anamIniciadas = 0;
+    let peiAtivos = 0;
+    let registros = 0;
+    let objTotal = 0;
+    let objAtingidos = 0;
+    for (const st of students) {
+      const m = /(\d+)\s*\/\s*(\d+)/.exec(st.anamnese || "");
+      const feitos = m ? Number(m[1]) : 0;
+      const total = m ? Number(m[2]) : 0;
+      if (total > 0 && feitos >= total) anamCompletas++;
+      else if (feitos > 0) anamIniciadas++;
+      const pei = (peiByStudent[st.id] || {}) as Record<string, unknown>;
+      if (peiTemConteudo(pei as Partial<PEIData>)) peiAtivos++;
+      const objs = objetivosDoPei(pei);
+      objTotal += objs.length;
+      objAtingidos += objs.filter((o) => objetivoConcluido(o.status)).length;
+      registros += (regByStudent[st.id] || []).length;
+    }
+    return { total: students.length, anamCompletas, anamIniciadas, peiAtivos, registros, objTotal, objAtingidos };
+  }, [students, peiByStudent, regByStudent]);
+
   const filtered = students.filter((s) => {
     if (turmaFilter.length > 0 && !turmaFilter.includes(s.turma)) return false;
     if (diagFilter.length > 0 && !diagFilter.includes(s.diag)) return false;
@@ -2134,6 +2158,38 @@ ${ident}
                   </button>
                 </div>
 
+                {resumoTurma.total > 0 && (
+                  <>
+                    <h2 className="inc-block-title">Situação dos alunos</h2>
+                    <div className="inc-resumo">
+                      <div className="inc-res">
+                        <span className="ic green" aria-hidden><Plus size={16} /></span>
+                        <span className="lb">Alunos PCD</span>
+                        <b>{resumoTurma.total}</b>
+                        <small>cadastrados na Inclusão</small>
+                      </div>
+                      <div className="inc-res">
+                        <span className="ic sky" aria-hidden><FileText size={16} /></span>
+                        <span className="lb">Anamnese completa</span>
+                        <b>{resumoTurma.anamCompletas}<span>/{resumoTurma.total}</span></b>
+                        <small>{resumoTurma.anamIniciadas > 0 ? `${resumoTurma.anamIniciadas} em andamento` : "nenhuma em andamento"}</small>
+                      </div>
+                      <div className="inc-res">
+                        <span className="ic sun" aria-hidden><CheckCircle2 size={16} /></span>
+                        <span className="lb">PEI ativo</span>
+                        <b>{resumoTurma.peiAtivos}<span>/{resumoTurma.total}</span></b>
+                        <small>{resumoTurma.objTotal > 0 ? `${resumoTurma.objAtingidos}/${resumoTurma.objTotal} objetivos realizados` : "sem objetivos definidos"}</small>
+                      </div>
+                      <div className="inc-res">
+                        <span className="ic coral" aria-hidden><Pencil size={16} /></span>
+                        <span className="lb">Registros de aula</span>
+                        <b>{resumoTurma.registros}</b>
+                        <small>somando todos os alunos</small>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <h2 className="inc-block-title">Seus alunos</h2>
                 <p className="inc-block-sub">Toque em um aluno para abrir PEI, Anamnese, Planejamento, Registros e Relatório.</p>
                 <div className="list-toolbar">
@@ -2277,80 +2333,8 @@ ${ident}
                   <div className="hero-r">
                     <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> {isMobile ? "PEI" : "Ver PEI completo"}</button>
                     <button className="btn btn-secondary" onClick={() => abrirEditarAluno(selected)} title="Editar nome, turma, ano escolar, CIDs e AEE"><Pencil size={14} /> {isMobile ? "Dados" : "Editar dados"}</button>
+                    <button className="btn btn-secondary" onClick={() => setObjetivosModalOpen(true)} title="Ver e atualizar os objetivos do PEI"><CheckCircle2 size={14} /> {isMobile ? "Objetivos" : "Objetivos do PEI"}</button>
                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => openSofiaForSelected({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> {isMobile ? "Adaptar" : "Adaptar aula de hoje"}</button>
-                  </div>
-                </div>
-
-                <div className="kpis">
-                  <div className="kpi kpi-accent">
-                    <div className="kpi-label">Tempo economizado neste aluno</div>
-                    <div className="kpi-value">
-                      {Math.floor(tempoAlunoMin / 60)}h
-                      <span className="small"> {String(tempoAlunoMin % 60).padStart(2, "0")}min</span>
-                    </div>
-                    <div className="kpi-sub">
-                      {tempoAlunoMin > 0
-                        ? "integra o contador do Painel"
-                        : "comece a usar a Sofia para acumular ganhos"}
-                    </div>
-                  </div>
-                  <div className="kpi">
-                    <div className="kpi-label">Aulas adaptadas</div>
-                    <div className="kpi-value">{selecionadosCount}<span className="small"> /{studentPlans.length}</span></div>
-                    <div className="kpi-sub">
-                      {studentPlans.length === 0
-                        ? "gere atividades em Planejamento"
-                        : selecionadosCount === 0
-                        ? `${studentPlans.length} disponível(is) · selecione em Planejamento`
-                        : `${selecionadosCount} selecionada(s) em Planejamento`}
-                    </div>
-                  </div>
-                  {(() => {
-                    const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
-                    const objs = objetivosDoPei(peiSel);
-                    const atingidos = objs.filter((o) => objetivoConcluido(o.status)).length;
-                    return (
-                      <button
-                        type="button"
-                        className="kpi"
-                        onClick={() => setObjetivosModalOpen(true)}
-                        style={{ textAlign: "left", cursor: "pointer", border: "1px solid var(--border)", background: "#fff" }}
-                        title="Abrir lista de objetivos do PEI"
-                      >
-                        <div className="kpi-label">Objetivos do PEI realizados</div>
-                        <div className="kpi-value">{atingidos}<span className="small"> /{objs.length}</span></div>
-                        <div className="kpi-sub">
-                          {objs.length === 0 ? "defina objetivos no PEI" : `clique para revisar status`}
-                        </div>
-                      </button>
-                    );
-                  })()}
-                  <div className="kpi">
-                    <div className="kpi-label">Evolução pedagógica</div>
-                    {(() => {
-                      const totalRegs = (regByStudent[studentKey] || []).length;
-                      const hasData = eixosPreenchidos > 0 || totalRegs > 0;
-                      if (!hasData) {
-                        return (
-                          <>
-                            <div className="kpi-value" style={{ color: "var(--muted)" }}>Sem dados</div>
-                            <div className="kpi-sub">aguardando primeiros registros</div>
-                          </>
-                        );
-                      }
-                      const avg = skillsEvolucao.reduce((acc, s) => acc + s.p, 0) / skillsEvolucao.length;
-                      let label = "Em desenvolvimento";
-                      let color = "var(--warn, #b8860b)";
-                      if (avg >= 70) { label = "Progredindo"; color = "var(--success, #16a34a)"; }
-                      else if (avg < 40) { label = "Necessita apoio"; color = "var(--danger, #dc2626)"; }
-                      else { color = "var(--accent, #d97706)"; }
-                      return (
-                        <>
-                          <div className="kpi-value" style={{ color }}>{label}</div>
-                          <div className="kpi-sub">média {Math.round(avg)}% · {totalRegs} registro{totalRegs === 1 ? "" : "s"}</div>
-                        </>
-                      );
-                    })()}
                   </div>
                 </div>
 
