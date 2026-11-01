@@ -300,7 +300,7 @@ function RootComponent() {
   const { ready, authed, isPublicRoute } = useAuthGuard();
   const showSofia = ready && authed && !isPublicRoute;
   // Páginas no novo visual "Painel" já têm navegação própria (PainelNav).
-  const isPainelPage = ["/", "/relatorios", "/planejamento", "/inclusao"].includes(loc.pathname);
+  const isPainelPage = ["/", "/relatorios", "/planejamento", "/inclusao", "/agenda"].includes(loc.pathname);
 
   if (!ready && !isPublicRoute) {
     return (
