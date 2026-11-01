@@ -1,14 +1,16 @@
 import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from "react";
 import { AlunoCard } from "@/components/inclusao/AlunoCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSearch, useNavigate } from "@tanstack/react-router";
+import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
   ChevronRight, ChevronDown, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb,
   Pencil, Save, FileDown,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
+import { incPainelCss } from "@/pages/inclusaoPainelCss";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { buildCidsPromptBlock } from "@/lib/inclusao/cidPrompt";
@@ -33,7 +35,6 @@ import { useUser } from "@/lib/mockData";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
-import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useTurmas } from "@/hooks/useTurmas";
@@ -59,7 +60,7 @@ const css = `
 }
 .inc-root *{box-sizing:border-box;}
 .inc-root h1,.inc-root h2,.inc-root h3,.inc-root h4{margin:0;letter-spacing:-.02em;color:var(--text);}
-.inc-root button{font-family:inherit;cursor:pointer;border:none;background:transparent;color:inherit;}
+.inc-root :where(button){font-family:inherit;cursor:pointer;border:none;background:transparent;color:inherit;}
 .inc-root p{margin:0;}
 .inc-root input,.inc-root textarea,.inc-root select{font-family:inherit;font-size:13px;}
 
@@ -2100,53 +2101,41 @@ ${ident}
   };
 
   return (
-    <div className="inc-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss + printCss }} />
+    <div className="pn inc-root">
+      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + tempoChipCss + css + emptyStateCss + printCss + incPainelCss }} />
+      <PainelNav />
       <div className="inc-app">
-        <AppSidebar active="inclusion" />
-
         <main className="inc-main">
-          {(() => {
-            const alunoCtx = sofiaCtx.entity.aluno_atual;
-            const eixos = alunoCtx?.anamnese_eixos_preenchidos ?? 0;
-            const proxAula = sofiaCtx.dataState.proxima_aula;
-            const adaptarDisabled = eixos < 4 || !proxAula;
-            const adaptarTooltip = "Disponível após Anamnese 4/16 + planejamento da semana cadastrado";
-            const crumbs =
-              view === "list"
-                ? [{ label: "Sua sala" }, { label: "Inclusão" }]
-                : [
-                    { label: "Sua sala" },
-                    { label: "Inclusão", onClick: () => goView("list") },
-                    { label: selected?.turma || "Aluno", onClick: () => goView("list") },
-                    { label: selected?.name || "—" },
-                  ];
-            return (
-              <AppHeader
-                breadcrumb={crumbs}
-                actions={
-                  <>
-                    <button className="inc-btn-ghost" onClick={() => setTutorialOpen(true)}>
-                      <HelpCircle size={14} /> Tutorial Inclusão
-                    </button>
-                    {view === "detail" && (
-                      <button className="inc-btn-ghost" onClick={() => setPeiOpen(true)}>
-                        <Download size={14} /> Exportar PEI
-                      </button>
-                    )}
-                  </>
-                }
-              />
-            );
-          })()}
-
           <div className="inc-content">
             {view === "list" && (
               <>
-                <div className="list-hero">
-                  <h1>Alunos · Educação Inclusiva</h1>
-                  <p>Selecione um aluno para acessar PEI, Anamnese, Planejamento, Registros e Relatórios.</p>
+                <div className="pn-strip">
+                  <TempoChip />
                 </div>
+                <h1 className="inc-title">Inclusão</h1>
+
+                <h2 className="inc-block-title">O que você quer fazer?</h2>
+                <div className="inc-actions">
+                  <button type="button" className="inc-action main" onClick={() => setNewStudentOpen(true)}>
+                    <span className="ic" aria-hidden><Plus size={22} /></span>
+                    <span className="tx"><b>Cadastrar aluno PCD</b><small>Nome, turma, diagnóstico, CID e AEE.</small></span>
+                  </button>
+                  <Link to="/inclusao/pei" className="inc-action">
+                    <span className="ic sky" aria-hidden><FileText size={22} /></span>
+                    <span className="tx"><b>PEI / PDI</b><small>A Sofia monta o plano individual de cada aluno.</small></span>
+                  </Link>
+                  <Link to="/planejamento" search={{ m: "pcd" } as never} className="inc-action">
+                    <span className="ic sun" aria-hidden><Sparkles size={22} /></span>
+                    <span className="tx"><b>Atividade adaptada</b><small>Planeje uma atividade com adaptações por necessidade.</small></span>
+                  </Link>
+                  <button type="button" className="inc-action" onClick={() => setTutorialOpen(true)}>
+                    <span className="ic ink" aria-hidden><HelpCircle size={22} /></span>
+                    <span className="tx"><b>Como funciona</b><small>Tutorial rápido da Inclusão.</small></span>
+                  </button>
+                </div>
+
+                <h2 className="inc-block-title">Seus alunos</h2>
+                <p className="inc-block-sub">Toque em um aluno para abrir PEI, Anamnese, Planejamento, Registros e Relatório.</p>
                 <div className="list-toolbar">
                   <div className="list-search">
                     <Search size={14} />
@@ -2365,16 +2354,25 @@ ${ident}
                   </div>
                 </div>
 
-                <div className="tabs" role="tablist">
+                <h2 className="inc-block-title">O que você quer ver de {selected.name.split(" ")[0]}?</h2>
+                <div className="inc-sections" role="tablist">
                   {([
-                    { k: "hoje", label: "Visão de hoje" },
-                    { k: "anam", label: "Anamnese" },
-                    { k: "plan", label: "Planejamento" },
-                    { k: "reg", label: "Registros" },
-                    { k: "rel", label: "Relatório IA" },
-                  ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
-                    <button key={t.k} className={"tab" + (tab === t.k ? " active" : "")} onClick={() => setActiveTab(t.k)} role="tab" aria-selected={tab === t.k}>
-                      {t.label}{t.count && <span className="tab-count">{t.count}</span>}
+                    { k: "hoje", label: "Visão de hoje", desc: "Próximo passo e resumo do aluno.", icon: <CheckCircle2 size={20} />, cor: "green" },
+                    { k: "anam", label: "Anamnese", desc: "Perfil, histórico e necessidades.", icon: <FileText size={20} />, cor: "sky" },
+                    { k: "plan", label: "Planejamento", desc: "Aulas adaptadas para este aluno.", icon: <Sparkles size={20} />, cor: "sun" },
+                    { k: "reg", label: "Registros", desc: "O que aconteceu em cada aula.", icon: <Pencil size={20} />, cor: "coral" },
+                    { k: "rel", label: "Relatório IA", desc: "Relatório escrito pela Sofia.", icon: <Download size={20} />, cor: "lilac" },
+                  ] as Array<{ k: TabKey; label: string; desc: string; icon: React.ReactNode; cor: string }>).map((t) => (
+                    <button
+                      key={t.k}
+                      type="button"
+                      className={"inc-section" + (tab === t.k ? " active" : "")}
+                      onClick={() => setActiveTab(t.k)}
+                      role="tab"
+                      aria-selected={tab === t.k}
+                    >
+                      <span className={"ic " + t.cor} aria-hidden>{t.icon}</span>
+                      <span className="tx"><b>{t.label}</b><small>{t.desc}</small></span>
                     </button>
                   ))}
                 </div>
