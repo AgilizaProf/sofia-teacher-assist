@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
+import { painelCss } from "@/pages/relatoriosPainelCss";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { useUser } from "@/lib/mockData";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
-import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
@@ -19,7 +19,7 @@ import { CUSTOS } from "@/lib/creditos/policy";
 import { isEducacaoInfantilGrade, EI_GRADE_LABELS, formatTurmaGrade } from "@/lib/turmaGrade";
 import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 import {
-  Search, Bell, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
+  Search, Star, Sparkles, ArrowRight, PlayCircle, Clock, Edit3,
   CheckCircle2, FileText, Users, Calendar, Filter, ChevronDown, MoreHorizontal,
   MessageSquare, Download, Copy, X, ClipboardList, UserPlus, RefreshCw, Trash2, Settings,
   ChevronLeft, ChevronRight,
@@ -49,8 +49,8 @@ const css = `
   -webkit-font-smoothing:antialiased;min-height:100vh;display:flex;width:100%;
 }
 .rel-root *{box-sizing:border-box;}
-.rel-root button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit;}
-.rel-root a{color:inherit;text-decoration:none;}
+.rel-root :where(button){font-family:inherit;cursor:pointer;border:0;background:none;color:inherit;}
+.rel-root :where(a){color:inherit;text-decoration:none;}
 .rel-main{display:flex;flex-direction:column;min-width:0;flex:1;}
 .rel-topbar{display:flex;align-items:center;gap:14px;padding:14px 28px;background:var(--paper);
   border-bottom:1px solid rgba(17,24,39,.06);position:sticky;top:0;z-index:5;}
@@ -1536,22 +1536,125 @@ ${parecerHtml}
     ) : null;
 
   return (
-    <div className="rel-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss }} />
-      <AppSidebar active="reports" />
+    <div className="pn rel-root">
+      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + css + emptyStateCss + painelCss }} />
+      <PainelNav />
 
       <main className="rel-main">
-        <AppHeader
-          breadcrumb={[{ label: "Sua sala" }, { label: "Relatórios" }, { label: isEi ? "Relatórios de desenvolvimento" : "Pareceres descritivos" }]}
-          actions={
-            <>
-              <button className="ah-icon" aria-label="Buscar"><Search size={16} /></button>
-              <button className="ah-icon" aria-label="Notificações"><Bell size={16} /></button>
-            </>
-          }
-        />
 
         <div className="rel-page">
+          <div className="rel-layout">
+          <aside className="rel-side" aria-label="Ações e resumo dos pareceres">
+            <div className="rel-side-title">Ações</div>
+            <div className="rel-side-actions">
+              <button
+                className="pn-btn primary"
+                onClick={abrirLoteSelecao}
+                disabled={lote.ativo}
+                title="Gerar o parecer de todos os alunos do filtro atual que ainda não têm parecer"
+              >
+                <Sparkles size={16} /> {lote.ativo ? `Gerando ${lote.feitos}/${lote.total}…` : "Gerar pareceres em lote"}
+              </button>
+              <button
+                className="pn-btn"
+                onClick={abrirNovoAluno}
+                title="Cadastrar novo aluno e vincular a uma turma"
+              >
+                <UserPlus size={16} /> Cadastrar aluno
+              </button>
+              <GerarRelatorioButton label="Editor de Relatório" className="rel-side-editor" />
+              <button
+                className="pn-btn"
+                onClick={abrirImpressaoLote}
+                title="Selecionar vários alunos e imprimir/exportar em PDF de uma só vez"
+              >
+                <Download size={16} /> Imprimir vários
+              </button>
+              <button
+                className="pn-btn"
+                onClick={() => setConfigPeriodoOpen(true)}
+                title="Definir se a avaliação é bimestral, trimestral, semestral ou anual — geral ou por turma"
+              >
+                <Settings size={16} /> Período de avaliação
+              </button>
+            </div>
+            <div className="rel-side-title">Situação</div>
+          {/* KPIs */}
+          <div className="rel-kpis">
+            <div
+              className="rel-kpi"
+              role="button"
+              tabIndex={0}
+              onClick={() => setStatusModal("todo")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("todo"); } }}
+              style={{ cursor: "pointer" }}
+              aria-label={`Ver ${aFazer} aluno(s) a fazer`}
+            >
+              <div className="rel-kpi-top"><span className="rel-kpi-label">A FAZER</span><div className="rel-kpi-icon amber"><Clock size={15} strokeWidth={2.2} /></div></div>
+              <div className="rel-kpi-num">{aFazer}<small> alunos</small></div>
+              <div className="rel-kpi-foot">{aFazer > 0 ? `${aFazer} pendente(s)` : "—"}</div>
+            </div>
+            <div
+              className="rel-kpi"
+              role="button"
+              tabIndex={0}
+              onClick={() => setStatusModal("draft")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("draft"); } }}
+              style={{ cursor: "pointer" }}
+              aria-label={`Ver ${rascunhos} aluno(s) em rascunho`}
+            >
+              <div className="rel-kpi-top"><span className="rel-kpi-label">EM RASCUNHO</span><div className="rel-kpi-icon violet"><Edit3 size={15} strokeWidth={2.2} /></div></div>
+              <div className="rel-kpi-num">{rascunhos}<small> pareceres</small></div>
+              <div className="rel-kpi-foot">{rascunhos > 0 ? "aguardando revisão" : "—"}</div>
+            </div>
+            <div
+              className="rel-kpi"
+              id="rel-kpi-pareceres"
+              role="button"
+              tabIndex={0}
+              onClick={() => setStatusModal("done")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("done"); } }}
+              style={{ cursor: "pointer" }}
+              aria-label={`Ver ${finalizados} aluno(s) finalizados`}
+            >
+              <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
+              <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
+              <div className="rel-kpi-foot">{pct}% do {periodoNomeLower}</div>
+            </div>
+            <div
+              id="rel-kpi-horas"
+              className={"rel-kpi rel-kpi-dark kpi-tip-host" + (bump ? " is-bump" : "")}
+              tabIndex={0}
+              aria-label="Como calculamos o tempo economizado"
+              style={{ background: "#14161F", color: "#fff", borderColor: "transparent", position: "relative", cursor: "help" }}
+            >
+              <div className="rel-kpi-top">
+                <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
+                <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
+              </div>
+              <div className="rel-kpi-num rel-kpi-anim" style={{ color: "#fff", transition: "transform .4s cubic-bezier(.2,.8,.2,1)", transform: bump ? "scale(1.06)" : "scale(1)" }}>
+                {savedH}h<small style={{ color: "rgba(255,255,255,.75)" }}>{String(savedM).padStart(2, "0")}min</small>
+              </div>
+              <div className="rel-kpi-foot" style={{ color: "rgba(255,255,255,.7)" }}>
+                {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
+              </div>
+              <span aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(circle at 80% 0%, rgba(255,106,44,.25), transparent 60%)", opacity: bump ? 1 : 0, transition: "opacity .6s ease" }} />
+              <div className="kpi-tip" role="tooltip">
+                <div className="kpi-tip-title">Como calculamos</div>
+                <ul className="kpi-tip-list">
+                  <li><span>Relatório por aluno · 45min cada</span><b>—</b></li>
+                  <li><span>Relatório gerado pela IA · 35min cada</span><b>—</b></li>
+                  <li><span>Relatório PCD (Inclusão) · 45min cada</span><b>—</b></li>
+                  <li><span>Integra o contador global no Painel</span><b>↑</b></li>
+                </ul>
+                <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
+                <span className="kpi-tip-arrow" aria-hidden />
+              </div>
+            </div>
+          </div>
+
+          </aside>
+          <div className="rel-content">
           {/* HERO */}
           <section className="rel-hero">
             <div className="rel-hero-grid">
@@ -1637,85 +1740,11 @@ ${parecerHtml}
             </div>
           </section>
 
-          {/* KPIs */}
-          <div className="rel-kpis">
-            <div
-              className="rel-kpi"
-              role="button"
-              tabIndex={0}
-              onClick={() => setStatusModal("todo")}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("todo"); } }}
-              style={{ cursor: "pointer" }}
-              aria-label={`Ver ${aFazer} aluno(s) a fazer`}
-            >
-              <div className="rel-kpi-top"><span className="rel-kpi-label">A FAZER</span><div className="rel-kpi-icon amber"><Clock size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">{aFazer}<small> alunos</small></div>
-              <div className="rel-kpi-foot">{aFazer > 0 ? `${aFazer} pendente(s)` : "—"}</div>
-            </div>
-            <div
-              className="rel-kpi"
-              role="button"
-              tabIndex={0}
-              onClick={() => setStatusModal("draft")}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("draft"); } }}
-              style={{ cursor: "pointer" }}
-              aria-label={`Ver ${rascunhos} aluno(s) em rascunho`}
-            >
-              <div className="rel-kpi-top"><span className="rel-kpi-label">EM RASCUNHO</span><div className="rel-kpi-icon violet"><Edit3 size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">{rascunhos}<small> pareceres</small></div>
-              <div className="rel-kpi-foot">{rascunhos > 0 ? "aguardando revisão" : "—"}</div>
-            </div>
-            <div
-              className="rel-kpi"
-              id="rel-kpi-pareceres"
-              role="button"
-              tabIndex={0}
-              onClick={() => setStatusModal("done")}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setStatusModal("done"); } }}
-              style={{ cursor: "pointer" }}
-              aria-label={`Ver ${finalizados} aluno(s) finalizados`}
-            >
-              <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
-              <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
-              <div className="rel-kpi-foot">{pct}% do {periodoNomeLower}</div>
-            </div>
-            <div
-              id="rel-kpi-horas"
-              className={"rel-kpi rel-kpi-dark kpi-tip-host" + (bump ? " is-bump" : "")}
-              tabIndex={0}
-              aria-label="Como calculamos o tempo economizado"
-              style={{ background: "linear-gradient(135deg,#0F1B36 0%,#1B2A4E 100%)", color: "#fff", borderColor: "transparent", position: "relative", cursor: "help" }}
-            >
-              <div className="rel-kpi-top">
-                <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
-                <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
-              </div>
-              <div className="rel-kpi-num rel-kpi-anim" style={{ color: "#fff", transition: "transform .4s cubic-bezier(.2,.8,.2,1)", transform: bump ? "scale(1.06)" : "scale(1)" }}>
-                {savedH}h<small style={{ color: "rgba(255,255,255,.75)" }}>{String(savedM).padStart(2, "0")}min</small>
-              </div>
-              <div className="rel-kpi-foot" style={{ color: "rgba(255,255,255,.7)" }}>
-                {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
-              </div>
-              <span aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(circle at 80% 0%, rgba(255,106,44,.25), transparent 60%)", opacity: bump ? 1 : 0, transition: "opacity .6s ease" }} />
-              <div className="kpi-tip" role="tooltip">
-                <div className="kpi-tip-title">Como calculamos</div>
-                <ul className="kpi-tip-list">
-                  <li><span>Relatório por aluno · 45min cada</span><b>—</b></li>
-                  <li><span>Relatório gerado pela IA · 35min cada</span><b>—</b></li>
-                  <li><span>Relatório PCD (Inclusão) · 45min cada</span><b>—</b></li>
-                  <li><span>Integra o contador global no Painel</span><b>↑</b></li>
-                </ul>
-                <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
-                <span className="kpi-tip-arrow" aria-hidden />
-              </div>
-            </div>
-          </div>
-
           {bubbleMsg && (
-            <div className="rel-sofia-bubble" style={{ marginTop: 18, background: "linear-gradient(135deg,#1E1B2E 0%,#15131F 100%)", border: "1px solid #2A2438", borderRadius: 14, padding: "16px 18px", color: "#fff", display: "flex", gap: 14, alignItems: "center" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg,#F97316,#EA580C)", display: "grid", placeItems: "center" }}><Sparkles size={16} color="#fff" /></div>
+            <div className="rel-sofia-bubble" style={{ marginTop: 18, background: "#14161F", border: "2px solid #14161F", borderRadius: 14, padding: "16px 18px", color: "#fff", display: "flex", gap: 14, alignItems: "center" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#0B7A55", display: "grid", placeItems: "center" }}><Sparkles size={16} color="#fff" /></div>
               <div style={{ flex: 1, fontSize: 14, lineHeight: 1.5 }}>{bubbleMsg}</div>
-              <button onClick={goLote} style={{ background: "linear-gradient(135deg,#F97316,#EA580C)", color: "#fff", padding: "9px 14px", borderRadius: 10, fontWeight: 700, fontSize: 13, border: 0, cursor: "pointer" }}>Continuar com a Sofia</button>
+              <button onClick={goLote} style={{ background: "#0B7A55", color: "#fff", padding: "9px 14px", borderRadius: 10, fontWeight: 700, fontSize: 13, border: 0, cursor: "pointer" }}>Continuar com a Sofia</button>
             </div>
           )}
 
@@ -1724,39 +1753,6 @@ ${parecerHtml}
             <div>
               <h2>{isEi ? "Relatórios" : "Pareceres"} deste {periodoNomeLower}</h2>
               <p>Filtre por status, turma ou aluno. Clique para gerar com a Sofia ou abrir o rascunho.</p>
-            </div>
-            <div className="rel-sec-actions">
-              <button
-                className="rel-pill"
-                onClick={() => setConfigPeriodoOpen(true)}
-                title="Definir se a avaliação é bimestral, trimestral, semestral ou anual — geral ou por turma"
-              >
-                <Settings size={13} /> Período de avaliação
-              </button>
-             <button
-                className="rel-pill"
-                onClick={abrirImpressaoLote}
-                title="Selecionar vários alunos e imprimir/exportar em PDF de uma só vez"
-              >
-                <Download size={13} /> Imprimir vários
-              </button>
-              <button
-                className="rel-pill"
-                onClick={abrirLoteSelecao}
-                disabled={lote.ativo}
-                title="Gerar o parecer de todos os alunos do filtro atual que ainda não têm parecer"
-              >
-                <Sparkles size={13} /> {lote.ativo ? `Gerando ${lote.feitos}/${lote.total}…` : "Gerar pareceres em lote"}
-              </button>
-              <GerarRelatorioButton label="Editor de Relatório" />
-              <button
-                className="rel-pill"
-                onClick={abrirNovoAluno}
-                style={{ background: "var(--primary-dark)", color: "#fff", border: 0 }}
-                title="Cadastrar novo aluno e vincular a uma turma"
-              >
-                <UserPlus size={13} /> Cadastrar aluno
-              </button>
             </div>
           </div>
 
@@ -2066,7 +2062,7 @@ ${parecerHtml}
                 );
               }
               const visible = verTodosHist ? finList : finList.slice(0, HIST_LIMIT);
-              const palette = ["#FF6A2C", "#6E5BE6", "#16A36B", "#3B82F6", "#EC4899", "#E9A23B"];
+              const palette = ["#F2604B", "#7A5FE0", "#0B7A55", "#3D8BFD", "#D9488B", "#C98A10"];
               return visible.map((a, idx) => {
                 const initials = a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
                 return (
@@ -2090,6 +2086,8 @@ ${parecerHtml}
                 );
               });
             })()}
+          </div>
+          </div>
           </div>
         </div>
       </main>
@@ -2179,7 +2177,7 @@ ${parecerHtml}
                   <span>{pctPreenchido}% avaliado · Desempenho {pctDesempenho}%</span>
                 </div>
                 <div style={{ height: 8, background: "#EEE9DC", borderRadius: 99, overflow: "hidden" }}>
-                  <div style={{ width: `${pctPreenchido}%`, height: "100%", background: "linear-gradient(90deg,#FF6A2C,#FFB47A)", transition: "width .3s" }} />
+                  <div style={{ width: `${pctPreenchido}%`, height: "100%", background: "#0B7A55", transition: "width .3s" }} />
                 </div>
                 <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
                   {STATUS.map((s) => (
@@ -2286,7 +2284,7 @@ ${parecerHtml}
                         <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--text-soft)" }}>
                           {ei ? "Observações sobre a criança" : "Observações sobre o aluno"}
                           {obsCount > 0 && (
-                            <span style={{ marginLeft: 8, color: "#EA580C", textTransform: "none", letterSpacing: 0, fontWeight: 700 }}>· preenchido</span>
+                            <span style={{ marginLeft: 8, color: "#0B7A55", textTransform: "none", letterSpacing: 0, fontWeight: 700 }}>· preenchido</span>
                           )}
                         </span>
                         <ChevronDown size={16} style={{ color: "var(--text-soft)", transform: obsOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .15s" }} />
@@ -2329,7 +2327,7 @@ ${parecerHtml}
                       setAlunoModal({ id, nome, turma, pcd: pcd || "", status: "review", statusLabel: "Parecer para revisar" });
                       void handleGerarParecerSofia(alunoArg);
                     }}
-                    style={{ background: "linear-gradient(135deg,#FF6A2C,#EA580C)", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                    style={{ background: "#0B7A55", color: "#fff", border: 0, borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 800, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
                   ><Sparkles size={13} /> {ei ? "Gerar parecer descritivo com a Sofia" : "Gerar parecer com a Sofia"}</button>
                 </div>
               </div>
@@ -2347,7 +2345,7 @@ ${parecerHtml}
                 : `Concluído · ${lote.itens.filter((i) => i.status === "ok").length} de ${lote.total} gerado(s)`}
             </div>
             <div style={{ height: 8, background: "#F1EFE8", borderRadius: 999, overflow: "hidden", margin: "0 0 14px" }}>
-              <div style={{ height: "100%", width: `${lote.total ? Math.round((lote.feitos / lote.total) * 100) : 0}%`, background: "linear-gradient(90deg,#FF6A2C,#FF8A4C)", borderRadius: 999, transition: "width .3s" }} />
+              <div style={{ height: "100%", width: `${lote.total ? Math.round((lote.feitos / lote.total) * 100) : 0}%`, background: "#0B7A55", borderRadius: 999, transition: "width .3s" }} />
             </div>
             <div className="rel-modal-body" style={{ maxHeight: 320, overflowY: "auto" }}>
               {lote.itens.map((it) => {
@@ -2374,7 +2372,7 @@ ${parecerHtml}
       {novoAlunoOpen && (
         <div
           onClick={(e) => { if (e.target === e.currentTarget) fecharModalAluno(); }}
-          style={{ position: "fixed", inset: 0, background: "rgba(15,27,54,.55)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.55)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
           <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 480, boxShadow: "0 20px 60px rgba(0,0,0,.25)", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line-soft)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

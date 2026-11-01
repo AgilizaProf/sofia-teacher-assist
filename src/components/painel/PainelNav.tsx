@@ -50,6 +50,9 @@ const navCss = `
 .pn-menu a:hover,.pn-menu button:hover{background:var(--pn-bg);}
 .pn-menu hr{border:0;border-top:1.5px solid var(--pn-line);margin:4px 0;}
 .pn-bottom{display:none;}
+/* Sofia flutuante no visual Painel (computador) */
+body:has(.pn-bottom) .sofia-fab-pulse{display:none!important;}
+body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #14161F!important;box-shadow:3px 3px 0 #14161F!important;}
 /* Com o PainelNav, o botão da Sofia fica na barra inferior no celular */
 @media(max-width:860px){
   body:has(.pn-bottom) .sofia-fab{display:none!important;}
