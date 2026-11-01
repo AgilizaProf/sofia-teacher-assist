@@ -31,7 +31,8 @@ import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useTurmas } from "@/hooks/useTurmas";
 import { matchAnoCurriculo } from "@/lib/curriculo/matchAno";
 import { wrapParecerPrintHtml as wrapStandardPrintHtml } from "@/lib/print/parecerPrintPlanejamento";
-import { GerarRelatorioButton } from "@/components/documentos/RelatorioDialog";
+import { RelatorioDialog } from "@/components/documentos/RelatorioDialog";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 
 const css = `
 .rel-root{
@@ -810,6 +811,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
 
   // Tutorial "Como funciona"
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   // ===== Parecer descritivo (mesmo modelo da aba Relatórios da Inclusão) =====
   type ParecerNarrativo = {
@@ -1537,48 +1539,61 @@ ${parecerHtml}
 
   return (
     <div className="pn rel-root">
-      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + css + emptyStateCss + painelCss }} />
+      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + tempoChipCss + css + emptyStateCss + painelCss }} />
       <PainelNav />
 
       <main className="rel-main">
 
         <div className="rel-page">
-          <div className="rel-layout">
-          <aside className="rel-side" aria-label="Ações e resumo dos pareceres">
-            <div className="rel-side-title">Ações</div>
-            <div className="rel-side-actions">
-              <button
-                className="pn-btn primary"
-                onClick={abrirLoteSelecao}
-                disabled={lote.ativo}
-                title="Gerar o parecer de todos os alunos do filtro atual que ainda não têm parecer"
-              >
-                <Sparkles size={16} /> {lote.ativo ? `Gerando ${lote.feitos}/${lote.total}…` : "Gerar pareceres em lote"}
-              </button>
-              <button
-                className="pn-btn"
-                onClick={abrirNovoAluno}
-                title="Cadastrar novo aluno e vincular a uma turma"
-              >
-                <UserPlus size={16} /> Cadastrar aluno
-              </button>
-              <GerarRelatorioButton label="Editor de Relatório" className="rel-side-editor" />
-              <button
-                className="pn-btn"
-                onClick={abrirImpressaoLote}
-                title="Selecionar vários alunos e imprimir/exportar em PDF de uma só vez"
-              >
-                <Download size={16} /> Imprimir vários
-              </button>
-              <button
-                className="pn-btn"
-                onClick={() => setConfigPeriodoOpen(true)}
-                title="Definir se a avaliação é bimestral, trimestral, semestral ou anual — geral ou por turma"
-              >
-                <Settings size={16} /> Período de avaliação
-              </button>
-            </div>
-            <div className="rel-side-title">Situação</div>
+          <div className="pn-strip rel-strip">
+            <TempoChip id="rel-kpi-horas" />
+            {totalAlunos > 0 && (
+              <span className="pn-chip rel-prog-chip" title={`Pareceres finalizados no ${periodoNomeLower}`}>
+                <span className="rel-prog-bar" aria-hidden><i style={{ width: `${pct}%` }} /></span>
+                <span><b>{finalizados}/{totalAlunos}</b> finalizados no {periodoNomeLower}</span>
+              </span>
+            )}
+          </div>
+          <h1 className="rel-title">{isEi ? "Relatórios de desenvolvimento" : "Pareceres"}</h1>
+
+          <h2 className="rel-block-title">O que você quer fazer?</h2>
+          <div className="rel-actions">
+            <button
+              type="button"
+              className="rel-action main"
+              onClick={abrirLoteSelecao}
+              disabled={lote.ativo}
+            >
+              <span className="ic"><Sparkles size={22} /></span>
+              <span className="tx">
+                <b>{lote.ativo ? `Gerando ${lote.feitos}/${lote.total}…` : (isEi ? "Gerar relatórios em lote" : "Gerar pareceres em lote")}</b>
+                <small>A Sofia escreve de todos os alunos que ainda faltam.</small>
+              </span>
+            </button>
+            <button type="button" className="rel-action" onClick={abrirNovoAluno}>
+              <span className="ic sky"><UserPlus size={22} /></span>
+              <span className="tx"><b>Cadastrar aluno</b><small>Adicione um aluno e escolha a turma.</small></span>
+            </button>
+            <button type="button" className="rel-action" onClick={abrirImpressaoLote}>
+              <span className="ic sun"><Download size={22} /></span>
+              <span className="tx"><b>Imprimir ou baixar PDF</b><small>Escolha vários alunos e baixe de uma vez.</small></span>
+            </button>
+            <button type="button" className="rel-action" onClick={() => setEditorOpen(true)}>
+              <span className="ic lilac"><FileText size={22} /></span>
+              <span className="tx"><b>Editor de relatório</b><small>Monte um relatório livre, do seu jeito.</small></span>
+            </button>
+            <button type="button" className="rel-action" onClick={() => setConfigPeriodoOpen(true)}>
+              <span className="ic coral"><Settings size={22} /></span>
+              <span className="tx"><b>Período de avaliação</b><small>Agora: {tipoPeriodo}. Mude geral ou por turma.</small></span>
+            </button>
+            <button type="button" className="rel-action" onClick={() => setTutorialOpen(true)}>
+              <span className="ic ink"><PlayCircle size={22} /></span>
+              <span className="tx"><b>Como funciona</b><small>Veja em 60 segundos como gerar um parecer.</small></span>
+            </button>
+          </div>
+          <RelatorioDialog open={editorOpen} onOpenChange={setEditorOpen} />
+
+          <h2 className="rel-block-title">Situação do {periodoNomeLower}</h2>
           {/* KPIs */}
           <div className="rel-kpis">
             <div
@@ -1621,130 +1636,14 @@ ${parecerHtml}
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do {periodoNomeLower}</div>
             </div>
-            <div
-              id="rel-kpi-horas"
-              className={"rel-kpi rel-kpi-dark kpi-tip-host" + (bump ? " is-bump" : "")}
-              tabIndex={0}
-              aria-label="Como calculamos o tempo economizado"
-              style={{ background: "#14161F", color: "#fff", borderColor: "transparent", position: "relative", cursor: "help" }}
-            >
-              <div className="rel-kpi-top">
-                <span className="rel-kpi-label" style={{ color: "rgba(255,255,255,.7)" }}>TEMPO ECONOMIZADO</span>
-                <div className="rel-kpi-icon orange"><Sparkles size={15} strokeWidth={2.2} /></div>
-              </div>
-              <div className="rel-kpi-num rel-kpi-anim" style={{ color: "#fff", transition: "transform .4s cubic-bezier(.2,.8,.2,1)", transform: bump ? "scale(1.06)" : "scale(1)" }}>
-                {savedH}h<small style={{ color: "rgba(255,255,255,.75)" }}>{String(savedM).padStart(2, "0")}min</small>
-              </div>
-              <div className="rel-kpi-foot" style={{ color: "rgba(255,255,255,.7)" }}>
-                {totalSavedMin > 0 ? "vs. escrita manual" : "comece a usar a Sofia"}
-              </div>
-              <span aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(circle at 80% 0%, rgba(255,106,44,.25), transparent 60%)", opacity: bump ? 1 : 0, transition: "opacity .6s ease" }} />
-              <div className="kpi-tip" role="tooltip">
-                <div className="kpi-tip-title">Como calculamos</div>
-                <ul className="kpi-tip-list">
-                  <li><span>Relatório por aluno · 45min cada</span><b>—</b></li>
-                  <li><span>Relatório gerado pela IA · 35min cada</span><b>—</b></li>
-                  <li><span>Relatório PCD (Inclusão) · 45min cada</span><b>—</b></li>
-                  <li><span>Integra o contador global no Painel</span><b>↑</b></li>
-                </ul>
-                <div className="kpi-tip-total"><span>Total</span><b>{Math.floor(totalSavedMin/60)}h {String(totalSavedMin%60).padStart(2,"0")}min</b></div>
-                <span className="kpi-tip-arrow" aria-hidden />
-              </div>
-            </div>
           </div>
 
-          </aside>
-          <div className="rel-content">
-          {/* HERO */}
-          <section className="rel-hero">
-            <div className="rel-hero-grid">
-              <div>
-              <span className="rel-eyebrow"><Star size={12} fill="currentColor" /> {
-                alunosCount === 0
-                  ? "CADASTRE SUA TURMA PARA COMEÇAR"
-                  : totalBim === 0
-                    ? (isEi ? "COMECE PELOS RELATÓRIOS DE DESENVOLVIMENTO" : "COMECE PELOS PARECERES")
-                    : pct >= 100
-                      ? `${periodoTituloUpper} · TUDO FINALIZADO`
-                      : aRevisar > 0
-                        ? `${periodoTituloUpper} · ${aRevisar} PRONTO${aRevisar > 1 ? "S" : ""} PARA REVISAR`
-                        : rascunhos > 0
-                          ? `${periodoTituloUpper} · ${rascunhos} RASCUNHO${rascunhos > 1 ? "S" : ""} EM ANDAMENTO`
-                          : `${periodoTituloUpper} · ${pct}% CONCLUÍDO`
-              }</span>
-                {alunosCount === 0 ? (
-                  <>
-                    <h1>Cadastre sua turma<br />para começar.</h1>
-                    <p>Adicione seus alunos em <b>Inclusão</b> ou no <b>Dashboard</b> para gerar {isEi ? "relatórios" : "pareceres"} aqui.</p>
-                  </>
-                ) : totalBim === 0 ? (
-                  <>
-                    <h1>{isEi ? <>Nenhum relatório<br />gerado ainda.</> : <>Nenhum parecer<br />gerado ainda.</>}</h1>
-                    <p>{isEi
-                      ? `${alunosCount} criança(s) cadastrada(s). Gere o primeiro relatório de desenvolvimento com a Sofia em poucos minutos.`
-                      : `${alunosCount} aluno(s) cadastrado(s). Gere o primeiro parecer descritivo com a Sofia em poucos minutos.`}</p>
-                  </>
-                ) : pct >= 100 ? (
-                  <>
-                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {periodoTituloLower}<br /><em>todos prontos</em>: {finalizados}/{totalAlunos}.</h1>
-                    <p>{periodoTituloLower.charAt(0).toUpperCase() + periodoTituloLower.slice(1)} fechado{horasEcon > 0 ? ` — cerca de ${horasEcon}h economizadas` : ""}. Exporte em PDF para a coordenação{tipoPeriodoEfetivo === "Anual" ? "." : ` ou siga para o próximo ${periodoNomeLower}.`}</p>
-                  </>
-                ) : (
-                  <>
-                    <h1>{isEi ? "Relatórios" : "Pareceres"} do {periodoTituloLower}<br /><em>{finalizados}/{totalAlunos}</em> prontos.</h1>
-                    <p>{(() => {
-                      const parts: string[] = [];
-                      if (aRevisar > 0) parts.push(`${aRevisar} ${aRevisar > 1 ? "prontos" : "pronto"} para revisar (100% observado, falta gerar)`);
-                      if (rascunhos > 0) parts.push(`${rascunhos} em rascunho (observações parciais)`);
-                      if (aFazer > 0) parts.push(`${aFazer} ainda sem observações`);
-                      const head = parts.length ? parts.join(" · ") + "." : "Quase lá.";
-                      const tail =
-                        aRevisar > 0
-                          ? ` Comece pelos ${aRevisar} prontos para revisar — é o caminho mais rápido para fechar o ${periodoNomeLower}.`
-                          : rascunhos > 0
-                            ? ` Continue de onde parou nos rascunhos para destravar a geração.`
-                            : aFazer > 0
-                              ? ` Registre as primeiras observações para destravar a Sofia.`
-                              : restantes > 0 ? ` Faltam ${restantes} para fechar o ${periodoNomeLower}.` : "";
-                      return head + tail;
-                    })()}</p>
-                  </>
-                )}
-                <div className="rel-hero-cta">
-                  <button className="rel-btn-primary" onClick={goLote} aria-label="Gerar com a Sofia">
-                    <Sparkles size={14} strokeWidth={2.4} /> {
-                      alunosCount === 0
-                        ? "Cadastrar alunos"
-                        : totalBim === 0
-                          ? (isEi ? "Gerar primeiro relatório" : "Gerar primeiro parecer")
-                          : aRevisar > 0
-                            ? `Revisar ${aRevisar} pronto${aRevisar > 1 ? "s" : ""}`
-                            : rascunhos > 0
-                              ? `Continuar ${rascunhos} rascunho${rascunhos > 1 ? "s" : ""}`
-                              : aFazer > 0
-                                ? `Iniciar ${aFazer} a fazer`
-                                : "Exportar tudo (PDF)"
-                    } <ArrowRight size={14} strokeWidth={2.4} />
-                  </button>
-                  <button className="rel-btn-ghost" aria-label="Ver como funciona" onClick={() => setTutorialOpen(true)}>
-                    <PlayCircle size={14} /> Como funciona · 60s
-                  </button>
-                </div>
-              </div>
-              <div className="rel-pc">
-                <div className="rel-pc-title">PROGRESSO DO {periodoNomeUpper}</div>
-                <div className="rel-pc-num">{finalizados}<span>/{totalAlunos} alunos</span></div>
-                <div className="rel-pc-bar"><i style={{ width: `${pct}%` }} /></div>
-                <div className="rel-pc-meta"><span>{pct}% concluído</span><span>{horasEcon > 0 ? `~${horasEcon}h economizadas` : "sem economia ainda"}</span></div>
-              </div>
-            </div>
-          </section>
 
           {bubbleMsg && (
-            <div className="rel-sofia-bubble" style={{ marginTop: 18, background: "#14161F", border: "2px solid #14161F", borderRadius: 14, padding: "16px 18px", color: "#fff", display: "flex", gap: 14, alignItems: "center" }}>
+            <div className="rel-sofia-bubble" style={{ marginTop: 18, background: "#FFE2A8", border: "1.5px solid #14161F", borderRadius: 14, padding: "16px 18px", color: "#14161F", display: "flex", gap: 14, alignItems: "center" }}>
               <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#0B7A55", display: "grid", placeItems: "center" }}><Sparkles size={16} color="#fff" /></div>
               <div style={{ flex: 1, fontSize: 14, lineHeight: 1.5 }}>{bubbleMsg}</div>
-              <button onClick={goLote} style={{ background: "#0B7A55", color: "#fff", padding: "9px 14px", borderRadius: 10, fontWeight: 700, fontSize: 13, border: 0, cursor: "pointer" }}>Continuar com a Sofia</button>
+              <button onClick={goLote} style={{ background: "#0B7A55", color: "#fff", padding: "9px 14px", borderRadius: 10, fontWeight: 700, fontSize: 13, border: "2px solid #14161F", cursor: "pointer" }}>Continuar com a Sofia</button>
             </div>
           )}
 
@@ -2086,8 +1985,6 @@ ${parecerHtml}
                 );
               });
             })()}
-          </div>
-          </div>
           </div>
         </div>
       </main>
