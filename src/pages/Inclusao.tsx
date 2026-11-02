@@ -1,14 +1,16 @@
 import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from "react";
 import { AlunoCard } from "@/components/inclusao/AlunoCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSearch, useNavigate } from "@tanstack/react-router";
+import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import {
   HelpCircle, Download, X, Sparkles, BookOpen, FileText, Printer,
   ChevronRight, ChevronDown, ArrowLeft, Plus, Search, Send, CheckCircle2, Lightbulb,
   Pencil, Save, FileDown,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
+import { incPainelCss } from "@/pages/inclusaoPainelCss";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { buildCidsPromptBlock } from "@/lib/inclusao/cidPrompt";
@@ -33,7 +35,6 @@ import { useUser } from "@/lib/mockData";
 import { useSofiaSuggestions } from "@/components/sofia/useSofiaSuggestions";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
-import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useTurmas } from "@/hooks/useTurmas";
@@ -59,7 +60,7 @@ const css = `
 }
 .inc-root *{box-sizing:border-box;}
 .inc-root h1,.inc-root h2,.inc-root h3,.inc-root h4{margin:0;letter-spacing:-.02em;color:var(--text);}
-.inc-root button{font-family:inherit;cursor:pointer;border:none;background:transparent;color:inherit;}
+.inc-root :where(button){font-family:inherit;cursor:pointer;border:none;background:transparent;color:inherit;}
 .inc-root p{margin:0;}
 .inc-root input,.inc-root textarea,.inc-root select{font-family:inherit;font-size:13px;}
 
@@ -1965,6 +1966,30 @@ ${ident}
     ])
   ).sort();
   const diagsUnicos = Array.from(new Set(students.map((s) => s.diag).filter(Boolean))).sort();
+  // Resumo de todos os alunos PCD, mostrado no topo da lista.
+  const resumoTurma = useMemo(() => {
+    let anamCompletas = 0;
+    let anamIniciadas = 0;
+    let peiAtivos = 0;
+    let registros = 0;
+    let objTotal = 0;
+    let objAtingidos = 0;
+    for (const st of students) {
+      const m = /(\d+)\s*\/\s*(\d+)/.exec(st.anamnese || "");
+      const feitos = m ? Number(m[1]) : 0;
+      const total = m ? Number(m[2]) : 0;
+      if (total > 0 && feitos >= total) anamCompletas++;
+      else if (feitos > 0) anamIniciadas++;
+      const pei = (peiByStudent[st.id] || {}) as Record<string, unknown>;
+      if (peiTemConteudo(pei as Partial<PEIData>)) peiAtivos++;
+      const objs = objetivosDoPei(pei);
+      objTotal += objs.length;
+      objAtingidos += objs.filter((o) => objetivoConcluido(o.status)).length;
+      registros += (regByStudent[st.id] || []).length;
+    }
+    return { total: students.length, anamCompletas, anamIniciadas, peiAtivos, registros, objTotal, objAtingidos };
+  }, [students, peiByStudent, regByStudent]);
+
   const filtered = students.filter((s) => {
     if (turmaFilter.length > 0 && !turmaFilter.includes(s.turma)) return false;
     if (diagFilter.length > 0 && !diagFilter.includes(s.diag)) return false;
@@ -2100,53 +2125,73 @@ ${ident}
   };
 
   return (
-    <div className="inc-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css + emptyStateCss + printCss }} />
+    <div className="pn inc-root">
+      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + tempoChipCss + css + emptyStateCss + printCss + incPainelCss }} />
+      <PainelNav />
       <div className="inc-app">
-        <AppSidebar active="inclusion" />
-
         <main className="inc-main">
-          {(() => {
-            const alunoCtx = sofiaCtx.entity.aluno_atual;
-            const eixos = alunoCtx?.anamnese_eixos_preenchidos ?? 0;
-            const proxAula = sofiaCtx.dataState.proxima_aula;
-            const adaptarDisabled = eixos < 4 || !proxAula;
-            const adaptarTooltip = "Disponível após Anamnese 4/16 + planejamento da semana cadastrado";
-            const crumbs =
-              view === "list"
-                ? [{ label: "Sua sala" }, { label: "Inclusão" }]
-                : [
-                    { label: "Sua sala" },
-                    { label: "Inclusão", onClick: () => goView("list") },
-                    { label: selected?.turma || "Aluno", onClick: () => goView("list") },
-                    { label: selected?.name || "—" },
-                  ];
-            return (
-              <AppHeader
-                breadcrumb={crumbs}
-                actions={
-                  <>
-                    <button className="inc-btn-ghost" onClick={() => setTutorialOpen(true)}>
-                      <HelpCircle size={14} /> Tutorial Inclusão
-                    </button>
-                    {view === "detail" && (
-                      <button className="inc-btn-ghost" onClick={() => setPeiOpen(true)}>
-                        <Download size={14} /> Exportar PEI
-                      </button>
-                    )}
-                  </>
-                }
-              />
-            );
-          })()}
-
           <div className="inc-content">
             {view === "list" && (
               <>
-                <div className="list-hero">
-                  <h1>Alunos · Educação Inclusiva</h1>
-                  <p>Selecione um aluno para acessar PEI, Anamnese, Planejamento, Registros e Relatórios.</p>
+                <div className="pn-strip">
+                  <TempoChip />
                 </div>
+                <h1 className="inc-title">Inclusão</h1>
+
+                <h2 className="inc-block-title">O que você quer fazer?</h2>
+                <div className="inc-actions">
+                  <button type="button" className="inc-action main" onClick={() => setNewStudentOpen(true)}>
+                    <span className="ic" aria-hidden><Plus size={22} /></span>
+                    <span className="tx"><b>Cadastrar aluno PCD</b><small>Nome, turma, diagnóstico, CID e AEE.</small></span>
+                  </button>
+                  <Link to="/inclusao/pei" className="inc-action">
+                    <span className="ic sky" aria-hidden><FileText size={22} /></span>
+                    <span className="tx"><b>PEI / PDI</b><small>A Sofia monta o plano individual de cada aluno.</small></span>
+                  </Link>
+                  <Link to="/planejamento" search={{ m: "pcd" } as never} className="inc-action">
+                    <span className="ic sun" aria-hidden><Sparkles size={22} /></span>
+                    <span className="tx"><b>Atividade adaptada</b><small>Planeje uma atividade com adaptações por necessidade.</small></span>
+                  </Link>
+                  <button type="button" className="inc-action" onClick={() => setTutorialOpen(true)}>
+                    <span className="ic ink" aria-hidden><HelpCircle size={22} /></span>
+                    <span className="tx"><b>Como funciona</b><small>Tutorial rápido da Inclusão.</small></span>
+                  </button>
+                </div>
+
+                {resumoTurma.total > 0 && (
+                  <>
+                    <h2 className="inc-block-title">Situação dos alunos</h2>
+                    <div className="inc-resumo">
+                      <div className="inc-res">
+                        <span className="ic green" aria-hidden><Plus size={16} /></span>
+                        <span className="lb">Alunos PCD</span>
+                        <b>{resumoTurma.total}</b>
+                        <small>cadastrados na Inclusão</small>
+                      </div>
+                      <div className="inc-res">
+                        <span className="ic sky" aria-hidden><FileText size={16} /></span>
+                        <span className="lb">Anamnese completa</span>
+                        <b>{resumoTurma.anamCompletas}<span>/{resumoTurma.total}</span></b>
+                        <small>{resumoTurma.anamIniciadas > 0 ? `${resumoTurma.anamIniciadas} em andamento` : "nenhuma em andamento"}</small>
+                      </div>
+                      <div className="inc-res">
+                        <span className="ic sun" aria-hidden><CheckCircle2 size={16} /></span>
+                        <span className="lb">PEI ativo</span>
+                        <b>{resumoTurma.peiAtivos}<span>/{resumoTurma.total}</span></b>
+                        <small>{resumoTurma.objTotal > 0 ? `${resumoTurma.objAtingidos}/${resumoTurma.objTotal} objetivos realizados` : "sem objetivos definidos"}</small>
+                      </div>
+                      <div className="inc-res">
+                        <span className="ic coral" aria-hidden><Pencil size={16} /></span>
+                        <span className="lb">Registros de aula</span>
+                        <b>{resumoTurma.registros}</b>
+                        <small>somando todos os alunos</small>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <h2 className="inc-block-title">Seus alunos</h2>
+                <p className="inc-block-sub">Toque em um aluno para abrir PEI, Anamnese, Planejamento, Registros e Relatório.</p>
                 <div className="list-toolbar">
                   <div className="list-search">
                     <Search size={14} />
@@ -2288,93 +2333,30 @@ ${ident}
                   <div className="hero-r">
                     <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> {isMobile ? "PEI" : "Ver PEI completo"}</button>
                     <button className="btn btn-secondary" onClick={() => abrirEditarAluno(selected)} title="Editar nome, turma, ano escolar, CIDs e AEE"><Pencil size={14} /> {isMobile ? "Dados" : "Editar dados"}</button>
+                    <button className="btn btn-secondary" onClick={() => setObjetivosModalOpen(true)} title="Ver e atualizar os objetivos do PEI"><CheckCircle2 size={14} /> {isMobile ? "Objetivos" : "Objetivos do PEI"}</button>
                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => openSofiaForSelected({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> {isMobile ? "Adaptar" : "Adaptar aula de hoje"}</button>
                   </div>
                 </div>
 
-                <div className="kpis">
-                  <div className="kpi kpi-accent">
-                    <div className="kpi-label">Tempo economizado neste aluno</div>
-                    <div className="kpi-value">
-                      {Math.floor(tempoAlunoMin / 60)}h
-                      <span className="small"> {String(tempoAlunoMin % 60).padStart(2, "0")}min</span>
-                    </div>
-                    <div className="kpi-sub">
-                      {tempoAlunoMin > 0
-                        ? "integra o contador do Painel"
-                        : "comece a usar a Sofia para acumular ganhos"}
-                    </div>
-                  </div>
-                  <div className="kpi">
-                    <div className="kpi-label">Aulas adaptadas</div>
-                    <div className="kpi-value">{selecionadosCount}<span className="small"> /{studentPlans.length}</span></div>
-                    <div className="kpi-sub">
-                      {studentPlans.length === 0
-                        ? "gere atividades em Planejamento"
-                        : selecionadosCount === 0
-                        ? `${studentPlans.length} disponível(is) · selecione em Planejamento`
-                        : `${selecionadosCount} selecionada(s) em Planejamento`}
-                    </div>
-                  </div>
-                  {(() => {
-                    const peiSel = (peiByStudent[selected.id] || {}) as Record<string, unknown>;
-                    const objs = objetivosDoPei(peiSel);
-                    const atingidos = objs.filter((o) => objetivoConcluido(o.status)).length;
-                    return (
-                      <button
-                        type="button"
-                        className="kpi"
-                        onClick={() => setObjetivosModalOpen(true)}
-                        style={{ textAlign: "left", cursor: "pointer", border: "1px solid var(--border)", background: "#fff" }}
-                        title="Abrir lista de objetivos do PEI"
-                      >
-                        <div className="kpi-label">Objetivos do PEI realizados</div>
-                        <div className="kpi-value">{atingidos}<span className="small"> /{objs.length}</span></div>
-                        <div className="kpi-sub">
-                          {objs.length === 0 ? "defina objetivos no PEI" : `clique para revisar status`}
-                        </div>
-                      </button>
-                    );
-                  })()}
-                  <div className="kpi">
-                    <div className="kpi-label">Evolução pedagógica</div>
-                    {(() => {
-                      const totalRegs = (regByStudent[studentKey] || []).length;
-                      const hasData = eixosPreenchidos > 0 || totalRegs > 0;
-                      if (!hasData) {
-                        return (
-                          <>
-                            <div className="kpi-value" style={{ color: "var(--muted)" }}>Sem dados</div>
-                            <div className="kpi-sub">aguardando primeiros registros</div>
-                          </>
-                        );
-                      }
-                      const avg = skillsEvolucao.reduce((acc, s) => acc + s.p, 0) / skillsEvolucao.length;
-                      let label = "Em desenvolvimento";
-                      let color = "var(--warn, #b8860b)";
-                      if (avg >= 70) { label = "Progredindo"; color = "var(--success, #16a34a)"; }
-                      else if (avg < 40) { label = "Necessita apoio"; color = "var(--danger, #dc2626)"; }
-                      else { color = "var(--accent, #d97706)"; }
-                      return (
-                        <>
-                          <div className="kpi-value" style={{ color }}>{label}</div>
-                          <div className="kpi-sub">média {Math.round(avg)}% · {totalRegs} registro{totalRegs === 1 ? "" : "s"}</div>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                <div className="tabs" role="tablist">
+                <h2 className="inc-block-title">O que você quer ver de {selected.name.split(" ")[0]}?</h2>
+                <div className="inc-sections" role="tablist">
                   {([
-                    { k: "hoje", label: "Visão de hoje" },
-                    { k: "anam", label: "Anamnese" },
-                    { k: "plan", label: "Planejamento" },
-                    { k: "reg", label: "Registros" },
-                    { k: "rel", label: "Relatório IA" },
-                  ] as Array<{ k: TabKey; label: string; count?: string }>).map((t) => (
-                    <button key={t.k} className={"tab" + (tab === t.k ? " active" : "")} onClick={() => setActiveTab(t.k)} role="tab" aria-selected={tab === t.k}>
-                      {t.label}{t.count && <span className="tab-count">{t.count}</span>}
+                    { k: "hoje", label: "Visão de hoje", desc: "Próximo passo e resumo do aluno.", icon: <CheckCircle2 size={20} />, cor: "green" },
+                    { k: "anam", label: "Anamnese", desc: "Perfil, histórico e necessidades.", icon: <FileText size={20} />, cor: "sky" },
+                    { k: "plan", label: "Planejamento", desc: "Aulas adaptadas para este aluno.", icon: <Sparkles size={20} />, cor: "sun" },
+                    { k: "reg", label: "Registros", desc: "O que aconteceu em cada aula.", icon: <Pencil size={20} />, cor: "coral" },
+                    { k: "rel", label: "Relatório IA", desc: "Relatório escrito pela Sofia.", icon: <Download size={20} />, cor: "lilac" },
+                  ] as Array<{ k: TabKey; label: string; desc: string; icon: React.ReactNode; cor: string }>).map((t) => (
+                    <button
+                      key={t.k}
+                      type="button"
+                      className={"inc-section" + (tab === t.k ? " active" : "")}
+                      onClick={() => setActiveTab(t.k)}
+                      role="tab"
+                      aria-selected={tab === t.k}
+                    >
+                      <span className={"ic " + t.cor} aria-hidden>{t.icon}</span>
+                      <span className="tx"><b>{t.label}</b><small>{t.desc}</small></span>
                     </button>
                   ))}
                 </div>

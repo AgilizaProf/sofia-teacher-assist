@@ -25,6 +25,7 @@ import { syncOnboardingFlagIfPending } from "@/lib/onboarding";
 import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
 import { useLocation } from "@tanstack/react-router";
 import { MobileTopBar } from "@/components/MobileTopBar";
+import { PencilLogo } from "@/components/painel/PainelNav";
 import { trackEvent, trackPageView } from "@/lib/tracking";
 
 import appCss from "../styles.css?url";
@@ -298,29 +299,35 @@ function RootComponent() {
   useFontSize();
   useHighContrast();
   const { ready, authed, isPublicRoute } = useAuthGuard();
-  const showSofia = ready && authed && !isPublicRoute;
+  // No primeiro acesso a pessoa só informa nome e celular; a Sofia aparece depois.
+  const showSofia = ready && authed && !isPublicRoute && loc.pathname !== "/onboarding";
   // Páginas no novo visual "Painel" já têm navegação própria (PainelNav).
-  const isPainelPage = loc.pathname === "/" || loc.pathname === "/relatorios";
+  const isPainelPage = ["/", "/relatorios", "/planejamento", "/inclusao", "/agenda", "/jogos", "/simulados", "/onboarding"].includes(loc.pathname);
 
   if (!ready && !isPublicRoute) {
     return (
-      <div style={{
-        minHeight: "100vh", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", gap: 16,
-        background: "linear-gradient(135deg,#1B2A4E,#0F1B36)",
-        fontFamily: "'Inter',-apple-system,sans-serif",
-      }}>
-        <div style={{ fontFamily: "'Fraunces',Georgia,serif", fontWeight: 900, fontSize: 38, color: "#fff", letterSpacing: "-.03em" }}>
-          Agiliza<span style={{ color: "#FF7A45" }}>Prof</span>
+      <div
+        style={{
+          minHeight: "100vh", display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: 18,
+          background: "#EDF0F5", color: "#14161F",
+          fontFamily: "'DM Sans',-apple-system,sans-serif",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "'Sora',sans-serif", fontWeight: 800, fontSize: 34, letterSpacing: "-.04em" }}>
+          <PencilLogo size={52} />
+          <span>
+            Agiliza<span style={{ color: "#0B7A55" }}>Prof</span>
+          </span>
         </div>
         <div style={{
-          width: 34, height: 34,
-          border: "2.5px solid rgba(255,122,69,.25)",
-          borderTopColor: "#FF7A45",
+          width: 30, height: 30,
+          border: "3px solid #CDEFE2",
+          borderTopColor: "#0B7A55",
           borderRadius: "50%",
           animation: "ap-spin .9s linear infinite",
         }} />
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,.6)" }}>Conectando à sua sala de aula…</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#596074" }}>Conectando à sua sala de aula…</div>
         <style>{`@keyframes ap-spin{to{transform:rotate(360deg);}}`}</style>
       </div>
     );

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
+import { agPainelCss } from "@/pages/agendaPainelCss";
 import { ChevronLeft, ChevronRight, Plus, Filter, Clock, X, Pencil, Trash2, Sparkles, Printer } from "lucide-react";
 import { holidayMap } from "@/lib/holidaysBR";
 import { brNow } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
-import { Header as AppHeader } from "@/components/Header";
 import { useAgenda } from "@/hooks/useAgenda";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
@@ -1266,23 +1267,57 @@ const deleteCalendar = async () => {
   };
 
   return (
-    <div className="ag-root">
-      <style>{sidebarCss}</style>
+    <div className="pn ag-root">
+      <style>{painelTokensCss + tempoChipCss}</style>
       <style>{css}</style>
+      <style>{agPainelCss}</style>
+      <PainelNav />
       <div className="ag-app">
-        <AppSidebar active="agenda" />
         <main className="ag-main">
-          <AppHeader
-            breadcrumb={[{ label: "Sua sala" }, { label: "Agenda" }, { label: headerLabel }]}
-            actions={
-              <>
+          <div className="ag-top">
+            <div className="pn-strip">
+              <TempoChip />
+            </div>
+            <h1 className="ag-ptitle">Agenda</h1>
+
+            <h2 className="ag-block-title">O que você quer fazer?</h2>
+            <div className="ag-actions">
+              <button type="button" className="ag-action main" onClick={() => openDayPanel(todayKey)}>
+                <span className="ic" aria-hidden><Plus size={22} /></span>
+                <span className="tx"><b>Novo evento</b><small>Reunião, prova, entrega ou compromisso.</small></span>
+              </button>
+              <button
+                type="button"
+                className="ag-action"
+                onClick={() => calendarFileRef.current?.click()}
+                disabled={importandoCalendario}
+              >
+                <span className="ic sky" aria-hidden>📅</span>
+                <span className="tx">
+                  <b>{importandoCalendario ? "Lendo calendário…" : "Importar calendário escolar"}</b>
+                  <small>Envie o PDF e a Sofia cria os eventos.</small>
+                </span>
+              </button>
+              <button type="button" className="ag-action" onClick={openM4Import}>
+                <span className="ic sun" aria-hidden>🗂️</span>
+                <span className="tx">
+                  <b>Trazer do planejamento{m4Pending > 0 ? ` · ${m4Pending}` : ""}</b>
+                  <small>Atividades agendadas no Planejamento.</small>
+                </span>
+              </button>
+              <button type="button" className="ag-action" onClick={openPrintDialog}>
+                <span className="ic coral" aria-hidden><Printer size={22} /></span>
+                <span className="tx"><b>Imprimir</b><small>Lista de compromissos e atividades.</small></span>
+              </button>
                 <div style={{ position: "relative" }}>
                   <button
-                    className="ag-btn"
+                    type="button"
+                    className="ag-action"
                     onClick={() => setFilterOpen((v) => !v)}
                     aria-expanded={filterOpen}
                   >
-                    <Filter size={14} /> Filtrar
+                    <span className="ic lilac" aria-hidden><Filter size={22} /></span>
+                    <span className="tx"><b>Filtrar eventos</b><small>Mostre só reuniões, provas, entregas…</small></span>
                     {typeFilter.length < ALL_TYPES.length && (
                       <span style={{
                         marginLeft: 6, background: "var(--primary, #2563eb)", color: "#fff",
@@ -1341,18 +1376,9 @@ const deleteCalendar = async () => {
                     </>
                   )}
                 </div>
-                <button className="ag-btn" onClick={openPrintDialog} title="Imprimir compromissos e atividades">
-                  <Printer size={14} /> Imprimir
-                </button>
-                <button className="ag-btn primary" onClick={() => openDayPanel(todayKey)}><Plus size={14} /> Novo evento</button>
-              </>
-            }
-          />
-          <div style={{ padding: "16px 32px 0" }}>
-            <h1 className="ag-title" style={{ margin: 0 }}>Agenda · Radar pedagógico</h1>
-            <div className="ag-meta">
-              <span><b>{counts.weekCount} {counts.weekCount === 1 ? "evento" : "eventos"}</b> esta semana</span>
             </div>
+
+            <h2 className="ag-block-title">Situação da agenda</h2>
           </div>
 
           <div className="ag-content">
@@ -1640,14 +1666,6 @@ const deleteCalendar = async () => {
                 accept="application/pdf"
                 style={{ display: "none" }}
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCalendarioFile(f); }}
-              />
-              <AgendaSofiaSide
-                onImportM4={openM4Import}
-                m4Count={m4Pending}
-                counts={counts}
-                todayKey={todayKey}
-                onImportCalendario={() => calendarFileRef.current?.click()}
-                importandoCalendario={importandoCalendario}
               />
 
               {calendarioInfo && (
