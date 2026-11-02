@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "@/lib/pwa/useInstalarApp";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -56,6 +57,11 @@ export const Route = createRootRoute({
   meta: [
     { charSet: "utf-8" },
     { name: "viewport", content: "width=device-width, initial-scale=1" },
+    { name: "theme-color", content: "#0B7A55" },
+    { name: "mobile-web-app-capable", content: "yes" },
+    { name: "apple-mobile-web-app-capable", content: "yes" },
+    { name: "apple-mobile-web-app-title", content: "AgilizaProf" },
+    { name: "apple-mobile-web-app-status-bar-style", content: "default" },
     { title: "Sofia Teacher Assist | AgilizaProf — IA para Educadores Brasileiros" },
     { name: "description", content: "Plataforma de inteligência artificial pedagógica para professores brasileiros. Crie planos de aula, relatórios e atividades personalizadas em minutos." },
     { name: "author", content: "AgilizaProf" },
@@ -77,6 +83,7 @@ export const Route = createRootRoute({
     { rel: "icon", type: "image/png", sizes: "96x96", href: "/favicon-96x96.png" },
     { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
     { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+    { rel: "manifest", href: "/site.webmanifest" },
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
     { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     {

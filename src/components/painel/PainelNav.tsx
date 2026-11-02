@@ -7,6 +7,7 @@ import { useIsAdmin } from "@/lib/admin/useIsAdmin";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofiaOptional } from "@/components/sofia/SofiaProvider";
 import { initialsFromName } from "@/lib/mockData";
+import { InstalarApp } from "./InstalarApp";
 
 // Visual "Painel": tokens, logo do lápis, menu do topo (computador) e
 // barra de baixo (celular). Usado pelas páginas já redesenhadas.
@@ -188,6 +189,12 @@ export const ICONS = {
       <path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
     </>
   ),
+  phone: (
+    <>
+      <rect x="6" y="2" width="12" height="20" rx="2.5" />
+      <line x1="11" y1="18" x2="13" y2="18" />
+    </>
+  ),
   gift: (
     <>
       <polyline points="20 12 20 22 4 22 4 12" />
@@ -237,6 +244,7 @@ export function PainelNav() {
   const nome = (ctx.user?.nome || "").trim();
   const [menu, setMenu] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [baixar, setBaixar] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -323,6 +331,16 @@ export function PainelNav() {
             </button>
             {menu && (
               <div className="pn-menu" role="menu">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenu(false);
+                    setBaixar(true);
+                  }}
+                >
+                  <Svg>{ICONS.phone}</Svg>Baixar o app no celular
+                </button>
                 <Link to="/configuracoes" role="menuitem">
                   <Svg>{ICONS.gear}</Svg>Configurações
                 </Link>
@@ -385,6 +403,16 @@ export function PainelNav() {
               <Link to="/indicacoes" style={{ background: "#FFB224", borderColor: "#14161F" }}>
                 <Svg>{ICONS.gift}</Svg>Indique e ganhe
               </Link>
+              <button
+                type="button"
+                style={{ background: "#CDEFE2", borderColor: "#0B7A55" }}
+                onClick={() => {
+                  setSheet(false);
+                  setBaixar(true);
+                }}
+              >
+                <Svg>{ICONS.phone}</Svg>Baixar o app no celular
+              </button>
               <Link to="/inclusao">
                 <Svg>{ICONS.users}</Svg>Inclusão
               </Link>
@@ -415,6 +443,7 @@ export function PainelNav() {
           </div>
         </div>
       )}
+      {baixar && <InstalarApp onClose={() => setBaixar(false)} />}
     </>
   );
 }

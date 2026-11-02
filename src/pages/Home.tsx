@@ -6,7 +6,9 @@ import { useSofiaOptional } from "@/components/sofia/SofiaProvider";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useTurmas } from "@/hooks/useTurmas";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
-import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
+import { TempoChip } from "@/components/painel/TempoChip";
+import { InstalarApp } from "@/components/painel/InstalarApp";
+import { useInstalarApp } from "@/lib/pwa/useInstalarApp";
 import { useCreditos } from "@/lib/creditos/useCreditos";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
 import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav";
@@ -15,17 +17,6 @@ import { trackEvent } from "@/lib/tracking";
 // Página inicial no visual "Painel": contador pequeno no topo, caixa para
 // escrever para a Sofia, currículo da rede e os cards de todas as funções.
 
-const TIERS = [
-  { max: 3, name: "Semente" },
-  { max: 7, name: "Manhã livre" },
-  { max: 19, name: "Dia inteiro" },
-  { max: 39, name: "Rotina leve" },
-  { max: 79, name: "Semana extra" },
-  { max: 129, name: "Vida de volta" },
-  { max: 199, name: "Mais leveza" },
-  { max: 499, name: "Extraordinário" },
-  { max: Infinity, name: "Lendário" },
-];
 
 type Card = { to?: string; title: string; desc: string; bg: string; icon: ReactNode; tag?: string };
 
@@ -134,7 +125,8 @@ const css = `
 .hm-wrap{max-width:1040px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));}
 .hm-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .hm-chip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 6px;border-radius:10px;text-decoration:none;color:var(--pn-ink);font-size:13.5px;font-weight:600;white-space:nowrap;}
-.hm-time{background:var(--pn-green-soft);border:1.5px solid var(--pn-green);}
+.hm-time{background:var(--pn-green-soft);border:1.5px solid var(--pn-green);font-family:inherit;cursor:pointer;}
+.hm-time:hover{background:#B9E6D3;}
 .hm-time .ic{width:24px;height:24px;border-radius:7px;background:var(--pn-green);color:#fff;display:flex;align-items:center;justify-content:center;}
 .hm-time .ic svg{width:14px;height:14px;}
 .hm-time b{font-family:var(--pn-display);font-variant-numeric:tabular-nums;}
@@ -164,6 +156,14 @@ select.hm-pill{cursor:pointer;padding-right:6px;}
 .hm-sugs button{height:36px;padding:0 12px;border-radius:8px;border:1.5px solid var(--pn-line);background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--pn-ink);cursor:pointer;}
 .hm-sugs button:hover{border-color:var(--pn-ink);}
 
+.hm-app{margin-top:26px;display:flex;align-items:center;gap:14px;background:var(--pn-green-soft);border:2px solid var(--pn-ink);box-shadow:3px 3px 0 var(--pn-ink);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
+.hm-app .ic{width:44px;height:44px;flex:none;border-radius:12px;background:var(--pn-green);color:#fff;border:2px solid var(--pn-ink);display:flex;align-items:center;justify-content:center;}
+.hm-app .ic svg{width:22px;height:22px;}
+.hm-app-tx{flex:1 1 220px;min-width:0;}
+.hm-app-tx b{display:block;font-family:var(--pn-display);font-size:16px;}
+.hm-app-tx span{display:block;margin-top:2px;font-size:13.5px;color:var(--pn-muted);}
+.hm-app .pn-btn{height:42px;}
+@media (max-width:520px){.hm-app .pn-btn{width:100%;}}
 .hm-curr{margin-top:26px;display:flex;align-items:center;gap:14px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
 .hm-badge{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--pn-ink);}
 .hm-badge svg{width:22px;height:22px;}
@@ -273,9 +273,10 @@ export function Home() {
   const sofia = useSofiaOptional();
   const { turmas } = useTurmas();
   const { curriculos, load: reloadCurriculos } = useCurriculoMunicipal();
-  const { minutos } = useTempoEconomizado();
   const cred = useCreditos();
 
+  const [baixar, setBaixar] = useState(false);
+  const app = useInstalarApp();
   const [texto, setTexto] = useState("");
   const [turmaId, setTurmaId] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
@@ -299,9 +300,6 @@ export function Home() {
 
   const primeiro = (ctx.user?.primeiro_nome || "").trim();
   const nome = primeiro && primeiro !== "Educador(a)" ? primeiro : "";
-  const horas = Math.floor(minutos / 60);
-  const mins = minutos % 60;
-  const nivel = TIERS.find((t) => horas <= t.max)?.name ?? "Semente";
   const credPct = cred.totais > 0 ? Math.round((cred.disponiveis / cred.totais) * 100) : 0;
   const turma = turmas.find((t) => t.id === turmaId);
   const padrao = useMemo(
@@ -356,23 +354,7 @@ export function Home() {
       <PainelNav />
       <main className="hm-wrap">
         <div className="hm-strip">
-          <span className="hm-chip hm-time" title="Tempo que a plataforma já te devolveu">
-            <span className="ic">
-              <Svg w={2.5}>
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </Svg>
-            </span>
-            <span>
-              <span className="lbl">Tempo devolvido a você </span>
-              <b suppressHydrationWarning>
-                {horas}h {String(mins).padStart(2, "0")}min
-              </b>
-            </span>
-            <span className="lvl" suppressHydrationWarning>
-              {nivel}
-            </span>
-          </span>
+          <TempoChip className="hm-chip hm-time" />
           {!cred.loading && cred.totais > 0 && (
             <Link to="/configuracoes" className="hm-chip hm-cred" title="Créditos disponíveis">
               Créditos
@@ -534,6 +516,22 @@ export function Home() {
             );
           })}
         </nav>
+
+        {!app.instalado && (
+          <section className="hm-app" aria-label="Baixar o app">
+            <span className="ic" aria-hidden>
+              <Svg>{ICONS.phone}</Svg>
+            </span>
+            <div className="hm-app-tx">
+              <b>Baixe o AgilizaProf no celular</b>
+              <span>Direto pelo navegador, sem Google Play. Fica com ícone na tela, como um app.</span>
+            </div>
+            <button type="button" className="pn-btn primary" onClick={() => setBaixar(true)}>
+              Baixar o app
+            </button>
+          </section>
+        )}
+        {baixar && <InstalarApp onClose={() => setBaixar(false)} />}
 
         <section className="hm-curr" aria-labelledby="hm-curr-h">
           <span className="hm-badge" style={{ background: "var(--pn-blue-soft)" }}>
