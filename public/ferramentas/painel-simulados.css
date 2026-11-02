@@ -1,0 +1,95 @@
+/* Visual "Painel" do Banco de questões e simulados dentro do AgilizaProf.
+   Vem depois do CSS original e só troca a aparência: cores e fontes do Painel,
+   cartões com borda e sombra dura, e a barra da marca some (o app já mostra o menu). */
+
+html.pn{
+  --pagina:#EDF0F5; --superficie:#FFFFFF; --superficie-2:#F3F5F9; --linha:#D6DBE5; --linha-forte:#14161F;
+  --texto:#14161F; --texto-2:#596074; --marinho:#14161F; --sobre-marinho:#FFFFFF;
+  --laranja:#0B7A55; --laranja-borda:#14161F; --laranja-suave:#CDEFE2; --sobre-laranja:#FFFFFF;
+  --azul:#1F5FC8; --azul-suave:#DCE9FF; --roxo:#5B45C9; --roxo-suave:#EDE8FF;
+  --bom:#0B7A55; --bom-suave:#CDEFE2; --ruim:#C2412D; --ruim-suave:#FDE3DE; --alerta:#8A5A00; --alerta-suave:#FFF1D1; --sol:#FFB224;
+  --f-marca:'Sora',system-ui,sans-serif;
+  --f-ui:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
+}
+html.pn body{margin:0;background:var(--pagina);color:var(--texto);}
+html.pn body::before{display:none;}
+
+/* Barra de cima: sem marca (o menu do app já está acima), só o tamanho da letra */
+html.pn .wrap{max-width:1240px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));}
+html.pn .topo{background:transparent;border-bottom:0;position:static;}
+html.pn .topo .wrap{display:flex;align-items:center;gap:12px;padding-top:14px;}
+html.pn .topo .abas{order:0;flex:1;min-width:0;padding:0;}
+html.pn .topo-in{order:1;margin-left:auto;padding:0;justify-content:flex-end;}
+/* No início não há a linha "← Início": o tamanho da letra fica no canto, ao lado do primeiro título */
+html.pn .topo:has(.abas[hidden]){position:absolute;top:0;left:0;right:0;z-index:6;pointer-events:none;}
+html.pn .topo:has(.abas[hidden]) .zoom{pointer-events:auto;}
+html.pn .abas .voltar{height:38px;}
+html.pn #painel > h2.pn-bloco:first-child{margin-top:16px;}
+html.pn .marca,html.pn .topo-tit{display:none;}
+html.pn .zoom button{background:var(--superficie);box-shadow:none;border:1.5px solid var(--linha);border-radius:10px;}
+html.pn .zoom button:hover{border-color:var(--texto);}
+html.pn main.wrap,html.pn #painel{padding-bottom:40px;}
+
+/* Títulos */
+html.pn h1,html.pn h2{font-family:var(--f-marca);font-weight:800;letter-spacing:-.035em;}
+html.pn h1{font-size:1.7rem;}
+html.pn h2.pn-bloco{margin:6px 0 10px;font-size:1.13rem;font-weight:700;letter-spacing:-.02em;}
+html.pn .pn-bloco-linha{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:26px 0 10px;}
+html.pn .pn-bloco-linha h2.pn-bloco{margin:0;}
+html.pn .pn-bloco-linha .btn.relatar{font-size:.8rem;}
+html.pn .icone-pag{background:var(--sol);border:2px solid var(--texto);box-shadow:3px 3px 0 var(--texto);}
+html.pn .icone-pag.roxo{background:#C9BDFF;box-shadow:3px 3px 0 var(--texto);}
+
+/* Botões quadrados com borda e sombra dura */
+html.pn .btn{border:2px solid var(--texto);box-shadow:3px 3px 0 var(--texto);border-radius:12px;background:var(--superficie);color:var(--texto);}
+html.pn .btn:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--texto);}
+html.pn .btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--texto);}
+html.pn .btn.prim{background:var(--laranja);color:#fff;box-shadow:3px 3px 0 var(--texto);}
+html.pn .btn.marinho{background:var(--texto);color:#fff;box-shadow:3px 3px 0 #596074;}
+html.pn .btn.roxo{background:#C9BDFF;color:var(--texto);box-shadow:3px 3px 0 var(--texto);}
+html.pn .btn.peq{border-width:1.5px;box-shadow:2px 2px 0 var(--texto);border-radius:10px;}
+html.pn .btn.perigo{color:var(--ruim);}
+html.pn .btn.relatar{color:var(--alerta);}
+html.pn .aba{box-shadow:none;border:1.5px solid var(--linha);border-radius:10px;}
+html.pn .aba[aria-selected="true"]{background:var(--texto);border-color:var(--texto);box-shadow:none;}
+html.pn .aba.sofia[aria-selected="true"]{background:#C9BDFF;color:var(--texto);border-color:var(--texto);}
+
+/* Painéis e campos */
+html.pn .painel{box-shadow:none;border:1.5px solid var(--linha);border-radius:16px;}
+html.pn input:not([type=checkbox]):not([type=radio]),html.pn select,html.pn textarea{border-radius:10px;}
+html.pn input[type=checkbox],html.pn input[type=radio]{accent-color:var(--laranja);}
+html.pn .toast{background:var(--texto);box-shadow:3px 3px 0 var(--laranja);}
+
+/* "O que você quer fazer?": cartões com nome e explicação */
+html.pn .inicio-cards{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+html.pn .card-ini{flex-direction:row;align-items:center;gap:12px;padding:12px;min-height:84px;border:2px solid var(--texto);border-radius:16px;
+  box-shadow:3px 3px 0 var(--texto);overflow:visible;transition:transform .12s,box-shadow .12s;}
+html.pn .card-ini:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--texto);}
+html.pn .card-ini:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--texto);}
+html.pn .card-ini .faixa-c{flex:none;width:46px;height:46px;border-radius:12px;border:1.5px solid var(--texto);position:relative;}
+html.pn .card-ini .faixa-c span{width:auto;height:auto;background:none;box-shadow:none;font-size:1.35rem;}
+html.pn .card-ini .faixa-c .cont{top:-9px;right:-12px;font-size:.7rem;padding:1px 7px;border:1.5px solid #fff;}
+html.pn .card-ini .corpo{padding:0;min-width:0;}
+html.pn .card-ini b{font-family:var(--f-marca);font-weight:700;font-size:.98rem;letter-spacing:-.02em;line-height:1.2;}
+html.pn .card-ini p{font-size:.82rem;line-height:1.35;margin-top:3px;}
+html.pn .card-ini:first-child{background:var(--laranja);color:#fff;}
+html.pn .card-ini:first-child p{color:#D4F3E6;}
+html.pn .card-ini:first-child .faixa-c{background:var(--sol)!important;}
+
+/* "Situação do banco": números em linha */
+html.pn .resumo-num{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;}
+html.pn .resumo-num div{box-shadow:none;border:1.5px solid var(--linha);border-radius:14px;}
+html.pn .resumo-num b{font-family:var(--f-marca);font-weight:800;letter-spacing:-.03em;font-size:1.55rem;}
+
+@media (max-width:1000px){html.pn .resumo-num{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media (max-width:640px){
+  html.pn .wrap{padding-left:16px;padding-right:16px;}
+  html.pn .inicio-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  html.pn .card-ini{flex-direction:column;align-items:flex-start;gap:8px;min-height:0;}
+  html.pn .card-ini .faixa-c{width:40px;height:40px;}
+  html.pn .card-ini b{font-size:.93rem;}
+  html.pn .card-ini p{font-size:.78rem;}
+  html.pn .resumo-num{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  html.pn .resumo-num b{font-size:1.35rem;}
+}
