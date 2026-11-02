@@ -52,6 +52,8 @@ const navItems = [
     label: "Quem volta",
     icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75 M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0",
   },
+  { to: "/admin/indicacoes", label: "Indicações", icon: "M20 12v10H4V12 M2 7h20v5H2z M12 22V7" },
+  { to: "/admin/avisos", label: "Aviso para todos", icon: "M3 11l18-5v12L3 14v-3z M11.6 16.8a3 3 0 1 1-5.8-1.6" },
   { to: "/admin/funil", label: "Caminho do usuário", icon: "M22 3H2l8 9.46V19l4 2v-8.54L22 3z" },
 ];
 
@@ -59,7 +61,7 @@ const navItems = [
 // cada grupo, as telas viram abas menores.
 const GROUPS: { label: string; icon: string; items: string[] }[] = [
   { label: "Visão geral", icon: navItems[0].icon, items: ["/admin"] },
-  { label: "Pessoas", icon: navItems[1].icon, items: ["/admin/usuarios", "/admin/pro"] },
+  { label: "Pessoas", icon: navItems[1].icon, items: ["/admin/usuarios", "/admin/pro", "/admin/indicacoes", "/admin/avisos"] },
   {
     label: "Vendas",
     icon: "M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
@@ -73,7 +75,7 @@ const GROUPS: { label: string; icon: string; items: string[] }[] = [
   {
     label: "Sistema",
     icon: "M2 12h6l3-9 4 18 3-9h4",
-    items: ["/admin/infra", "/admin/erros", "/admin/storage", "/admin/manutencao"],
+    items: ["/admin/infra", "/admin/erros", "/admin/manutencao"],
   },
 ];
 

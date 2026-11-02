@@ -16,6 +16,14 @@ export function MaintenanceBanner() {
   const [windows, setWindows] = useState<Window[]>([]);
   const { isAdmin } = useIsAdmin();
   const location = useLocation();
+  const [dispensados, setDispensados] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      setDispensados(JSON.parse(localStorage.getItem("aviso-dispensado") || "[]"));
+    } catch {
+      setDispensados([]);
+    }
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -55,11 +63,24 @@ export function MaintenanceBanner() {
     );
   }
 
+  if (dispensados.includes(active.id)) return null;
+  const dispensar = () => {
+    const novos = [...dispensados, active.id];
+    setDispensados(novos);
+    try {
+      localStorage.setItem("aviso-dispensado", JSON.stringify(novos.slice(-20)));
+    } catch {
+      /* sem armazenamento: o aviso volta na próxima visita */
+    }
+  };
+
   return (
-    <div style={{position:"sticky",top:0,zIndex:50,background:"linear-gradient(90deg,#0B7A55,#0B7A55)",color:"#fff",padding:"8px 14px",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:600,display:"flex",alignItems:"center",gap:8,justifyContent:"center"}}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>{active.title}{active.message ? ` — ${active.message}` : ""}</span>
-      <span style={{opacity:.85,fontWeight:500}}>(até {new Date(active.ends_at).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})})</span>
+    <div role="status" style={{position:"sticky",top:0,zIndex:50,background:"#FFE2A8",color:"#14161F",borderBottom:"2px solid #14161F",padding:"8px 12px",fontFamily:"'DM Sans',sans-serif",fontSize:13.5,fontWeight:600,display:"flex",alignItems:"center",gap:10,justifyContent:"center"}}>
+      <span aria-hidden>📣</span>
+      <span style={{minWidth:0,overflowWrap:"anywhere"}}>
+        <b>{active.title}</b>{active.message ? ` · ${active.message}` : ""}
+      </span>
+      <button type="button" aria-label="Fechar aviso" onClick={dispensar} style={{flex:"none",width:28,height:28,borderRadius:8,border:"1.5px solid #14161F",background:"#fff",cursor:"pointer",fontWeight:800,lineHeight:1}}>×</button>
     </div>
   );
 }

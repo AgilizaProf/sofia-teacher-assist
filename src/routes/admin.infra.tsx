@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { StorageResumo } from "@/components/admin/StorageResumo";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/infra")({ component: InfraPage });
@@ -39,6 +40,7 @@ function InfraPage() {
           </table>
         </div>
       </div>
+      <StorageResumo />
     </AdminLayout>
   );
 }
