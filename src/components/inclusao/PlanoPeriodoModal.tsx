@@ -310,7 +310,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
           <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 6 }}>
             <button
               type="button"
-              className="btn btn-primary bg-orange-400 text-orange-400"
+              className="btn btn-primary bg-emerald-400 text-emerald-400"
               onClick={gerar}
               disabled={loading || disciplinas.length === 0}
             >
@@ -424,7 +424,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
           <button type="button" className="inc-btn-ghost" onClick={onClose}>Cancelar</button>
           <button
             type="button"
-            className="btn btn-primary bg-orange-400 text-orange-400"
+            className="btn btn-primary bg-emerald-400 text-emerald-400"
             onClick={salvarSelecionados}
             disabled={loading || itens.filter((x) => x.incluir).length === 0}
           >
@@ -436,13 +436,13 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
           .pim-overlay{position:fixed;inset:0;background:rgba(15,26,54,.55);display:grid;place-items:center;z-index:1000;padding:16px;}
           .pim-modal{background:#fff;border-radius:16px;width:min(960px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px -20px rgba(11,18,32,.5);}
           .pim-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);}
-          .pim-head h3{font-family:'Fraunces',serif;font-weight:700;font-size:18px;margin:0;}
+          .pim-head h3{font-family:'Sora',serif;font-weight:700;font-size:18px;margin:0;}
           .pim-sub{font-size:12px;color:var(--muted);}
-          .pim-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:#1B2A4E;}
+          .pim-meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:#14161F;}
           .pim-meta-item{background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px;}
           .pim-meta-item b{font-weight:700;color:var(--muted);margin-right:4px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
           .pim-x{background:transparent;border:none;cursor:pointer;color:var(--muted);padding:6px;border-radius:6px;}
-          .pim-x:hover{background:var(--bg);color:#1B2A4E;}
+          .pim-x:hover{background:var(--bg);color:#14161F;}
           .pim-body{padding:18px 22px;overflow:auto;display:flex;flex-direction:column;gap:14px;}
           .pim-field{display:flex;flex-direction:column;gap:6px;}
           .pim-field>label{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
@@ -452,20 +452,20 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
           .pim-chip.active{background:var(--accent-soft);border-color:#FFB37A;color:#B8410E;font-weight:700;}
           .pim-toggle{display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:2px;}
           .pim-toggle-opt{padding:5px 12px;border-radius:6px;border:none;background:transparent;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted);font-weight:600;}
-          .pim-toggle-opt.active{background:#fff;color:#1B2A4E;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+          .pim-toggle-opt.active{background:#fff;color:#14161F;box-shadow:0 1px 3px rgba(0,0,0,.06);}
           .pim-list{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
           .pim-card{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff;transition:opacity .15s;}
           .pim-card.off{opacity:.55;}
           .pim-card-head{display:flex;gap:10px;align-items:flex-start;}
-          .pim-card-head h4{font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin:2px 0 0;line-height:1.3;}
+          .pim-card-head h4{font-family:'Sora',serif;font-weight:700;font-size:15px;margin:2px 0 0;line-height:1.3;}
           .pim-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;}
-          .pim-card-disc{background:#1B2A4E;color:#fff;padding:2px 8px;border-radius:6px;font-weight:700;}
+          .pim-card-disc{background:#14161F;color:#fff;padding:2px 8px;border-radius:6px;font-weight:700;}
           .pim-card-sem{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
           .pim-bncc{font-family:'JetBrains Mono',monospace;background:var(--accent-soft);color:#B8410E;padding:2px 6px;border-radius:5px;font-weight:700;}
           .pim-expand{background:transparent;border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-family:inherit;}
-          .pim-expand:hover{background:var(--bg);color:#1B2A4E;}
+          .pim-expand:hover{background:var(--bg);color:#14161F;}
           .pim-topicos{margin-top:10px;display:flex;flex-direction:column;gap:4px;font-size:12.5px;line-height:1.45;}
-          .pim-topicos b{color:#1B2A4E;}
+          .pim-topicos b{color:#14161F;}
           .pim-completo{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:10px;}
           .pim-completo section b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:3px;}
           .pim-completo p{font-size:12.5px;line-height:1.5;margin:0;}

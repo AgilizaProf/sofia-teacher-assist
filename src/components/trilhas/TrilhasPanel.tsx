@@ -507,8 +507,8 @@ export function TrilhasPanel() {
                     padding: "5px 11px",
                     borderRadius: 99,
                     border: "1px solid " + (active ? "var(--orange)" : "var(--line)"),
-                    background: active ? "#FFF7ED" : "#fff",
-                    color: active ? "#9A3412" : "var(--ink)",
+                    background: active ? "#E8F6EF" : "#fff",
+                    color: active ? "#064E36" : "var(--ink)",
                     fontSize: 12.5,
                     cursor: "pointer",
                   }}
@@ -556,7 +556,7 @@ export function TrilhasPanel() {
         {trilhas.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhuma trilha ainda. Crie a primeira acima.</p>}
         <div style={{ display: "grid", gap: 10 }}>
           {trilhas.map((t) => (
-            <div key={t.id} style={{ border: "1px solid var(--line)", borderRadius: 10, padding: 14, cursor: "pointer", background: selected === t.id ? "#FFF7ED" : "#fff", minWidth: 0, maxWidth: "100%", overflowWrap: "break-word" }} onClick={() => setSelected(selected === t.id ? null : t.id)}>
+            <div key={t.id} style={{ border: "1px solid var(--line)", borderRadius: 10, padding: 14, cursor: "pointer", background: selected === t.id ? "#E8F6EF" : "#fff", minWidth: 0, maxWidth: "100%", overflowWrap: "break-word" }} onClick={() => setSelected(selected === t.id ? null : t.id)}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: 14, overflowWrap: "break-word", wordBreak: "normal" }}><BookOpen size={14} style={{ display: "inline", marginRight: 6 }} />{t.tema_central}</div>
@@ -579,7 +579,7 @@ export function TrilhasPanel() {
                       return (
                         <div onClick={(e) => e.stopPropagation()} style={{ display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                           {bulkProgresso && (
-                            <span style={{ fontSize: 11.5, color: bulkProgresso.falhou > 0 ? "#9A3412" : "var(--muted)" }}>
+                            <span style={{ fontSize: 11.5, color: bulkProgresso.falhou > 0 ? "#064E36" : "var(--muted)" }}>
                               {bulkProgresso.feito}/{bulkProgresso.total} gerada(s){bulkProgresso.falhou > 0 ? ` · ${bulkProgresso.falhou} falha(s)` : ""}
                             </span>
                           )}
@@ -626,7 +626,7 @@ export function TrilhasPanel() {
                         onDragOver={(e) => { if (draggingId && draggingId !== s.id) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverId(s.id); } }}
                         onDragLeave={() => { if (dragOverId === s.id) setDragOverId(null); }}
                         onDrop={(e) => { e.preventDefault(); e.stopPropagation(); const fromId = e.dataTransfer.getData("text/plain") || draggingId; setDragOverId(null); setDraggingId(null); if (fromId) void reordenarSemanas(fromId, s.id, t.id); }}
-                        style={{ background: isOver ? "#FFF7ED" : checado ? "#FFF7ED" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : checado ? "1px solid var(--orange)" : "none", transition: "background .12s ease", minWidth: 0, maxWidth: "100%" }}
+                        style={{ background: isOver ? "#E8F6EF" : checado ? "#E8F6EF" : "#F8FAFC", borderRadius: 6, padding: "8px 10px", opacity: isDragging ? 0.4 : 1, outline: isOver ? "2px dashed var(--orange)" : checado ? "1px solid var(--orange)" : "none", transition: "background .12s ease", minWidth: 0, maxWidth: "100%" }}
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, flexWrap: isMobile ? "wrap" : "nowrap" }}>
                           {/* Esquerda: alça de drag + checkbox */}
@@ -1058,7 +1058,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
     }).join("\n");
     const rod = `${avaliacao ? `<p><b>Avaliação formativa:</b> ${esc(avaliacao)}</p>` : ""}${ponte ? `<p><b>Ponte p/ próxima semana:</b> ${esc(ponte)}</p>` : ""}`;
     return `<!doctype html><html><head><meta charset="utf-8"><title>Trilha · S${semana.semana}</title>
-<style>@page{size:A4;margin:22mm 20mm;}body{font-family:Inter,Arial,sans-serif;color:#0B1220;line-height:1.55;font-size:12pt;}h1{font-family:Fraunces,Georgia,serif;font-size:22pt;margin:0 0 4px;color:#0F1B36;}h2{font-size:13pt;color:#FF6A2C;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #E7E9EF;padding-bottom:4px;}.meta{color:#6B7691;font-size:10.5pt;margin-bottom:14px;}p{margin:6px 0;}ul{margin:6px 0;padding-left:18px;}</style></head><body>${cabec}${corpo}${rod}</body></html>`;
+<style>@page{size:A4;margin:22mm 20mm;}body{font-family:Inter,Arial,sans-serif;color:#0B1220;line-height:1.55;font-size:12pt;}h1{font-family:Sora,Georgia,serif;font-size:22pt;margin:0 0 4px;color:#14161F;}h2{font-size:13pt;color:#0B7A55;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #E7E9EF;padding-bottom:4px;}.meta{color:#6B7691;font-size:10.5pt;margin-bottom:14px;}p{margin:6px 0;}ul{margin:6px 0;padding-left:18px;}</style></head><body>${cabec}${corpo}${rod}</body></html>`;
   };
   const exportarPdf = () => {
     if (diasSelecionados.length === 0) { alert("Selecione ao menos um dia."); return; }
@@ -1337,7 +1337,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
                               <span style={{ minWidth: 36, fontWeight: 600 }}>{nomeDia(c.weekday)}</span>
                               <span style={{ minWidth: 92 }}>{c.iso.split("-").reverse().join("/")}</span>
                               {usado && (
-                                <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#FFF7ED", color: "#9A3412", fontWeight: 600 }}>
+                                <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#E8F6EF", color: "#064E36", fontWeight: 600 }}>
                                   → {tituloAtiv(atividadeIdx!)}
                                 </span>
                               )}
@@ -1370,7 +1370,7 @@ ${par("Adaptação PCD", d.adaptacao_pcd)}`;
                             {disc && <span style={{ fontSize: 10.5, padding: "1px 6px", borderRadius: 99, background: "#EEF2FF", color: "#3730A3", fontWeight: 600 }}>{disc}</span>}
                             <span style={{ minWidth: 18, color: "var(--muted)" }}>→</span>
                             {iso ? (
-                              <span style={{ fontWeight: 600, color: "#9A3412" }}>
+                              <span style={{ fontWeight: 600, color: "#064E36" }}>
                                 {nomeDia(parseIso(iso).getUTCDay())}, {iso.split("-").reverse().join("/")}
                               </span>
                             ) : (

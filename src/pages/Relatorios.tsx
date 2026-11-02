@@ -36,17 +36,17 @@ import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 
 const css = `
 .rel-root{
-  --primary:#1B2A4E;--primary-dark:#0F1B36;
+  --primary:#14161F;--primary-dark:#14161F;
   --panel:#0E1422;--muted:#7A8194;--line-soft:#E7E9EF;
   --paper:#F6F4EE;--paper-2:#FBFAF6;
-  --accent:#FF6A2C;--accent-2:#FFB47A;
+  --accent:#0B7A55;--accent-2:#FFB47A;
   --violet:#6E5BE6;--violet-soft:#EDEAFE;
   --green:#16A36B;--green-soft:#E7F6EE;
   --amber:#E9A23B;--amber-soft:#FCF1DC;
   --red:#DC2626;--red-soft:#FDECEC;
   --text:#0B1220;--text-soft:#3B4256;
   --shadow-card:0 1px 0 rgba(17,24,39,.04), 0 8px 24px -12px rgba(17,24,39,.18);
-  font-family:'Inter',ui-sans-serif,system-ui,sans-serif;background:var(--paper);color:var(--text);
+  font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif;background:var(--paper);color:var(--text);
   -webkit-font-smoothing:antialiased;min-height:100vh;display:flex;width:100%;
 }
 .rel-root *{box-sizing:border-box;}
@@ -65,7 +65,7 @@ const css = `
 .rel-icon-btn:hover{border-color:#cfd4e1;}
 .rel-user-pill{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line-soft);
   padding:6px 10px 6px 6px;border-radius:999px;box-shadow:var(--shadow-card);}
-.rel-user-pill .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#FF6A2C,#6E5BE6);
+.rel-user-pill .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#0B7A55,#6E5BE6);
   display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;}
 .rel-user-pill b{font-size:12.5px;}
 .rel-user-pill small{color:var(--accent);font-size:10.5px;display:block;letter-spacing:.06em;font-weight:700;}
@@ -76,12 +76,12 @@ const css = `
   border-radius:22px;padding:28px 30px;color:#fff;position:relative;overflow:hidden;
   box-shadow:0 30px 60px -30px rgba(11,18,32,.45);}
 .rel-hero::before{content:"";position:absolute;top:-180px;right:-100px;width:480px;height:480px;
-  background:radial-gradient(circle, rgba(255,122,69,.26) 0%, transparent 60%);border-radius:50%;pointer-events:none;}
+  background:radial-gradient(circle, rgba(11,122,85,.26) 0%, transparent 60%);border-radius:50%;pointer-events:none;}
 .rel-hero::after{content:"";position:absolute;bottom:-160px;left:-80px;width:380px;height:380px;
-  background:radial-gradient(circle, rgba(255,148,102,.10) 0%, transparent 65%);border-radius:50%;pointer-events:none;}
+  background:radial-gradient(circle, rgba(11,122,85,.10) 0%, transparent 65%);border-radius:50%;pointer-events:none;}
 .rel-hero-grid{display:grid;grid-template-columns:1fr 360px;gap:30px;align-items:center;position:relative;}
 .rel-eyebrow{font-size:11px;letter-spacing:.16em;color:#FFB47A;font-weight:700;display:inline-flex;align-items:center;gap:8px;}
-.rel-hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:38px;line-height:1.12;margin:10px 0 8px;letter-spacing:-.01em;}
+.rel-hero h1{font-family:'Sora',serif;font-weight:600;font-size:38px;line-height:1.12;margin:10px 0 8px;letter-spacing:-.01em;}
 .rel-hero h1 em{font-style:normal;color:var(--accent);}
 .rel-hero p{margin:0 0 18px;color:#aab2c8;font-size:14.5px;max-width:560px;line-height:1.55;}
 .rel-hero-cta{display:flex;gap:10px;flex-wrap:wrap;}
@@ -96,10 +96,10 @@ const css = `
 .rel-pc{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);
   border-radius:16px;padding:18px;backdrop-filter:blur(6px);}
 .rel-pc-title{font-size:11px;letter-spacing:.14em;color:#aab2c8;font-weight:700;text-transform:uppercase;}
-.rel-pc-num{font-family:'Fraunces',serif;font-weight:600;font-size:34px;line-height:1;margin:8px 0 4px;}
+.rel-pc-num{font-family:'Sora',serif;font-weight:600;font-size:34px;line-height:1;margin:8px 0 4px;}
 .rel-pc-num span{color:#aab2c8;font-size:18px;font-weight:500;}
 .rel-pc-bar{height:8px;background:rgba(255,255,255,.10);border-radius:999px;overflow:hidden;margin-top:12px;}
-.rel-pc-bar i{display:block;height:100%;background:linear-gradient(90deg,#FF6A2C,#FF8A4C);border-radius:999px;
+.rel-pc-bar i{display:block;height:100%;background:linear-gradient(90deg,#0B7A55,#FF8A4C);border-radius:999px;
   box-shadow:0 0 24px rgba(255,106,44,.6);}
 .rel-pc-meta{display:flex;justify-content:space-between;font-size:11.5px;color:#aab2c8;margin-top:8px;}
 .rel-pc-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(22,163,107,.18);color:#7EE0AF;
@@ -115,14 +115,14 @@ const css = `
 .rel-kpi-icon.violet{background:var(--violet-soft);color:#4B3CA8;}
 .rel-kpi-icon.green{background:var(--green-soft);color:#0E7A4F;}
 .rel-kpi-icon.orange{background:rgba(255,106,44,.10);color:#C84A14;}
-.rel-kpi-num{font-family:'Fraunces',serif;font-weight:600;font-size:28px;line-height:1;margin-top:4px;}
-.rel-kpi-num small{font-size:14px;color:var(--muted);font-weight:500;font-family:'Inter';}
+.rel-kpi-num{font-family:'Sora',serif;font-weight:600;font-size:28px;line-height:1;margin-top:4px;}
+.rel-kpi-num small{font-size:14px;color:var(--muted);font-weight:500;font-family:'DM Sans';}
 .rel-kpi-foot{font-size:11.5px;color:var(--muted);}
 .rel-kpi-foot b.up{color:var(--green);}
 .rel-kpi-foot b.urg{color:var(--red);}
 
 .rel-sec-head{display:flex;align-items:flex-end;justify-content:space-between;margin:26px 0 14px;gap:18px;flex-wrap:wrap;}
-.rel-sec-head h2{margin:0;font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-.005em;}
+.rel-sec-head h2{margin:0;font-family:'Sora',serif;font-weight:600;font-size:22px;letter-spacing:-.005em;}
 .rel-sec-head p{margin:4px 0 0;color:var(--muted);font-size:13px;}
 .rel-sec-actions{display:flex;gap:8px;align-items:center;}
 
@@ -161,7 +161,7 @@ const css = `
 .rel-card:hover{transform:translateY(-2px);border-color:#d8dbe4;box-shadow:0 12px 32px -16px rgba(17,24,39,.22);}
 .rel-card-head{display:flex;align-items:center;gap:12px;}
 .rel-av{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none;
-  background:linear-gradient(135deg,#FF6A2C,#FF8A4C);}
+  background:linear-gradient(135deg,#0B7A55,#FF8A4C);}
 .rel-av.violet{background:linear-gradient(135deg,#6E5BE6,#9C8CFA);}
 .rel-av.green{background:linear-gradient(135deg,#16A36B,#48C893);}
 .rel-av.blue{background:linear-gradient(135deg,#3B82F6,#60A5FA);}
@@ -188,7 +188,7 @@ const css = `
 .rel-status.done .dot{background:var(--green);}
 
 .rel-progress{height:6px;background:#F1EFE8;border-radius:999px;overflow:hidden;}
-.rel-progress i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#FF6A2C,#FF8A4C);}
+.rel-progress i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#0B7A55,#FF8A4C);}
 .rel-meta{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;flex-wrap:wrap;}
 .rel-meta .sep{width:3px;height:3px;border-radius:50%;background:#cfd4e1;}
 
@@ -206,9 +206,9 @@ const css = `
 
 .rel-bulk{grid-column:span 3;background:linear-gradient(135deg,#FFF6EE 0%,#FFE3CC 100%);border:1px dashed #F4B58A;
   border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:18px;}
-.rel-bulk-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#FF6A2C,#FF8A4C);
+.rel-bulk-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0B7A55,#FF8A4C);
   display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 10px 22px -10px rgba(255,106,44,.6);}
-.rel-bulk h3{margin:0 0 2px;font-family:'Fraunces',serif;font-weight:600;font-size:18px;}
+.rel-bulk h3{margin:0 0 2px;font-family:'Sora',serif;font-weight:600;font-size:18px;}
 .rel-bulk p{margin:0;font-size:13px;color:#5a3a20;}
 .rel-bulk .rel-btn-primary{margin-left:auto;}
 
@@ -228,7 +228,7 @@ const css = `
 
 .rel-modal-bg{position:fixed;inset:0;background:rgba(11,18,32,.55);display:grid;place-items:center;z-index:50;padding:20px;}
 .rel-modal{background:#fff;border-radius:18px;max-width:640px;width:100%;max-height:85vh;overflow:auto;padding:28px;box-shadow:0 30px 80px -20px rgba(0,0,0,.4);}
-.rel-modal h3{margin:0 0 8px;font-family:'Fraunces',serif;font-size:22px;font-weight:600;}
+.rel-modal h3{margin:0 0 8px;font-family:'Sora',serif;font-size:22px;font-weight:600;}
 .rel-modal .rel-modal-meta{color:var(--muted);font-size:12.5px;margin-bottom:18px;}
 .rel-modal-body{font-size:14px;line-height:1.65;color:var(--text-soft);background:var(--paper-2);padding:18px;border-radius:12px;border:1px solid var(--line-soft);}
 .rel-modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
@@ -1800,7 +1800,7 @@ ${parecerHtml}
                       {naoObservadas > 0 && (
                         <div
                           title="Itens marcados como 'Não observada' não entram no cálculo. Avalie-os para refletir no parecer."
-                          style={{ marginTop: 6, display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 8px", borderRadius: 999, background: "#FFF7ED", color: "#9A3412", border: "1px solid #FED7AA", fontSize: 11, fontWeight: 600 }}
+                          style={{ marginTop: 6, display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 8px", borderRadius: 999, background: "#E8F6EF", color: "#064E36", border: "1px solid #CDEFE2", fontSize: 11, fontWeight: 600 }}
                         >
                           <span aria-hidden>⚠</span>
                           {naoObservadas} {naoObservadas === 1 ? "item não observado" : "itens não observados"}
@@ -2703,7 +2703,7 @@ ${parecerHtml}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
-                        <select value={formatoParecer} onChange={(e) => setFormatoParecer(e.target.value as "" | "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: formatoParecer ? "1px solid var(--line-soft)" : "1px solid #F97316", fontSize: 13, background: "#fff" }}>
+                        <select value={formatoParecer} onChange={(e) => setFormatoParecer(e.target.value as "" | "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: formatoParecer ? "1px solid var(--line-soft)" : "1px solid #0B7A55", fontSize: 13, background: "#fff" }}>
                           <option value="" disabled>Escolha o formato…</option>
                           <option value="topicos">Tópicos (estruturado)</option>
                           <option value="texto">Texto corrido</option>
@@ -2728,7 +2728,7 @@ ${parecerHtml}
                 {parecerAluno && (
                   <div style={{ marginTop: 14, padding: 14, background: "#fff", border: "1px solid var(--line-soft)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                      <b style={{ fontFamily: "'Fraunces',serif", fontSize: 15 }}>{parecerAluno.titulo || "Parecer descritivo"}</b>
+                      <b style={{ fontFamily: "'Sora',serif", fontSize: 15 }}>{parecerAluno.titulo || "Parecer descritivo"}</b>
                       <span style={{ fontSize: 11, color: "var(--muted)" }}>
                         {parecerAluno.periodoLabel ? `${parecerAluno.periodoLabel} · ` : ""}Gerado em {parecerAluno.geradoEm}
                       </span>
@@ -2764,7 +2764,7 @@ ${parecerHtml}
                               </div>
                             )}
                             {parecerAluno.comunicacao_familias && (
-                              <div style={{ background: "#FFF7ED", padding: 10, borderRadius: 8 }}>
+                              <div style={{ background: "#E8F6EF", padding: 10, borderRadius: 8 }}>
                                 <b style={{ fontSize: 12 }}>Comunicação à família</b>
                                 <p style={{ margin: "4px 0 0", fontSize: 13 }}>{parecerAluno.comunicacao_familias}</p>
                               </div>
@@ -2849,7 +2849,7 @@ ${parecerHtml}
                         {parecerAluno.versao_familia && (
                           <div style={{ marginTop: 4, padding: 12, background: "linear-gradient(180deg,#FFFDF9,#FBF3EA)", border: "1px solid #F1E4D2", borderRadius: 10 }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
-                              <b style={{ fontFamily: "'Fraunces',serif", fontSize: 14 }}>Versão para a família</b>
+                              <b style={{ fontFamily: "'Sora',serif", fontSize: 14 }}>Versão para a família</b>
                               <button
                                 className="rel-btn-card"
                                 onClick={() => {
@@ -3072,7 +3072,7 @@ ${parecerHtml}
                               <span style={{ fontSize: 12, color: "var(--muted)" }}>{a.turma || "Sem turma"} · {a.statusLabel}{a.pcd ? ` · PCD: ${a.pcd}` : ""}</span>
                             </div>
                             {!tem && (
-                              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#9C6B1F", background: "#FFF7ED", padding: "2px 8px", borderRadius: 999 }}>Sem parecer</span>
+                              <span style={{ fontSize: 10.5, fontWeight: 700, color: "#9C6B1F", background: "#E8F6EF", padding: "2px 8px", borderRadius: 999 }}>Sem parecer</span>
                             )}
                           </label>
                         </li>
@@ -3083,7 +3083,7 @@ ${parecerHtml}
               </div>
 
               {semParecer > 0 && (
-                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#FFF7ED", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
+                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#E8F6EF", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
                   {semParecer} aluno(s) selecionado(s) ainda não têm parecer gerado — só a rubrica BNCC será impressa.
                 </div>
               )}
@@ -3178,7 +3178,7 @@ ${parecerHtml}
               </div>
 
               {jaTem > 0 && (
-                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#FFF7ED", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
+                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#E8F6EF", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
                   {jaTem} aluno(s) selecionado(s) já têm parecer — serão regenerados e substituirão o atual.
                 </div>
               )}

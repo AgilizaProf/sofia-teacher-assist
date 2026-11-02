@@ -76,11 +76,17 @@ const CARDS: Card[] = [
     icon: ICONS.users,
   },
   {
-    to: "/minha-sala",
-    title: "Minha sala",
-    desc: "Escolas, turmas e alunos",
-    bg: "var(--pn-blue-soft)",
-    icon: ICONS.users,
+    to: "/indicacoes",
+    title: "Indique e ganhe",
+    desc: "Convide colegas e ganhe créditos e meses grátis",
+    bg: "var(--pn-sun)",
+    icon: (
+      <>
+        <rect x="3" y="8" width="18" height="4" rx="1" />
+        <path d="M12 8v13M19 12v9H5v-9" />
+        <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
+      </>
+    ),
   },
   {
     to: "/agenda",
@@ -158,7 +164,7 @@ select.hm-pill{cursor:pointer;padding-right:6px;}
 .hm-sugs button{height:36px;padding:0 12px;border-radius:8px;border:1.5px solid var(--pn-line);background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--pn-ink);cursor:pointer;}
 .hm-sugs button:hover{border-color:var(--pn-ink);}
 
-.hm-curr{margin-top:14px;display:flex;align-items:center;gap:14px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
+.hm-curr{margin-top:26px;display:flex;align-items:center;gap:14px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
 .hm-badge{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--pn-ink);}
 .hm-badge svg{width:22px;height:22px;}
 .hm-curr-txt{flex:1;min-width:220px;}
@@ -350,11 +356,7 @@ export function Home() {
       <PainelNav />
       <main className="hm-wrap">
         <div className="hm-strip">
-          <Link
-            to="/minha-sala"
-            className="hm-chip hm-time"
-            title="Tempo que a plataforma já te devolveu"
-          >
+          <span className="hm-chip hm-time" title="Tempo que a plataforma já te devolveu">
             <span className="ic">
               <Svg w={2.5}>
                 <circle cx="12" cy="12" r="10" />
@@ -370,7 +372,7 @@ export function Home() {
             <span className="lvl" suppressHydrationWarning>
               {nivel}
             </span>
-          </Link>
+          </span>
           {!cred.loading && cred.totais > 0 && (
             <Link to="/configuracoes" className="hm-chip hm-cred" title="Créditos disponíveis">
               Créditos
@@ -491,42 +493,6 @@ export function Home() {
           </div>
         </section>
 
-        <section className="hm-curr" aria-labelledby="hm-curr-h">
-          <span className="hm-badge" style={{ background: "var(--pn-blue-soft)" }}>
-            <Svg>
-              <path d="M3 21h18" />
-              <path d="M5 21V10l7-5 7 5v11" />
-              <path d="M10 21v-5h4v5" />
-            </Svg>
-          </span>
-          <div className="hm-curr-txt">
-            <b id="hm-curr-h">Currículo da sua rede</b>
-            <span>
-              Com o currículo ativo, a Sofia troca os códigos da BNCC pelos do seu município nos
-              planos, relatórios e pareceres.
-            </span>
-          </div>
-          {curriculos.map((c) => (
-            <span
-              key={c.id}
-              className={
-                "hm-slot" +
-                (c.status === "processando" ? " proc" : c.status === "erro" ? " err" : "")
-              }
-            >
-              {c.municipio || c.arquivo_nome}
-              {c.status === "processando" ? " · processando" : c.status === "erro" ? " · erro" : ""}
-              {c.eh_padrao && c.status === "ativo" && <em>Padrão</em>}
-            </span>
-          ))}
-          <button type="button" className="hm-add" onClick={() => setModalCurr(true)}>
-            {curriculos.length === 0
-              ? "+ Anexar currículo (PDF)"
-              : curriculos.length < 2
-                ? "+ Anexar outro currículo (PDF)"
-                : "Gerenciar currículos"}
-          </button>
-        </section>
 
         <div className="hm-sec">
           <h2>Suas ferramentas</h2>
@@ -568,6 +534,43 @@ export function Home() {
             );
           })}
         </nav>
+
+        <section className="hm-curr" aria-labelledby="hm-curr-h">
+          <span className="hm-badge" style={{ background: "var(--pn-blue-soft)" }}>
+            <Svg>
+              <path d="M3 21h18" />
+              <path d="M5 21V10l7-5 7 5v11" />
+              <path d="M10 21v-5h4v5" />
+            </Svg>
+          </span>
+          <div className="hm-curr-txt">
+            <b id="hm-curr-h">Currículo da sua rede</b>
+            <span>
+              Com o currículo ativo, a Sofia troca os códigos da BNCC pelos do seu município nos
+              planos, relatórios e pareceres.
+            </span>
+          </div>
+          {curriculos.map((c) => (
+            <span
+              key={c.id}
+              className={
+                "hm-slot" +
+                (c.status === "processando" ? " proc" : c.status === "erro" ? " err" : "")
+              }
+            >
+              {c.municipio || c.arquivo_nome}
+              {c.status === "processando" ? " · processando" : c.status === "erro" ? " · erro" : ""}
+              {c.eh_padrao && c.status === "ativo" && <em>Padrão</em>}
+            </span>
+          ))}
+          <button type="button" className="hm-add" onClick={() => setModalCurr(true)}>
+            {curriculos.length === 0
+              ? "+ Anexar currículo (PDF)"
+              : curriculos.length < 2
+                ? "+ Anexar outro currículo (PDF)"
+                : "Gerenciar currículos"}
+          </button>
+        </section>
       </main>
 
       {modalCurr && (

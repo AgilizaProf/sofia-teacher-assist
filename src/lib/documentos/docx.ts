@@ -8,7 +8,7 @@ import { formatarDataBR } from "./builders";
 import { formatarFraseLegal } from "./leis";
 
 const ARIAL = "Arial";
-const FRAUNCES = "Fraunces";
+const FRAUNCES = "Sora";
 
 function run(text: string, opts: { bold?: boolean; size?: number; font?: string } = {}) {
   return new TextRun({

@@ -85,7 +85,7 @@ function buildCss(legal: string): string {
   --divider:#C9B98A;
   --gray:#6B6B6B;
   --border:#DDDDDD;
-  --font-title:'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-title:'Sora', Georgia, 'Times New Roman', serif;
   --font-body: Arial, Helvetica, sans-serif;
   --header-h:0.6cm;
 }

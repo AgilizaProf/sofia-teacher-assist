@@ -117,7 +117,7 @@ function CuponsPage() {
         <button
           onClick={() => void criar()}
           disabled={saving}
-          style={{ marginTop: 10, padding: "9px 16px", borderRadius: 8, border: "none", background: "#FF7A45", color: "#fff", fontWeight: 600, cursor: "pointer", opacity: saving ? 0.6 : 1 }}
+          style={{ marginTop: 10, padding: "9px 16px", borderRadius: 8, border: "none", background: "#0B7A55", color: "#fff", fontWeight: 600, cursor: "pointer", opacity: saving ? 0.6 : 1 }}
         >
           {saving ? "Salvando..." : "Criar código"}
         </button>

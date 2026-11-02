@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
 
 // Contador pequeno "Tempo devolvido a você", igual em todas as páginas
@@ -33,12 +32,7 @@ export function TempoChip({ id }: { id?: string }) {
   const mins = minutos % 60;
   const nivel = TIERS.find((t) => horas <= t.max)?.name ?? "Semente";
   return (
-    <Link
-      id={id}
-      to="/minha-sala"
-      className="pn-chip pn-time"
-      title="Tempo que a plataforma já te devolveu"
-    >
+    <span id={id} className="pn-chip pn-time" title="Tempo que a plataforma já te devolveu">
       <span className="ic">
         <svg
           viewBox="0 0 24 24"
@@ -62,6 +56,6 @@ export function TempoChip({ id }: { id?: string }) {
       <span className="lvl" suppressHydrationWarning>
         {nivel}
       </span>
-    </Link>
+    </span>
   );
 }

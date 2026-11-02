@@ -145,9 +145,9 @@ function ResetPasswordPage() {
   const barLabels = ["Muito fraca", "Fraca", "Razoável", "Boa", "Forte"];
 
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "linear-gradient(135deg,#1B2A4E,#0F1B36)", padding: 24, fontFamily: "'Inter',-apple-system,sans-serif" }}>
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "linear-gradient(135deg,#14161F,#14161F)", padding: 24, fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 440, background: "#fff", borderRadius: 20, padding: 32, boxShadow: "0 30px 60px -20px rgba(0,0,0,.35)" }}>
-        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 28, color: "#1B2A4E", margin: 0 }}>Redefinir senha</h1>
+        <h1 style={{ fontFamily: "'Sora',serif", fontSize: 28, color: "#14161F", margin: 0 }}>Redefinir senha</h1>
         <p style={{ color: "#5B6B82", fontSize: 14, marginTop: 6, marginBottom: 22 }}>
           {invalidLink
             ? "Link inválido ou expirado. Volte para o login e solicite um novo e-mail de recuperação."
@@ -156,7 +156,7 @@ function ResetPasswordPage() {
               : "Validando link de recuperação..."}
         </p>
         {invalidLink && (
-          <button onClick={() => navigate({ to: "/auth" })} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#FF7A45,#FF9466)", color: "#fff", fontWeight: 800, cursor: "pointer", width: "100%" }}>
+          <button onClick={() => navigate({ to: "/auth" })} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#0B7A55,#0B7A55)", color: "#fff", fontWeight: 800, cursor: "pointer", width: "100%" }}>
             Voltar para o login
           </button>
         )}
@@ -181,7 +181,7 @@ function ResetPasswordPage() {
               </div>
             )}
             <input type="password" placeholder="Confirme a nova senha" value={confirm} onChange={(e) => setConfirm(e.target.value)} minLength={8} required style={inp} />
-            <button type="submit" disabled={loading || !meets || password !== confirm} style={{ marginTop: 6, padding: "12px 16px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#FF7A45,#FF9466)", color: "#fff", fontWeight: 800, cursor: (loading || !meets || password !== confirm) ? "not-allowed" : "pointer", opacity: (loading || !meets || password !== confirm) ? .5 : 1 }}>
+            <button type="submit" disabled={loading || !meets || password !== confirm} style={{ marginTop: 6, padding: "12px 16px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#0B7A55,#0B7A55)", color: "#fff", fontWeight: 800, cursor: (loading || !meets || password !== confirm) ? "not-allowed" : "pointer", opacity: (loading || !meets || password !== confirm) ? .5 : 1 }}>
               {loading ? "Salvando..." : "Salvar nova senha"}
             </button>
             <p style={{ fontSize: 11, color: "#8A98AE", textAlign: "center", margin: "4px 0 0" }}>

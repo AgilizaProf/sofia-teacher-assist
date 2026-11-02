@@ -120,15 +120,15 @@ export function ReferralCard() {
   return (
     <div
       style={{
-        background: "linear-gradient(135deg,#FFF7F0 0%,#FFF1E8 100%)",
-        border: "1px solid #FED7AA",
+        background: "linear-gradient(135deg,#FFF7F0 0%,#E8F6EF 100%)",
+        border: "1px solid #CDEFE2",
         borderRadius: 14,
         padding: 22,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <Gift size={20} color="#B8410E" />
-        <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 700, margin: 0, color: "#1B2A4E" }}>
+        <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, fontWeight: 700, margin: 0, color: "#14161F" }}>
           CONVIDE OUTRO(A) EDUCADOR(A)
         </h3>
       </div>
@@ -189,7 +189,7 @@ export function ReferralCard() {
 
           {refs.length > 0 && (
             <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#1B2A4E", marginBottom: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#14161F", marginBottom: 6 }}>
                 Suas indicações
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -232,11 +232,11 @@ export function ReferralCard() {
                 marginTop: 14,
                 padding: 12,
                 background: "#fff",
-                border: "1px dashed #FED7AA",
+                border: "1px dashed #CDEFE2",
                 borderRadius: 10,
               }}
             >
-              <div style={{ fontSize: 12.5, color: "#1B2A4E", marginBottom: 8 }}>
+              <div style={{ fontSize: 12.5, color: "#14161F", marginBottom: 8 }}>
                 Você foi indicada com o código <b style={{ fontFamily: "'JetBrains Mono',monospace", color: "#B8410E" }}>{referredBy}</b>.
                 {myReferral
                   ? " Compra registrada — o bônus libera após o período de confirmação (7 dias)."
@@ -254,8 +254,8 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   return (
     <div
       style={{
-        background: accent ? "#FF7A45" : "#fff",
-        color: accent ? "#fff" : "#1B2A4E",
+        background: accent ? "#0B7A55" : "#fff",
+        color: accent ? "#fff" : "#14161F",
         border: accent ? "none" : "1px solid #E4E8F0",
         borderRadius: 10,
         padding: "10px 12px",
@@ -264,7 +264,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
       <div style={{ fontSize: 11, opacity: accent ? 0.9 : 0.7, textTransform: "uppercase", letterSpacing: ".06em", fontWeight: 700 }}>
         {label}
       </div>
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, marginTop: 2 }}>{value}</div>
+      <div style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, marginTop: 2 }}>{value}</div>
     </div>
   );
 }
@@ -275,7 +275,7 @@ function btn(kind: "primary" | "ghost"): React.CSSProperties {
       display: "inline-flex",
       alignItems: "center",
       gap: 6,
-      background: "#FF7A45",
+      background: "#0B7A55",
       color: "#fff",
       border: "none",
       borderRadius: 8,
@@ -290,7 +290,7 @@ function btn(kind: "primary" | "ghost"): React.CSSProperties {
     alignItems: "center",
     gap: 6,
     background: "#fff",
-    color: "#1B2A4E",
+    color: "#14161F",
     border: "1px solid #E4E8F0",
     borderRadius: 8,
     padding: "8px 12px",

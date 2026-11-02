@@ -6,13 +6,13 @@ const css = `
   padding:6px 12px 6px 10px;border-radius:999px;
   background:#FFF4EC;border:1px solid #FFD8BF;
   color:#9A3F12;font-size:12px;font-weight:600;
-  font-family:'Inter',-apple-system,sans-serif;
+  font-family:'DM Sans',-apple-system,sans-serif;
   cursor:pointer;transition:.15s;line-height:1;
   white-space:nowrap;
 }
 .sofia-ctx-chip:hover{
-  background:#FFE7D6;border-color:#F97316;
-  box-shadow:0 4px 14px rgba(249,115,22,.18);
+  background:#FFE7D6;border-color:#0B7A55;
+  box-shadow:0 4px 14px rgba(11,122,85,.18);
   transform:translateY(-1px);
 }
 .sofia-ctx-chip .dot{
@@ -23,7 +23,7 @@ const css = `
 }
 .sofia-ctx-chip .lbl b{font-weight:700;color:#7A2E08;}
 .sofia-ctx-chip .lbl em{font-style:normal;color:#9A3F12;font-weight:500;}
-.sofia-ctx-chip .lbl span{color:#C2410C;font-weight:700;}
+.sofia-ctx-chip .lbl span{color:#064E36;font-weight:700;}
 `;
 
 export type SofiaContextChipProps = {

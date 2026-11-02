@@ -110,12 +110,12 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       aria-label="Buscar ou navegar"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
-        position: "fixed", inset: 0, background: "rgba(15,27,54,.55)",
+        position: "fixed", inset: 0, background: "rgba(20,22,31,.55)",
         backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-start",
         justifyContent: "center", paddingTop: 110, zIndex: 1100,
       }}
     >
-      <div style={{ width: "100%", maxWidth: 580, background: "#fff", borderRadius: 14, boxShadow: "0 25px 60px rgba(15,27,54,.4)", overflow: "hidden", border: "1px solid #E4E8F0" }}>
+      <div style={{ width: "100%", maxWidth: 580, background: "#fff", borderRadius: 14, boxShadow: "0 25px 60px rgba(20,22,31,.4)", overflow: "hidden", border: "1px solid #E4E8F0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: "1px solid #E4E8F0" }}>
           <Search size={16} color="#6B7691" />
           <input
@@ -124,9 +124,9 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar páginas, ações, atalhos…"
             autoComplete="off"
-            style={{ flex: 1, border: "none", outline: "none", fontSize: 15, fontFamily: "inherit", color: "#1B2A4E", background: "transparent" }}
+            style={{ flex: 1, border: "none", outline: "none", fontSize: 15, fontFamily: "inherit", color: "#14161F", background: "transparent" }}
           />
-          <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, background: "#F4F6FB", border: "1px solid #E4E8F0", borderRadius: 4, padding: "2px 6px", color: "#6B7691" }}>ESC</kbd>
+          <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, background: "#EDF0F5", border: "1px solid #E4E8F0", borderRadius: 4, padding: "2px 6px", color: "#6B7691" }}>ESC</kbd>
         </div>
         <div style={{ padding: 8, maxHeight: 420, overflowY: "auto" }}>
           {grouped.length === 0 && (
@@ -152,8 +152,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                     style={{
                       width: "100%", display: "flex", alignItems: "center", gap: 10,
                       padding: "10px 12px", borderRadius: 8, border: "none",
-                      background: isActive ? "#FFF1E8" : "transparent",
-                      color: "#1B2A4E", fontSize: 13.5, cursor: "pointer", textAlign: "left",
+                      background: isActive ? "#E8F6EF" : "transparent",
+                      color: "#14161F", fontSize: 13.5, cursor: "pointer", textAlign: "left",
                       fontFamily: "inherit",
                     }}
                   >
@@ -162,7 +162,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                     {a.shortcut && (
                       <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "#6B7691" }}>{a.shortcut}</kbd>
                     )}
-                    {isActive && <ArrowRight size={13} color="#FF7A45" />}
+                    {isActive && <ArrowRight size={13} color="#0B7A55" />}
                   </button>
                 );
               })}

@@ -52,10 +52,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 const css = `
 .inc-root{
-  --primary:#1B2A4E;--primary-dark:#0F1B36;--accent:#FF7A45;--accent-warm:#FF9466;--accent-soft:#FFF1E8;
+  --primary:#14161F;--primary-dark:#14161F;--accent:#0B7A55;--accent-warm:#0B7A55;--accent-soft:#E8F6EF;
   --success:#10B981;--warn:#F59E0B;--danger:#EF4444;
-  --bg:#F4F6FB;--card:#FFFFFF;--text:#1B2A4E;--muted:#6B7691;--border:#E4E8F0;
-  font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);
+  --bg:#EDF0F5;--card:#FFFFFF;--text:#14161F;--muted:#6B7691;--border:#E4E8F0;
+  font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);
   -webkit-font-smoothing:antialiased;line-height:1.5;font-size:14px;min-height:100vh;
 }
 .inc-root *{box-sizing:border-box;}
@@ -83,7 +83,7 @@ const css = `
 .inc-content{padding:22px 26px 48px;}
 
 /* LIST VIEW */
-.list-hero h1{font-family:'Fraunces',serif;font-weight:800;font-size:30px;letter-spacing:-.4px;margin-bottom:5px;}
+.list-hero h1{font-family:'Sora',serif;font-weight:800;font-size:30px;letter-spacing:-.4px;margin-bottom:5px;}
 .list-hero p{color:var(--muted);font-size:13.5px;}
 .list-toolbar{margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .list-search{flex:1;max-width:380px;position:relative;}
@@ -94,15 +94,15 @@ const css = `
 .list-actions{margin-left:auto;}
 .list-grid{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
 .student-card{background:#fafbfd;border:1.5px dashed #C9D2E0;border-radius:14px;padding:18px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease;position:relative;overflow:hidden;text-align:left;width:100%;color:var(--text);}
-.student-card:hover{background:#fff;border-color:var(--accent);border-style:solid;transform:translateY(-3px);box-shadow:0 16px 32px rgba(255,122,69,.22);}
+.student-card:hover{background:#fff;border-color:var(--accent);border-style:solid;transform:translateY(-3px);box-shadow:0 16px 32px rgba(11,122,85,.22);}
 .student-card:hover .sc-info b{color:var(--accent);}
 .student-card:hover .sc-tag.muted{background:var(--accent-soft);color:#B8410E;}
 .student-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));opacity:0;transition:.15s;}
 .student-card:hover::before{opacity:1;}
 .sc-head{display:flex;gap:12px;align-items:center;margin-bottom:12px;}
-.sc-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:18px;flex-shrink:0;}
-.sc-avatar.featured{background:linear-gradient(135deg,var(--accent),var(--accent-warm));box-shadow:0 0 0 3px rgba(255,122,69,.2);}
-.sc-info b{display:block;font-family:'Fraunces',serif;font-weight:700;font-size:16px;color:var(--text);letter-spacing:-.2px;transition:color .18s ease;}
+.sc-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-family:'Sora',serif;font-weight:800;font-size:18px;flex-shrink:0;}
+.sc-avatar.featured{background:linear-gradient(135deg,var(--accent),var(--accent-warm));box-shadow:0 0 0 3px rgba(11,122,85,.2);}
+.sc-info b{display:block;font-family:'Sora',serif;font-weight:700;font-size:16px;color:var(--text);letter-spacing:-.2px;transition:color .18s ease;}
 .sc-info span{font-size:12px;color:var(--muted);font-weight:500;}
 .sc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
 .sc-tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--accent-soft);color:#B8410E;letter-spacing:.2px;}
@@ -116,11 +116,11 @@ const css = `
 @media(max-width:1024px){.hero{grid-template-columns:1fr;}}
 .back{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;margin-bottom:10px;}
 .back:hover{color:var(--accent);}
-.hero-l h1{font-family:'Fraunces',serif;font-weight:800;font-size:34px;letter-spacing:-.6px;line-height:1.05;margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-.hero-l h1 .age{font-family:'Inter',sans-serif;font-weight:500;font-size:15px;color:var(--muted);letter-spacing:0;}
-.diagnostic{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#FFF1E8,#FFE4D2);border:1px solid #FFD4B8;color:#B8410E;padding:7px 13px;border-radius:10px;font-weight:700;font-size:13px;margin-right:8px;}
-.diagnostic .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(255,122,69,.6);animation:incPulse 2s infinite;}
-@keyframes incPulse{0%{box-shadow:0 0 0 0 rgba(255,122,69,.6);}70%{box-shadow:0 0 0 8px rgba(255,122,69,0);}100%{box-shadow:0 0 0 0 rgba(255,122,69,0);}}
+.hero-l h1{font-family:'Sora',serif;font-weight:800;font-size:34px;letter-spacing:-.6px;line-height:1.05;margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.hero-l h1 .age{font-family:'DM Sans',sans-serif;font-weight:500;font-size:15px;color:var(--muted);letter-spacing:0;}
+.diagnostic{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#E8F6EF,#FFE4D2);border:1px solid #FFD4B8;color:#B8410E;padding:7px 13px;border-radius:10px;font-weight:700;font-size:13px;margin-right:8px;}
+.diagnostic .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(11,122,85,.6);animation:incPulse 2s infinite;}
+@keyframes incPulse{0%{box-shadow:0 0 0 0 rgba(11,122,85,.6);}70%{box-shadow:0 0 0 8px rgba(11,122,85,0);}100%{box-shadow:0 0 0 0 rgba(11,122,85,0);}}
 .tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:#fff;border:1px solid var(--border);font-size:12px;color:var(--muted);font-weight:500;}
 .tag b{color:var(--text);font-weight:600;}
 .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
@@ -131,18 +131,18 @@ const css = `
 .inc-root .btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text);}
 .inc-root .btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
 /* Exceção: botão Cadastrar aluno mantém o destaque laranja. */
-.inc-root .btn-cadastrar{background:linear-gradient(135deg,var(--accent),var(--accent-warm))!important;color:#fff!important;border:none!important;box-shadow:0 6px 16px rgba(255,122,69,.35);}
-.inc-root .btn-cadastrar:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(255,122,69,.45);filter:brightness(1.03);color:#fff!important;}
+.inc-root .btn-cadastrar{background:linear-gradient(135deg,var(--accent),var(--accent-warm))!important;color:#fff!important;border:none!important;box-shadow:0 6px 16px rgba(11,122,85,.35);}
+.inc-root .btn-cadastrar:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(11,122,85,.45);filter:brightness(1.03);color:#fff!important;}
 
 .kpis{margin-top:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 @media(max-width:1024px){.kpis{grid-template-columns:repeat(2,1fr);}}
 .kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;}
 .kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:6px;}
-.kpi-value{font-family:'Fraunces',serif;font-weight:700;font-size:24px;letter-spacing:-.4px;line-height:1;}
+.kpi-value{font-family:'Sora',serif;font-weight:700;font-size:24px;letter-spacing:-.4px;line-height:1;}
 .kpi-value .small{font-size:14px;color:var(--muted);font-weight:500;}
 .kpi-sub{font-size:11.5px;color:var(--muted);margin-top:4px;}
 .kpi-sub .up{color:var(--success);font-weight:700;}
-.kpi-accent{background:#0F1B36;border:1px solid #0F1B36;color:#fff;position:relative;overflow:hidden;}
+.kpi-accent{background:#14161F;border:1px solid #14161F;color:#fff;position:relative;overflow:hidden;}
 .kpi-accent::before{display:none;}
 .kpi-accent .kpi-label{color:rgba(255,255,255,.75);}
 .kpi-accent .kpi-value{color:#fff;}
@@ -151,25 +151,25 @@ const css = `
 .tabs{margin-top:18px;display:flex;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border:1px solid var(--navy-darker,#0F1A36);border-radius:11px;padding:5px;gap:2px;overflow-x:auto;box-shadow:0 6px 18px rgba(15,26,54,.18);}
 .tab{flex:1;min-width:0;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:#fff !important;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;transition:.15s;white-space:nowrap;}
 .tab:hover{background:rgba(255,255,255,.08);color:#fff;}
-.tab.active{background:linear-gradient(135deg,var(--accent),#FF9466);color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.35);}
+.tab.active{background:linear-gradient(135deg,var(--accent),#0B7A55);color:#fff;box-shadow:0 4px 10px rgba(11,122,85,.35);}
 .tab-count{display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--accent);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .tab.active .tab-count{background:rgba(255,255,255,.22);color:#fff;}
 
 .panel{display:none;flex-direction:column;gap:14px;margin-top:14px;}
 .panel.active{display:flex;}
 
-.action-card{background:linear-gradient(135deg,#1B2A4E 0%,#0F1A36 100%);border:1px solid #0F1A36;border-radius:14px;padding:20px 22px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 28px rgba(15,26,54,.22);}
+.action-card{background:linear-gradient(135deg,#14161F 0%,#0F1A36 100%);border:1px solid #0F1A36;border-radius:14px;padding:20px 22px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 28px rgba(15,26,54,.22);}
 .action-card::before{display:none;}
 .ac-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;position:relative;z-index:2;}
-.ac-head .sofia{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:13px;box-shadow:0 0 0 3px rgba(255,122,69,.2);}
+.ac-head .sofia{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Sora',serif;font-weight:800;color:#fff;font-size:13px;box-shadow:0 0 0 3px rgba(11,122,85,.2);}
 .ac-head-txt{flex:1;}
 .ac-head-txt b{display:block;font-weight:700;font-size:13px;color:#fff;}
 .ac-head-txt span{font-size:11.5px;color:rgba(255,255,255,.7);}
 .ac-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--accent);color:#fff;padding:4px 8px;border-radius:6px;}
-.inc-root .ac-title{font-family:'Fraunces',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:#fff;position:relative;z-index:2;}
+.inc-root .ac-title{font-family:'Sora',serif;font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.3px;margin-bottom:8px;color:#fff;position:relative;z-index:2;}
 .inc-root .ac-title em{color:var(--accent-warm);font-style:normal;font-weight:800;}
 .ac-body{font-size:13px;line-height:1.55;color:rgba(255,255,255,.78);margin-bottom:16px;position:relative;z-index:2;}
-.ac-body .bncc{font-family:'JetBrains Mono',monospace;color:#fff;background:rgba(255,122,69,.3);padding:1px 5px;border-radius:4px;font-size:11.5px;font-weight:700;}
+.ac-body .bncc{font-family:'JetBrains Mono',monospace;color:#fff;background:rgba(11,122,85,.3);padding:1px 5px;border-radius:4px;font-size:11.5px;font-weight:700;}
 .ac-strats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;position:relative;z-index:2;}
 @media(max-width:1024px){.ac-strats{grid-template-columns:1fr;}}
 .ac-strat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:10px;font-size:11.5px;line-height:1.4;}
@@ -180,17 +180,17 @@ const css = `
 .btn-ghost-dark:hover{border-color:var(--accent);color:var(--accent);}
 
 .section{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px 20px;}
-.section-head h3{font-family:'Fraunces',serif;font-weight:700;font-size:18px;letter-spacing:-.2px;flex:1 1 100%;min-width:0;overflow-wrap:break-word;word-break:normal;}
-.section-head h3{font-family:'Fraunces',serif;font-weight:700;font-size:18px;letter-spacing:-.2px;flex:1;}
+.section-head h3{font-family:'Sora',serif;font-weight:700;font-size:18px;letter-spacing:-.2px;flex:1 1 100%;min-width:0;overflow-wrap:break-word;word-break:normal;}
+.section-head h3{font-family:'Sora',serif;font-weight:700;font-size:18px;letter-spacing:-.2px;flex:1;}
 .section-head .legal{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);background:var(--bg);padding:4px 8px;border-radius:6px;font-weight:500;}
 .section-head .more{color:var(--muted);font-size:12px;font-weight:600;}
 .section-head .more:hover{color:var(--accent);}
 .pei-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 @media(max-width:720px){.pei-grid{grid-template-columns:1fr;}}
 .pei{padding:13px 14px;border:1.5px solid var(--accent);border-radius:11px;background:linear-gradient(180deg,#fff,#FAFBFE);cursor:pointer;transition:.15s;text-align:left;width:100%;}
-.pei:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px rgba(255,122,69,.18);}
-.pei-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;font-weight:800;margin-bottom:8px;font-family:'Fraunces',serif;}
-.pei-cog{background:#FFF1E8;color:#B8410E;}
+.pei:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 20px rgba(11,122,85,.18);}
+.pei-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;font-weight:800;margin-bottom:8px;font-family:'Sora',serif;}
+.pei-cog{background:#E8F6EF;color:#B8410E;}
 .pei-soc{background:#E0F2FE;color:#0C4A6E;}
 .pei-mot{background:#DCFCE7;color:#14532D;}
 .pei-com{background:#FEF3C7;color:#78350F;}
@@ -203,7 +203,7 @@ const css = `
 .pei p b{color:var(--text);font-weight:600;}
 
 .simple{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px 20px;}
-.simple h4{font-family:'Fraunces',serif;font-weight:700;font-size:17px;margin-bottom:6px;}
+.simple h4{font-family:'Sora',serif;font-weight:700;font-size:17px;margin-bottom:6px;}
 .simple p{color:var(--muted);font-size:13px;}
 
 /* Visão de hoje · 2 colunas */
@@ -214,23 +214,23 @@ const css = `
 @media(max-width:1024px){.col-r{position:static;}}
 
 /* Sofia card */
-.sofia-card{background:linear-gradient(135deg,#1B2A4E 0%,#0F1A36 100%);border:1px solid #0F1A36;border-radius:14px;padding:18px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 28px rgba(15,26,54,.22);}
+.sofia-card{background:linear-gradient(135deg,#14161F 0%,#0F1A36 100%);border:1px solid #0F1A36;border-radius:14px;padding:18px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 28px rgba(15,26,54,.22);}
 .sofia-card::before{display:none;}
 .sofia-card > *{position:relative;z-index:1;}
 .sofia-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.sofia-head .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;}
+.sofia-head .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));display:grid;place-items:center;font-family:'Sora',serif;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;}
 .sofia-head b{display:block;font-weight:700;font-size:13.5px;color:#fff;}
 .sofia-head span{font-size:11.5px;color:rgba(255,255,255,.7);}
 .sofia-q{font-style:italic;font-size:12.5px;color:rgba(255,255,255,.82);line-height:1.5;margin-bottom:12px;}
 .sofia-actions{display:flex;flex-direction:column;gap:6px;}
 .sofia-action{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:10px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;text-align:left;width:100%;color:#fff;font-weight:500;transition:.15s;}
-.sofia-action:hover{border-color:var(--accent-warm);background:rgba(255,122,69,.14);color:#fff;}
+.sofia-action:hover{border-color:var(--accent-warm);background:rgba(11,122,85,.14);color:#fff;}
 .sofia-action .ico{color:var(--accent-warm);flex-shrink:0;}
 .sofia-action .arrow{margin-left:auto;color:rgba(255,255,255,.6);font-size:14px;}
 
 /* Contexto rápido */
 .context-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
-.context-card h4{font-family:'Fraunces',serif;font-weight:700;font-size:15px;margin-bottom:12px;}
+.context-card h4{font-family:'Sora',serif;font-weight:700;font-size:15px;margin-bottom:12px;}
 .ctx-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:12px;}
 .ctx-row:last-child{border-bottom:none;}
 .ctx-row .lbl{color:var(--muted);font-weight:500;}
@@ -245,8 +245,8 @@ const css = `
 .context-card.m-collapsed > :not(h4){display:none;}
 .skills-card.m-collapsed > :not(h4){display:none;}
 @media (max-width:768px){.ac-body{display:none;}}
-.skills-card h4{font-family:'Fraunces',serif;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-.skills-card h4 .badge{margin-left:auto;font-family:'Inter',sans-serif;font-size:10.5px;font-weight:700;background:#DCFCE7;color:#14532D;padding:3px 7px;border-radius:6px;}
+.skills-card h4{font-family:'Sora',serif;font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.skills-card h4 .badge{margin-left:auto;font-family:'DM Sans',sans-serif;font-size:10.5px;font-weight:700;background:#DCFCE7;color:#14532D;padding:3px 7px;border-radius:6px;}
 .skill{margin-bottom:11px;}
 .skill:last-child{margin-bottom:0;}
 .skill-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;font-size:12px;}
@@ -267,7 +267,7 @@ const css = `
 .tl::before{content:"";position:absolute;left:15px;top:14px;bottom:14px;width:0;border-left:2px dashed var(--border);}
 .tl-item{display:grid;grid-template-columns:24px 1fr auto;gap:12px;padding:10px 0;align-items:start;position:relative;}
 .tl-dot{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--accent);margin-top:3px;position:relative;z-index:2;}
-.tl-dot.pulse{box-shadow:0 0 0 0 rgba(255,122,69,.6);animation:incPulse 2s infinite;}
+.tl-dot.pulse{box-shadow:0 0 0 0 rgba(11,122,85,.6);animation:incPulse 2s infinite;}
 .tl-dot.done{background:var(--success);border-color:var(--success);}
 .tl-dot.warn{background:#fff;border-color:var(--warn);}
 .tl-content b{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
@@ -275,12 +275,12 @@ const css = `
 .tl-date{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);font-weight:600;white-space:nowrap;}
 
 /* MODAL */
-.inc-modal-overlay{position:fixed;inset:0;background:rgba(15,27,54,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px;}
+.inc-modal-overlay{position:fixed;inset:0;background:rgba(20,22,31,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px;}
 .inc-modal-overlay.open{display:flex;}
-.inc-modal{background:#fff;border-radius:16px;width:100%;max-width:880px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(15,27,54,.4);}
+.inc-modal{background:#fff;border-radius:16px;width:100%;max-width:880px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(20,22,31,.4);}
 .inc-modal-bar{height:5px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));}
 .inc-modal-head{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
-.inc-modal-head h2{font-family:'Fraunces',serif;font-weight:800;font-size:20px;flex:1;}
+.inc-modal-head h2{font-family:'Sora',serif;font-weight:800;font-size:20px;flex:1;}
 .inc-modal-head .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-align:right;line-height:1.5;}
 .inc-modal-close{background:var(--bg);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--muted);border:0;cursor:pointer;padding:0;font:inherit;}
 .inc-modal-close:hover{background:var(--danger);color:#fff;}
@@ -314,28 +314,28 @@ const css = `
 }
 
 .inc-tut-step{display:grid;grid-template-columns:36px 1fr;gap:14px;padding:14px;border:1px solid var(--border);border-radius:11px;background:linear-gradient(180deg,#fff,#FAFBFE);margin-bottom:8px;}
-.inc-tut-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:15px;}
+.inc-tut-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Sora',serif;font-weight:800;font-size:15px;}
 .inc-tut-step b{display:block;font-weight:700;font-size:14px;margin-bottom:2px;}
 .inc-tut-step p{font-size:12.5px;color:var(--muted);line-height:1.5;}
 
 .inc-adapt-item{display:grid;grid-template-columns:32px 1fr auto;gap:14px;align-items:start;padding:14px;border:1px solid var(--border);border-radius:11px;margin-bottom:8px;background:#fff;}
-.inc-adapt-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:14px;}
+.inc-adapt-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-warm));color:#fff;display:grid;place-items:center;font-family:'Sora',serif;font-weight:800;font-size:14px;}
 .inc-adapt-item h4{font-weight:700;font-size:14px;}
 .inc-adapt-item p{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:3px;}
 .inc-adapt-item .meta{margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--accent);font-weight:700;}
 
-.inc-a4{background:#fff;width:100%;max-width:760px;margin:0 auto;padding:40px 50px;font-family:'Fraunces',serif;color:#000;border:1px solid var(--border);border-radius:6px;}
+.inc-a4{background:#fff;width:100%;max-width:760px;margin:0 auto;padding:40px 50px;font-family:'Sora',serif;color:#000;border:1px solid var(--border);border-radius:6px;}
 .inc-a4-head{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;border-bottom:3px double #000;padding-bottom:14px;margin-bottom:18px;}
-.inc-a4-logo{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:22px;}
-.inc-a4-head .center{text-align:center;font-family:'Inter',sans-serif;}
+.inc-a4-logo{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;display:grid;place-items:center;font-family:'Sora',serif;font-weight:900;font-size:22px;}
+.inc-a4-head .center{text-align:center;font-family:'DM Sans',sans-serif;}
 .inc-a4-head .center b{display:block;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;}
 .inc-a4-head .center span{font-size:11px;color:#444;}
 .inc-a4-head .stamp{font-family:'JetBrains Mono',monospace;font-size:10px;color:#666;text-align:right;line-height:1.5;}
-.inc-a4 h1{font-family:'Fraunces',serif;font-weight:800;font-size:18px;text-align:center;margin-bottom:18px;text-transform:uppercase;letter-spacing:.05em;}
-.inc-a4 .ident{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:12.5px;margin-bottom:18px;border:1px solid #000;padding:10px 14px;font-family:'Inter',sans-serif;}
-.inc-a4 h2{font-family:'Fraunces',serif;font-weight:700;font-size:13px;background:#000;color:#fff;padding:5px 12px;margin:14px 0 8px;text-transform:uppercase;letter-spacing:.06em;}
+.inc-a4 h1{font-family:'Sora',serif;font-weight:800;font-size:18px;text-align:center;margin-bottom:18px;text-transform:uppercase;letter-spacing:.05em;}
+.inc-a4 .ident{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:12.5px;margin-bottom:18px;border:1px solid #000;padding:10px 14px;font-family:'DM Sans',sans-serif;}
+.inc-a4 h2{font-family:'Sora',serif;font-weight:700;font-size:13px;background:#000;color:#fff;padding:5px 12px;margin:14px 0 8px;text-transform:uppercase;letter-spacing:.06em;}
 .inc-a4 p{font-size:13px;line-height:1.6;text-align:justify;margin-bottom:8px;}
-.inc-a4 ul{font-size:12.5px;line-height:1.7;padding-left:22px;margin-bottom:8px;font-family:'Inter',sans-serif;}
+.inc-a4 ul{font-size:12.5px;line-height:1.7;padding-left:22px;margin-bottom:8px;font-family:'DM Sans',sans-serif;}
 
 @media(max-width:720px){.inc-app{grid-template-columns:1fr;}}
 @media(max-width:480px){
@@ -360,10 +360,10 @@ const css = `
 
 /* PLAN tab */
 .plan-hero{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;margin-bottom:14px;}
-.plan-hero::before{content:"";position:absolute;top:-40%;right:-15%;width:70%;height:140%;background:radial-gradient(circle,rgba(255,122,69,.32) 0%,transparent 60%);pointer-events:none;}
+.plan-hero::before{content:"";position:absolute;top:-40%;right:-15%;width:70%;height:140%;background:radial-gradient(circle,rgba(11,122,85,.32) 0%,transparent 60%);pointer-events:none;}
 .plan-hero > *{position:relative;z-index:1;}
 .plan-hero .tag-line{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.7);margin-bottom:8px;}
-.plan-hero h3{font-family:'Fraunces',serif;font-size:22px;font-weight:700;margin-bottom:10px;color:#fff;}
+.plan-hero h3{font-family:'Sora',serif;font-size:22px;font-weight:700;margin-bottom:10px;color:#fff;}
 .plan-hero p{color:rgba(255,255,255,.85);font-size:13px;margin-bottom:14px;}
 .plan-strats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
 @media(max-width:1024px){.plan-strats{grid-template-columns:1fr;}}
@@ -400,7 +400,7 @@ const css = `
 
 /* REL tab */
 .rel-feature{background:linear-gradient(135deg,var(--accent-soft),#FFE4D2);border:1px solid #FFD4B8;border-radius:14px;padding:18px 20px;margin-bottom:14px;}
-.rel-feature h4{font-family:'Fraunces',serif;font-size:18px;color:#7A2E0A;margin-bottom:6px;}
+.rel-feature h4{font-family:'Sora',serif;font-size:18px;color:#7A2E0A;margin-bottom:6px;}
 .rel-feature p{color:#7A2E0A;font-size:12.5px;margin-bottom:12px;}
 .rel-list{display:flex;flex-direction:column;gap:10px;}
 .rel-row{background:#fff;border:1px solid var(--border);border-radius:11px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
@@ -413,7 +413,7 @@ const css = `
 .rel-status.draft{background:#FEF3C7;color:#78350F;}
 .rel-actions{display:flex;gap:6px;}
 .rel-suggest{margin-top:14px;background:#fff;border:1px dashed var(--accent);border-radius:12px;padding:14px 16px;}
-.rel-suggest h5{font-family:'Fraunces',serif;font-size:14.5px;margin-bottom:10px;color:var(--text);}
+.rel-suggest h5{font-family:'Sora',serif;font-size:14.5px;margin-bottom:10px;color:var(--text);}
 .rel-suggest ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
 .rel-suggest li{font-size:12.5px;color:var(--text);display:flex;gap:8px;align-items:flex-start;}
 .rel-suggest li::before{content:"•";color:var(--accent);font-weight:900;}
@@ -422,7 +422,7 @@ const css = `
 .doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
 .doc-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;}
 .doc-card .doc-head{display:flex;align-items:center;gap:10px;}
-.doc-card .doc-ic{width:36px;height:36px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:800;font-size:12px;flex-shrink:0;}
+.doc-card .doc-ic{width:36px;height:36px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:'Sora',serif;font-weight:800;font-size:12px;flex-shrink:0;}
 .doc-card b{font-size:13.5px;font-weight:700;line-height:1.3;}
 .doc-card .doc-meta{font-size:11.5px;color:var(--muted);}
 .doc-card .doc-acts{display:flex;gap:6px;margin-top:6px;}
@@ -1187,9 +1187,9 @@ export function Inclusao() {
   @page WordSection1 { size: A4; mso-page-orientation: portrait; margin: 2cm; mso-border-surround-header: 1pt solid #000; mso-border-surround-footer: 1pt solid #000; }
   div.WordSection1 { page: WordSection1; border:1px solid #000; padding:6mm; }
   body, p, li, td, h1, h2, h3, h4 { font-family: Arial, sans-serif !important; line-height:1.5 !important; }
-  body { color:#0F1B36; font-size:12pt; }
-  h1 { font-size:16pt; margin:0 0 6pt; border-bottom:2px solid #FF7A45; padding-bottom:4pt; page-break-after:avoid; }
-  h3 { font-size:12pt; margin:12pt 0 4pt; color:#FF7A45; text-transform:uppercase; page-break-after:avoid; }
+  body { color:#14161F; font-size:12pt; }
+  h1 { font-size:16pt; margin:0 0 6pt; border-bottom:2px solid #0B7A55; padding-bottom:4pt; page-break-after:avoid; }
+  h3 { font-size:12pt; margin:12pt 0 4pt; color:#0B7A55; text-transform:uppercase; page-break-after:avoid; }
   .meta { font-size:11pt; color:#6B7691; margin-bottom:10pt; }
   ul, p, table { page-break-inside:avoid; }
   ul { margin:4pt 0 0 18pt; }
@@ -2240,7 +2240,7 @@ ${ident}
                     )}
                   </div>
                   <div className="list-actions">
-                    <button className="btn btn-primary bg-orange-400 text-orange-400 btn-cadastrar" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
+                    <button className="btn btn-primary bg-emerald-400 text-emerald-400 btn-cadastrar" onClick={() => setNewStudentOpen(true)}><Plus size={14} /> Cadastrar aluno</button>
                   </div>
                 </div>
                 <div className="list-grid">
@@ -2299,7 +2299,7 @@ ${ident}
                       {selected.anoReferenciaPedagogico && (
                         <span
                           className="tag"
-                          style={{ background: "#FFF7ED", borderColor: "#FED7AA", color: "#9A3412" }}
+                          style={{ background: "#E8F6EF", borderColor: "#CDEFE2", color: "#064E36" }}
                           title="Ano usado pela Sofia ao gerar conteúdos pedagógicos"
                         >
                           📚 <b>Ano de referência:</b> {selected.anoReferenciaPedagogico}
@@ -2334,7 +2334,7 @@ ${ident}
                     <button className="btn btn-secondary" onClick={() => setPeiOpen(true)}><FileText size={14} /> {isMobile ? "PEI" : "Ver PEI completo"}</button>
                     <button className="btn btn-secondary" onClick={() => abrirEditarAluno(selected)} title="Editar nome, turma, ano escolar, CIDs e AEE"><Pencil size={14} /> {isMobile ? "Dados" : "Editar dados"}</button>
                     <button className="btn btn-secondary" onClick={() => setObjetivosModalOpen(true)} title="Ver e atualizar os objetivos do PEI"><CheckCircle2 size={14} /> {isMobile ? "Objetivos" : "Objetivos do PEI"}</button>
-                     <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => openSofiaForSelected({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> {isMobile ? "Adaptar" : "Adaptar aula de hoje"}</button>
+                     <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => openSofiaForSelected({ prompt: `Adapte a aula de hoje para ${selected.name}`, context: `Aluno PCD: ${selected.name} · Inclusão` })}><Sparkles size={14} /> {isMobile ? "Adaptar" : "Adaptar aula de hoje"}</button>
                   </div>
                 </div>
 
@@ -2366,7 +2366,7 @@ ${ident}
                   <div className="section-head" style={{ marginBottom: 10 }}>
                     <h3>Visão de hoje · {selected.name}</h3>
                     <span className="legal">{selected.anoEscolar || "Ano escolar não informado"}</span>
-                    <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Visão de hoje")}><CheckCircle2 size={14} /> Salvar</button>
+                    <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => saveTab("Visão de hoje")}><CheckCircle2 size={14} /> Salvar</button>
                   </div>
                   <div className="hoje-grid">
                     <div className="col-l">
@@ -2405,7 +2405,7 @@ ${ident}
                             <h2 className="ac-title">Vamos começar pela <em>Anamnese</em> de {firstName}</h2>
                             <p className="ac-body">Sem registros ainda. Preencha os eixos da Anamnese e cadastre o PEI para que a Sofia possa sugerir adaptações de aula alinhadas ao perfil e à BNCC.</p>
                             <div className="ac-cta">
-                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("anam")}>Preencher Anamnese <ChevronRight size={14} /></button>
+                              <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setActiveTab("anam")}>Preencher Anamnese <ChevronRight size={14} /></button>
                               <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Abrir PEI</button>
                             </div>
                           </>
@@ -2430,7 +2430,7 @@ ${ident}
                               Já estou conhecendo {firstName}{ultimoReg ? `. Último registro: "${ultimoReg.body.slice(0, 90)}${ultimoReg.body.length > 90 ? "…" : ""}"` : ""}. Continue preenchendo a Anamnese ou já adiante o PEI.
                             </p>
                             <div className="ac-cta">
-                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("anam")}>Continuar Anamnese <ChevronRight size={14} /></button>
+                              <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setActiveTab("anam")}>Continuar Anamnese <ChevronRight size={14} /></button>
                               <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Abrir PEI ({peiFilled}/8)</button>
                             </div>
                           </>
@@ -2453,7 +2453,7 @@ ${ident}
                             <h2 className="ac-title">Falta{restantes > 1 ? "m" : ""} <em>{restantes} eixo{restantes > 1 ? "s" : ""}</em> da Anamnese para refinar as adaptações</h2>
                             <p className="ac-body">O PEI de {firstName} está completo. Concluir a Anamnese me dá a linha de base para sugerir adaptações ainda mais precisas.</p>
                             <div className="ac-cta">
-                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("anam")}>Concluir Anamnese <ChevronRight size={14} /></button>
+                              <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setActiveTab("anam")}>Concluir Anamnese <ChevronRight size={14} /></button>
                               <button className="btn-ghost-dark" onClick={() => setActiveTab("plan")}>Adaptar atividade</button>
                             </div>
                           </>
@@ -2475,7 +2475,7 @@ ${ident}
                             <h2 className="ac-title">Hora de cadastrar o <em>PEI</em> de {firstName}</h2>
                             <p className="ac-body">Já tenho o perfil pedagógico de {firstName}. Vamos formalizar o Plano Educacional Individualizado (Lei 14.254/2021) para alinhar metas, adaptações e equipe responsável.</p>
                             <div className="ac-cta">
-                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeiOpen(true)}>Preencher PEI <ChevronRight size={14} /></button>
+                              <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setPeiOpen(true)}>Preencher PEI <ChevronRight size={14} /></button>
                               <button className="btn-ghost-dark" onClick={() => setActiveTab("anam")}>Revisar Anamnese</button>
                             </div>
                           </>
@@ -2500,7 +2500,7 @@ ${ident}
                               {ultimoReg ? ` Último registro: "${ultimoReg.body.slice(0, 80)}${ultimoReg.body.length > 80 ? "…" : ""}"` : ""}
                             </p>
                             <div className="ac-cta">
-                              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeiOpen(true)}>Concluir PEI <ChevronRight size={14} /></button>
+                              <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setPeiOpen(true)}>Concluir PEI <ChevronRight size={14} /></button>
                               <button className="btn-ghost-dark" onClick={() => setActiveTab("plan")}>Adaptar atividade</button>
                             </div>
                           </>
@@ -2525,7 +2525,7 @@ ${ident}
                               : <>Cadastre registros pedagógicos para que eu acompanhe a evolução e refine as adaptações automaticamente.</>}
                           </p>
                           <div className="ac-cta">
-                            <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setActiveTab("plan")}>Adaptar próxima aula <ChevronRight size={14} /></button>
+                            <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setActiveTab("plan")}>Adaptar próxima aula <ChevronRight size={14} /></button>
                             <button className="btn-ghost-dark" onClick={() => setActiveTab("reg")}>Novo registro</button>
                             <button className="btn-ghost-dark" onClick={() => setPeiOpen(true)}>Revisar PEI</button>
                           </div>
@@ -2662,7 +2662,7 @@ ${ident}
                                 Sem a Anamnese, o contexto rápido fica limitado. Preencha os eixos para que a Sofia traga aqui o desempenho, destaques e pontos de atenção de {selected.name.split(" ")[0]}.
                               </p>
                               <button
-                                className="btn btn-primary bg-orange-400 text-orange-400"
+                                className="btn btn-primary bg-emerald-400 text-emerald-400"
                                 style={{ alignSelf: "flex-start" }}
                                 onClick={() => setActiveTab("anam")}
                               >
@@ -2855,7 +2855,7 @@ ${ident}
                       <h3>Anamnese · {eixosPreenchidos} de {anamData.length} eixos preenchidos</h3>
                       <span className="legal">{selected?.anoEscolar ? selected.anoEscolar + " · " : ""}{selected?.turma || ""} · {selected?.diag || ""}</span>
                       <button className="btn btn-secondary" onClick={() => { setAnamPrintMode("completo"); setAnamPrintOpen(true); }}><Printer size={14} /> Imprimir Anamnese</button>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     {/* Ano de Referência Pedagógico — define o parâmetro
                         pedagógico real do aluno, que pode diferir do ano de
@@ -2931,9 +2931,9 @@ ${ident}
                               style={{
                                 marginTop: 4,
                                 fontSize: 11.5,
-                                color: "#9A3412",
-                                background: "#FFF7ED",
-                                border: "1px solid #FED7AA",
+                                color: "#064E36",
+                                background: "#E8F6EF",
+                                border: "1px solid #CDEFE2",
                                 borderRadius: 8,
                                 padding: "6px 10px",
                               }}
@@ -3055,11 +3055,11 @@ ${ident}
                     <div className="section-head">
                       <h3>Planejamento adaptado · {selected?.name || ""}</h3>
                       <span className="legal">{selected?.anoEscolar || "Ano escolar não informado"} · {selected?.turma || ""}</span>
-                     <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar aula adaptada</button>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setPeriodoOpen(true)}><Sparkles size={14} /> Atividades por períodos</button>
+                     <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setAdaptOpen(true)}><Sparkles size={14} /> Gerar aula adaptada</button>
+                      <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setPeriodoOpen(true)}><Sparkles size={14} /> Atividades por períodos</button>
                       {studentPlans.length > 0 && (
                         <button
-                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          className="btn btn-primary bg-emerald-400 text-emerald-400"
                           onClick={abrirAgendarPeriodo}
                           disabled={agendando}
                           title="A Sofia distribui as atividades selecionadas em dias úteis na sua agenda."
@@ -3069,7 +3069,7 @@ ${ident}
                       )}
                       {studentPlans.length > 0 && (
                         <button
-                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          className="btn btn-primary bg-emerald-400 text-emerald-400"
                           onClick={imprimirSelecionados}
                           disabled={selecionadosCount === 0}
                           title="Imprime as atividades selecionadas no modo escolhido."
@@ -3077,7 +3077,7 @@ ${ident}
                           <Printer size={14} /> Imprimir{selecionadosCount ? ` (${selecionadosCount})` : ""}
                         </button>
                       )}
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => saveTab("Planejamento")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", margin: "8px 0 14px" }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em" }}>Ano de referência</label>
@@ -3236,8 +3236,8 @@ ${ident}
                   <div className="section">
                     <div className="section-head">
                       <h3>Registros pedagógicos · {studentRegs.length}</h3>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setRegModalOpen(true)}><Plus size={14} /> Novo registro</button>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Registros")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setRegModalOpen(true)}><Plus size={14} /> Novo registro</button>
+                      <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => saveTab("Registros")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="reg-filters">
                       {([
@@ -3277,7 +3277,7 @@ ${ident}
                     <div className="section-head">
                       <h3>Relatórios · Pareceres descritivos</h3>
                       <span className="legal">Lei 14.254/2021</span>
-                      <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
+                      <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="rel-feature">
                       <h4>Parecer descritivo · {relIntervalo.label}</h4>
@@ -3312,7 +3312,7 @@ ${ident}
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                           <label style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Formato</label>
-                          <select value={relFormato} onChange={(e) => setRelFormato(e.target.value as "" | "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: relFormato ? "1px solid var(--border)" : "1px solid #F97316", fontSize: 13, background: "#fff" }}>
+                          <select value={relFormato} onChange={(e) => setRelFormato(e.target.value as "" | "topicos" | "texto")} style={{ padding: "6px 10px", borderRadius: 8, border: relFormato ? "1px solid var(--border)" : "1px solid #0B7A55", fontSize: 13, background: "#fff" }}>
                             <option value="" disabled>Escolha o formato…</option>
                             <option value="topicos">Tópicos (estruturado)</option>
                             <option value="texto">Texto corrido</option>
@@ -3384,7 +3384,7 @@ ${ident}
                           const semDados = regsDoPeriodo.length === 0 && !anamneseResumo && !temPEI;
                           return (
                         <button
-                          className="btn btn-primary bg-orange-400 text-orange-400"
+                          className="btn btn-primary bg-emerald-400 text-emerald-400"
                           onClick={handleGerarParecer}
                           disabled={gerandoParecer || semDados || !relFormato}
                           title={!relFormato ? "Escolha o formato (texto corrido ou estruturado) antes de gerar." : (semDados ? "Preencha a anamnese, o PEI ou adicione registros para gerar o parecer." : "")}
@@ -3424,7 +3424,7 @@ ${ident}
                       {parecerAtual && (
                         <div style={{ marginTop: 14, padding: 14, background: "#fff", border: "1px solid var(--border)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 10 }}>
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                            <b style={{ fontFamily: "'Fraunces',serif", fontSize: 15 }}>{parecerAtual.titulo || "Parecer descritivo"}</b>
+                            <b style={{ fontFamily: "'Sora',serif", fontSize: 15 }}>{parecerAtual.titulo || "Parecer descritivo"}</b>
                             <span style={{ fontSize: 11, color: "var(--muted)" }}>
                               {parecerAtual.periodoLabel ? `${parecerAtual.periodoLabel} · ` : ""}Gerado em {parecerAtual.geradoEm}
                             </span>
@@ -3476,7 +3476,7 @@ ${ident}
                         </div>
                       )}
                     </div>
-                    <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 15, margin: "16px 0 10px" }}>Pareceres anteriores · 2025</h4>
+                    <h4 style={{ fontFamily: "'Sora',serif", fontSize: 15, margin: "16px 0 10px" }}>Pareceres anteriores · 2025</h4>
                     <div className="rel-list">
                       {REL_PAST.map((r) => (
                         <div className="rel-row" key={r.bim}>
@@ -3529,7 +3529,7 @@ ${ident}
           </div>
           <div className="inc-modal-foot">
             <span className="legal">Pode chamar a Sofia a qualquer momento clicando em "Assistente IA"</span>
-            <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => setTutorialOpen(false)}>Entendi, começar</button>
+            <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setTutorialOpen(false)}>Entendi, começar</button>
           </div>
         </div>
       </div>
@@ -3638,7 +3638,7 @@ ${ident}
           <div style={{ padding: "12px 18px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
             <button className="inc-btn-ghost" onClick={() => setAgendarPeriodOpen(false)}>Cancelar</button>
             <button
-              className="btn btn-primary bg-orange-400 text-orange-400"
+              className="btn btn-primary bg-emerald-400 text-emerald-400"
               onClick={agendarPlanos}
               disabled={agendando}
             >
@@ -3687,12 +3687,12 @@ ${ident}
                 maxWidth: 720,
                 padding: "32px 36px",
                 boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                fontFamily: "'Inter',Arial,sans-serif",
-                color: "#0F1B36",
+                fontFamily: "'DM Sans',Arial,sans-serif",
+                color: "#14161F",
                 fontSize: 13,
                 lineHeight: 1.55,
               }}>
-                <h1 style={{ fontSize: 22, margin: "0 0 6px", borderBottom: "2px solid #FF7A45", paddingBottom: 6 }}>
+                <h1 style={{ fontSize: 22, margin: "0 0 6px", borderBottom: "2px solid #0B7A55", paddingBottom: 6 }}>
                   {parecerAtual.titulo || "Parecer descritivo"}
                 </h1>
                 <div style={{ fontSize: 11.5, color: "#6B7691", marginBottom: 14 }}>
@@ -3702,13 +3702,13 @@ ${ident}
                 </div>
                 {editandoParecer && parecerDraft ? (
                   (() => {
-                    const taStyle: React.CSSProperties = { width: "100%", border: "1px solid var(--border)", borderRadius: 6, padding: 8, fontFamily: "inherit", fontSize: 13, lineHeight: 1.5, color: "#0F1B36", resize: "vertical" };
+                    const taStyle: React.CSSProperties = { width: "100%", border: "1px solid var(--border)", borderRadius: 6, padding: 8, fontFamily: "inherit", fontSize: 13, lineHeight: 1.5, color: "#14161F", resize: "vertical" };
                     const upd = (patch: Partial<Parecer>) => setParecerDraft((d) => d ? { ...d, ...patch } : d);
                     const updList = (key: "avancos" | "desafios" | "encaminhamentos") => (v: string) =>
                       upd({ [key]: v.split("\n").map((s) => s.trim()).filter(Boolean) } as Partial<Parecer>);
                     const Section = ({ title, value, onChange, rows = 3 }: { title: string; value: string; onChange: (v: string) => void; rows?: number }) => (
                       <div style={{ marginTop: 12 }}>
-                        <h3 style={{ fontSize: 12.5, margin: "0 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>{title}</h3>
+                        <h3 style={{ fontSize: 12.5, margin: "0 0 4px", color: "#0B7A55", textTransform: "uppercase", letterSpacing: ".05em" }}>{title}</h3>
                         <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} style={taStyle} />
                       </div>
                     );
@@ -3753,7 +3753,7 @@ ${ident}
                       ["Família", parecerAtual.familia],
                     ] as Array<[string, string | undefined]>).map(([t, c]) => c ? (
                       <div key={t}>
-                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>{t}</h3>
+                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#0B7A55", textTransform: "uppercase", letterSpacing: ".05em" }}>{t}</h3>
                         <p style={{ margin: 0 }}>{c}</p>
                       </div>
                     ) : null)}
@@ -3763,7 +3763,7 @@ ${ident}
                       ["Encaminhamentos", parecerAtual.encaminhamentos],
                     ] as Array<[string, string[] | undefined]>).map(([t, arr]) => arr && arr.length ? (
                       <div key={t}>
-                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>{t}</h3>
+                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#0B7A55", textTransform: "uppercase", letterSpacing: ".05em" }}>{t}</h3>
                         <ul style={{ margin: "4px 0 0 18px" }}>
                           {arr.map((a, i) => <li key={i}>{a}</li>)}
                         </ul>
@@ -3771,7 +3771,7 @@ ${ident}
                     ) : null)}
                     {parecerAtual.comunicacao_familias && (
                       <div>
-                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#FF7A45", textTransform: "uppercase", letterSpacing: ".05em" }}>Comunicação à família</h3>
+                        <h3 style={{ fontSize: 12.5, margin: "14px 0 4px", color: "#0B7A55", textTransform: "uppercase", letterSpacing: ".05em" }}>Comunicação à família</h3>
                         <p style={{ margin: 0 }}>{parecerAtual.comunicacao_familias}</p>
                       </div>
                     )}
@@ -3790,7 +3790,7 @@ ${ident}
               {editandoParecer ? (
                 <>
                   <button className="inc-btn-ghost" onClick={cancelEditParecer}>Cancelar</button>
-                  <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={saveEditParecer}>
+                  <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={saveEditParecer}>
                     <Save size={14} /> Salvar alterações
                   </button>
                 </>
@@ -3803,7 +3803,7 @@ ${ident}
                   <button className="inc-btn-ghost" onClick={exportarParecerWord}>
                     <FileDown size={14} /> Salvar em Word
                   </button>
-                  <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => { setPreviewParecerOpen(false); imprimirParecer(); }}>
+                  <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => { setPreviewParecerOpen(false); imprimirParecer(); }}>
                     <Printer size={14} /> Imprimir / PDF
                   </button>
                 </>
@@ -3860,7 +3860,7 @@ ${ident}
                     <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 12 }}>
                       Nenhum objetivo cadastrado no PEI ainda. Abra o PEI para definir metas pedagógicas individualizadas.
                     </p>
-                    <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={() => { setObjetivosModalOpen(false); setPeiOpen(true); }}>
+                    <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => { setObjetivosModalOpen(false); setPeiOpen(true); }}>
                       <FileText size={14} /> Abrir PEI
                     </button>
                   </div>
@@ -3988,7 +3988,7 @@ ${ident}
                     </div>
                   );
                 })}
-                <div style={{ marginTop: 32, display:"grid", gridTemplateColumns:"1fr 1fr", gap: 40, fontFamily:"'Inter',sans-serif", fontSize:12 }}>
+                <div style={{ marginTop: 32, display:"grid", gridTemplateColumns:"1fr 1fr", gap: 40, fontFamily:"'DM Sans',sans-serif", fontSize:12 }}>
                   <div style={{ borderTop:"1px solid #000", paddingTop:6, textAlign:"center" }}>Professor(a) responsável</div>
                   <div style={{ borderTop:"1px solid #000", paddingTop:6, textAlign:"center" }}>Coordenação pedagógica</div>
                 </div>
@@ -4006,7 +4006,7 @@ ${ident}
               }}
             ><FileText size={14} /> Word (.docx)</button>
             <button
-              className="btn btn-primary bg-orange-400 text-orange-400"
+              className="btn btn-primary bg-emerald-400 text-emerald-400"
               onClick={() => {
                 const data = buildAnamneseDocData(selected, anamData, anamPrintMode);
                 printAnamneseDocument(data);
@@ -4142,7 +4142,7 @@ ${ident}
             </label>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
               <button type="button" className="inc-btn-ghost" onClick={fecharModalAluno}>Cancelar</button>
-              <button type="submit" className="btn btn-primary bg-orange-400 text-orange-400" disabled={savingStudent} aria-busy={savingStudent}>
+              <button type="submit" className="btn btn-primary bg-emerald-400 text-emerald-400" disabled={savingStudent} aria-busy={savingStudent}>
                 {savingStudent ? "Salvando…" : (editingStudentId ? "Salvar alterações" : "Salvar aluno")}
               </button>
             </div>
@@ -4208,7 +4208,7 @@ ${ident}
               <button type="button" className="inc-btn-ghost" onClick={() => setRegModalOpen(false)}>Cancelar</button>
               <button
                 type="submit"
-                className="btn btn-primary bg-orange-400 text-orange-400"
+                className="btn btn-primary bg-emerald-400 text-emerald-400"
                 disabled={!(["ped","com","sen","fam"] as RegCat[]).some((c) => (nrBodies[c] || "").trim())}
               ><Plus size={14} /> Salvar registros</button>
             </div>
@@ -4280,7 +4280,7 @@ function FilterPopover({
               <button
                 type="button"
                 onClick={onClear}
-                style={{ fontSize: 11.5, color: "var(--orange, #F97316)", fontWeight: 600 }}
+                style={{ fontSize: 11.5, color: "var(--orange, #0B7A55)", fontWeight: 600 }}
               >
                 Limpar
               </button>
@@ -4298,7 +4298,7 @@ function FilterPopover({
                     borderRadius: 6,
                     cursor: "pointer",
                     fontSize: 13,
-                    background: checked ? "#FFF7ED" : "transparent",
+                    background: checked ? "#E8F6EF" : "transparent",
                   }}
                 >
                   <input

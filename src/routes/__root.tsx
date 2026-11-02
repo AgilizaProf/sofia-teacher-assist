@@ -24,7 +24,6 @@ import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { syncOnboardingFlagIfPending } from "@/lib/onboarding";
 import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
 import { useLocation } from "@tanstack/react-router";
-import { MobileTopBar } from "@/components/MobileTopBar";
 import { PencilLogo } from "@/components/painel/PainelNav";
 import { trackEvent, trackPageView } from "@/lib/tracking";
 
@@ -126,14 +125,14 @@ function RootShell({ children }: { children: React.ReactNode }) {
           fbq('track', 'PageView');
         `}} />
         <style dangerouslySetInnerHTML={{ __html: `
-          #ap-splash{position:fixed;inset:0;background:linear-gradient(135deg,#1B2A4E 0%,#0F1B36 100%);
+          #ap-splash{position:fixed;inset:0;background:linear-gradient(135deg,#14161F 0%,#14161F 100%);
             display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;
-            transition:opacity .4s ease;font-family:'Inter',-apple-system,sans-serif;}
+            transition:opacity .4s ease;font-family:'DM Sans',-apple-system,sans-serif;}
           #ap-splash.hide{opacity:0;pointer-events:none;}
-          #ap-splash .ap-logo{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:40px;color:#fff;letter-spacing:-.03em;}
-          #ap-splash .ap-logo span{color:#FF7A45;}
+          #ap-splash .ap-logo{font-family:'Sora',Georgia,serif;font-weight:900;font-size:40px;color:#fff;letter-spacing:-.03em;}
+          #ap-splash .ap-logo span{color:#0B7A55;}
           #ap-splash .ap-sub{font-size:13px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.04em;}
-          #ap-splash .ap-ring{width:36px;height:36px;border:2.5px solid rgba(255,122,69,.25);border-top-color:#FF7A45;
+          #ap-splash .ap-ring{width:36px;height:36px;border:2.5px solid rgba(11,122,85,.25);border-top-color:#0B7A55;
             border-radius:50%;animation:ap-spin 0.9s linear infinite;}
           @keyframes ap-spin{to{transform:rotate(360deg);}}
         `}} />
@@ -301,8 +300,6 @@ function RootComponent() {
   const { ready, authed, isPublicRoute } = useAuthGuard();
   // No primeiro acesso a pessoa só informa nome e celular; a Sofia aparece depois.
   const showSofia = ready && authed && !isPublicRoute && loc.pathname !== "/onboarding";
-  // Páginas no novo visual "Painel" já têm navegação própria (PainelNav).
-  const isPainelPage = ["/", "/relatorios", "/planejamento", "/inclusao", "/agenda", "/jogos", "/simulados", "/onboarding"].includes(loc.pathname);
 
   if (!ready && !isPublicRoute) {
     return (
@@ -352,7 +349,6 @@ function RootComponent() {
             <SofiaProvider>
               <CreditosGateProvider>
                 <MaintenanceBanner />
-                {showSofia && !isPainelPage && <MobileTopBar />}
                 <Outlet />
               </CreditosGateProvider>
               {showSofia && (

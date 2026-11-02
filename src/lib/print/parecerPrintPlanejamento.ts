@@ -26,7 +26,7 @@ const BASE_CSS = `
 html,body{margin:0;padding:0;background:#fff;color:#000}
 body{font:12px/1.45 Arial, Helvetica, sans-serif;text-align:justify}
 article.report{border:1px solid #000;padding:2cm;margin:0;}
-article.report h1{font-family:'Fraunces', Georgia, serif;font-weight:700;font-size:28px;text-align:center;margin:0 0 8px;letter-spacing:.01em;line-height:1.15;}
+article.report h1{font-family:'Sora', Georgia, serif;font-weight:700;font-size:28px;text-align:center;margin:0 0 8px;letter-spacing:.01em;line-height:1.15;}
 .grid-2{display:block;margin:8px 0 16px;border-top:1px solid #000;padding-top:10px;}
 .field-box{display:flex;gap:6px;align-items:baseline;margin:2px 0;background:none;border:0;}
 .field-label{font-weight:700;color:#000;background:none;border:0;padding:0;text-transform:none;letter-spacing:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;}

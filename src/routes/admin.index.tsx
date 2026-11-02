@@ -101,8 +101,8 @@ function AdminOverview() {
             <div style={{display:"flex",flexDirection:"column",gap:9}}>
               {s.topEvents.map(ev => (
                 <div key={ev.event_type}>
-                  <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'Inter',sans-serif",fontSize:12,marginBottom:4}}>
-                    <span style={{fontWeight:600,color:"#0F1B36"}}>{ev.event_type}</span>
+                  <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'DM Sans',sans-serif",fontSize:12,marginBottom:4}}>
+                    <span style={{fontWeight:600,color:"#14161F"}}>{ev.event_type}</span>
                     <span style={{color:"#6B7280",fontWeight:700}}>{ev.count}</span>
                   </div>
                   <div className="ad-bar"><div style={{width:`${(ev.count/maxEv)*100}%`}}/></div>
@@ -115,7 +115,7 @@ function AdminOverview() {
           <h3>Próxima manutenção</h3>
           {s.nextMaint ? (
             <div>
-              <p style={{fontFamily:"'Fraunces',serif",fontWeight:700,fontSize:15,color:"#0F1B36",margin:0}}>{s.nextMaint.title}</p>
+              <p style={{fontFamily:"'Sora',serif",fontWeight:700,fontSize:15,color:"#14161F",margin:0}}>{s.nextMaint.title}</p>
               <p style={{fontSize:12,color:"#6B7280",marginTop:6}}>{new Date(s.nextMaint.starts_at).toLocaleString("pt-BR")}</p>
             </div>
           ) : <p style={{fontSize:13,color:"#6B7280"}}>Nenhuma agendada.</p>}
@@ -124,7 +124,7 @@ function AdminOverview() {
           <h3 style={{margin:0}}>Links para compartilhar</h3>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,width:"100%"}}>
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
-              <span style={{fontSize:12,fontWeight:600,color:"#0F1B36"}}>Aplicativo</span>
+              <span style={{fontSize:12,fontWeight:600,color:"#14161F"}}>Aplicativo</span>
               {qrAppUrl ? (
                 <img src={qrAppUrl} alt="QR Code do aplicativo" style={{width:110,height:110,borderRadius:8,border:"1px solid #E5E7EB"}} />
               ) : (
@@ -134,14 +134,14 @@ function AdminOverview() {
                 onClick={() => {
                   navigator.clipboard.writeText(APP_URL).then(() => { setCopiedApp(true); setTimeout(() => setCopiedApp(false), 2000); });
                 }}
-                style={{display:"flex",alignItems:"center",gap:6,fontSize:11,padding:"5px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",color:"#0F1B36"}}
+                style={{display:"flex",alignItems:"center",gap:6,fontSize:11,padding:"5px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",color:"#14161F"}}
               >
                 {copiedApp ? <Check size={12} color="#16A34A" /> : <Copy size={12} />}
                 {copiedApp ? "Copiado!" : "Copiar link"}
               </button>
             </div>
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
-              <span style={{fontSize:12,fontWeight:600,color:"#0F1B36"}}>Site de vendas</span>
+              <span style={{fontSize:12,fontWeight:600,color:"#14161F"}}>Site de vendas</span>
               {qrVendasUrl ? (
                 <img src={qrVendasUrl} alt="QR Code do site de vendas" style={{width:110,height:110,borderRadius:8,border:"1px solid #E5E7EB"}} />
               ) : (
@@ -151,7 +151,7 @@ function AdminOverview() {
                 onClick={() => {
                   navigator.clipboard.writeText(VENDAS_URL).then(() => { setCopiedVendas(true); setTimeout(() => setCopiedVendas(false), 2000); });
                 }}
-                style={{display:"flex",alignItems:"center",gap:6,fontSize:11,padding:"5px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",color:"#0F1B36"}}
+                style={{display:"flex",alignItems:"center",gap:6,fontSize:11,padding:"5px 10px",borderRadius:6,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",color:"#14161F"}}
               >
                 {copiedVendas ? <Check size={12} color="#16A34A" /> : <Copy size={12} />}
                 {copiedVendas ? "Copiado!" : "Copiar link"}

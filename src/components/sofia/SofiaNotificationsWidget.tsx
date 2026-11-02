@@ -25,7 +25,7 @@ import { reportError } from "@/lib/admin/track";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CAT_META: Record<SofiaNotifCategory, { icon: typeof Bell; label: string; color: string; bg: string }> = {
-  lembrete: { icon: BellIcon,        label: "Lembrete",   color: "#9A3412", bg: "#FFEDD5" },
+  lembrete: { icon: BellIcon,        label: "Lembrete",   color: "#064E36", bg: "#CDEFE2" },
   pcd:      { icon: Baby,            label: "Aluno PCD",  color: "#7C3AED", bg: "#EDE9FE" },
   plano:    { icon: ClipboardList,   label: "Planejamento", color: "#1D4ED8", bg: "#DBEAFE" },
   padrao:   { icon: BarChart3,       label: "Padrão",     color: "#0F766E", bg: "#CCFBF1" },
@@ -144,24 +144,24 @@ export function SofiaNotificationsWidget() {
     <>
       <style>{`
         .sofia-notif-fab{position:fixed;right:max(16px, env(safe-area-inset-right));bottom:calc(max(20px, env(safe-area-inset-bottom)) + 68px);z-index:60;width:48px;height:48px;border:none;border-radius:50%;cursor:pointer;
-          background:#fff;color:#1B2A4E;display:grid;place-items:center;
+          background:#fff;color:#14161F;display:grid;place-items:center;
           box-shadow:0 12px 24px -10px rgba(11,18,32,.35);border:1px solid var(--sofia-line, #E5E7EB);
           transition:transform .18s, box-shadow .18s;}
         .sofia-notif-fab:hover{transform:translateY(-2px);box-shadow:0 18px 28px -10px rgba(11,18,32,.45);}
-        .sofia-notif-badge{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#E11D48;color:#fff;font-family:'Inter',sans-serif;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid #fff;}
+        .sofia-notif-badge{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#E11D48;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid #fff;}
         @media(max-width:640px){.sofia-notif-fab{bottom:calc(max(20px, env(safe-area-inset-bottom)) + 68px);right:max(16px, env(safe-area-inset-right));}}
         .sofia-notif-item{display:flex;gap:10px;padding:12px;border:1px solid var(--sofia-line,#E5E7EB);border-radius:12px;background:#fff;align-items:flex-start;transition:background .15s;}
-        .sofia-notif-item.unread{background:#FFF7ED;border-color:#FFD9C2;}
+        .sofia-notif-item.unread{background:#E8F6EF;border-color:#FFD9C2;}
         .sofia-notif-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;}
-        .sofia-notif-text{font-size:13px;line-height:1.45;color:#1B2A4E;}
+        .sofia-notif-text{font-size:13px;line-height:1.45;color:#14161F;}
         .sofia-notif-meta{font-size:11px;color:#64748B;margin-top:2px;display:flex;gap:8px;align-items:center;}
         .sofia-notif-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
         .sofia-notif-empty{text-align:center;padding:32px 16px;color:#64748B;font-size:13px;}
-        .sofia-notif-empty h4{font-family:var(--sofia-font-display,'Fraunces',serif);font-size:18px;color:#1B2A4E;margin:0 0 4px;}
+        .sofia-notif-empty h4{font-family:var(--sofia-font-display,'Sora',serif);font-size:18px;color:#14161F;margin:0 0 4px;}
         .sofia-notif-foot{border-top:1px solid var(--sofia-line,#E5E7EB);padding:10px 12px;background:#fff;}
-        .sofia-notif-foot textarea{width:100%;resize:none;border:1px solid var(--sofia-line,#E5E7EB);border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;color:#1B2A4E;outline:none;min-height:44px;max-height:120px;}
-        .sofia-notif-foot textarea:focus{border-color:var(--sofia-primary,#F97316);}
-        .sofia-notif-answer{margin:8px 0 4px;padding:10px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0;font-size:13px;line-height:1.5;color:#1B2A4E;}
+        .sofia-notif-foot textarea{width:100%;resize:none;border:1px solid var(--sofia-line,#E5E7EB);border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;color:#14161F;outline:none;min-height:44px;max-height:120px;}
+        .sofia-notif-foot textarea:focus{border-color:var(--sofia-primary,#0B7A55);}
+        .sofia-notif-answer{margin:8px 0 4px;padding:10px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0;font-size:13px;line-height:1.5;color:#14161F;}
         .sofia-notif-answer p{margin:0 0 8px;} .sofia-notif-answer p:last-child{margin-bottom:0;}
       `}</style>
 
@@ -180,14 +180,14 @@ export function SofiaNotificationsWidget() {
           <SheetHeader className="px-4 py-3 border-b">
             <div className="flex items-center justify-between gap-2">
               <SheetTitle className="flex items-center gap-2 text-base">
-                <Bell size={18} className="text-orange-500" />
+                <Bell size={18} className="text-emerald-500" />
                 Notificações da Sofia
               </SheetTitle>
               {items.length > 0 && unread > 0 && (
                 <button
                   type="button"
                   onClick={markAllRead}
-                  className="text-xs font-semibold text-orange-600 hover:text-orange-700 inline-flex items-center gap-1"
+                  className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1"
                 >
                   <Check size={12} /> Marcar todas como lidas
                 </button>
@@ -275,7 +275,7 @@ export function SofiaNotificationsWidget() {
                 onClick={handleAsk}
                 disabled={!draft.trim() || asking || !sofia.isAuthed}
                 aria-label="Enviar pergunta"
-                className="bg-orange-500 hover:bg-orange-600 text-white shrink-0"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white shrink-0"
               >
                 {asking ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
               </Button>

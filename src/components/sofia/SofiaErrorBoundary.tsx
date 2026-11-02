@@ -44,7 +44,7 @@ export class SofiaErrorBoundary extends Component<Props, State> {
           borderRadius: 16,
           padding: "16px 18px",
           color: "#fff",
-          fontFamily: "'Inter',-apple-system,sans-serif",
+          fontFamily: "'DM Sans',-apple-system,sans-serif",
           display: "flex",
           alignItems: "center",
           gap: 12,

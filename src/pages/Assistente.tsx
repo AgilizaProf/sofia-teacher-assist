@@ -6,7 +6,7 @@ import {
   Calendar, CheckSquare, Star, X, ChevronLeft, ChevronRight,
   GraduationCap, Users, BookOpen, Brain, ClipboardList, Clock, ChevronUp, ChevronDown,
 } from "lucide-react";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { PainelNav } from "@/components/painel/PainelNav";
 import ReactMarkdown from "react-markdown";
 import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { useSofia } from "@/components/sofia/SofiaProvider";
@@ -61,10 +61,10 @@ function CtxChipGroup({ options, value, onToggle }: { options: string[]; value: 
 
 const css = `
 .ap-root{
-  --primary:#1B2A4E;--primary-dark:#0F1B36;--accent:#FF6A2C;--accent-warm:#FF9466;
+  --primary:#14161F;--primary-dark:#14161F;--accent:#0B7A55;--accent-warm:#0B7A55;
   --paper:#F6F4EE;--paper-2:#FBFAF6;--text:#0B1220;--text-soft:#3B4256;--muted:#7A8194;
   --line-soft:#E7E9EF;--violet:#6E5BE6;--green:#16A36B;
-  font-family:'Inter',-apple-system,sans-serif;background:var(--paper);color:var(--text);
+  font-family:'DM Sans',-apple-system,sans-serif;background:var(--paper);color:var(--text);
   -webkit-font-smoothing:antialiased;line-height:1.5;font-size:14px;min-height:100vh;
 }
 .ap-root *{box-sizing:border-box;}
@@ -72,9 +72,9 @@ const css = `
 .ap-root button{font-family:inherit;cursor:pointer;border:none;background:transparent;color:inherit;}
 .ap-root a{color:inherit;text-decoration:none;}
 .ap-root p{margin:0;}
-.ai-app{display:grid;grid-template-columns:240px 1fr 320px;min-height:100vh;transition:grid-template-columns .25s ease;}
+.ai-app{display:grid;grid-template-columns:minmax(0,1fr) 320px;min-height:100vh;transition:grid-template-columns .25s ease;}
 @media(max-width:820px){.ai-app{grid-template-columns:1fr;}.ai-sidebar{display:none;}.convo{padding-top:18px;}}
-.ai-app.collapsed{grid-template-columns:240px 1fr 56px;}
+.ai-app.collapsed{grid-template-columns:minmax(0,1fr) 56px;}
 
 /* Main */
 .ai-main{display:flex;flex-direction:column;min-width:0;}
@@ -85,9 +85,9 @@ const css = `
 .ai-crumbs .sep{opacity:.5;}
 .sofia-id{display:flex;align-items:center;gap:10px;}
 .sofia-avatar{width:36px;height:36px;border-radius:10px;
-  background:radial-gradient(120% 120% at 30% 20%,#FFD2B7 0%,#FF6A2C 60%,#C84A14 100%);
+  background:radial-gradient(120% 120% at 30% 20%,#FFD2B7 0%,#0B7A55 60%,#C84A14 100%);
   display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px -8px rgba(255,106,44,.6);}
-.sofia-name{font-family:'Fraunces',serif;font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px;color:var(--text);}
+.sofia-name{font-family:'Sora',serif;font-weight:700;font-size:18px;display:flex;align-items:center;gap:8px;color:var(--text);}
 .tag-beta{font-size:10px;background:#0B1220;color:#fff;padding:2px 6px;border-radius:6px;letter-spacing:.06em;font-weight:700;}
 .sofia-sub{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
 .dot-online{width:6px;height:6px;border-radius:50%;background:#16A36B;display:inline-block;}
@@ -121,7 +121,7 @@ const css = `
 .ctx-modal-overlay{position:fixed;inset:0;background:rgba(11,18,32,.55);backdrop-filter:blur(4px);display:grid;place-items:center;z-index:80;padding:20px;}
 .ctx-modal{background:#fff;border-radius:18px;width:100%;max-width:560px;max-height:85vh;overflow:auto;box-shadow:0 30px 80px -20px rgba(11,18,32,.45);border:1px solid var(--line-soft);}
 .ctx-modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line-soft);position:sticky;top:0;background:#fff;}
-.ctx-modal-head h3{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--text);}
+.ctx-modal-head h3{font-family:'Sora',serif;font-size:20px;font-weight:600;color:var(--text);}
 .ctx-modal-head p{font-size:12px;color:var(--muted);margin-top:2px;}
 .ctx-modal-close{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--muted);background:transparent;border:1px solid var(--line-soft);}
 .ctx-modal-close:hover{background:var(--paper);}
@@ -167,7 +167,7 @@ const css = `
 .convo-inner{width:100%;max-width:760px;}
 .stamp{display:inline-flex;align-items:center;gap:8px;background:rgba(255,106,44,.10);color:var(--accent);
   padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.04em;}
-.greet{font-family:'Fraunces',serif;font-weight:600;font-size:40px;line-height:1.12;letter-spacing:-.01em;
+.greet{font-family:'Sora',serif;font-weight:600;font-size:40px;line-height:1.12;letter-spacing:-.01em;
   margin:18px 0 10px;color:var(--text);}
 .greet em{font-style:normal;color:var(--accent);}
 .greet u{text-decoration:none;background:linear-gradient(180deg,transparent 62%,rgba(255,106,44,.22) 62%);}
@@ -179,11 +179,11 @@ const css = `
   display:grid;grid-template-columns:54px 1fr auto;gap:16px;align-items:center;color:#fff;
   box-shadow:0 30px 60px -30px rgba(11,18,32,.45);}
 .suggest .ico-tile{width:54px;height:54px;border-radius:14px;
-  background:linear-gradient(135deg,#FF6A2C,#FF8A4C);display:grid;place-items:center;color:#fff;
+  background:linear-gradient(135deg,#0B7A55,#FF8A4C);display:grid;place-items:center;color:#fff;
   box-shadow:0 10px 24px -10px rgba(255,106,44,.7);}
 .suggest .label{font-size:11px;letter-spacing:.08em;color:#FFB47A;font-weight:700;
   text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;}
-.suggest h3{margin:6px 0 4px;font-family:'Fraunces',serif;font-weight:600;font-size:22px;line-height:1.25;color:#fff;}
+.suggest h3{margin:6px 0 4px;font-family:'Sora',serif;font-weight:600;font-size:22px;line-height:1.25;color:#fff;}
 .suggest p{margin:0;color:#aab2c8;font-size:13px;}
 .suggest{position:relative;overflow:hidden;}
 .suggest::before{content:"";position:absolute;inset:-40% -10% auto auto;width:280px;height:280px;
@@ -231,7 +231,7 @@ const css = `
 /* Tasks block */
 .tasks-wrap{margin-top:28px;}
 .tasks-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
-.tasks-title{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--text);letter-spacing:-.01em;}
+.tasks-title{font-family:'Sora',serif;font-weight:600;font-size:18px;color:var(--text);letter-spacing:-.01em;}
 .tasks-tabs{display:inline-flex;gap:4px;background:#fff;border:1px solid var(--line-soft);border-radius:10px;padding:4px;}
 .tasks-tab{font-size:12px;color:var(--text-soft);font-weight:600;padding:6px 12px;border-radius:7px;transition:all .15s;}
 .tasks-tab.active{background:var(--accent);color:#fff;}
@@ -243,9 +243,9 @@ const css = `
 .task-card:hover{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,106,44,.18),0 10px 22px -12px rgba(255,106,44,.5);transform:translateY(-2px);}
 .task-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;}
 .task-emoji{width:30px;height:30px;border-radius:8px;background:#FBF7F0;display:grid;place-items:center;font-size:15px;flex-shrink:0;}
-.task-top-pill{position:absolute;top:8px;left:10px;font-size:8px;font-weight:800;color:#9A3412;background:#FFEDD5;padding:2px 6px;border-radius:999px;letter-spacing:.04em;}
+.task-top-pill{position:absolute;top:8px;left:10px;font-size:8px;font-weight:800;color:#064E36;background:#CDEFE2;padding:2px 6px;border-radius:999px;letter-spacing:.04em;}
 .task-shortcut{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);font-weight:700;background:#F6F4EE;border:1px solid var(--line-soft);padding:3px 7px;border-radius:6px;white-space:nowrap;display:inline-flex;align-items:center;line-height:1;margin-top:auto;align-self:flex-start;height:20px;}
-.task-name{font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:var(--text);line-height:1.2;margin-top:4px;}
+.task-name{font-family:'Sora',serif;font-weight:600;font-size:13px;color:var(--text);line-height:1.2;margin-top:4px;}
 .task-desc{font-size:10.5px;color:var(--text-soft);line-height:1.35;}
 @media(max-width:1100px){.tasks-grid{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:520px){.tasks-grid{grid-template-columns:repeat(2,1fr);}}
@@ -279,10 +279,10 @@ const css = `
   display:grid;place-items:center;color:#3B4256;flex:none;}
 .h-text{font-size:13px;line-height:1.35;color:var(--text);}
 .h-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.plan{margin:auto 12px 12px;background:linear-gradient(180deg,#FFEDD5 0%,#FFD7B5 100%);
+.plan{margin:auto 12px 12px;background:linear-gradient(180deg,#CDEFE2 0%,#FFD7B5 100%);
   border:1px solid #F7C9A8;border-radius:12px;padding:10px 12px;color:#3a1f0b;}
-.plan-tag{font-size:9.5px;font-weight:800;color:#9A3412;letter-spacing:.08em;display:inline-flex;align-items:center;gap:5px;}
-.plan h4{margin:5px 0 2px;font-family:'Fraunces',serif;font-weight:700;font-size:13px;color:#3a1f0b;line-height:1.25;}
+.plan-tag{font-size:9.5px;font-weight:800;color:#064E36;letter-spacing:.08em;display:inline-flex;align-items:center;gap:5px;}
+.plan h4{margin:5px 0 2px;font-family:'Sora',serif;font-weight:700;font-size:13px;color:#3a1f0b;line-height:1.25;}
 .plan p{margin:0;font-size:11px;color:#5a3a20;line-height:1.35;}
 .btn-plan{margin-top:8px;display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;
   padding:6px 10px;border-radius:8px;font-size:11.5px;font-weight:700;}
@@ -300,10 +300,10 @@ const css = `
 .history.collapsed .btn-new{padding:6px;width:32px;height:32px;justify-content:center;}
 .history.collapsed .btn-collapse svg{transform:rotate(180deg);}
 
-@media(max-width:1100px){.ai-app{grid-template-columns:240px 1fr 240px;}.ai-app.collapsed{grid-template-columns:240px 1fr 56px;}}
+@media(max-width:1100px){.ai-app{grid-template-columns:minmax(0,1fr) 240px;}.ai-app.collapsed{grid-template-columns:minmax(0,1fr) 56px;}}
 @media(min-width:1101px){
-  .ai-app{grid-template-columns:240px 1fr 320px;}
-  .ai-app.collapsed{grid-template-columns:240px 1fr 56px;}
+  .ai-app{grid-template-columns:minmax(0,1fr) 320px;}
+  .ai-app.collapsed{grid-template-columns:minmax(0,1fr) 56px;}
 }
 @media(max-width:820px){
   .ai-app{grid-template-columns:1fr 240px;}
@@ -317,12 +317,12 @@ const css = `
   .history{
     position:fixed;top:0;right:0;height:100dvh;width:min(360px,88vw);
     z-index:210;transform:translateX(100%);transition:transform .25s ease;
-    box-shadow:-12px 0 32px rgba(15,27,54,.18);border-left:1px solid rgba(17,24,39,.08);
+    box-shadow:-12px 0 32px rgba(20,22,31,.18);border-left:1px solid rgba(17,24,39,.08);
     display:flex;flex-direction:column;
   }
   .history.mobile-open{transform:translateX(0);}
   .history-mobile-backdrop{
-    position:fixed;inset:0;background:rgba(15,27,54,.45);z-index:205;
+    position:fixed;inset:0;background:rgba(20,22,31,.45);z-index:205;
     opacity:0;pointer-events:none;transition:opacity .2s ease;
   }
   .history-mobile-backdrop.show{opacity:1;pointer-events:auto;}
@@ -330,7 +330,7 @@ const css = `
 .hist-mobile-btn{display:none;align-items:center;gap:6px;background:#fff;
   border:1px solid var(--line-soft);border-radius:999px;padding:6px 12px;
   font-size:12px;font-weight:700;color:var(--text-soft);cursor:pointer;}
-.history-mobile-backdrop{position:fixed;inset:0;background:rgba(15,27,54,.45);z-index:205;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+.history-mobile-backdrop{position:fixed;inset:0;background:rgba(20,22,31,.45);z-index:205;opacity:0;pointer-events:none;transition:opacity .2s ease;}
 .history-mobile-backdrop.show{opacity:1;pointer-events:auto;}
 `;
 
@@ -629,12 +629,13 @@ export function Assistente() {
 
   return (
     <div className="ap-root">
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss + css }} />
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <PainelNav />
       <div className={"ai-app" + (collapsed ? " collapsed" : "")}>
-        <AppSidebar active="assistant" />
 
         <section className="ai-main">
           <AppHeader
+            noNav
             actions={
               <>
                 <button
@@ -713,7 +714,7 @@ export function Assistente() {
                             <ReactMarkdown>{parsed?.clean ?? m.content}</ReactMarkdown>
                           </div>
                           {m.issues && m.issues.length > 0 && (
-                            <div style={{ marginTop: 10, padding: "8px 10px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, fontSize: 12, color: "#7C2D12" }}>
+                            <div style={{ marginTop: 10, padding: "8px 10px", background: "#E8F6EF", border: "1px solid #CDEFE2", borderRadius: 8, fontSize: 12, color: "#7C2D12" }}>
                               <b>Linguagem ajustada automaticamente</b> ({m.issues.length} termo{m.issues.length > 1 ? "s" : ""}): {m.issues.map((i, k) => (
                                 <span key={k}>{k > 0 ? ", " : " "}<i>"{i.term}"</i> → <b>{i.suggestion}</b></span>
                               ))}
@@ -930,7 +931,7 @@ export function Assistente() {
                 tabIndex={0}
                 onClick={() => pickConversation(c.id)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
-                style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
+                style={c.id === sofia.conversationId ? { background: "#E8F6EF" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
                 <div style={{ minWidth: 0 }}>
@@ -961,7 +962,7 @@ export function Assistente() {
                 tabIndex={0}
                 onClick={() => pickConversation(c.id)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
-                style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
+                style={c.id === sofia.conversationId ? { background: "#E8F6EF" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
                 <div style={{ minWidth: 0 }}>
@@ -992,7 +993,7 @@ export function Assistente() {
                 tabIndex={0}
                 onClick={() => pickConversation(c.id)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickConversation(c.id); } }}
-                style={c.id === sofia.conversationId ? { background: "#FFF5EE" } : undefined}
+                style={c.id === sofia.conversationId ? { background: "#E8F6EF" } : undefined}
               >
                 <div className="h-icon"><FileText size={13} /></div>
                 <div style={{ minWidth: 0 }}>
@@ -1217,7 +1218,7 @@ export function Assistente() {
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "#3B4256" }}>{s.body}</p>
               <div style={{ display: "flex", gap: 6, marginTop: 18, marginBottom: 18 }}>
                 {steps.map((_, i) => (
-                  <span key={i} style={{ height: 4, flex: 1, borderRadius: 2, background: i <= idx ? "#1B2A4E" : "rgba(148,163,184,.3)" }} />
+                  <span key={i} style={{ height: 4, flex: 1, borderRadius: 2, background: i <= idx ? "#14161F" : "rgba(148,163,184,.3)" }} />
                 ))}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
@@ -1231,14 +1232,14 @@ export function Assistente() {
                 {idx < total - 1 ? (
                   <button
                     onClick={() => setTutorialStep((n: number) => Math.min(total - 1, n + 1))}
-                    style={{ padding: "8px 14px", borderRadius: 10, border: 0, background: "#1B2A4E", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+                    style={{ padding: "8px 14px", borderRadius: 10, border: 0, background: "#14161F", color: "#fff", cursor: "pointer", fontWeight: 600 }}
                   >
                     Próximo
                   </button>
                 ) : (
                   <button
                     onClick={close}
-                    style={{ padding: "8px 14px", borderRadius: 10, border: 0, background: "#1B2A4E", color: "#fff", cursor: "pointer", fontWeight: 600 }}
+                    style={{ padding: "8px 14px", borderRadius: 10, border: 0, background: "#14161F", color: "#fff", cursor: "pointer", fontWeight: 600 }}
                   >
                     Entendi
                   </button>

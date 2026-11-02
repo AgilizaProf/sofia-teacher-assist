@@ -1,15 +1,16 @@
+import { PainelNav } from "@/components/painel/PainelNav";
 import React, { useEffect, useMemo } from "react";
 import { useUser } from "@/lib/mockData";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useTurmas } from "@/hooks/useTurmas";
 import { formatTurmaGrade } from "@/lib/turmaGrade";
 
-const NAVY = "#1a2744";
+const NAVY = "#0B7A55";
 const BORDER = "#d6d6d6";
 const SOFT = "#f7f6f2";
 
-const titleFont = "'Fraunces', Georgia, 'Times New Roman', serif";
-const bodyFont = "'Inter', Arial, Helvetica, sans-serif";
+const titleFont = "'Sora', Georgia, 'Times New Roman', serif";
+const bodyFont = "'DM Sans', Arial, Helvetica, sans-serif";
 
 type DashSchool = { name: string; network: string; stage: string; city: string; uf: string; classes: string };
 
@@ -202,7 +203,8 @@ export default function PlanejamentoPedagogico() {
   };
 
   return (
-    <div className="planejamento-root" style={{ background: "#eceae4", minHeight: "100vh", padding: "1px 0", overflowX: "auto" }}>
+    <div className="planejamento-root" style={{ background: "#EDF0F5", minHeight: "100vh", padding: "1px 0", overflowX: "auto" }}>
+      <PainelNav />
       <style>{`
         @media print {
           @page { size: A4; margin: 0; }
@@ -222,7 +224,12 @@ export default function PlanejamentoPedagogico() {
           box-shadow: 0 0 0 2px rgba(26,39,68,.12);
         }
         @media (max-width: 820px){
-          .planejamento-root{-webkit-overflow-scrolling:touch;}
+          .planejamento-root{-webkit-overflow-scrolling:touch;overflow-x:hidden !important;padding-bottom:110px !important;}
+          .planejamento-page{width:auto !important;max-width:794px;margin:12px !important;min-height:0 !important;}
+          .planejamento-page > div:last-child{padding:18px 16px 28px !important;}
+          .planejamento-page *{max-width:100%;overflow-wrap:break-word;}
+          .planejamento-page h1{font-size:30px !important;line-height:1.1 !important;}
+          .planejamento-page h2{font-size:20px !important;}
           .planejamento-toolbar{width:auto !important;max-width:100%;margin:12px 12px 0 !important;flex-wrap:wrap;justify-content:stretch !important;}
           .planejamento-toolbar > button{flex:1 1 140px;font-size:13px !important;padding:10px 12px !important;}
         }

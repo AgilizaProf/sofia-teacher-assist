@@ -3,7 +3,7 @@ import { Home } from "@/pages/Home";
 
 export const Route = createFileRoute("/")({
   // Links antigos da Sofia apontavam pra "/?open=…" (turmas, alunos, escolas,
-  // agenda). Essas seções agora vivem em /minha-sala.
+  // agenda). Escolas e turmas agora ficam em Configurações.
   validateSearch: (
     s: Record<string, unknown>,
   ): { open?: string; target?: string; m?: "m1" | "m3" | "m5" } => ({
@@ -15,7 +15,8 @@ export const Route = createFileRoute("/")({
         : undefined,
   }),
   beforeLoad: ({ search }) => {
-    if (search.open) throw redirect({ to: "/minha-sala", search });
+    if (search.open === "schools" || search.open === "classes")
+      throw redirect({ to: "/configuracoes" });
   },
   head: () => ({
     meta: [

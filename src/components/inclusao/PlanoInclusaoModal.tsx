@@ -649,7 +649,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
                 </div>
 
                 <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 10, padding: 14 }}>
-                  <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 17, marginBottom: 6 }}>{plano.titulo}</h4>
+                  <h4 style={{ fontFamily: "'Sora',serif", fontSize: 17, marginBottom: 6 }}>{plano.titulo}</h4>
                   <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 10 }}>{plano.objetivo}</p>
                   {plano.habilidades?.length > 0 && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
@@ -719,7 +719,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
           <span className="legal">O plano será salvo no histórico de {aluno.name.split(" ")[0]}.</span>
           <button className="inc-btn-ghost" onClick={onClose}>Cancelar</button>
           {planos.length === 0 ? (
-            <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={gerar} disabled={loading}>
+            <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={gerar} disabled={loading}>
               {loading
                 ? <><Loader2 size={14} className="animate-spin" /> Gerando {disciplinas.length > 1 && modoGeracao === "separado" ? `${disciplinas.length} planos` : "plano"}…</>
                 : <><Sparkles size={14} /> Gerar {disciplinas.length > 1 && modoGeracao === "separado" ? `${disciplinas.length} planos` : "plano"} com a Sofia</>}
@@ -729,7 +729,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
               <button className="inc-btn-ghost" onClick={regerarAtual} disabled={loading} title="Regerar apenas a aba atual">
                 {loading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Regerar este
               </button>
-              <button className="btn btn-primary bg-orange-400 text-orange-400" onClick={salvar}>
+              <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={salvar}>
                 <CheckCircle2 size={14} /> Salvar selecionados ({planos.filter(p => p.incluir).length})
               </button>
             </>

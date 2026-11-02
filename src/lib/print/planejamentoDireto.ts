@@ -114,7 +114,7 @@ export function construirPlanejamentoHtml(args: ImprimirArgs): string {
   html,body{margin:0;padding:0;background:#fff;color:#000}
   body{font:12px/1.45 Arial, Helvetica, sans-serif;text-align:justify}
   .doc{border:1px solid #000;padding:2cm;margin:0;min-height:100vh}
-  h1{font-family:'Fraunces', Georgia, serif;font-weight:700;font-size:28px;text-align:center;margin:0 0 8px;letter-spacing:.01em}
+  h1{font-family:'Sora', Georgia, serif;font-weight:700;font-size:28px;text-align:center;margin:0 0 8px;letter-spacing:.01em}
   .periodo{text-align:center;margin:0 0 16px;font-size:12px}
   hr{border:0;border-top:1px solid #000;margin:12px 0}
   .meta{text-align:left;margin:8px 0 16px}

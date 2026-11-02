@@ -8,7 +8,7 @@ import { formatarDataBR } from "./relatorioPeriodo";
 import { formatarFraseLegalRelatorio } from "./relatorioLeis";
 
 const ARIAL = "Arial";
-const FRAUNCES = "Fraunces";
+const FRAUNCES = "Sora";
 const BASE_SIZE = 22; // 11pt (half-points)
 const LINE_15 = { line: 360, lineRule: "auto" as const };
 

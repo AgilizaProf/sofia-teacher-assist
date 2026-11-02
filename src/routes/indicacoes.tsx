@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { PainelNav } from "@/components/painel/PainelNav";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
+import { ReferralCard } from "@/components/settings/ReferralCard";
 
 export const Route = createFileRoute("/indicacoes")({
   head: () => ({
     meta: [
-      { title: "Funil de indicação · AgilizaProf" },
+      { title: "Indique e ganhe · AgilizaProf" },
       { name: "description", content: "Acompanhe cliques, cadastros e conversões do seu link de indicação." },
     ],
   }),
@@ -31,10 +34,10 @@ type Ref = {
   created_at: string;
 };
 
-const NAVY = "#1B2A4E";
+const NAVY = "#14161F";
 const MUTED = "#6B7691";
-const BORDER = "#E4E8F0";
-const ACCENT = "#FF7A45";
+const BORDER = "#D6DBE5";
+const ACCENT = "#0B7A55";
 
 const EVENT_LABEL: Record<string, { label: string; bg: string; fg: string }> = {
   ref_visualizar_secao:  { label: "Visualizou seção",      bg: "#EEF2FF", fg: "#3730A3" },
@@ -43,7 +46,7 @@ const EVENT_LABEL: Record<string, { label: string; bg: string; fg: string }> = {
   ref_cadastro_via_link: { label: "Clique no link",        bg: "#FEF3C7", fg: "#92400E" },
   ref_registrado:        { label: "Indicado cadastrou",    bg: "#DCFCE7", fg: "#166534" },
   ref_registro_falhou:   { label: "Falha no vínculo",      bg: "#FEE2E2", fg: "#991B1B" },
-  ref_conversao:         { label: "Conversão (compra)",    bg: "#FFE4D6", fg: "#9A3412" },
+  ref_conversao:         { label: "Conversão (compra)",    bg: "#FFE4D6", fg: "#064E36" },
 };
 
 function fmtDate(iso: string): string {
@@ -100,20 +103,27 @@ function IndicacoesPage() {
   const creditadas = referrals.filter((r) => r.credited).length;
 
   return (
-    <div style={{ fontFamily: "'Inter',-apple-system,sans-serif", color: NAVY, background: "#F4F6FB", minHeight: "100vh", padding: "28px 24px 48px" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <header style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontWeight: 800, fontSize: 30, margin: 0, letterSpacing: "-0.02em" }}>
-            Funil de indicação
-          </h1>
-          <p style={{ color: MUTED, fontSize: 14, margin: "6px 0 0" }}>
-            Acompanhe quem clicou no seu link, quem se cadastrou e quem virou cliente pagante.
+    <div className="pn" style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", color: NAVY, background: "#EDF0F5", minHeight: "100vh" }}>
+      <style>{tempoChipCss + `.ind-wrap{max-width:1100px;margin:0 auto;padding:22px 24px 120px;}.ind-h1{font-family:'Sora',sans-serif;font-weight:800;font-size:34px;margin:14px 0 0;letter-spacing:-.045em;line-height:1.1;}.ind-h2{font-family:'Sora',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.02em;margin:26px 0 10px;}@media(max-width:860px){.ind-wrap{padding:16px 16px 120px;}.ind-h1{font-size:28px;}}`}</style>
+      <PainelNav />
+      <div className="ind-wrap">
+        <header style={{ marginBottom: 18 }}>
+          <div className="pn-strip">
+            <TempoChip />
+          </div>
+          <h1 className="ind-h1">Indique e ganhe</h1>
+          <p style={{ color: MUTED, fontSize: 14.5, margin: "6px 0 0", maxWidth: "70ch" }}>
+            Compartilhe seu link com colegas. Quando alguém assina pelo seu convite, você ganha.
             {code ? <> Seu código: <b style={{ color: ACCENT, fontFamily: "'JetBrains Mono',monospace" }}>{code}</b>.</> : null}
           </p>
         </header>
 
+        <ReferralCard />
+
+        <h2 className="ind-h2">Situação das suas indicações</h2>
+
         {/* Cards do funil */}
-        <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))", marginBottom: 22 }}>
+        <section style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit,minmax(min(150px,100%),1fr))", marginBottom: 22 }}>
           <Stat label="Cliques no link" value={counts.ref_cadastro_via_link || 0} hint="Visitantes via /CODIGO" />
           <Stat label="Cadastros vinculados" value={counts.ref_registrado || 0} hint="Conta criada com seu código" />
           <Stat label="Conversões (compra)" value={conversoes} hint="Indicados que assinaram" />
@@ -124,8 +134,8 @@ function IndicacoesPage() {
         </section>
 
         {/* Linha do tempo de eventos */}
-        <section style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, marginBottom: 22 }}>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, margin: "0 0 4px" }}>Linha do tempo</h2>
+        <section style={{ background: "#fff", border: `1.5px solid ${BORDER}`, borderRadius: 16, padding: 20, margin: "22px 0", minWidth: 0 }}>
+          <h2 style={{ fontFamily: "'Sora',serif", fontSize: 18, margin: "0 0 4px" }}>Linha do tempo</h2>
           <p style={{ color: MUTED, fontSize: 12.5, margin: "0 0 14px" }}>Últimos 500 eventos do seu funil, do mais recente para o mais antigo.</p>
           {loading ? (
             <div style={{ color: MUTED, fontSize: 13 }}>Carregando…</div>
@@ -166,7 +176,7 @@ function IndicacoesPage() {
 
         {/* Conversões pagas */}
         <section style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20 }}>
-          <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, margin: "0 0 4px" }}>Conversões pagas</h2>
+          <h2 style={{ fontFamily: "'Sora',serif", fontSize: 18, margin: "0 0 4px" }}>Conversões pagas</h2>
           <p style={{ color: MUTED, fontSize: 12.5, margin: "0 0 14px" }}>Compras confirmadas dos seus indicados (registradas pelo webhook do Mercado Pago).</p>
           {loading ? (
             <div style={{ color: MUTED, fontSize: 13 }}>Carregando…</div>
@@ -214,17 +224,18 @@ const td: React.CSSProperties = { padding: "10px", verticalAlign: "top" };
 function Stat({ label, value, hint, accent, muted }: { label: string; value: number | string; hint?: string; accent?: boolean; muted?: boolean }) {
   return (
     <div style={{
-      background: accent ? `linear-gradient(135deg, ${ACCENT}, #FF9466)` : "#fff",
+      background: accent ? ACCENT : "#fff",
       color: accent ? "#fff" : NAVY,
-      border: accent ? "none" : `1px solid ${BORDER}`,
-      borderRadius: 12,
+      border: accent ? "2px solid #14161F" : `1.5px solid ${BORDER}`,
+      boxShadow: accent ? "3px 3px 0 #14161F" : "none",
+      borderRadius: 14,
       padding: "14px 16px",
       opacity: muted ? 0.85 : 1,
     }}>
       <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: accent ? "rgba(255,255,255,.85)" : MUTED }}>
         {label}
       </div>
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 800, lineHeight: 1.05, marginTop: 4 }}>
+      <div style={{ fontFamily: "'Sora',serif", fontSize: 26, fontWeight: 800, lineHeight: 1.05, marginTop: 4 }}>
         {value}
       </div>
       {hint && (

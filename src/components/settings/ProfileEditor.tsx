@@ -32,7 +32,7 @@ const fieldStyle: React.CSSProperties = {
   borderRadius: 8,
   fontSize: 13,
   background: "#fff",
-  color: "#1B2A4E",
+  color: "#14161F",
   fontFamily: "inherit",
 };
 const labelStyle: React.CSSProperties = {
@@ -154,7 +154,7 @@ export function ProfileEditor() {
 
   return (
     <form onSubmit={onSave} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <div className="pe-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div className="pe-grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(220px,100%),1fr))", gap: 14 }}>
         <div>
           <label style={labelStyle}>Nome completo</label>
           <input style={fieldStyle} value={profile.display_name} maxLength={120}
@@ -170,7 +170,7 @@ export function ProfileEditor() {
           <input style={fieldStyle} value={profile.telefone} maxLength={30}
             onChange={(e) => update("telefone", e.target.value)} placeholder="(11) 99999-9999" />
         </div>
-        <div className="pe-grid-city" style={{ gridColumn: "span 2", display: "grid", gridTemplateColumns: "1fr 80px", gap: 14 }}>
+        <div className="pe-grid-city" style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "minmax(0,1fr) 80px", gap: 14 }}>
           <div>
             <label style={labelStyle}>Cidade</label>
             <input style={fieldStyle} value={profile.cidade} maxLength={80}
@@ -206,7 +206,7 @@ export function ProfileEditor() {
         </div>
       </div>
 
-      <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#1B2A4E", cursor: "pointer" }}>
+      <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#14161F", cursor: "pointer" }}>
         <input type="checkbox" checked={profile.sofia_lembretes}
           onChange={(e) => update("sofia_lembretes", e.target.checked)} />
         Receber lembretes da Sofia
@@ -216,7 +216,7 @@ export function ProfileEditor() {
         <button type="submit" disabled={saving}
           style={{
             display: "inline-flex", alignItems: "center", gap: 8,
-            background: "#FF7A45", color: "#fff", border: "none",
+            background: "#0B7A55", color: "#fff", border: "none",
             padding: "10px 18px", borderRadius: 10, fontWeight: 700, fontSize: 13,
             cursor: saving ? "not-allowed" : "pointer", opacity: saving ? .7 : 1,
           }}>

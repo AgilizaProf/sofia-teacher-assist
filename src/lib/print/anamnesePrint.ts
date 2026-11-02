@@ -221,7 +221,7 @@ body{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:12pt;line-heigh
 }
 
 .documento h1.title{
-  font-family:'Fraunces',Georgia,'Times New Roman',serif;
+  font-family:'Sora',Georgia,'Times New Roman',serif;
   font-weight:700;font-size:28px;text-align:center;
   margin:0 0 6px;color:#000;
 }
@@ -318,7 +318,7 @@ export function printAnamneseDocument(data: AnamneseData): void {
 /* ───────────────────── Word (.docx) ───────────────────── */
 
 const ARIAL = "Arial";
-const FRAUNCES = "Fraunces";
+const FRAUNCES = "Sora";
 
 function run(text: string, opts: { bold?: boolean; size?: number; font?: string; italics?: boolean; color?: string } = {}) {
   return new TextRun({
