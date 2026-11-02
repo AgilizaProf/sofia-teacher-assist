@@ -97,7 +97,7 @@ const CARDS: Card[] = [
   },
   {
     to: "/jogos",
-    title: "Jogos 2D",
+    title: "Jogos e atividades interativas",
     desc: "Jogos para criar a partir da aula e jogar com a turma",
     bg: "var(--pn-cream)",
     icon: (

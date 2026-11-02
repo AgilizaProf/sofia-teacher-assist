@@ -53,6 +53,13 @@ const navCss = `
 .pn-links a{height:100%;display:flex;align-items:center;text-decoration:none;font-weight:500;font-size:15px;color:var(--pn-muted);border-bottom:3px solid transparent;}
 .pn-links a:hover{color:var(--pn-ink);}
 .pn-links a[aria-current="page"]{color:var(--pn-ink);font-weight:700;border-bottom-color:var(--pn-green);}
+.pn-links a{white-space:nowrap;}
+@media (max-width: 1360px){.pn-links{gap:16px;}.pn-links a{font-size:14px;}}
+@media (max-width: 1240px){
+  .pn-indique .pn-indique-tx{font-size:0;}
+  .pn-indique .pn-indique-tx::after{content:"Indique";font-size:14px;}
+}
+@media (max-width: 1140px){.pn-links{gap:12px;}.pn-links a{font-size:13.5px;}}
 .pn-right{margin-left:auto;position:relative;display:flex;align-items:center;gap:10px;}
 .pn-av{width:40px;height:40px;border-radius:10px;background:var(--pn-sun);border:2px solid var(--pn-ink);display:flex;align-items:center;justify-content:center;
   font-family:var(--pn-display);font-weight:800;font-size:14px;color:var(--pn-ink);cursor:pointer;}
@@ -67,7 +74,7 @@ const navCss = `
 body:has(.pn-bottom) .sofia-fab-pulse{display:none!important;}
 body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #14161F!important;box-shadow:3px 3px 0 #14161F!important;}
 /* Com o PainelNav, o botão da Sofia fica na barra inferior no celular */
-@media(max-width:860px){
+@media(max-width:1080px){
   body:has(.pn-bottom) .sofia-fab{display:none!important;}
   body:has(.pn-bottom) .sofia-bubble{bottom:96px!important;}
   body:has(.pn-bottom) .sofia-notif-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;}
@@ -81,7 +88,7 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
 .pn-sheet-list a,.pn-sheet-list button{display:flex;align-items:center;gap:12px;padding:12px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:14px;
   text-decoration:none;color:var(--pn-ink);font-family:var(--pn-body);font-weight:700;font-size:15px;text-align:left;cursor:pointer;}
 .pn-sheet-list svg{width:20px;height:20px;}
-@media (max-width: 860px){
+@media (max-width: 1080px){
   .pn-top{height:58px;}
   .pn-top-in{padding:0 16px;}
   .pn-links,.pn-right .pn-hide-m{display:none;}
@@ -94,7 +101,7 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
   .pn-brand{font-size:18px;}
   .pn-brand svg{width:30px;height:30px;}
 }
-@media (max-width: 860px){
+@media (max-width: 1080px){
   .pn-bottom{display:flex;gap:4px;position:fixed;z-index:50;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:6px;
     background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:18px;box-shadow:3px 3px 0 var(--pn-ink);}
   .pn-bottom a,.pn-bottom button{flex:1;height:54px;border-radius:12px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -103,6 +110,7 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
   .pn-bottom .pn-sofia{flex:0 0 54px;background:var(--pn-green);color:#fff;}
   .pn-bottom svg{width:20px;height:20px;}
 }
+@media (min-width: 821px) and (max-width: 1080px){body:has(.pn-bottom){padding-bottom:96px;}.pn-bottom{max-width:560px;margin:0 auto;}}
 `;
 
 function Svg({ children, w = 2.2 }: { children: ReactNode; w?: number }) {
@@ -216,7 +224,7 @@ const LINKS: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/relatorios", label: "Pareceres" },
   { to: "/inclusao", label: "Inclusão" },
   { to: "/agenda", label: "Agenda" },
-  { to: "/jogos", label: "Jogos" },
+  { to: "/jogos", label: "Jogos e atividades interativas" },
   { to: "/simulados", label: "Simulados" },
 ];
 
@@ -387,7 +395,7 @@ export function PainelNav() {
                 <Svg>{ICONS.cal}</Svg>Agenda
               </Link>
               <Link to="/jogos">
-                <Svg>{ICONS.game}</Svg>Jogos 2D
+                <Svg>{ICONS.game}</Svg>Jogos e atividades interativas
               </Link>
               <Link to="/simulados">
                 <Svg>{ICONS.check}</Svg>Simulados

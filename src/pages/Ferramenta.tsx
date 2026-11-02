@@ -1,7 +1,7 @@
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
 import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 
-// Página do app que abriga uma ferramenta completa (Jogos 2D, Simulados)
+// Página do app que abriga uma ferramenta completa (Jogos e atividades interativas, Simulados)
 // no visual "Painel": menu do app, contador pequeno no topo, título e a
 // ferramenta logo abaixo, ocupando o resto da tela.
 
