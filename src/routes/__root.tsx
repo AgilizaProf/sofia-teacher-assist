@@ -136,13 +136,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
           fbq('track', 'PageView');
         `}} />
         <style dangerouslySetInnerHTML={{ __html: `
-          #ap-splash{position:fixed;inset:0;background:linear-gradient(135deg,#14161F 0%,#14161F 100%);
+          #ap-splash{position:fixed;inset:0;background:#EDF0F5;
             display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;
             transition:opacity .4s ease;font-family:'DM Sans',-apple-system,sans-serif;}
           #ap-splash.hide{opacity:0;pointer-events:none;}
-          #ap-splash .ap-logo{font-family:'Sora',Georgia,serif;font-weight:900;font-size:40px;color:#fff;letter-spacing:-.03em;}
+          #ap-splash .ap-logo{font-family:'Sora',Georgia,serif;font-weight:900;font-size:40px;color:#14161F;letter-spacing:-.03em;}
           #ap-splash .ap-logo span{color:#0B7A55;}
-          #ap-splash .ap-sub{font-size:13px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.04em;}
+          #ap-splash .ap-sub{font-size:13px;color:#596074;font-weight:500;letter-spacing:.04em;}
           #ap-splash .ap-ring{width:36px;height:36px;border:2.5px solid rgba(11,122,85,.25);border-top-color:#0B7A55;
             border-radius:50%;animation:ap-spin 0.9s linear infinite;}
           @keyframes ap-spin{to{transform:rotate(360deg);}}
