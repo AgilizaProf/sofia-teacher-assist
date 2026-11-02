@@ -744,12 +744,11 @@ function renderInicio(){
     ["leitor","📷","Leitor QR","Fotografe o cartão e veja os acertos de cada prova","#BDEFD8,#5FD3A0"],
     ["resultados","📊","Quadro de resultados","Rendimento da turma, quem mais acertou e as questões mais erradas","#C6EEF5,#6CCFE0"],
     ["alunos","👩‍🏫","Alunos e turmas","Cadastre os nomes que saem nas provas","#F9D0DD,#F28AA8"],
-    ["minhas","🗂️","Minhas questões","Questões suas e da Sofia, com imagem própria","#DDE3EE,#AEB9CF"],
-    ["relatos","🛠️","Relatos de erro","Questões com problema avisadas pelos professores","#FFE7A8,#FFC53D"]];
+    ["minhas","🗂️","Minhas questões","Questões suas e da Sofia, com imagem própria","#DDE3EE,#AEB9CF"]];
   const cont={minhas:S.minhas.length,resultados:S.resultados.length,relatos:relatosAbertos().length};
   $("#painel").innerHTML=`<h2 class="pn-bloco">O que você quer fazer?</h2>
    <div class="inicio-cards">${cards.map(([k,ic,t,d,g])=>`<button class="card-ini" data-ir="${k}"><div class="faixa-c" style="background:linear-gradient(135deg,${g})"><span>${ic}</span>${cont[k]?`<em class="cont">${cont[k]}</em>`:""}</div><div class="corpo"><b>${t}</b><p>${d}</p></div></button>`).join("")}</div>
-   <h2 class="pn-bloco">Situação do banco</h2>
+   <div class="pn-bloco-linha"><h2 class="pn-bloco">Situação do banco</h2><button class="btn peq relatar" data-ir="relatos">⚠️ Relatos de erro${cont.relatos?` (${cont.relatos})`:""}</button></div>
    <div class="resumo-num"><div><b>${BANCO.length+S.minhas.length}</b><span>questões disponíveis</span></div><div><b>${nSaeb}</b><span>itens SAEB com descritor</span></div><div><b>${nFig}</b><span>questões com figura</span></div><div><b>${nAval(1)}</b><span>marcadas com 👍 Gostei</span></div><div><b>${S.simulados.length}</b><span>simulados gerados</span></div><div><b>${S.resultados.length}</b><span>provas corrigidas</span></div></div>`;
   $("#painel").querySelectorAll("[data-ir]").forEach(b=>b.onclick=()=>irPara(b.dataset.ir));
 }

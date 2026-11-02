@@ -35,7 +35,9 @@ html.pn main.wrap,html.pn #painel{padding-bottom:40px;}
 html.pn h1,html.pn h2{font-family:var(--f-marca);font-weight:800;letter-spacing:-.035em;}
 html.pn h1{font-size:1.7rem;}
 html.pn h2.pn-bloco{margin:6px 0 10px;font-size:1.13rem;font-weight:700;letter-spacing:-.02em;}
-html.pn .inicio-cards + h2.pn-bloco{margin-top:26px;}
+html.pn .pn-bloco-linha{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:26px 0 10px;}
+html.pn .pn-bloco-linha h2.pn-bloco{margin:0;}
+html.pn .pn-bloco-linha .btn.relatar{font-size:.8rem;}
 html.pn .icone-pag{background:var(--sol);border:2px solid var(--texto);box-shadow:3px 3px 0 var(--texto);}
 html.pn .icone-pag.roxo{background:#C9BDFF;box-shadow:3px 3px 0 var(--texto);}
 

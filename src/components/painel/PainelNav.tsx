@@ -254,7 +254,7 @@ export function PainelNav() {
           <Link to="/" className="pn-brand" aria-label="AgilizaProf, página inicial">
             <PencilLogo />
             <span>
-              agiliza<b>prof</b>
+              Agiliza<b>Prof</b>
             </span>
           </Link>
           <nav className="pn-links" aria-label="Navegação principal">
