@@ -29,7 +29,7 @@ const css = `
 .sf-meta b{color:#9ED9C2;font-weight:700;}
 .sf-action{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#0B7A55,#096746);color:#fff;border:0;font-weight:700;font-size:13px;cursor:pointer;transition:.18s;font-family:inherit;}
 .sf-action:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(11,122,85,.4);}
-.sofia-foco-empty{background:#FFF7EE;border:1px dashed #FFD8BF;color:#9A3F12;padding:14px 16px;border-radius:12px;font-size:13px;font-weight:600;}
+.sofia-foco-empty{background:#F2FAF6;border:1px dashed #9FD9C1;color:#064E36;padding:14px 16px;border-radius:12px;font-size:13px;font-weight:600;}
 `;
 
 export function SofiaFocoCard({ showEmptyFallback = false }: { showEmptyFallback?: boolean }) {

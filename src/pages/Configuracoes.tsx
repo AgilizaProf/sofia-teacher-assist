@@ -256,7 +256,7 @@ export function Configuracoes() {
               style={{
                 background: "#E8F6EF",
                 border: "1px solid #CDEFE2",
-                color: "#7C2D12",
+                color: "#064E36",
                 borderRadius: 10,
                 padding: "10px 14px",
                 fontSize: 13,

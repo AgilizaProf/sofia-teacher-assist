@@ -205,7 +205,7 @@ export function buildAnamnesePrintHtml(data: AnamneseData): string {
   const dataPreench = `Data de preenchimento: ${fmtDateBR(identificacao.dataPreenchimento)}`;
 
   const css = `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap');
 
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;background:#e5e5e5;}

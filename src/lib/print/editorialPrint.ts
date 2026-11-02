@@ -76,7 +76,7 @@ function escCss(s: string): string {
 
 function buildCss(legal: string): string {
   return `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap');
 
 :root{
   --ink:#111111;

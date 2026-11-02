@@ -17,12 +17,12 @@ type Variant = "hero" | "inline" | "compact";
 const css = `
 /* hero */
 .ssg-hero{position:relative;display:flex;align-items:center;gap:18px;padding:22px 24px;border-radius:18px;cursor:pointer;color:#fff;
-  background:radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,.10), transparent 55%), linear-gradient(135deg,#14161F 0%,#14161F 55%,#3A1A0A 100%);
+  background:radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,.10), transparent 55%), linear-gradient(135deg,#14161F 0%,#14161F 55%,#14161F 100%);
   border:1px solid rgba(11,122,85,.35);box-shadow:0 18px 40px -18px rgba(11,18,32,.6);transition:transform .18s, box-shadow .18s;overflow:hidden;}
 .ssg-hero:hover{transform:translateY(-2px);box-shadow:0 28px 50px -20px rgba(11,18,32,.7);}
 .ssg-hero::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(11,122,85,.45),transparent 65%);pointer-events:none;}
 .ssg-hero-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#0B7A55,#0B7A55);display:grid;place-items:center;flex-shrink:0;box-shadow:0 10px 24px -8px rgba(11,122,85,.7);}
-.ssg-hero-tag{font-family:'DM Sans',sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#FFB37A;display:inline-flex;align-items:center;gap:6px;}
+.ssg-hero-tag{font-family:'DM Sans',sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9FD9C1;display:inline-flex;align-items:center;gap:6px;}
 .ssg-hero-title{font-family:'Sora',serif;font-weight:800;font-size:18px;line-height:1.3;margin:4px 0 4px;}
 .ssg-hero-desc{font-family:'DM Sans',sans-serif;font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.5;}
 .ssg-hero-cta{margin-left:auto;background:#0B7A55;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;z-index:1;}

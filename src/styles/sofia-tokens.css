@@ -14,7 +14,7 @@
   --sofia-primary-soft: #E8F6EF;       /* tinta para fundos de chip/sugestão */
   --sofia-primary-ring: rgba(11,122,85, 0.35);
   --sofia-gradient: linear-gradient(135deg, #0B7A55 0%, #096746 100%);
-  --sofia-gradient-soft: linear-gradient(135deg, #E8F6EF 0%, #FFE4D2 100%);
+  --sofia-gradient-soft: linear-gradient(135deg, #E8F6EF 0%, #E3F5EC 100%);
 
   /* Fundo dark (hero) */
   --sofia-dark: #1E1B2E;

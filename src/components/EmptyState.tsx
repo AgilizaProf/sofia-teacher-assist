@@ -2,7 +2,7 @@ import type React from "react";
 
 export const emptyStateCss = `
 .es-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 20px;border:1.5px dashed #E4E8F0;border-radius:14px;background:#fafbfd;gap:10px;color:#5B6B82;}
-.es-icon{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#E8F6EF,#FFD7B5);color:#0B7A55;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.es-icon{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#E8F6EF,#CDEFE2);color:#0B7A55;display:flex;align-items:center;justify-content:center;font-size:22px;}
 .es-title{font-family:'Sora',serif;font-weight:700;font-size:15px;color:#14161F;margin:0;}
 .es-desc{font-size:12.5px;color:#64708A;max-width:340px;line-height:1.45;margin:0;}
 .es-cta{margin-top:6px;display:inline-flex;align-items:center;gap:6px;background:#0B7A55;color:#fff;border:none;padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}

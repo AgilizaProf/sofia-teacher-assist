@@ -34,7 +34,7 @@ const css = `
 .cp-bar-fill.danger{background:linear-gradient(90deg,#EF4444,#F87171);}
 .cp-pct{display:flex;justify-content:space-between;font-size:10px;color:var(--text-soft,#5B6B82);margin-top:4px;}
 .cp-msg{margin-top:8px;font-size:11px;color:var(--text-soft,#5B6B82);line-height:1.4;}
-.cp-bonus{margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft,#E8F6EF);color:var(--accent-deep,#E85F2C);padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;}
+.cp-bonus{margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft,#E8F6EF);color:var(--accent-deep,#096746);padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;}
 .cp-hist{border-left:1px solid var(--border-soft,#EEF1F6);padding-left:14px;display:flex;flex-direction:column;}
 .cp-hist h4{font-size:11px;font-weight:700;color:var(--text-soft,#5B6B82);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;}
 .cp-hist-empty{color:var(--text-muted,#8A98AE);font-size:11px;}
@@ -44,11 +44,11 @@ const css = `
 .cp-hist-q.pos{color:#10B981;}
 .cp-hist-q.neg{color:#EF4444;}
 .cp-hist-d{color:var(--text,#14161F);flex:1;margin:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.cp-hist-more{margin-top:8px;font-size:11px;color:var(--accent-deep,#E85F2C);font-weight:700;background:none;border:none;padding:0;text-align:left;cursor:pointer;}
-.cp-upgrade{margin-top:8px;padding:8px 10px;background:linear-gradient(135deg,#E8F6EF,#FFE4D1);border-radius:8px;font-size:11px;color:var(--accent-deep,#E85F2C);font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.cp-hist-more{margin-top:8px;font-size:11px;color:var(--accent-deep,#096746);font-weight:700;background:none;border:none;padding:0;text-align:left;cursor:pointer;}
+.cp-upgrade{margin-top:8px;padding:8px 10px;background:linear-gradient(135deg,#E8F6EF,#E3F5EC);border-radius:8px;font-size:11px;color:var(--accent-deep,#096746);font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .cp-upgrade-text{flex:1;min-width:0;}
 .cp-upgrade-btn{background:#0B7A55;color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;}
-.cp-upgrade-btn:hover{background:#E85F2C;color:#fff !important;}
+.cp-upgrade-btn:hover{background:#096746;color:#fff !important;}
 .cp-renew{margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:#EEF6FF;color:#1E40AF;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;}
 .cp-compare{margin-top:10px;padding:10px;background:linear-gradient(135deg,#F8FAFF,#EEF1F8);border:1px dashed var(--border,#E4E8F0);border-radius:10px;font-size:11px;color:var(--text,#14161F);}
 .cp-compare h5{margin:0 0 6px;font-size:10px;font-weight:700;color:var(--text-soft,#5B6B82);text-transform:uppercase;letter-spacing:.06em;}
@@ -56,7 +56,7 @@ const css = `
 .cp-compare-row strong{font-weight:700;}
 .cp-compare-eco{margin-top:6px;color:#059669;font-weight:700;}
 .cp-compare-cta{margin-top:8px;display:inline-block;background:#0B7A55;color:#fff !important;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer;border:none;}
-.cp-compare-cta:hover{background:#E85F2C;}
+.cp-compare-cta:hover{background:#096746;}
 .cp-peak{margin-bottom:10px;padding:10px 12px;border-radius:10px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:12px;display:flex;align-items:flex-start;gap:10px;}
 .cp-peak-body{flex:1;line-height:1.45;}
 .cp-peak-body strong{font-weight:700;}
@@ -87,7 +87,7 @@ const css = `
 .cp-tabela ul{list-style:none;margin:0;padding:6px 0;}
 .cp-tabela li{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:12px;color:var(--text,#14161F);border-top:1px solid var(--border-soft,#EEF1F6);}
 .cp-tabela li:first-child{border-top:none;}
-.cp-tabela li .preco{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:var(--accent-deep,#E85F2C);white-space:nowrap;margin-left:10px;}
+.cp-tabela li .preco{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:var(--accent-deep,#096746);white-space:nowrap;margin-left:10px;}
 .cp-tabela li .preco.free{color:#059669;}
 @media(max-width:760px){
   .cp-card{grid-template-columns:1fr;gap:10px;padding:12px;border-radius:10px;}

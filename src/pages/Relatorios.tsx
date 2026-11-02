@@ -39,7 +39,7 @@ const css = `
   --primary:#14161F;--primary-dark:#14161F;
   --panel:#0E1422;--muted:#7A8194;--line-soft:#E7E9EF;
   --paper:#F6F4EE;--paper-2:#FBFAF6;
-  --accent:#0B7A55;--accent-2:#FFB47A;
+  --accent:#0B7A55;--accent-2:#FFB224;
   --violet:#6E5BE6;--violet-soft:#EDEAFE;
   --green:#16A36B;--green-soft:#E7F6EE;
   --amber:#E9A23B;--amber-soft:#FCF1DC;
@@ -80,14 +80,14 @@ const css = `
 .rel-hero::after{content:"";position:absolute;bottom:-160px;left:-80px;width:380px;height:380px;
   background:radial-gradient(circle, rgba(11,122,85,.10) 0%, transparent 65%);border-radius:50%;pointer-events:none;}
 .rel-hero-grid{display:grid;grid-template-columns:1fr 360px;gap:30px;align-items:center;position:relative;}
-.rel-eyebrow{font-size:11px;letter-spacing:.16em;color:#FFB47A;font-weight:700;display:inline-flex;align-items:center;gap:8px;}
+.rel-eyebrow{font-size:11px;letter-spacing:.16em;color:#FFB224;font-weight:700;display:inline-flex;align-items:center;gap:8px;}
 .rel-hero h1{font-family:'Sora',serif;font-weight:600;font-size:38px;line-height:1.12;margin:10px 0 8px;letter-spacing:-.01em;}
 .rel-hero h1 em{font-style:normal;color:var(--accent);}
 .rel-hero p{margin:0 0 18px;color:#aab2c8;font-size:14.5px;max-width:560px;line-height:1.55;}
 .rel-hero-cta{display:flex;gap:10px;flex-wrap:wrap;}
-.rel-root .rel-btn-primary{background:linear-gradient(180deg,#FF7A3D,#FF5A14);color:#fff;padding:12px 18px;border-radius:12px;
+.rel-root .rel-btn-primary{background:linear-gradient(180deg,#0B7A55,#0B7A55);color:#fff;padding:12px 18px;border-radius:12px;
   font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;
-  box-shadow:0 12px 24px -8px rgba(255,90,20,.55), inset 0 1px 0 rgba(255,255,255,.25);transition:filter .15s;}
+  box-shadow:0 12px 24px -8px rgba(11,122,85,.55), inset 0 1px 0 rgba(255,255,255,.25);transition:filter .15s;}
 .rel-root .rel-btn-primary:hover{filter:brightness(1.05);}
 .rel-root .rel-btn-ghost{background:rgba(255,255,255,.06);color:#fff;padding:12px 16px;border-radius:12px;
   font-weight:500;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);transition:background .15s;}
@@ -99,8 +99,8 @@ const css = `
 .rel-pc-num{font-family:'Sora',serif;font-weight:600;font-size:34px;line-height:1;margin:8px 0 4px;}
 .rel-pc-num span{color:#aab2c8;font-size:18px;font-weight:500;}
 .rel-pc-bar{height:8px;background:rgba(255,255,255,.10);border-radius:999px;overflow:hidden;margin-top:12px;}
-.rel-pc-bar i{display:block;height:100%;background:linear-gradient(90deg,#0B7A55,#FF8A4C);border-radius:999px;
-  box-shadow:0 0 24px rgba(255,106,44,.6);}
+.rel-pc-bar i{display:block;height:100%;background:linear-gradient(90deg,#0B7A55,#0B7A55);border-radius:999px;
+  box-shadow:0 0 24px rgba(11,122,85,.6);}
 .rel-pc-meta{display:flex;justify-content:space-between;font-size:11.5px;color:#aab2c8;margin-top:8px;}
 .rel-pc-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(22,163,107,.18);color:#7EE0AF;
   padding:4px 8px;border-radius:999px;font-size:11px;font-weight:600;margin-top:10px;}
@@ -114,7 +114,7 @@ const css = `
 .rel-kpi-icon.amber{background:var(--amber-soft);color:#9C6B1F;}
 .rel-kpi-icon.violet{background:var(--violet-soft);color:#4B3CA8;}
 .rel-kpi-icon.green{background:var(--green-soft);color:#0E7A4F;}
-.rel-kpi-icon.orange{background:rgba(255,106,44,.10);color:#C84A14;}
+.rel-kpi-icon.orange{background:rgba(11,122,85,.10);color:#096746;}
 .rel-kpi-num{font-family:'Sora',serif;font-weight:600;font-size:28px;line-height:1;margin-top:4px;}
 .rel-kpi-num small{font-size:14px;color:var(--muted);font-weight:500;font-family:'DM Sans';}
 .rel-kpi-foot{font-size:11.5px;color:var(--muted);}
@@ -132,7 +132,7 @@ const css = `
 .rel-tab{padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;color:#5b6478;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
 .rel-tab.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.06);}
 .rel-tab .count{background:#E7E9EF;color:#5b6478;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:700;}
-.rel-tab.active .count{background:rgba(255,106,44,.12);color:var(--accent);}
+.rel-tab.active .count{background:rgba(11,122,85,.12);color:var(--accent);}
 .rel-divider{width:1px;height:22px;background:var(--line-soft);flex:none;}
 .rel-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;
   border:1px solid var(--line-soft);background:#fff;font-size:12px;color:var(--text-soft);position:relative;white-space:nowrap;flex:none;cursor:pointer;user-select:none;}
@@ -161,7 +161,7 @@ const css = `
 .rel-card:hover{transform:translateY(-2px);border-color:#d8dbe4;box-shadow:0 12px 32px -16px rgba(17,24,39,.22);}
 .rel-card-head{display:flex;align-items:center;gap:12px;}
 .rel-av{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none;
-  background:linear-gradient(135deg,#0B7A55,#FF8A4C);}
+  background:linear-gradient(135deg,#0B7A55,#0B7A55);}
 .rel-av.violet{background:linear-gradient(135deg,#6E5BE6,#9C8CFA);}
 .rel-av.green{background:linear-gradient(135deg,#16A36B,#48C893);}
 .rel-av.blue{background:linear-gradient(135deg,#3B82F6,#60A5FA);}
@@ -182,13 +182,13 @@ const css = `
 .rel-status.todo .dot{background:var(--amber);}
 .rel-status.draft{background:var(--violet-soft);color:#4B3CA8;}
 .rel-status.draft .dot{background:var(--violet);}
-.rel-status.review{background:rgba(255,106,44,.12);color:#C84A14;}
+.rel-status.review{background:rgba(11,122,85,.12);color:#096746;}
 .rel-status.review .dot{background:var(--accent);}
 .rel-status.done{background:var(--green-soft);color:#0E7A4F;}
 .rel-status.done .dot{background:var(--green);}
 
 .rel-progress{height:6px;background:#F1EFE8;border-radius:999px;overflow:hidden;}
-.rel-progress i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#0B7A55,#FF8A4C);}
+.rel-progress i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#0B7A55,#0B7A55);}
 .rel-meta{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;flex-wrap:wrap;}
 .rel-meta .sep{width:3px;height:3px;border-radius:50%;background:#cfd4e1;}
 
@@ -200,14 +200,14 @@ const css = `
 .rel-btn-card:hover{background:#F8F6F0;}
 .rel-root .rel-btn-card.dark{background:#0B1220;color:#fff;border-color:#0B1220;}
 .rel-root .rel-btn-card.dark:hover{filter:brightness(1.1);background:#0B1220;}
-.rel-root .rel-btn-card.accent{background:linear-gradient(180deg,#FF7A3D,#FF5A14);color:#fff;border-color:transparent;
-  box-shadow:0 8px 18px -8px rgba(255,90,20,.5);}
+.rel-root .rel-btn-card.accent{background:linear-gradient(180deg,#0B7A55,#0B7A55);color:#fff;border-color:transparent;
+  box-shadow:0 8px 18px -8px rgba(11,122,85,.5);}
 .rel-root .rel-btn-card.accent:hover{filter:brightness(1.05);}
 
-.rel-bulk{grid-column:span 3;background:linear-gradient(135deg,#FFF6EE 0%,#FFE3CC 100%);border:1px dashed #F4B58A;
+.rel-bulk{grid-column:span 3;background:linear-gradient(135deg,#F2FAF6 0%,#E3F5EC 100%);border:1px dashed #9FD9C1;
   border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:18px;}
-.rel-bulk-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0B7A55,#FF8A4C);
-  display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 10px 22px -10px rgba(255,106,44,.6);}
+.rel-bulk-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0B7A55,#0B7A55);
+  display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 10px 22px -10px rgba(11,122,85,.6);}
 .rel-bulk h3{margin:0 0 2px;font-family:'Sora',serif;font-weight:600;font-size:18px;}
 .rel-bulk p{margin:0;font-size:13px;color:#5a3a20;}
 .rel-bulk .rel-btn-primary{margin-left:auto;}
@@ -295,7 +295,7 @@ const css = `
 .kpi-tip-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
 .kpi-tip-list li{display:flex;justify-content:space-between;gap:14px;color:rgba(255,255,255,.85);}
 .kpi-tip-list li b{color:#fff;font-weight:700;white-space:nowrap;}
-.kpi-tip-total{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.14);display:flex;justify-content:space-between;font-weight:700;color:#FFB47A;}
+.kpi-tip-total{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.14);display:flex;justify-content:space-between;font-weight:700;color:#FFB224;}
 .kpi-tip-arrow{position:absolute;top:-6px;left:50%;transform:translateX(-50%) rotate(45deg);width:12px;height:12px;background:#0B1220;border-left:1px solid rgba(255,255,255,.08);border-top:1px solid rgba(255,255,255,.08);border-radius:2px;}
 `;
 
@@ -2367,7 +2367,7 @@ ${parecerHtml}
         const isDraft = a.status === "draft";
         const isReview = a.status === "review";
         const isDone = a.status === "done";
-        const headerColor = isTodo ? "#9C6B1F" : isDraft ? "#4B3CA8" : isReview ? "#C84A14" : "#0E7A4F";
+        const headerColor = isTodo ? "#9C6B1F" : isDraft ? "#4B3CA8" : isReview ? "#096746" : "#0E7A4F";
         const titulo = isTodo ? "Parecer a fazer" : isDraft ? "Rascunho do parecer" : isReview ? "Parecer para revisar" : "Parecer finalizado";
         const descricao = isTodo
           ? "Ainda não há parecer gerado. Use a Sofia para criar um rascunho a partir da anamnese, registros e PEI."
@@ -3060,7 +3060,7 @@ ${parecerHtml}
                       const tem = Boolean(parecerByAluno[a.id]);
                       return (
                         <li key={a.id}>
-                          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: checked ? "rgba(255,106,44,.06)" : "#fff", cursor: "pointer" }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: checked ? "rgba(11,122,85,.06)" : "#fff", cursor: "pointer" }}>
                             <input
                               type="checkbox"
                               checked={checked}
@@ -3083,7 +3083,7 @@ ${parecerHtml}
               </div>
 
               {semParecer > 0 && (
-                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#E8F6EF", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
+                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#E8F6EF", border: "1px solid #E3F5EC", padding: "8px 10px", borderRadius: 8 }}>
                   {semParecer} aluno(s) selecionado(s) ainda não têm parecer gerado — só a rubrica BNCC será impressa.
                 </div>
               )}
@@ -3139,7 +3139,7 @@ ${parecerHtml}
                       const tem = Boolean(parecerByAluno[a.id]);
                       return (
                         <li key={a.id}>
-                          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: checked ? "rgba(255,106,44,.06)" : "#fff", cursor: "pointer" }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, border: "1px solid var(--line-soft)", background: checked ? "rgba(11,122,85,.06)" : "#fff", cursor: "pointer" }}>
                             <input
                               type="checkbox"
                               checked={checked}
@@ -3178,7 +3178,7 @@ ${parecerHtml}
               </div>
 
               {jaTem > 0 && (
-                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#E8F6EF", border: "1px solid #FBE2C2", padding: "8px 10px", borderRadius: 8 }}>
+                <div style={{ marginTop: 10, fontSize: 12, color: "#9C6B1F", background: "#E8F6EF", border: "1px solid #E3F5EC", padding: "8px 10px", borderRadius: 8 }}>
                   {jaTem} aluno(s) selecionado(s) já têm parecer — serão regenerados e substituirão o atual.
                 </div>
               )}

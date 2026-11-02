@@ -449,7 +449,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
           .pim-chips{display:flex;flex-wrap:wrap;gap:6px;}
           .pim-chip{padding:6px 11px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;}
           .pim-chip:hover{background:var(--bg);}
-          .pim-chip.active{background:var(--accent-soft);border-color:#FFB37A;color:#B8410E;font-weight:700;}
+          .pim-chip.active{background:var(--accent-soft);border-color:#9FD9C1;color:#096746;font-weight:700;}
           .pim-toggle{display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:2px;}
           .pim-toggle-opt{padding:5px 12px;border-radius:6px;border:none;background:transparent;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted);font-weight:600;}
           .pim-toggle-opt.active{background:#fff;color:#14161F;box-shadow:0 1px 3px rgba(0,0,0,.06);}
@@ -461,7 +461,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
           .pim-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;}
           .pim-card-disc{background:#14161F;color:#fff;padding:2px 8px;border-radius:6px;font-weight:700;}
           .pim-card-sem{color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
-          .pim-bncc{font-family:'JetBrains Mono',monospace;background:var(--accent-soft);color:#B8410E;padding:2px 6px;border-radius:5px;font-weight:700;}
+          .pim-bncc{font-family:'JetBrains Mono',monospace;background:var(--accent-soft);color:#096746;padding:2px 6px;border-radius:5px;font-weight:700;}
           .pim-expand{background:transparent;border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-family:inherit;}
           .pim-expand:hover{background:var(--bg);color:#14161F;}
           .pim-topicos{margin-top:10px;display:flex;flex-direction:column;gap:4px;font-size:12.5px;line-height:1.45;}

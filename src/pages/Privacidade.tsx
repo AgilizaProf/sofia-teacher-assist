@@ -16,7 +16,7 @@ export function Privacidade() {
         .legal-card p, .legal-card li { font-size:14px; line-height:1.65; color:#3A4A6B; }
         .legal-card ul { padding-left: 20px; margin: 6px 0 10px; }
         .legal-card strong { color:#14161F; }
-        .legal-meta { background:#E8F6EF; border:1px solid #CDEFE2; color:#7C2D12; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+        .legal-meta { background:#E8F6EF; border:1px solid #CDEFE2; color:#064E36; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
         .rights-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin: 8px 0 4px; }
         .right-chip { background:#FBFAF6; border:1px solid #E4E8F0; border-radius:10px; padding:10px 12px; font-size:13px; color:#14161F; }
         @media (max-width: 900px) { .legal-grid { grid-template-columns: 1fr; } .legal-pad { padding: 20px; } .rights-grid { grid-template-columns: 1fr; } }

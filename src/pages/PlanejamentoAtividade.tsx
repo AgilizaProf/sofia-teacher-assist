@@ -66,14 +66,14 @@ const css = `
 .pa-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap;}
 .pa-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;border:1px solid #E2E8F0;background:#fff;color:#0F172A;cursor:pointer;transition:.15s;}
 .pa-btn:hover{border-color:#CBD5E1;background:#FBFBFD;}
-.pa-btn.primary{background:linear-gradient(135deg,#0B7A55,#096746);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(255,106,44,.25);}
+.pa-btn.primary{background:linear-gradient(135deg,#0B7A55,#096746);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(11,122,85,.25);}
 .pa-btn.primary:hover{transform:translateY(-1px);}
 
 .pa-side h3{font-family:'Sora',Georgia,serif;font-size:14px;font-weight:600;color:#0F172A;margin:0 0 8px;display:flex;align-items:center;gap:7px;}
 .pa-side h3 svg{color:#0B7A55;}
 .pa-side ul{margin:0;padding-left:18px;color:#475569;font-size:12.5px;line-height:1.6;}
 .pa-side ul li{margin-bottom:4px;}
-.pa-side .tip{background:linear-gradient(135deg,#FFF4ED 0%,#FFFAF7 100%);border:1px solid #CDEFE2;border-radius:12px;padding:14px;font-size:12.5px;color:#064E36;line-height:1.5;}
+.pa-side .tip{background:linear-gradient(135deg,#F2FAF6 0%,#F7FBF9 100%);border:1px solid #CDEFE2;border-radius:12px;padding:14px;font-size:12.5px;color:#064E36;line-height:1.5;}
 `;
 
 const ETAPAS = [

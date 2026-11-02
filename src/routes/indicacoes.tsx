@@ -46,7 +46,7 @@ const EVENT_LABEL: Record<string, { label: string; bg: string; fg: string }> = {
   ref_cadastro_via_link: { label: "Clique no link",        bg: "#FEF3C7", fg: "#92400E" },
   ref_registrado:        { label: "Indicado cadastrou",    bg: "#DCFCE7", fg: "#166534" },
   ref_registro_falhou:   { label: "Falha no vínculo",      bg: "#FEE2E2", fg: "#991B1B" },
-  ref_conversao:         { label: "Conversão (compra)",    bg: "#FFE4D6", fg: "#064E36" },
+  ref_conversao:         { label: "Conversão (compra)",    bg: "#E3F5EC", fg: "#064E36" },
 };
 
 function fmtDate(iso: string): string {

@@ -62,20 +62,24 @@ export const Route = createRootRoute({
     { name: "apple-mobile-web-app-capable", content: "yes" },
     { name: "apple-mobile-web-app-title", content: "AgilizaProf" },
     { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-    { title: "Sofia Teacher Assist | AgilizaProf — IA para Educadores Brasileiros" },
+    { title: "AgilizaProf — Planejamento, pareceres e inclusão com a Sofia" },
     { name: "description", content: "Plataforma de inteligência artificial pedagógica para professores brasileiros. Crie planos de aula, relatórios e atividades personalizadas em minutos." },
     { name: "author", content: "AgilizaProf" },
     { name: "application-name", content: "AgilizaProf" },
-    { property: "og:title", content: "Sofia Teacher Assist | AgilizaProf — IA para Educadores Brasileiros" },
+    { property: "og:title", content: "AgilizaProf — Planejamento, pareceres e inclusão com a Sofia" },
     { property: "og:description", content: "Plataforma de inteligência artificial pedagógica para professores brasileiros. Crie planos de aula, relatórios e atividades personalizadas em minutos." },
     { property: "og:type", content: "website" },
     { property: "og:locale", content: "pt_BR" },
     { property: "og:site_name", content: "AgilizaProf" },
     { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:title", content: "Sofia Teacher Assist | AgilizaProf" },
+    { name: "twitter:title", content: "AgilizaProf — IA pedagógica para educadores" },
     { name: "twitter:description", content: "IA pedagógica para educadores brasileiros. Planos de aula, relatórios e atividades em minutos." },
-    { property: "og:image", content: "/og-image.png" },
-    { name: "twitter:image", content: "/og-image.png" },
+    // Redes sociais e WhatsApp só leem a imagem com endereço completo.
+    { property: "og:image", content: "https://agilizaprof.app.br/og-image.png" },
+    { property: "og:image:width", content: "1200" },
+    { property: "og:image:height", content: "630" },
+    { property: "og:image:alt", content: "AgilizaProf: planejamento, pareceres e inclusão em minutos" },
+    { name: "twitter:image", content: "https://agilizaprof.app.br/og-image.png" },
   ],
   links: [
     { rel: "stylesheet", href: appCss },
@@ -88,7 +92,7 @@ export const Route = createRootRoute({
     { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     {
       rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap",
     },
   ],
 }),
@@ -132,13 +136,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
           fbq('track', 'PageView');
         `}} />
         <style dangerouslySetInnerHTML={{ __html: `
-          #ap-splash{position:fixed;inset:0;background:linear-gradient(135deg,#14161F 0%,#14161F 100%);
+          #ap-splash{position:fixed;inset:0;background:#EDF0F5;
             display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;
             transition:opacity .4s ease;font-family:'DM Sans',-apple-system,sans-serif;}
           #ap-splash.hide{opacity:0;pointer-events:none;}
-          #ap-splash .ap-logo{font-family:'Sora',Georgia,serif;font-weight:900;font-size:40px;color:#fff;letter-spacing:-.03em;}
+          #ap-splash .ap-logo{font-family:'Sora',Georgia,serif;font-weight:900;font-size:40px;color:#14161F;letter-spacing:-.03em;}
           #ap-splash .ap-logo span{color:#0B7A55;}
-          #ap-splash .ap-sub{font-size:13px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.04em;}
+          #ap-splash .ap-sub{font-size:13px;color:#596074;font-weight:500;letter-spacing:.04em;}
           #ap-splash .ap-ring{width:36px;height:36px;border:2.5px solid rgba(11,122,85,.25);border-top-color:#0B7A55;
             border-radius:50%;animation:ap-spin 0.9s linear infinite;}
           @keyframes ap-spin{to{transform:rotate(360deg);}}
@@ -148,7 +152,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <noscript>
           <img height={1} width={1} style={{ display: "none" }} src="https://www.facebook.com/tr?id=966501615841208&ev=PageView&noscript=1" alt="" />
         </noscript>
-        <div id="ap-splash">
+        <div id="ap-splash" suppressHydrationWarning>
           <div className="ap-logo">Agiliza<span>Prof</span></div>
           <div className="ap-ring"></div>
           <div className="ap-sub">Conectando à sua sala de aula…</div>
