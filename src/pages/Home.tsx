@@ -155,14 +155,10 @@ select.hm-pill{cursor:pointer;padding-right:6px;}
 .hm-sugs button{height:36px;padding:0 12px;border-radius:8px;border:1.5px solid var(--pn-line);background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--pn-ink);cursor:pointer;}
 .hm-sugs button:hover{border-color:var(--pn-ink);}
 
-.hm-app{margin-top:26px;display:flex;align-items:center;gap:14px;background:var(--pn-green-soft);border:2px solid var(--pn-ink);box-shadow:3px 3px 0 var(--pn-ink);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
-.hm-app .ic{width:44px;height:44px;flex:none;border-radius:12px;background:var(--pn-green);color:#fff;border:2px solid var(--pn-ink);display:flex;align-items:center;justify-content:center;}
-.hm-app .ic svg{width:22px;height:22px;}
-.hm-app-tx{flex:1 1 220px;min-width:0;}
-.hm-app-tx b{display:block;font-family:var(--pn-display);font-size:16px;}
-.hm-app-tx span{display:block;margin-top:2px;font-size:13.5px;color:var(--pn-muted);}
-.hm-app .pn-btn{height:42px;}
-@media (max-width:520px){.hm-app .pn-btn{width:100%;}}
+.hm-app{margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:4px 2px;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--pn-green);text-decoration:underline;text-underline-offset:3px;}
+.hm-app svg{width:16px;height:16px;}
+.hm-app + .hm-curr,.hm-app ~ .hm-curr{margin-top:14px;}
 .hm-curr{margin-top:26px;display:flex;align-items:center;gap:14px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
 .hm-badge{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--pn-ink);}
 .hm-badge svg{width:22px;height:22px;}
@@ -516,26 +512,16 @@ export function Home() {
         </nav>
 
         {!app.instalado && (
-          <section className="hm-app" aria-label="Baixar o app">
-            <span className="ic" aria-hidden>
-              <Svg>{ICONS.phone}</Svg>
-            </span>
-            <div className="hm-app-tx">
-              <b>Baixe o AgilizaProf no celular</b>
-              <span>
-                Direto pelo navegador, sem Google Play. Fica com ícone na tela, como um app.
-              </span>
-            </div>
-            <button
-              type="button"
-              className="pn-btn primary"
-              onClick={async () => {
-                if (!(app.podeInstalarDireto && (await app.instalar()))) setBaixar(true);
-              }}
-            >
-              Baixar o app
-            </button>
-          </section>
+          <button
+            type="button"
+            className="hm-app"
+            onClick={async () => {
+              if (!(app.podeInstalarDireto && (await app.instalar()))) setBaixar(true);
+            }}
+          >
+            <Svg>{ICONS.phone}</Svg>
+            Baixar o app no celular
+          </button>
         )}
         {baixar && <InstalarApp onClose={() => setBaixar(false)} />}
 
