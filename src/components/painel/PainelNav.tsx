@@ -112,6 +112,17 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
   .pn-bottom .pn-sofia{flex:0 0 54px;background:var(--pn-green);color:#fff;}
   .pn-bottom svg{width:20px;height:20px;}
 }
+@media (max-width: 350px){
+  .pn-top-in{gap:8px;padding:0 12px;}
+  .pn-brand{font-size:16px;gap:6px;}
+  .pn-brand svg{width:26px;height:26px;}
+  .pn-indique{padding:0 8px;gap:5px;}
+  .pn-indique svg{width:15px;height:15px;}
+  .pn-av{width:36px;height:36px;font-size:13px;}
+  .pn-bottom{left:8px;right:8px;}
+  .pn-bottom a,.pn-bottom button{font-size:10.5px;white-space:nowrap;}
+  .pn-bottom .pn-sofia{flex:0 0 48px;}
+}
 @media (min-width: 821px) and (max-width: 1080px){body:has(.pn-bottom){padding-bottom:96px;}.pn-bottom{max-width:560px;margin:0 auto;}}
 `;
 
