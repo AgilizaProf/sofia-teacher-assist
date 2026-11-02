@@ -188,7 +188,7 @@ export function CurriculoMunicipalCard() {
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#14161F" }}>
               {curriculos.find((c) => c.ordem === formOrdem)
                 ? `Substituir Currículo ${formOrdem}`
                 : `Adicionar Currículo ${formOrdem}`}
@@ -212,7 +212,7 @@ export function CurriculoMunicipalCard() {
             onClick={() => fileRef.current?.click()}
             style={{
               padding: "11px 16px", borderRadius: 10, border: "2px dashed #DDE3EE",
-              background: "#fff", color: uploading ? "#9AA3B8" : "#1B2A4E",
+              background: "#fff", color: uploading ? "#9AA3B8" : "#14161F",
               fontSize: 13, fontWeight: 600, cursor: uploading ? "not-allowed" : "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}
@@ -257,8 +257,8 @@ function SlotCard({
           gap: 6, padding: 14, fontFamily: "inherit",
         }}
       >
-        <div style={{ fontSize: 22, color: "#FF7A45" }}>＋</div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Adicionar currículo {ordem}</div>
+        <div style={{ fontSize: 22, color: "#0B7A55" }}>＋</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#14161F" }}>Adicionar currículo {ordem}</div>
         <div style={{ fontSize: 11.5 }}>Slot {ordem} de 2</div>
       </button>
     );
@@ -267,8 +267,8 @@ function SlotCard({
   const isErro = curriculo.status === "erro";
   const isProc = curriculo.status === "processando";
   const isAtivo = curriculo.status === "ativo";
-  const bg = isErro ? "#FEF2F2" : curriculo.eh_padrao ? "#FFF7ED" : "#fff";
-  const border = isErro ? "#FECACA" : curriculo.eh_padrao ? "#FED7AA" : "#DDE3EE";
+  const bg = isErro ? "#FEF2F2" : curriculo.eh_padrao ? "#E8F6EF" : "#fff";
+  const border = isErro ? "#FECACA" : curriculo.eh_padrao ? "#CDEFE2" : "#DDE3EE";
   const statusBadge = isErro
     ? { txt: "Erro", bg: "#FEE2E2", color: "#B91C1C" }
     : isProc
@@ -281,7 +281,7 @@ function SlotCard({
         <span
           style={{
             position: "absolute", top: 10, right: 10,
-            background: "#FF7A45", color: "#fff", fontSize: 10.5, fontWeight: 700,
+            background: "#0B7A55", color: "#fff", fontSize: 10.5, fontWeight: 700,
             padding: "3px 8px", borderRadius: 999,
           }}
         >
@@ -294,7 +294,7 @@ function SlotCard({
       </div>
 
       <div>
-        <div style={{ fontWeight: 700, fontSize: 14, color: "#1B2A4E" }}>
+        <div style={{ fontWeight: 700, fontSize: 14, color: "#14161F" }}>
           {curriculo.municipio}{curriculo.estado ? ` — ${curriculo.estado}` : ""}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
@@ -315,12 +315,12 @@ function SlotCard({
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: "auto" }}>
         {isAtivo && (
           curriculo.eh_padrao ? (
-            <span style={{ fontSize: 11.5, color: "#FF7A45", fontWeight: 700, padding: "6px 0" }}>✓ Padrão</span>
+            <span style={{ fontSize: 11.5, color: "#0B7A55", fontWeight: 700, padding: "6px 0" }}>✓ Padrão</span>
           ) : (
             <button
               type="button"
               onClick={() => void onDefinirPadrao(curriculo.id)}
-              style={{ fontSize: 11.5, color: "#FF7A45", background: "none", border: "none", cursor: "pointer", fontWeight: 700, padding: "6px 0" }}
+              style={{ fontSize: 11.5, color: "#0B7A55", background: "none", border: "none", cursor: "pointer", fontWeight: 700, padding: "6px 0" }}
             >
               Definir como padrão
             </button>
@@ -329,7 +329,7 @@ function SlotCard({
         <button
           type="button"
           onClick={onSubstituir}
-          style={{ fontSize: 11.5, color: "#1B2A4E", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: "6px 0" }}
+          style={{ fontSize: 11.5, color: "#14161F", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: "6px 0" }}
         >
           Substituir arquivo
         </button>
@@ -337,7 +337,7 @@ function SlotCard({
           <button
             type="button"
             onClick={() => void onReprocessar(curriculo.id)}
-            style={{ fontSize: 11.5, color: "#1B2A4E", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: "6px 0" }}
+            style={{ fontSize: 11.5, color: "#14161F", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: "6px 0" }}
             title="Reprocessar o arquivo já enviado (sem novo upload)"
           >
             Reprocessar

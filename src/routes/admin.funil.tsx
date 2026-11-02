@@ -74,14 +74,14 @@ function FunilPage() {
           {etapas.map((e, i) => (
             <div key={i} style={{ marginBottom: 18 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
-                <span style={{ color: "#0F1B36" }}>{e.label}</span>
+                <span style={{ color: "#14161F" }}>{e.label}</span>
                 <span style={{ display: "flex", gap: 12, color: "#6B7280" }}>
                   {i > 0 && (
                     <span style={{ color: e.conv >= 50 ? "#16A34A" : e.conv >= 20 ? "#D97706" : "#DC2626", fontWeight: 700 }}>
                       {e.conv.toFixed(0)}% da etapa anterior
                     </span>
                   )}
-                  <span style={{ color: "#0F1B36", fontWeight: 700 }}>{e.users} usuários</span>
+                  <span style={{ color: "#14161F", fontWeight: 700 }}>{e.users} usuários</span>
                 </span>
               </div>
               <div className="ad-bar">
@@ -94,13 +94,13 @@ function FunilPage() {
           ))}
 
           {etapas.length > 1 && (
-            <div style={{ marginTop: 24, padding: "14px 16px", background: "#FFF7ED", borderRadius: 10, border: "1px solid #FED7AA" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#9A3412", marginBottom: 8 }}>💡 Maior gargalo</div>
+            <div style={{ marginTop: 24, padding: "14px 16px", background: "#E8F6EF", borderRadius: 10, border: "1px solid #CDEFE2" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#064E36", marginBottom: 8 }}>💡 Maior gargalo</div>
               {(() => {
                 let minConv = 101; let minLabel = "";
                 etapas.forEach((e, i) => { if (i > 0 && e.conv < minConv) { minConv = e.conv; minLabel = e.label; } });
                 return (
-                  <p style={{ fontSize: 13, color: "#7C2D12" }}>
+                  <p style={{ fontSize: 13, color: "#064E36" }}>
                     <strong>{minLabel}</strong> — apenas <strong>{minConv.toFixed(0)}%</strong> das professoras chegam aqui.
                     É onde mais vale investir em melhoria de UX ou onboarding.
                   </p>

@@ -76,7 +76,7 @@ function escCss(s: string): string {
 
 function buildCss(legal: string): string {
   return `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap');
 
 :root{
   --ink:#111111;
@@ -85,7 +85,7 @@ function buildCss(legal: string): string {
   --divider:#C9B98A;
   --gray:#6B6B6B;
   --border:#DDDDDD;
-  --font-title:'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-title:'Sora', Georgia, 'Times New Roman', serif;
   --font-body: Arial, Helvetica, sans-serif;
   --header-h:0.6cm;
 }

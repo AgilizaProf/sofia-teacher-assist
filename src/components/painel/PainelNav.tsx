@@ -7,6 +7,8 @@ import { useIsAdmin } from "@/lib/admin/useIsAdmin";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofiaOptional } from "@/components/sofia/SofiaProvider";
 import { initialsFromName } from "@/lib/mockData";
+import { InstalarApp } from "./InstalarApp";
+import { useInstalarApp } from "@/lib/pwa/useInstalarApp";
 
 // Visual "Painel": tokens, logo do lápis, menu do topo (computador) e
 // barra de baixo (celular). Usado pelas páginas já redesenhadas.
@@ -32,14 +34,34 @@ export const painelTokensCss = `
 `;
 
 const navCss = `
+:root{--pn-bg:#EDF0F5;--pn-surface:#FFFFFF;--pn-ink:#14161F;--pn-muted:#596074;--pn-line:#D6DBE5;
+  --pn-green:#0B7A55;--pn-green-soft:#CDEFE2;--pn-sun:#FFB224;--pn-coral:#F2604B;--pn-sky:#3D8BFD;
+  --pn-lilac:#C9BDFF;--pn-pink:#FFD3CC;--pn-cream:#FFE2A8;--pn-blue-soft:#D7E6FF;
+  --pn-display:'Sora','Segoe UI',system-ui,sans-serif;--pn-body:'DM Sans','Segoe UI',system-ui,sans-serif;}
+.pn-top,.pn-bottom,.pn-sheet-bg{font-family:var(--pn-body);-webkit-font-smoothing:antialiased;}
+.pn-top *,.pn-bottom *,.pn-sheet-bg *{box-sizing:border-box;}
+.pn-indique{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 12px;border-radius:10px;background:var(--pn-sun);border:2px solid var(--pn-ink);
+  box-shadow:2px 2px 0 var(--pn-ink);color:var(--pn-ink);text-decoration:none;font-family:var(--pn-body);font-weight:700;font-size:14px;white-space:nowrap;}
+.pn-indique svg{width:17px;height:17px;}
+.pn-indique:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--pn-ink);}
+.pn-indique[aria-current="page"]{background:var(--pn-ink);color:#fff;}
 .pn-top{position:sticky;top:0;z-index:40;height:64px;background:var(--pn-surface);border-bottom:1.5px solid var(--pn-line);}
 .pn-top-in{height:100%;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:28px;padding:0 24px;}
 .pn-brand{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--pn-ink);font-family:var(--pn-display);font-weight:800;font-size:20px;letter-spacing:-.04em;}
 .pn-brand b{color:var(--pn-green);font-weight:800;}
+.pn-brand{white-space:nowrap;flex:none;}
+.pn-indique svg{flex:none;}
 .pn-links{display:flex;gap:22px;height:100%;}
 .pn-links a{height:100%;display:flex;align-items:center;text-decoration:none;font-weight:500;font-size:15px;color:var(--pn-muted);border-bottom:3px solid transparent;}
 .pn-links a:hover{color:var(--pn-ink);}
 .pn-links a[aria-current="page"]{color:var(--pn-ink);font-weight:700;border-bottom-color:var(--pn-green);}
+.pn-links a{white-space:nowrap;}
+@media (max-width: 1360px){.pn-links{gap:16px;}.pn-links a{font-size:14px;}}
+@media (max-width: 1240px){
+  .pn-indique .pn-indique-tx{font-size:0;}
+  .pn-indique .pn-indique-tx::after{content:"Indique";font-size:14px;}
+}
+@media (max-width: 1140px){.pn-links{gap:12px;}.pn-links a{font-size:13.5px;}}
 .pn-right{margin-left:auto;position:relative;display:flex;align-items:center;gap:10px;}
 .pn-av{width:40px;height:40px;border-radius:10px;background:var(--pn-sun);border:2px solid var(--pn-ink);display:flex;align-items:center;justify-content:center;
   font-family:var(--pn-display);font-weight:800;font-size:14px;color:var(--pn-ink);cursor:pointer;}
@@ -54,7 +76,7 @@ const navCss = `
 body:has(.pn-bottom) .sofia-fab-pulse{display:none!important;}
 body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #14161F!important;box-shadow:3px 3px 0 #14161F!important;}
 /* Com o PainelNav, o botão da Sofia fica na barra inferior no celular */
-@media(max-width:860px){
+@media(max-width:1080px){
   body:has(.pn-bottom) .sofia-fab{display:none!important;}
   body:has(.pn-bottom) .sofia-bubble{bottom:96px!important;}
   body:has(.pn-bottom) .sofia-notif-fab{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;}
@@ -68,10 +90,20 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
 .pn-sheet-list a,.pn-sheet-list button{display:flex;align-items:center;gap:12px;padding:12px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:14px;
   text-decoration:none;color:var(--pn-ink);font-family:var(--pn-body);font-weight:700;font-size:15px;text-align:left;cursor:pointer;}
 .pn-sheet-list svg{width:20px;height:20px;}
-@media (max-width: 860px){
+@media (max-width: 1080px){
   .pn-top{height:58px;}
   .pn-top-in{padding:0 16px;}
   .pn-links,.pn-right .pn-hide-m{display:none;}
+  .pn-indique{height:38px;padding:0 10px;font-size:13px;}
+  .pn-top-in{gap:12px;}
+}
+@media (max-width: 420px){
+  .pn-indique .pn-indique-tx{font-size:0;}
+  .pn-indique .pn-indique-tx::after{content:"Indique";font-size:13px;}
+  .pn-brand{font-size:18px;}
+  .pn-brand svg{width:30px;height:30px;}
+}
+@media (max-width: 1080px){
   .pn-bottom{display:flex;gap:4px;position:fixed;z-index:50;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:6px;
     background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:18px;box-shadow:3px 3px 0 var(--pn-ink);}
   .pn-bottom a,.pn-bottom button{flex:1;height:54px;border-radius:12px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -80,6 +112,18 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
   .pn-bottom .pn-sofia{flex:0 0 54px;background:var(--pn-green);color:#fff;}
   .pn-bottom svg{width:20px;height:20px;}
 }
+@media (max-width: 350px){
+  .pn-top-in{gap:8px;padding:0 12px;}
+  .pn-brand{font-size:16px;gap:6px;}
+  .pn-brand svg{width:26px;height:26px;}
+  .pn-indique{padding:0 8px;gap:5px;}
+  .pn-indique svg{width:15px;height:15px;}
+  .pn-av{width:36px;height:36px;font-size:13px;}
+  .pn-bottom{left:8px;right:8px;}
+  .pn-bottom a,.pn-bottom button{font-size:10.5px;white-space:nowrap;}
+  .pn-bottom .pn-sofia{flex:0 0 48px;}
+}
+@media (min-width: 821px) and (max-width: 1080px){body:has(.pn-bottom){padding-bottom:96px;}.pn-bottom{max-width:560px;margin:0 auto;}}
 `;
 
 function Svg({ children, w = 2.2 }: { children: ReactNode; w?: number }) {
@@ -157,6 +201,12 @@ export const ICONS = {
       <path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
     </>
   ),
+  phone: (
+    <>
+      <rect x="6" y="2" width="12" height="20" rx="2.5" />
+      <line x1="11" y1="18" x2="13" y2="18" />
+    </>
+  ),
   gift: (
     <>
       <polyline points="20 12 20 22 4 22 4 12" />
@@ -189,12 +239,11 @@ export const ICONS = {
 
 const LINKS: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/", label: "Início", exact: true },
-  { to: "/minha-sala", label: "Minha sala" },
   { to: "/planejamento", label: "Planejar" },
   { to: "/relatorios", label: "Pareceres" },
   { to: "/inclusao", label: "Inclusão" },
   { to: "/agenda", label: "Agenda" },
-  { to: "/jogos", label: "Jogos" },
+  { to: "/jogos", label: "Jogos e atividades interativas" },
   { to: "/simulados", label: "Simulados" },
 ];
 
@@ -207,6 +256,13 @@ export function PainelNav() {
   const nome = (ctx.user?.nome || "").trim();
   const [menu, setMenu] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [baixar, setBaixar] = useState(false);
+  const app = useInstalarApp();
+  // Android/Chrome: um toque já abre a confirmação de instalação.
+  const abrirBaixar = async () => {
+    if (app.podeInstalarDireto && (await app.instalar())) return;
+    setBaixar(true);
+  };
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -248,7 +304,7 @@ export function PainelNav() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: navCss }} />
+      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + navCss }} />
       <header className="pn-top">
         <div className="pn-top-in">
           <Link to="/" className="pn-brand" aria-label="AgilizaProf, página inicial">
@@ -265,6 +321,10 @@ export function PainelNav() {
             ))}
           </nav>
           <div className="pn-right" ref={ref}>
+            <Link to="/indicacoes" className="pn-indique" aria-current={cur("/indicacoes")}>
+              <Svg>{ICONS.gift}</Svg>
+              <span className="pn-indique-tx">Indique e ganhe</span>
+            </Link>
             {sofia && (
               <button
                 type="button"
@@ -289,11 +349,18 @@ export function PainelNav() {
             </button>
             {menu && (
               <div className="pn-menu" role="menu">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenu(false);
+                    void abrirBaixar();
+                  }}
+                >
+                  <Svg>{ICONS.phone}</Svg>Baixar o app no celular
+                </button>
                 <Link to="/configuracoes" role="menuitem">
                   <Svg>{ICONS.gear}</Svg>Configurações
-                </Link>
-                <Link to="/indicacoes" role="menuitem">
-                  <Svg>{ICONS.gift}</Svg>Indique e ganhe
                 </Link>
                 {isAdmin && (
                   <Link to="/admin" role="menuitem">
@@ -351,9 +418,19 @@ export function PainelNav() {
           >
             <h2>Tudo do AgilizaProf</h2>
             <div className="pn-sheet-list">
-              <Link to="/minha-sala">
-                <Svg>{ICONS.users}</Svg>Minha sala
+              <Link to="/indicacoes" style={{ background: "#FFB224", borderColor: "#14161F" }}>
+                <Svg>{ICONS.gift}</Svg>Indique e ganhe
               </Link>
+              <button
+                type="button"
+                style={{ background: "#CDEFE2", borderColor: "#0B7A55" }}
+                onClick={() => {
+                  setSheet(false);
+                  void abrirBaixar();
+                }}
+              >
+                <Svg>{ICONS.phone}</Svg>Baixar o app no celular
+              </button>
               <Link to="/inclusao">
                 <Svg>{ICONS.users}</Svg>Inclusão
               </Link>
@@ -364,16 +441,13 @@ export function PainelNav() {
                 <Svg>{ICONS.cal}</Svg>Agenda
               </Link>
               <Link to="/jogos">
-                <Svg>{ICONS.game}</Svg>Jogos 2D
+                <Svg>{ICONS.game}</Svg>Jogos e atividades interativas
               </Link>
               <Link to="/simulados">
                 <Svg>{ICONS.check}</Svg>Simulados
               </Link>
               <Link to="/configuracoes">
                 <Svg>{ICONS.gear}</Svg>Configurações
-              </Link>
-              <Link to="/indicacoes">
-                <Svg>{ICONS.gift}</Svg>Indique e ganhe
               </Link>
               {isAdmin && (
                 <Link to="/admin">
@@ -387,6 +461,7 @@ export function PainelNav() {
           </div>
         </div>
       )}
+      {baixar && <InstalarApp onClose={() => setBaixar(false)} />}
     </>
   );
 }

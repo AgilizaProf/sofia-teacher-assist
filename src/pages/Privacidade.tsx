@@ -1,4 +1,3 @@
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
@@ -7,33 +6,31 @@ const VIGENCIA = "25 de maio de 2026";
 
 export function Privacidade() {
   return (
-    <div style={{ minHeight: "100vh", background: "#F4F6FB", color: "#1B2A4E", fontFamily: "'Inter',-apple-system,sans-serif" }}>
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss }} />
+    <div style={{ minHeight: "100vh", background: "#EDF0F5", color: "#14161F", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
       <style>{`
-        .legal-grid { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+        .legal-grid { display: block; min-height: 100vh; }
         .legal-pad { padding: 24px 36px 32px; width: 100%; max-width: 920px; margin: 0 auto; }
         .legal-card { background:#fff; border:1px solid #E4E8F0; border-radius:14px; padding:28px; }
-        .legal-card h2 { font-family:'Fraunces',serif; font-size:18px; font-weight:700; margin:24px 0 8px; color:#1B2A4E; }
+        .legal-card h2 { font-family:'Sora',serif; font-size:18px; font-weight:700; margin:24px 0 8px; color:#14161F; }
         .legal-card h2:first-of-type { margin-top: 8px; }
         .legal-card p, .legal-card li { font-size:14px; line-height:1.65; color:#3A4A6B; }
         .legal-card ul { padding-left: 20px; margin: 6px 0 10px; }
-        .legal-card strong { color:#1B2A4E; }
-        .legal-meta { background:#FFF1E8; border:1px solid #FED7AA; color:#7C2D12; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+        .legal-card strong { color:#14161F; }
+        .legal-meta { background:#E8F6EF; border:1px solid #CDEFE2; color:#064E36; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
         .rights-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin: 8px 0 4px; }
-        .right-chip { background:#FBFAF6; border:1px solid #E4E8F0; border-radius:10px; padding:10px 12px; font-size:13px; color:#1B2A4E; }
+        .right-chip { background:#FBFAF6; border:1px solid #E4E8F0; border-radius:10px; padding:10px 12px; font-size:13px; color:#14161F; }
         @media (max-width: 900px) { .legal-grid { grid-template-columns: 1fr; } .legal-pad { padding: 20px; } .rights-grid { grid-template-columns: 1fr; } }
       `}</style>
       <div className="legal-grid">
-        <AppSidebar active="settings" />
         <main style={{ width: "100%", minWidth: 0 }}>
           <AppHeader />
           <div className="legal-pad">
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-              <ShieldCheck size={22} color="#FF7A45" />
-              <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 700, margin: 0 }}>Política de Privacidade</h1>
+              <ShieldCheck size={22} color="#0B7A55" />
+              <h1 style={{ fontFamily: "'Sora',serif", fontSize: 28, fontWeight: 700, margin: 0 }}>Política de Privacidade</h1>
             </div>
             <p style={{ color: "#6B7691", fontSize: 14, marginTop: 4, marginBottom: 18 }}>
-              Como tratamos seus dados pessoais — em conformidade com a LGPD, o ECA e a LBI. Veja também os <Link to="/termos" style={{ color: "#FF7A45", fontWeight: 600 }}>Termos de Uso</Link>.
+              Como tratamos seus dados pessoais — em conformidade com a LGPD, o ECA e a LBI. Veja também os <Link to="/termos" style={{ color: "#0B7A55", fontWeight: 600 }}>Termos de Uso</Link>.
             </p>
 
             <section className="legal-card" aria-labelledby="priv-title">
@@ -136,7 +133,7 @@ export function Privacidade() {
 
               <h2>15. Contato</h2>
               <p>
-                Encarregado (DPO): <strong>dpo@agilizaprof.com.br</strong> · Suporte: <strong>suporte@agilizaprof.com.br</strong> · ANPD: <a href="https://www.gov.br/anpd" target="_blank" rel="noopener noreferrer" style={{ color: "#FF7A45", fontWeight: 600 }}>gov.br/anpd</a>.
+                Encarregado (DPO): <strong>dpo@agilizaprof.com.br</strong> · Suporte: <strong>suporte@agilizaprof.com.br</strong> · ANPD: <a href="https://www.gov.br/anpd" target="_blank" rel="noopener noreferrer" style={{ color: "#0B7A55", fontWeight: 600 }}>gov.br/anpd</a>.
               </p>
             </section>
           </div>

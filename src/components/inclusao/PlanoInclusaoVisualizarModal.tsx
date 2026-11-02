@@ -146,7 +146,7 @@ export function PlanoInclusaoVisualizarModal({ open, plano, onClose, onSave }: P
         <div style={{ padding: "12px 18px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button className="inc-btn-ghost" onClick={onClose}>Cancelar</button>
           <button
-            className="btn btn-primary bg-orange-400 text-orange-400"
+            className="btn btn-primary bg-emerald-400 text-emerald-400"
             onClick={() => { onSave(form); onClose(); }}
           >
             <CheckCircle2 size={14} /> Salvar alterações

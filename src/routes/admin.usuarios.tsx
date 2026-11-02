@@ -180,10 +180,10 @@ function UserDrawer({ row, onClose }: { row: Row; onClose: () => void }) {
     })();
   }, [row.user_id]);
   return (
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(15,27,54,.55)",zIndex:90,display:"flex",justifyContent:"flex-end"}}>
-      <div onClick={e => e.stopPropagation()} style={{width:"min(540px,92vw)",background:"#fff",height:"100%",overflow:"auto",padding:24,fontFamily:"'Inter',sans-serif"}}>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(20,22,31,.55)",zIndex:90,display:"flex",justifyContent:"flex-end"}}>
+      <div onClick={e => e.stopPropagation()} style={{width:"min(540px,92vw)",background:"#fff",height:"100%",overflow:"auto",padding:24,fontFamily:"'DM Sans',sans-serif"}}>
         <button onClick={onClose} style={{float:"right",background:"transparent",border:0,fontSize:22,cursor:"pointer",color:"#6B7280"}}>×</button>
-        <h2 style={{fontFamily:"'Fraunces',serif",fontWeight:800,fontSize:22,color:"#0F1B36",margin:0}}>{row.display_name ?? row.email}</h2>
+        <h2 style={{fontFamily:"'Sora',serif",fontWeight:800,fontSize:22,color:"#14161F",margin:0}}>{row.display_name ?? row.email}</h2>
         <p style={{color:"#6B7280",fontSize:13,marginTop:4}}>{row.email}</p>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,margin:"18px 0"}}>
           <Info k="Plano" v={row.plano.toUpperCase() + (row.ciclo ? ` · ${row.ciclo}` : "")} />
@@ -193,11 +193,11 @@ function UserDrawer({ row, onClose }: { row: Row; onClose: () => void }) {
           <Info k="Validade" v={row.current_period_end ? new Date(row.current_period_end).toLocaleDateString("pt-BR") : "—"} />
           <Info k="Último acesso" v={row.last_seen ? new Date(row.last_seen).toLocaleString("pt-BR") : "nunca"} />
         </div>
-        <h3 style={{fontFamily:"'Fraunces',serif",fontSize:14,color:"#0F1B36",margin:"18px 0 8px"}}>Atividades recentes</h3>
+        <h3 style={{fontFamily:"'Sora',serif",fontSize:14,color:"#14161F",margin:"18px 0 8px"}}>Atividades recentes</h3>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {events.map((e,i) => (
-            <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 10px",background:"#F4F6FB",borderRadius:7,fontSize:12}}>
-              <span style={{fontWeight:600,color:"#0F1B36"}}>{e.event_type}</span>
+            <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 10px",background:"#EDF0F5",borderRadius:7,fontSize:12}}>
+              <span style={{fontWeight:600,color:"#14161F"}}>{e.event_type}</span>
               <span style={{color:"#6B7280"}}>{new Date(e.created_at).toLocaleString("pt-BR")}</span>
             </div>
           ))}
@@ -209,8 +209,8 @@ function UserDrawer({ row, onClose }: { row: Row; onClose: () => void }) {
 }
 
 function Info({ k, v }: { k: string; v: string }) {
-  return <div style={{background:"#F4F6FB",padding:"9px 11px",borderRadius:8}}>
+  return <div style={{background:"#EDF0F5",padding:"9px 11px",borderRadius:8}}>
     <div style={{fontSize:10,fontWeight:700,color:"#6B7280",textTransform:"uppercase",letterSpacing:".06em"}}>{k}</div>
-    <div style={{fontSize:13,fontWeight:600,color:"#0F1B36",marginTop:3}}>{v}</div>
+    <div style={{fontSize:13,fontWeight:600,color:"#14161F",marginTop:3}}>{v}</div>
   </div>;
 }

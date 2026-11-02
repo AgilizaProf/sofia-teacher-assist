@@ -1,4 +1,3 @@
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { Link } from "@tanstack/react-router";
 import { FileText } from "lucide-react";
@@ -7,31 +6,29 @@ const VIGENCIA = "25 de maio de 2026";
 
 export function Termos() {
   return (
-    <div style={{ minHeight: "100vh", background: "#F4F6FB", color: "#1B2A4E", fontFamily: "'Inter',-apple-system,sans-serif" }}>
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss }} />
+    <div style={{ minHeight: "100vh", background: "#EDF0F5", color: "#14161F", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
       <style>{`
-        .legal-grid { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+        .legal-grid { display: block; min-height: 100vh; }
         .legal-pad { padding: 24px 36px 32px; width: 100%; max-width: 920px; margin: 0 auto; }
         .legal-card { background:#fff; border:1px solid #E4E8F0; border-radius:14px; padding:28px; }
-        .legal-card h2 { font-family:'Fraunces',serif; font-size:18px; font-weight:700; margin:24px 0 8px; color:#1B2A4E; }
+        .legal-card h2 { font-family:'Sora',serif; font-size:18px; font-weight:700; margin:24px 0 8px; color:#14161F; }
         .legal-card h2:first-of-type { margin-top: 8px; }
         .legal-card p, .legal-card li { font-size:14px; line-height:1.65; color:#3A4A6B; }
         .legal-card ul { padding-left: 20px; margin: 6px 0 10px; }
-        .legal-card strong { color:#1B2A4E; }
-        .legal-meta { background:#FFF1E8; border:1px solid #FED7AA; color:#7C2D12; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
+        .legal-card strong { color:#14161F; }
+        .legal-meta { background:#E8F6EF; border:1px solid #CDEFE2; color:#064E36; border-radius:10px; padding:10px 14px; font-size:13px; margin-bottom:18px; }
         @media (max-width: 900px) { .legal-grid { grid-template-columns: 1fr; } .legal-pad { padding: 20px; } }
       `}</style>
       <div className="legal-grid">
-        <AppSidebar active="settings" />
         <main style={{ width: "100%", minWidth: 0 }}>
           <AppHeader />
           <div className="legal-pad">
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-              <FileText size={22} color="#FF7A45" />
-              <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 700, margin: 0 }}>Termos de Uso</h1>
+              <FileText size={22} color="#0B7A55" />
+              <h1 style={{ fontFamily: "'Sora',serif", fontSize: 28, fontWeight: 700, margin: 0 }}>Termos de Uso</h1>
             </div>
             <p style={{ color: "#6B7691", fontSize: 14, marginTop: 4, marginBottom: 18 }}>
-              Regras de utilização da plataforma AgilizaProf / Sofia. Veja também a <Link to="/privacidade" style={{ color: "#FF7A45", fontWeight: 600 }}>Política de Privacidade</Link>.
+              Regras de utilização da plataforma AgilizaProf / Sofia. Veja também a <Link to="/privacidade" style={{ color: "#0B7A55", fontWeight: 600 }}>Política de Privacidade</Link>.
             </p>
 
             <section className="legal-card" aria-labelledby="termos-title">
@@ -64,7 +61,7 @@ export function Termos() {
 
               <h2>5. Princípios da Sofia (parte integrante destes Termos)</h2>
               <p>
-                A Sofia opera sob 13 princípios públicos — entre eles <strong>Dados Reais</strong>, <strong>Linguagem Humanizada</strong>, <strong>Legalidade</strong>, <strong>Sua Autoria</strong>, <strong>Educação Inclusiva</strong> e <strong>Confidencialidade</strong>. Você é a <strong>autora</strong> do conteúdo final; a Sofia é apoio e nunca substitui sua decisão pedagógica. Consulte-os em <Link to="/configuracoes" style={{ color: "#FF7A45", fontWeight: 600 }}>Configurações → Princípios da Sofia</Link>.
+                A Sofia opera sob 13 princípios públicos — entre eles <strong>Dados Reais</strong>, <strong>Linguagem Humanizada</strong>, <strong>Legalidade</strong>, <strong>Sua Autoria</strong>, <strong>Educação Inclusiva</strong> e <strong>Confidencialidade</strong>. Você é a <strong>autora</strong> do conteúdo final; a Sofia é apoio e nunca substitui sua decisão pedagógica. Consulte-os em <Link to="/configuracoes" style={{ color: "#0B7A55", fontWeight: 600 }}>Configurações → Princípios da Sofia</Link>.
               </p>
 
               <h2>6. Conteúdo gerado por IA</h2>

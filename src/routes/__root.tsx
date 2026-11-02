@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "@/lib/pwa/useInstalarApp";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -24,7 +25,6 @@ import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { syncOnboardingFlagIfPending } from "@/lib/onboarding";
 import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
 import { useLocation } from "@tanstack/react-router";
-import { MobileTopBar } from "@/components/MobileTopBar";
 import { PencilLogo } from "@/components/painel/PainelNav";
 import { trackEvent, trackPageView } from "@/lib/tracking";
 
@@ -57,20 +57,29 @@ export const Route = createRootRoute({
   meta: [
     { charSet: "utf-8" },
     { name: "viewport", content: "width=device-width, initial-scale=1" },
-    { title: "Sofia Teacher Assist | AgilizaProf — IA para Educadores Brasileiros" },
+    { name: "theme-color", content: "#0B7A55" },
+    { name: "mobile-web-app-capable", content: "yes" },
+    { name: "apple-mobile-web-app-capable", content: "yes" },
+    { name: "apple-mobile-web-app-title", content: "AgilizaProf" },
+    { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+    { title: "AgilizaProf — Planejamento, pareceres e inclusão com a Sofia" },
     { name: "description", content: "Plataforma de inteligência artificial pedagógica para professores brasileiros. Crie planos de aula, relatórios e atividades personalizadas em minutos." },
     { name: "author", content: "AgilizaProf" },
     { name: "application-name", content: "AgilizaProf" },
-    { property: "og:title", content: "Sofia Teacher Assist | AgilizaProf — IA para Educadores Brasileiros" },
+    { property: "og:title", content: "AgilizaProf — Planejamento, pareceres e inclusão com a Sofia" },
     { property: "og:description", content: "Plataforma de inteligência artificial pedagógica para professores brasileiros. Crie planos de aula, relatórios e atividades personalizadas em minutos." },
     { property: "og:type", content: "website" },
     { property: "og:locale", content: "pt_BR" },
     { property: "og:site_name", content: "AgilizaProf" },
     { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:title", content: "Sofia Teacher Assist | AgilizaProf" },
+    { name: "twitter:title", content: "AgilizaProf — IA pedagógica para educadores" },
     { name: "twitter:description", content: "IA pedagógica para educadores brasileiros. Planos de aula, relatórios e atividades em minutos." },
-    { property: "og:image", content: "/og-image.png" },
-    { name: "twitter:image", content: "/og-image.png" },
+    // Redes sociais e WhatsApp só leem a imagem com endereço completo.
+    { property: "og:image", content: "https://agilizaprof.app.br/og-image.png" },
+    { property: "og:image:width", content: "1200" },
+    { property: "og:image:height", content: "630" },
+    { property: "og:image:alt", content: "AgilizaProf: planejamento, pareceres e inclusão em minutos" },
+    { name: "twitter:image", content: "https://agilizaprof.app.br/og-image.png" },
   ],
   links: [
     { rel: "stylesheet", href: appCss },
@@ -78,11 +87,12 @@ export const Route = createRootRoute({
     { rel: "icon", type: "image/png", sizes: "96x96", href: "/favicon-96x96.png" },
     { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
     { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+    { rel: "manifest", href: "/site.webmanifest" },
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
     { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     {
       rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Fraunces:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Sora:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap",
     },
   ],
 }),
@@ -126,14 +136,14 @@ function RootShell({ children }: { children: React.ReactNode }) {
           fbq('track', 'PageView');
         `}} />
         <style dangerouslySetInnerHTML={{ __html: `
-          #ap-splash{position:fixed;inset:0;background:linear-gradient(135deg,#1B2A4E 0%,#0F1B36 100%);
+          #ap-splash{position:fixed;inset:0;background:#EDF0F5;
             display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;
-            transition:opacity .4s ease;font-family:'Inter',-apple-system,sans-serif;}
+            transition:opacity .4s ease;font-family:'DM Sans',-apple-system,sans-serif;}
           #ap-splash.hide{opacity:0;pointer-events:none;}
-          #ap-splash .ap-logo{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:40px;color:#fff;letter-spacing:-.03em;}
-          #ap-splash .ap-logo span{color:#FF7A45;}
-          #ap-splash .ap-sub{font-size:13px;color:rgba(255,255,255,.6);font-weight:500;letter-spacing:.04em;}
-          #ap-splash .ap-ring{width:36px;height:36px;border:2.5px solid rgba(255,122,69,.25);border-top-color:#FF7A45;
+          #ap-splash .ap-logo{font-family:'Sora',Georgia,serif;font-weight:900;font-size:40px;color:#14161F;letter-spacing:-.03em;}
+          #ap-splash .ap-logo span{color:#0B7A55;}
+          #ap-splash .ap-sub{font-size:13px;color:#596074;font-weight:500;letter-spacing:.04em;}
+          #ap-splash .ap-ring{width:36px;height:36px;border:2.5px solid rgba(11,122,85,.25);border-top-color:#0B7A55;
             border-radius:50%;animation:ap-spin 0.9s linear infinite;}
           @keyframes ap-spin{to{transform:rotate(360deg);}}
         `}} />
@@ -142,7 +152,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <noscript>
           <img height={1} width={1} style={{ display: "none" }} src="https://www.facebook.com/tr?id=966501615841208&ev=PageView&noscript=1" alt="" />
         </noscript>
-        <div id="ap-splash">
+        <div id="ap-splash" suppressHydrationWarning>
           <div className="ap-logo">Agiliza<span>Prof</span></div>
           <div className="ap-ring"></div>
           <div className="ap-sub">Conectando à sua sala de aula…</div>
@@ -301,8 +311,6 @@ function RootComponent() {
   const { ready, authed, isPublicRoute } = useAuthGuard();
   // No primeiro acesso a pessoa só informa nome e celular; a Sofia aparece depois.
   const showSofia = ready && authed && !isPublicRoute && loc.pathname !== "/onboarding";
-  // Páginas no novo visual "Painel" já têm navegação própria (PainelNav).
-  const isPainelPage = ["/", "/relatorios", "/planejamento", "/inclusao", "/agenda", "/jogos", "/simulados", "/onboarding"].includes(loc.pathname);
 
   if (!ready && !isPublicRoute) {
     return (
@@ -352,7 +360,6 @@ function RootComponent() {
             <SofiaProvider>
               <CreditosGateProvider>
                 <MaintenanceBanner />
-                {showSofia && !isPainelPage && <MobileTopBar />}
                 <Outlet />
               </CreditosGateProvider>
               {showSofia && (

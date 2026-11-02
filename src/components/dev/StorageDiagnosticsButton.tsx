@@ -42,7 +42,7 @@ export function StorageDiagnosticsButton() {
         flexDirection: "column",
         alignItems: "flex-start",
         gap: 6,
-        fontFamily: "'Inter',-apple-system,sans-serif",
+        fontFamily: "'DM Sans',-apple-system,sans-serif",
       }}
     >
       <button
@@ -56,9 +56,9 @@ export function StorageDiagnosticsButton() {
           gap: 8,
           padding: "8px 12px",
           borderRadius: 999,
-          border: "1px solid rgba(249,115,22,.4)",
+          border: "1px solid rgba(11,122,85,.4)",
           background: "linear-gradient(135deg,#1F1B2E,#2A1F3D)",
-          color: "#FDBA74",
+          color: "#9ED9C2",
           fontSize: 12,
           fontWeight: 700,
           cursor: "pointer",

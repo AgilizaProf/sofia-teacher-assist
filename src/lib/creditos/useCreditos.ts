@@ -110,10 +110,10 @@ export function useCreditos(): CreditosState & { refresh: () => Promise<void> } 
       await ensureAndFetch();
       if (cancelled) return;
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user || cancelled) return;
 
       channel = supabase
-        .channel("creditos:" + user.id)
+        .channel(`creditos:${user.id}:${crypto.randomUUID()}`)
         .on(
           "postgres_changes",
           { event: "UPDATE", schema: "public", table: "creditos_usuario", filter: `user_id=eq.${user.id}` },
@@ -189,8 +189,9 @@ export function useHistoricoCreditos(limit = 5): { items: MovimentacaoCredito[];
         setItems((data as any[] | null) ?? []);
         setLoading(false);
       }
+      if (cancelled) return;
       channel = supabase
-        .channel("creditos_hist:" + user.id)
+        .channel(`creditos_hist:${user.id}:${crypto.randomUUID()}`)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "creditos_historico", filter: `user_id=eq.${user.id}` },

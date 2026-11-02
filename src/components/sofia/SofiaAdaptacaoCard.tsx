@@ -51,7 +51,7 @@ function studentId(s: DashStudent): string {
 const css = `
 .sofia-adapt{position:relative;background:linear-gradient(135deg,#1E1B2E 0%,#15131F 100%);
   border:1px solid #2A2438;border-radius:16px;padding:18px 20px;color:#fff;overflow:hidden;
-  box-shadow:0 14px 36px rgba(15,13,30,.28);font-family:'Inter',-apple-system,sans-serif;}
+  box-shadow:0 14px 36px rgba(15,13,30,.28);font-family:'DM Sans',-apple-system,sans-serif;}
 .sofia-adapt::before{content:"";position:absolute;inset:-1px -1px auto auto;width:55%;height:140%;
   background:radial-gradient(circle at 90% 20%,rgba(139,92,246,.32) 0%,transparent 60%);pointer-events:none;}
 .sofia-adapt > *{position:relative;z-index:1;}
@@ -61,9 +61,9 @@ const css = `
 .sa-title{font-size:12px;font-weight:700;color:#C4B5FD;letter-spacing:.04em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
 .sa-body{font-size:15px;line-height:1.5;color:rgba(255,255,255,.95);font-weight:500;margin-bottom:6px;}
 .sa-body b{color:#fff;font-weight:700;}
-.sa-body em{color:#FDBA74;font-style:normal;font-weight:700;}
+.sa-body em{color:#9ED9C2;font-style:normal;font-weight:700;}
 .sa-meta{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:14px;}
-.sa-meta b{color:#FDBA74;font-weight:700;}
+.sa-meta b{color:#9ED9C2;font-weight:700;}
 .sa-foot{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
 .sa-action{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;
   background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;border:0;font-weight:700;font-size:13px;
@@ -73,12 +73,12 @@ const css = `
 .sa-stack:hover{background:rgba(255,255,255,.06);}
 .sa-stack-av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;
   font-size:11px;font-weight:800;border:2px solid #15131F;margin-left:-8px;
-  background:linear-gradient(135deg,#F97316,#EA580C);font-family:'Inter';}
+  background:linear-gradient(135deg,#0B7A55,#096746);font-family:'DM Sans';}
 .sa-stack-av:first-child{margin-left:0;}
 .sa-stack-av.more{background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);}
 .sa-stack-text{font-size:11.5px;color:rgba(255,255,255,.7);margin-left:8px;font-weight:600;}
 .sofia-adapt-empty{background:#F3FAF6;border:1px dashed #C8E6D2;color:#0E7A4F;padding:14px 16px;
-  border-radius:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;}
+  border-radius:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;}
 `;
 
 function initialsOf(name: string): string {

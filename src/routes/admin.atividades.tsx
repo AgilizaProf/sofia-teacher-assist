@@ -107,8 +107,8 @@ function ActPage() {
           <div style={{display:"flex",flexDirection:"column",gap:10,marginTop:8}}>
             {top.map(([k,v]) => (
               <div key={k}>
-                <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'Inter',sans-serif",fontSize:12,marginBottom:4}}>
-                  <span style={{fontWeight:600,color:"#0F1B36"}} title={k}>{labelForEvent(k)}</span>
+                <div style={{display:"flex",justifyContent:"space-between",fontFamily:"'DM Sans',sans-serif",fontSize:12,marginBottom:4}}>
+                  <span style={{fontWeight:600,color:"#14161F"}} title={k}>{labelForEvent(k)}</span>
                   <span style={{color:"#6B7280",fontWeight:700}}>{v} {v === 1 ? "vez" : "vezes"}</span>
                 </div>
                 <div className="ad-bar"><div style={{width:`${(v/max)*100}%`}}/></div>

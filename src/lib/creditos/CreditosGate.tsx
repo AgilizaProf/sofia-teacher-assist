@@ -94,8 +94,8 @@ export function CreditosGateProvider({ children }: { children: ReactNode }) {
               marginTop: 6,
               padding: "12px 14px",
               borderRadius: 10,
-              background: "linear-gradient(135deg,#FFF1E8,#FFE4D1)",
-              color: "#8a3a12",
+              background: "linear-gradient(135deg,#E8F6EF,#E3F5EC)",
+              color: "#064E36",
               fontSize: 13,
               lineHeight: 1.5,
             }}
@@ -126,7 +126,7 @@ export function CreditosGateProvider({ children }: { children: ReactNode }) {
               style={{
                 padding: "8px 14px",
                 borderRadius: 8,
-                background: "#FF7A45",
+                background: "#0B7A55",
                 color: "#fff",
                 fontSize: 13,
                 fontWeight: 700,

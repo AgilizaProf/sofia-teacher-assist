@@ -94,7 +94,7 @@ function buildPrintCss(
   void docType;
   return `
 /* Fontes — Fraunces para títulos, Arial para corpo */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap');
 
 /* Paleta sóbria e elegante */
 :root {
@@ -156,7 +156,7 @@ html, body, .print-header, .page-band, .field-box > .label, .section-band, .digi
   box-sizing: border-box;
 }
 .print-header .brand {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Sora', Georgia, serif;
   font-weight: 700;
   color: #ffffff;
 }
@@ -205,7 +205,7 @@ p, li, td, th, dd, dt, .doc-body, .doc-block, .kpi, .card, .pei-block, section, 
 /* Títulos: Fraunces Bold, azul profundo */
 h1, h2, h3, h4, h5, h6,
 .doc-title, .section-title {
-  font-family: 'Fraunces', Georgia, 'Times New Roman', serif !important;
+  font-family: 'Sora', Georgia, 'Times New Roman', serif !important;
   font-weight: 700;
   color: #1F3A5F; /* azul profundo editorial */
   letter-spacing: -0.01em;
@@ -291,7 +291,7 @@ h2 + p > em:only-child,
   border-top: 1.2pt solid #C9B98A;
 }
 .doc-cover .subtitle {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Sora', Georgia, serif;
   font-style: italic;
   font-size: 14pt; color: #1F3A5F; margin-top: 0;
 }
@@ -323,7 +323,7 @@ h2 + p > em:only-child,
 .field-box > .label {
   display: block;
   background: #F5F1EA;
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Sora', Georgia, serif;
   font-weight: 700;
   color: #1F3A5F;
   font-size: 9.5pt;
@@ -343,7 +343,7 @@ h2 + p > em:only-child,
   border-left: 3pt solid #1F3A5F;
   padding: 6pt 12pt;
   margin: 14pt 0 8pt 0;
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Sora', Georgia, serif;
   font-weight: 700;
   color: #1F3A5F;
   letter-spacing: .04em;
@@ -378,7 +378,7 @@ th, td {
   text-align: left;
 }
 th {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Sora', Georgia, serif;
   font-weight: 700;
   color: #1F3A5F;
   border-bottom: 1px solid #C9B98A;
@@ -418,7 +418,7 @@ ${
 `
 }
 
-/* Rodapé "na tela" — filete dourado, AgilizaProf em Fraunces, base legal em itálico cinza */
+/* Rodapé "na tela" — filete dourado, AgilizaProf em Sora, base legal em itálico cinza */
 .screen-foot {
   margin-top: 28px;
   padding-top: 10px;
@@ -430,7 +430,7 @@ ${
   font-size: 9.5pt;
 }
 .screen-foot .brand {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Sora', Georgia, serif;
   font-weight: 700;
   color: #1F3A5F;
 }
@@ -468,7 +468,7 @@ h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
   page-break-inside: avoid; break-inside: avoid;
 }
 .digital-sig .label {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Sora', Georgia, serif;
   font-size: 10pt; color: #1F3A5F; text-transform: uppercase;
   letter-spacing: .08em; margin-bottom: 8px; font-weight: 700;
 }

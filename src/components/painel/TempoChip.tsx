@@ -1,5 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
+import { TempoPainel } from "./TempoPainel";
 
 // Contador pequeno "Tempo devolvido a você", igual em todas as páginas
 // do visual Painel. O CSS fica em `tempoChipCss`.
@@ -18,8 +19,9 @@ const TIERS = [
 
 export const tempoChipCss = `
 .pn-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.pn-chip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 6px;border-radius:10px;text-decoration:none;color:var(--pn-ink);font-size:13.5px;font-weight:600;white-space:nowrap;}
+.pn-chip{font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 6px;border-radius:10px;text-decoration:none;color:var(--pn-ink);font-size:13.5px;font-weight:600;white-space:nowrap;}
 .pn-time{background:var(--pn-green-soft);border:1.5px solid var(--pn-green);}
+.pn-time:hover{background:#B9E6D3;}
 .pn-time .ic{width:24px;height:24px;border-radius:7px;background:var(--pn-green);color:#fff;display:flex;align-items:center;justify-content:center;}
 .pn-time .ic svg{width:14px;height:14px;}
 .pn-time b{font-family:var(--pn-display);font-variant-numeric:tabular-nums;}
@@ -27,41 +29,59 @@ export const tempoChipCss = `
 @media (max-width:860px){.pn-time .lbl{display:none;}}
 `;
 
-export function TempoChip({ id }: { id?: string }) {
+export function nivelDoTempo(minutos: number) {
+  const horas = Math.floor(minutos / 60);
+  return TIERS.find((t) => horas <= t.max)?.name ?? "Semente";
+}
+
+export function TempoChip({
+  id,
+  className = "pn-chip pn-time",
+}: {
+  id?: string;
+  className?: string;
+}) {
   const { minutos } = useTempoEconomizado();
+  const [aberto, setAberto] = useState(false);
   const horas = Math.floor(minutos / 60);
   const mins = minutos % 60;
-  const nivel = TIERS.find((t) => horas <= t.max)?.name ?? "Semente";
+  const nivel = nivelDoTempo(minutos);
   return (
-    <Link
-      id={id}
-      to="/minha-sala"
-      className="pn-chip pn-time"
-      title="Tempo que a plataforma já te devolveu"
-    >
-      <span className="ic">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-      </span>
-      <span>
-        <span className="lbl">Tempo devolvido a você </span>
-        <b suppressHydrationWarning>
-          {horas}h {String(mins).padStart(2, "0")}min
-        </b>
-      </span>
-      <span className="lvl" suppressHydrationWarning>
-        {nivel}
-      </span>
-    </Link>
+    <>
+      <button
+        type="button"
+        id={id}
+        className={className}
+        title="Ver onde você economizou tempo"
+        aria-haspopup="dialog"
+        aria-expanded={aberto}
+        onClick={() => setAberto(true)}
+      >
+        <span className="ic">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </span>
+        <span>
+          <span className="lbl">Tempo devolvido a você </span>
+          <b suppressHydrationWarning>
+            {horas}h {String(mins).padStart(2, "0")}min
+          </b>
+        </span>
+        <span className="lvl" suppressHydrationWarning>
+          {nivel}
+        </span>
+      </button>
+      {aberto && <TempoPainel minutos={minutos} nivel={nivel} onClose={() => setAberto(false)} />}
+    </>
   );
 }

@@ -9,27 +9,27 @@ const css = `
   border:1px solid #2A2438;border-radius:16px;
   padding:18px 20px;color:#fff;overflow:hidden;
   box-shadow:0 14px 36px rgba(15,13,30,.28);
-  font-family:'Inter',-apple-system,sans-serif;
+  font-family:'DM Sans',-apple-system,sans-serif;
 }
 .sofia-foco::before{
   content:"";position:absolute;inset:-1px -1px auto auto;width:55%;height:140%;
-  background:radial-gradient(circle at 90% 20%,rgba(249,115,22,.32) 0%,transparent 60%);
+  background:radial-gradient(circle at 90% 20%,rgba(11,122,85,.32) 0%,transparent 60%);
   pointer-events:none;
 }
 .sofia-foco > *{position:relative;z-index:1;}
 .sf-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.sf-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F97316,#EA580C);display:grid;place-items:center;color:#fff;flex-shrink:0;box-shadow:0 0 0 3px rgba(249,115,22,.18);}
-.sf-title{font-size:12px;font-weight:700;color:#F97316;letter-spacing:.04em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.sf-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0B7A55,#096746);display:grid;place-items:center;color:#fff;flex-shrink:0;box-shadow:0 0 0 3px rgba(11,122,85,.18);}
+.sf-title{font-size:12px;font-weight:700;color:#0B7A55;letter-spacing:.04em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
 .sf-close{margin-left:auto;background:transparent;border:0;color:rgba(255,255,255,.6);cursor:pointer;padding:4px;border-radius:6px;display:grid;place-items:center;}
 .sf-close:hover{color:#fff;background:rgba(255,255,255,.08);}
 .sf-body{font-size:15px;line-height:1.5;color:rgba(255,255,255,.95);font-weight:500;margin-bottom:6px;}
 .sf-body b{color:#fff;font-weight:700;}
-.sf-body em{color:#FDBA74;font-style:normal;font-weight:700;}
+.sf-body em{color:#9ED9C2;font-style:normal;font-weight:700;}
 .sf-meta{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:14px;}
-.sf-meta b{color:#FDBA74;font-weight:700;}
-.sf-action{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#F97316,#EA580C);color:#fff;border:0;font-weight:700;font-size:13px;cursor:pointer;transition:.18s;font-family:inherit;}
-.sf-action:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(249,115,22,.4);}
-.sofia-foco-empty{background:#FFF7EE;border:1px dashed #FFD8BF;color:#9A3F12;padding:14px 16px;border-radius:12px;font-size:13px;font-weight:600;}
+.sf-meta b{color:#9ED9C2;font-weight:700;}
+.sf-action{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#0B7A55,#096746);color:#fff;border:0;font-weight:700;font-size:13px;cursor:pointer;transition:.18s;font-family:inherit;}
+.sf-action:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(11,122,85,.4);}
+.sofia-foco-empty{background:#F2FAF6;border:1px dashed #9FD9C1;color:#064E36;padding:14px 16px;border-radius:12px;font-size:13px;font-weight:600;}
 `;
 
 export function SofiaFocoCard({ showEmptyFallback = false }: { showEmptyFallback?: boolean }) {

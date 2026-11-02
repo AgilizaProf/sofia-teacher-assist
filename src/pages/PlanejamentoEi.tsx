@@ -226,7 +226,7 @@ export function PlanejamentoEi() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <header className="sticky top-0 z-10 border-b bg-card px-6 py-3 flex items-center gap-3">
         <button onClick={() => navigate({ to: "/planejamento" })} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft size={16} /> Planejamento

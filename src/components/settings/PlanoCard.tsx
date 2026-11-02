@@ -21,10 +21,10 @@ function fmtData(iso: string | null): string {
   }
 }
 
-const NAVY = "#1B2A4E";
+const NAVY = "#14161F";
 const MUTED = "#6B7691";
 const BORDER = "#E4E8F0";
-const ACCENT = "#FF7A45";
+const ACCENT = "#0B7A55";
 const SUCCESS = "#10B981";
 const DANGER = "#DC2626";
 
@@ -54,12 +54,12 @@ const cta = (variant: "primary" | "ghost" | "danger"): React.CSSProperties => ({
       : "none",
   background:
     variant === "primary"
-      ? `linear-gradient(135deg, ${ACCENT}, #FF9466)`
+      ? `linear-gradient(135deg, ${ACCENT}, #0B7A55)`
       : variant === "danger"
       ? "#fff"
       : "#fff",
   color: variant === "primary" ? "#fff" : variant === "danger" ? DANGER : NAVY,
-  boxShadow: variant === "primary" ? "0 6px 16px rgba(255,122,69,.28)" : "none",
+  boxShadow: variant === "primary" ? "0 6px 16px rgba(11,122,85,.28)" : "none",
   textDecoration: "none",
 });
 
@@ -123,7 +123,7 @@ export function PlanoCard() {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
         <h2
           id="plano-title"
-          style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}
+          style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0 }}
         >
           💳 Meu plano
         </h2>
@@ -202,7 +202,7 @@ function PlanoBody({
       : "Assinatura cancelada.";
   } else if (isAdminGrant) {
     label = "Pro · Cortesia";
-    labelStyle = pill("#FFF1E8", "#9A3412");
+    labelStyle = pill("#E8F6EF", "#064E36");
     descricao = data.current_period_end
       ? `Acesso válido até ${fmtData(data.current_period_end)}.`
       : "Acesso de cortesia ativo.";
@@ -382,7 +382,7 @@ function CancelModal({
         <h3
           id="cancel-title"
           style={{
-            fontFamily: "'Fraunces',serif",
+            fontFamily: "'Sora',serif",
             fontSize: 20,
             fontWeight: 700,
             margin: 0,
@@ -412,7 +412,7 @@ function CancelModal({
                     gap: 10,
                     padding: "10px 12px",
                     border: `1px solid ${checked ? ACCENT : BORDER}`,
-                    background: checked ? "#FFF6F0" : "#fff",
+                    background: checked ? "#F2FAF6" : "#fff",
                     borderRadius: 10,
                     fontSize: 13,
                     color: NAVY,

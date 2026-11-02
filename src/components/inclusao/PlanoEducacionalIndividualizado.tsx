@@ -19,7 +19,7 @@ const LEGAL_REFS =
   "Fundamentação legal: Lei nº 13.146/2015 (LBI – Art. 28) | Resolução CNE/CEB nº 4/2009 | Decreto nº 7.611/2011 | Lei nº 12.764/2012 | PNEEPEI/2008";
 
 const SERIF = '"Source Serif 4", "Georgia", "Times New Roman", serif';
-const SANS = '"Inter", system-ui, -apple-system, sans-serif';
+const SANS = '"DM Sans", system-ui, -apple-system, sans-serif';
 
 function PageHeader({ pageNumber = 1, totalPages }: PEIPageData) {
   return (

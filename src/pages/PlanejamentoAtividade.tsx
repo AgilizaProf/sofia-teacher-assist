@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Sparkles, BookOpen, Target, Layers, Clock, Users, ChevronDown } from "lucide-react";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,9 +20,9 @@ import { listTurmas, type TurmaUI } from "@/lib/db/turmas";
  */
 
 const css = `
-.pa-root{font-family:'Inter',-apple-system,sans-serif;background:#F6F7FB;color:#0F172A;min-height:100vh;}
+.pa-root{font-family:'DM Sans',-apple-system,sans-serif;background:#F6F7FB;color:#0F172A;min-height:100vh;}
 .pa-root *{box-sizing:border-box;}
-.pa-app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+.pa-app{display:block;min-height:100vh;}
 @media(max-width:900px){.pa-app{grid-template-columns:1fr;}}
 @media(max-width:480px){
   .pa-hero{margin:14px 12px 0;padding:18px 16px;border-radius:14px;}
@@ -35,19 +34,19 @@ const css = `
 }
 .pa-main{display:flex;flex-direction:column;min-width:0;}
 .pa-back{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#64748B;font-weight:600;background:none;border:none;cursor:pointer;padding:6px 0;text-decoration:none;}
-.pa-back:hover{color:#FF7A45;}
-.pa-hero{margin:18px 24px 0;background:linear-gradient(135deg,#1B2A4E 0%,#243762 100%);border-radius:16px;padding:24px 28px;color:#fff;position:relative;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.08);}
-.pa-hero::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,122,69,.18) 0%,rgba(255,122,69,0) 70%);pointer-events:none;}
-.pa-hero .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,122,69,.15);border:1px solid rgba(255,122,69,.3);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;color:#FF7A45;letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
-.pa-hero h1{font-family:'Fraunces',Georgia,serif;font-size:28px;font-weight:600;color:#fff;margin:14px 0 0;line-height:1.15;letter-spacing:-.02em;}
-.pa-hero h1 em{color:#FF7A45;font-style:normal;display:block;}
+.pa-back:hover{color:#0B7A55;}
+.pa-hero{margin:18px 24px 0;background:linear-gradient(135deg,#14161F 0%,#243762 100%);border-radius:16px;padding:24px 28px;color:#fff;position:relative;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.08);}
+.pa-hero::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(11,122,85,.18) 0%,rgba(11,122,85,0) 70%);pointer-events:none;}
+.pa-hero .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(11,122,85,.15);border:1px solid rgba(11,122,85,.3);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;color:#0B7A55;letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.pa-hero h1{font-family:'Sora',Georgia,serif;font-size:28px;font-weight:600;color:#fff;margin:14px 0 0;line-height:1.15;letter-spacing:-.02em;}
+.pa-hero h1 em{color:#0B7A55;font-style:normal;display:block;}
 .pa-hero p{margin-top:10px;color:#CBD5E1;font-size:13.5px;line-height:1.55;max-width:780px;}
 
 .pa-grid{margin:18px 24px 80px;display:grid;grid-template-columns:1fr 360px;gap:18px;}
 @media(max-width:1100px){.pa-grid{grid-template-columns:1fr;}}
 .pa-card{background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:20px;box-shadow:0 1px 2px rgba(15,23,42,.06);}
-.pa-card h2{font-family:'Fraunces',Georgia,serif;font-size:17px;font-weight:600;color:#0F172A;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
-.pa-card h2 svg{color:#FF7A45;}
+.pa-card h2{font-family:'Sora',Georgia,serif;font-size:17px;font-weight:600;color:#0F172A;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+.pa-card h2 svg{color:#0B7A55;}
 .pa-card .sub{font-size:12.5px;color:#64748B;margin:0 0 16px;}
 
 .pa-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
@@ -55,26 +54,26 @@ const css = `
 .pa-field{display:flex;flex-direction:column;gap:5px;}
 .pa-field label{font-size:10.5px;color:#64748B;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
 .pa-input,.pa-select,.pa-text{width:100%;padding:9px 12px;border:1px solid #E2E8F0;border-radius:9px;font-size:13px;background:#fff;color:#0F172A;font-family:inherit;}
-.pa-input:focus,.pa-select:focus,.pa-text:focus{outline:none;border-color:#FF7A45;box-shadow:0 0 0 3px rgba(255,122,69,.12);}
+.pa-input:focus,.pa-select:focus,.pa-text:focus{outline:none;border-color:#0B7A55;box-shadow:0 0 0 3px rgba(11,122,85,.12);}
 .pa-text{min-height:84px;resize:vertical;line-height:1.45;}
 .pa-help{font-size:11px;color:#94A3B8;margin-top:4px;}
 
 .pa-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
 .pa-pill{padding:6px 11px;border:1px solid #E2E8F0;background:#fff;border-radius:999px;font-size:11.5px;color:#334155;cursor:pointer;transition:.15s;}
 .pa-pill:hover{border-color:#CBD5E1;}
-.pa-pill.on{background:#1B2A4E;color:#fff;border-color:#1B2A4E;}
+.pa-pill.on{background:#14161F;color:#fff;border-color:#14161F;}
 
 .pa-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap;}
 .pa-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;border:1px solid #E2E8F0;background:#fff;color:#0F172A;cursor:pointer;transition:.15s;}
 .pa-btn:hover{border-color:#CBD5E1;background:#FBFBFD;}
-.pa-btn.primary{background:linear-gradient(135deg,#FF6A2C,#EA580C);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(255,106,44,.25);}
+.pa-btn.primary{background:linear-gradient(135deg,#0B7A55,#096746);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(11,122,85,.25);}
 .pa-btn.primary:hover{transform:translateY(-1px);}
 
-.pa-side h3{font-family:'Fraunces',Georgia,serif;font-size:14px;font-weight:600;color:#0F172A;margin:0 0 8px;display:flex;align-items:center;gap:7px;}
-.pa-side h3 svg{color:#FF7A45;}
+.pa-side h3{font-family:'Sora',Georgia,serif;font-size:14px;font-weight:600;color:#0F172A;margin:0 0 8px;display:flex;align-items:center;gap:7px;}
+.pa-side h3 svg{color:#0B7A55;}
 .pa-side ul{margin:0;padding-left:18px;color:#475569;font-size:12.5px;line-height:1.6;}
 .pa-side ul li{margin-bottom:4px;}
-.pa-side .tip{background:linear-gradient(135deg,#FFF4ED 0%,#FFFAF7 100%);border:1px solid #FED7C4;border-radius:12px;padding:14px;font-size:12.5px;color:#9A3412;line-height:1.5;}
+.pa-side .tip{background:linear-gradient(135deg,#F2FAF6 0%,#F7FBF9 100%);border:1px solid #CDEFE2;border-radius:12px;padding:14px;font-size:12.5px;color:#064E36;line-height:1.5;}
 `;
 
 const ETAPAS = [
@@ -334,10 +333,8 @@ export function PlanejamentoAtividade() {
 
   return (
     <div className="pa-root">
-      <style>{sidebarCss}</style>
       <style>{css}</style>
       <div className="pa-app">
-        <AppSidebar active="planning" />
         <div className="pa-main">
           <AppHeader breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }, { label: "Nova atividade" }]} />
 
@@ -373,7 +370,7 @@ export function PlanejamentoAtividade() {
                   {!loadingTurmas && minhasTurmas.length === 0 && (
                     <span className="pa-help">
                       Nenhuma turma encontrada no seu perfil.{" "}
-                      <Link to="/configuracoes" style={{ color: "#FF7A45", fontWeight: 700 }}>Cadastrar agora</Link>.
+                      <Link to="/configuracoes" style={{ color: "#0B7A55", fontWeight: 700 }}>Cadastrar agora</Link>.
                     </span>
                   )}
                 </div>

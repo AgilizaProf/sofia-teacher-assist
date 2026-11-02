@@ -67,17 +67,32 @@ export function useRealtimeSync() {
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
     let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+    let channelUid: string | null = null;
+    // Cada chamada de setup recebe um número; só a mais recente pode abrir canal.
+    // Sem isso, o evento inicial de login chegava enquanto o primeiro setup ainda
+    // esperava a sessão, e os dois criavam o mesmo canal ("cannot add
+    // postgres_changes callbacks after subscribe()").
+    let generation = 0;
 
     async function setup() {
+      const gen = ++generation;
       const { data } = await supabase.auth.getSession();
       const uid = data.session?.user?.id;
-      if (!uid || cancelled) return;
+      if (cancelled || gen !== generation) return;
+      if (uid && uid === channelUid && channel) return; // mesmo usuário, canal já aberto
+      if (channel) {
+        void supabase.removeChannel(channel);
+        channel = null;
+        channelUid = null;
+      }
+      if (!uid) return;
       setStatus("connecting");
       if (fallbackTimer) clearTimeout(fallbackTimer);
       // If we never reach SUBSCRIBED within 8s, declare fallback mode.
       fallbackTimer = setTimeout(() => setStatus("fallback"), 8000);
 
-      channel = supabase.channel(`rt-user-${uid}`);
+      channelUid = uid;
+      channel = supabase.channel(`rt-user-${uid}:${crypto.randomUUID()}`);
 
       for (const [table, queryKey] of Object.entries(TABLE_TO_QUERY_KEY)) {
         channel = channel.on(
@@ -122,11 +137,8 @@ export function useRealtimeSync() {
     void setup();
 
     // Re-setup when auth changes (login/logout)
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, _s) => {
-      if (channel) {
-        void supabase.removeChannel(channel);
-        channel = null;
-      }
+    // (renovação de token do mesmo usuário não recria o canal)
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
       void setup();
     });
 

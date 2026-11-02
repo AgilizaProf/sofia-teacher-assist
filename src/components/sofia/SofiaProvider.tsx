@@ -9,6 +9,7 @@ import { registrarMensagemSofia, consumirCreditos } from "@/lib/creditos/consume
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useSofiaUserDataOptional } from "@/lib/sofia/SofiaUserContext";
+import { brDateKey } from "@/lib/datetime";
 
 export type SofiaMessage = {
   role: "user" | "assistant";
@@ -16,6 +17,10 @@ export type SofiaMessage = {
   issues?: Array<{ term: string; suggestion: string; principle: string }> | null;
   /** true quando a resposta foi cortada por limite de tokens. */
   truncated?: boolean;
+  /** true quando é um aviso de erro (não vai para o histórico enviado à IA). */
+  error?: boolean;
+  /** Texto do pedido que falhou, para o botão "Tentar de novo". */
+  retryText?: string;
 };
 
 export type SofiaConversationSummary = {
@@ -59,6 +64,8 @@ type SofiaCtx = {
   openSofia: (opts?: OpenOptions) => void;
   messages: SofiaMessage[];
   loading: boolean;
+  /** true do envio até o fim da resposta (inclui o tempo em que o texto vai aparecendo). */
+  busy: boolean;
   draft: string;
   setDraft: (s: string) => void;
   send: (text?: string) => Promise<void>;
@@ -127,6 +134,8 @@ function useRouteContext() {
       ?? (etapaPerfil && etapaPerfil.trim() ? etapaPerfil.trim() : null);
     const ds = sofia?.dataState;
     const linhas = [tela];
+    const nome = sofia?.user?.primeiro_nome;
+    if (nome && nome !== "Educador(a)") linhas.push(`Primeiro nome do(a) educador(a): ${nome}.`);
 
     if (ds && ds.turmas_count > 0) {
       linhas.push(`Total de turmas cadastradas: ${ds.turmas_count}.`);
@@ -172,7 +181,7 @@ function useRouteContext() {
     // ── Agenda real ─────────────────────────────────────────────────────
     const agenda = userData?.agenda ?? [];
     if (agenda.length > 0) {
-      const hoje = new Date().toISOString().slice(0, 10);
+      const hoje = brDateKey();
       const proximos = agenda
         .filter((e) => e.date >= hoje)
         .sort((a, b) => a.date.localeCompare(b.date))
@@ -187,7 +196,7 @@ function useRouteContext() {
     }
 
     return linhas.join("\n");
-  }, [loc.pathname, sofia?.entity?.turma_atual, sofia?.entity?.aluno_atual, sofia?.entity?.todos_alunos_pcd, sofia?.user?.etapa_ensino, sofia?.dataState, curriculo, municipalAtivo, userData?.agenda]);
+  }, [loc.pathname, sofia?.user?.primeiro_nome, sofia?.entity?.turma_atual, sofia?.entity?.aluno_atual, sofia?.entity?.todos_alunos_pcd, sofia?.user?.etapa_ensino, sofia?.dataState, curriculo, municipalAtivo, userData?.agenda]);
 }
 
 function useRouteName() {
@@ -214,6 +223,8 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<SofiaMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<SofiaConversationSummary[]>([]);
   const [isAuthed, setIsAuthed] = useState(false);
@@ -324,15 +335,26 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
 
   const send = useCallback(async (raw?: string) => {
     const text = (raw ?? draft).trim();
-    if (!text || loading) return;
+    if (!text || loading || busyRef.current) return;
     if (!isAuthed) {
       navigate({ to: "/auth" });
       return;
     }
-    const next: SofiaMessage[] = [...messages, { role: "user", content: text }];
+    // Avisos de erro ficam só na tela: não entram no histórico da IA.
+    let prev = messages;
+    const last = prev[prev.length - 1];
+    if (last?.error) {
+      prev = prev.slice(0, -1);
+      // "Tentar de novo": não duplica o pedido que falhou.
+      if (last.retryText === text && prev[prev.length - 1]?.role === "user") prev = prev.slice(0, -1);
+    }
+    const base = prev.filter((m) => !m.error);
+    const next: SofiaMessage[] = [...base, { role: "user", content: text }];
     setMessages(next);
     setDraft("");
     setLoading(true);
+    busyRef.current = true;
+    setBusy(true);
     // Compõe o routeContext com o marcador invisível, se houver.
     const marker = pendingRouteMarker.current;
     pendingRouteMarker.current = null;
@@ -343,7 +365,9 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       const stream = await askSofia({
         data: {
           conversationId: conversationId ?? undefined,
-          messages: next.map(({ role, content }) => ({ role, content })),
+          messages: next
+            .filter((m) => m.content.trim())
+            .map(({ role, content }) => ({ role, content })),
           routeContext: composedRouteContext,
           originRoute: loc.pathname,
           userContext: userContext || undefined,
@@ -392,8 +416,16 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
         void registrarMensagemSofia();
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao consultar a Sofia.";
-      setMessages((m) => [...m, { role: "assistant", content: `_${msg}_` }]);
+      const msg = err instanceof Error ? err.message : "A Sofia teve um problema para responder agora.";
+      const errConv = (err as { conversationId?: string | null } | null)?.conversationId;
+      if (errConv) setConversationId(errConv);
+      // Remove a resposta parcial (se houver) e mostra um aviso com "Tentar de novo".
+      // A mensagem do usuário sai da lista: o botão reenvia o mesmo texto.
+      setMessages((m) => {
+        const semParcial = m.length && m[m.length - 1].role === "assistant" && !m[m.length - 1].error ? m.slice(0, -1) : m;
+        const semPedido = semParcial.length && semParcial[semParcial.length - 1].role === "user" ? semParcial.slice(0, -1) : semParcial;
+        return [...semPedido, { role: "user", content: text }, { role: "assistant", content: msg, error: true, retryText: text }];
+      });
       // Telemetria: registra a falha em platform_errors sem expor conteúdo
       // de alunos, mensagens do usuário ou contexto sensível.
       void reportError(`[sofia.chat] ${msg}`, {
@@ -408,6 +440,8 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
       });
     } finally {
       setLoading(false);
+      busyRef.current = false;
+      setBusy(false);
     }
   }, [draft, loading, messages, conversationId, routeContext, userContext, loc.pathname, isAuthed, navigate, refreshConversations, open]);
   const startNew = useCallback(() => {
@@ -521,7 +555,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   }, [open, send]);
 
   const value: SofiaCtx = {
-    open, setOpen: setOpenWrapped, openSofia, messages, loading, draft, setDraft, send,
+    open, setOpen: setOpenWrapped, openSofia, messages, loading, busy, draft, setDraft, send,
     conversationId, startNew, conversations, loadConversation, refreshConversations,
     deleteConversation, clearConversations,
     isAuthed, routeContext, routeName, unread, resetUnread,

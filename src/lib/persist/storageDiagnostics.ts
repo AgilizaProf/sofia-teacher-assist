@@ -116,7 +116,7 @@ export function reportStorageIssue(issue: Omit<StorageIssue, "ts">): void {
   /* eslint-disable no-console */
   console.groupCollapsed(
     `%c[storage:invalid] %c${full.key} %c· ${full.kind}`,
-    "color:#F97316;font-weight:700;",
+    "color:#0B7A55;font-weight:700;",
     "color:#8B5CF6;font-weight:700;",
     "color:#888;font-weight:500;",
   );

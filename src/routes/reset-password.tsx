@@ -22,6 +22,21 @@ function evaluatePassword(pw: string) {
   return { checks, score };
 }
 
+/** true se o token veio de um link de recuperação de senha aberto há pouco. */
+function isRecoverySession(accessToken: string): boolean {
+  try {
+    const part = accessToken.split(".")[1] ?? "";
+    const json = JSON.parse(atob(part.replace(/-/g, "+").replace(/_/g, "/")));
+    const amr: { method?: string; timestamp?: number }[] = Array.isArray(json?.amr) ? json.amr : [];
+    const now = Date.now() / 1000;
+    return amr.some(
+      (m) => (m.method === "recovery" || m.method === "otp") && (!m.timestamp || now - m.timestamp < 60 * 60),
+    );
+  } catch {
+    return false;
+  }
+}
+
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
@@ -31,6 +46,7 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     // Segurança: aceitar APENAS sessões originadas do link de recuperação
@@ -69,28 +85,36 @@ function ResetPasswordPage() {
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
 
-        // Antes de aplicar o token de recuperação, encerra qualquer sessão
-        // pré-existente NESTE navegador (apenas local) para garantir que a
-        // sessão ativa será exclusivamente a do link.
-        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
-
+        // O cliente do Supabase já lê o link sozinho (detectSessionInUrl) e
+        // costuma criar a sessão de recuperação antes desta tela abrir. Antes,
+        // esta tela encerrava a sessão logo em seguida e o link era dado como
+        // inválido. Agora aplicamos o token só se ele ainda estiver na URL e,
+        // no fim, aceitamos apenas uma sessão que veio de um link de
+        // recuperação recente (claim "amr" do token). Uma sessão antiga do
+        // navegador (ex.: dispositivo compartilhado) continua sendo descartada.
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-          await finalizeRecovery();
+          await supabase.auth.exchangeCodeForSession(code).catch(() => {});
         } else if (tokenHash && type === "recovery") {
-          const { error } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
-          if (error) throw error;
-          await finalizeRecovery();
+          await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash }).catch(() => {});
         } else if (accessToken && refreshToken && type === "recovery") {
-          const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-          if (error) throw error;
-          await finalizeRecovery();
+          await supabase.auth
+            .setSession({ access_token: accessToken, refresh_token: refreshToken })
+            .catch(() => {});
         }
         // Limpa imediatamente os tokens da URL para evitar vazamento via
         // histórico do navegador, referer ou compartilhamento de link.
         if (code || tokenHash || accessToken) {
           window.history.replaceState({}, "", window.location.pathname);
+        }
+        if (cancelled || recovered) return;
+
+        const { data } = await supabase.auth.getSession();
+        if (cancelled || recovered) return;
+        if (data.session && isRecoverySession(data.session.access_token)) {
+          await finalizeRecovery();
+        } else {
+          if (data.session) await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+          if (!cancelled) setInvalidLink(true);
         }
       } catch (err) {
         if (!cancelled) setInvalidLink(true);
@@ -99,7 +123,7 @@ function ResetPasswordPage() {
 
     const timer = setTimeout(() => {
       if (!recovered && !cancelled) setInvalidLink(true);
-    }, 4000);
+    }, 8000);
 
     return () => {
       cancelled = true;
@@ -141,52 +165,111 @@ function ResetPasswordPage() {
     }
   };
 
-  const barColors = ["#EF4444", "#F59E0B", "#F59E0B", "#3B82F6", "#10B981"];
+  const barColors = ["#C2410C", "#B45309", "#B45309", "#3D8BFD", "#0B7A55"];
   const barLabels = ["Muito fraca", "Fraca", "Razoável", "Boa", "Forte"];
+  // score vai de 1 a 5 com a senha preenchida; antes usava barColors[5] (inexistente)
+  // e a barra e o rótulo "Forte" sumiam justamente na senha mais forte.
+  const lvl = Math.min(4, Math.max(0, score - 1));
+  const canSubmit = !loading && meets && password === confirm;
+  const req: [boolean, string][] = [
+    [checks.length, "Mínimo 10 caracteres"],
+    [checks.upper, "Letra maiúscula"],
+    [checks.lower, "Letra minúscula"],
+    [checks.digit, "Número"],
+    [checks.special, "Caractere especial (!@#$...)"],
+  ];
 
   return (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "linear-gradient(135deg,#1B2A4E,#0F1B36)", padding: 24, fontFamily: "'Inter',-apple-system,sans-serif" }}>
-      <div style={{ width: "100%", maxWidth: 440, background: "#fff", borderRadius: 20, padding: 32, boxShadow: "0 30px 60px -20px rgba(0,0,0,.35)" }}>
-        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 28, color: "#1B2A4E", margin: 0 }}>Redefinir senha</h1>
-        <p style={{ color: "#5B6B82", fontSize: 14, marginTop: 6, marginBottom: 22 }}>
+    <div className="rp-root">
+      <style>{rpCss}</style>
+      <a href="/auth" className="rp-logo" aria-label="AgilizaProf">
+        <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true">
+          <rect x="10" y="40" width="12" height="22" rx="5" fill="#F2604B" />
+          <rect x="20" y="40" width="10" height="22" fill="#3D8BFD" />
+          <rect x="30" y="40" width="40" height="22" fill="#0B7A55" />
+          <polygon points="70,40 92,51 70,62" fill="#FFB224" />
+          <polygon points="85,47.5 92,51 85,54.5" fill="#14161F" />
+          <line x1="14" y1="28" x2="44" y2="28" stroke="#14161F" strokeWidth="6" strokeLinecap="round" />
+          <line x1="6" y1="74" x2="32" y2="74" stroke="#14161F" strokeWidth="6" strokeLinecap="round" />
+        </svg>
+        <span>
+          Agiliza<b>Prof</b>
+        </span>
+      </a>
+      <div className="rp-card">
+        <h1>Redefinir senha</h1>
+        <p className="rp-sub" role="status">
           {invalidLink
-            ? "Link inválido ou expirado. Volte para o login e solicite um novo e-mail de recuperação."
+            ? "Este link é inválido ou já expirou. Volte para o login e peça um novo e-mail de recuperação."
             : ready
-              ? "Escolha uma nova senha forte para sua conta."
-              : "Validando link de recuperação..."}
+              ? "Escolha uma nova senha forte para a sua conta."
+              : "Validando o link de recuperação..."}
         </p>
+        {!ready && !invalidLink && <div className="rp-spin" aria-hidden="true" />}
         {invalidLink && (
-          <button onClick={() => navigate({ to: "/auth" })} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#FF7A45,#FF9466)", color: "#fff", fontWeight: 800, cursor: "pointer", width: "100%" }}>
+          <button type="button" className="rp-btn" onClick={() => navigate({ to: "/auth" })}>
             Voltar para o login
           </button>
         )}
         {ready && !invalidLink && (
-          <form onSubmit={submit} style={{ display: "grid", gap: 12 }}>
-            <input type="password" placeholder="Nova senha" value={password} onChange={(e) => setPassword(e.target.value)} minLength={10} required style={inp} autoComplete="new-password" />
+          <form onSubmit={submit} className="rp-form">
+            <label className="rp-label" htmlFor="rp-pw">
+              Nova senha
+            </label>
+            <div className="rp-field">
+              <input
+                id="rp-pw"
+                type={show ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={10}
+                required
+                autoComplete="new-password"
+              />
+              <button type="button" className="rp-eye" onClick={() => setShow((v) => !v)}>
+                {show ? "Ocultar" : "Mostrar"}
+              </button>
+            </div>
             {password.length > 0 && (
               <div>
-                <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
-                  {[0,1,2,3,4].map(i => (
-                    <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < score ? barColors[score] : "#E5E7EB" }} />
+                <div className="rp-bars">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div key={i} style={{ background: i < score ? barColors[lvl] : "#D6DBE5" }} />
                   ))}
                 </div>
-                <div style={{ fontSize: 11, color: barColors[score], fontWeight: 700, marginBottom: 6 }}>{barLabels[score]}</div>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, fontSize: 11.5, color: "#5B6B82", display: "grid", gap: 3 }}>
-                  <li style={{ color: checks.length ? "#10B981" : "#5B6B82" }}>{checks.length ? "✓" : "○"} Mínimo 10 caracteres</li>
-                  <li style={{ color: checks.upper ? "#10B981" : "#5B6B82" }}>{checks.upper ? "✓" : "○"} Letra maiúscula</li>
-                  <li style={{ color: checks.lower ? "#10B981" : "#5B6B82" }}>{checks.lower ? "✓" : "○"} Letra minúscula</li>
-                  <li style={{ color: checks.digit ? "#10B981" : "#5B6B82" }}>{checks.digit ? "✓" : "○"} Número</li>
-                  <li style={{ color: checks.special ? "#10B981" : "#5B6B82" }}>{checks.special ? "✓" : "○"} Caractere especial (!@#$...)</li>
+                <div className="rp-strength" style={{ color: barColors[lvl] }}>
+                  {barLabels[lvl]}
+                </div>
+                <ul className="rp-req">
+                  {req.map(([ok, t]) => (
+                    <li key={t} className={ok ? "ok" : ""}>
+                      {ok ? "✓" : "○"} {t}
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
-            <input type="password" placeholder="Confirme a nova senha" value={confirm} onChange={(e) => setConfirm(e.target.value)} minLength={8} required style={inp} />
-            <button type="submit" disabled={loading || !meets || password !== confirm} style={{ marginTop: 6, padding: "12px 16px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#FF7A45,#FF9466)", color: "#fff", fontWeight: 800, cursor: (loading || !meets || password !== confirm) ? "not-allowed" : "pointer", opacity: (loading || !meets || password !== confirm) ? .5 : 1 }}>
+            <label className="rp-label" htmlFor="rp-pw2">
+              Confirme a nova senha
+            </label>
+            <div className="rp-field">
+              <input
+                id="rp-pw2"
+                type={show ? "text" : "password"}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                minLength={10}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+            {confirm.length > 0 && password !== confirm && (
+              <p className="rp-err">As senhas ainda não são iguais.</p>
+            )}
+            <button type="submit" className="rp-btn" disabled={!canSubmit}>
               {loading ? "Salvando..." : "Salvar nova senha"}
             </button>
-            <p style={{ fontSize: 11, color: "#8A98AE", textAlign: "center", margin: "4px 0 0" }}>
-              Sua senha é verificada contra vazamentos conhecidos antes de ser aceita.
-            </p>
+            <p className="rp-foot">Sua senha é verificada contra vazamentos conhecidos antes de ser aceita.</p>
           </form>
         )}
       </div>
@@ -194,4 +277,29 @@ function ResetPasswordPage() {
   );
 }
 
-const inp: React.CSSProperties = { padding: "12px 14px", borderRadius: 10, border: "2px solid #DDE3EE", fontSize: 15, fontFamily: "inherit", outline: "none" };
+const rpCss = `
+.rp-root{min-height:100dvh;background:#EDF0F5;color:#14161F;font-family:'DM Sans',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px 16px}
+.rp-logo{display:flex;align-items:center;gap:10px;font-family:'Sora',system-ui,sans-serif;font-weight:800;font-size:24px;letter-spacing:-.03em;color:#14161F;text-decoration:none}
+.rp-logo b{color:#0B7A55}
+.rp-card{width:100%;max-width:440px;background:#fff;border:2px solid #14161F;border-radius:20px;box-shadow:5px 5px 0 #14161F;padding:28px}
+.rp-card h1{font-family:'Sora',system-ui,sans-serif;font-weight:800;font-size:28px;letter-spacing:-.03em;margin:0}
+.rp-sub{color:#596074;font-size:15px;margin:6px 0 20px}
+.rp-spin{width:28px;height:28px;border-radius:50%;border:3px solid #CDEFE2;border-top-color:#0B7A55;animation:rpspin .8s linear infinite}
+@keyframes rpspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.rp-spin{animation:none}}
+.rp-form{display:grid;gap:10px}
+.rp-label{font-weight:700;font-size:14px;margin-top:4px}
+.rp-field{display:flex;align-items:center;border:1.5px solid #D6DBE5;border-radius:12px;background:#fff}
+.rp-field:focus-within{border-color:#0B7A55;box-shadow:0 0 0 3px #CDEFE2}
+.rp-field input{flex:1;min-width:0;border:0;outline:0;background:transparent;padding:13px 14px;font:inherit;font-size:16px;color:#14161F}
+.rp-eye{border:0;background:none;color:#0B7A55;font-weight:700;font-size:13px;padding:0 14px;min-height:44px;cursor:pointer}
+.rp-bars{display:flex;gap:4px;margin:2px 0 6px}.rp-bars div{flex:1;height:5px;border-radius:3px}
+.rp-strength{font-size:12px;font-weight:700;margin-bottom:6px}
+.rp-req{list-style:none;padding:0;margin:0;display:grid;gap:3px;font-size:13px;color:#596074}
+.rp-req li.ok{color:#0B7A55;font-weight:600}
+.rp-err{color:#C2410C;font-size:13px;margin:0}
+.rp-btn{margin-top:8px;width:100%;min-height:50px;border-radius:14px;border:2px solid #14161F;box-shadow:3px 3px 0 #14161F;background:#0B7A55;color:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer}
+.rp-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.rp-btn:focus-visible,.rp-eye:focus-visible{outline:3px solid #FFB224;outline-offset:2px}
+.rp-foot{font-size:12px;color:#596074;text-align:center;margin:4px 0 0}
+`;

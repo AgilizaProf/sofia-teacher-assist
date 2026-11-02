@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Shield, ChevronDown } from "lucide-react";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
 import { Header as AppHeader } from "@/components/Header";
 import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
-import { ReferralCard } from "@/components/settings/ReferralCard";
+import { TurmasCard } from "@/components/settings/TurmasCard";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { PlanoCard } from "@/components/settings/PlanoCard";
 import { PromoCodeRedeem } from "@/components/PromoCodeRedeem";
 import { useReducedMotion, type ReducedMotionMode } from "@/hooks/useReducedMotion";
@@ -50,36 +50,42 @@ export function Configuracoes() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F4F6FB", color: "#1B2A4E", fontFamily: "'Inter',-apple-system,sans-serif" }}>
-      <style dangerouslySetInnerHTML={{ __html: sidebarCss }} />
+    <div className="pn" style={{ minHeight: "100vh", background: "#EDF0F5", color: "#14161F", fontFamily: "'DM Sans',-apple-system,sans-serif" }}>
+      <style>{tempoChipCss}</style>
       <style>{`
-        .cfg-grid { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
-        .cfg-pad { padding: 24px 36px 0; width: 100%; max-width: 100%; }
-        .cfg-pad-b { padding: 16px 36px 32px; width: 100%; max-width: 100%; }
+        .cfg-grid { display: block; min-height: 100vh; }
+        .cfg-pad { padding: 22px 24px 0; width: 100%; max-width: 1100px; margin: 0 auto; }
+        .cfg-pad-b { padding: 18px 24px 120px; width: 100%; max-width: 1100px; margin: 0 auto; }
+        .cfg-h1 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -.045em; line-height: 1.1; margin: 14px 0 0; }
+        .cfg-pad-b section, .cfg-pad-b > div > section { border-color: #D6DBE5 !important; border-width: 1.5px !important; border-radius: 16px !important; box-shadow: none !important; min-width: 0; }
+        .cfg-pad-b h2 { letter-spacing: -.03em; }
+        @media (max-width: 860px) { .cfg-h1 { font-size: 28px; } }
         @media (max-width: 900px) {
           .cfg-grid { grid-template-columns: 1fr; }
-          .cfg-pad { padding: 20px 20px 0; }
-          .cfg-pad-b { padding: 14px 20px 28px; }
+          .cfg-pad { padding: 16px 16px 0; }
+          .cfg-pad-b { padding: 14px 16px 120px; }
         }
         @media (max-width: 560px) {
-          .cfg-pad { padding: 16px 14px 0; }
-          .cfg-pad-b { padding: 12px 14px 24px; }
+          .cfg-pad { padding: 16px 16px 0; }
+          .cfg-pad-b { padding: 12px 16px 120px; }
           .cfg-section { padding: 18px !important; }
         }
       `}</style>
       <div className="cfg-grid">
-        <AppSidebar active="settings" />
         <main style={{ width: "100%", minWidth: 0 }}>
           <AppHeader />
           <div className="cfg-pad">
-            <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 700, margin: 0 }}>Configurações</h1>
-            <p style={{ color: "#6B7691", fontSize: 14, marginTop: 4 }}>Ajustes da sua conta e princípios da Sofia.</p>
+            <div className="pn-strip">
+              <TempoChip />
+            </div>
+            <h1 className="cfg-h1">Configurações</h1>
+            <p style={{ color: "#596074", fontSize: 14.5, marginTop: 4 }}>Sua conta, suas turmas, plano, acessibilidade e os princípios da Sofia.</p>
           </div>
           <div className="cfg-pad-b">
 
           <section className="cfg-section" aria-labelledby="perfil-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-              <h2 id="perfil-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
+              <h2 id="perfil-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
                 👤 Meu perfil
               </h2>
             </div>
@@ -89,18 +95,16 @@ export function Configuracoes() {
             <ProfileEditor />
           </section>
 
+          <TurmasCard />
+
           <PlanoCard />
 
           <PromoCodeRedeem />
 
-          <section id="convide" aria-labelledby="indique-title" style={{ marginBottom: 18, scrollMarginTop: 80 }}>
-            <h2 id="indique-title" style={{ position: "absolute", left: -9999 }}>Programa de indicação</h2>
-            <ReferralCard />
-          </section>
 
           <section className="cfg-section" aria-labelledby="acessibilidade-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-              <h2 id="acessibilidade-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
+              <h2 id="acessibilidade-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
                 ♿ Acessibilidade
               </h2>
               <button
@@ -110,9 +114,9 @@ export function Configuracoes() {
                 aria-controls="a11y-content"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  background: a11yOpen ? "#FF7A45" : "transparent",
-                  color: a11yOpen ? "#fff" : "#FF7A45",
-                  border: "1px solid #FF7A45",
+                  background: a11yOpen ? "#0B7A55" : "transparent",
+                  color: a11yOpen ? "#fff" : "#0B7A55",
+                  border: "1px solid #0B7A55",
                   padding: "6px 10px", borderRadius: 8, fontWeight: 600, fontSize: 12,
                   cursor: "pointer", whiteSpace: "nowrap",
                 }}
@@ -129,13 +133,13 @@ export function Configuracoes() {
 
                 {/* Tamanho do texto */}
                 <div role="radiogroup" aria-label="Tamanho do texto" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Tamanho do texto</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#14161F" }}>Tamanho do texto</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
                     {FS_OPTS.map((opt) => {
                       const on = fsMode === opt.v;
                       return (
                         <button key={opt.v} type="button" role="radio" aria-checked={on} onClick={() => setFsMode(opt.v)}
-                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0", background: on ? "#FFF1E8" : "#fff", color: "#1B2A4E", cursor: "pointer" }}>
+                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #0B7A55" : "1px solid #E4E8F0", background: on ? "#E8F6EF" : "#fff", color: "#14161F", cursor: "pointer" }}>
                           <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
                           <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
                         </button>
@@ -146,13 +150,13 @@ export function Configuracoes() {
 
                 {/* Alto contraste */}
                 <div role="radiogroup" aria-label="Alto contraste" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Alto contraste</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#14161F" }}>Alto contraste</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
                     {HC_OPTS.map((opt) => {
                       const on = hcMode === opt.v;
                       return (
                         <button key={opt.v} type="button" role="radio" aria-checked={on} onClick={() => setHcMode(opt.v)}
-                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0", background: on ? "#FFF1E8" : "#fff", color: "#1B2A4E", cursor: "pointer" }}>
+                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #0B7A55" : "1px solid #E4E8F0", background: on ? "#E8F6EF" : "#fff", color: "#14161F", cursor: "pointer" }}>
                           <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
                           <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
                         </button>
@@ -163,13 +167,13 @@ export function Configuracoes() {
 
                 {/* Reduzir movimento */}
                 <div role="radiogroup" aria-label="Reduzir movimento" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Reduzir movimento</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#14161F" }}>Reduzir movimento</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
                     {RM_OPTS.map((opt) => {
                       const on = rmMode === opt.v;
                       return (
                         <button key={opt.v} type="button" role="radio" aria-checked={on} onClick={() => setRmMode(opt.v)}
-                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0", background: on ? "#FFF1E8" : "#fff", color: "#1B2A4E", cursor: "pointer" }}>
+                          style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #0B7A55" : "1px solid #E4E8F0", background: on ? "#E8F6EF" : "#fff", color: "#14161F", cursor: "pointer" }}>
                           <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
                           <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
                         </button>
@@ -182,14 +186,14 @@ export function Configuracoes() {
 </section>
 
           <section className="cfg-section" aria-labelledby="sofia-cards-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
-            <h2 id="sofia-cards-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: "0 0 4px" }}>
+            <h2 id="sofia-cards-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: "0 0 4px" }}>
               ✨ Cartões da Sofia
             </h2>
             <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 16px" }}>
               Controle os cartões de boas-vindas e dicas que a Sofia mostra ao navegar entre as páginas. Isso não afeta o chat, as sugestões nem a geração de conteúdo — a Sofia continua funcionando normalmente.
             </p>
             <div role="radiogroup" aria-label="Mostrar cartões da Sofia ao navegar" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#1B2A4E" }}>Mostrar cartões da Sofia ao navegar</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#14161F" }}>Mostrar cartões da Sofia ao navegar</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 10 }}>
                 {([
                   { v: "on" as const, label: "Mostrar", desc: "Exibe os cartões de boas-vindas e dicas da Sofia." },
@@ -198,7 +202,7 @@ export function Configuracoes() {
                   const on = sofiaTips === opt.v;
                   return (
                     <button key={opt.v} type="button" role="radio" aria-checked={on} onClick={() => setSofiaTips(opt.v)}
-                      style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #FF7A45" : "1px solid #E4E8F0", background: on ? "#FFF1E8" : "#fff", color: "#1B2A4E", cursor: "pointer" }}>
+                      style={{ textAlign: "left", padding: "12px 14px", borderRadius: 10, border: on ? "2px solid #0B7A55" : "1px solid #E4E8F0", background: on ? "#E8F6EF" : "#fff", color: "#14161F", cursor: "pointer" }}>
                       <div style={{ fontSize: 13, fontWeight: 700 }}>{opt.label}</div>
                       <div style={{ fontSize: 12, color: "#6B7691", marginTop: 2 }}>{opt.desc}</div>
                     </button>
@@ -210,7 +214,7 @@ export function Configuracoes() {
 
           <section className="cfg-section" aria-labelledby="curriculo-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <h2 id="curriculo-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
+              <h2 id="curriculo-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
                 🏫 Currículo Municipal
               </h2>
             </div>
@@ -222,8 +226,8 @@ export function Configuracoes() {
 
           <section className="cfg-section" aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <Shield size={20} color="#FF7A45" />
-              <h2 id="principios-title" style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
+              <Shield size={20} color="#0B7A55" />
+              <h2 id="principios-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
                 🛡️ Princípios da Sofia
               </h2>
               <button
@@ -233,9 +237,9 @@ export function Configuracoes() {
                 aria-controls="principios-content"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  background: principlesOpen ? "#FF7A45" : "transparent",
-                  color: principlesOpen ? "#fff" : "#FF7A45",
-                  border: "1px solid #FF7A45",
+                  background: principlesOpen ? "#0B7A55" : "transparent",
+                  color: principlesOpen ? "#fff" : "#0B7A55",
+                  border: "1px solid #0B7A55",
                   padding: "6px 10px", borderRadius: 8, fontWeight: 600, fontSize: 12,
                   cursor: "pointer", whiteSpace: "nowrap",
                 }}
@@ -250,9 +254,9 @@ export function Configuracoes() {
             <div
               role="status"
               style={{
-                background: "#FFF1E8",
-                border: "1px solid #FED7AA",
-                color: "#7C2D12",
+                background: "#E8F6EF",
+                border: "1px solid #CDEFE2",
+                color: "#064E36",
                 borderRadius: 10,
                 padding: "10px 14px",
                 fontSize: 13,

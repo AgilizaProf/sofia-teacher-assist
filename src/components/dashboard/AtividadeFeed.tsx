@@ -13,7 +13,7 @@ const VISIBLE_LIMIT = 6;
 const ICON_BY_TYPE: Record<ActivityType, { Icon: typeof FileText; color: string; label: string }> = {
   parecer: { Icon: FileText, color: "#8B5CF6", label: "Parecer" },
   planejamento: { Icon: CalendarCheck2, color: "#10B981", label: "Planejamento" },
-  adaptacao: { Icon: Sparkles, color: "#F97316", label: "Adaptação" },
+  adaptacao: { Icon: Sparkles, color: "#0B7A55", label: "Adaptação" },
   aluno: { Icon: UserPlus, color: "#0EA5E9", label: "Aluno" },
   exportacao: { Icon: Download, color: "#64748B", label: "Exportação" },
 };

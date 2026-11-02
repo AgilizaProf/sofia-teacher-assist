@@ -1,12 +1,13 @@
+import { PainelNav } from "@/components/painel/PainelNav";
 import React from "react";
 
-const NAVY = "#1a2744";
+const NAVY = "#0B7A55";
 const BORDER = "#d4d4d4";
 const LIGHT_BG = "#f7f5f0";
 const MUTED = "#6b6b6b";
 
-const serif = "'Fraunces', 'Playfair Display', Georgia, serif";
-const sans = "'Inter', Arial, sans-serif";
+const serif = "'Sora', 'Playfair Display', Georgia, serif";
+const sans = "'DM Sans', Arial, sans-serif";
 
 type FieldProps = { label: string; minHeight?: number };
 const Field: React.FC<FieldProps> = ({ label, minHeight = 32 }) => (
@@ -98,7 +99,9 @@ const Signature: React.FC<{ role: string }> = ({ role }) => (
 
 export const RelatorioPedagogico: React.FC = () => {
   return (
-    <div className="rel-pedag-root" style={{ background: "#e9e9ec", minHeight: "100vh", padding: "24px 0", overflowX: "auto" }}>
+    <div className="rel-pedag-root" style={{ background: "#EDF0F5", minHeight: "100vh", padding: "0 0 24px", overflowX: "auto" }}>
+      <PainelNav />
+      <div style={{ height: 24 }} />
       <div
         className="rel-pedag-page"
         style={{
@@ -305,7 +308,11 @@ export const RelatorioPedagogico: React.FC = () => {
           @page { size: A4; margin: 0; }
         }
         @media (max-width: 820px){
-          .rel-pedag-root{-webkit-overflow-scrolling:touch;padding:12px 0 !important;}
+          .rel-pedag-root{-webkit-overflow-scrolling:touch;padding:0 0 110px !important;overflow-x:hidden !important;}
+          .rel-pedag-page{width:auto !important;max-width:794px;margin:12px !important;}
+          .rel-pedag-page *{max-width:100%;overflow-wrap:break-word;}
+          .rel-pedag-page h1{font-size:30px !important;line-height:1.1 !important;}
+          .rel-pedag-page h2{font-size:20px !important;}
         }
         @media (max-width: 480px){
           .rel-pedag-page input,.rel-pedag-page textarea,.rel-pedag-page select{font-size:16px !important;}

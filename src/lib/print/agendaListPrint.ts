@@ -82,13 +82,13 @@ export function imprimirListaAgenda(
       h1{font-size:20px;margin:0 0 4px}
       .sub{color:#555;font-size:12px;margin-bottom:18px}
       .day{margin:0 0 18px;page-break-inside:avoid}
-      .day h2{font-size:14px;margin:0 0 6px;color:#1B2A4E;border-bottom:2px solid #1B2A4E;padding-bottom:4px}
+      .day h2{font-size:14px;margin:0 0 6px;color:#14161F;border-bottom:2px solid #14161F;padding-bottom:4px}
       table{width:100%;border-collapse:collapse;font-size:12px}
       th,td{text-align:left;vertical-align:top;padding:6px 8px;border-bottom:1px solid #e5e7eb}
       th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;background:#f9fafb}
       td.t,th.t{width:90px;white-space:nowrap;font-variant-numeric:tabular-nums}
       .title{font-weight:600}
-      .type{font-size:11px;color:#FF7A45;margin-top:2px}
+      .type{font-size:11px;color:#0B7A55;margin-top:2px}
       .notes{font-size:11px;color:#374151;margin-top:4px;white-space:pre-wrap}
       .empty{color:#6b7280;font-size:12px;font-style:italic}
       @page{size:A4;margin:14mm}

@@ -49,7 +49,7 @@ export function PromoCodeRedeem() {
     >
       <h2
         id="cupom-title"
-        style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, margin: "0 0 4px" }}
+        style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: "0 0 4px" }}
       >
         Código de desconto
       </h2>
@@ -88,7 +88,7 @@ export function PromoCodeRedeem() {
             padding: "10px 18px",
             borderRadius: 10,
             border: "none",
-            background: "#FF7A45",
+            background: "#0B7A55",
             color: "#fff",
             fontWeight: 600,
             fontSize: 14,
@@ -126,7 +126,7 @@ export function PromoCodeRedeem() {
                   textAlign: "center",
                   padding: "11px 14px",
                   borderRadius: 10,
-                  background: "#1B2A4E",
+                  background: "#14161F",
                   color: "#fff",
                   fontWeight: 600,
                   fontSize: 14,
@@ -146,7 +146,7 @@ export function PromoCodeRedeem() {
                   textAlign: "center",
                   padding: "11px 14px",
                   borderRadius: 10,
-                  background: "#FF7A45",
+                  background: "#0B7A55",
                   color: "#fff",
                   fontWeight: 600,
                   fontSize: 14,

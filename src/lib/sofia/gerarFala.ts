@@ -60,7 +60,7 @@ export function gerarFalaSofia(ctx: SofiaContext): FalaSofia {
         { label: "1 turma", intent: "onboarding_turmas:1" },
         { label: "2-3 turmas", intent: "onboarding_turmas:2-3" },
         { label: "4 ou mais", intent: "onboarding_turmas:4+" },
-        { label: "Cadastrar do zero", intent: "abrir_cadastro_turma", to: "/minha-sala" },
+        { label: "Cadastrar do zero", intent: "abrir_cadastro_turma", to: "/configuracoes" },
       ],
       contexto_chip: null,
     };

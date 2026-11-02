@@ -6,7 +6,9 @@ import { useSofiaOptional } from "@/components/sofia/SofiaProvider";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useTurmas } from "@/hooks/useTurmas";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
-import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
+import { TempoChip } from "@/components/painel/TempoChip";
+import { InstalarApp } from "@/components/painel/InstalarApp";
+import { useInstalarApp } from "@/lib/pwa/useInstalarApp";
 import { useCreditos } from "@/lib/creditos/useCreditos";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
 import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav";
@@ -14,18 +16,6 @@ import { trackEvent } from "@/lib/tracking";
 
 // Página inicial no visual "Painel": contador pequeno no topo, caixa para
 // escrever para a Sofia, currículo da rede e os cards de todas as funções.
-
-const TIERS = [
-  { max: 3, name: "Semente" },
-  { max: 7, name: "Manhã livre" },
-  { max: 19, name: "Dia inteiro" },
-  { max: 39, name: "Rotina leve" },
-  { max: 79, name: "Semana extra" },
-  { max: 129, name: "Vida de volta" },
-  { max: 199, name: "Mais leveza" },
-  { max: 499, name: "Extraordinário" },
-  { max: Infinity, name: "Lendário" },
-];
 
 type Card = { to?: string; title: string; desc: string; bg: string; icon: ReactNode; tag?: string };
 
@@ -76,11 +66,17 @@ const CARDS: Card[] = [
     icon: ICONS.users,
   },
   {
-    to: "/minha-sala",
-    title: "Minha sala",
-    desc: "Escolas, turmas e alunos",
-    bg: "var(--pn-blue-soft)",
-    icon: ICONS.users,
+    to: "/indicacoes",
+    title: "Indique e ganhe",
+    desc: "Convide colegas e ganhe créditos e meses grátis",
+    bg: "var(--pn-sun)",
+    icon: (
+      <>
+        <rect x="3" y="8" width="18" height="4" rx="1" />
+        <path d="M12 8v13M19 12v9H5v-9" />
+        <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
+      </>
+    ),
   },
   {
     to: "/agenda",
@@ -91,7 +87,7 @@ const CARDS: Card[] = [
   },
   {
     to: "/jogos",
-    title: "Jogos 2D",
+    title: "Jogos e atividades interativas",
     desc: "Jogos para criar a partir da aula e jogar com a turma",
     bg: "var(--pn-cream)",
     icon: (
@@ -128,7 +124,8 @@ const css = `
 .hm-wrap{max-width:1040px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));}
 .hm-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .hm-chip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 6px;border-radius:10px;text-decoration:none;color:var(--pn-ink);font-size:13.5px;font-weight:600;white-space:nowrap;}
-.hm-time{background:var(--pn-green-soft);border:1.5px solid var(--pn-green);}
+.hm-time{background:var(--pn-green-soft);border:1.5px solid var(--pn-green);font-family:inherit;cursor:pointer;}
+.hm-time:hover{background:#B9E6D3;}
 .hm-time .ic{width:24px;height:24px;border-radius:7px;background:var(--pn-green);color:#fff;display:flex;align-items:center;justify-content:center;}
 .hm-time .ic svg{width:14px;height:14px;}
 .hm-time b{font-family:var(--pn-display);font-variant-numeric:tabular-nums;}
@@ -158,7 +155,11 @@ select.hm-pill{cursor:pointer;padding-right:6px;}
 .hm-sugs button{height:36px;padding:0 12px;border-radius:8px;border:1.5px solid var(--pn-line);background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--pn-ink);cursor:pointer;}
 .hm-sugs button:hover{border-color:var(--pn-ink);}
 
-.hm-curr{margin-top:14px;display:flex;align-items:center;gap:14px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
+.hm-app{margin-top:16px;display:inline-flex;align-items:center;gap:6px;padding:4px 2px;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--pn-green);text-decoration:underline;text-underline-offset:3px;}
+.hm-app svg{width:16px;height:16px;}
+.hm-app + .hm-curr,.hm-app ~ .hm-curr{margin-top:14px;}
+.hm-curr{margin-top:26px;display:flex;align-items:center;gap:14px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
 .hm-badge{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--pn-ink);}
 .hm-badge svg{width:22px;height:22px;}
 .hm-curr-txt{flex:1;min-width:220px;}
@@ -267,9 +268,10 @@ export function Home() {
   const sofia = useSofiaOptional();
   const { turmas } = useTurmas();
   const { curriculos, load: reloadCurriculos } = useCurriculoMunicipal();
-  const { minutos } = useTempoEconomizado();
   const cred = useCreditos();
 
+  const [baixar, setBaixar] = useState(false);
+  const app = useInstalarApp();
   const [texto, setTexto] = useState("");
   const [turmaId, setTurmaId] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
@@ -293,9 +295,6 @@ export function Home() {
 
   const primeiro = (ctx.user?.primeiro_nome || "").trim();
   const nome = primeiro && primeiro !== "Educador(a)" ? primeiro : "";
-  const horas = Math.floor(minutos / 60);
-  const mins = minutos % 60;
-  const nivel = TIERS.find((t) => horas <= t.max)?.name ?? "Semente";
   const credPct = cred.totais > 0 ? Math.round((cred.disponiveis / cred.totais) * 100) : 0;
   const turma = turmas.find((t) => t.id === turmaId);
   const padrao = useMemo(
@@ -350,27 +349,7 @@ export function Home() {
       <PainelNav />
       <main className="hm-wrap">
         <div className="hm-strip">
-          <Link
-            to="/minha-sala"
-            className="hm-chip hm-time"
-            title="Tempo que a plataforma já te devolveu"
-          >
-            <span className="ic">
-              <Svg w={2.5}>
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </Svg>
-            </span>
-            <span>
-              <span className="lbl">Tempo devolvido a você </span>
-              <b suppressHydrationWarning>
-                {horas}h {String(mins).padStart(2, "0")}min
-              </b>
-            </span>
-            <span className="lvl" suppressHydrationWarning>
-              {nivel}
-            </span>
-          </Link>
+          <TempoChip className="hm-chip hm-time" />
           {!cred.loading && cred.totais > 0 && (
             <Link to="/configuracoes" className="hm-chip hm-cred" title="Créditos disponíveis">
               Créditos
@@ -491,43 +470,6 @@ export function Home() {
           </div>
         </section>
 
-        <section className="hm-curr" aria-labelledby="hm-curr-h">
-          <span className="hm-badge" style={{ background: "var(--pn-blue-soft)" }}>
-            <Svg>
-              <path d="M3 21h18" />
-              <path d="M5 21V10l7-5 7 5v11" />
-              <path d="M10 21v-5h4v5" />
-            </Svg>
-          </span>
-          <div className="hm-curr-txt">
-            <b id="hm-curr-h">Currículo da sua rede</b>
-            <span>
-              Com o currículo ativo, a Sofia troca os códigos da BNCC pelos do seu município nos
-              planos, relatórios e pareceres.
-            </span>
-          </div>
-          {curriculos.map((c) => (
-            <span
-              key={c.id}
-              className={
-                "hm-slot" +
-                (c.status === "processando" ? " proc" : c.status === "erro" ? " err" : "")
-              }
-            >
-              {c.municipio || c.arquivo_nome}
-              {c.status === "processando" ? " · processando" : c.status === "erro" ? " · erro" : ""}
-              {c.eh_padrao && c.status === "ativo" && <em>Padrão</em>}
-            </span>
-          ))}
-          <button type="button" className="hm-add" onClick={() => setModalCurr(true)}>
-            {curriculos.length === 0
-              ? "+ Anexar currículo (PDF)"
-              : curriculos.length < 2
-                ? "+ Anexar outro currículo (PDF)"
-                : "Gerenciar currículos"}
-          </button>
-        </section>
-
         <div className="hm-sec">
           <h2>Suas ferramentas</h2>
           <span>{CARDS.length} funções</span>
@@ -568,6 +510,57 @@ export function Home() {
             );
           })}
         </nav>
+
+        {!app.instalado && (
+          <button
+            type="button"
+            className="hm-app"
+            onClick={async () => {
+              if (!(app.podeInstalarDireto && (await app.instalar()))) setBaixar(true);
+            }}
+          >
+            <Svg>{ICONS.phone}</Svg>
+            Baixar o app no celular
+          </button>
+        )}
+        {baixar && <InstalarApp onClose={() => setBaixar(false)} />}
+
+        <section className="hm-curr" aria-labelledby="hm-curr-h">
+          <span className="hm-badge" style={{ background: "var(--pn-blue-soft)" }}>
+            <Svg>
+              <path d="M3 21h18" />
+              <path d="M5 21V10l7-5 7 5v11" />
+              <path d="M10 21v-5h4v5" />
+            </Svg>
+          </span>
+          <div className="hm-curr-txt">
+            <b id="hm-curr-h">Currículo da sua rede</b>
+            <span>
+              Com o currículo ativo, a Sofia troca os códigos da BNCC pelos do seu município nos
+              planos, relatórios e pareceres.
+            </span>
+          </div>
+          {curriculos.map((c) => (
+            <span
+              key={c.id}
+              className={
+                "hm-slot" +
+                (c.status === "processando" ? " proc" : c.status === "erro" ? " err" : "")
+              }
+            >
+              {c.municipio || c.arquivo_nome}
+              {c.status === "processando" ? " · processando" : c.status === "erro" ? " · erro" : ""}
+              {c.eh_padrao && c.status === "ativo" && <em>Padrão</em>}
+            </span>
+          ))}
+          <button type="button" className="hm-add" onClick={() => setModalCurr(true)}>
+            {curriculos.length === 0
+              ? "+ Anexar currículo (PDF)"
+              : curriculos.length < 2
+                ? "+ Anexar outro currículo (PDF)"
+                : "Gerenciar currículos"}
+          </button>
+        </section>
       </main>
 
       {modalCurr && (

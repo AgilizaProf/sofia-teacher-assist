@@ -36,16 +36,16 @@ const css = `
 .pl-m2-add{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#FAFBFD;display:grid;grid-template-columns:90px 150px minmax(0,1fr);gap:8px;align-items:center;}
 @media(max-width:640px){.pl-m2-add{grid-template-columns:1fr;}}
 .pl-root{
-  --primary:#1B2A4E;--primary-dark:#0F1B36;
-  --navy:#1B2A4E;--navy-2:#243762;--navy-deep:#0F1A36;--navy-darker:#0A1228;
-  --orange:#FF7A45;--orange-2:#F26B36;--orange-soft:rgba(255,122,69,.12);--orange-soft-2:rgba(255,122,69,.20);
+  --primary:#14161F;--primary-dark:#14161F;
+  --navy:#14161F;--navy-2:#243762;--navy-deep:#0F1A36;--navy-darker:#0A1228;
+  --orange:#0B7A55;--orange-2:#096746;--orange-soft:rgba(11,122,85,.12);--orange-soft-2:rgba(11,122,85,.20);
   --ink:#0F172A;--ink-2:#334155;--muted:#64748B;--line:#E2E8F0;--bg:#F6F7FB;
   --green:#10B981;--amber:#F59E0B;--red:#EF4444;
   --shadow-sm:0 1px 2px rgba(15,23,42,.06);--shadow-md:0 6px 18px rgba(15,23,42,.08);--shadow-lg:0 18px 40px rgba(15,23,42,.18);
-  font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh;
+  font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh;
 }
 .pl-root *{box-sizing:border-box;}
-.pl-root h1,.pl-root h2,.pl-root h3,.pl-root h4{font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0;color:var(--ink);}
+.pl-root h1,.pl-root h2,.pl-root h3,.pl-root h4{font-family:'Sora',Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0;color:var(--ink);}
 .pl-root :where(button){font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
 .pl-root p{margin:0;}
 
@@ -62,8 +62,8 @@ const css = `
 .pl-top-meta .av{width:28px;height:28px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-weight:600;font-size:11px;}
 
 .pl-hero{margin:18px 24px 0;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);border-radius:16px;padding:24px 28px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--shadow-md);}
-.pl-hero::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(255,122,69,.18) 0%,rgba(255,122,69,0) 70%);pointer-events:none;}
-.pl-hero .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,122,69,.15);border:1px solid rgba(255,122,69,.3);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;color:var(--orange);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.pl-hero::after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(11,122,85,.18) 0%,rgba(11,122,85,0) 70%);pointer-events:none;}
+.pl-hero .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(11,122,85,.15);border:1px solid rgba(11,122,85,.3);padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;color:var(--orange);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
 .pl-hero h1{font-size:30px;font-weight:600;color:#fff;margin-top:14px;line-height:1.15;letter-spacing:-.02em;}
 .pl-hero h1 em{color:var(--orange);font-style:normal;display:block;}
 .pl-hero .lead{margin-top:10px;color:#CBD5E1;font-size:14px;line-height:1.55;max-width:780px;}
@@ -81,13 +81,13 @@ const css = `
 .pl-tab .lbl{min-width:0;flex:1 1 auto;color:#fff !important;overflow:hidden;text-overflow:ellipsis;}
 .pl-tab .num{flex:0 0 auto;display:inline-grid;place-items:center;padding:2px 6px;border-radius:5px;background:var(--orange);color:#fff !important;font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;}
 .pl-tab:hover{background:rgba(255,255,255,.08);color:#fff;}
-.pl-tab.active{background:linear-gradient(135deg,var(--orange),#FF9466);color:#fff;box-shadow:0 4px 10px rgba(255,122,69,.35);}
+.pl-tab.active{background:linear-gradient(135deg,var(--orange),#0B7A55);color:#fff;box-shadow:0 4px 10px rgba(11,122,85,.35);}
 .pl-tab.active .num{background:rgba(255,255,255,.22);color:#fff;}
 
 .pl-workspace{padding:18px 24px 100px;display:grid;grid-template-columns:1fr;gap:18px;}
 .pl-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
 .pl-tools h2{font-size:18px;color:var(--ink);font-weight:600;}
-.pl-tools h2 small{color:var(--muted);font-weight:400;font-family:'Inter';font-size:12.5px;margin-left:6px;}
+.pl-tools h2 small{color:var(--muted);font-weight:400;font-family:'DM Sans';font-size:12.5px;margin-left:6px;}
 .pl-tools .right{display:flex;gap:8px;flex-wrap:wrap;}
 .pl-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:9px;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);transition:.15s;box-shadow:var(--shadow-sm);cursor:pointer;}
 .pl-btn:hover{border-color:#CBD5E1;background:#FBFBFD;transform:translateY(-1px);}
@@ -108,7 +108,7 @@ const css = `
 .pl-day.drop{border-color:var(--orange);background:var(--orange-soft);border-style:solid;box-shadow:inset 0 0 0 2px var(--orange-soft-2);}
 .pl-day-head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 8px;border-bottom:1px solid var(--line);}
 .pl-day-head .dn{font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
-.pl-day-head .dd{font-family:'Fraunces',serif;font-size:18px;color:var(--ink);font-weight:600;}
+.pl-day-head .dd{font-family:'Sora',serif;font-size:18px;color:var(--ink);font-weight:600;}
 .pl-day-head .add{width:22px;height:22px;border-radius:6px;color:var(--muted);display:grid;place-items:center;cursor:pointer;}
 .pl-day-head .add:hover{background:#fff;color:var(--orange);box-shadow:var(--shadow-sm);}
 
@@ -142,8 +142,8 @@ const css = `
 
 .pl-side{display:flex;flex-direction:column;gap:14px;}
 .pl-panel{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;box-shadow:var(--shadow-sm);}
-.pl-panel.accent{background:linear-gradient(135deg,#FFF4ED 0%,#FFFAF7 100%);border-color:#FED7C4;}
-.pl-panel h3{font-size:14px;font-family:'Fraunces',serif;color:var(--ink);font-weight:600;display:flex;align-items:center;gap:7px;}
+.pl-panel.accent{background:linear-gradient(135deg,#F2FAF6 0%,#F7FBF9 100%);border-color:#CDEFE2;}
+.pl-panel h3{font-size:14px;font-family:'Sora',serif;color:var(--ink);font-weight:600;display:flex;align-items:center;gap:7px;}
 .pl-panel .lead{color:var(--muted);font-size:12px;margin:4px 0 12px;line-height:1.45;}
 .pl-panel .lead b{color:var(--ink);font-weight:600;}
 
@@ -184,7 +184,7 @@ const css = `
 .pl-cal-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow-sm);}
 .pl-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;}
 .pl-cal-head .nav{display:flex;align-items:center;gap:8px;}
-.pl-cal-head .month{font-family:'Fraunces',serif;font-size:17px;color:var(--ink);font-weight:600;}
+.pl-cal-head .month{font-family:'Sora',serif;font-size:17px;color:var(--ink);font-weight:600;}
 .pl-cal-head .nav button{width:28px;height:28px;border-radius:7px;color:var(--ink-2);background:var(--bg);cursor:pointer;display:grid;place-items:center;border:none;}
 .pl-cal-head .nav button:hover{background:#E2E8F0;}
 .pl-cal-head .stat{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
@@ -192,13 +192,13 @@ const css = `
 .pl-cal-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;table-layout:fixed;width:100%;}
 @media(max-width:1100px){.pl-cal-grid{grid-template-columns:repeat(5,minmax(140px,1fr));overflow-x:auto;}}
 .pl-cal-day{background:#FAFBFD;border:1px solid var(--line);border-radius:11px;padding:10px;min-height:240px;display:flex;flex-direction:column;gap:6px;transition:.15s;cursor:pointer;position:relative;min-width:0;overflow:hidden;}
-.pl-cal-day:hover{border-color:var(--orange);box-shadow:0 4px 12px rgba(255,122,69,.08);}
-.pl-cal-day.has-ai{background:#fff;border-color:#FED7C4;}
+.pl-cal-day:hover{border-color:var(--orange);box-shadow:0 4px 12px rgba(11,122,85,.08);}
+.pl-cal-day.has-ai{background:#fff;border-color:#CDEFE2;}
 .pl-cal-day.has-ai::after{content:"✨";position:absolute;top:7px;right:7px;font-size:11px;opacity:.7;}
 .pl-cal-day.selected{border-color:var(--orange);background:#fff;box-shadow:0 0 0 2px var(--orange-soft-2);}
 .pl-cd-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:6px;}
 .pl-cd-head .dn{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
-.pl-cd-head .dd{font-family:'Fraunces',serif;font-size:16px;color:var(--ink);font-weight:600;}
+.pl-cd-head .dd{font-family:'Sora',serif;font-size:16px;color:var(--ink);font-weight:600;}
 .pl-cd-pill{font-size:9.5px;font-weight:600;padding:1px 6px;border-radius:5px;background:var(--orange-soft);color:var(--orange);letter-spacing:.04em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
 .pl-ai{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 8px 7px 11px;font-size:11px;position:relative;transition:.15s;cursor:pointer;min-width:0;overflow:hidden;}
 .pl-ai:hover{border-color:#CBD5E1;background:#FBFBFD;}
@@ -224,7 +224,7 @@ const css = `
 .pl-pill.on{background:var(--navy);color:#fff;border-color:var(--navy);}
 .pl-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
 .pl-stat-box{background:#FAFBFD;border:1px solid var(--line);border-radius:8px;padding:9px;}
-.pl-stat-box .v{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--ink);}
+.pl-stat-box .v{font-family:'Sora',serif;font-size:18px;font-weight:600;color:var(--ink);}
 .pl-stat-box .v.green{color:var(--green);}
 .pl-stat-box .v.orange{color:var(--orange);}
 .pl-stat-box .l{font-size:10.5px;color:var(--muted);margin-top:1px;}
@@ -254,14 +254,14 @@ const css = `
 .pl-step .ttl{font-size:14px;font-weight:600;color:var(--ink);margin:4px 0 4px;}
 .pl-step .meta{color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .pl-step .meta .pill{background:#fff;border:1px solid var(--line);padding:2px 7px;border-radius:5px;font-size:10.5px;color:var(--ink-2);font-family:'JetBrains Mono',monospace;}
-.pl-step.suggest .body{background:#FFF8F2;border-color:#FED7C4;border-style:dashed;}
+.pl-step.suggest .body{background:#F2FAF6;border-color:#CDEFE2;border-style:dashed;}
 .pl-step.suggest .ttl{color:var(--orange-2);}
 .pl-step.suggest .body::before{border-color:var(--orange);background:var(--orange);}
 .pl-step{transition:transform .18s ease, opacity .18s ease, background .18s ease;}
 .pl-step.dragging{opacity:.45;transform:scale(.98);}
-.pl-step.drop-target > .body{box-shadow:0 0 0 2px var(--orange), 0 8px 22px rgba(255,122,69,.22);border-color:var(--orange);background:#FFF4EC;}
+.pl-step.drop-target > .body{box-shadow:0 0 0 2px var(--orange), 0 8px 22px rgba(11,122,85,.22);border-color:var(--orange);background:#F2FAF6;}
 .pl-step.drop-target > .day{color:var(--orange);}
-.pl-drop-ph{grid-column:1 / -1;height:0;margin:0;border-radius:8px;background:linear-gradient(90deg,var(--orange-soft),rgba(255,122,69,.35),var(--orange-soft));box-shadow:0 0 0 2px var(--orange-soft) inset;animation:plPhIn .18s ease forwards;}
+.pl-drop-ph{grid-column:1 / -1;height:0;margin:0;border-radius:8px;background:linear-gradient(90deg,var(--orange-soft),rgba(11,122,85,.35),var(--orange-soft));box-shadow:0 0 0 2px var(--orange-soft) inset;animation:plPhIn .18s ease forwards;}
 @keyframes plPhIn{from{height:0;opacity:0;margin:0;}to{height:10px;opacity:1;margin:6px 0;}}
 
 /* M3 — chat */
@@ -269,14 +269,14 @@ const css = `
 @media(max-width:1200px){.pl-chat{grid-template-columns:1fr;}}
 .pl-chat-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-sm);}
 .pl-act-card{border:1px solid var(--line);border-radius:12px;padding:14px;background:#FAFBFD;}
-.pl-act-card h4{font-size:13px;font-family:'Fraunces',serif;color:var(--ink);margin-bottom:6px;}
+.pl-act-card h4{font-size:13px;font-family:'Sora',serif;color:var(--ink);margin-bottom:6px;}
 .pl-act-card .meta{color:var(--muted);font-size:11.5px;display:flex;gap:8px;}
 .pl-act-card .body{margin-top:10px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--ink-2);font-size:12.5px;line-height:1.55;}
 .pl-msg{display:flex;gap:10px;align-items:flex-start;}
 .pl-msg .av{width:28px;height:28px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0;}
 .pl-msg.user .av{background:var(--navy);}
 .pl-msg .bub{background:#FAFBFD;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--ink);max-width:85%;}
-.pl-msg.user .bub{background:var(--orange-soft);border-color:#FED7C4;}
+.pl-msg.user .bub{background:var(--orange-soft);border-color:#CDEFE2;}
 .pl-chat-input{display:flex;gap:8px;border:1px solid var(--line);border-radius:11px;padding:6px 6px 6px 12px;background:#fff;}
 .pl-chat-input input{flex:1;border:none;outline:none;font-family:inherit;font-size:13px;color:var(--ink);background:transparent;}
 .pl-chat-input button{background:var(--orange);color:#fff;border-radius:8px;padding:7px 12px;font-weight:600;font-size:12px;display:inline-flex;gap:5px;align-items:center;}
@@ -305,15 +305,15 @@ const css = `
 .pl-mood button:hover{border-color:#CBD5E1;}
 .pl-mood button.ok.on{background:#DCFCE7;border-color:#86EFAC;color:#15803D;}
 .pl-mood button.warn.on{background:#FEF3C7;border-color:#FCD34D;color:#92400E;}
-.pl-mood button.next.on{background:var(--orange-soft);border-color:#FED7C4;color:var(--orange-2);}
-.pl-learnt{padding:12px 14px;background:linear-gradient(135deg,#FFF4ED,#FFFAF7);border:1px solid #FED7C4;border-radius:12px;font-size:12.5px;color:#7A2E0A;line-height:1.5;display:flex;gap:10px;align-items:flex-start;}
+.pl-mood button.next.on{background:var(--orange-soft);border-color:#CDEFE2;color:var(--orange-2);}
+.pl-learnt{padding:12px 14px;background:linear-gradient(135deg,#F2FAF6,#F7FBF9);border:1px solid #CDEFE2;border-radius:12px;font-size:12.5px;color:#064E36;line-height:1.5;display:flex;gap:10px;align-items:flex-start;}
 .pl-d6{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;}
 @media(max-width:1100px){.pl-d6{grid-template-columns:1fr;}}
 .pl-d6-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);}
 .pl-d6-emojis{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px;}
 .pl-d6-emojis button{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:22px;cursor:pointer;transition:all .18s;}
 .pl-d6-emojis button:hover{transform:translateY(-2px);}
-.pl-d6-emojis button.on{background:var(--orange-soft);border-color:var(--orange);transform:scale(1.08);box-shadow:0 6px 18px rgba(249,115,22,.25);}
+.pl-d6-emojis button.on{background:var(--orange-soft);border-color:var(--orange);transform:scale(1.08);box-shadow:0 6px 18px rgba(11,122,85,.25);}
 .pl-d6-tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;}
 .pl-d6-tags button{padding:6px 10px;border-radius:99px;border:1px solid var(--line);background:#fff;font-size:11.5px;cursor:pointer;color:var(--muted);font-weight:600;}
 .pl-d6-tags button.on{background:var(--navy,#0F172A);color:#fff;border-color:var(--navy,#0F172A);}
@@ -325,8 +325,8 @@ const css = `
 .pl-d6-entry .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
 .pl-d6-entry .chips span{padding:3px 8px;border-radius:99px;background:rgba(15,23,42,.06);font-size:10.5px;color:var(--ink);font-weight:600;}
 .pl-d6-progress{height:8px;background:#F1F5F9;border-radius:99px;overflow:hidden;margin-top:6px;}
-.pl-d6-progress > div{height:100%;background:linear-gradient(90deg,var(--orange),#FB923C);transition:width .4s;}
-.pl-d6-pattern{padding:14px;border-radius:12px;background:linear-gradient(135deg,#FFF4ED,#FFFAF7);border:1px dashed var(--orange);margin-bottom:12px;}
+.pl-d6-progress > div{height:100%;background:linear-gradient(90deg,var(--orange),#0B7A55);transition:width .4s;}
+.pl-d6-pattern{padding:14px;border-radius:12px;background:linear-gradient(135deg,#F2FAF6,#F7FBF9);border:1px dashed var(--orange);margin-bottom:12px;}
 @keyframes fade-in{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
 @media (prefers-reduced-motion: reduce){
   .pl-d6-entry{animation:none !important;}
@@ -342,8 +342,8 @@ const css = `
 
 @keyframes pl-blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
 @keyframes pl-highlight{
-  0%{background:rgba(249,115,22,.28);box-shadow:0 0 0 3px rgba(249,115,22,.18);}
-  60%{background:rgba(249,115,22,.12);box-shadow:0 0 0 2px rgba(249,115,22,.08);}
+  0%{background:rgba(11,122,85,.28);box-shadow:0 0 0 3px rgba(11,122,85,.18);}
+  60%{background:rgba(11,122,85,.12);box-shadow:0 0 0 2px rgba(11,122,85,.08);}
   100%{background:transparent;box-shadow:0 0 0 0 transparent;}
 }
 .pl-novo{animation:pl-highlight 1.6s ease-out, pl-blink 1s ease-in-out 2;border-radius:8px;padding:2px 6px;margin:-2px -6px;}
@@ -1933,7 +1933,7 @@ export function Planejamento() {
     eventos: { color: "#10B981", label: "Evento" },
     feriados: { color: "#EF4444", label: "Feriado" },
     bncc: { color: "#06B6D4", label: "BNCC" },
-    sofia: { color: "#FF7A45", label: "Sofia" },
+    sofia: { color: "#0B7A55", label: "Sofia" },
   };
   const [m4Month, setM4Month] = usePersistentState<{ y: number; m: number }>(
     "plan_m4_month",
@@ -3408,7 +3408,7 @@ export function Planejamento() {
                               <div
                                 key={c.id}
                                 className={"pl-card " + c.v + (c.locked ? " locked" : "")}
-                                style={m5Selected.has(c.id) ? { outline: "2px solid var(--orange, #F97316)", outlineOffset: 2 } : undefined}
+                                style={m5Selected.has(c.id) ? { outline: "2px solid var(--orange, #0B7A55)", outlineOffset: 2 } : undefined}
                                 draggable={!c.locked}
                                 onDragStart={() => onDragStart(d.k, c.id)}
                                 onClick={(e) => {
@@ -3553,7 +3553,7 @@ export function Planejamento() {
                         <button aria-label="Semana anterior" onClick={() => setWeekOffset((w) => w - 1)}><ChevronLeft size={14} /></button>
                         <div className="month" style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
                           <span>{m1Week.label}</span>
-                          <small style={{ fontFamily: "'Inter',sans-serif", fontSize: 11.5, color: "var(--muted)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{m1Week.range}</small>
+                          <small style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: "var(--muted)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{m1Week.range}</small>
                         </div>
                         <button aria-label="Próxima semana" onClick={() => setWeekOffset((w) => w + 1)}><ChevronRight size={14} /></button>
                         {weekOffset !== 0 && (
@@ -3652,8 +3652,8 @@ export function Planejamento() {
                                                 style={{
                                                   marginTop: 6,
                                                   padding: "6px 8px",
-                                                  background: "#FFF7ED",
-                                                  border: "1px solid #FED7AA",
+                                                  background: "#E8F6EF",
+                                                  border: "1px solid #CDEFE2",
                                                   borderRadius: 6,
                                                   display: "flex",
                                                   flexDirection: "column",
@@ -3758,7 +3758,7 @@ export function Planejamento() {
                           marginTop: 12,
                           padding: "10px 12px",
                           borderRadius: 10,
-                          border: "1px solid #FED7C4",
+                          border: "1px solid #CDEFE2",
                           background: "#fff",
                           display: "flex",
                           alignItems: "center",
@@ -3862,7 +3862,7 @@ export function Planejamento() {
                       </div>
                     </div>
                     <div style={{ height: 8, background: "#EEF1F6", borderRadius: 99, overflow: "hidden" }}>
-                      <div style={{ width: `${m2Pct}%`, height: "100%", background: "linear-gradient(90deg, var(--primary, #F97316), #FB923C)", transition: "width .35s ease" }} />
+                      <div style={{ width: `${m2Pct}%`, height: "100%", background: "linear-gradient(90deg, var(--primary, #0B7A55), #0B7A55)", transition: "width .35s ease" }} />
                     </div>
                   </div>
                 )}
@@ -3937,7 +3937,7 @@ export function Planejamento() {
                                 status === "done"
                                   ? { opacity: 0.55 }
                                   : status === "current"
-                                  ? { borderColor: "var(--primary, #F97316)", borderWidth: 2, boxShadow: "0 0 0 3px rgba(249,115,22,.12)" }
+                                  ? { borderColor: "var(--primary, #0B7A55)", borderWidth: 2, boxShadow: "0 0 0 3px rgba(11,122,85,.12)" }
                                   : undefined
                               }
                             >
@@ -3955,7 +3955,7 @@ export function Planejamento() {
                                   onChange={() => m2ToggleSel(s.id)}
                                   onClick={(e) => e.stopPropagation()}
                                   title="Incluir na impressão"
-                                  style={{ width: 12, height: 12, accentColor: "var(--primary, #F97316)", cursor: "pointer" }}
+                                  style={{ width: 12, height: 12, accentColor: "var(--primary, #0B7A55)", cursor: "pointer" }}
                                 />
                                 {!editing && <GripVertical size={11} style={{ opacity: .55 }} />}
                                 {s.d}
@@ -4005,9 +4005,9 @@ export function Planejamento() {
                                   <>
                                     <div className="tag" style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                       {status === "done" && <Check size={12} style={{ color: "#16a34a" }} />}
-                                      {status === "current" && <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 99, background: "var(--primary, #F97316)" }} />}
+                                      {status === "current" && <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 99, background: "var(--primary, #0B7A55)" }} />}
                                       <span>{s.tag}{s.suggest ? " · sugestão Sofia" : ""}</span>
-                                      {status === "current" && <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--primary, #F97316)", letterSpacing: .3 }}>· EM ANDAMENTO</span>}
+                                      {status === "current" && <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--primary, #0B7A55)", letterSpacing: .3 }}>· EM ANDAMENTO</span>}
                                       {status === "done" && <span style={{ fontSize: 10.5, fontWeight: 700, color: "#16a34a", letterSpacing: .3 }}>· CONCLUÍDA</span>}
                                     </div>
                                     <div className="ttl" style={status === "done" ? { textDecoration: "line-through" } : undefined}>{s.t}</div>
@@ -4133,7 +4133,7 @@ export function Planejamento() {
                           <li key={e.id} className={e.novo ? "pl-novo" : undefined} style={{ fontSize: 12.5, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                             <span>{e.titulo}</span>
                             <span style={{ color: "var(--muted)", fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>· {e.min} min</span>
-                            {e.novo && <span className="pl-badge-novo" style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
+                            {e.novo && <span className="pl-badge-novo" style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(11,122,85,.15)", color: "#064E36", letterSpacing: .3 }}>NOVO</span>}
                           </li>
                         ))}
                       </ol>
@@ -4148,7 +4148,7 @@ export function Planejamento() {
                             <li key={a.id} className={a.novo ? "pl-novo" : undefined} style={{ fontSize: 12.5, padding: 8, border: "1px solid var(--line)", borderRadius: 8, background: "#FAFBFD" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                                 <strong>{a.aluno}</strong>
-                                {a.novo && <span className="pl-badge-novo" style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(249,115,22,.15)", color: "#c2410c", letterSpacing: .3 }}>NOVO</span>}
+                                {a.novo && <span className="pl-badge-novo" style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(11,122,85,.15)", color: "#064E36", letterSpacing: .3 }}>NOVO</span>}
                               </div>
                               <div style={{ color: "var(--muted)" }}>{a.texto}</div>
                             </li>
@@ -4221,7 +4221,7 @@ export function Planejamento() {
                               onClick={() => setM4SelectedDay(isSel ? null : day)}
                               style={{
                                 width: "100%", textAlign: "left", cursor: "pointer",
-                                border: isSel ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)",
+                                border: isSel ? "2px solid var(--orange, #0B7A55)" : "1px solid var(--line)",
                                 borderRadius: 12, background: "#fff", padding: 0, overflow: "hidden",
                                 display: "flex", flexDirection: "column",
                               }}
@@ -4279,9 +4279,9 @@ export function Planejamento() {
                             position: "relative",
                             minHeight: 78,
                             padding: 6,
-                            border: isDropTarget ? "2px dashed #F97316" : isSel ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)",
+                            border: isDropTarget ? "2px dashed #0B7A55" : isSel ? "2px solid var(--orange, #0B7A55)" : "1px solid var(--line)",
                             borderRadius: 8,
-                            background: isEmpty ? "#FAFBFD" : isDropTarget ? "#FFF7ED" : "#fff",
+                            background: isEmpty ? "#FAFBFD" : isDropTarget ? "#E8F6EF" : "#fff",
                             textAlign: "left",
                             cursor: !isEmpty && evts.length > 0 ? "pointer" : "default",
                             opacity: isEmpty ? .4 : 1,
@@ -4371,7 +4371,7 @@ export function Planejamento() {
                                       {e.meta && <span style={{ color: "var(--muted)" }}> · {e.meta}</span>}
                                       <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 2 }}>
                                         {M4_CAT_META[e.cat].label}
-                                        {e.source === "m3" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(255,122,69,.15)", color: "#9A3412", fontWeight: 700, letterSpacing: ".04em" }}>M3 · Sofia</span>}
+                                        {e.source === "m3" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(11,122,85,.15)", color: "#064E36", fontWeight: 700, letterSpacing: ".04em" }}>M3 · Sofia</span>}
                                         {e.source === "atv" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(59,130,246,.15)", color: "#1d4ed8", fontWeight: 700, letterSpacing: ".04em" }}>M1 · Atividade</span>}
                                         {e.source === "pcd" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(16,185,129,.15)", color: "#047857", fontWeight: 700, letterSpacing: ".04em" }}>M2 · PCD</span>}
                                         {e.source === "trilha" && <span style={{ marginLeft: 6, padding: "1px 6px", borderRadius: 99, background: "rgba(139,92,246,.15)", color: "#6d28d9", fontWeight: 700, letterSpacing: ".04em" }}>M7 · Trilha</span>}
@@ -4380,7 +4380,7 @@ export function Planejamento() {
                                     {e.source === "m3" && e.m3Dia && e.m3CardId ? (
                                       <button
                                         onClick={() => { setM("m1"); m1OpenEdit(e.m3Dia!, e.m3CardId!); }}
-                                        style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--orange, #F97316)", background: "var(--orange, #F97316)", color: "#fff", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}
+                                        style={{ fontSize: 11, padding: "4px 8px", border: "1px solid var(--orange, #0B7A55)", background: "var(--orange, #0B7A55)", color: "#fff", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}
                                       >
                                         Abrir no M3
                                       </button>
@@ -4407,16 +4407,16 @@ export function Planejamento() {
                   <span className="it"><span className="sw" style={{ background: "#10B981" }} /> Eventos da escola</span>
                   <span className="it"><span className="sw" style={{ background: "#EF4444" }} /> Feriados</span>
                   <span className="it"><span className="sw" style={{ background: "#06B6D4" }} /> BNCC</span>
-                  <span className="it"><span className="sw" style={{ background: "#FF7A45" }} /> Sugestões Sofia</span>
+                  <span className="it"><span className="sw" style={{ background: "#0B7A55" }} /> Sugestões Sofia</span>
                 </div>
                 {m4ListOpen && (
                   <div
                     onClick={() => setM4ListOpen(false)}
-                    style={{ position: "fixed", inset: 0, background: "rgba(15,27,54,.45)", backdropFilter: "blur(2px)", zIndex: 200, display: "flex", justifyContent: "center", alignItems: "center", padding: 16 }}
+                    style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.45)", backdropFilter: "blur(2px)", zIndex: 200, display: "flex", justifyContent: "center", alignItems: "center", padding: 16 }}
                   >
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      style={{ background: "#fff", borderRadius: 12, width: "min(680px, 100%)", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 30px 60px rgba(15,27,54,.25)" }}
+                      style={{ background: "#fff", borderRadius: 12, width: "min(680px, 100%)", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 30px 60px rgba(20,22,31,.25)" }}
                     >
                       <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 12 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -4545,7 +4545,7 @@ export function Planejamento() {
                             key={s}
                             type="button"
                             onClick={() => m6AddQuickText(s)}
-                            style={{ background: "#FFF7ED", border: "1px solid #FED7AA", color: "#7C2D12", borderRadius: 99, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", fontWeight: 500 }}
+                            style={{ background: "#E8F6EF", border: "1px solid #CDEFE2", color: "#064E36", borderRadius: 99, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", fontWeight: 500 }}
                           >
                             + {s}
                           </button>
@@ -4574,8 +4574,8 @@ export function Planejamento() {
                           marginTop: 12,
                           padding: 14,
                           borderRadius: 12,
-                          background: "linear-gradient(180deg, #FFF7ED 0%, #FFFBF5 100%)",
-                          border: "1px solid #FED7AA",
+                          background: "linear-gradient(180deg, #E8F6EF 0%, #FFFBF5 100%)",
+                          border: "1px solid #CDEFE2",
                           display: "grid",
                           gap: 10,
                         }}
@@ -4585,20 +4585,20 @@ export function Planejamento() {
                             <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Sofia entendeu
                           </span>
                           {m6JustSaved.iaLoading && (
-                            <span style={{ fontSize: 11, color: "#9A3412", fontStyle: "italic", opacity: 0.7 }}>
+                            <span style={{ fontSize: 11, color: "#064E36", fontStyle: "italic", opacity: 0.7 }}>
                               analisando com IA…
                             </span>
                           )}
                           {m6JustSaved.sinais.map((s) => (
-                            <span key={s} style={{ background: "#fff", border: "1px solid #FDBA74", color: "#9A3412", borderRadius: 99, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
+                            <span key={s} style={{ background: "#fff", border: "1px solid #9ED9C2", color: "#064E36", borderRadius: 99, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>
                               {s}
                             </span>
                           ))}
                         </div>
-                        <p style={{ fontSize: 13, color: "#7A2E0A", margin: 0, lineHeight: 1.5 }}>
+                        <p style={{ fontSize: 13, color: "#064E36", margin: 0, lineHeight: 1.5 }}>
                           {m6JustSaved.resumo}
                         </p>
-                        <div style={{ display: "grid", gap: 6, padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #FED7AA" }}>
+                        <div style={{ display: "grid", gap: 6, padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #CDEFE2" }}>
                           <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600 }}>Ajuste sugerido para a próxima aula</div>
                           <div style={{ fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>{m6JustSaved.ajuste}</div>
                           <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginTop: 4 }}>Abertura</div>
@@ -4624,34 +4624,34 @@ export function Planejamento() {
                           padding: "8px 10px",
                           marginBottom: 10,
                           borderRadius: 10,
-                          background: "#FFF7ED",
-                          border: "1px solid #FED7AA",
+                          background: "#E8F6EF",
+                          border: "1px solid #CDEFE2",
                           fontSize: 12,
-                          color: "#9A3412",
+                          color: "#064E36",
                         }}
                       >
                          <strong style={{ marginRight: 4 }}>Filtrando por:</strong>
                          {m6FilterTag && (
-                           <span data-testid="m6-filter-tag" style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                           <span data-testid="m6-filter-tag" style={{ background: "#fff", border: "1px solid #9ED9C2", borderRadius: 99, padding: "2px 8px" }}>
                             tag · {m6FilterTag}
                           </span>
                         )}
                         {m6FilterTurma && (
-                          <span data-testid="m6-filter-turma" style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                          <span data-testid="m6-filter-turma" style={{ background: "#fff", border: "1px solid #9ED9C2", borderRadius: 99, padding: "2px 8px" }}>
                             turma · {m6FilterTurma}
                           </span>
                         )}
                         {m6FilterAluno && (
-                          <span data-testid="m6-filter-aluno" style={{ background: "#fff", border: "1px solid #FDBA74", borderRadius: 99, padding: "2px 8px" }}>
+                          <span data-testid="m6-filter-aluno" style={{ background: "#fff", border: "1px solid #9ED9C2", borderRadius: 99, padding: "2px 8px" }}>
                             aluno · {m6FilterAluno}
                           </span>
                         )}
-                        <span data-testid="m6-filter-count" style={{ marginLeft: "auto", color: "#7C2D12" }}>
+                        <span data-testid="m6-filter-count" style={{ marginLeft: "auto", color: "#064E36" }}>
                           {m6FilteredEntries.length} de {m6Entries.length}
                         </span>
                         <button
                           onClick={m6ClearFilters}
-                          style={{ background: "transparent", border: "1px solid #FDBA74", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: "#9A3412", fontWeight: 600 }}
+                          style={{ background: "transparent", border: "1px solid #9ED9C2", borderRadius: 6, padding: "2px 8px", cursor: "pointer", color: "#064E36", fontWeight: 600 }}
                         >
                           Limpar
                         </button>
@@ -4660,19 +4660,19 @@ export function Planejamento() {
                     {m6SofiaPattern && m6SofiaPicked && m6PatternDismissedKey !== m6SofiaPattern.key && (
                       <div className="pl-d6-pattern">
                         <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>✨ Sofia detectou um padrão</div>
-                        <p style={{ fontSize: 13, color: "#7A2E0A", lineHeight: 1.5, margin: 0 }}>
+                        <p style={{ fontSize: 13, color: "#064E36", lineHeight: 1.5, margin: 0 }}>
                           {m6SofiaPattern.n} dos últimos {m6SofiaPattern.total} registros indicam <strong>{m6SofiaPattern.label}</strong>. Selecionei automaticamente a melhor intervenção da biblioteca:
                         </p>
-                        <div style={{ marginTop: 10, padding: 10, borderRadius: 10, background: "#fff", border: "1px solid #FED7AA" }}>
+                        <div style={{ marginTop: 10, padding: 10, borderRadius: 10, background: "#fff", border: "1px solid #CDEFE2" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                             <span style={{ fontSize: 18 }}>{m6SofiaPicked.icone}</span>
-                            <strong style={{ fontSize: 13, color: "#7A2E0A" }}>{m6SofiaPicked.titulo}</strong>
-                            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--orange-2)", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 99, padding: "2px 8px" }}>
+                            <strong style={{ fontSize: 13, color: "#064E36" }}>{m6SofiaPicked.titulo}</strong>
+                            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--orange-2)", background: "#E8F6EF", border: "1px solid #CDEFE2", borderRadius: 99, padding: "2px 8px" }}>
                               {M6_CAT_LABEL[m6SofiaPicked.categoria]}
                             </span>
                           </div>
-                          <p style={{ fontSize: 12, color: "#7A2E0A", lineHeight: 1.45, margin: "4px 0" }}>{m6SofiaPicked.descricao}</p>
-                          <p style={{ fontSize: 11, color: "#9A3412", lineHeight: 1.4, margin: "4px 0 0", fontStyle: "italic" }}>
+                          <p style={{ fontSize: 12, color: "#064E36", lineHeight: 1.45, margin: "4px 0" }}>{m6SofiaPicked.descricao}</p>
+                          <p style={{ fontSize: 11, color: "#064E36", lineHeight: 1.4, margin: "4px 0 0", fontStyle: "italic" }}>
                             <strong>Por que esta?</strong> {m6SofiaPicked.porQue}
                           </p>
                         </div>
@@ -4734,7 +4734,7 @@ export function Planejamento() {
                           </div>
                           <div className="ttl"><span style={{ fontSize: 18 }}>{e.emoji}</span> {e.title}</div>
                           {e.atividadeTitulo && (
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--orange)", fontWeight: 600, background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 99, padding: "2px 8px", marginTop: 4 }}>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--orange)", fontWeight: 600, background: "#E8F6EF", border: "1px solid #CDEFE2", borderRadius: 99, padding: "2px 8px", marginTop: 4 }}>
                               <Sparkles size={10} /> Atividade: {e.atividadeTitulo}
                             </div>
                           )}
@@ -4803,7 +4803,7 @@ export function Planejamento() {
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(420px,100%)", boxShadow: "0 24px 60px rgba(15,23,42,.35)", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)" }}>
               <div style={{ fontSize: 11, color: "#b91c1c", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>⚠ Confirmar exclusão</div>
-              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Excluir {m5Selected.size} cartões?</h3>
+              <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, marginTop: 4 }}>Excluir {m5Selected.size} cartões?</h3>
             </div>
             <div style={{ padding: 20, fontSize: 13.5, color: "var(--muted)" }}>
               Esta ação removerá os cartões selecionados da semana. Você poderá desfazer pelo histórico.
@@ -4822,7 +4822,7 @@ export function Planejamento() {
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📋 Replicar semana</div>
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Escolha as turmas</h3>
+                <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, marginTop: 4 }}>Escolha as turmas</h3>
               </div>
               <button onClick={() => setM5ReplicaOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 6 }}><X size={18} /></button>
             </div>
@@ -4830,8 +4830,8 @@ export function Planejamento() {
               {TURMAS.map((t) => {
                 const on = !!m5ReplicaPicks[t.id];
                 return (
-                  <button key={t.id} onClick={() => setM5ReplicaPicks((p) => ({ ...p, [t.id]: !p[t.id] }))} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: on ? "2px solid var(--orange, #F97316)" : "1px solid var(--line)", borderRadius: 10, background: on ? "rgba(249,115,22,.06)" : "#fff", cursor: "pointer", textAlign: "left" }}>
-                    <span style={{ width: 18, height: 18, borderRadius: 4, border: "1px solid var(--line)", background: on ? "var(--orange, #F97316)" : "#fff", display: "grid", placeItems: "center", color: "#fff" }}>{on && <Check size={12} />}</span>
+                  <button key={t.id} onClick={() => setM5ReplicaPicks((p) => ({ ...p, [t.id]: !p[t.id] }))} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: on ? "2px solid var(--orange, #0B7A55)" : "1px solid var(--line)", borderRadius: 10, background: on ? "rgba(11,122,85,.06)" : "#fff", cursor: "pointer", textAlign: "left" }}>
+                    <span style={{ width: 18, height: 18, borderRadius: 4, border: "1px solid var(--line)", background: on ? "var(--orange, #0B7A55)" : "#fff", display: "grid", placeItems: "center", color: "#fff" }}>{on && <Check size={12} />}</span>
                     <span style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{t.name}
                         {t.warn && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 99, background: "rgba(239,68,68,.12)", color: "#b91c1c" }}>{t.warn}</span>}
@@ -4859,7 +4859,7 @@ export function Planejamento() {
         <div role="dialog" aria-modal="true" onClick={() => setM5HistoryOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", zIndex: 80 }}>
           <aside onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(420px,100%)", background: "#fff", boxShadow: "-12px 0 40px rgba(15,23,42,.25)", display: "flex", flexDirection: "column", animation: "fade-in .25s ease-out" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, margin: 0 }}>🕘 Histórico</h3>
+              <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, margin: 0 }}>🕘 Histórico</h3>
               <button onClick={() => setM5HistoryOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", padding: 6 }}><X size={18} /></button>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -4901,7 +4901,7 @@ export function Planejamento() {
                 <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
                   🖨 Versão para impressão
                 </div>
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Sequência didática · {m2Total} {m2Total === 1 ? "etapa" : "etapas"}</h3>
+                <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, marginTop: 4 }}>Sequência didática · {m2Total} {m2Total === 1 ? "etapa" : "etapas"}</h3>
               </div>
               <button onClick={() => setM2PrintOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6 }}><X size={18} /></button>
             </div>
@@ -4913,7 +4913,7 @@ export function Planejamento() {
                 {m2Steps.map((s, idx) => {
                   const status = idx < m2CurIdx ? "Concluída" : idx === m2CurIdx ? "Em andamento" : "Futura";
                   return (
-                    <li key={s.id} style={{ borderLeft: "3px solid " + (idx < m2CurIdx ? "#16a34a" : idx === m2CurIdx ? "#F97316" : "#cbd5e1"), paddingLeft: 12 }}>
+                    <li key={s.id} style={{ borderLeft: "3px solid " + (idx < m2CurIdx ? "#16a34a" : idx === m2CurIdx ? "#0B7A55" : "#cbd5e1"), paddingLeft: 12 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .3, textTransform: "uppercase", color: "var(--muted)" }}>{s.d} · {s.tag} · {status}</div>
                       <div style={{ fontSize: 14, fontWeight: 600, marginTop: 2 }}>{s.t}</div>
                       <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{s.p}</div>
@@ -4936,7 +4936,7 @@ export function Planejamento() {
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📊 Relatório {M6_PERIODO_META[m6Periodo].label.toLowerCase()}</div>
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>{M6_PERIODO_META[m6Periodo].label} · {m6RelTurma || "Todas as turmas"}</h3>
+                <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, marginTop: 4 }}>{M6_PERIODO_META[m6Periodo].label} · {m6RelTurma || "Todas as turmas"}</h3>
               </div>
               <button onClick={() => setM6ReportOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6 }}><X size={18} /></button>
             </div>
@@ -4983,7 +4983,7 @@ export function Planejamento() {
                   <p style={{ margin: 0 }}>
                     <strong>Balanço:</strong> {m6RelLeitura.positivos} momentos positivos · {m6RelLeitura.reforco} pontos de reforço.
                   </p>
-                  <div style={{ marginTop: 4, padding: 12, background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 10, fontSize: 12.5, color: "#7C2D12" }}>
+                  <div style={{ marginTop: 4, padding: 12, background: "#E8F6EF", border: "1px solid #CDEFE2", borderRadius: 10, fontSize: 12.5, color: "#064E36" }}>
                     <strong>Sofia sugere:</strong> revisar os tópicos com reforço pendente e replicar as estratégias marcadas como “funcionou” na próxima quinzena.
                   </div>
                 </>
@@ -4998,11 +4998,11 @@ export function Planejamento() {
                 </div>
               )}
               {m6AIRel && (
-                <div style={{ marginTop: 8, padding: 14, borderRadius: 12, background: "linear-gradient(180deg,#FFF7ED 0%,#FFFBF5 100%)", border: "1px solid #FED7AA", display: "grid", gap: 10 }}>
+                <div style={{ marginTop: 8, padding: 14, borderRadius: 12, background: "linear-gradient(180deg,#E8F6EF 0%,#FFFBF5 100%)", border: "1px solid #CDEFE2", display: "grid", gap: 10 }}>
                   <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
                     <Sparkles size={12} style={{ verticalAlign: "-2px" }} /> Relatório gerado pela Sofia
                   </div>
-                  {m6AIRel.titulo && <h4 style={{ fontFamily: "'Fraunces',serif", fontSize: 16, margin: 0, color: "var(--ink)" }}>{m6AIRel.titulo}</h4>}
+                  {m6AIRel.titulo && <h4 style={{ fontFamily: "'Sora',serif", fontSize: 16, margin: 0, color: "var(--ink)" }}>{m6AIRel.titulo}</h4>}
                   {m6AIRel.resumo && <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.55 }}>{m6AIRel.resumo}</p>}
                   {m6AIRel.evolucao_periodo && (
                     <div style={{ background: "linear-gradient(135deg,#F0FDF4,#DCFCE7)", border: "1px solid #86EFAC", borderRadius: 9, padding: "10px 13px", display: "flex", gap: 9, alignItems: "flex-start" }}>
@@ -5049,7 +5049,7 @@ export function Planejamento() {
                     </div>
                   )}
                   {m6AIRel.comunicacao_familias && (
-                    <div style={{ padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #FED7AA" }}>
+                    <div style={{ padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #CDEFE2" }}>
                       <div style={{ fontSize: 11.5, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>Comunicação para as famílias</div>
                       <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{m6AIRel.comunicacao_familias}</p>
                     </div>
@@ -5112,7 +5112,7 @@ export function Planejamento() {
                 <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
                   ✨ Preencher só {m1DayModal.n} · dia {m1DayModal.d}
                 </div>
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>A Sofia gera com base nas competências da BNCC</h3>
+                <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, marginTop: 4 }}>A Sofia gera com base nas competências da BNCC</h3>
               </div>
               <button onClick={fecharDayModal} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6 }}><X size={18} /></button>
             </div>
@@ -5359,7 +5359,7 @@ export function Planejamento() {
                 <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>
                   ✏️ Ajustar parâmetros
                 </div>
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, marginTop: 4 }}>Contexto desta aba</h3>
+                <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, marginTop: 4 }}>Contexto desta aba</h3>
               </div>
               <button onClick={() => setParamsModalOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, borderRadius: 6 }}><X size={18} /></button>
             </div>
@@ -5637,7 +5637,7 @@ function M1EditCardModal(props: {
       onClick={() => setTab(k)}
       style={{
         padding: "8px 14px", borderRadius: 8, border: "none", cursor: "pointer",
-        background: tab === k ? "var(--orange, #F97316)" : "transparent",
+        background: tab === k ? "var(--orange, #0B7A55)" : "transparent",
         color: tab === k ? "#fff" : "var(--ink, #0F172A)",
         fontWeight: tab === k ? 700 : 500, fontSize: 12.5,
         display: "inline-flex", alignItems: "center", gap: 6,
@@ -5659,17 +5659,17 @@ function M1EditCardModal(props: {
         style={{ background: "#fff", borderRadius: 16, width: "min(880px, 100%)", maxHeight: "94vh", display: "flex", flexDirection: "column", boxShadow: "0 30px 80px rgba(15,23,42,.45)", overflow: "hidden" }}>
 
         {/* HEADER */}
-        <div style={{ padding: "18px 22px 14px", borderBottom: "1px solid var(--line)", background: "linear-gradient(180deg, #FFF7ED 0%, #fff 100%)" }}>
+        <div style={{ padding: "18px 22px 14px", borderBottom: "1px solid var(--line)", background: "linear-gradient(180deg, #E8F6EF 0%, #fff 100%)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 10.5, color: "#9A3412", fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 10.5, color: "#064E36", fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>
                 <Sparkles size={12} /> Atividade da Sofia · {diaLabel}
               </div>
               {edit ? (
                 <input value={card.title} onChange={(e) => upd({ title: e.target.value })}
-                  style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 18, fontWeight: 700, fontFamily: "'Fraunces',serif", background: "#fff" }} />
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid var(--line)", fontSize: 18, fontWeight: 700, fontFamily: "'Sora',serif", background: "#fff" }} />
               ) : (
-                <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 22, lineHeight: 1.2, margin: 0 }}>{card.title}</h3>
+                <h3 style={{ fontFamily: "'Sora',serif", fontSize: 22, lineHeight: 1.2, margin: 0 }}>{card.title}</h3>
               )}
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700, padding: "3px 10px", borderRadius: 99, background: "rgba(59,130,246,.12)", color: "#1d4ed8", fontFamily: "'JetBrains Mono',monospace" }}>
@@ -5684,7 +5684,7 @@ function M1EditCardModal(props: {
                   </span>
                 )}
                 {card.foco && (
-                  <span style={{ fontSize: 11.5, fontWeight: 600, padding: "3px 10px", borderRadius: 99, background: "rgba(249,115,22,.12)", color: "#9A3412" }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, padding: "3px 10px", borderRadius: 99, background: "rgba(11,122,85,.12)", color: "#064E36" }}>
                     🎯 {card.foco}
                   </span>
                 )}
@@ -5771,7 +5771,7 @@ function M1EditCardModal(props: {
               <RefreshCw size={13} /> Regenerar com Sofia
             </button>
             <button onClick={onClose}
-              style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: "var(--orange, #F97316)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: "var(--orange, #0B7A55)", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}>
               <Check size={13} /> Concluir
             </button>
           </div>
