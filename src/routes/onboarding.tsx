@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { markOnboardingDone, shouldShowOnboarding } from "@/lib/onboarding";
 import { trackEvent } from "@/lib/tracking";
-import logoImg from "@/assets/agilizaprof-logo.webp";
+import { PencilLogo } from "@/components/painel/PainelNav";
 
 // Primeiro acesso: pede apenas nome e WhatsApp e leva direto à página inicial.
 // A rota continua sendo "/onboarding" porque o guard de autenticação
@@ -29,28 +29,22 @@ function formatPhone(raw: string): string {
 }
 
 const css = `
-.pa-root{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px;font-family:'Inter',-apple-system,sans-serif;color:#1E293B;background:#FFFBF5;position:relative;overflow:hidden;}
-.pa-blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;pointer-events:none;animation:pa-float 12s ease-in-out infinite alternate;}
-.pa-blob.b1{width:380px;height:380px;background:#FFD6A5;top:-120px;left:-100px;}
-.pa-blob.b2{width:340px;height:340px;background:#BDE0FE;bottom:-120px;right:-80px;animation-delay:-4s;}
-.pa-blob.b3{width:260px;height:260px;background:#CDB4DB;top:40%;left:60%;animation-delay:-8s;}
-@keyframes pa-float{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,-20px) scale(1.08);}}
-.pa-card{position:relative;z-index:1;width:100%;max-width:420px;background:#fff;border-radius:24px;padding:32px 28px;box-shadow:0 20px 50px rgba(30,41,59,.10);animation:pa-in .5s cubic-bezier(.2,.8,.2,1) both;}
-@keyframes pa-in{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
-.pa-logo{width:48px;height:48px;border-radius:14px;overflow:hidden;margin-bottom:18px;box-shadow:0 8px 20px rgba(255,122,69,.30);}
-.pa-logo img{width:100%;height:100%;object-fit:cover;display:block;}
-.pa-card h1{margin:0 0 6px;font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:26px;letter-spacing:-.02em;line-height:1.15;}
-.pa-card p.sub{margin:0 0 24px;color:#64748B;font-size:14.5px;line-height:1.5;}
+.pa-root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px 16px;font-family:'DM Sans',-apple-system,sans-serif;color:#14161F;background:#EDF0F5;}
+.pa-brand{display:inline-flex;align-items:center;gap:8px;font-family:'Sora',sans-serif;font-weight:800;font-size:22px;letter-spacing:-.04em;}
+.pa-brand b{color:#0B7A55;font-weight:800;}
+.pa-card{width:100%;max-width:440px;background:#fff;border:2px solid #14161F;border-radius:20px;box-shadow:6px 6px 0 #14161F;padding:28px 26px;}
+.pa-card h1{margin:0 0 6px;font-family:'Sora',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.045em;line-height:1.12;}
+.pa-card p.sub{margin:0 0 22px;color:#596074;font-size:15px;line-height:1.5;}
 .pa-field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
-.pa-field label{font-size:13px;font-weight:700;color:#334155;}
-.pa-field input{height:48px;border:1.5px solid #E2E8F0;border-radius:12px;padding:0 14px;font-size:16px;font-family:inherit;color:#1E293B;background:#F8FAFC;transition:border-color .15s,background .15s,box-shadow .15s;}
-.pa-field input:focus{outline:none;border-color:#FF7A45;background:#fff;box-shadow:0 0 0 4px rgba(255,122,69,.15);}
-.pa-hint{font-size:12px;color:#94A3B8;}
-.pa-error{font-size:13px;color:#DC2626;background:#FEF2F2;border-radius:10px;padding:10px 12px;margin-bottom:14px;}
-.pa-btn{width:100%;height:50px;border:0;border-radius:14px;font-family:inherit;font-size:15.5px;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(135deg,#FF7A45,#F59E0B);box-shadow:0 10px 24px rgba(255,122,69,.35);transition:transform .15s,box-shadow .15s,opacity .15s;}
-.pa-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(255,122,69,.40);}
+.pa-field label{font-family:'Sora',sans-serif;font-size:14px;font-weight:700;letter-spacing:-.01em;}
+.pa-field input{height:50px;border:1.5px solid #D6DBE5;border-radius:12px;padding:0 14px;font-size:16px;font-family:inherit;color:#14161F;background:#fff;transition:border-color .15s,box-shadow .15s;}
+.pa-field input:focus{outline:none;border-color:#14161F;box-shadow:0 0 0 3px #CDEFE2;}
+.pa-hint{font-size:12.5px;color:#596074;}
+.pa-error{font-size:13.5px;font-weight:600;color:#A3301F;background:#FDE3DE;border:1.5px solid #F2604B;border-radius:12px;padding:10px 12px;margin-bottom:14px;}
+.pa-btn{width:100%;height:52px;border:2px solid #14161F;border-radius:12px;font-family:'Sora',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.02em;color:#fff;cursor:pointer;background:#0B7A55;box-shadow:4px 4px 0 #14161F;transition:transform .12s,box-shadow .12s;}
+.pa-btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #14161F;}
+.pa-btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #14161F;}
 .pa-btn:disabled{opacity:.6;cursor:default;transform:none;}
-@media (prefers-reduced-motion: reduce){.pa-blob,.pa-card{animation:none;}}
 `;
 
 function PrimeiroAcessoPage() {
@@ -106,7 +100,7 @@ function PrimeiroAcessoPage() {
     const nome = name.trim();
     const digits = phone.replace(/\D/g, "");
     if (nome.length < 2) {
-      setError("Informe seu nome.");
+      setError("Diga como podemos te chamar.");
       return;
     }
     if (digits.length < 10 || digits.length > 11) {
@@ -129,30 +123,32 @@ function PrimeiroAcessoPage() {
   return (
     <div className="pa-root">
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <div className="pa-blob b1" />
-      <div className="pa-blob b2" />
-      <div className="pa-blob b3" />
+      <div className="pa-brand">
+        <PencilLogo size={40} />
+        <span>
+          Agiliza<b>Prof</b>
+        </span>
+      </div>
       <form className="pa-card" onSubmit={onSubmit} noValidate>
-        <div className="pa-logo">
-          <img src={logoImg} alt="AgilizaProf" />
-        </div>
-        <h1>Que bom ter você aqui! 👋</h1>
-        <p className="sub">Só precisamos de duas informações para começar.</p>
+        <h1>Que bom ter você aqui!</h1>
+        <p className="sub">
+          Antes de começar, só duas coisas: como podemos te chamar e o seu celular.
+        </p>
 
         <div className="pa-field">
-          <label htmlFor="pa-nome">Seu nome</label>
+          <label htmlFor="pa-nome">Como podemos te chamar?</label>
           <input
             id="pa-nome"
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Como você quer ser chamado(a)?"
+            placeholder="Ex.: Prof. Ana"
             autoFocus
           />
         </div>
 
         <div className="pa-field">
-          <label htmlFor="pa-tel">WhatsApp</label>
+          <label htmlFor="pa-tel">Número do celular (WhatsApp)</label>
           <input
             id="pa-tel"
             type="tel"

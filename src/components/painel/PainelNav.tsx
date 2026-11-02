@@ -164,6 +164,19 @@ export const ICONS = {
       <line x1="12" y1="22" x2="12" y2="7" />
     </>
   ),
+  game: (
+    <>
+      <rect x="2" y="7" width="20" height="12" rx="4" />
+      <line x1="7" y1="11" x2="7" y2="15" />
+      <line x1="5" y1="13" x2="9" y2="13" />
+    </>
+  ),
+  check: (
+    <>
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+    </>
+  ),
   star: <path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z" />,
   out: (
     <>
@@ -181,6 +194,8 @@ const LINKS: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/relatorios", label: "Pareceres" },
   { to: "/inclusao", label: "Inclusão" },
   { to: "/agenda", label: "Agenda" },
+  { to: "/jogos", label: "Jogos" },
+  { to: "/simulados", label: "Simulados" },
 ];
 
 export function PainelNav() {
@@ -239,7 +254,7 @@ export function PainelNav() {
           <Link to="/" className="pn-brand" aria-label="AgilizaProf, página inicial">
             <PencilLogo />
             <span>
-              agiliza<b>prof</b>
+              Agiliza<b>Prof</b>
             </span>
           </Link>
           <nav className="pn-links" aria-label="Navegação principal">
@@ -347,6 +362,12 @@ export function PainelNav() {
               </Link>
               <Link to="/agenda">
                 <Svg>{ICONS.cal}</Svg>Agenda
+              </Link>
+              <Link to="/jogos">
+                <Svg>{ICONS.game}</Svg>Jogos 2D
+              </Link>
+              <Link to="/simulados">
+                <Svg>{ICONS.check}</Svg>Simulados
               </Link>
               <Link to="/configuracoes">
                 <Svg>{ICONS.gear}</Svg>Configurações

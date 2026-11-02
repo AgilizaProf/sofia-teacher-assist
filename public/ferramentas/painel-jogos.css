@@ -1,0 +1,96 @@
+/* Visual "Painel" dos Jogos 2D dentro do AgilizaProf.
+   Vem depois do CSS original e só troca a aparência da escolha e da configuração
+   dos jogos (cores, fontes, cartões com borda e sombra dura). As telas de jogar
+   continuam com a arte própria de cada jogo. */
+
+html.pn body{background:#EDF0F5;color:#14161F;font-family:'DM Sans',system-ui,sans-serif;}
+html.pn .dm-site{background:#EDF0F5;color:#14161F;font-family:'DM Sans',system-ui,sans-serif;
+  --text:#14161F;--text-mute:#596074;--border:#D6DBE5;--accent:#0B7A55;--accent-soft:#CDEFE2;}
+html.pn .jg-root{--primary:#14161F;--accent:#0B7A55;--accent-warm:#0B7A55;--accent-soft:#CDEFE2;--bg:#EDF0F5;--text:#14161F;--text-mute:#596074;--border:#D6DBE5;}
+
+/* Barra de cima: sem marca nem nota (o menu do app já está acima); fica só o "Tela cheia" */
+html.pn .dm-site{position:relative;}
+html.pn .dm-cab{position:absolute;top:14px;right:max(24px,calc((100% - 1240px) / 2 + 24px));z-index:5;background:transparent;border-bottom:0;padding:0;justify-content:flex-end;}
+html.pn .dm-marca,html.pn .dm-cab-nota{display:none;}
+html.pn .dm-cheia{box-shadow:none;border:1.5px solid #D6DBE5;border-radius:10px;font-family:'DM Sans',system-ui,sans-serif;}
+html.pn .dm-cheia:hover{background:#fff;border-color:#14161F;}
+
+/* Títulos */
+html.pn .dm-miolo{padding-top:18px;padding-inline:24px;}
+html.pn .dm-miolo-largo{max-width:1240px;}
+html.pn .dm-miolo .dm-heroi{padding-right:150px;}
+html.pn .dm-heroi{margin:0;}
+html.pn .dm-heroi-emoji{display:none;}
+html.pn .dm-heroi-titulo,html.pn .jg-h1{font-family:'Sora',system-ui,sans-serif;font-weight:800;letter-spacing:-.04em;color:#14161F;}
+html.pn .dm-miolo-largo .dm-heroi-titulo{font-size:17px;font-weight:700;letter-spacing:-.02em;}
+html.pn .jg-h1{font-size:30px;}
+html.pn .jg-lead{color:#596074;}
+html.pn .dm-jogo-emoji{border:1.5px solid #14161F;}
+html.pn .jg-formato-grupo h3{font-family:'Sora',system-ui,sans-serif;font-weight:700;font-size:17px;letter-spacing:-.02em;color:#14161F;}
+html.pn .jg-formato-grupo h3 small{font-family:'DM Sans',system-ui,sans-serif;color:#596074;}
+
+/* Busca e categorias */
+html.pn .jg-seletor .jg-busca{box-shadow:none;border:1.5px solid #D6DBE5;border-radius:12px;background:#fff;}
+html.pn .jg-seletor .jg-busca:focus{border-color:#14161F;outline:none;}
+html.pn .jg-cat{box-shadow:none;border:1.5px solid #D6DBE5;border-radius:10px;font-family:'DM Sans',system-ui,sans-serif;font-weight:700;color:#14161F;}
+html.pn .jg-cat.ativo{background:#14161F;border-color:#14161F;color:#fff;box-shadow:none;}
+
+/* Cada jogo: cartão com nome e explicação */
+html.pn .jg-formatos{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+html.pn .jg-formato-op{flex-direction:row;align-items:center;gap:12px;height:auto;min-height:92px;padding:12px;border:2px solid #14161F;border-radius:16px;
+  box-shadow:3px 3px 0 #14161F;font-family:'DM Sans',system-ui,sans-serif;color:#14161F;overflow:visible;}
+html.pn .jg-formato-op:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:5px 5px 0 #14161F;}
+html.pn .jg-formato-op:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 #14161F;}
+html.pn .jg-formato-op.ativo{box-shadow:3px 3px 0 #0B7A55;border-color:#0B7A55;}
+html.pn .jg-formato-capa{position:static;width:46px;height:46px;border-radius:12px;border:1.5px solid #14161F;overflow:hidden;}
+html.pn .jg-formato-capa::before,html.pn .jg-formato-capa::after{display:none;}
+html.pn .jg-formato-op .emoji{width:auto;height:auto;background:none;box-shadow:none;font-size:23px;border-radius:0;}
+html.pn .jg-formato-op:hover:not(:disabled) .emoji{transform:none;}
+html.pn .jg-formato-op .txt{padding:0;gap:3px;}
+html.pn .jg-formato-op b{font-family:'Sora',system-ui,sans-serif;font-weight:700;font-size:15px;letter-spacing:-.02em;line-height:1.2;}
+html.pn .jg-formato-op small{font-size:12.5px;color:#596074;line-height:1.35;}
+html.pn .jg-formato-tags{padding-top:4px;}
+html.pn .jg-formato-selo,html.pn .jg-formato-publico{top:-9px;background:#FFB224;color:#14161F;border:1.5px solid #14161F;}
+html.pn .jg-formato-selo{right:10px;}
+html.pn .jg-formato-publico{left:auto;right:10px;background:#fff;color:#14161F;max-width:calc(100% - 20px);}
+html.pn .jg-formato-op:has(.jg-formato-selo) .jg-formato-publico{right:52px;}
+
+/* Configuração do jogo: etapas, blocos e botões */
+html.pn .cf-etapas{background:#fff;border:1.5px solid #D6DBE5;border-radius:16px;}
+html.pn .cf-etapa{font-family:'DM Sans',system-ui,sans-serif;color:#596074;border-radius:12px;}
+html.pn .cf-etapa.cf-agora{background:#CDEFE2;color:#14161F;box-shadow:none;}
+html.pn .cf-etapa-bola{box-shadow:inset 0 0 0 1.5px #D6DBE5;}
+html.pn .cf-etapa.cf-agora .cf-etapa-bola{background:#FFB224;box-shadow:none;border:1.5px solid #14161F;}
+html.pn .cf-etapa.cf-feita .cf-etapa-bola{box-shadow:inset 0 0 0 2.5px #0B7A55;}
+html.pn .cf-etapa-conta{background:#CDEFE2;color:#064E36;}
+html.pn .cf-bloco{box-shadow:none;border:1.5px solid #D6DBE5;border-radius:16px;}
+html.pn .cf-bloco-emoji{background:#CDEFE2;border:1.5px solid #14161F;box-shadow:none;border-radius:12px;}
+html.pn .cf-bloco-topo h3{font-family:'Sora',system-ui,sans-serif;font-weight:700;font-size:17px;letter-spacing:-.02em;color:#14161F;}
+html.pn .cf-bloco-topo p{color:#596074;}
+html.pn .ep-tema{border:1.5px solid #D6DBE5;}
+html.pn .ep-tema[aria-checked="true"]{background:#14161F;border-color:#14161F;}
+html.pn .ep-nivel{border:1.5px solid #D6DBE5;}
+html.pn .ep-nivel b{font-family:'Sora',system-ui,sans-serif;}
+html.pn .ep-nivel[aria-checked="true"]{border-color:#0B7A55;background:#CDEFE2;box-shadow:inset 0 0 0 1px #0B7A55;}
+html.pn .jg-input:focus,html.pn .jg-select:focus,html.pn .jg-textarea:focus{border-color:#0B7A55;box-shadow:0 0 0 3px rgba(11,122,85,.15);}
+html.pn .jg-btn{border:1.5px solid #14161F;border-radius:10px;font-weight:700;}
+html.pn .jg-btn.primary{background:#0B7A55;color:#fff;border-color:#14161F;box-shadow:2px 2px 0 #14161F;}
+html.pn .jg-btn.primary:hover:not(:disabled){background:#0B7A55;filter:none;}
+html.pn .jg-btn.ghost{border-color:transparent;}
+html.pn .dm-barra{background:rgba(237,240,245,.94);box-shadow:0 -1.5px 0 #D6DBE5;}
+html.pn .dm-barra-voltar,html.pn .dm-barra-proximo{border:2px solid #14161F;border-radius:12px;box-shadow:3px 3px 0 #14161F;font-family:'DM Sans',system-ui,sans-serif;font-weight:700;color:#14161F;}
+html.pn .dm-jogar-btn{background:#0B7A55;border:2px solid #14161F;border-radius:12px;box-shadow:3px 3px 0 #14161F;font-family:'Sora',system-ui,sans-serif;font-weight:800;font-size:18px;letter-spacing:-.02em;}
+html.pn .dm-jogar-btn:active{box-shadow:1px 1px 0 #14161F;transform:translate(2px,2px);}
+
+@media (max-width:640px){
+  html.pn .dm-cab{top:12px;right:16px;}
+  html.pn .dm-miolo{padding-inline:16px;padding-top:14px;}
+  html.pn .dm-miolo .dm-heroi{padding-right:52px;}
+  html.pn .jg-formatos{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  html.pn .jg-formato-op{flex-direction:column;align-items:flex-start;gap:8px;min-height:0;}
+  html.pn .jg-formato-capa{width:40px;height:40px;}
+  html.pn .jg-formato-op .emoji{font-size:20px;}
+  html.pn .jg-formato-op b{font-size:14px;}
+  html.pn .jg-formato-op small{font-size:12px;}
+  html.pn .jg-formato-tags{display:none;}
+}
