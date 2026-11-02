@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useChildMatches } from "@tanstack/react-router";
 import { Planejamento } from "@/pages/Planejamento";
 import { sanitizeFilter } from "@/lib/sofia/m6Filters";
 
@@ -61,5 +61,12 @@ export const Route = createFileRoute("/planejamento")({
       { property: "og:description", content: "Drag & drop entre dias + replicar em N turmas. Choveu? Arrasta. Deu certo? Replica." },
     ],
   }),
-  component: Planejamento,
+  component: PlanejamentoRota,
 });
+
+// As telas filhas (ex.: /planejamento/...) precisam do Outlet;
+// sem ele, os links abriam de novo a página principal.
+function PlanejamentoRota() {
+  const filhas = useChildMatches();
+  return filhas.length > 0 ? <Outlet /> : <Planejamento />;
+}

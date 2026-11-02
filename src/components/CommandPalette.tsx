@@ -115,7 +115,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         justifyContent: "center", paddingTop: 110, zIndex: 1100,
       }}
     >
-      <div style={{ width: "100%", maxWidth: 580, background: "#fff", borderRadius: 14, boxShadow: "0 25px 60px rgba(20,22,31,.4)", overflow: "hidden", border: "1px solid #E4E8F0" }}>
+      <div style={{ width: "100%", maxWidth: 580, background: "#fff", borderRadius: 20, border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: "1px solid #E4E8F0" }}>
           <Search size={16} color="#6B7691" />
           <input

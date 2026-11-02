@@ -275,15 +275,15 @@ const css = `
 .tl-date{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);font-weight:600;white-space:nowrap;}
 
 /* MODAL */
-.inc-modal-overlay{position:fixed;inset:0;background:rgba(20,22,31,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px;}
+.inc-modal-overlay{position:fixed;inset:0;background:rgba(20,22,31,.45);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px;}
 .inc-modal-overlay.open{display:flex;}
-.inc-modal{background:#fff;border-radius:16px;width:100%;max-width:880px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(20,22,31,.4);}
-.inc-modal-bar{height:5px;background:linear-gradient(90deg,var(--accent),var(--accent-warm));}
+.inc-modal{background:#fff;border-radius:20px;width:100%;max-width:880px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;border:2px solid #14161F;box-shadow:5px 5px 0 #14161F;}
+.inc-modal-bar{display:none;}
 .inc-modal-head{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
 .inc-modal-head h2{font-family:'Sora',serif;font-weight:800;font-size:20px;flex:1;}
 .inc-modal-head .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);text-align:right;line-height:1.5;}
-.inc-modal-close{background:var(--bg);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--muted);border:0;cursor:pointer;padding:0;font:inherit;}
-.inc-modal-close:hover{background:var(--danger);color:#fff;}
+.inc-modal-close{background:#fff;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#14161F;border:1.5px solid #14161F;cursor:pointer;padding:0;font:inherit;}
+.inc-modal-close:hover{background:#EDF0F5;}
 .inc-modal-close > *{pointer-events:none;}
 .inc-modal-body{padding:22px 24px;overflow-y:auto;flex:1;background:#F0F2F7;}
 .inc-modal-body.plain{background:#fff;}
@@ -296,7 +296,7 @@ const css = `
    * dispõem-se em grade de 2 por linha (2+2+1). */
   .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;overflow-x:visible;}
   .tab{flex:none;width:100%;}
-  .inc-modal{max-width:100% !important;max-height:100dvh;height:100dvh;border-radius:14px 14px 0 0;}
+  .inc-modal{max-width:100% !important;max-height:94dvh;height:auto;border-radius:20px 20px 0 0;border-bottom:0;box-shadow:none;}
   .inc-modal-head{padding:14px 16px;gap:10px;}
   .inc-modal-head h2{font-size:17px;line-height:1.25;}
   .inc-modal-body{padding:16px;-webkit-overflow-scrolling:touch;padding-bottom:calc(16px + env(safe-area-inset-bottom));}
@@ -2351,7 +2351,14 @@ ${ident}
                       key={t.k}
                       type="button"
                       className={"inc-section" + (tab === t.k ? " active" : "")}
-                      onClick={() => setActiveTab(t.k)}
+                      onClick={() => {
+                        setActiveTab(t.k);
+                        // Leva direto até a seção que abriu, logo abaixo dos botões.
+                        requestAnimationFrame(() => {
+                          const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+                          document.getElementById("inc-secao-aberta")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+                        });
+                      }}
                       role="tab"
                       aria-selected={tab === t.k}
                     >
@@ -2360,6 +2367,7 @@ ${ident}
                     </button>
                   ))}
                 </div>
+                <div id="inc-secao-aberta" style={{ scrollMarginTop: 80 }} aria-hidden />
 
                 {/* PANEL: HOJE */}
                 <div className={"panel" + (tab === "hoje" ? " active" : "")}>

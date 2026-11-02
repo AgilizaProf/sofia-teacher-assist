@@ -71,6 +71,9 @@ const navCss = `
   font-family:var(--pn-body);font-size:14.5px;font-weight:600;color:var(--pn-ink);text-decoration:none;cursor:pointer;}
 .pn-menu a:hover,.pn-menu button:hover{background:var(--pn-bg);}
 .pn-menu hr{border:0;border-top:1.5px solid var(--pn-line);margin:4px 0;}
+.pn-menu svg{width:18px;height:18px;flex:none;}
+.pn-menu a,.pn-menu button{white-space:nowrap;}
+.pn-menu{width:max-content;max-width:calc(100vw - 24px);}
 .pn-bottom{display:none;}
 /* Sofia flutuante no visual Painel (computador) */
 body:has(.pn-bottom) .sofia-fab-pulse{display:none!important;}

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Sparkles, BookOpen, Target, Layers, Clock, Users, ChevronDown } from "lucide-react";
-import { Header as AppHeader } from "@/components/Header";
+import { ArrowLeft, Sparkles, Clock } from "lucide-react";
+import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -332,30 +333,25 @@ export function PlanejamentoAtividade() {
   };
 
   return (
-    <div className="pa-root">
-      <style>{css}</style>
+    <div className="pn pa-root">
+      <style>{painelTokensCss + tempoChipCss + css + paPainelCss}</style>
+      <PainelNav />
       <div className="pa-app">
         <div className="pa-main">
-          <AppHeader breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }, { label: "Nova atividade" }]} />
-
-          <div style={{ padding: "10px 24px 0" }}>
-            <Link to="/planejamento" className="pa-back"><ArrowLeft size={14} /> Voltar ao planejamento</Link>
-          </div>
-
-          <div className="pa-hero">
-            <span className="badge">★ Atividade · BNCC</span>
-            <h1>Nova atividade pedagógica<em>Alinhada à BNCC, gerada com a Sofia.</em></h1>
-            <p>Preencha o mínimo necessário e a Sofia gera a sequência didática, habilidades, objetivos, adaptações de inclusão e bloco de transparência — tudo conforme a Base e a Constituição da Sofia.</p>
+          <div className="pa-topo">
+            <div className="pn-strip"><TempoChip /></div>
+            <Link to="/planejamento" className="pa-back"><ArrowLeft size={16} /> Planejamento</Link>
+            <h1 className="pa-title">Nova atividade</h1>
+            <p className="pa-lead">Diga a turma e o que vai ensinar. A Sofia monta a atividade completa, alinhada à BNCC, e você revisa.</p>
           </div>
 
           <div className="pa-grid">
             <form className="pa-card" onSubmit={(e) => { e.preventDefault(); onGerar(); }}>
-              <h2><Users size={16} /> Turma</h2>
-              <p className="sub">Escolha uma das suas turmas cadastradas. Você pode gerenciá-las em Configurações &rsaquo; Perfil.</p>
+              <h2><span className="pa-num">1</span> Para qual turma?</h2>
 
               <div className="pa-row">
                 <div className="pa-field">
-                  <label>Turma cadastrada</label>
+                  <label>Suas turmas</label>
                   <select
                     className="pa-select"
                     value={turma}
@@ -375,7 +371,7 @@ export function PlanejamentoAtividade() {
                   )}
                 </div>
                 <div className="pa-field">
-                  <label>Adicionar turma rápida</label>
+                  <label>Ou digite outra turma</label>
                   <div style={{ display: "flex", gap: 6 }}>
                     <input
                       className="pa-input"
@@ -384,15 +380,13 @@ export function PlanejamentoAtividade() {
                       placeholder="Ex.: 3º A"
                       onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); adicionarTurma(); } }}
                     />
-                    <button type="button" className="pa-btn" onClick={adicionarTurma}>+ Adicionar</button>
+                    <button type="button" className="pa-btn" onClick={adicionarTurma}>Usar</button>
                   </div>
-                  <span className="pa-help">Usada só nesta atividade. Para persistir, edite seu perfil.</span>
+                  <span className="pa-help">Vale só para esta atividade.</span>
                 </div>
               </div>
 
-              <div style={{ height: 6 }} />
-              <h2><BookOpen size={16} /> Etapa, ano e componente</h2>
-              <p className="sub">Define o recorte curricular para a Sofia escolher a habilidade certa.</p>
+              <h2 className="pa-h2-sep"><span className="pa-num">2</span> O que você vai ensinar?</h2>
 
               <div className="pa-row">
                 <div className="pa-field">
@@ -453,9 +447,8 @@ export function PlanejamentoAtividade() {
                 </div>
               </div>
 
-              <div style={{ height: 6 }} />
-              <h2><Target size={16} /> Habilidade e objetivo</h2>
-              <p className="sub">Se você já sabe a habilidade, informe o código. Senão, deixe em branco — a Sofia escolhe.</p>
+              <details className="pa-mais">
+              <summary><span className="pa-num">3</span> Quer detalhar mais? <small>(opcional, a Sofia completa o que faltar)</small></summary>
 
               <div className="pa-row">
                 <div className="pa-field">
@@ -478,9 +471,6 @@ export function PlanejamentoAtividade() {
                 </div>
               </div>
 
-              <div style={{ height: 6 }} />
-              <h2><Layers size={16} /> Recursos e inclusão</h2>
-              <p className="sub">Quanto mais contexto, mais aderente fica a atividade — sem inventar (Princípio 1).</p>
 
               <div className="pa-row">
                 <div className="pa-field">
@@ -492,36 +482,22 @@ export function PlanejamentoAtividade() {
                   <textarea className="pa-text" value={adapt} onChange={(e) => setAdapt(e.target.value)} placeholder="Ex.: aluno com TEA — antecipar rotina; aluna com dislexia — texto adaptado…" />
                 </div>
               </div>
+              </details>
 
               <div className="pa-actions">
-                <button type="button" className="pa-btn" onClick={() => navigate({ to: "/planejamento" })}>Cancelar</button>
-                <button type="submit" className="pa-btn primary"><Sparkles size={14} /> Gerar atividade com a Sofia</button>
+                <button type="button" className="pn-btn" onClick={() => navigate({ to: "/planejamento" })}>Cancelar</button>
+                <button type="submit" className="pn-btn primary"><Sparkles size={18} /> Sofia monta a atividade</button>
               </div>
             </form>
 
-            <aside className="pa-side" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div className="pa-card">
-                <h3><Clock size={14} /> Como funciona</h3>
-                <ul>
-                  <li>Você preenche o mínimo necessário.</li>
-                  <li>A Sofia abre o chat lateral e gera a atividade completa.</li>
-                  <li>Você revisa, ajusta com linguagem natural ("encurta", "adapta para TDAH").</li>
-                  <li>Quando aprovar, adicione ao dia da semana no planejamento.</li>
-                </ul>
-              </div>
-
-              <div className="pa-card">
-                <h3><Users size={14} /> O que a Sofia entrega</h3>
-                <ul>
-                  <li>Habilidade(s) BNCC pelo código + descrição oficial.</li>
-                  <li>Objetivos mensuráveis e sequência didática com tempos.</li>
-                  <li>Adaptações para inclusão (linguagem não-capacitista).</li>
-                  <li>Avaliação formativa e bloco de transparência (fontes, autores, base legal).</li>
-                </ul>
-              </div>
-
-              <div className="tip">
-                Dica: para Educação Infantil, a Sofia usa <strong>Campos de Experiência</strong> e <strong>Direitos de Aprendizagem</strong> automaticamente.
+            <aside className="pa-side">
+              <div className="pa-card pa-como">
+                <h3><Clock size={16} /> Como funciona</h3>
+                <ol>
+                  <li>Você escolhe a turma e o conteúdo.</li>
+                  <li>A Sofia escreve a atividade com habilidades da BNCC, passo a passo e adaptações.</li>
+                  <li>Você ajusta conversando ("encurta", "adapta para TDAH") e coloca no dia da semana.</li>
+                </ol>
               </div>
             </aside>
           </div>
@@ -530,3 +506,47 @@ export function PlanejamentoAtividade() {
     </div>
   );
 }
+
+// Visual "Painel": cartões com borda escura, botões e tipografia do app.
+const paPainelCss = `
+.pn.pa-root{background:var(--pn-bg);color:var(--pn-ink);font-family:var(--pn-body);}
+.pa-main{max-width:1180px;margin:0 auto;width:100%;}
+.pa-topo{padding:22px 24px 0;display:flex;flex-direction:column;gap:10px;align-items:flex-start;}
+.pn.pa-root .pa-back{font-size:14px;color:var(--pn-muted);padding:0;}
+.pa-title{font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;margin:0;}
+.pa-lead{margin:0;color:var(--pn-muted);font-size:15px;max-width:62ch;}
+.pn.pa-root .pa-grid{margin:18px 24px 120px;grid-template-columns:1fr 320px;align-items:start;}
+.pn.pa-root .pa-card{border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:20px;}
+.pn.pa-root .pa-card h2{font-family:var(--pn-display);font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--pn-ink);margin:0 0 14px;gap:10px;}
+.pn.pa-root .pa-h2-sep{margin-top:22px!important;padding-top:20px;border-top:1.5px solid var(--pn-line);}
+.pa-num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--pn-sun);border:2px solid var(--pn-ink);display:inline-grid;place-items:center;font-size:15px;font-weight:800;font-family:var(--pn-display);}
+.pn.pa-root .pa-field label{font-family:var(--pn-body);font-size:14px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--pn-ink);}
+.pn.pa-root .pa-input,.pn.pa-root .pa-select,.pn.pa-root .pa-text{font-size:15px;border:1.5px solid var(--pn-line);border-radius:12px;padding:10px 12px;color:var(--pn-ink);}
+.pn.pa-root .pa-input,.pn.pa-root .pa-select{height:44px;}
+.pn.pa-root .pa-input:focus,.pn.pa-root .pa-select:focus,.pn.pa-root .pa-text:focus{border-color:var(--pn-ink);box-shadow:0 0 0 3px rgba(11,122,85,.18);}
+.pn.pa-root .pa-help{font-size:12.5px;color:var(--pn-muted);}
+.pn.pa-root .pa-pill{font-size:13.5px;padding:8px 13px;border:1.5px solid var(--pn-line);color:var(--pn-ink);font-weight:600;}
+.pn.pa-root .pa-pill.on{background:var(--pn-green);border-color:var(--pn-ink);color:#fff;}
+.pn.pa-root .pa-btn{height:44px;border:2px solid var(--pn-ink);border-radius:12px;font-size:14px;}
+.pa-mais{margin-top:22px;padding-top:20px;border-top:1.5px solid var(--pn-line);}
+.pa-mais summary{cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--pn-display);font-size:19px;font-weight:700;letter-spacing:-.02em;list-style:none;margin-bottom:4px;}
+.pa-mais summary::-webkit-details-marker{display:none;}
+.pa-mais summary small{font-family:var(--pn-body);font-size:13px;font-weight:500;color:var(--pn-muted);letter-spacing:0;}
+.pa-mais[open] summary{margin-bottom:14px;}
+.pa-mais summary::after{content:"Abrir";margin-left:auto;font-family:var(--pn-body);font-size:13px;font-weight:700;color:var(--pn-green);border:1.5px solid var(--pn-green);border-radius:999px;padding:3px 12px;letter-spacing:0;}
+.pa-mais[open] summary::after{content:"Fechar";}
+.pn.pa-root .pa-btn{white-space:nowrap;}
+.pn.pa-root .pa-actions{margin-top:22px;padding-top:18px;border-top:1.5px solid var(--pn-line);}
+.pn.pa-root .pa-side h3{font-family:var(--pn-display);font-size:17px;font-weight:700;color:var(--pn-ink);margin:0 0 10px;}
+.pa-como ol{margin:0;padding-left:20px;color:var(--pn-ink);font-size:14px;line-height:1.55;display:flex;flex-direction:column;gap:8px;}
+.pn.pa-root .pa-como{box-shadow:none;border-width:1.5px;border-color:var(--pn-line);}
+@media(max-width:1100px){.pn.pa-root .pa-grid{grid-template-columns:1fr;}}
+@media(max-width:640px){
+  .pa-topo{padding:16px 16px 0;}
+  .pa-title{font-size:28px;}
+  .pn.pa-root .pa-grid{margin:14px 16px 120px;}
+  .pn.pa-root .pa-card{padding:16px;border-radius:18px;box-shadow:3px 3px 0 var(--pn-ink);}
+  .pn.pa-root .pa-actions{flex-direction:column-reverse;}
+  .pn.pa-root .pa-actions .pn-btn{width:100%;}
+}
+`;

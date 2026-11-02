@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useChildMatches } from "@tanstack/react-router";
 import { Inclusao } from "@/pages/Inclusao";
 
 type Search = { tab?: "hoje" | "anam" | "plan" | "reg" | "rel" | "doc"; view?: "list" | "detail"; aluno?: string };
@@ -21,5 +21,12 @@ export const Route = createFileRoute("/inclusao")({
       { property: "og:description", content: "Acompanhamento PCD com PEI institucional, anamnese guiada e pareceres com IA." },
     ],
   }),
-  component: Inclusao,
+  component: InclusaoRota,
 });
+
+// As telas filhas (ex.: /inclusao/...) precisam do Outlet;
+// sem ele, os links abriam de novo a página principal.
+function InclusaoRota() {
+  const filhas = useChildMatches();
+  return filhas.length > 0 ? <Outlet /> : <Inclusao />;
+}

@@ -2271,7 +2271,7 @@ ${parecerHtml}
           onClick={(e) => { if (e.target === e.currentTarget) fecharModalAluno(); }}
           style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.55)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
         >
-          <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 480, boxShadow: "0 20px 60px rgba(0,0,0,.25)", overflow: "hidden" }}>
+          <div style={{ background: "#fff", borderRadius: 20, width: "100%", maxWidth: 480, border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line-soft)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "var(--primary-dark)" }}>{editAluno ? "Editar dados do aluno" : "Cadastrar aluno"}</h3>
