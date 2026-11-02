@@ -270,7 +270,7 @@ export function PainelNav() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: navCss }} />
+      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + navCss }} />
       <header className="pn-top">
         <div className="pn-top-in">
           <Link to="/" className="pn-brand" aria-label="AgilizaProf, página inicial">
