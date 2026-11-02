@@ -355,7 +355,7 @@ const sectionTitleCss: React.CSSProperties = {
 };
 const sectionBadge: React.CSSProperties = {
   fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 999,
-  background: "var(--accent-soft)", color: "#B8410E",
+  background: "var(--accent-soft)", color: "#096746",
 };
 
 function CheckGroup({
@@ -383,7 +383,7 @@ function CheckGroup({
               fontSize: 12, padding: "5px 10px", borderRadius: 999,
               border: `1px solid ${isOn ? "var(--accent)" : "var(--border)"}`,
               background: isOn ? "var(--accent-soft)" : "#fff",
-              color: isOn ? "#B8410E" : "var(--text)",
+              color: isOn ? "#096746" : "var(--text)",
               fontWeight: 600, cursor: "pointer",
             }}
           >
@@ -625,12 +625,12 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   fontSize: 12, padding: "6px 11px", borderRadius: 8,
                   border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
                   background: active ? "var(--accent-soft)" : (filled ? "#F0FDF4" : "#fff"),
-                  color: active ? "#B8410E" : "var(--text)",
+                  color: active ? "#096746" : "var(--text)",
                   fontWeight: 700, cursor: "pointer",
                   display: "inline-flex", alignItems: "center", gap: 5,
                 }}
               >
-                {t.label}{filled && <CheckCircle2 size={11} color={active ? "#B8410E" : "#16A34A"} />}
+                {t.label}{filled && <CheckCircle2 size={11} color={active ? "#096746" : "#16A34A"} />}
               </button>
             );
           })}

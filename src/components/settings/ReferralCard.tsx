@@ -120,14 +120,14 @@ export function ReferralCard() {
   return (
     <div
       style={{
-        background: "linear-gradient(135deg,#FFF7F0 0%,#E8F6EF 100%)",
+        background: "linear-gradient(135deg,#F2FAF6 0%,#E8F6EF 100%)",
         border: "1px solid #CDEFE2",
         borderRadius: 14,
         padding: 22,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-        <Gift size={20} color="#B8410E" />
+        <Gift size={20} color="#096746" />
         <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, fontWeight: 700, margin: 0, color: "#14161F" }}>
           CONVIDE OUTRO(A) EDUCADOR(A)
         </h3>
@@ -165,7 +165,7 @@ export function ReferralCard() {
                 Seu código
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: "#B8410E", letterSpacing: ".05em" }}>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 20, fontWeight: 700, color: "#096746", letterSpacing: ".05em" }}>
                   {code || "—"}
                 </span>
                 <span style={{ fontSize: 12, color: "#6B7691", wordBreak: "break-all" }}>{link}</span>
@@ -182,7 +182,7 @@ export function ReferralCard() {
           </div>
 
           <div style={{ marginTop: 10, fontSize: 12.5 }}>
-            <a href="/indicacoes" style={{ color: "#B8410E", fontWeight: 700, textDecoration: "underline" }}>
+            <a href="/indicacoes" style={{ color: "#096746", fontWeight: 700, textDecoration: "underline" }}>
               Ver funil de indicação →
             </a>
           </div>
@@ -216,7 +216,7 @@ export function ReferralCard() {
                         <Check size={13} /> Creditado
                       </span>
                     ) : (
-                      <span style={{ color: "#B8410E", display: "inline-flex", gap: 4, alignItems: "center", fontWeight: 600 }}>
+                      <span style={{ color: "#096746", display: "inline-flex", gap: 4, alignItems: "center", fontWeight: 600 }}>
                         <Clock size={13} /> Libera em {daysUntil(r.credit_at)}d
                       </span>
                     )}
@@ -237,7 +237,7 @@ export function ReferralCard() {
               }}
             >
               <div style={{ fontSize: 12.5, color: "#14161F", marginBottom: 8 }}>
-                Você foi indicada com o código <b style={{ fontFamily: "'JetBrains Mono',monospace", color: "#B8410E" }}>{referredBy}</b>.
+                Você foi indicada com o código <b style={{ fontFamily: "'JetBrains Mono',monospace", color: "#096746" }}>{referredBy}</b>.
                 {myReferral
                   ? " Compra registrada — o bônus libera após o período de confirmação (7 dias)."
                   : " Assine um plano para liberar o bônus de quem te indicou e o seu (acesso + créditos)."}

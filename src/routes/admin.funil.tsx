@@ -100,7 +100,7 @@ function FunilPage() {
                 let minConv = 101; let minLabel = "";
                 etapas.forEach((e, i) => { if (i > 0 && e.conv < minConv) { minConv = e.conv; minLabel = e.label; } });
                 return (
-                  <p style={{ fontSize: 13, color: "#7C2D12" }}>
+                  <p style={{ fontSize: 13, color: "#064E36" }}>
                     <strong>{minLabel}</strong> — apenas <strong>{minConv.toFixed(0)}%</strong> das professoras chegam aqui.
                     É onde mais vale investir em melhoria de UX ou onboarding.
                   </p>

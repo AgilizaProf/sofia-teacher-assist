@@ -345,9 +345,9 @@ button[aria-label="Dispensar"] > * {
   color:#475569;font-weight:600;font-size:15px;text-decoration:none;
   min-height:44px;transition:background .15s;background:transparent;border:none;width:100%;text-align:left;cursor:pointer;
 }
-.mtb-link:active,.mtb-link:hover{background:#FFF4EC;color:#1E293B;}
+.mtb-link:active,.mtb-link:hover{background:#F2FAF6;color:#1E293B;}
 .mtb-link svg{color:#0B7A55;}
-.mtb-link.active{background:#FFEDE2;color:#1E293B;font-weight:800;}
+.mtb-link.active{background:#E3F5EC;color:#1E293B;font-weight:800;}
 .mtb-link svg{width:18px;height:18px;flex-shrink:0;}
 .mtb-link .badge{
   margin-left:auto;background:#0B7A55;color:#fff;font-size:10px;font-weight:800;

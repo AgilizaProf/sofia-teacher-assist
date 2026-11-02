@@ -21,7 +21,7 @@ function escHtml(s: unknown): string {
 }
 
 const BASE_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&display=swap');
 *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 html,body{margin:0;padding:0;background:#fff;color:#000}
 body{font:12px/1.45 Arial, Helvetica, sans-serif;text-align:justify}

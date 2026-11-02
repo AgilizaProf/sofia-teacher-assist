@@ -151,7 +151,7 @@ export function SofiaNotificationsWidget() {
         .sofia-notif-badge{position:absolute;top:-2px;right:-2px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#E11D48;color:#fff;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid #fff;}
         @media(max-width:640px){.sofia-notif-fab{bottom:calc(max(20px, env(safe-area-inset-bottom)) + 68px);right:max(16px, env(safe-area-inset-right));}}
         .sofia-notif-item{display:flex;gap:10px;padding:12px;border:1px solid var(--sofia-line,#E5E7EB);border-radius:12px;background:#fff;align-items:flex-start;transition:background .15s;}
-        .sofia-notif-item.unread{background:#E8F6EF;border-color:#FFD9C2;}
+        .sofia-notif-item.unread{background:#E8F6EF;border-color:#CDEFE2;}
         .sofia-notif-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;}
         .sofia-notif-text{font-size:13px;line-height:1.45;color:#14161F;}
         .sofia-notif-meta{font-size:11px;color:#64748B;margin-top:2px;display:flex;gap:8px;align-items:center;}

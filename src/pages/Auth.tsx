@@ -328,7 +328,7 @@ const css = `
 .uol-icon{font-size:30px;flex-shrink:0;}
 .uol-body{flex:1;min-width:0;}
 .uol-line{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;}
-.uol-logo{font-family:'Sora',sans-serif;font-weight:800;font-size:22px;color:#FF6600;letter-spacing:-.05em;line-height:1;}
+.uol-logo{font-family:'Sora',sans-serif;font-weight:800;font-size:22px;color:#0B7A55;letter-spacing:-.05em;line-height:1;}
 .uol-tag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--green-soft);color:#064E36;padding:3px 8px;border-radius:6px;}
 .uol-quote{font-weight:600;color:var(--ink);font-size:15px;line-height:1.4;margin:0;}
 .right{padding:48px 56px;display:flex;flex-direction:column;justify-content:center;align-items:center;}

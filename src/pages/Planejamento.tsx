@@ -38,7 +38,7 @@ const css = `
 .pl-root{
   --primary:#14161F;--primary-dark:#14161F;
   --navy:#14161F;--navy-2:#243762;--navy-deep:#0F1A36;--navy-darker:#0A1228;
-  --orange:#0B7A55;--orange-2:#F26B36;--orange-soft:rgba(11,122,85,.12);--orange-soft-2:rgba(11,122,85,.20);
+  --orange:#0B7A55;--orange-2:#096746;--orange-soft:rgba(11,122,85,.12);--orange-soft-2:rgba(11,122,85,.20);
   --ink:#0F172A;--ink-2:#334155;--muted:#64748B;--line:#E2E8F0;--bg:#F6F7FB;
   --green:#10B981;--amber:#F59E0B;--red:#EF4444;
   --shadow-sm:0 1px 2px rgba(15,23,42,.06);--shadow-md:0 6px 18px rgba(15,23,42,.08);--shadow-lg:0 18px 40px rgba(15,23,42,.18);
@@ -142,7 +142,7 @@ const css = `
 
 .pl-side{display:flex;flex-direction:column;gap:14px;}
 .pl-panel{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px;box-shadow:var(--shadow-sm);}
-.pl-panel.accent{background:linear-gradient(135deg,#FFF4ED 0%,#FFFAF7 100%);border-color:#CDEFE2;}
+.pl-panel.accent{background:linear-gradient(135deg,#F2FAF6 0%,#F7FBF9 100%);border-color:#CDEFE2;}
 .pl-panel h3{font-size:14px;font-family:'Sora',serif;color:var(--ink);font-weight:600;display:flex;align-items:center;gap:7px;}
 .pl-panel .lead{color:var(--muted);font-size:12px;margin:4px 0 12px;line-height:1.45;}
 .pl-panel .lead b{color:var(--ink);font-weight:600;}
@@ -254,12 +254,12 @@ const css = `
 .pl-step .ttl{font-size:14px;font-weight:600;color:var(--ink);margin:4px 0 4px;}
 .pl-step .meta{color:var(--muted);font-size:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .pl-step .meta .pill{background:#fff;border:1px solid var(--line);padding:2px 7px;border-radius:5px;font-size:10.5px;color:var(--ink-2);font-family:'JetBrains Mono',monospace;}
-.pl-step.suggest .body{background:#FFF8F2;border-color:#CDEFE2;border-style:dashed;}
+.pl-step.suggest .body{background:#F2FAF6;border-color:#CDEFE2;border-style:dashed;}
 .pl-step.suggest .ttl{color:var(--orange-2);}
 .pl-step.suggest .body::before{border-color:var(--orange);background:var(--orange);}
 .pl-step{transition:transform .18s ease, opacity .18s ease, background .18s ease;}
 .pl-step.dragging{opacity:.45;transform:scale(.98);}
-.pl-step.drop-target > .body{box-shadow:0 0 0 2px var(--orange), 0 8px 22px rgba(11,122,85,.22);border-color:var(--orange);background:#FFF4EC;}
+.pl-step.drop-target > .body{box-shadow:0 0 0 2px var(--orange), 0 8px 22px rgba(11,122,85,.22);border-color:var(--orange);background:#F2FAF6;}
 .pl-step.drop-target > .day{color:var(--orange);}
 .pl-drop-ph{grid-column:1 / -1;height:0;margin:0;border-radius:8px;background:linear-gradient(90deg,var(--orange-soft),rgba(11,122,85,.35),var(--orange-soft));box-shadow:0 0 0 2px var(--orange-soft) inset;animation:plPhIn .18s ease forwards;}
 @keyframes plPhIn{from{height:0;opacity:0;margin:0;}to{height:10px;opacity:1;margin:6px 0;}}
@@ -306,7 +306,7 @@ const css = `
 .pl-mood button.ok.on{background:#DCFCE7;border-color:#86EFAC;color:#15803D;}
 .pl-mood button.warn.on{background:#FEF3C7;border-color:#FCD34D;color:#92400E;}
 .pl-mood button.next.on{background:var(--orange-soft);border-color:#CDEFE2;color:var(--orange-2);}
-.pl-learnt{padding:12px 14px;background:linear-gradient(135deg,#FFF4ED,#FFFAF7);border:1px solid #CDEFE2;border-radius:12px;font-size:12.5px;color:#7A2E0A;line-height:1.5;display:flex;gap:10px;align-items:flex-start;}
+.pl-learnt{padding:12px 14px;background:linear-gradient(135deg,#F2FAF6,#F7FBF9);border:1px solid #CDEFE2;border-radius:12px;font-size:12.5px;color:#064E36;line-height:1.5;display:flex;gap:10px;align-items:flex-start;}
 .pl-d6{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;}
 @media(max-width:1100px){.pl-d6{grid-template-columns:1fr;}}
 .pl-d6-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);}
@@ -326,7 +326,7 @@ const css = `
 .pl-d6-entry .chips span{padding:3px 8px;border-radius:99px;background:rgba(15,23,42,.06);font-size:10.5px;color:var(--ink);font-weight:600;}
 .pl-d6-progress{height:8px;background:#F1F5F9;border-radius:99px;overflow:hidden;margin-top:6px;}
 .pl-d6-progress > div{height:100%;background:linear-gradient(90deg,var(--orange),#0B7A55);transition:width .4s;}
-.pl-d6-pattern{padding:14px;border-radius:12px;background:linear-gradient(135deg,#FFF4ED,#FFFAF7);border:1px dashed var(--orange);margin-bottom:12px;}
+.pl-d6-pattern{padding:14px;border-radius:12px;background:linear-gradient(135deg,#F2FAF6,#F7FBF9);border:1px dashed var(--orange);margin-bottom:12px;}
 @keyframes fade-in{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
 @media (prefers-reduced-motion: reduce){
   .pl-d6-entry{animation:none !important;}
@@ -4545,7 +4545,7 @@ export function Planejamento() {
                             key={s}
                             type="button"
                             onClick={() => m6AddQuickText(s)}
-                            style={{ background: "#E8F6EF", border: "1px solid #CDEFE2", color: "#7C2D12", borderRadius: 99, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", fontWeight: 500 }}
+                            style={{ background: "#E8F6EF", border: "1px solid #CDEFE2", color: "#064E36", borderRadius: 99, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", fontWeight: 500 }}
                           >
                             + {s}
                           </button>
@@ -4595,7 +4595,7 @@ export function Planejamento() {
                             </span>
                           ))}
                         </div>
-                        <p style={{ fontSize: 13, color: "#7A2E0A", margin: 0, lineHeight: 1.5 }}>
+                        <p style={{ fontSize: 13, color: "#064E36", margin: 0, lineHeight: 1.5 }}>
                           {m6JustSaved.resumo}
                         </p>
                         <div style={{ display: "grid", gap: 6, padding: 10, background: "#fff", borderRadius: 8, border: "1px solid #CDEFE2" }}>
@@ -4646,7 +4646,7 @@ export function Planejamento() {
                             aluno · {m6FilterAluno}
                           </span>
                         )}
-                        <span data-testid="m6-filter-count" style={{ marginLeft: "auto", color: "#7C2D12" }}>
+                        <span data-testid="m6-filter-count" style={{ marginLeft: "auto", color: "#064E36" }}>
                           {m6FilteredEntries.length} de {m6Entries.length}
                         </span>
                         <button
@@ -4660,18 +4660,18 @@ export function Planejamento() {
                     {m6SofiaPattern && m6SofiaPicked && m6PatternDismissedKey !== m6SofiaPattern.key && (
                       <div className="pl-d6-pattern">
                         <div style={{ fontSize: 11, color: "var(--orange-2)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace", marginBottom: 6 }}>✨ Sofia detectou um padrão</div>
-                        <p style={{ fontSize: 13, color: "#7A2E0A", lineHeight: 1.5, margin: 0 }}>
+                        <p style={{ fontSize: 13, color: "#064E36", lineHeight: 1.5, margin: 0 }}>
                           {m6SofiaPattern.n} dos últimos {m6SofiaPattern.total} registros indicam <strong>{m6SofiaPattern.label}</strong>. Selecionei automaticamente a melhor intervenção da biblioteca:
                         </p>
                         <div style={{ marginTop: 10, padding: 10, borderRadius: 10, background: "#fff", border: "1px solid #CDEFE2" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                             <span style={{ fontSize: 18 }}>{m6SofiaPicked.icone}</span>
-                            <strong style={{ fontSize: 13, color: "#7A2E0A" }}>{m6SofiaPicked.titulo}</strong>
+                            <strong style={{ fontSize: 13, color: "#064E36" }}>{m6SofiaPicked.titulo}</strong>
                             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--orange-2)", background: "#E8F6EF", border: "1px solid #CDEFE2", borderRadius: 99, padding: "2px 8px" }}>
                               {M6_CAT_LABEL[m6SofiaPicked.categoria]}
                             </span>
                           </div>
-                          <p style={{ fontSize: 12, color: "#7A2E0A", lineHeight: 1.45, margin: "4px 0" }}>{m6SofiaPicked.descricao}</p>
+                          <p style={{ fontSize: 12, color: "#064E36", lineHeight: 1.45, margin: "4px 0" }}>{m6SofiaPicked.descricao}</p>
                           <p style={{ fontSize: 11, color: "#064E36", lineHeight: 1.4, margin: "4px 0 0", fontStyle: "italic" }}>
                             <strong>Por que esta?</strong> {m6SofiaPicked.porQue}
                           </p>
@@ -4983,7 +4983,7 @@ export function Planejamento() {
                   <p style={{ margin: 0 }}>
                     <strong>Balanço:</strong> {m6RelLeitura.positivos} momentos positivos · {m6RelLeitura.reforco} pontos de reforço.
                   </p>
-                  <div style={{ marginTop: 4, padding: 12, background: "#E8F6EF", border: "1px solid #CDEFE2", borderRadius: 10, fontSize: 12.5, color: "#7C2D12" }}>
+                  <div style={{ marginTop: 4, padding: 12, background: "#E8F6EF", border: "1px solid #CDEFE2", borderRadius: 10, fontSize: 12.5, color: "#064E36" }}>
                     <strong>Sofia sugere:</strong> revisar os tópicos com reforço pendente e replicar as estratégias marcadas como “funcionou” na próxima quinzena.
                   </div>
                 </>

@@ -8,7 +8,7 @@ export const appHeaderCss = `
 .app-header .ah-crumbs strong{color:#14161F;font-weight:700;}
 .app-header .ah-crumbs .sep{opacity:.45;}
 .app-header .ah-crumbs .now{color:#14161F;font-weight:700;}
-.app-header .ah-streak{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#E8F6EF,#fff);border:1px solid #FFD9BF;border-radius:100px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#064E36;}
+.app-header .ah-streak{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#E8F6EF,#fff);border:1px solid #9FD9C1;border-radius:100px;padding:4px 10px 4px 8px;font-size:11.5px;font-weight:700;color:#064E36;}
 .app-header .ah-streak .num{font-family:'Sora',serif;font-weight:800;font-size:13px;}
 .app-header .ah-secstatus{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#6B7691;}
 .app-header .ah-secstatus .dot{width:7px;height:7px;border-radius:50%;background:#10B981;box-shadow:0 0 6px #10B981;}

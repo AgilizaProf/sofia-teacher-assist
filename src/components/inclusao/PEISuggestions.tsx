@@ -553,7 +553,7 @@ export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = 
           borderRadius: 999,
           border: "1px dashed var(--border)",
           background: open ? "var(--accent-soft)" : "#fff",
-          color: open ? "#B8410E" : "var(--muted)",
+          color: open ? "#096746" : "var(--muted)",
           fontWeight: 700,
           cursor: "pointer",
           display: "inline-flex",

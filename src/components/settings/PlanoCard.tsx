@@ -412,7 +412,7 @@ function CancelModal({
                     gap: 10,
                     padding: "10px 12px",
                     border: `1px solid ${checked ? ACCENT : BORDER}`,
-                    background: checked ? "#FFF6F0" : "#fff",
+                    background: checked ? "#F2FAF6" : "#fff",
                     borderRadius: 10,
                     fontSize: 13,
                     color: NAVY,

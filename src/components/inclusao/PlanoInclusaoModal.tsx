@@ -263,11 +263,11 @@ export function ChipRow({ items, onPick, label = "Sugestões rápidas" }: { item
             title={t}
             style={{
               fontSize: 11.5, padding: "5px 10px", borderRadius: 999,
-              border: "1px solid #FFD4B8", background: "var(--accent-soft)",
-              color: "#B8410E", fontWeight: 600, cursor: "pointer",
+              border: "1px solid #9FD9C1", background: "var(--accent-soft)",
+              color: "#096746", fontWeight: 600, cursor: "pointer",
               transition: "transform .12s, background .12s",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "#FFE4D2"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#E3F5EC"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "var(--accent-soft)"; }}
           >
             + {t.length > 60 ? t.slice(0, 58) + "…" : t}
@@ -553,7 +553,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
                             flex: 1, padding: "8px 12px", borderRadius: 8, cursor: "pointer", fontSize: 12, fontWeight: 600, textAlign: "left",
                             border: ativo ? "1px solid var(--accent)" : "1px solid var(--border)",
                             background: ativo ? "var(--accent-soft)" : "#fff",
-                            color: ativo ? "#B8410E" : "var(--text)",
+                            color: ativo ? "#096746" : "var(--text)",
                           }}
                         >
                           {ativo ? "● " : "○ "}{opt.l}
@@ -588,7 +588,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
                   {TIPOS.map((t) => <option key={t}>{t}</option>)}
                 </select>
               </label>
-              <div style={{ background: "var(--accent-soft)", border: "1px solid #FFD4B8", color: "#B8410E", borderRadius: 8, padding: "10px 12px", fontSize: 12, display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <div style={{ background: "var(--accent-soft)", border: "1px solid #9FD9C1", color: "#096746", borderRadius: 8, padding: "10px 12px", fontSize: 12, display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <Lightbulb size={14} style={{ marginTop: 2, flexShrink: 0 }} />
                 <span>
                   A Sofia vai considerar{" "}
@@ -670,7 +670,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
                   )}
                   {plano.adaptacoes?.length > 0 && (
                     <div style={{ marginTop: 10, padding: 10, background: "var(--accent-soft)", borderRadius: 8 }}>
-                      <b style={{ fontSize: 12, color: "#B8410E", textTransform: "uppercase", letterSpacing: ".06em" }}>Adaptações específicas</b>
+                      <b style={{ fontSize: 12, color: "#096746", textTransform: "uppercase", letterSpacing: ".06em" }}>Adaptações específicas</b>
                       <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12.5 }}>
                         {plano.adaptacoes.map((a, i) => <li key={i}><b>{a.categoria}:</b> {a.texto}</li>)}
                       </ul>
