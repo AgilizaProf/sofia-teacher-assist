@@ -90,10 +90,10 @@ const CARDS: Card[] = [
     icon: ICONS.cal,
   },
   {
+    to: "/jogos",
     title: "Jogos 2D",
-    desc: "Jogos criados a partir da aula",
+    desc: "Jogos para criar a partir da aula e jogar com a turma",
     bg: "var(--pn-cream)",
-    tag: "Em breve",
     icon: (
       <>
         <rect x="2" y="7" width="20" height="12" rx="4" />
@@ -103,10 +103,10 @@ const CARDS: Card[] = [
     ),
   },
   {
+    to: "/simulados",
     title: "Simulados",
-    desc: "SAEB, ENEM e provas da rede",
+    desc: "Banco de questões, provas e correção pela foto",
     bg: "var(--pn-pink)",
-    tag: "Em breve",
     icon: (
       <>
         <path d="M9 11l3 3L22 4" />
