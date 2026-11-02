@@ -8,6 +8,7 @@ import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofiaOptional } from "@/components/sofia/SofiaProvider";
 import { initialsFromName } from "@/lib/mockData";
 import { InstalarApp } from "./InstalarApp";
+import { useInstalarApp } from "@/lib/pwa/useInstalarApp";
 
 // Visual "Painel": tokens, logo do lápis, menu do topo (computador) e
 // barra de baixo (celular). Usado pelas páginas já redesenhadas.
@@ -245,6 +246,12 @@ export function PainelNav() {
   const [menu, setMenu] = useState(false);
   const [sheet, setSheet] = useState(false);
   const [baixar, setBaixar] = useState(false);
+  const app = useInstalarApp();
+  // Android/Chrome: um toque já abre a confirmação de instalação.
+  const abrirBaixar = async () => {
+    if (app.podeInstalarDireto && (await app.instalar())) return;
+    setBaixar(true);
+  };
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -336,7 +343,7 @@ export function PainelNav() {
                   role="menuitem"
                   onClick={() => {
                     setMenu(false);
-                    setBaixar(true);
+                    void abrirBaixar();
                   }}
                 >
                   <Svg>{ICONS.phone}</Svg>Baixar o app no celular
@@ -408,7 +415,7 @@ export function PainelNav() {
                 style={{ background: "#CDEFE2", borderColor: "#0B7A55" }}
                 onClick={() => {
                   setSheet(false);
-                  setBaixar(true);
+                  void abrirBaixar();
                 }}
               >
                 <Svg>{ICONS.phone}</Svg>Baixar o app no celular

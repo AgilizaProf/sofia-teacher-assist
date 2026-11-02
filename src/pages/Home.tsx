@@ -17,7 +17,6 @@ import { trackEvent } from "@/lib/tracking";
 // Página inicial no visual "Painel": contador pequeno no topo, caixa para
 // escrever para a Sofia, currículo da rede e os cards de todas as funções.
 
-
 type Card = { to?: string; title: string; desc: string; bg: string; icon: ReactNode; tag?: string };
 
 const CARDS: Card[] = [
@@ -475,7 +474,6 @@ export function Home() {
           </div>
         </section>
 
-
         <div className="hm-sec">
           <h2>Suas ferramentas</h2>
           <span>{CARDS.length} funções</span>
@@ -524,9 +522,17 @@ export function Home() {
             </span>
             <div className="hm-app-tx">
               <b>Baixe o AgilizaProf no celular</b>
-              <span>Direto pelo navegador, sem Google Play. Fica com ícone na tela, como um app.</span>
+              <span>
+                Direto pelo navegador, sem Google Play. Fica com ícone na tela, como um app.
+              </span>
             </div>
-            <button type="button" className="pn-btn primary" onClick={() => setBaixar(true)}>
+            <button
+              type="button"
+              className="pn-btn primary"
+              onClick={async () => {
+                if (!(app.podeInstalarDireto && (await app.instalar()))) setBaixar(true);
+              }}
+            >
               Baixar o app
             </button>
           </section>
