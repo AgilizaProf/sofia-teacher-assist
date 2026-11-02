@@ -1,12 +1,12 @@
 import type { SofiaNotifAction } from "./notifications";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Deep-links para o Dashboard (rota "/").
+// Deep-links para Minha sala (rota "/minha-sala").
 //
 // Ao clicar em uma notificação criada por estes helpers, a página Dashboard
 // lê os search params, rola até a seção certa, destaca-a e abre o modal
 // correspondente (turma / aluno / planejamento). Veja o useEffect de
-// "open"/"target" em src/pages/Dashboard.tsx.
+// "open"/"target" em src/pages/MinhaSala.tsx.
 //
 // Estes helpers são usados pela Sofia para vincular cada lembrete a um
 // elemento real do painel — nunca inventando dados.
@@ -18,7 +18,7 @@ export type DashboardOpenTarget = "schools" | "classes" | "students" | "agenda" 
 export function actionOpenTurma(turmaNome?: string, label = "Abrir turma"): SofiaNotifAction {
   return {
     label,
-    to: "/",
+    to: "/minha-sala",
     search: { open: "classes", target: turmaNome },
   };
 }
@@ -27,7 +27,7 @@ export function actionOpenTurma(turmaNome?: string, label = "Abrir turma"): Sofi
 export function actionOpenAluno(alunoNome?: string, label = "Ver aluno"): SofiaNotifAction {
   return {
     label,
-    to: "/",
+    to: "/minha-sala",
     search: { open: "students", target: alunoNome },
   };
 }
@@ -44,19 +44,19 @@ export function actionOpenAlunoNoMomento(
 ): SofiaNotifAction {
   return {
     label,
-    to: "/",
+    to: "/minha-sala",
     search: { open: "students", target: alunoNome, m: momento },
   };
 }
 
 /** Abre a seção de escolas. */
 export function actionOpenEscolas(label = "Ver escolas"): SofiaNotifAction {
-  return { label, to: "/", search: { open: "schools" } };
+  return { label, to: "/minha-sala", search: { open: "schools" } };
 }
 
 /** Abre a agenda do painel. */
 export function actionOpenAgenda(label = "Abrir agenda"): SofiaNotifAction {
-  return { label, to: "/", search: { open: "agenda" } };
+  return { label, to: "/minha-sala", search: { open: "agenda" } };
 }
 
 /**

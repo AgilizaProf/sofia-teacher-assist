@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useSearch, useNavigate } from "@tanstack/react-router";
+import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
 import { sanitizeFilter, sanitizeM6Filters, type M6FilterState } from "@/lib/sofia/m6Filters";
 import { useEiMode } from "@/lib/ei/useEiMode";
@@ -8,13 +8,14 @@ import {
   Lock, GripVertical, Lightbulb, X, Clock, Copy, Move,
   Link2, MessageSquare, Send, Layers, BookOpen, Smile, Frown, ArrowRight, ArrowDownUp, Download, Printer, Pencil,
 } from "lucide-react";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
+import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
+import { planPainelCss } from "@/pages/planejamentoPainelCss";
 import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { imprimirPlanejamentoDireto, salvarPlanejamentoDocx } from "@/lib/print/planejamentoDireto";
 import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaListPrint";
 import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModal";
 import { SofiaContextChip } from "@/components/sofia/SofiaContextChip";
-import { Header as AppHeader } from "@/components/Header";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -45,7 +46,7 @@ const css = `
 }
 .pl-root *{box-sizing:border-box;}
 .pl-root h1,.pl-root h2,.pl-root h3,.pl-root h4{font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0;color:var(--ink);}
-.pl-root button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+.pl-root :where(button){font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
 .pl-root p{margin:0;}
 
 .pl-app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
@@ -467,6 +468,19 @@ const TABS: Array<{ k: MKey; num: string; label: string }> = [
   { k: "m6", num: "M6", label: "Diário de bordo" },
   { k: "trilhas", num: "M7", label: "Trilhas semestrais" },
 ];
+
+// Nome curto, explicação e ícone de cada ferramenta (visual Painel).
+const TAB_INFO: Record<MKey, { nome: string; desc: string; icone: string; cor: string }> = {
+  atv: { nome: "Atividades", desc: "A Sofia monta o plano completo de uma atividade para a turma.", icone: "✏️", cor: "green" },
+  pcd: { nome: "Atividades PCD", desc: "Adaptações por necessidade, a partir dos laudos.", icone: "♿", cor: "sky" },
+  m1: { nome: "Sofia preenche a semana", desc: "A semana esboçada pela Sofia para você revisar.", icone: "✨", cor: "sun" },
+  m2: { nome: "Sequência didática", desc: "Uma aula puxando a próxima.", icone: "🔗", cor: "lilac" },
+  m3: { nome: "Editor conversacional", desc: "Você fala e a Sofia ajusta a atividade.", icone: "💬", cor: "lilac" },
+  m4: { nome: "Calendário", desc: "A semana por disciplina, BNCC ou tipo de aula.", icone: "📅", cor: "lilac" },
+  m5: { nome: "Organizar a semana", desc: "Arraste entre os dias e replique em outras turmas.", icone: "↔️", cor: "coral" },
+  m6: { nome: "Diário de bordo", desc: "Registre como foi a aula em 3 toques.", icone: "📓", cor: "cream" },
+  trilhas: { nome: "Trilhas semestrais", desc: "O semestre inteiro em ~20 semanas com BNCC.", icone: "🧭", cor: "ink" },
+};
 
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
 const M6_AULAS: Array<{ id: string; t: string; s: string }> = [];
@@ -3207,16 +3221,17 @@ export function Planejamento() {
   return (
     !hydrated ? (
       <div
-        className="pl-root"
+        className="pn pl-root"
         data-testid="planejamento-skeleton"
         role="status"
         aria-busy="true"
         aria-live="polite"
         aria-label="Carregando planejamento"
       >
-        <style>{sidebarCss}</style>
+        <style>{painelTokensCss + tempoChipCss}</style>
         <style>{css}</style>
         <style>{emptyStateCss}</style>
+        <style>{planPainelCss}</style>
         <style>{`
           @keyframes plSkPulse { 0%,100%{opacity:.55} 50%{opacity:1} }
           .pl-sk { background: linear-gradient(90deg, #eef1f5 0%, #f6f8fb 50%, #eef1f5 100%); border-radius: 10px; animation: plSkPulse 1.4s ease-in-out infinite; }
@@ -3227,9 +3242,8 @@ export function Planejamento() {
           Carregando o planejamento, por favor aguarde. O conteúdo aparecerá automaticamente assim que estiver pronto.
         </p>
         <div className="pl-app" aria-hidden="true">
-          <AppSidebar active="planning" />
+          <PainelNav />
           <div className="pl-main">
-            <AppHeader breadcrumb={[{ label: "Sua sala" }, { label: "Planejamento" }]} />
             <div className="pl-hero">
               <div className="pl-sk" style={{ width: 110, height: 22, marginBottom: 14 }} />
               <div className="pl-sk" style={{ width: "70%", height: 36, marginBottom: 10 }} />
@@ -3253,68 +3267,63 @@ export function Planejamento() {
         </div>
       </div>
     ) : (
-    <div className="pl-root">
-      <style>{sidebarCss}</style>
+    <div className="pn pl-root">
+      <style>{painelTokensCss + tempoChipCss}</style>
       <style>{css}</style>
       <style>{emptyStateCss}</style>
+      <style>{planPainelCss}</style>
+      <PainelNav />
       <div className="pl-app">
-        <AppSidebar active="planning" />
         <div className="pl-main">
-          <AppHeader
-            breadcrumb={[
-              { label: "Sua sala" },
-              { label: isEi ? "Roteiros de experiência" : "Planejamento" },
-              { label: isEi && cfg.crumb === "Diário de bordo" ? "Diário de observação" : cfg.crumb },
-            ]}
-          />
-          {isEi && (
-            <div style={{ background: "#ECFDF5", borderBottom: "1px solid #A7F3D0", color: "#065F46", padding: "8px 16px", fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
-              🌱 <strong>Modo Educação Infantil ativo.</strong> Para roteiros de experiência com Campos de Experiência, abra o
-              <a href="/planejamento/ei" style={{ color: "#047857", fontWeight: 600, marginLeft: 4 }}>Roteiro EI →</a>
+          <div className="pl-top">
+            <div className="pn-strip">
+              <TempoChip />
             </div>
-          )}
+            <h1 className="pl-title">{isEi ? "Roteiros de experiência" : "Planejamento"}</h1>
+            {isEi && (
+              <div className="pl-ei-note">
+                🌱 <strong>Modo Educação Infantil ativo.</strong> Para roteiros com Campos de Experiência, abra o{" "}
+                <Link to="/planejamento/ei">Roteiro EI →</Link>
+              </div>
+            )}
 
-          {/* HERO */}
-          <div className="pl-hero">
-            <span className="badge">{cfg.badge}</span>
-            <h1>{cfg.title}<em>{cfg.sub}</em></h1>
-            <p className="lead">{cfg.lead}</p>
-            <div className="chips">
-              {cfg.chips.map((c, i) => (
-                <button
-                  key={i}
-                  className={"hbc " + (c.solid ? "solid" : "outline")}
-                  onClick={() => {
-                    const l = c.label.toLowerCase();
-                    if (l.includes("ajustar parâmetros")) { setParamsModalOpen(true); return; }
-                    const scrollToAnchor = (id: string) => {
-                      const el = document.getElementById(id);
-                      if (!el) return;
-                      const topbar = document.querySelector(".pl-topbar") as HTMLElement | null;
-                      const offset = (topbar?.offsetHeight ?? 48) + 16;
-                      const y = el.getBoundingClientRect().top + window.scrollY - offset;
-                      window.scrollTo({ top: y, behavior: "smooth" });
-                    };
-                    if (m === "m2") {
-                      if (l.includes("ver cadeia")) { scrollToAnchor("m2-cadeia"); return; }
-                      if (l.includes("habilidades")) { scrollToAnchor("m2-habilidades"); return; }
-                      if (l.includes("reordenar")) { reordenarSequencia(); return; }
-                    }
-                  }}
-                >{c.label}</button>
-              ))}
+            <h2 className="pl-block-title">O que você quer planejar?</h2>
+            <div className="pl-tools-grid" role="tablist" aria-label="Ferramentas de planejamento">
+              {TABS.map((t) => {
+                const info = TAB_INFO[t.k];
+                return (
+                  <button
+                    key={t.k}
+                    type="button"
+                    role="tab"
+                    aria-selected={m === t.k}
+                    className={"pl-tool" + (m === t.k ? " active" : "")}
+                    onClick={() => setMudanca(t.k)}
+                  >
+                    <span className={"ic " + info.cor} aria-hidden>{info.icone}</span>
+                    <span className="tx">
+                      <b>{info.nome}</b>
+                      <small>{info.desc}</small>
+                    </span>
+                  </button>
+                );
+              })}
+              {!isEi && (
+                <Link to="/planejamento/ei" className="pl-tool">
+                  <span className="ic sun" aria-hidden>🌱</span>
+                  <span className="tx">
+                    <b>Educação Infantil</b>
+                    <small>Roteiros com Campos de Experiência.</small>
+                  </span>
+                </Link>
+              )}
+            </div>
+
+            <div className="pl-mode-head">
+              <h2>{TAB_INFO[m]?.nome ?? cfg.title}</h2>
+              <p>{cfg.sub}</p>
             </div>
           </div>
-
-          {/* TABS */}
-          <div className="pl-tabbar" role="tablist">
-            {TABS.map((t) => (
-              <button key={t.k} className={"pl-tab" + (m === t.k ? " active" : "")} onClick={() => setMudanca(t.k)} role="tab" aria-selected={m === t.k}>
-                <span className="num">{t.num}</span><span className="lbl">{t.label}</span>
-              </button>
-            ))}
-          </div>
-
 
           <div className="pl-workspace">
             {m === "m5" && (
