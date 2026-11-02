@@ -51,6 +51,7 @@ import { Route as AdminCuponsRouteImport } from './routes/admin.cupons'
 import { Route as AdminConversaoRouteImport } from './routes/admin.conversao'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
+import { Route as ApiSofiaChatRouteImport } from './routes/api/sofia.chat'
 import { Route as ApiPublicWebhooksMercadopago_debugRouteImport } from './routes/api/public/webhooks/mercadopago_debug'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 
@@ -266,6 +267,11 @@ const ApiSofiaSuggestionsRoute = ApiSofiaSuggestionsRouteImport.update({
   path: '/api/sofia/suggestions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSofiaChatRoute = ApiSofiaChatRouteImport.update({
+  id: '/api/sofia/chat',
+  path: '/api/sofia/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksMercadopago_debugRoute =
   ApiPublicWebhooksMercadopago_debugRouteImport.update({
     id: '/api/public/webhooks/mercadopago_debug',
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/sofia/chat': typeof ApiSofiaChatRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mercadopago_debug': typeof ApiPublicWebhooksMercadopago_debugRoute
@@ -366,6 +373,7 @@ export interface FileRoutesByTo {
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
   '/admin': typeof AdminIndexRoute
+  '/api/sofia/chat': typeof ApiSofiaChatRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mercadopago_debug': typeof ApiPublicWebhooksMercadopago_debugRoute
@@ -413,6 +421,7 @@ export interface FileRoutesById {
   '/planejamento/atividade': typeof PlanejamentoAtividadeRoute
   '/planejamento/ei': typeof PlanejamentoEiRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/sofia/chat': typeof ApiSofiaChatRoute
   '/api/sofia/suggestions': typeof ApiSofiaSuggestionsRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/mercadopago_debug': typeof ApiPublicWebhooksMercadopago_debugRoute
@@ -461,6 +470,7 @@ export interface FileRouteTypes {
     | '/planejamento/atividade'
     | '/planejamento/ei'
     | '/admin/'
+    | '/api/sofia/chat'
     | '/api/sofia/suggestions'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mercadopago_debug'
@@ -506,6 +516,7 @@ export interface FileRouteTypes {
     | '/planejamento/atividade'
     | '/planejamento/ei'
     | '/admin'
+    | '/api/sofia/chat'
     | '/api/sofia/suggestions'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mercadopago_debug'
@@ -552,6 +563,7 @@ export interface FileRouteTypes {
     | '/planejamento/atividade'
     | '/planejamento/ei'
     | '/admin/'
+    | '/api/sofia/chat'
     | '/api/sofia/suggestions'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/mercadopago_debug'
@@ -582,6 +594,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SimuladosRoute: typeof SimuladosRoute
   TermosRoute: typeof TermosRoute
+  ApiSofiaChatRoute: typeof ApiSofiaChatRoute
   ApiSofiaSuggestionsRoute: typeof ApiSofiaSuggestionsRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
   ApiPublicWebhooksMercadopago_debugRoute: typeof ApiPublicWebhooksMercadopago_debugRoute
@@ -883,6 +896,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSofiaSuggestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/sofia/chat': {
+      id: '/api/sofia/chat'
+      path: '/api/sofia/chat'
+      fullPath: '/api/sofia/chat'
+      preLoaderRoute: typeof ApiSofiaChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/mercadopago_debug': {
       id: '/api/public/webhooks/mercadopago_debug'
       path: '/api/public/webhooks/mercadopago_debug'
@@ -995,6 +1015,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SimuladosRoute: SimuladosRoute,
   TermosRoute: TermosRoute,
+  ApiSofiaChatRoute: ApiSofiaChatRoute,
   ApiSofiaSuggestionsRoute: ApiSofiaSuggestionsRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
   ApiPublicWebhooksMercadopago_debugRoute:

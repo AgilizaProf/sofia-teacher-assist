@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { buildSofiaPrompt } from "@/lib/sofia-constitution";
 
 type ChatMsg = { role: "system" | "user" | "assistant"; content: string };
 
@@ -16,44 +15,6 @@ type SofiaStoredMessage = {
   content: string;
   issues: Array<{ term: string; suggestion: string; principle: string }> | null;
 };
-
-function sanitizeMessages(input: unknown): ChatMsg[] {
-  if (!Array.isArray(input)) return [];
-  return input
-    .filter(
-      (m): m is { role: ChatMsg["role"]; content: string } =>
-        !!m
-        && typeof m === "object"
-        && "content" in m
-        && typeof m.content === "string"
-        && "role" in m
-        && (m.role === "user" || m.role === "assistant" || m.role === "system"),
-    )
-    .map((m) => ({ role: m.role, content: String(m.content).slice(0, 8000) }));
-}
-
-function buildSystemPrompt(routeContext?: string, userContext?: string) {
-  const taskPrompt = [
-    "Responda à conversa do chat seguindo rigorosamente a Constituição. Use apenas o que o(a) educador(a) registrou; quando faltar informação essencial, pergunte antes de produzir o documento. Escreva sempre em português do Brasil correto.",
-    "",
-    "ESTILO: Seja direta e objetiva. Sem introduções tipo 'Claro!' ou encerramentos tipo 'Espero ter ajudado!'. Vá direto ao ponto.",
-    ...(userContext
-      ? [
-          "",
-          "===== CONTEXTO ADICIONAL FORNECIDO PELA PROFESSORA =====",
-          userContext,
-          "===== FIM DO CONTEXTO ADICIONAL =====",
-        ]
-      : []),
-  ].join("\n");
-  return buildSofiaPrompt(taskPrompt, routeContext);
-}
-
-function conversationTitleFromMessages(messages: ChatMsg[]): string {
-  const firstUserMessage = messages.find((message) => message.role === "user")?.content ?? "Conversa com a Sofia";
-  const compact = firstUserMessage.replace(/\s+/g, " ").trim();
-  return compact.slice(0, 80) || "Conversa com a Sofia";
-}
 
 const listSofiaConversationsServer = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -128,155 +89,19 @@ export const clearSofiaConversations = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Reserva sem streaming: usada só se a rota /api/sofia/chat não responder.
 const askSofiaServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => ({
-    conversationId: typeof (d as { conversationId?: unknown })?.conversationId === "string"
-      ? (d as { conversationId: string }).conversationId
-      : undefined,
-    messages: sanitizeMessages((d as { messages?: unknown })?.messages),
-    routeContext: typeof (d as { routeContext?: unknown })?.routeContext === "string"
-      ? (d as { routeContext: string }).routeContext.slice(0, 4000)
-      : undefined,
-    originRoute: typeof (d as { originRoute?: unknown })?.originRoute === "string"
-      ? (d as { originRoute: string }).originRoute.slice(0, 200)
-      : undefined,
-    userContext: typeof (d as { userContext?: unknown })?.userContext === "string"
-      ? (d as { userContext: string }).userContext.slice(0, 2000)
-      : undefined,
-  }))
-  .handler(async ({ data, context }) => {
+  .inputValidator((d: unknown) => d as AskArgs["data"])
+  .handler(async ({ data: raw, context }) => {
     const { supabase, userId } = context;
-    if (data.messages.length === 0) throw new Error("Nenhuma mensagem foi enviada para a Sofia.");
-
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("Variável de ambiente ausente: LOVABLE_API_KEY.");
-
-    let conversationId = data.conversationId ?? null;
-
-    if (conversationId) {
-      const { data: existing, error: existingError } = await supabase
-        .from("sofia_conversations")
-        .select("id")
-        .eq("id", conversationId)
-        .maybeSingle();
-
-      if (existingError) throw new Error(existingError.message);
-      if (!existing) conversationId = null;
-    }
-
-    if (!conversationId) {
-      const { data: created, error: createError } = await supabase
-        .from("sofia_conversations")
-        .insert({
-          user_id: userId,
-          title: conversationTitleFromMessages(data.messages),
-          origin_route: data.originRoute ?? null,
-          context: {
-            route_context: data.routeContext ?? null,
-            user_context: data.userContext ?? null,
-          },
-        })
-        .select("id")
-        .single();
-
-      if (createError) throw new Error(createError.message);
-      conversationId = created.id;
-
-      const createdConversationId = conversationId;
-      const historyRows = data.messages.map((message) => ({
-        conversation_id: createdConversationId,
-        user_id: userId,
-        role: message.role,
-        content: message.content,
-      }));
-
-      if (historyRows.length > 0) {
-        const { error: historyError } = await supabase.from("sofia_messages").insert(historyRows);
-        if (historyError) throw new Error(historyError.message);
-      }
-    } else {
-      const latestUserMessage = [...data.messages].reverse().find((message) => message.role === "user");
-      if (latestUserMessage) {
-        const { error: userMessageError } = await supabase.from("sofia_messages").insert({
-          conversation_id: conversationId,
-          user_id: userId,
-          role: "user",
-          content: latestUserMessage.content,
-        });
-        if (userMessageError) throw new Error(userMessageError.message);
-      }
-
-      await supabase
-        .from("sofia_conversations")
-        .update({
-          origin_route: data.originRoute ?? null,
-          context: {
-            route_context: data.routeContext ?? null,
-            user_context: data.userContext ?? null,
-          },
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", conversationId);
-    }
-
-    const system = buildSystemPrompt(data.routeContext, data.userContext);
-
-    const chatMessages = [
-      { role: "system" as const, content: system },
-      ...data.messages
-        .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-    ];
-
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: chatMessages,
-        temperature: 0.7,
-      }),
-    });
-
-    if (!aiRes.ok) {
-      const text = await aiRes.text().catch(() => "");
-      if (aiRes.status === 429) {
-        throw new Error("Limite de uso da IA atingido. Aguarde alguns instantes e tente novamente.");
-      }
-      if (aiRes.status === 402) {
-        throw new Error("Créditos de IA esgotados no workspace. Adicione créditos para continuar.");
-      }
-      throw new Error(`IA ${aiRes.status}: ${text.slice(0, 200)}`);
-    }
-
-    const aiJson = await aiRes.json();
-    const content: string = aiJson?.choices?.[0]?.message?.content ?? "";
-
-    // Roda o validator para P3 (linguagem), P2 (BNCC) e P6 (transparência)
-    const { validateSofiaOutput } = await import("@/lib/sofia-validator");
-    const validation = validateSofiaOutput(content);
-    const issues = validation.issues.length > 0 ? validation.issues : null;
-
-    const { error: assistantError } = await supabase.from("sofia_messages").insert({
-      conversation_id: conversationId,
-      user_id: userId,
-      role: "assistant",
-      content: validation.sanitized,
-      issues: issues as unknown as import("@/integrations/supabase/types").Json,
-    });
-
-    if (assistantError) throw new Error(assistantError.message);
-
-    return {
-      conversationId,
-      content: validation.sanitized,
-      issues,
-      truncated: false,
-    };
+    const { callGateway, finalizeSofiaChat, parseChatInput, prepareSofiaChat } = await import("@/server/sofia-chat.server");
+    const data = parseChatInput(raw);
+    const prep = await prepareSofiaChat(supabase, userId, data);
+    const res = await callGateway(prep.model, prep.chatMessages, false);
+    const json = await res.json();
+    const choice = json?.choices?.[0];
+    return finalizeSofiaChat(supabase, userId, prep.conversationId, choice?.message?.content ?? "", choice?.finish_reason ?? null);
   });
 
 export type SofiaChunk =
@@ -293,7 +118,7 @@ export async function listSofiaConversations() {
   return listSofiaConversationsServer();
 }
 
-export async function* askSofia(args: {
+type AskArgs = {
   data: {
     conversationId?: string;
     messages: ChatMsg[];
@@ -301,8 +126,84 @@ export async function* askSofia(args: {
     originRoute?: string;
     userContext?: string;
   };
-}): AsyncGenerator<SofiaChunk> {
+};
+
+async function* askSofiaFallback(args: AskArgs): AsyncGenerator<SofiaChunk> {
   const { content, conversationId, issues, truncated } = await askSofiaServer(args);
   yield { type: "delta", content };
   yield { type: "done", content, conversationId, issues, truncated };
+}
+
+/**
+ * Envia a conversa para a Sofia e devolve o texto em pedaços, enquanto ela
+ * escreve. Se a rota com streaming não estiver disponível, usa a server
+ * function sem streaming (resposta inteira de uma vez).
+ */
+export async function* askSofia(args: AskArgs): AsyncGenerator<SofiaChunk> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data: sess } = await supabase.auth.getSession();
+  const token = sess.session?.access_token;
+  if (!token) throw new Error("Sua sessão expirou. Entre novamente para falar com a Sofia.");
+
+  let res: Response;
+  try {
+    res = await fetch("/api/sofia/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(args.data),
+    });
+  } catch {
+    yield* askSofiaFallback(args);
+    return;
+  }
+  if (res.status === 404 || res.status === 405) {
+    yield* askSofiaFallback(args);
+    return;
+  }
+  if (!res.ok || !res.body) {
+    const j = await res.json().catch(() => null) as { message?: string } | null;
+    throw new Error(j?.message || "A Sofia teve um problema para responder agora. Tente de novo em instantes.");
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  let gotDone = false;
+  let conversationId: string | null = args.data.conversationId ?? null;
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line) continue;
+      let ev: { type: string; [k: string]: unknown };
+      try { ev = JSON.parse(line); } catch { continue; }
+      if (ev.type === "meta" && typeof ev.conversationId === "string") {
+        conversationId = ev.conversationId;
+      } else if (ev.type === "delta" && typeof ev.content === "string") {
+        yield { type: "delta", content: ev.content };
+      } else if (ev.type === "done") {
+        gotDone = true;
+        yield {
+          type: "done",
+          content: String(ev.content ?? ""),
+          conversationId: (ev.conversationId as string) ?? conversationId,
+          issues: (ev.issues as SofiaStoredMessage["issues"]) ?? null,
+          truncated: Boolean(ev.truncated),
+        };
+      } else if (ev.type === "error") {
+        const err = new Error(String(ev.message || "A Sofia teve um problema para responder agora."));
+        (err as Error & { conversationId?: string | null }).conversationId = conversationId;
+        throw err;
+      }
+    }
+  }
+  if (!gotDone) {
+    const err = new Error("A conexão caiu antes de a Sofia terminar. Envie de novo.");
+    (err as Error & { conversationId?: string | null }).conversationId = conversationId;
+    throw err;
+  }
 }
