@@ -74,8 +74,12 @@ export const Route = createRootRoute({
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: "AgilizaProf — IA pedagógica para educadores" },
     { name: "twitter:description", content: "IA pedagógica para educadores brasileiros. Planos de aula, relatórios e atividades em minutos." },
-    { property: "og:image", content: "/og-image.png" },
-    { name: "twitter:image", content: "/og-image.png" },
+    // Redes sociais e WhatsApp só leem a imagem com endereço completo.
+    { property: "og:image", content: "https://agilizaprof.app.br/og-image.png" },
+    { property: "og:image:width", content: "1200" },
+    { property: "og:image:height", content: "630" },
+    { property: "og:image:alt", content: "AgilizaProf: planejamento, pareceres e inclusão em minutos" },
+    { name: "twitter:image", content: "https://agilizaprof.app.br/og-image.png" },
   ],
   links: [
     { rel: "stylesheet", href: appCss },
