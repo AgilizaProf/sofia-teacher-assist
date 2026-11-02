@@ -4487,9 +4487,8 @@ export function Planejamento() {
             {m === "m6" && (
               <>
                 <div className="pl-tools">
-                  <div>
-                    <h2>{isEi ? "Diário de observação" : "Diário de bordo"} <small>· registro de 30 segundos</small></h2>
-                  </div>
+                  {/* O título já aparece logo acima (nome da ferramenta). */}
+                  <div />
                   <div className="right">
                     <button className="pl-btn" onClick={() => { setM6Reminder(true); showToast("✓ Você será lembrada todo dia às 18h."); }}>
                       <Clock size={14} /> {m6Reminder ? "Lembrete ativo" : "Ativar lembrete"}

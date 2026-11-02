@@ -786,6 +786,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const isMobile = useIsMobile();
   // Cards de aluno começam recolhidos no mobile; expandir adiciona o id ao set.
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  // Alunos em que a pessoa abriu o seletor de período (por padrão fica escondido).
+  const [periodoAberto, setPeriodoAberto] = useState<Set<string>>(new Set());
   const toggleCard = (id: string) =>
     setExpandedCards((prev) => {
       const next = new Set(prev);
@@ -1435,7 +1437,7 @@ ${parecerHtml}
   const alunosLista = useMemo(() => {
     type Item = { id: string; nome: string; turma: string; pcd: string; status: "done" | "draft" | "review" | "todo"; statusLabel: string; naoObservadas: number };
     const STATUS_LABEL: Record<Item["status"], string> = {
-      todo: "A FAZER", draft: "RASCUNHO", review: "PARA REVISAR", done: "FINALIZADO",
+      todo: "A fazer", draft: "Rascunho", review: "Para revisar", done: "Finalizado",
     };
     const deriveStatus = (id: string, turma: string, pcd: string): { status: Item["status"]; naoObservadas: number } => {
       const { pctPreenchido, naoObservadas, total } = computeProgress(id, turma, pcd);
@@ -1605,7 +1607,7 @@ ${parecerHtml}
               style={{ cursor: "pointer" }}
               aria-label={`Ver ${aFazer} aluno(s) a fazer`}
             >
-              <div className="rel-kpi-top"><span className="rel-kpi-label">A FAZER</span><div className="rel-kpi-icon amber"><Clock size={15} strokeWidth={2.2} /></div></div>
+              <div className="rel-kpi-top"><span className="rel-kpi-label">A fazer</span><div className="rel-kpi-icon amber"><Clock size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{aFazer}<small> alunos</small></div>
               <div className="rel-kpi-foot">{aFazer > 0 ? `${aFazer} pendente(s)` : "—"}</div>
             </div>
@@ -1618,7 +1620,7 @@ ${parecerHtml}
               style={{ cursor: "pointer" }}
               aria-label={`Ver ${rascunhos} aluno(s) em rascunho`}
             >
-              <div className="rel-kpi-top"><span className="rel-kpi-label">EM RASCUNHO</span><div className="rel-kpi-icon violet"><Edit3 size={15} strokeWidth={2.2} /></div></div>
+              <div className="rel-kpi-top"><span className="rel-kpi-label">Em rascunho</span><div className="rel-kpi-icon violet"><Edit3 size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{rascunhos}<small> pareceres</small></div>
               <div className="rel-kpi-foot">{rascunhos > 0 ? "aguardando revisão" : "—"}</div>
             </div>
@@ -1632,7 +1634,7 @@ ${parecerHtml}
               style={{ cursor: "pointer" }}
               aria-label={`Ver ${finalizados} aluno(s) finalizados`}
             >
-              <div className="rel-kpi-top"><span className="rel-kpi-label">FINALIZADOS</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
+              <div className="rel-kpi-top"><span className="rel-kpi-label">Finalizados</span><div className="rel-kpi-icon green"><CheckCircle2 size={15} strokeWidth={2.2} /></div></div>
               <div className="rel-kpi-num">{finalizados}<small>/{alunosCount}</small></div>
               <div className="rel-kpi-foot">{pct}% do {periodoNomeLower}</div>
             </div>
@@ -1792,9 +1794,9 @@ ${parecerHtml}
                    const { pctPreenchido, pctDesempenho, naoObservadas } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 6 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-soft)", marginBottom: 4 }}>
-                        <span>BNCC · {pctPreenchido}% avaliado</span>
-                        <span>Desempenho {pctDesempenho}%</span>
+                      <div className="rel-card-prog">
+                        <span>{pctPreenchido === 0 ? "Avaliação ainda não começou" : `Avaliação ${pctPreenchido}% feita`}</span>
+                        {pctPreenchido > 0 && <span>Desempenho {pctDesempenho}%</span>}
                       </div>
                       <div className="rel-progress"><i style={{ width: `${pctPreenchido}%` }} /></div>
                       {naoObservadas > 0 && (
@@ -1825,9 +1827,21 @@ ${parecerHtml}
                     };
                     const limparOv = () => setPeriodoByAluno((prev) => { const cp = { ...prev }; delete cp[a.id]; return cp; });
                     const labelPeriodo = per.tipo === "Anual" ? "Ano letivo" : `${per.num}º ${per.nome}`;
+                    if (!override && !periodoAberto.has(a.id)) {
+                      return (
+                        <button
+                          type="button"
+                          className="rel-per-link"
+                          onClick={() => setPeriodoAberto((prev) => new Set(prev).add(a.id))}
+                          title="Usar outro período só para este aluno"
+                        >
+                          {labelPeriodo} · <u>mudar</u>
+                        </button>
+                      );
+                    }
                     return (
                       <div style={{ width: "100%", display: "flex", alignItems: "center", gap: 6, padding: "6px 8px", background: "#FBFAF6", border: "1px solid var(--line-soft)", borderRadius: 8, marginBottom: 6 }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Período</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--muted)" }}>Período</span>
                         <button
                           type="button"
                           onClick={() => setOv({ num: per.num - 1 })}
