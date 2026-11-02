@@ -62,8 +62,13 @@ export function useTempoEconomizado(opts?: UseTempoEconomizadoOpts): TempoEconom
         if (!cancelled) setState({ loading: false, minutos: total });
       }
 
+      // Saiu da tela enquanto carregava: não abre canal (evita canal órfão).
+      if (cancelled) return;
+      // Nome único por instância: o Supabase reaproveita canais com o mesmo nome e
+      // quebra ("cannot add postgres_changes after subscribe") quando o cabeçalho
+      // e a página usam este hook ao mesmo tempo.
       channel = supabase
-        .channel(`tempo_economizado:${user.id}:${filtered ? `f:${acoesKey}|${motivoKey}` : "total"}`)
+        .channel(`tempo_economizado:${user.id}:${filtered ? `f:${acoesKey}|${motivoKey}` : "total"}:${crypto.randomUUID()}`)
         .on(
           "postgres_changes",
           {
