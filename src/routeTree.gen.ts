@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as SimuladosRouteImport } from './routes/simulados'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as RelatorioPedagogicoRouteImport } from './routes/relatorio-pedagogico'
@@ -20,6 +21,7 @@ import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagament
 import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento-confirmado-anual'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MinhaSalaRouteImport } from './routes/minha-sala'
+import { Route as JogosRouteImport } from './routes/jogos'
 import { Route as IndicacoesRouteImport } from './routes/indicacoes'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as EiRouteImport } from './routes/ei'
@@ -55,6 +57,11 @@ import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/p
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimuladosRoute = SimuladosRouteImport.update({
+  id: '/simulados',
+  path: '/simulados',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -107,6 +114,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const MinhaSalaRoute = MinhaSalaRouteImport.update({
   id: '/minha-sala',
   path: '/minha-sala',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JogosRoute = JogosRouteImport.update({
+  id: '/jogos',
+  path: '/jogos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndicacoesRoute = IndicacoesRouteImport.update({
@@ -279,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
+  '/jogos': typeof JogosRoute
   '/minha-sala': typeof MinhaSalaRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
@@ -289,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
@@ -322,6 +336,7 @@ export interface FileRoutesByTo {
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
+  '/jogos': typeof JogosRoute
   '/minha-sala': typeof MinhaSalaRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
@@ -332,6 +347,7 @@ export interface FileRoutesByTo {
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
@@ -367,6 +383,7 @@ export interface FileRoutesById {
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
+  '/jogos': typeof JogosRoute
   '/minha-sala': typeof MinhaSalaRoute
   '/onboarding': typeof OnboardingRoute
   '/pagamento-confirmado-anual': typeof PagamentoConfirmadoAnualRoute
@@ -377,6 +394,7 @@ export interface FileRoutesById {
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/conversao': typeof AdminConversaoRoute
@@ -413,6 +431,7 @@ export interface FileRouteTypes {
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
+    | '/jogos'
     | '/minha-sala'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
@@ -423,6 +442,7 @@ export interface FileRouteTypes {
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
+    | '/simulados'
     | '/termos'
     | '/admin/atividades'
     | '/admin/conversao'
@@ -456,6 +476,7 @@ export interface FileRouteTypes {
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
+    | '/jogos'
     | '/minha-sala'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
@@ -466,6 +487,7 @@ export interface FileRouteTypes {
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
+    | '/simulados'
     | '/termos'
     | '/admin/atividades'
     | '/admin/conversao'
@@ -500,6 +522,7 @@ export interface FileRouteTypes {
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
+    | '/jogos'
     | '/minha-sala'
     | '/onboarding'
     | '/pagamento-confirmado-anual'
@@ -510,6 +533,7 @@ export interface FileRouteTypes {
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
+    | '/simulados'
     | '/termos'
     | '/admin/atividades'
     | '/admin/conversao'
@@ -545,6 +569,7 @@ export interface RootRouteChildren {
   EiRoute: typeof EiRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
   IndicacoesRoute: typeof IndicacoesRoute
+  JogosRoute: typeof JogosRoute
   MinhaSalaRoute: typeof MinhaSalaRoute
   OnboardingRoute: typeof OnboardingRoute
   PagamentoConfirmadoAnualRoute: typeof PagamentoConfirmadoAnualRoute
@@ -555,6 +580,7 @@ export interface RootRouteChildren {
   RelatorioPedagogicoRoute: typeof RelatorioPedagogicoRoute
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SimuladosRoute: typeof SimuladosRoute
   TermosRoute: typeof TermosRoute
   ApiSofiaSuggestionsRoute: typeof ApiSofiaSuggestionsRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
@@ -568,6 +594,13 @@ declare module '@tanstack/react-router' {
       path: '/termos'
       fullPath: '/termos'
       preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulados': {
+      id: '/simulados'
+      path: '/simulados'
+      fullPath: '/simulados'
+      preLoaderRoute: typeof SimuladosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -638,6 +671,13 @@ declare module '@tanstack/react-router' {
       path: '/minha-sala'
       fullPath: '/minha-sala'
       preLoaderRoute: typeof MinhaSalaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jogos': {
+      id: '/jogos'
+      path: '/jogos'
+      fullPath: '/jogos'
+      preLoaderRoute: typeof JogosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/indicacoes': {
@@ -942,6 +982,7 @@ const rootRouteChildren: RootRouteChildren = {
   EiRoute: EiRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
   IndicacoesRoute: IndicacoesRoute,
+  JogosRoute: JogosRoute,
   MinhaSalaRoute: MinhaSalaRoute,
   OnboardingRoute: OnboardingRoute,
   PagamentoConfirmadoAnualRoute: PagamentoConfirmadoAnualRoute,
@@ -952,6 +993,7 @@ const rootRouteChildren: RootRouteChildren = {
   RelatorioPedagogicoRoute: RelatorioPedagogicoRoute,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SimuladosRoute: SimuladosRoute,
   TermosRoute: TermosRoute,
   ApiSofiaSuggestionsRoute: ApiSofiaSuggestionsRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,

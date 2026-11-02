@@ -1,240 +1,239 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
-import { AppSidebar, sidebarCss } from "@/components/AppSidebar";
-import { Header as AppHeader, appHeaderCss } from "@/components/Header";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
+import { useSofiaOptional } from "@/components/sofia/SofiaProvider";
 import { useHydrated } from "@/hooks/useHydrated";
+import { useTurmas } from "@/hooks/useTurmas";
+import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
+import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
+import { useCreditos } from "@/lib/creditos/useCreditos";
+import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
+import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav";
 import { trackEvent } from "@/lib/tracking";
 
-// Página inicial: saudação + atalhos para todas as funcionalidades.
-// O antigo painel (escolas, turmas, alunos) vive em /minha-sala.
+// Página inicial no visual "Painel": contador pequeno no topo, caixa para
+// escrever para a Sofia, currículo da rede e os cards de todas as funções.
 
-type Feature = {
-  to: string;
-  title: string;
-  desc: string;
-  color: string;
-  icon: ReactNode;
-  tag?: string;
-};
+const TIERS = [
+  { max: 3, name: "Semente" },
+  { max: 7, name: "Manhã livre" },
+  { max: 19, name: "Dia inteiro" },
+  { max: 39, name: "Rotina leve" },
+  { max: 79, name: "Semana extra" },
+  { max: 129, name: "Vida de volta" },
+  { max: 199, name: "Mais leveza" },
+  { max: 499, name: "Extraordinário" },
+  { max: Infinity, name: "Lendário" },
+];
 
-const FEATURES: Feature[] = [
-  {
-    to: "/assistente",
-    title: "Sofia, assistente IA",
-    desc: "Converse e peça ajuda com qualquer tarefa pedagógica.",
-    color: "#8B5CF6",
-    tag: "Novo",
-    icon: (
-      <>
-        <path d="M12 2v3" />
-        <path d="M12 19v3" />
-        <circle cx="12" cy="12" r="6" />
-        <path d="M5 12H2" />
-        <path d="M22 12h-3" />
-      </>
-    ),
-  },
+type Card = { to?: string; title: string; desc: string; bg: string; icon: ReactNode; tag?: string };
+
+const CARDS: Card[] = [
   {
     to: "/planejamento",
     title: "Planejamento",
-    desc: "Monte a semana arrastando aulas e replicando para outras turmas.",
-    color: "#0EA5E9",
-    icon: (
-      <>
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-      </>
-    ),
+    desc: "A semana da turma, com a Sofia preenchendo",
+    bg: "var(--pn-green-soft)",
+    icon: ICONS.cal,
   },
   {
     to: "/planejamento/atividade",
-    title: "Plano de aula",
-    desc: "Crie uma atividade alinhada à BNCC em poucos minutos.",
-    color: "#22C55E",
+    title: "Nova atividade",
+    desc: "Atividade pronta e alinhada ao currículo",
+    bg: "var(--pn-cream)",
     icon: (
       <>
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
       </>
     ),
   },
   {
     to: "/planejamento/ei",
     title: "Educação Infantil",
-    desc: "Roteiros de experiência para os campos da BNCC.",
-    color: "#D99A06",
+    desc: "Roteiros pelos campos de experiência",
+    bg: "var(--pn-pink)",
     icon: (
       <>
-        <circle cx="12" cy="12" r="10" />
-        <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-        <line x1="9" y1="9" x2="9.01" y2="9" />
-        <line x1="15" y1="9" x2="15.01" y2="9" />
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
       </>
     ),
   },
   {
     to: "/relatorios",
-    title: "Relatórios e pareceres",
-    desc: "Pareceres descritivos de cada aluno, prontos para revisar.",
-    color: "#F97316",
-    icon: (
-      <>
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </>
-    ),
+    title: "Pareceres",
+    desc: "Pareceres descritivos de cada aluno",
+    bg: "var(--pn-sun)",
+    icon: ICONS.pen,
   },
   {
     to: "/inclusao",
-    title: "Inclusão",
-    desc: "Alunos com laudo, adaptações e acompanhamento.",
-    color: "#EC4899",
-    tag: "Exclusivo",
-    icon: (
-      <>
-        <circle cx="12" cy="8" r="5" />
-        <path d="M20 21a8 8 0 0 0-16 0" />
-      </>
-    ),
-  },
-  {
-    to: "/inclusao/pei",
-    title: "PEI / PDI",
-    desc: "Plano educacional individualizado com metas e evidências.",
-    color: "#14B8A6",
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="10" />
-        <circle cx="12" cy="12" r="6" />
-        <circle cx="12" cy="12" r="2" />
-      </>
-    ),
-  },
-  {
-    to: "/agenda",
-    title: "Agenda escolar",
-    desc: "Reuniões, avaliações e entregas num só lugar.",
-    color: "#EF4444",
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </>
-    ),
+    title: "Inclusão e PEI",
+    desc: "Adaptações, registros e plano individual",
+    bg: "var(--pn-lilac)",
+    icon: ICONS.users,
   },
   {
     to: "/minha-sala",
     title: "Minha sala",
-    desc: "Escolas, turmas e alunos cadastrados.",
-    color: "#6366F1",
+    desc: "Escolas, turmas e alunos",
+    bg: "var(--pn-blue-soft)",
+    icon: ICONS.users,
+  },
+  {
+    to: "/agenda",
+    title: "Agenda",
+    desc: "Reuniões, provas e prazos da escola",
+    bg: "var(--pn-green-soft)",
+    icon: ICONS.cal,
+  },
+  {
+    to: "/jogos",
+    title: "Jogos 2D",
+    desc: "Jogos para criar a partir da aula e jogar com a turma",
+    bg: "var(--pn-cream)",
     icon: (
       <>
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        <rect x="2" y="7" width="20" height="12" rx="4" />
+        <line x1="7" y1="11" x2="7" y2="15" />
+        <line x1="5" y1="13" x2="9" y2="13" />
       </>
     ),
   },
   {
-    to: "/indicacoes",
-    title: "Indique e ganhe",
-    desc: "Convide colegas e ganhe meses grátis.",
-    color: "#F43F5E",
+    to: "/simulados",
+    title: "Simulados",
+    desc: "Banco de questões, provas e correção pela foto",
+    bg: "var(--pn-pink)",
     icon: (
       <>
-        <polyline points="20 12 20 22 4 22 4 12" />
-        <rect x="2" y="7" width="20" height="5" />
-        <line x1="12" y1="22" x2="12" y2="7" />
-        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-      </>
-    ),
-  },
-  {
-    to: "/configuracoes",
-    title: "Configurações",
-    desc: "Seu perfil, plano, currículo municipal e acessibilidade.",
-    color: "#64748B",
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.18V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-2.82-1.18l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 3.09 15H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
       </>
     ),
   },
 ];
 
+const SUGESTOES = [
+  "Planeje a semana da minha turma",
+  "Adapte uma atividade para um aluno com TEA",
+  "Me ajude a escrever os pareceres do bimestre",
+  "Ideias para a feira de ciências",
+];
+
 const css = `
-.hm-root{min-height:100vh;background:#FFFBF7;color:#1E293B;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
-.hm-grid{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-.hm-main{min-width:0;width:100%;}
-.hm-pad{padding:28px 36px 48px;max-width:1240px;}
+.hm{min-height:100dvh;padding-bottom:40px;}
+.hm-wrap{max-width:1040px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));}
+.hm-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.hm-chip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 6px;border-radius:10px;text-decoration:none;color:var(--pn-ink);font-size:13.5px;font-weight:600;white-space:nowrap;}
+.hm-time{background:var(--pn-green-soft);border:1.5px solid var(--pn-green);}
+.hm-time .ic{width:24px;height:24px;border-radius:7px;background:var(--pn-green);color:#fff;display:flex;align-items:center;justify-content:center;}
+.hm-time .ic svg{width:14px;height:14px;}
+.hm-time b{font-family:var(--pn-display);font-variant-numeric:tabular-nums;}
+.hm-time .lvl{font-size:12px;font-weight:700;padding:2px 7px;border-radius:5px;background:#fff;}
+.hm-cred{background:var(--pn-surface);border:1.5px solid var(--pn-line);padding-left:12px;}
+.hm-cred .bar{width:60px;height:8px;border-radius:3px;background:var(--pn-bg);overflow:hidden;}
+.hm-cred .bar span{display:block;height:100%;background:var(--pn-green);}
+.hm-cred b{font-variant-numeric:tabular-nums;}
+.hm-date{margin-left:auto;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--pn-muted);}
+.hm-hello{margin:18px 0 14px;font-family:var(--pn-display);font-weight:800;font-size:40px;letter-spacing:-.04em;line-height:1.05;text-wrap:balance;}
 
-.hm-hero{position:relative;overflow:hidden;border-radius:28px;padding:34px 36px;margin-bottom:28px;
-  background:linear-gradient(120deg,#FFE8D6 0%,#FFF3C4 35%,#DDF4FF 70%,#EDE4FF 100%);background-size:220% 220%;
-  animation:hm-shift 16s ease-in-out infinite alternate;}
-@keyframes hm-shift{from{background-position:0% 50%;}to{background-position:100% 50%;}}
-.hm-hero .bubble{position:absolute;border-radius:50%;opacity:.55;pointer-events:none;animation:hm-float 9s ease-in-out infinite alternate;}
-.hm-hero .bubble.b1{width:140px;height:140px;background:#FFB98A;right:6%;top:-40px;}
-.hm-hero .bubble.b2{width:90px;height:90px;background:#9BD8FF;right:22%;bottom:-30px;animation-delay:-3s;}
-.hm-hero .bubble.b3{width:56px;height:56px;background:#C9B6FF;right:3%;bottom:24px;animation-delay:-6s;}
-@keyframes hm-float{from{transform:translateY(0) scale(1);}to{transform:translateY(14px) scale(1.06);}}
-.hm-hero-in{position:relative;z-index:1;max-width:640px;}
-.hm-date{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.75);border-radius:100px;padding:6px 12px;font-size:12.5px;font-weight:700;color:#475569;margin-bottom:14px;}
-.hm-date .dot{width:7px;height:7px;border-radius:50%;background:#22C55E;box-shadow:0 0 0 0 rgba(34,197,94,.5);animation:hm-pulse 2s infinite;}
-@keyframes hm-pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5);}70%{box-shadow:0 0 0 8px rgba(34,197,94,0);}100%{box-shadow:0 0 0 0 rgba(34,197,94,0);}}
-.hm-hello{margin:0;font-family:'Fraunces',Georgia,serif;font-weight:800;font-size:40px;line-height:1.08;letter-spacing:-.025em;color:#1E293B;}
-.hm-hello .wave{display:inline-block;transform-origin:70% 70%;animation:hm-wave 2.4s ease-in-out 1;}
-@keyframes hm-wave{0%,60%,100%{transform:rotate(0);}10%,30%{transform:rotate(14deg);}20%{transform:rotate(-8deg);}40%{transform:rotate(-4deg);}50%{transform:rotate(10deg);}}
-.hm-hello .name{background:linear-gradient(90deg,#F97316,#EC4899,#8B5CF6);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.hm-sub{margin:12px 0 0;font-size:16px;line-height:1.5;color:#475569;}
+.hm-sofia{background:var(--pn-sun);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:18px;}
+.hm-sofia-h{display:flex;align-items:center;gap:8px;font-family:var(--pn-display);font-weight:700;font-size:16px;}
+.hm-sofia-h .ic{width:28px;height:28px;border-radius:8px;background:var(--pn-ink);color:var(--pn-sun);display:flex;align-items:center;justify-content:center;}
+.hm-sofia-h .ic svg{width:16px;height:16px;}
+.hm-box{margin-top:10px;background:#fff;border:2px solid var(--pn-ink);border-radius:14px;padding:12px 12px 10px;}
+.hm-box textarea{width:100%;min-height:64px;border:0;resize:vertical;font-family:inherit;font-size:16px;line-height:1.45;color:var(--pn-ink);background:transparent;outline:none;}
+.hm-box-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.hm-pill{display:inline-flex;align-items:center;height:32px;padding:0 10px;border-radius:8px;background:var(--pn-bg);font-size:13px;font-weight:700;color:var(--pn-ink);border:0;font-family:inherit;}
+.hm-pill.curr{background:var(--pn-blue-soft);text-decoration:none;}
+select.hm-pill{cursor:pointer;padding-right:6px;}
+.hm-icbtn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--pn-line);background:#fff;color:var(--pn-ink);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.hm-icbtn svg{width:16px;height:16px;}
+.hm-icbtn.on{background:var(--pn-coral);border-color:var(--pn-ink);color:#fff;}
+.hm-send{margin-left:auto;height:40px;font-size:14px;}
+.hm-sugs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.hm-sugs button{height:36px;padding:0 12px;border-radius:8px;border:1.5px solid var(--pn-line);background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--pn-ink);cursor:pointer;}
+.hm-sugs button:hover{border-color:var(--pn-ink);}
 
-.hm-section-title{margin:0 0 14px;font-size:13px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.12em;}
-.hm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;}
-.hm-card{--c:#6366F1;position:relative;display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:20px;text-decoration:none;color:inherit;
-  background:#fff;border:1.5px solid color-mix(in srgb,var(--c) 14%,#fff);box-shadow:0 2px 6px rgba(30,41,59,.04);
-  transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s;
-  opacity:0;animation:hm-in .5s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i) * 45ms);overflow:hidden;}
-@keyframes hm-in{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
-.hm-card::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:color-mix(in srgb,var(--c) 10%,transparent);transition:transform .35s;}
-.hm-card:hover,.hm-card:focus-visible{transform:translateY(-4px);border-color:color-mix(in srgb,var(--c) 45%,#fff);box-shadow:0 16px 32px color-mix(in srgb,var(--c) 20%,transparent);outline:none;}
-.hm-card:hover::after{transform:scale(1.35);}
-.hm-card .ic{position:relative;z-index:1;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;
-  background:linear-gradient(135deg,color-mix(in srgb,var(--c) 80%,#fff),var(--c));box-shadow:0 8px 18px color-mix(in srgb,var(--c) 35%,transparent);transition:transform .25s;}
-.hm-card:hover .ic{transform:rotate(-6deg) scale(1.06);}
-.hm-card .ic svg{width:22px;height:22px;}
-.hm-card h3{position:relative;z-index:1;margin:0;font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#1E293B;}
-.hm-card p{position:relative;z-index:1;margin:0;font-size:13.5px;line-height:1.45;color:#64748B;}
-.hm-card .tag{align-self:flex-start;position:relative;z-index:1;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);padding:3px 8px;border-radius:100px;margin-top:-4px;}
-.hm-card .go{position:relative;z-index:1;margin-top:auto;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--c);}
-.hm-card .go svg{width:14px;height:14px;transition:transform .2s;}
-.hm-card:hover .go svg{transform:translateX(4px);}
+.hm-curr{margin-top:14px;display:flex;align-items:center;gap:14px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;padding:14px 16px;flex-wrap:wrap;}
+.hm-badge{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--pn-ink);}
+.hm-badge svg{width:22px;height:22px;}
+.hm-curr-txt{flex:1;min-width:220px;}
+.hm-curr-txt b{display:block;font-family:var(--pn-display);font-size:16px;}
+.hm-curr-txt span{display:block;margin-top:2px;font-size:13.5px;color:var(--pn-muted);}
+.hm-slot{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:700;white-space:nowrap;
+  background:var(--pn-green-soft);border:1.5px solid var(--pn-green);}
+.hm-slot.proc{background:var(--pn-cream);border-color:#C98A00;}
+.hm-slot.err{background:var(--pn-pink);border-color:var(--pn-coral);}
+.hm-slot em{font-style:normal;padding:2px 6px;border-radius:5px;background:var(--pn-green);color:#fff;font-size:11px;}
+.hm-add{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 12px;border-radius:10px;border:1.5px dashed var(--pn-muted);background:transparent;
+  font-family:inherit;font-size:13.5px;font-weight:700;color:var(--pn-ink);cursor:pointer;white-space:nowrap;}
+.hm-add:hover{border-color:var(--pn-ink);border-style:solid;}
 
-@media(max-width:820px){
-  .hm-grid{grid-template-columns:1fr;}
-  .hm-pad{padding:18px 16px 40px;}
-  .hm-hero{padding:24px 20px;border-radius:22px;margin-bottom:22px;}
-  .hm-hello{font-size:30px;}
-  .hm-sub{font-size:15px;}
-  .hm-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
-  .hm-card{padding:16px;gap:10px;border-radius:18px;}
-  .hm-card .ic{width:42px;height:42px;border-radius:12px;}
-  .hm-card p{display:none;}
-    .hm-card h3{font-size:15px;}
+.hm-sec{display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 12px;}
+.hm-sec h2{margin:0;font-family:var(--pn-display);font-weight:700;font-size:18px;}
+.hm-sec span{font-size:13.5px;color:var(--pn-muted);}
+.hm-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.hm-card{display:flex;flex-direction:column;gap:10px;padding:16px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;text-decoration:none;color:var(--pn-ink);
+  transition:border-color .15s,box-shadow .15s,transform .15s;min-width:0;}
+a.hm-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);transform:translate(-2px,-2px);}
+.hm-card.soon{opacity:.75;}
+.hm-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.hm-tag{padding:4px 8px;border-radius:6px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--pn-bg);color:var(--pn-ink);white-space:nowrap;}
+.hm-card h3{margin:0;font-family:var(--pn-display);font-weight:700;font-size:17px;letter-spacing:-.01em;}
+.hm-card p{margin:3px 0 0;font-size:13.5px;line-height:1.4;color:var(--pn-muted);}
+.hm-go{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--pn-green);margin-top:auto;}
+.hm-go svg{width:14px;height:14px;}
+
+.hm-modal-bg{position:fixed;inset:0;z-index:70;background:rgba(20,22,31,.5);display:flex;align-items:center;justify-content:center;padding:16px;}
+.hm-modal{width:100%;max-width:760px;max-height:90vh;overflow:auto;background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:6px 6px 0 var(--pn-ink);padding:22px;}
+.hm-modal-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.hm-modal-h h2{margin:0;font-family:var(--pn-display);font-size:22px;letter-spacing:-.03em;}
+.hm-modal-h p{margin:4px 0 0;font-size:14px;color:var(--pn-muted);line-height:1.45;}
+
+@media (max-width: 860px){
+  .hm{padding-bottom:110px;}
+  .hm-wrap{padding-top:12px;}
+  .hm-date{display:none;}
+  .hm-hello{font-size:28px;margin:14px 0 10px;}
+  .hm-sofia{padding:14px;}
+  .hm-time .lbl{display:none;}
+  .hm-cred .bar{width:40px;}
+  .hm-sugs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+  .hm-sugs button{flex-shrink:0;font-size:13px;height:34px;}
+  .hm-curr{padding:12px;gap:10px;}
+  .hm-curr .hm-badge{width:36px;height:36px;}
+  .hm-curr-txt{min-width:0;flex:1 1 200px;}
+  .hm-slot,.hm-add{width:100%;justify-content:flex-start;}
+  .hm-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .hm-card{padding:12px;gap:8px;}
+  .hm-card .hm-badge{width:36px;height:36px;}
+  .hm-card .hm-badge svg{width:18px;height:18px;}
+  .hm-card h3{font-size:14.5px;}
+  .hm-card p{font-size:12px;}
+  .hm-go{display:none;}
 }
-@media(max-width:360px){.hm-cards{grid-template-columns:1fr;}}
-@media (prefers-reduced-motion: reduce){
-  .hm-hero,.hm-hero .bubble,.hm-date .dot,.hm-hello .wave{animation:none;}
-  .hm-card{animation:none;opacity:1;}
-}
+@media (prefers-reduced-motion: reduce){.hm-card{transition:none;}}
 `;
+
+function Svg({ children, w = 2.2 }: { children: ReactNode; w?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={w}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {children}
+    </svg>
+  );
+}
 
 function saudacaoAgora(): string {
   const h = new Date().getHours();
@@ -244,112 +243,358 @@ function saudacaoAgora(): string {
 }
 
 function dataHoje(): string {
-  const txt = new Date().toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-  return txt.charAt(0).toUpperCase() + txt.slice(1);
+  return new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+}
+
+// Ditado por voz quando o navegador oferece reconhecimento de fala.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getRecognition(): any {
+  if (typeof window === "undefined") return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const w = window as any;
+  const R = w.SpeechRecognition || w.webkitSpeechRecognition;
+  if (!R) return null;
+  const r = new R();
+  r.lang = "pt-BR";
+  r.interimResults = false;
+  r.continuous = false;
+  return r;
 }
 
 export function Home() {
   const hydrated = useHydrated();
-  const sofiaCtx = useSofiaContext();
-  const nome = (sofiaCtx.user?.primeiro_nome || "").trim();
+  const ctx = useSofiaContext();
+  const sofia = useSofiaOptional();
+  const { turmas } = useTurmas();
+  const { curriculos, load: reloadCurriculos } = useCurriculoMunicipal();
+  const { minutos } = useTempoEconomizado();
+  const cred = useCreditos();
 
-  // Mantém a saudação certa se a página ficar aberta na virada do período.
-  const [, setTick] = useState(0);
+  const [texto, setTexto] = useState("");
+  const [turmaId, setTurmaId] = useState("");
+  const [ouvindo, setOuvindo] = useState(false);
+  const [podeOuvir, setPodeOuvir] = useState(false);
+  const [modalCurr, setModalCurr] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recRef = useRef<any>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => setPodeOuvir(!!getRecognition()), []);
   useEffect(() => {
-    if (!hydrated) return;
-    const id = setInterval(() => setTick((n) => n + 1), 60_000);
-    return () => clearInterval(id);
-  }, [hydrated]);
-
+    if (!turmaId && turmas.length > 0) setTurmaId(turmas[0].id);
+  }, [turmas, turmaId]);
   useEffect(() => {
-    trackEvent("page_view_dashboard", { location: "dashboard" });
-  }, []);
+    if (!modalCurr) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && fecharModal();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalCurr]);
 
-  // SSR/primeiro paint usa "Olá" pra não dar mismatch de hidratação.
-  const slot = hydrated ? saudacaoAgora() : "Olá";
+  const primeiro = (ctx.user?.primeiro_nome || "").trim();
+  const nome = primeiro && primeiro !== "Educador(a)" ? primeiro : "";
+  const horas = Math.floor(minutos / 60);
+  const mins = minutos % 60;
+  const nivel = TIERS.find((t) => horas <= t.max)?.name ?? "Semente";
+  const credPct = cred.totais > 0 ? Math.round((cred.disponiveis / cred.totais) * 100) : 0;
+  const turma = turmas.find((t) => t.id === turmaId);
+  const padrao = useMemo(
+    () =>
+      curriculos.find((c) => c.eh_padrao && c.status === "ativo") ??
+      curriculos.find((c) => c.status === "ativo") ??
+      null,
+    [curriculos],
+  );
+
+  const enviar = () => {
+    const prompt = texto.trim();
+    if (!prompt || !sofia) return;
+    const partes = [
+      turma ? `Turma: ${turma.name}${turma.grade ? ` (${turma.grade})` : ""}` : "",
+      padrao ? `Currículo da rede: ${padrao.municipio}` : "",
+    ].filter(Boolean);
+    sofia.openSofia({ prompt, send: true, context: partes.join(" · ") || undefined });
+    trackEvent("home_sofia_enviar", { location: "home", com_turma: !!turma });
+    setTexto("");
+  };
+
+  const ditar = () => {
+    if (ouvindo) {
+      recRef.current?.stop?.();
+      return;
+    }
+    const r = getRecognition();
+    if (!r) return;
+    recRef.current = r;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    r.onresult = (e: any) => {
+      const t = Array.from(e.results as ArrayLike<{ 0: { transcript: string } }>)
+        .map((x) => x[0].transcript)
+        .join(" ");
+      setTexto((prev) => (prev ? `${prev} ${t}` : t));
+    };
+    r.onend = () => setOuvindo(false);
+    r.onerror = () => setOuvindo(false);
+    setOuvindo(true);
+    r.start();
+  };
+
+  const fecharModal = () => {
+    setModalCurr(false);
+    void reloadCurriculos();
+  };
 
   return (
-    <div className="hm-root">
-      <style dangerouslySetInnerHTML={{ __html: css + sidebarCss + appHeaderCss }} />
-      <div className="hm-grid">
-        <AppSidebar active="home" />
-        <main className="hm-main">
-          <AppHeader breadcrumb={[{ label: "Página inicial" }]} />
-          <div className="hm-pad">
-            <section className="hm-hero" aria-labelledby="hm-hello">
-              <span className="bubble b1" aria-hidden />
-              <span className="bubble b2" aria-hidden />
-              <span className="bubble b3" aria-hidden />
-              <div className="hm-hero-in">
-                {hydrated && (
-                  <div className="hm-date">
-                    <span className="dot" aria-hidden />
-                    {dataHoje()}
-                  </div>
-                )}
-                <h1 id="hm-hello" className="hm-hello" suppressHydrationWarning>
-                  {slot}
-                  {nome && nome !== "Educador(a)" ? (
-                    <>
-                      , <span className="name">{nome}</span>
-                    </>
-                  ) : null}
-                  !{" "}
-                  <span className="wave" aria-hidden>
-                    👋
-                  </span>
-                </h1>
-                <p className="hm-sub">O que você quer fazer hoje?</p>
-              </div>
-            </section>
+    <div className="pn hm">
+      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + css }} />
+      <PainelNav />
+      <main className="hm-wrap">
+        <div className="hm-strip">
+          <Link
+            to="/minha-sala"
+            className="hm-chip hm-time"
+            title="Tempo que a plataforma já te devolveu"
+          >
+            <span className="ic">
+              <Svg w={2.5}>
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </Svg>
+            </span>
+            <span>
+              <span className="lbl">Tempo devolvido a você </span>
+              <b suppressHydrationWarning>
+                {horas}h {String(mins).padStart(2, "0")}min
+              </b>
+            </span>
+            <span className="lvl" suppressHydrationWarning>
+              {nivel}
+            </span>
+          </Link>
+          {!cred.loading && cred.totais > 0 && (
+            <Link to="/configuracoes" className="hm-chip hm-cred" title="Créditos disponíveis">
+              Créditos
+              <span className="bar" aria-hidden>
+                <span style={{ width: `${credPct}%` }} />
+              </span>
+              <b>
+                {cred.disponiveis}/{cred.totais}
+              </b>
+            </Link>
+          )}
+          {hydrated && <span className="hm-date">{dataHoje()}</span>}
+        </div>
 
-            <h2 className="hm-section-title">Tudo o que você pode fazer</h2>
-            <nav className="hm-cards" aria-label="Funcionalidades">
-              {FEATURES.map((f, i) => (
-                <Link
-                  key={f.to}
-                  to={f.to}
-                  className="hm-card"
-                  style={{ ["--c" as string]: f.color, ["--i" as string]: i } as CSSProperties}
-                >
-                  <span className="ic" aria-hidden>
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      {f.icon}
-                    </svg>
-                  </span>
-                  <h3>{f.title}</h3>
-                  {f.tag && <span className="tag">{f.tag}</span>}
-                  <p>{f.desc}</p>
-                  <span className="go">
-                    Abrir
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 12h14M13 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                </Link>
-              ))}
-            </nav>
+        <h1 className="hm-hello" suppressHydrationWarning>
+          {hydrated ? saudacaoAgora() : "Olá"}
+          {nome ? `, ${nome}` : ""}.
+        </h1>
+
+        <section className="hm-sofia" aria-labelledby="hm-sofia-h">
+          <div className="hm-sofia-h" id="hm-sofia-h">
+            <span className="ic">
+              <Svg w={2}>{ICONS.spark}</Svg>
+            </span>
+            Fale com a Sofia
           </div>
-        </main>
-      </div>
+          <form
+            className="hm-box"
+            onSubmit={(e) => {
+              e.preventDefault();
+              enviar();
+            }}
+          >
+            <label
+              htmlFor="hm-sofia-txt"
+              className="sr-only"
+              style={{ position: "absolute", left: -9999 }}
+            >
+              Mensagem para a Sofia
+            </label>
+            <textarea
+              id="hm-sofia-txt"
+              ref={taRef}
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  enviar();
+                }
+              }}
+              placeholder="O que você precisa hoje? Ex.: planeje uma aula de frações com adaptação para um aluno com TEA."
+            />
+            <div className="hm-box-row">
+              {turmas.length > 0 && (
+                <select
+                  className="hm-pill"
+                  aria-label="Turma"
+                  value={turmaId}
+                  onChange={(e) => setTurmaId(e.target.value)}
+                >
+                  {turmas.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      Turma: {t.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {padrao && (
+                <span
+                  className="hm-pill curr"
+                  title="A Sofia usa os códigos do currículo da sua rede"
+                >
+                  Currículo: {padrao.municipio}
+                </span>
+              )}
+              {podeOuvir && (
+                <button
+                  type="button"
+                  className={"hm-icbtn" + (ouvindo ? " on" : "")}
+                  aria-label={ouvindo ? "Parar de ouvir" : "Falar em vez de digitar"}
+                  aria-pressed={ouvindo}
+                  onClick={ditar}
+                >
+                  <Svg>
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 10a7 7 0 0 0 14 0" />
+                    <line x1="12" y1="19" x2="12" y2="22" />
+                  </Svg>
+                </button>
+              )}
+              <button
+                type="submit"
+                className="pn-btn primary hm-send"
+                disabled={!texto.trim() || !sofia}
+              >
+                Enviar
+                <Svg w={2.5}>
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </Svg>
+              </button>
+            </div>
+          </form>
+          <div className="hm-sugs">
+            {SUGESTOES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => {
+                  setTexto(s);
+                  taRef.current?.focus();
+                }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="hm-curr" aria-labelledby="hm-curr-h">
+          <span className="hm-badge" style={{ background: "var(--pn-blue-soft)" }}>
+            <Svg>
+              <path d="M3 21h18" />
+              <path d="M5 21V10l7-5 7 5v11" />
+              <path d="M10 21v-5h4v5" />
+            </Svg>
+          </span>
+          <div className="hm-curr-txt">
+            <b id="hm-curr-h">Currículo da sua rede</b>
+            <span>
+              Com o currículo ativo, a Sofia troca os códigos da BNCC pelos do seu município nos
+              planos, relatórios e pareceres.
+            </span>
+          </div>
+          {curriculos.map((c) => (
+            <span
+              key={c.id}
+              className={
+                "hm-slot" +
+                (c.status === "processando" ? " proc" : c.status === "erro" ? " err" : "")
+              }
+            >
+              {c.municipio || c.arquivo_nome}
+              {c.status === "processando" ? " · processando" : c.status === "erro" ? " · erro" : ""}
+              {c.eh_padrao && c.status === "ativo" && <em>Padrão</em>}
+            </span>
+          ))}
+          <button type="button" className="hm-add" onClick={() => setModalCurr(true)}>
+            {curriculos.length === 0
+              ? "+ Anexar currículo (PDF)"
+              : curriculos.length < 2
+                ? "+ Anexar outro currículo (PDF)"
+                : "Gerenciar currículos"}
+          </button>
+        </section>
+
+        <div className="hm-sec">
+          <h2>Suas ferramentas</h2>
+          <span>{CARDS.length} funções</span>
+        </div>
+        <nav className="hm-cards" aria-label="Funcionalidades">
+          {CARDS.map((c) => {
+            const inner = (
+              <>
+                <span className="hm-card-top">
+                  <span className="hm-badge" style={{ background: c.bg }}>
+                    <Svg>{c.icon}</Svg>
+                  </span>
+                  {c.tag && <span className="hm-tag">{c.tag}</span>}
+                </span>
+                <span>
+                  <h3>{c.title}</h3>
+                  <p>{c.desc}</p>
+                </span>
+                {c.to && (
+                  <span className="hm-go">
+                    Abrir
+                    <Svg w={2.5}>
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </Svg>
+                  </span>
+                )}
+              </>
+            );
+            return c.to ? (
+              <Link key={c.title} to={c.to} className="hm-card">
+                {inner}
+              </Link>
+            ) : (
+              <div key={c.title} className="hm-card soon" aria-disabled="true">
+                {inner}
+              </div>
+            );
+          })}
+        </nav>
+      </main>
+
+      {modalCurr && (
+        <div className="hm-modal-bg" onClick={fecharModal}>
+          <div
+            className="hm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="hm-modal-h"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="hm-modal-h">
+              <div>
+                <h2 id="hm-modal-h">Currículo da sua rede</h2>
+                <p>
+                  Envie o PDF do currículo do seu município. Você pode guardar até dois e escolher
+                  qual é o padrão.
+                </p>
+              </div>
+              <button type="button" className="pn-btn" style={{ height: 38 }} onClick={fecharModal}>
+                Fechar
+              </button>
+            </div>
+            <CurriculoMunicipalCard />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
