@@ -5,7 +5,7 @@ function Jogos() {
   return (
     <Ferramenta
       titulo="Jogos e atividades interativas"
-      sub="Mais de 120 jogos para criar a partir da aula e jogar com a turma, no computador ou projetados na sala."
+      sub="Escolha um dos mais de 120 jogos e siga as etapas: conteúdo, visual, regras e jogar. Dá para jogar com a turma no computador ou projetado na sala."
       src="/ferramentas/jogos.html"
     />
   );
