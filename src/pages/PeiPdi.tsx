@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { ArrowLeft, Sparkles, Save, Loader2, FileText, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw, Bug, Eraser } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,7 +55,6 @@ const emptyPei: PeiData = {
 };
 
 export function PeiPdi() {
-  const navigate = useNavigate();
   const [students] = usePersistentState<Student[]>("inc_students", []);
   const [regByStudent] = usePersistentState<Record<string, Array<{ when?: string; cat?: string; body?: string }>>>("inc_reg", {});
   const [anamByStudent] = usePersistentState<Record<string, unknown[]>>("inc_anam", {});
@@ -326,7 +327,6 @@ export function PeiPdi() {
       avaliacao: { ...emptyPei.avaliacao, ...(full.avaliacao as PeiData["avaliacao"]) },
       responsaveis: { ...emptyPei.responsaveis, ...(full.responsaveis as PeiData["responsaveis"]) },
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const apagarVersao = async (id: string) => {
@@ -338,70 +338,69 @@ export function PeiPdi() {
     loadVersions();
   };
 
+  const mostrarDebug = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug");
+
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <header className="sticky top-0 z-10 border-b bg-card px-6 py-3 flex items-center gap-3">
-        <button onClick={() => navigate({ to: "/inclusao" })} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft size={16} /> Inclusão
-        </button>
-        <span className="text-sm font-semibold">PEI / PDI</span>
-        <span className="ml-auto inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Gemini 2.5 Flash
-        </span>
-      </header>
+    <div className="pn pei-root">
+      <style>{painelTokensCss + tempoChipCss + peiCss}</style>
+      <PainelNav />
+      <main className="pei-main">
+        <div className="pn-strip"><TempoChip /></div>
+        <Link to="/inclusao" className="pei-voltar"><ArrowLeft size={16} /> Inclusão</Link>
+        <h1 className="pei-title">PEI / PDI</h1>
+        <p className="pei-sub">A Sofia escreve o plano individual do aluno com o que você já registrou. Você revisa, ajusta e salva.</p>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
-        <section className="bg-card border rounded-2xl p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-rose-50 grid place-items-center text-lg">♿</div>
-            <div>
-              <h1 className="text-xl font-bold">Plano Educacional Individualizado</h1>
-              <p className="text-sm text-muted-foreground">Sofia gera o PEI completo a partir dos dados cadastrados do aluno PCD. 6 seções editáveis. Versionado.</p>
+        <section className="pei-card">
+          <h2 className="pei-h2"><span className="pei-num">1</span> Para quem é o plano?</h2>
+          {students.length === 0 ? (
+            <div className="pei-vazio">
+              <p>Você ainda não cadastrou alunos em Inclusão.</p>
+              <Link to="/inclusao" className="pn-btn primary">Cadastrar aluno</Link>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="text-sm">
-              <span className="block font-semibold mb-1">Aluno PCD</span>
-              <select value={alunoId} onChange={(e) => setAlunoId(e.target.value)} className="w-full border rounded-lg px-3 py-2 bg-background">
-                <option value="">Selecione…</option>
+          ) : (
+            <>
+              <div className="pei-alunos" role="radiogroup" aria-label="Aluno">
                 {students.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} {s.turma ? `· ${s.turma}` : ""}</option>
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={alunoId === s.id}
+                    className={"pei-aluno" + (alunoId === s.id ? " on" : "")}
+                    onClick={() => setAlunoId(s.id)}
+                  >
+                    <span className="av" aria-hidden>{s.name.trim().charAt(0).toUpperCase()}</span>
+                    <span className="tx"><b>{s.name}</b>{(s.turma || s.diag) && <small>{[s.turma, s.diag].filter(Boolean).join(" · ")}</small>}</span>
+                  </button>
                 ))}
-              </select>
-              {students.length === 0 && (
-                <span className="block text-xs text-muted-foreground mt-1">Nenhum aluno PCD cadastrado em Inclusão.</span>
-              )}
-            </label>
-            <label className="text-sm">
-              <span className="block font-semibold mb-1">Bimestre / Semestre</span>
-              <select value={bimestre} onChange={(e) => setBimestre(e.target.value)} className="w-full border rounded-lg px-3 py-2 bg-background">
-                {BIMESTRES.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </label>
-            {aluno && (
-              <div className="md:col-span-2 flex flex-wrap gap-2 text-xs">
-                {aluno.diag && <span className="px-2 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200">{aluno.diag}</span>}
-                {aluno.anoEscolar && <span className="px-2 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-200">{aluno.anoEscolar}</span>}
-                {aluno.cid ? (
-                  <span className="px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Laudo: {aluno.cid}</span>
-                ) : (
-                  <span className="px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Sem laudo · Sofia usa o tipo cadastrado</span>
+              </div>
+
+              <div className="pei-linha">
+                <label className="pei-campo">
+                  <span>Período</span>
+                  <select value={bimestre} onChange={(e) => setBimestre(e.target.value)}>
+                    {BIMESTRES.map((b) => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </label>
+                {aluno && (
+                  <div className="pei-tags">
+                    {aluno.anoEscolar && <span className="pei-tag">{aluno.anoEscolar}</span>}
+                    {aluno.cid ? <span className="pei-tag ok">Laudo: {aluno.cid}</span> : <span className="pei-tag aviso">Sem laudo</span>}
+                  </div>
                 )}
               </div>
-            )}
-            <label className="md:col-span-2 text-sm">
-              <span className="block font-semibold mb-1">Contexto adicional (opcional)</span>
-              <textarea value={contexto} onChange={(e) => setContexto(e.target.value)} rows={3} placeholder="Acompanhamento externo, informações da família, etc." className="w-full border rounded-lg px-3 py-2 bg-background resize-y" />
-            </label>
-          </div>
 
-          <div className="mt-4 flex gap-2">
-            <button onClick={gerarPei} disabled={!aluno || generating} className="inline-flex items-center gap-2 bg-rose-600 text-white font-semibold px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-rose-700">
-              {generating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-              {generating ? "Sofia está escrevendo…" : (pei ? "Regenerar PEI" : "Sofia gera o PEI")}
-            </button>
-          </div>
+              <details className="pei-mais">
+                <summary>Quer contar algo a mais para a Sofia? (opcional)</summary>
+                <textarea value={contexto} onChange={(e) => setContexto(e.target.value)} rows={3} placeholder="Ex.: faz terapia ocupacional, a família relatou avanços na leitura…" />
+              </details>
+
+              <button type="button" onClick={gerarPei} disabled={!aluno || generating} className="pn-btn primary pei-gerar">
+                {generating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                {generating ? "A Sofia está escrevendo…" : !aluno ? "Escolha um aluno acima" : pei ? "Escrever de novo" : "Sofia escreve o PEI"}
+              </button>
+            </>
+          )}
         </section>
 
         {pei && aluno && (
@@ -417,97 +416,48 @@ export function PeiPdi() {
           />
         )}
 
-        <section className="bg-card border rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold flex items-center gap-2"><FileText size={16} /> PEIs salvos</h2>
-            <button onClick={loadVersions} className="text-xs inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-              <RefreshCw size={12} /> Atualizar
-            </button>
+        <section className="pei-card">
+          <div className="pei-cab">
+            <h2 className="pei-h2"><FileText size={18} /> PEIs salvos</h2>
+            <button type="button" onClick={loadVersions} className="pei-link"><RefreshCw size={14} /> Atualizar</button>
           </div>
           {loadingList ? (
-            <div className="text-sm text-muted-foreground">Carregando…</div>
+            <p className="pei-muted">Carregando…</p>
           ) : versions.length === 0 ? (
-            <div className="text-sm text-muted-foreground">Nenhum PEI salvo ainda.</div>
+            <p className="pei-muted">Nenhum PEI salvo ainda. Os que você salvar aparecem aqui.</p>
           ) : (
-            <ul className="divide-y">
+            <ul className="pei-salvos">
               {versions.map((v) => (
-                <li key={v.id} className="py-3 flex items-center gap-3 text-sm">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold truncate">{v.aluno_nome}</div>
-                    <div className="text-xs text-muted-foreground">{v.bimestre} · v{v.versao} · {new Date(v.gerado_em).toLocaleDateString("pt-BR")}</div>
+                <li key={v.id} className={currentId === v.id ? "on" : ""}>
+                  <div className="tx">
+                    <b>{v.aluno_nome}</b>
+                    <small>{v.bimestre} · versão {v.versao} · {new Date(v.gerado_em).toLocaleDateString("pt-BR")}</small>
                   </div>
-                  <button onClick={() => abrirVersao(v)} className="text-xs px-3 py-1.5 rounded-lg border hover:bg-accent">Abrir</button>
-                  <button onClick={() => apagarVersao(v.id)} className="text-xs p-1.5 rounded-lg border text-rose-600 hover:bg-rose-50" title="Apagar"><Trash2 size={14} /></button>
+                  <button type="button" onClick={() => abrirVersao(v)} className="pn-btn pei-abrir">Abrir</button>
+                  <button type="button" onClick={() => apagarVersao(v.id)} className="pei-apagar" title="Apagar" aria-label={`Apagar PEI de ${v.aluno_nome}`}><Trash2 size={16} /></button>
                 </li>
               ))}
             </ul>
           )}
         </section>
 
-        <div className="text-center pt-4">
-          <Link to="/inclusao" className="text-xs text-muted-foreground hover:text-foreground">← Voltar para Inclusão</Link>
-        </div>
-
-        <section className="bg-card border rounded-2xl overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setDebugOpen((v) => !v)}
-            className="w-full px-6 py-3 flex items-center justify-between text-sm font-semibold border-b bg-muted/40 hover:bg-muted"
-          >
-            <span className="inline-flex items-center gap-2">
-              <Bug size={14} /> Debug Sofia · PEI
-              <span className="text-xs font-normal text-muted-foreground">({debugLog.length} eventos)</span>
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => { e.stopPropagation(); setDebugLog([]); }}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setDebugLog([]); } }}
-                className="text-xs inline-flex items-center gap-1 px-2 py-1 rounded border hover:bg-background cursor-pointer"
-              >
-                <Eraser size={12} /> Limpar
+        {mostrarDebug && (
+          <section className="pei-card pei-debug">
+            <div className="pei-cab">
+              <h2 className="pei-h2"><Bug size={16} /> Debug Sofia · PEI ({debugLog.length})</h2>
+              <span>
+                <button type="button" className="pei-link" onClick={() => setDebugLog([])}><Eraser size={14} /> Limpar</button>
+                <button type="button" className="pei-link" onClick={() => setDebugOpen((v) => !v)}>{debugOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
               </span>
-              {debugOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </span>
-          </button>
-          {debugOpen && (
-            <div className="p-4 space-y-3 max-h-[500px] overflow-auto">
-              {debugLog.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  Nenhum evento ainda. Clique em <strong>Sofia gera o PEI</strong> para ver request, raw response e JSON parseado em tempo real (incluindo split parte=a / parte=b).
-                </p>
-              ) : (
-                debugLog.map((e, i) => {
-                  const stageColor =
-                    e.stage === "request" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                    e.stage === "raw" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                    e.stage === "parsed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                    "bg-rose-50 text-rose-700 border-rose-200";
-                  const parteColor =
-                    e.parte === "completo" ? "bg-violet-50 text-violet-700 border-violet-200" :
-                    e.parte === "a" ? "bg-sky-50 text-sky-700 border-sky-200" :
-                    "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200";
-                  return (
-                    <div key={i} className="border rounded-lg overflow-hidden">
-                      <div className="px-3 py-2 flex items-center gap-2 text-xs bg-background border-b">
-                        <span className={`px-2 py-0.5 rounded-full border ${stageColor}`}>{e.stage}</span>
-                        <span className={`px-2 py-0.5 rounded-full border ${parteColor}`}>parte={e.parte}</span>
-                        <span className="ml-auto text-muted-foreground">{e.ts}</span>
-                      </div>
-                      <pre className="text-[11px] leading-relaxed p-3 overflow-auto max-h-64 bg-muted/30 whitespace-pre-wrap break-words">
-{(() => {
-  try { return JSON.stringify(e.payload, null, 2); }
-  catch { return String(e.payload); }
-})()}
-                      </pre>
-                    </div>
-                  );
-                })
-              )}
             </div>
-          )}
-        </section>
+            {debugOpen && debugLog.map((e, i) => (
+              <div key={i} className="pei-debug-item">
+                <small>{e.ts} · {e.stage} · parte={e.parte}</small>
+                <pre>{(() => { try { return JSON.stringify(e.payload, null, 2); } catch { return String(e.payload); } })()}</pre>
+              </div>
+            ))}
+          </section>
+        )}
       </main>
     </div>
   );
@@ -520,88 +470,104 @@ function PeiPanel(props: {
 }) {
   const { pei, onChange, onSave, saving } = props;
   const update = (patch: Partial<PeiData>) => onChange({ ...pei, ...patch });
+  const ref = useRef<HTMLElement>(null);
+  // Assim que o PEI aparece, leva a pessoa direto até ele.
+  useEffect(() => {
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    ref.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }, []);
+
+  const botaoSalvar = (
+    <button type="button" onClick={onSave} disabled={saving} className="pn-btn primary">
+      {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+      {props.currentId ? "Salvar alterações" : "Salvar PEI"}
+    </button>
+  );
 
   return (
-    <section className="bg-card border rounded-2xl overflow-hidden">
-      <div className="px-6 py-4 border-b flex items-center justify-between flex-wrap gap-3">
+    <section className="pei-card pei-plano" ref={ref}>
+      <div className="pei-cab">
         <div>
-          <div className="text-sm font-semibold">{props.aluno}</div>
-          <div className="text-xs text-muted-foreground">{props.bimestre} · Versão {props.versao} {props.currentId ? "· salvo" : "· não salvo"}</div>
+          <h2 className="pei-h2"><span className="pei-num">2</span> Revise o plano de {props.aluno.split(" ")[0]}</h2>
+          <p className="pei-muted">
+            {props.bimestre} · versão {props.versao} ·{" "}
+            <span className={"pei-status" + (props.currentId ? " ok" : "")}>{props.currentId ? "salvo" : "ainda não salvo"}</span>
+          </p>
         </div>
-        <button onClick={onSave} disabled={saving} className="inline-flex items-center gap-2 bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-emerald-700 text-sm">
-          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-          Salvar PEI
-        </button>
+        {botaoSalvar}
       </div>
+      <p className="pei-dica">Toque em qualquer texto para mudar. Tudo que a Sofia escreveu é só um ponto de partida.</p>
 
-      <Section title="1. Perfil do aluno" icon="🧭">
-        <Field label="Descrição do perfil de aprendizagem">
-          <textarea value={pei.perfil_aluno.descricao} onChange={(e) => update({ perfil_aluno: { ...pei.perfil_aluno, descricao: e.target.value } })} rows={3} className="w-full border rounded-lg px-3 py-2 bg-background resize-y" />
+      <Section title="Quem é o aluno" icon="🧭" cor="green" aberto>
+        <Field label="Como ele(a) aprende">
+          <textarea value={pei.perfil_aluno.descricao} onChange={(e) => update({ perfil_aluno: { ...pei.perfil_aluno, descricao: e.target.value } })} rows={3} />
         </Field>
         <ListField label="Pontos fortes" items={pei.perfil_aluno.pontos_fortes} onChange={(v) => update({ perfil_aluno: { ...pei.perfil_aluno, pontos_fortes: v } })} />
-        <ListField label="Áreas que precisam de suporte" items={pei.perfil_aluno.areas_suporte} onChange={(v) => update({ perfil_aluno: { ...pei.perfil_aluno, areas_suporte: v } })} />
+        <ListField label="Onde precisa de apoio" items={pei.perfil_aluno.areas_suporte} onChange={(v) => update({ perfil_aluno: { ...pei.perfil_aluno, areas_suporte: v } })} />
       </Section>
 
-      <Section title="2. Objetivos de longo prazo (semestre)" icon="🎯">
+      <Section title="Metas do semestre" icon="🎯" cor="sun" qtd={pei.objetivos_longo.length}>
         <ObjectivesList
           items={pei.objetivos_longo}
-          fields={[{ key: "objetivo", label: "Objetivo" }, { key: "criterio_avaliacao", label: "Critério de avaliação" }]}
+          fields={[{ key: "objetivo", label: "Meta" }, { key: "criterio_avaliacao", label: "Como saber que conseguiu" }]}
           onChange={(v) => update({ objetivos_longo: v })}
           prefix="long"
         />
       </Section>
 
-      <Section title="3. Objetivos de curto prazo (bimestre)" icon="📌">
+      <Section title="Metas do bimestre" icon="📌" cor="coral" qtd={pei.objetivos_curto.length}>
         <ObjectivesList
           items={pei.objetivos_curto}
-          fields={[{ key: "objetivo", label: "Objetivo" }, { key: "indicador", label: "Indicador de progresso" }]}
+          fields={[{ key: "objetivo", label: "Meta" }, { key: "indicador", label: "Sinal de avanço" }]}
           onChange={(v) => update({ objetivos_curto: v })}
           prefix="curt"
         />
       </Section>
 
-      <Section title="4. Estratégias por dimensão" icon="📐">
-        <ListField label="Comunicação e linguagem" items={pei.estrategias.comunicacao} onChange={(v) => update({ estrategias: { ...pei.estrategias, comunicacao: v } })} />
-        <ListField label="Organização e tempo" items={pei.estrategias.organizacao} onChange={(v) => update({ estrategias: { ...pei.estrategias, organizacao: v } })} />
-        <ListField label="Materiais e espaço físico" items={pei.estrategias.materiais} onChange={(v) => update({ estrategias: { ...pei.estrategias, materiais: v } })} />
-        <ListField label="Interação social e participação" items={pei.estrategias.interacao} onChange={(v) => update({ estrategias: { ...pei.estrategias, interacao: v } })} />
+      <Section title="Como ajudar na sala" icon="🤝" cor="sky">
+        <ListField label="Comunicação" items={pei.estrategias.comunicacao} onChange={(v) => update({ estrategias: { ...pei.estrategias, comunicacao: v } })} />
+        <ListField label="Rotina e tempo" items={pei.estrategias.organizacao} onChange={(v) => update({ estrategias: { ...pei.estrategias, organizacao: v } })} />
+        <ListField label="Materiais e espaço" items={pei.estrategias.materiais} onChange={(v) => update({ estrategias: { ...pei.estrategias, materiais: v } })} />
+        <ListField label="Convivência e participação" items={pei.estrategias.interacao} onChange={(v) => update({ estrategias: { ...pei.estrategias, interacao: v } })} />
       </Section>
 
-      <Section title="5. Critérios de avaliação adaptados" icon="📝">
-        <Field label="Como avaliar este aluno">
-          <textarea value={pei.avaliacao.como_avaliar} onChange={(e) => update({ avaliacao: { ...pei.avaliacao, como_avaliar: e.target.value } })} rows={3} className="w-full border rounded-lg px-3 py-2 bg-background resize-y" />
+      <Section title="Como avaliar" icon="📝" cor="lilac">
+        <Field label="Jeito de avaliar">
+          <textarea value={pei.avaliacao.como_avaliar} onChange={(e) => update({ avaliacao: { ...pei.avaliacao, como_avaliar: e.target.value } })} rows={3} />
         </Field>
-        <ListField label="Instrumentos recomendados" items={pei.avaliacao.instrumentos} onChange={(v) => update({ avaliacao: { ...pei.avaliacao, instrumentos: v } })} />
+        <ListField label="Instrumentos" items={pei.avaliacao.instrumentos} onChange={(v) => update({ avaliacao: { ...pei.avaliacao, instrumentos: v } })} />
       </Section>
 
-      <Section title="6. Responsáveis e periodicidade" icon="👥">
-        <ListField label="Responsáveis" items={pei.responsaveis.lista} onChange={(v) => update({ responsaveis: { ...pei.responsaveis, lista: v } })} />
-        <Field label="Periodicidade de revisão">
-          <input value={pei.responsaveis.periodicidade_revisao} onChange={(e) => update({ responsaveis: { ...pei.responsaveis, periodicidade_revisao: e.target.value } })} className="w-full border rounded-lg px-3 py-2 bg-background" />
+      <Section title="Quem acompanha" icon="👥" cor="cream">
+        <ListField label="Pessoas envolvidas" items={pei.responsaveis.lista} onChange={(v) => update({ responsaveis: { ...pei.responsaveis, lista: v } })} />
+        <Field label="Revisar o plano a cada">
+          <input value={pei.responsaveis.periodicidade_revisao} onChange={(e) => update({ responsaveis: { ...pei.responsaveis, periodicidade_revisao: e.target.value } })} />
         </Field>
       </Section>
+
+      <div className="pei-rodape">{botaoSalvar}</div>
     </section>
   );
 }
 
-function Section({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(true);
+function Section({ title, icon, cor, qtd, aberto, children }: { title: string; icon: string; cor: string; qtd?: number; aberto?: boolean; children: React.ReactNode }) {
   return (
-    <div className="border-t">
-      <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center gap-2 px-6 py-3 text-left hover:bg-accent/30">
-        <span className="text-base">{icon}</span>
-        <span className="font-semibold text-sm flex-1">{title}</span>
-        {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-      </button>
-      {open && <div className="px-6 pb-5 space-y-3">{children}</div>}
-    </div>
+    <details className="pei-sec" open={aberto}>
+      <summary>
+        <span className={"ic " + cor} aria-hidden>{icon}</span>
+        <b>{title}</b>
+        {qtd != null && <span className="qtd">{qtd}</span>}
+        <ChevronDown size={18} className="seta" aria-hidden />
+      </summary>
+      <div className="pei-sec-corpo">{children}</div>
+    </details>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div className="text-xs font-semibold text-muted-foreground mb-1">{label}</div>
+    <div className="pei-field">
+      <div className="lb">{label}</div>
       {children}
     </div>
   );
@@ -610,20 +576,19 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function ListField({ label, items, onChange }: { label: string; items: string[]; onChange: (v: string[]) => void }) {
   return (
     <Field label={label}>
-      <div className="space-y-2">
+      <div className="pei-lista">
         {items.map((it, i) => (
-          <div key={i} className="flex gap-2">
+          <div key={i} className="pei-item">
             <textarea
               value={it}
               onChange={(e) => { const next = items.slice(); next[i] = e.target.value; onChange(next); }}
               rows={1}
-              className="flex-1 border rounded-lg px-3 py-2 bg-background resize-y text-sm"
             />
-            <button onClick={() => onChange(items.filter((_, j) => j !== i))} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg" title="Remover"><Trash2 size={14} /></button>
+            <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="pei-apagar" title="Remover" aria-label="Remover"><Trash2 size={16} /></button>
           </div>
         ))}
-        <button onClick={() => onChange([...items, ""])} className="inline-flex items-center gap-1 text-xs text-rose-600 hover:underline">
-          <Plus size={12} /> Adicionar
+        <button type="button" onClick={() => onChange([...items, ""])} className="pei-link">
+          <Plus size={14} /> Adicionar
         </button>
       </div>
     </Field>
@@ -638,39 +603,127 @@ function ObjectivesList<T extends { id: string } & Record<string, string>>(props
 }) {
   const { items, fields, onChange, prefix } = props;
   return (
-    <div className="space-y-3">
+    <div className="pei-lista">
       {items.map((it, i) => (
-        <div key={it.id || i} className="border rounded-lg p-3 space-y-2 bg-background">
-          {fields.map((f) => (
-            <div key={f.key}>
-              <div className="text-xs font-semibold text-muted-foreground mb-1">{f.label}</div>
-              <textarea
-                value={(it[f.key] as string) || ""}
-                onChange={(e) => {
-                  const next = items.slice();
-                  next[i] = { ...next[i], [f.key]: e.target.value };
-                  onChange(next);
-                }}
-                rows={2}
-                className="w-full border rounded-lg px-3 py-2 bg-card resize-y text-sm"
-              />
-            </div>
-          ))}
-          <div className="flex justify-end">
-            <button onClick={() => onChange(items.filter((_, j) => j !== i))} className="text-xs text-rose-600 hover:underline inline-flex items-center gap-1"><Trash2 size={12} /> Remover</button>
+        <div key={it.id || i} className="pei-meta">
+          <span className="n">{i + 1}</span>
+          <div className="campos">
+            {fields.map((f) => (
+              <div key={f.key} className="pei-field">
+                <div className="lb">{f.label}</div>
+                <textarea
+                  value={(it[f.key] as string) || ""}
+                  onChange={(e) => {
+                    const next = items.slice();
+                    next[i] = { ...next[i], [f.key]: e.target.value };
+                    onChange(next);
+                  }}
+                  rows={2}
+                />
+              </div>
+            ))}
           </div>
+          <button type="button" onClick={() => onChange(items.filter((_, j) => j !== i))} className="pei-apagar" title="Remover meta" aria-label="Remover meta"><Trash2 size={16} /></button>
         </div>
       ))}
       <button
+        type="button"
         onClick={() => {
           const blank = { id: `${prefix}-${Date.now()}` } as Record<string, string>;
           fields.forEach((f) => { blank[f.key] = ""; });
           onChange([...items, blank as T]);
         }}
-        className="inline-flex items-center gap-1 text-xs text-rose-600 hover:underline"
+        className="pei-link"
       >
-        <Plus size={12} /> Adicionar objetivo
+        <Plus size={14} /> Adicionar meta
       </button>
     </div>
   );
 }
+
+const peiCss = `
+.pei-root{min-height:100vh;background:var(--pn-bg);font-family:var(--pn-body);color:var(--pn-ink);}
+.pei-main{max-width:880px;margin:0 auto;padding:22px 24px 120px;display:flex;flex-direction:column;gap:18px;}
+.pei-voltar{display:inline-flex;align-items:center;gap:6px;color:var(--pn-muted);font-weight:600;font-size:14px;text-decoration:none;margin-top:-6px;}
+.pei-voltar:hover{color:var(--pn-ink);}
+.pei-title{font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;margin:-8px 0 0;}
+.pei-sub{margin:-10px 0 0;color:var(--pn-muted);font-size:15px;max-width:60ch;}
+.pei-card{background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:20px;scroll-margin-top:80px;}
+.pei-h2{display:flex;align-items:center;gap:10px;font-family:var(--pn-display);font-weight:700;font-size:19px;letter-spacing:-.02em;margin:0;}
+.pei-num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--pn-sun);border:2px solid var(--pn-ink);display:grid;place-items:center;font-size:15px;font-weight:800;}
+.pei-cab{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.pei-muted{color:var(--pn-muted);font-size:14px;margin:6px 0 0;}
+.pei-vazio{margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--pn-muted);}
+.pei-vazio p{margin:0;}
+.pei-alunos{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.pei-aluno{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border:1.5px solid var(--pn-line);border-radius:14px;background:var(--pn-surface);cursor:pointer;color:var(--pn-ink);font:inherit;min-width:0;}
+.pei-aluno:hover{border-color:var(--pn-ink);}
+.pei-aluno.on{border:2px solid var(--pn-ink);background:var(--pn-green-soft);box-shadow:3px 3px 0 var(--pn-ink);}
+.pei-aluno .av{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--pn-lilac);border:1.5px solid var(--pn-ink);font-weight:800;font-family:var(--pn-display);}
+.pei-aluno.on .av{background:var(--pn-green);color:#fff;}
+.pei-aluno .tx{display:flex;flex-direction:column;min-width:0;}
+.pei-aluno b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pei-aluno small{color:var(--pn-muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pei-linha{margin-top:16px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;}
+.pei-campo{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:700;}
+.pei-campo select,.pei-root textarea,.pei-root input{font:inherit;font-weight:400;font-size:15px;color:var(--pn-ink);background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:12px;padding:10px 12px;width:100%;box-sizing:border-box;}
+.pei-campo select{min-width:200px;height:44px;}
+.pei-root textarea{resize:vertical;line-height:1.45;}
+.pei-root textarea:focus,.pei-root input:focus,.pei-campo select:focus{outline:none;border-color:var(--pn-ink);box-shadow:0 0 0 3px rgba(11,122,85,.18);}
+.pei-tags{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:10px;}
+.pei-tag{font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--pn-blue-soft);border:1.5px solid var(--pn-ink);}
+.pei-tag.ok{background:var(--pn-green-soft);}
+.pei-tag.aviso{background:var(--pn-cream);}
+.pei-mais{margin-top:14px;}
+.pei-mais summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--pn-green);}
+.pei-mais textarea{margin-top:8px;}
+.pei-gerar{margin-top:16px;width:100%;height:52px;font-size:16px;}
+.pei-link{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:6px 4px;color:var(--pn-green);font:inherit;font-weight:700;font-size:14px;cursor:pointer;}
+.pei-link:hover{text-decoration:underline;}
+.pei-apagar{flex:none;width:38px;height:38px;display:grid;place-items:center;border-radius:10px;border:1.5px solid var(--pn-line);background:var(--pn-surface);color:var(--pn-coral);cursor:pointer;}
+.pei-apagar:hover{border-color:var(--pn-coral);background:#FFF1EE;}
+.pei-status{font-weight:700;color:#8A5A00;}
+.pei-status.ok{color:var(--pn-green);}
+.pei-dica{margin:14px 0 6px;font-size:14px;background:var(--pn-cream);border-radius:12px;padding:10px 12px;}
+.pei-sec{border-top:1.5px solid var(--pn-line);}
+.pei-sec:first-of-type{margin-top:8px;}
+.pei-sec summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 2px;cursor:pointer;}
+.pei-sec summary::-webkit-details-marker{display:none;}
+.pei-sec summary b{flex:1;font-family:var(--pn-display);font-size:17px;font-weight:700;letter-spacing:-.02em;}
+.pei-sec .ic{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:18px;border:1.5px solid var(--pn-ink);background:var(--pn-green-soft);}
+.pei-sec .ic.sun{background:var(--pn-sun);} .pei-sec .ic.coral{background:var(--pn-pink);} .pei-sec .ic.sky{background:var(--pn-blue-soft);}
+.pei-sec .ic.lilac{background:var(--pn-lilac);} .pei-sec .ic.cream{background:var(--pn-cream);}
+.pei-sec .qtd{font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--pn-bg);border:1.5px solid var(--pn-line);}
+.pei-sec .seta{transition:transform .15s;color:var(--pn-muted);}
+.pei-sec[open] .seta{transform:rotate(180deg);}
+.pei-sec-corpo{padding:0 2px 18px;display:flex;flex-direction:column;gap:14px;}
+.pei-field .lb{font-size:13px;font-weight:700;color:var(--pn-muted);margin-bottom:6px;}
+.pei-lista{display:flex;flex-direction:column;gap:8px;align-items:stretch;}
+.pei-lista > .pei-link{align-self:flex-start;}
+.pei-item{display:flex;gap:8px;align-items:flex-start;}
+.pei-item textarea{min-height:44px;field-sizing:content;}
+.pei-meta{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1.5px solid var(--pn-line);border-radius:14px;background:#FAFBFD;}
+.pei-meta .n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--pn-ink);color:#fff;font-size:13px;font-weight:800;margin-top:2px;}
+.pei-meta .campos{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;}
+.pei-rodape{display:flex;justify-content:flex-end;padding-top:16px;border-top:1.5px solid var(--pn-line);}
+.pei-salvos{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;}
+.pei-salvos li{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--pn-line);border-radius:14px;}
+.pei-salvos li.on{border-color:var(--pn-green);background:var(--pn-green-soft);}
+.pei-salvos .tx{flex:1;min-width:0;display:flex;flex-direction:column;}
+.pei-salvos b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pei-salvos small{color:var(--pn-muted);font-size:13px;}
+.pei-abrir{height:38px;padding:0 14px;}
+.pei-debug pre{font-size:11px;white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto;background:var(--pn-bg);padding:8px;border-radius:8px;}
+.pei-debug-item{margin-top:10px;}
+@media(max-width:640px){
+  .pei-main{padding:16px 16px 120px;gap:14px;}
+  .pei-title{font-size:28px;}
+  .pei-card{padding:16px;border-radius:18px;box-shadow:3px 3px 0 var(--pn-ink);}
+  .pei-alunos{grid-template-columns:1fr;}
+  .pei-campo,.pei-campo select{width:100%;min-width:0;}
+  .pei-cab > .pn-btn{width:100%;}
+  .pei-rodape .pn-btn{width:100%;}
+  .pei-meta{padding:10px;gap:8px;}
+  .pei-meta .n{display:none;}
+}
+`;

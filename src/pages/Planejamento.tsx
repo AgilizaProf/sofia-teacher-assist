@@ -4421,7 +4421,7 @@ export function Planejamento() {
                   >
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      style={{ background: "#fff", borderRadius: 12, width: "min(680px, 100%)", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 30px 60px rgba(20,22,31,.25)" }}
+                      style={{ background: "#fff", borderRadius: 20, width: "min(680px, 100%)", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden", border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F" }}
                     >
                       <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 12 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -4487,9 +4487,8 @@ export function Planejamento() {
             {m === "m6" && (
               <>
                 <div className="pl-tools">
-                  <div>
-                    <h2>{isEi ? "Diário de observação" : "Diário de bordo"} <small>· registro de 30 segundos</small></h2>
-                  </div>
+                  {/* O título já aparece logo acima (nome da ferramenta). */}
+                  <div />
                   <div className="right">
                     <button className="pl-btn" onClick={() => { setM6Reminder(true); showToast("✓ Você será lembrada todo dia às 18h."); }}>
                       <Clock size={14} /> {m6Reminder ? "Lembrete ativo" : "Ativar lembrete"}
@@ -4804,8 +4803,8 @@ export function Planejamento() {
       )}
 
       {m5ConfirmDelete && (
-        <div role="dialog" aria-modal="true" onClick={() => setM5ConfirmDelete(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(420px,100%)", boxShadow: "0 24px 60px rgba(15,23,42,.35)", overflow: "hidden" }}>
+        <div role="dialog" aria-modal="true" onClick={() => setM5ConfirmDelete(false)} style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.45)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, width: "min(420px,100%)", border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)" }}>
               <div style={{ fontSize: 11, color: "#b91c1c", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>⚠ Confirmar exclusão</div>
               <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, marginTop: 4 }}>Excluir {m5Selected.size} cartões?</h3>
@@ -4822,8 +4821,8 @@ export function Planejamento() {
       )}
 
       {m5ReplicaOpen && (
-        <div role="dialog" aria-modal="true" onClick={() => setM5ReplicaOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(560px,100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}>
+        <div role="dialog" aria-modal="true" onClick={() => setM5ReplicaOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.45)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, width: "min(560px,100%)", maxHeight: "90vh", overflow: "auto", border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📋 Replicar semana</div>
@@ -4861,7 +4860,7 @@ export function Planejamento() {
       )}
 
       {m5HistoryOpen && (
-        <div role="dialog" aria-modal="true" onClick={() => setM5HistoryOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", zIndex: 80 }}>
+        <div role="dialog" aria-modal="true" onClick={() => setM5HistoryOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.45)", zIndex: 80 }}>
           <aside onClick={(e) => e.stopPropagation()} style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(420px,100%)", background: "#fff", boxShadow: "-12px 0 40px rgba(15,23,42,.25)", display: "flex", flexDirection: "column", animation: "fade-in .25s ease-out" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontFamily: "'Sora',serif", fontSize: 18, margin: 0 }}>🕘 Histórico</h3>
@@ -4895,11 +4894,11 @@ export function Planejamento() {
           aria-modal="true"
           aria-label="Imprimir sequência didática"
           onClick={() => setM2PrintOpen(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.45)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: "#fff", borderRadius: 14, width: "min(760px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+            style={{ background: "#fff", borderRadius: 20, width: "min(760px, 100%)", maxHeight: "90vh", overflow: "auto", border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F" }}
           >
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
@@ -4936,8 +4935,8 @@ export function Planejamento() {
       )}
 
       {m6ReportOpen && (
-        <div role="dialog" aria-modal="true" onClick={() => setM6ReportOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 14, width: "min(620px,100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}>
+        <div role="dialog" aria-modal="true" onClick={() => setM6ReportOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.45)", zIndex: 90, display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, width: "min(620px,100%)", maxHeight: "90vh", overflow: "auto", border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 11, color: "var(--orange)", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", fontFamily: "'JetBrains Mono',monospace" }}>📊 Relatório {M6_PERIODO_META[m6Periodo].label.toLowerCase()}</div>
@@ -5106,11 +5105,11 @@ export function Planejamento() {
           aria-modal="true"
           aria-label={`Preencher ${m1DayModal.n}`}
           onClick={fecharDayModal}
-          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.45)", zIndex: 80, display: "grid", placeItems: "center", padding: 16 }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: "#fff", borderRadius: 14, width: "min(720px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+            style={{ background: "#fff", borderRadius: 20, width: "min(720px, 100%)", maxHeight: "90vh", overflow: "auto", border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F" }}
           >
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
@@ -5353,11 +5352,11 @@ export function Planejamento() {
           aria-label="Ajustar parâmetros"
           data-paramsmodal
           onClick={() => setParamsModalOpen(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 1000 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(20,22,31,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 1000 }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background: "#fff", borderRadius: 14, width: "min(560px, 100%)", maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 60px rgba(15,23,42,.35)" }}
+            style={{ background: "#fff", borderRadius: 20, width: "min(560px, 100%)", maxHeight: "90vh", overflow: "auto", border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F" }}
           >
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
@@ -5661,7 +5660,7 @@ function M1EditCardModal(props: {
       onClick={onClose}
       style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.6)", zIndex: 90, display: "grid", placeItems: "center", padding: 16, backdropFilter: "blur(2px)" }}>
       <div onClick={(e) => e.stopPropagation()}
-        style={{ background: "#fff", borderRadius: 16, width: "min(880px, 100%)", maxHeight: "94vh", display: "flex", flexDirection: "column", boxShadow: "0 30px 80px rgba(15,23,42,.45)", overflow: "hidden" }}>
+        style={{ background: "#fff", borderRadius: 20, width: "min(880px, 100%)", maxHeight: "94vh", display: "flex", flexDirection: "column", border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F", overflow: "hidden" }}>
 
         {/* HEADER */}
         <div style={{ padding: "18px 22px 14px", borderBottom: "1px solid var(--line)", background: "linear-gradient(180deg, #E8F6EF 0%, #fff 100%)" }}>

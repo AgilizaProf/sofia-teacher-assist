@@ -94,7 +94,7 @@ function AdminOverview() {
         <Stat label="Usando o plano gratuito" value={s.free} />
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr",gap:18}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(260px,100%),1fr))",gap:18}}>
         <div className="ad-card">
           <h3>Modalidade mais usada (mês)</h3>
           {s.topEvents.length === 0 ? <p style={{fontSize:13,color:"#6B7280"}}>Sem dados ainda.</p> :

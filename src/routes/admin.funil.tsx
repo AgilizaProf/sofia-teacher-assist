@@ -73,9 +73,9 @@ function FunilPage() {
           </p>
           {etapas.map((e, i) => (
             <div key={i} style={{ marginBottom: 18 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "2px 12px", justifyContent: "space-between", fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
                 <span style={{ color: "#14161F" }}>{e.label}</span>
-                <span style={{ display: "flex", gap: 12, color: "#6B7280" }}>
+                <span style={{ display: "flex", flexWrap: "wrap", gap: "2px 12px", whiteSpace: "nowrap", color: "#6B7280" }}>
                   {i > 0 && (
                     <span style={{ color: e.conv >= 50 ? "#16A34A" : e.conv >= 20 ? "#D97706" : "#DC2626", fontWeight: 700 }}>
                       {e.conv.toFixed(0)}% da etapa anterior

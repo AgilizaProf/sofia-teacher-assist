@@ -44,11 +44,13 @@ import { Route as AdminRetencaoRouteImport } from './routes/admin.retencao'
 import { Route as AdminProRouteImport } from './routes/admin.pro'
 import { Route as AdminManutencaoRouteImport } from './routes/admin.manutencao'
 import { Route as AdminInfraRouteImport } from './routes/admin.infra'
+import { Route as AdminIndicacoesRouteImport } from './routes/admin.indicacoes'
 import { Route as AdminIaRouteImport } from './routes/admin.ia'
 import { Route as AdminFunilRouteImport } from './routes/admin.funil'
 import { Route as AdminErrosRouteImport } from './routes/admin.erros'
 import { Route as AdminCuponsRouteImport } from './routes/admin.cupons'
 import { Route as AdminConversaoRouteImport } from './routes/admin.conversao'
+import { Route as AdminAvisosRouteImport } from './routes/admin.avisos'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 import { Route as ApiSofiaChatRouteImport } from './routes/api/sofia.chat'
@@ -232,6 +234,11 @@ const AdminInfraRoute = AdminInfraRouteImport.update({
   path: '/infra',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminIndicacoesRoute = AdminIndicacoesRouteImport.update({
+  id: '/indicacoes',
+  path: '/indicacoes',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminIaRoute = AdminIaRouteImport.update({
   id: '/ia',
   path: '/ia',
@@ -255,6 +262,11 @@ const AdminCuponsRoute = AdminCuponsRouteImport.update({
 const AdminConversaoRoute = AdminConversaoRouteImport.update({
   id: '/conversao',
   path: '/conversao',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAvisosRoute = AdminAvisosRouteImport.update({
+  id: '/avisos',
+  path: '/avisos',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
@@ -311,11 +323,13 @@ export interface FileRoutesByFullPath {
   '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/avisos': typeof AdminAvisosRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/cupons': typeof AdminCuponsRoute
   '/admin/erros': typeof AdminErrosRoute
   '/admin/funil': typeof AdminFunilRoute
   '/admin/ia': typeof AdminIaRoute
+  '/admin/indicacoes': typeof AdminIndicacoesRoute
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
@@ -357,11 +371,13 @@ export interface FileRoutesByTo {
   '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/avisos': typeof AdminAvisosRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/cupons': typeof AdminCuponsRoute
   '/admin/erros': typeof AdminErrosRoute
   '/admin/funil': typeof AdminFunilRoute
   '/admin/ia': typeof AdminIaRoute
+  '/admin/indicacoes': typeof AdminIndicacoesRoute
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
@@ -405,11 +421,13 @@ export interface FileRoutesById {
   '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/avisos': typeof AdminAvisosRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/cupons': typeof AdminCuponsRoute
   '/admin/erros': typeof AdminErrosRoute
   '/admin/funil': typeof AdminFunilRoute
   '/admin/ia': typeof AdminIaRoute
+  '/admin/indicacoes': typeof AdminIndicacoesRoute
   '/admin/infra': typeof AdminInfraRoute
   '/admin/manutencao': typeof AdminManutencaoRoute
   '/admin/pro': typeof AdminProRoute
@@ -454,11 +472,13 @@ export interface FileRouteTypes {
     | '/simulados'
     | '/termos'
     | '/admin/atividades'
+    | '/admin/avisos'
     | '/admin/conversao'
     | '/admin/cupons'
     | '/admin/erros'
     | '/admin/funil'
     | '/admin/ia'
+    | '/admin/indicacoes'
     | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
@@ -500,11 +520,13 @@ export interface FileRouteTypes {
     | '/simulados'
     | '/termos'
     | '/admin/atividades'
+    | '/admin/avisos'
     | '/admin/conversao'
     | '/admin/cupons'
     | '/admin/erros'
     | '/admin/funil'
     | '/admin/ia'
+    | '/admin/indicacoes'
     | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
@@ -547,11 +569,13 @@ export interface FileRouteTypes {
     | '/simulados'
     | '/termos'
     | '/admin/atividades'
+    | '/admin/avisos'
     | '/admin/conversao'
     | '/admin/cupons'
     | '/admin/erros'
     | '/admin/funil'
     | '/admin/ia'
+    | '/admin/indicacoes'
     | '/admin/infra'
     | '/admin/manutencao'
     | '/admin/pro'
@@ -847,6 +871,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInfraRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/indicacoes': {
+      id: '/admin/indicacoes'
+      path: '/indicacoes'
+      fullPath: '/admin/indicacoes'
+      preLoaderRoute: typeof AdminIndicacoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/ia': {
       id: '/admin/ia'
       path: '/ia'
@@ -880,6 +911,13 @@ declare module '@tanstack/react-router' {
       path: '/conversao'
       fullPath: '/admin/conversao'
       preLoaderRoute: typeof AdminConversaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/avisos': {
+      id: '/admin/avisos'
+      path: '/avisos'
+      fullPath: '/admin/avisos'
+      preLoaderRoute: typeof AdminAvisosRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/atividades': {
@@ -922,11 +960,13 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAtividadesRoute: typeof AdminAtividadesRoute
+  AdminAvisosRoute: typeof AdminAvisosRoute
   AdminConversaoRoute: typeof AdminConversaoRoute
   AdminCuponsRoute: typeof AdminCuponsRoute
   AdminErrosRoute: typeof AdminErrosRoute
   AdminFunilRoute: typeof AdminFunilRoute
   AdminIaRoute: typeof AdminIaRoute
+  AdminIndicacoesRoute: typeof AdminIndicacoesRoute
   AdminInfraRoute: typeof AdminInfraRoute
   AdminManutencaoRoute: typeof AdminManutencaoRoute
   AdminProRoute: typeof AdminProRoute
@@ -938,11 +978,13 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAtividadesRoute: AdminAtividadesRoute,
+  AdminAvisosRoute: AdminAvisosRoute,
   AdminConversaoRoute: AdminConversaoRoute,
   AdminCuponsRoute: AdminCuponsRoute,
   AdminErrosRoute: AdminErrosRoute,
   AdminFunilRoute: AdminFunilRoute,
   AdminIaRoute: AdminIaRoute,
+  AdminIndicacoesRoute: AdminIndicacoesRoute,
   AdminInfraRoute: AdminInfraRoute,
   AdminManutencaoRoute: AdminManutencaoRoute,
   AdminProRoute: AdminProRoute,

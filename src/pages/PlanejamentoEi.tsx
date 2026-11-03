@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
+import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { ArrowLeft, Sparkles, Save, Loader2, FileText, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,7 +68,6 @@ const empty: Roteiro = {
 };
 
 export function PlanejamentoEi() {
-  const navigate = useNavigate();
   const [students] = usePersistentState<Student[]>("inc_students", []);
   const { curriculos } = useCurriculoMunicipal();
   const curriculoPadrao = useMemo(
@@ -226,26 +227,17 @@ export function PlanejamentoEi() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <header className="sticky top-0 z-10 border-b bg-card px-6 py-3 flex items-center gap-3">
-        <button onClick={() => navigate({ to: "/planejamento" })} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft size={16} /> Planejamento
-        </button>
-        <span className="text-sm font-semibold">Roteiro de Experiência · Educação Infantil</span>
-        <span className="ml-auto inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Gemini 2.5 Flash
-        </span>
-      </header>
+    <div className="pn ei-root">
+      <style>{painelTokensCss + tempoChipCss + eiCss}</style>
+      <PainelNav />
+      <main className="ei-main">
+        <div className="pn-strip"><TempoChip /></div>
+        <Link to="/planejamento" className="ei-voltar"><ArrowLeft size={16} /> Planejamento</Link>
+        <h1 className="ei-title">Educação Infantil</h1>
+        <p className="ei-sub">A Sofia cria um roteiro de experiência para Creche e Pré-escola, com Campos de Experiência e direitos de aprendizagem.</p>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
-        <section className="bg-card border rounded-2xl p-6">
-          <div className="flex items-start gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 grid place-items-center text-lg">🌱</div>
-            <div>
-              <h1 className="text-xl font-bold">Roteiro de Experiência</h1>
-              <p className="text-sm text-muted-foreground">Para Creche e Pré-escola — sem habilidades BNCC do Fundamental, com Campos de Experiência e direitos de aprendizagem.</p>
-            </div>
-          </div>
+        <section className="ei-card">
+          <h2 className="ei-h2"><span className="ei-num">1</span> Monte a experiência</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="text-sm">
@@ -260,7 +252,7 @@ export function PlanejamentoEi() {
             </label>
 
             <div className="md:col-span-2">
-              <span className="block text-sm font-semibold mb-2">Campos de Experiência (múltipla seleção)</span>
+              <span className="block text-sm font-semibold mb-2">Campos de Experiência <small className="ei-muted">(pode escolher mais de um)</small></span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {CAMPOS.map((c) => {
                   const active = campos.includes(c.id);
@@ -269,7 +261,8 @@ export function PlanejamentoEi() {
                       key={c.id}
                       type="button"
                       onClick={() => toggleCampo(c.id)}
-                      className={`text-left border rounded-lg px-3 py-2 flex items-center gap-2 transition ${active ? "bg-emerald-50 border-emerald-300" : "bg-background hover:bg-accent"}`}
+                      aria-pressed={active}
+                      className={"ei-campo" + (active ? " on" : "")}
                     >
                       <span className="text-lg">{c.emoji}</span>
                       <span className="text-xs font-medium leading-tight">{c.nome}</span>
@@ -304,9 +297,9 @@ export function PlanejamentoEi() {
           </div>
 
           <div className="mt-4 flex gap-2">
-            <button onClick={gerar} disabled={generating || campos.length === 0} className="inline-flex items-center gap-2 bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-emerald-700">
-              {generating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-              {generating ? "Sofia está escrevendo…" : (roteiro ? "Regenerar roteiro" : "Sofia cria o roteiro")}
+            <button type="button" onClick={gerar} disabled={generating || campos.length === 0} className="pn-btn primary ei-gerar">
+              {generating ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+              {generating ? "A Sofia está escrevendo…" : campos.length === 0 ? "Escolha ao menos um campo acima" : roteiro ? "Escrever de novo" : "Sofia cria o roteiro"}
             </button>
           </div>
         </section>
@@ -321,7 +314,7 @@ export function PlanejamentoEi() {
           />
         )}
 
-        <section className="bg-card border rounded-2xl p-6">
+        <section className="ei-card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold flex items-center gap-2"><FileText size={16} /> Roteiros salvos</h2>
             <button onClick={loadList} className="text-xs inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
@@ -342,7 +335,7 @@ export function PlanejamentoEi() {
                       {r.faixa_etaria} {r.turma ? `· ${r.turma}` : ""} · {r.tipo_experiencia} · {r.duracao}min · {new Date(r.gerado_em).toLocaleDateString("pt-BR")}
                     </div>
                   </div>
-                  <button onClick={() => abrir(r)} className="text-xs px-3 py-1.5 rounded-lg border hover:bg-accent">Abrir</button>
+                  <button type="button" onClick={() => abrir(r)} className="pn-btn ei-abrir">Abrir</button>
                   <button onClick={() => apagar(r.id)} className="text-xs p-1.5 rounded-lg border text-rose-600 hover:bg-rose-50" title="Apagar"><Trash2 size={14} /></button>
                 </li>
               ))}
@@ -350,9 +343,6 @@ export function PlanejamentoEi() {
           )}
         </section>
 
-        <div className="text-center pt-4">
-          <Link to="/planejamento" className="text-xs text-muted-foreground hover:text-foreground">← Voltar ao Planejamento</Link>
-        </div>
       </main>
     </div>
   );
@@ -367,9 +357,15 @@ function RoteiroPanel(props: {
 }) {
   const { roteiro, onChange, onSave, saving, currentId } = props;
   const update = (patch: Partial<Roteiro>) => onChange({ ...roteiro, ...patch });
+  const ref = useRef<HTMLElement>(null);
+  // Assim que o roteiro aparece, leva a pessoa direto até ele.
+  useEffect(() => {
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    ref.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }, []);
 
   return (
-    <section className="bg-card border rounded-2xl overflow-hidden">
+    <section className="ei-card ei-roteiro" ref={ref}>
       <div className="px-6 py-4 border-b flex items-center justify-between flex-wrap gap-3">
         <div>
           <input
@@ -379,8 +375,8 @@ function RoteiroPanel(props: {
           />
           <div className="text-xs text-muted-foreground mt-1">{currentId ? "Salvo" : "Não salvo"}</div>
         </div>
-        <button onClick={onSave} disabled={saving} className="inline-flex items-center gap-2 bg-emerald-600 text-white font-semibold px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-emerald-700 text-sm">
-          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+        <button type="button" onClick={onSave} disabled={saving} className="pn-btn primary">
+          {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
           Salvar roteiro
         </button>
       </div>
@@ -500,3 +496,43 @@ function ListField({ label, items, onChange }: { label: string; items: string[];
     </div>
   );
 }
+
+// Visual "Painel" desta página: só aparência, sobre as classes existentes.
+const eiCss = `
+.ei-root{min-height:100vh;background:var(--pn-bg);font-family:var(--pn-body);color:var(--pn-ink);}
+.ei-main{max-width:880px;margin:0 auto;padding:22px 24px 120px;display:flex;flex-direction:column;gap:18px;}
+.ei-voltar{display:inline-flex;align-items:center;gap:6px;color:var(--pn-muted);font-weight:600;font-size:14px;text-decoration:none;margin-top:-6px;}
+.ei-title{font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;margin:-8px 0 0;}
+.ei-sub{margin:-10px 0 0;color:var(--pn-muted);font-size:15px;max-width:62ch;}
+.ei-muted{font-weight:500;color:var(--pn-muted);}
+.ei-card{background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:20px;scroll-margin-top:80px;}
+.ei-h2{display:flex;align-items:center;gap:10px;font-family:var(--pn-display);font-weight:700;font-size:19px;letter-spacing:-.02em;margin:0 0 16px;}
+.ei-num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--pn-sun);border:2px solid var(--pn-ink);display:grid;place-items:center;font-size:15px;font-weight:800;}
+.ei-root h2,.ei-root h3{font-family:var(--pn-display);letter-spacing:-.02em;}
+.ei-root .ei-card h2.font-semibold{font-size:19px;}
+.ei-root input,.ei-root select,.ei-root textarea{font:inherit;font-size:15px!important;color:var(--pn-ink);background:var(--pn-surface)!important;border:1.5px solid var(--pn-line)!important;border-radius:12px!important;padding:10px 12px!important;}
+.ei-root select,.ei-root input:not([type]){min-height:44px;}
+.ei-root input:focus,.ei-root select:focus,.ei-root textarea:focus{outline:none;border-color:var(--pn-ink)!important;box-shadow:0 0 0 3px rgba(11,122,85,.18);}
+.ei-root label > span{font-size:14px;}
+.ei-campo{text-align:left;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--pn-line);border-radius:14px;background:var(--pn-surface);cursor:pointer;font:inherit;font-size:14px;font-weight:600;color:var(--pn-ink);}
+.ei-campo:hover{border-color:var(--pn-ink);}
+.ei-campo.on{border:2px solid var(--pn-ink);background:var(--pn-green-soft);box-shadow:3px 3px 0 var(--pn-ink);}
+.ei-campo span:first-child{font-size:20px;}
+.ei-campo .text-xs{font-size:14px;}
+.ei-gerar{width:100%;height:52px;font-size:16px;}
+.ei-abrir{height:38px;padding:0 14px;}
+.ei-roteiro{padding:0;overflow:hidden;}
+.ei-roteiro > div{padding-left:20px!important;padding-right:20px!important;border-color:var(--pn-line)!important;}
+.ei-roteiro > div:first-child input{font-family:var(--pn-display);font-size:19px!important;font-weight:700;border:0!important;padding:4px 0!important;border-bottom:1.5px dashed var(--pn-line)!important;border-radius:0!important;}
+.ei-roteiro h3{font-size:17px!important;font-weight:700;}
+.ei-roteiro .text-muted-foreground{color:var(--pn-muted);}
+.ei-root .divide-y > li{border-color:var(--pn-line);}
+@media(max-width:640px){
+  .ei-main{padding:16px 16px 120px;gap:14px;}
+  .ei-title{font-size:28px;}
+  .ei-card{padding:16px;border-radius:18px;box-shadow:3px 3px 0 var(--pn-ink);}
+  .ei-roteiro{padding:0;}
+  .ei-roteiro > div{padding-left:16px!important;padding-right:16px!important;}
+  .ei-roteiro > div:first-child .pn-btn{width:100%;}
+}
+`;

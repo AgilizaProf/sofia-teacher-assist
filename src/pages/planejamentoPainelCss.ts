@@ -76,4 +76,26 @@ export const planPainelCss = `
   .pn.pl-root .pl-mode-head h2{font-size:20px;}
   .pn.pl-root .pl-workspace{padding:12px 16px 120px!important;}
 }
+
+/* Mais simples: cartões, rótulos, campos e botões no padrão do Painel */
+.pn.pl-root :is(.pl-panel,.pl-cal-card,.pl-chain-card,.pl-chat-card,.pl-diary-card,.pl-d6-card,.atv-toolbar,.atv-hist){
+  border:2px solid var(--pn-ink);border-radius:18px;box-shadow:4px 4px 0 var(--pn-ink);}
+.pn.pl-root :is(.pl-field,.atv-field) > label{font-family:var(--pn-body);font-size:13.5px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--pn-ink);}
+.pn.pl-root :is(.pl-day-head .dn,.pl-cd-head .dn,.pl-step .tag,.pl-ai .sub,.pl-card .tag,.pl-cd-pill){font-family:var(--pn-body);letter-spacing:0;text-transform:none;font-size:12px;}
+.pn.pl-root :is(.pl-field,.atv-field) :is(input:not([type=checkbox]):not([type=radio]),select){min-height:44px;border:1.5px solid var(--pn-line);border-radius:12px;font-size:15px;color:var(--pn-ink);}
+.pn.pl-root :is(.pl-field,.atv-field) textarea{border:1.5px solid var(--pn-line);border-radius:12px;font-size:15px;}
+.pn.pl-root :is(.pl-field,.atv-field) :is(input,select,textarea):focus{border-color:var(--pn-ink);box-shadow:0 0 0 3px rgba(11,122,85,.18);outline:none;}
+.pn.pl-root .atv-btn{min-height:44px;border:2px solid var(--pn-ink);border-radius:12px;font-weight:700;font-size:14px;box-shadow:3px 3px 0 var(--pn-ink);}
+.pn.pl-root .atv-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--pn-ink);}
+.pn.pl-root .atv-btn.primary{background:var(--pn-green);border-color:var(--pn-ink);color:#fff;}
+.pn.pl-root .atv-btn.ghost{box-shadow:none;border-color:var(--pn-line);}
+.pn.pl-root .atv-btn.ghost:hover{transform:none;border-color:var(--pn-ink);}
+.pn.pl-root .atv-empty{border:1.5px dashed var(--pn-line);border-radius:18px;background:var(--pn-surface);padding:32px 20px;}
+.pn.pl-root .pl-btn{min-height:40px;}
+.pn.pl-root .atv-foco-label{font-family:var(--pn-body);text-transform:none;letter-spacing:0;font-size:13px;font-weight:700;color:var(--pn-ink);}
+@media(max-width:640px){
+  .pl-tool small{display:none;}
+  .pn.pl-root .pl-tool{padding:10px 12px;}
+  .pn.pl-root :is(.pl-panel,.pl-cal-card,.pl-chain-card,.pl-chat-card,.pl-diary-card,.pl-d6-card,.atv-toolbar,.atv-hist){box-shadow:3px 3px 0 var(--pn-ink);border-radius:16px;}
+}
 `;
