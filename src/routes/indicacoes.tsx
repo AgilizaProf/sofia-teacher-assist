@@ -104,7 +104,7 @@ function IndicacoesPage() {
 
   return (
     <div className="pn" style={{ fontFamily: "'DM Sans',-apple-system,sans-serif", color: NAVY, background: "#EDF0F5", minHeight: "100vh" }}>
-      <style>{tempoChipCss + `.ind-wrap{max-width:1100px;margin:0 auto;padding:22px 24px 120px;}.ind-h1{font-family:'Sora',sans-serif;font-weight:800;font-size:34px;margin:14px 0 0;letter-spacing:-.045em;line-height:1.1;}.ind-h2{font-family:'Sora',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.02em;margin:26px 0 10px;}@media(max-width:860px){.ind-wrap{padding:16px 16px 120px;}.ind-h1{font-size:28px;}}`}</style>
+      <style>{tempoChipCss + `.ind-wrap{max-width:1240px;margin:0 auto;padding:22px 24px 120px;}.ind-h1{font-family:'Sora',sans-serif;font-weight:800;font-size:34px;margin:14px 0 0;letter-spacing:-.045em;line-height:1.1;}.ind-h2{font-family:'Sora',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.02em;margin:26px 0 10px;}@media(max-width:860px){.ind-wrap{padding:16px 16px 120px;}.ind-h1{font-size:28px;}}`}</style>
       <PainelNav />
       <div className="ind-wrap">
         <header style={{ marginBottom: 18 }}>

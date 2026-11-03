@@ -11,7 +11,7 @@ export const incPainelCss = `
   font-family:var(--pn-body);background:var(--pn-bg);
 }
 .pn.inc-root h1,.pn.inc-root h2,.pn.inc-root h3,.pn.inc-root h4{font-family:var(--pn-display);letter-spacing:-.03em;}
-.pn.inc-root .inc-app{display:block;min-height:0;max-width:1180px;margin:0 auto;}
+.pn.inc-root .inc-app{display:block;min-height:0;max-width:1240px;margin:0 auto;}
 .pn.inc-root .inc-main{padding-top:0;}
 .pn.inc-root .inc-content{padding:22px 24px 64px;}
 

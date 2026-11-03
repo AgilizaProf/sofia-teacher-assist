@@ -397,8 +397,6 @@ button[aria-label="Dispensar"] > * {
   .ag-sofia-name,
   .ag-sofia-msg,
   .pl-hero-title,
-  .pl-title,
-  .inc-title,
   .ap-root .hero-title {
     word-break: normal !important;
     overflow-wrap: break-word !important;
@@ -406,9 +404,7 @@ button[aria-label="Dispensar"] > * {
     line-height: 1.25 !important;
   }
   .ag-title,
-  .pl-hero-title,
-  .pl-title,
-  .inc-title { font-size: clamp(20px, 5.5vw, 26px) !important; }
+  .pl-hero-title { font-size: clamp(20px, 5.5vw, 26px) !important; }
   .ag-panel-title,
   .ag-sofia-name { font-size: clamp(15px, 4.2vw, 18px) !important; }
   .ag-sofia-msg,

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
@@ -121,7 +121,7 @@ const SUGESTOES = [
 
 const css = `
 .hm{min-height:100dvh;padding-bottom:40px;}
-.hm-wrap{max-width:1040px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));}
+.hm-wrap{max-width:1240px;margin:0 auto;padding:22px 24px 0;}
 .hm-strip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .hm-chip{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px 0 6px;border-radius:10px;text-decoration:none;color:var(--pn-ink);font-size:13.5px;font-weight:600;white-space:nowrap;}
 .hm-time{background:var(--pn-green-soft);border:1.5px solid var(--pn-green);font-family:inherit;cursor:pointer;}
@@ -135,7 +135,7 @@ const css = `
 .hm-cred .bar span{display:block;height:100%;background:var(--pn-green);}
 .hm-cred b{font-variant-numeric:tabular-nums;}
 .hm-date{margin-left:auto;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--pn-muted);}
-.hm-hello{margin:18px 0 14px;font-family:var(--pn-display);font-weight:800;font-size:40px;letter-spacing:-.04em;line-height:1.05;text-wrap:balance;}
+.hm-hello{margin:14px 0 14px;font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.05;text-wrap:balance;}
 
 .hm-sofia{background:var(--pn-sun);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:18px;}
 .hm-sofia-h{display:flex;align-items:center;gap:8px;font-family:var(--pn-display);font-weight:700;font-size:16px;}
@@ -197,7 +197,7 @@ a.hm-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);tr
 
 @media (max-width: 860px){
   .hm{padding-bottom:110px;}
-  .hm-wrap{padding-top:12px;}
+  .hm-wrap{padding:16px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));}
   .hm-date{display:none;}
   .hm-hello{font-size:28px;margin:14px 0 10px;}
   .hm-sofia{padding:14px;}
@@ -266,6 +266,7 @@ export function Home() {
   const hydrated = useHydrated();
   const ctx = useSofiaContext();
   const sofia = useSofiaOptional();
+  const navigate = useNavigate();
   const { turmas } = useTurmas();
   const { curriculos, load: reloadCurriculos } = useCurriculoMunicipal();
   const cred = useCreditos();
@@ -312,7 +313,12 @@ export function Home() {
       turma ? `Turma: ${turma.name}${turma.grade ? ` (${turma.grade})` : ""}` : "",
       padrao ? `Currículo da rede: ${padrao.municipio}` : "",
     ].filter(Boolean);
-    sofia.openSofia({ prompt, send: true, context: partes.join(" · ") || undefined });
+    const contexto = partes.join(" · ");
+    const mensagem = contexto ? `${prompt}\n\n[Contexto: ${contexto}]` : prompt;
+    // Abre a conversa já em tela cheia (página do Assistente), sem a janelinha.
+    if (sofia.busy) sofia.setDraft(mensagem);
+    else void sofia.send(mensagem);
+    navigate({ to: "/assistente" });
     trackEvent("home_sofia_enviar", { location: "home", com_turma: !!turma });
     setTexto("");
   };

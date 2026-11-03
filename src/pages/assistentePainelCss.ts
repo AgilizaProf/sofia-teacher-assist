@@ -199,8 +199,8 @@ body:has(.as-root){padding-bottom:0!important;}
   .as-hist-close{display:grid!important;}
   .as-collapse-btn{display:none!important;}
   .as-composer-wrap{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px));}
-  body.as-typing .pn-bottom{display:none!important;}
-  body.as-typing .as-composer-wrap{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));}
+  body.as-composing .pn-bottom{display:none!important;}
+  body.as-composing .as-composer-wrap{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));}
   .as-hist{position:fixed;top:0;right:0;bottom:0;width:min(360px,90vw);z-index:260;transform:translateX(105%);transition:transform .22s ease;border-left:2px solid var(--pn-ink);}
   .as-hist.open{transform:none;}
   .hist-collapsed .as-hist{border-left:2px solid var(--pn-ink);}

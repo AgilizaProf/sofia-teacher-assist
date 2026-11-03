@@ -19,7 +19,7 @@ export const painelCss = `
 .pn.rel-root .rel-main{display:block;}
 .pn.rel-root .rel-page{max-width:1280px;padding:24px 24px 64px;}
 
-.pn.rel-root .rel-page{max-width:1120px;}
+.pn.rel-root .rel-page{max-width:1240px;}
 .rel-title{margin:14px 0 0;font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;}
 .pn.rel-root .rel-block-title{margin:22px 0 10px;font-family:var(--pn-display);font-weight:700;font-size:17px;letter-spacing:-.02em;}
 .rel-prog-chip{background:var(--pn-surface);border:1.5px solid var(--pn-line);padding:0 12px;}

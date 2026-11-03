@@ -197,7 +197,7 @@ export function Assistente() {
     sofia.setOpen(false);
     setTimeout(() => composerRef.current?.focus(), 0);
   }, [sofia.open, sofia.setOpen]);
-  useEffect(() => () => { document.body.classList.remove("as-typing"); }, []);
+  useEffect(() => () => { document.body.classList.remove("as-composing"); }, []);
 
 
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
@@ -510,8 +510,8 @@ export function Assistente() {
                   rows={1}
                   value={sofia.draft}
                   onChange={(e) => sofia.setDraft(e.target.value)}
-                  onFocus={() => document.body.classList.add("as-typing")}
-                  onBlur={() => document.body.classList.remove("as-typing")}
+                  onFocus={() => document.body.classList.add("as-composing")}
+                  onBlur={() => document.body.classList.remove("as-composing")}
                   onKeyDown={(e) => {
                     // No celular, Enter quebra a linha; no computador, Enter envia.
                     if (e.key === "Enter" && !e.shiftKey && !isTouch) { e.preventDefault(); sendMessage(); }
