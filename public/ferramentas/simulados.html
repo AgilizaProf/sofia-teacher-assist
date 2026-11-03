@@ -645,18 +645,57 @@ const slug=s=>semAcento(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|
 function opcoes(obj,val,todos){return (todos?`<option value="">${todos}</option>`:"")+Object.entries(obj).map(([k,v])=>`<option value="${k}"${String(val)===String(k)?" selected":""}>${esc(v)}</option>`).join("");}
 const ANOS=Object.fromEntries([1,2,3,4,5,6,7,8,9].map(a=>[a,anoTxt(a)]));
 
-/* ============ ARMAZENAMENTO (no navegador do professor) ============ */
+/* ============ ARMAZENAMENTO (neste aparelho e na nuvem da conta do professor) ============ */
 const CHAVE="agilizaprof-banco-v1";
 let S={turmas:[],simulados:[],resultados:[],sel:[],minhas:[],fav:[],aval:{},relatos:[],sofiaAuto:true,aba:"inicio",zoom:1};
 function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE)||"null");if(d)S=Object.assign(S,d);}catch(e){}
   S.minhas=S.minhas||[];S.fav=S.fav||[];S.aval=S.aval||{};if(S.sofiaAuto==null)S.sofiaAuto=true;
-  if(!S.turmas.length&&!S._semExemplo){S.turmas=[{id:"EX1",nome:"5º A (exemplo)",ano:5,exemplo:true,alunos:["Ana Beatriz Souza","Bruno Henrique Lima","Carla Vitória Santos","Davi Lucas Oliveira","Eduarda Ferreira","Felipe Rocha Alves"].map((n,i)=>({id:"EX1-"+(i+1),nome:n}))}];}}
-function salvar(){try{localStorage.setItem(CHAVE,JSON.stringify(S));}catch(e){toast("O navegador ficou sem espaço. Apague imagens grandes de Minhas questões ou faça um backup.");}}
-async function baixar(nome,conteudo){
-  try{const d=await window.claude?.use?.("downloads");
-    if(!d){toast("Não foi possível baixar arquivos nesta visualização.");return false;}
-    await d.save({filename:nome,data:conteudo});toast("Arquivo salvo.");return true;
-  }catch(e){if(e&&e.code==="declined")toast("Download cancelado.");else toast("Não foi possível salvar o arquivo agora.");return false;}
+  limparExemplos();}
+// as turmas de exemplo de versões antigas não aparecem mais
+function limparExemplos(){S.turmas=(S.turmas||[]).filter(t=>!t.exemplo&&t.id!=="EX1");}
+function salvarLocal(){try{localStorage.setItem(CHAVE,JSON.stringify(S));}catch(e){toast("O navegador ficou sem espaço. Apague imagens grandes de Minhas questões ou faça um backup.");}}
+function salvar(){S._ts=Date.now();salvarLocal();nuvemSalvar();}
+/* ---- nuvem: a página do app (mesmo domínio) empresta o acesso à conta do professor ---- */
+const NUVEM_CHAVE="simulados_dados";
+const NUVEM_CAMPOS=["turmas","simulados","resultados","minhas","fav","aval","relatos","sofiaAuto","_ts"];
+function nuvem(){try{return window.parent!==window&&window.parent.aprofNuvem||null;}catch(e){return null;}}
+let nuvemTimer=0,nuvemPronta=false;
+function nuvemSalvar(){if(!nuvemPronta||!nuvem())return;clearTimeout(nuvemTimer);
+  nuvemTimer=setTimeout(async()=>{const n=nuvem();if(!n)return;const d={};NUVEM_CAMPOS.forEach(k=>d[k]=S[k]);
+    try{await n.set(NUVEM_CHAVE,d);}catch(e){toast("Não consegui salvar na nuvem agora. Os dados continuam neste aparelho e vão para a nuvem na próxima alteração.");}},1200);}
+async function nuvemCarregar(){
+  let n=nuvem();for(let i=0;i<30&&!n&&window.parent!==window;i++){await new Promise(r=>setTimeout(r,100));n=nuvem();}
+  if(!n)return;
+  let r=null;try{r=await n.get(NUVEM_CHAVE);}catch(e){nuvemPronta=true;return;}
+  nuvemPronta=true;
+  const d=r&&r.data;
+  if(!d||!d._ts){if(S.turmas.length||S.simulados.length||S.resultados.length||S.minhas.length)nuvemSalvar();return;}
+  if(S._ts&&S._ts>=d._ts){if(S._ts>d._ts)nuvemSalvar();return;}
+  if(!S._ts){
+    // dados antigos deste aparelho que nunca foram para a nuvem: junta com os da nuvem
+    const junta=(a,b,k)=>{const ids=new Set(a.map(x=>x[k]));return a.concat((b||[]).filter(x=>!ids.has(x[k])));};
+    const loc={turmas:S.turmas,simulados:S.simulados,resultados:S.resultados,minhas:S.minhas};
+    NUVEM_CAMPOS.forEach(k=>{if(d[k]!==undefined)S[k]=d[k];});
+    S.turmas=junta(S.turmas||[],loc.turmas,"id");S.simulados=junta(S.simulados||[],loc.simulados,"id");S.resultados=junta(S.resultados||[],loc.resultados,"rid");S.minhas=junta(S.minhas||[],loc.minhas,"id");
+    S._ts=Date.now();
+  }else NUVEM_CAMPOS.forEach(k=>{if(d[k]!==undefined)S[k]=d[k];});
+  S.minhas=S.minhas||[];S.fav=S.fav||[];S.aval=S.aval||{};limparExemplos();
+  S.minhas.forEach(q=>{q.ref=q.id;q.saeb=!!q.desc;});PREF=null;
+  salvarLocal();if(S._ts>d._ts)nuvemSalvar();
+  montarAbas();RENDER[S.aba]();
+}
+// Provas, cartões e gabaritos (.html) abrem numa nova aba, já prontos para imprimir ou salvar em PDF.
+// Planilhas e backups são baixados como arquivo. Sem "await" antes do window.open, para o navegador não bloquear a aba.
+function baixar(nome,conteudo){
+  try{
+    const html=/\.html?$/i.test(nome);
+    const tipo=html?"text/html;charset=utf-8":/\.csv$/i.test(nome)?"text/csv;charset=utf-8":"application/json;charset=utf-8";
+    const url=URL.createObjectURL(new Blob([conteudo],{type:tipo}));
+    setTimeout(()=>URL.revokeObjectURL(url),120000);
+    if(html){const w=window.open(url,"_blank");if(w){toast("Abri o arquivo numa nova aba: lá você imprime ou salva em PDF.");return true;}}
+    const a=document.createElement("a");a.href=url;a.download=nome;a.rel="noopener";document.body.appendChild(a);a.click();a.remove();
+    toast("Arquivo baixado: "+nome);return true;
+  }catch(e){toast("Não foi possível salvar o arquivo agora.");return false;}
 }
 
 /* ============ QUESTÕES: banco + minhas questões ============ */
@@ -694,12 +733,13 @@ function qrSvg(texto){
 function qrTexto(sim,v){
   const nome=semAcento(v.nome||"").replace(/[;|:]/g," ").slice(0,40);
   const pos=v.ordem.map(r=>typeof r==="number"?r.toString(36).toUpperCase().padStart(3,"0"):"---").join("");
-  return ["AP2",sim.id,v.n,nome,v.tipo||"",[v.gab,pos,BANCO_VER].join(":")].join(";");
+  const fim=[v.gab,pos,BANCO_VER];if(cartaoGrande(sim,v.ordem.length))fim.push("G");
+  return ["AP2",sim.id,v.n,nome,v.tipo||"",fim.join(":")].join(";");
 }
 function lerQrTexto(t){
   const p=String(t).split(";");
   if(p[0]==="AP1"&&p.length>=6){const ordem=(p[5].match(/.{2}/g)||[]).map(x=>x==="__"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],gab:p[4],ordem,tipo:""};}
-  if(p[0]==="AP2"&&p.length>=6){const [gab,pos=""]=p[5].split(":");const ordem=(pos.match(/.{3}/g)||[]).map(x=>x==="---"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],tipo:p[4]||"",gab,ordem};}
+  if(p[0]==="AP2"&&p.length>=6){const [gab,pos="",,tam=""]=p[5].split(":");const ordem=(pos.match(/.{3}/g)||[]).map(x=>x==="---"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],tipo:p[4]||"",gab,ordem,grande:tam==="G"};}
   return null;
 }
 
@@ -1071,11 +1111,35 @@ function tabelaDescritores(itens,acertos){
 }
 
 /* ============ GERADOR DE SIMULADOS ============ */
-let G={origem:"auto",titulo:"",escola:"",prof:"",turma:"",ano:"5",disc:"MAT",discs:{MAT:"10"},qtd:"10",nivel:"",fig:"algumas",modo:"tipos",nTipos:"4",embQ:true,embA:true,saeb:false,blocoTam:0,ultimo:null,cs:{n:"20",nt:"1",gabs:{A:"",B:"",C:"",D:""}}};
+let G={origem:"auto",titulo:"",escola:"",prof:"",turma:"",turmas:[],ano:"5",disc:"MAT",discs:{MAT:"10"},qtd:"10",nivel:"",fig:"algumas",modo:"tipos",nTipos:"4",embQ:true,embA:true,saeb:false,blocoTam:0,ultimo:null,cs:{n:"20",nt:"1",gabs:{A:"",B:"",C:"",D:""},secs:null}};
 const TIPOS="ABCD";
+// turmas marcadas no gerador: o mesmo simulado (mesmo código e mesmo gabarito) vale para todas
+function lerTurmas(){return [...document.querySelectorAll("[data-gt]")].filter(c=>c.checked).map(c=>c.dataset.gt);}
+function turmasSel(){const ts=S.turmas.filter(t=>G.turmas.includes(t.id));if(!ts.length){toast("Marque pelo menos uma turma.");return null;}
+  const vazia=ts.find(t=>!t.alunos.length);if(vazia){toast(`A turma ${vazia.nome} não tem alunos.`);return null;}return ts;}
+function turmaDe(sim,v){return (v&&v.turma)||((sim.turmaIds||[]).length>1?"":sim.turma||"");}
+function nomesTurmas(sim){return [...new Set(sim.versoes.map(v=>v.turma||sim.turma).filter(Boolean))].join(", ");}
+// acrescenta os alunos de uma turma ao simulado, com as mesmas questões e o mesmo gabarito
+function addTurmaVersoes(sim,t){
+  let n=sim.versoes.reduce((m,v)=>Math.max(m,v.n),0);
+  t.alunos.forEach((a,k)=>{n++;const base={n,alunoId:a.id,nome:a.nome,turmaId:t.id,turma:t.nome};
+    if(sim.tipos){const tp=sim.tipos[k%sim.tipos.length];sim.versoes.push({...base,tipo:tp.t,ordem:tp.ordem,perms:tp.perms,gab:tp.gab});}
+    else if(sim.cartaoSo||sim.modo==="igual"||!(sim.embQ||sim.embA))sim.versoes.push({...base,tipo:"",...montarVersao(sim,sim.base,"",false,false)});
+    else sim.versoes.push({...base,...montarVersao(sim,sim.base,sim.id+"|"+a.id,sim.embQ,sim.embA)});});
+}
+// conteúdos do cartão-resposta (prova própria): cada um com componente, conteúdo e número de questões
+function csSecs(){if(!G.cs.secs||!G.cs.secs.length)G.cs.secs=[{disc:G.disc||"MAT",tema:"",n:String(G.cs.n||20)}];return G.cs.secs;}
+function csFaixas(secs){let a=1;const out=[];for(const x of secs){if(a>60)break;const b=Math.min(60,a+Math.max(1,+x.n||1)-1);out.push({disc:x.disc,tema:String(x.tema||"").trim(),a,b});a=b+1;}return out;}
+function csN(){const f=csFaixas(csSecs());return f.length?f[f.length-1].b:1;}
+function faixasTxt(fx){return fx.map(f=>`${f.a===f.b?"Questão "+f.a:"Questões "+f.a+" a "+f.b}: ${DISC[f.disc]||f.disc}${f.tema?" · "+f.tema:""}`).join(" · ");}
+function reusarCartao(x){const n=x.base.length,ts=x.tipos||[{t:"A",gab:x.versoes[0]?.gab||""}];
+  G.cs.nt=String(x.tipos?x.tipos.length:1);G.cs.gabs={A:"",B:"",C:"",D:""};ts.forEach(t=>G.cs.gabs[t.t||"A"]=t.gab);
+  G.cs.secs=x.secs?x.secs.map(y=>({...y})):[{disc:(x.discs||[])[0]||"MAT",tema:"",n:String(n)}];G.cs.n=String(n);
+  G.ano=String((x.anos||[])[0]||G.ano);G.titulo=x.titulo;G.escola=x.escola||G.escola;G.prof=x.prof||G.prof;}
 function renderGerador(){
-  if(!S.turmas.find(t=>t.id===G.turma))G.turma=S.turmas[0]?.id||"";
-  const turma=S.turmas.find(t=>t.id===G.turma);
+  G.turmas=(G.turmas||[]).filter(id=>S.turmas.some(t=>t.id===id));
+  if(!G.turmas.length&&S.turmas[0])G.turmas=[S.turmas[0].id];
+  const turma=S.turmas.find(t=>G.turmas.includes(t.id));
   $("#painel").innerHTML=cabecalho("🖨️","Gerador de simulados","Gere uma prova para cada aluno da turma, com o nome impresso e um cartão-resposta com QR code próprio. Escolha tipos de prova A, B, C e D com as mesmas questões em ordens diferentes, uma versão por aluno ou prova única. O QR guarda o aluno, o tipo e o gabarito. Se a prova foi feita fora do AgilizaProf, gere só o cartão-resposta com o seu gabarito.")+`
    <div class="duas">
     <section class="painel pilha">
@@ -1107,8 +1171,9 @@ function renderGerador(){
     </section>
     <section class="painel pilha">
      <h2>3. Turma e versões</h2>
-     <label class="campo">Turma<select id="g-turma">${S.turmas.map(t=>`<option value="${t.id}"${t.id===G.turma?" selected":""}>${esc(t.nome)} (${t.alunos.length} alunos)</option>`).join("")}</select></label>
-     ${turma?"":`<div class="aviso">Cadastre uma turma na aba Alunos e turmas para gerar as provas com os nomes.</div>`}
+     ${S.turmas.length?`<div class="pilha" style="gap:6px"><span class="fonte" style="font-weight:700">Turmas · marque uma ou mais (o mesmo simulado e o mesmo gabarito valem para todas)</span>
+      <div class="disc-qtd">${S.turmas.map(t=>`<label class="opc"><input type="checkbox" data-gt="${t.id}"${G.turmas.includes(t.id)?" checked":""}><span>${esc(t.nome)} <small class="fonte">· ${t.alunos.length} alunos</small></span></label>`).join("")}</div></div>`:""}
+     ${turma?"":`<div class="aviso">Cadastre uma turma em <a href="#" id="g-irturmas">Alunos e turmas</a> para gerar as provas com os nomes.</div>`}
      <div class="pilha" style="gap:8px"${G.origem==="cartao"?" hidden":""}>
       <span class="fonte" style="font-weight:700">Como montar as provas</span>
       <label class="opc"><input type="radio" name="g-modo" value="tipos"${G.modo==="tipos"?" checked":""}> <span><b>Tipos de prova</b> (A, B, C, D): as mesmas questões em ordens diferentes; os alunos recebem os tipos alternados, na ordem da lista</span></label>
@@ -1121,18 +1186,20 @@ function renderGerador(){
       <label class="opc"><input type="checkbox" id="g-emba"${G.embA?" checked":""}> Embaralhar as alternativas (A, B, C, D)</label>
      </div>
      ${G.origem==="cartao"?`<p class="fonte" style="margin:0">Cada aluno recebe um cartão com o nome e um QR code próprio${+G.cs.nt>1?"; os tipos são distribuídos alternados, na ordem da lista":""}. Você também pode baixar cartões sem nome para fotocopiar.</p>
-     <div class="linha-acoes"><button class="btn prim" id="g-gerar"${turma?"":" disabled"}>Gerar cartões-resposta da turma</button></div>`:`
+     <div class="linha-acoes"><button class="btn prim" id="g-gerar"${turma?"":" disabled"}>Gerar cartões-resposta das turmas marcadas</button></div>`:`
      <label class="opc"><input type="checkbox" id="g-saeb"${G.saeb?" checked":""}> Diagramar no estilo SAEB (blocos)</label>
-     <div class="linha-acoes"><button class="btn prim" id="g-gerar"${turma?"":" disabled"}>Gerar simulados da turma</button><button class="btn" id="g-lista">Baixar lista de exercícios</button></div>
+     <div class="linha-acoes"><button class="btn prim" id="g-gerar"${turma?"":" disabled"}>Gerar simulados das turmas marcadas</button><button class="btn" id="g-lista">Baixar lista de exercícios</button></div>
      <p class="fonte" style="margin:0">A lista de exercícios sai em uma única versão, sem nomes e sem QR, com o gabarito no final.</p>`}
     </section>
    </div>
    <div id="g-saida" style="margin-top:18px"></div>
    <section style="margin-top:22px" class="pilha"><h2>Simulados gerados</h2>${listaSimulados()}</section>`;
-  const lerCampos=()=>{G.titulo=$("#g-titulo").value;G.escola=$("#g-escola").value;G.prof=$("#g-prof").value;G.turma=$("#g-turma")?.value||"";
+  const lerCampos=()=>{G.titulo=$("#g-titulo").value;G.escola=$("#g-escola").value;G.prof=$("#g-prof").value;if(document.querySelector("[data-gt]"))G.turmas=lerTurmas();
     G.ano=$("#g-ano").value;G.discs=lerDiscs();G.nivel=$("#g-nivel").value;G.fig=$("#g-fig").value;G.embQ=$("#g-embq").checked;G.embA=$("#g-emba").checked;G.saeb=$("#g-saeb")?.checked??G.saeb;
     G.modo=$("#painel").querySelector("[name=g-modo]:checked").value;G.nTipos=$("#g-ntipos").value;};
   $("#painel").querySelectorAll('[name=g-modo]').forEach(r=>r.onchange=()=>{$("#g-tipos").hidden=r.value!=="tipos";$("#g-emb").hidden=r.value==="igual";});
+  $("#painel").querySelectorAll("[data-gt]").forEach(c=>c.onchange=()=>{G.turmas=lerTurmas();$("#g-gerar").disabled=!G.turmas.length;});
+  if($("#g-irturmas"))$("#g-irturmas").onclick=e=>{e.preventDefault();irPara("alunos");};
   const total=()=>{const d=lerDiscs(),n=Object.values(d).reduce((a,b)=>a+(+b||0),0);$("#g-total").textContent=Object.keys(d).length?`Total: ${n} questões em ${Object.keys(d).length} ${Object.keys(d).length>1?"componentes":"componente"}, todas no mesmo cartão-resposta${n>60?" · o máximo é 60":""}.`:"Marque pelo menos um componente.";};
   $("#painel").querySelectorAll("[data-gd],[data-gq]").forEach(i=>i.oninput=total);total();
   $("#painel").querySelectorAll('[name=g-origem]').forEach(r=>r.onchange=()=>{lerCampos();lerCS();G.origem=r.value;renderGerador();});
@@ -1145,14 +1212,18 @@ function renderGerador(){
 }
 /* ---- Só o cartão-resposta: o professor aplica a própria prova e informa o gabarito ---- */
 function cartaoSoHtml(){
-  const n=Math.max(1,Math.min(60,+G.cs.n||20)),nt=Math.max(1,Math.min(4,+G.cs.nt||1));
+  const secs=csSecs(),n=csN(),nt=Math.max(1,Math.min(4,+G.cs.nt||1)),fx=csFaixas(secs),reusaveis=S.simulados.filter(x=>x.cartaoSo);
   return `<div class="pilha" id="g-cs">
    <p class="fonte" style="margin:0">Informe quantas questões tem a sua prova e a letra certa de cada uma. O AgilizaProf gera os cartões-resposta com QR e o leitor corrige pela foto. Dá para corrigir o gabarito depois, mesmo com os cartões já impressos.</p>
+   ${reusaveis.length?`<label class="campo">Reaproveitar um cartão-resposta já criado (mesmo gabarito, para outro simulado ou outra turma)<select id="cs-reusar"><option value="">Começar um cartão novo</option>${reusaveis.map(x=>`<option value="${x.id}">${esc(x.titulo)} · ${x.id} · ${esc(x.turma)}</option>`).join("")}</select></label>`:""}
    <div class="grade-filtros">
-    <label class="campo">Nº de questões<input id="cs-n" type="number" min="1" max="60" value="${n}"></label>
     <label class="campo">Tipos de prova<select id="cs-nt">${opcoes({1:"Prova única",2:"2 tipos (A e B)",3:"3 tipos (A, B e C)",4:"4 tipos (A, B, C e D)"},nt)}</select></label>
     <label class="campo">Ano<select id="cs-ano">${opcoes(ANOS,G.ano)}</select></label>
-    <label class="campo">Componente<select id="cs-disc">${opcoes(DISC,G.disc)}</select></label>
+   </div>
+   <div class="pilha" style="gap:6px"><span class="fonte" style="font-weight:700">Conteúdos do cartão, na ordem das questões</span>
+    ${secs.map((x,i)=>`<div class="linha-acoes" style="align-items:flex-end;flex-wrap:wrap"><label class="campo" style="flex:1 1 150px">Componente<select data-csd="${i}">${opcoes(DISC,x.disc)}</select></label><label class="campo" style="flex:2 1 170px">Conteúdo (opcional)<input data-cstema="${i}" value="${esc(x.tema||"")}" placeholder="Ex.: Frações"></label><label class="campo" style="flex:0 0 92px">Questões<input type="number" min="1" max="60" data-csn="${i}" value="${esc(x.n)}"></label>${secs.length>1?`<button type="button" class="btn peq perigo" data-csx="${i}" aria-label="Tirar este conteúdo">Tirar</button>`:""}</div>`).join("")}
+    <div class="linha-acoes"><button type="button" class="btn peq" id="cs-addsec">+ Adicionar outro conteúdo</button></div>
+    <span class="fonte">Total: ${n} ${n===1?"questão":"questões"}${fx.length>1?" · "+esc(faixasTxt(fx)):""}</span>
    </div>
    ${[...TIPOS.slice(0,nt)].map(t=>gabEditorHtml(t,n,G.cs.gabs[t]||"",nt>1)).join("")}
   </div>`;
@@ -1163,28 +1234,35 @@ function gabEditorHtml(t,n,gab,mostraTipo){
    <label class="campo">Digite as letras em sequência (ou toque abaixo)<input class="entrada cs-txt" data-t="${t}" value="${esc(g.slice(0,n).replace(/[^ABCD]/g,"-"))}" placeholder="Ex.: ACBDDABC…" autocomplete="off" spellcheck="false" style="font-family:ui-monospace,Menlo,monospace;letter-spacing:.12em;text-transform:uppercase"></label>
    <div class="cartao-grade">${Array.from({length:n},(_,k)=>`<div class="cg-linha"><span class="n">${k+1}</span>${[..."ABCD"].map(a=>`<button type="button" class="${g[k]===a?"on":""}" data-cst="${t}" data-k="${k}" data-a="${a}" aria-label="Tipo ${t}, questão ${k+1}, alternativa ${a}">${a}</button>`).join("")}</div>`).join("")}</div></div>`;
 }
-function lerCS(){if(!$("#cs-n"))return;G.titulo=$("#g-titulo").value;G.escola=$("#g-escola").value;G.prof=$("#g-prof").value;G.turma=$("#g-turma")?.value||G.turma;G.cs.n=$("#cs-n").value;G.cs.nt=$("#cs-nt").value;G.ano=$("#cs-ano").value;G.disc=$("#cs-disc").value;}
+function lerCS(){if(!$("#g-cs"))return;G.titulo=$("#g-titulo").value;G.escola=$("#g-escola").value;G.prof=$("#g-prof").value;if(document.querySelector("[data-gt]"))G.turmas=lerTurmas();G.cs.nt=$("#cs-nt").value;G.ano=$("#cs-ano").value;
+  csSecs().forEach((x,i)=>{const d=document.querySelector(`[data-csd="${i}"]`);if(!d)return;x.disc=d.value;x.tema=document.querySelector(`[data-cstema="${i}"]`).value;x.n=String(Math.max(1,Math.min(60,+document.querySelector(`[data-csn="${i}"]`).value||1)));});
+  G.cs.n=String(csN());G.disc=csSecs()[0].disc;}
 function ligarCartaoSo(){
   const re=()=>{const y=window.scrollY;renderGerador();window.scrollTo({top:y});};
   const ler=lerCS;
-  $("#cs-n").onchange=()=>{ler();re();};$("#cs-nt").onchange=()=>{ler();re();};
+  $("#cs-nt").onchange=()=>{ler();re();};
+  $("#g-cs").querySelectorAll("[data-csd],[data-csn]").forEach(i=>i.onchange=()=>{ler();re();});
+  $("#g-cs").querySelectorAll("[data-cstema]").forEach(i=>i.onchange=()=>ler());
+  $("#g-cs").querySelectorAll("[data-csx]").forEach(b=>b.onclick=()=>{ler();G.cs.secs.splice(+b.dataset.csx,1);G.cs.n=String(csN());re();});
+  $("#cs-addsec").onclick=()=>{ler();const livre=60-csN();if(livre<1){toast("O cartão-resposta comporta até 60 questões.");return;}G.cs.secs.push({disc:G.cs.secs[G.cs.secs.length-1].disc==="LP"?"MAT":"LP",tema:"",n:String(Math.min(10,livre))});G.cs.n=String(csN());re();};
+  if($("#cs-reusar"))$("#cs-reusar").onchange=e=>{const x=S.simulados.find(y=>y.id===e.target.value);if(!x)return;ler();reusarCartao(x);re();toast("Gabarito e conteúdos copiados. Marque as turmas e gere os cartões.");};
   $("#g-cs").querySelectorAll("[data-cst]").forEach(b=>b.onclick=()=>{const t=b.dataset.cst,k=+b.dataset.k,n=+G.cs.n;let g=(G.cs.gabs[t]||"").padEnd(n,"-").split("");g[k]=g[k]===b.dataset.a?"-":b.dataset.a;G.cs.gabs[t]=g.join("");ler();re();});
   $("#g-cs").querySelectorAll(".cs-txt").forEach(i=>i.onchange=()=>{G.cs.gabs[i.dataset.t]=i.value.toUpperCase().replace(/[^ABCD\-_ ]/g,"").replace(/[_ ]/g,"-");ler();re();});
 }
 function gerarCartaoSo(){
-  const turma=S.turmas.find(t=>t.id===G.turma);if(!turma||!turma.alunos.length){toast("A turma escolhida não tem alunos.");return;}
-  const n=Math.max(1,Math.min(60,+G.cs.n||20)),nt=Math.max(1,Math.min(4,+G.cs.nt||1)),ts=[...TIPOS.slice(0,nt)];
+  const tsel=turmasSel();if(!tsel)return;
+  const secs=csSecs().map(x=>({...x})),fx=csFaixas(secs),n=csN(),nt=Math.max(1,Math.min(4,+G.cs.nt||1)),ts=[...TIPOS.slice(0,nt)];
+  const secDe=k=>fx.find(f=>k+1>=f.a&&k+1<=f.b)||fx[0],discs=[...new Set(fx.map(f=>f.disc))];
   for(const t of ts){const g=(G.cs.gabs[t]||"").toUpperCase();const f=Array.from({length:n},(_,k)=>k).filter(k=>!"ABCD".includes(g[k]||"_"));
     if(f.length){toast(`Falta a letra certa ${nt>1?"no tipo "+t+", ":""}questão ${f[0]+1}.`);return;}}
-  const id=novoId(),ano=+G.ano,disc=G.disc,extra={};
+  const id=novoId(),ano=+G.ano,extra={};
   const tipos=ts.map(t=>{const gab=G.cs.gabs[t].toUpperCase().slice(0,n);
-    const ordem=Array.from({length:n},(_,k)=>{const qid=`K${id}${t}${k+1}`;extra[qid]={id:qid,ref:qid,ano,disc,tema:"Prova própria",nivel:2,enunciado:`Questão ${k+1}${nt>1?" (tipo "+t+")":""} da prova do professor`,alts:["A","B","C","D"],correta:L.indexOf(gab[k]),origem:"cartao"};return qid;});
+    const ordem=Array.from({length:n},(_,k)=>{const qid=`K${id}${t}${k+1}`;const sd=secDe(k);extra[qid]={id:qid,ref:qid,ano,disc:sd.disc,tema:sd.tema||"Prova própria",nivel:2,enunciado:`Questão ${k+1}${nt>1?" (tipo "+t+")":""} da prova do professor`,alts:["A","B","C","D"],correta:L.indexOf(gab[k]),origem:"cartao"};return qid;});
     return {t,ordem,perms:ordem.map(()=>[0,1,2,3]),gab};});
-  const sim={id,titulo:G.titulo.trim()||`Prova de ${DISC[disc]} · ${anoTxt(ano)}`,escola:G.escola.trim(),prof:G.prof.trim(),turmaId:turma.id,turma:turma.nome,
-    anos:[ano],discs:[disc],base:tipos[0].ordem,extra,modo:nt>1?"tipos":"igual",cartaoSo:true,embQ:false,embA:false,saeb:false,blocoTam:0,data:hoje(),criado:Date.now(),ver:BANCO_VER,versoes:[]};
+  const sim={id,titulo:G.titulo.trim()||`Prova de ${discs.map(d=>DISC[d]).join(", ")} · ${anoTxt(ano)}`,escola:G.escola.trim(),prof:G.prof.trim(),turmaIds:tsel.map(t=>t.id),turma:tsel.map(t=>t.nome).join(", "),
+    anos:[ano],discs,secs,base:tipos[0].ordem,extra,modo:nt>1?"tipos":"igual",cartaoSo:true,embQ:false,embA:false,saeb:false,blocoTam:0,data:hoje(),criado:Date.now(),ver:BANCO_VER,versoes:[]};
   if(nt>1)sim.tipos=tipos;
-  turma.alunos.forEach((a,k)=>{const tp=tipos[k%nt];sim.versoes.push({n:k+1,alunoId:a.id,nome:a.nome,tipo:nt>1?tp.t:"",ordem:tp.ordem,perms:tp.perms,gab:tp.gab});});
-  S.simulados.unshift(sim);G.ultimo=sim.id;salvar();renderGerador();toast(`${sim.versoes.length} cartões-resposta gerados`);
+  S.simulados.unshift(sim);tsel.forEach(t=>addTurmaVersoes(sim,t));G.ultimo=sim.id;salvar();renderGerador();toast(`${sim.versoes.length} cartões-resposta gerados`);
   document.getElementById("g-saida").scrollIntoView({behavior:"smooth"});
 }
 // corrige o gabarito de uma prova própria e recalcula as notas já lidas
@@ -1229,7 +1307,7 @@ function montarVersao(sim,idx,semente,embQ,embA){
   return {ordem,perms,gab};
 }
 function gerar(){
-  const turma=S.turmas.find(t=>t.id===G.turma);if(!turma||!turma.alunos.length){toast("A turma escolhida não tem alunos.");return;}
+  const tsel=turmasSel();if(!tsel)return;
   const idx=escolherRefs();if(!idx)return;
   const qs=idx.map(getQ);
   if(G.modo!=="igual"&&!G.embQ&&!G.embA){toast("Marque embaralhar questões ou alternativas para ter provas diferentes.");return;}
@@ -1239,17 +1317,14 @@ function gerar(){
   let novasNoBanco=0;
   if(S.sofiaAuto)qs.forEach(q=>{if(q.origem==="sofia"&&!q.banco){q.banco=true;novasNoBanco++;if(!S.minhas.some(m=>m.id===q.id))S.minhas.unshift(q);}});
   const modo=G.modo||"aluno";
-  const sim={id:novoId(),titulo:G.titulo.trim()||`Simulado de ${discs.map(d=>DISC[d]).join(", ")}`,escola:G.escola.trim(),prof:G.prof.trim(),turmaId:turma.id,turma:turma.nome,
+  const sim={id:novoId(),titulo:G.titulo.trim()||`Simulado de ${discs.map(d=>DISC[d]).join(", ")}`,escola:G.escola.trim(),prof:G.prof.trim(),turmaIds:tsel.map(t=>t.id),turma:tsel.map(t=>t.nome).join(", "),
     anos,discs,base:idx,extra,modo,embQ:modo!=="igual"&&G.embQ,embA:modo!=="igual"&&G.embA,saeb:G.saeb,blocoTam:G.saeb?(G.blocoTam||SAEB_FMT[anos[0]]?.itens||13):0,data:hoje(),criado:Date.now(),ver:BANCO_VER,versoes:[]};
   if(modo==="tipos"){
     const nt=Math.max(2,Math.min(4,+G.nTipos||4));
     // tipo A segue a ordem original; B, C e D embaralham
     sim.tipos=[...TIPOS.slice(0,nt)].map((t,k)=>({t,...(k===0?montarVersao(sim,idx,sim.id+"|A",false,false):montarVersao(sim,idx,sim.id+"|"+t,sim.embQ,sim.embA))}));
-    turma.alunos.forEach((a,k)=>{const tp=sim.tipos[k%nt];sim.versoes.push({n:k+1,alunoId:a.id,nome:a.nome,tipo:tp.t,ordem:tp.ordem,perms:tp.perms,gab:tp.gab});});
-  }else{
-    turma.alunos.forEach((a,k)=>{sim.versoes.push({n:k+1,alunoId:a.id,nome:a.nome,...(modo==="igual"?montarVersao(sim,idx,"",false,false):montarVersao(sim,idx,sim.id+"|"+a.id,sim.embQ,sim.embA))});});
   }
-  S.simulados.unshift(sim);G.ultimo=sim.id;salvar();montarAbas();renderGerador();toast(`${sim.versoes.length} provas geradas${novasNoBanco?` · ${novasNoBanco} questões da Sofia entraram no banco`:""}`);
+  S.simulados.unshift(sim);tsel.forEach(t=>addTurmaVersoes(sim,t));G.ultimo=sim.id;salvar();montarAbas();renderGerador();toast(`${sim.versoes.length} provas geradas${novasNoBanco?` · ${novasNoBanco} questões da Sofia entraram no banco`:""}`);
   document.getElementById("g-saida").scrollIntoView({behavior:"smooth"});
 }
 function secoes(idx){const out=[];idx.forEach(i=>{const d=getQ(i).disc;if(!out.length||getQ(out[out.length-1][0]).disc!==d)out.push([i]);else out[out.length-1].push(i);});return out;}
@@ -1262,16 +1337,22 @@ function mostrarGerado(sim){
   const tipos=sim.modo==="tipos"&&sim.tipos;
   el.innerHTML=`<section class="painel pilha"><div class="linha-acoes" style="justify-content:space-between"><div><h2 style="margin:0">${esc(sim.titulo)}</h2><span class="fonte">Código ${sim.id} · ${esc(sim.turma)} · ${sim.base.length} questões · ${sim.versoes.length} alunos · ${modoTxt(sim)}</span></div>
    <div class="linha-acoes">${sim.cartaoSo?`<button class="btn prim" data-cartoes="${sim.id}">Baixar cartões com nome</button><button class="btn" data-matriz="${sim.id}">Cartões sem nome (para fotocopiar)</button>`:`<button class="btn prim" data-baixar="${sim.id}">Provas completas (cartão + questões)</button><button class="btn" data-cartoes="${sim.id}">Só os cartões-resposta (só frente)</button><button class="btn" data-cadernos="${sim.id}">Só as questões (frente e verso)</button>${tipos?`<button class="btn" data-matriz="${sim.id}">Uma prova de cada tipo (para fotocopiar)</button>`:""}`}<button class="btn" data-gab="${sim.id}">Gabaritos do professor</button><button class="btn" data-lersim="${sim.id}">Corrigir no leitor</button></div></div>
-   <p class="fonte" style="margin:0">O arquivo baixado abre no navegador e já chama a impressão; no topo dele dá para ligar ou desligar o frente e verso. Imprima em A4, tamanho real (100%). Dica: imprima os cartões-resposta só na frente e as questões em frente e verso. Em frente e verso, cada aluno sempre começa numa folha nova.${tipos||sim.cartaoSo?" O que sai sem nome serve para fotocopiar; no leitor, você escolhe o aluno depois de ler o QR.":""}</p>
+   ${(()=>{const ja=new Set(sim.versoes.map(v=>v.turmaId||sim.turmaId));const outras=S.turmas.filter(t=>!ja.has(t.id)&&t.alunos.length);
+     return outras.length?`<div class="linha-acoes" style="align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Aplicar este mesmo simulado (mesmo cartão e mesmo gabarito) em outra turma<select id="g-maisturma">${outras.map(t=>`<option value="${t.id}">${esc(t.nome)} · ${t.alunos.length} alunos</option>`).join("")}</select></label><button class="btn prim" id="g-addturma">Adicionar turma</button></div>`:"";})()}
+   <p class="fonte" style="margin:0">O arquivo abre numa nova aba e já chama a impressão (lá também dá para salvar em PDF); no topo dele dá para ligar ou desligar o frente e verso. Imprima em A4, tamanho real (100%). Dica: imprima os cartões-resposta só na frente e as questões em frente e verso. Em frente e verso, cada aluno sempre começa numa folha nova.${tipos||sim.cartaoSo?" O que sai sem nome serve para fotocopiar; no leitor, você escolhe o aluno depois de ler o QR.":""}</p>
    ${sim.cartaoSo?`<details${sim._abrirGab?" open":""}><summary style="cursor:pointer;font-weight:700">Conferir ou corrigir o gabarito</summary><div class="pilha" style="margin-top:10px" id="g-edgab">${(sim.tipos||[{t:"",gab:sim.versoes[0]?.gab||""}]).map(t=>gabEditorHtml(t.t||"A",sim.base.length,t.gab,!!sim.tipos).replace('data-gabtipo="'+(t.t||"A")+'"','data-gabtipo="'+(t.t||"")+'"')).join("")}<div class="linha-acoes"><button class="btn prim peq" id="g-salvargab">Salvar gabarito e recalcular notas</button></div><p class="fonte" style="margin:0">Os cartões já impressos continuam valendo: o leitor usa o gabarito salvo aqui.</p></div></details>`:""}
    ${tipos?`<div class="tabela-wrap"><table><thead><tr><th>Tipo</th><th>Alunos</th><th>Gabarito</th></tr></thead><tbody>${sim.tipos.map(t=>`<tr><td>${seloTipo(t.t)}</td><td class="num">${sim.versoes.filter(v=>v.tipo===t.t).length}</td><td style="font-family:ui-monospace,Menlo,monospace;letter-spacing:.06em;white-space:normal;overflow-wrap:anywhere">${t.gab}</td></tr>`).join("")}</tbody></table></div><p class="fonte" style="margin:0">Para trocar o tipo de um aluno (por exemplo, para separar vizinhos de carteira), mude abaixo antes de baixar.</p>`:""}
-   <div class="versoes">${sim.versoes.map(v=>`<div class="versao"><div class="qr-mini">${qrSvg(qrTexto(sim,v))}</div><div><div class="nome">${esc(v.nome)}</div><div class="fonte">${tipos?`Tipo <select data-trocatipo="${v.n}" aria-label="Tipo de prova de ${esc(v.nome)}">${sim.tipos.map(t=>`<option${t.t===v.tipo?" selected":""}>${t.t}</option>`).join("")}</select>`:`Versão ${v.n}`}</div><div class="gab">${v.gab}</div></div></div>`).join("")}</div></section>`;
+   <div class="versoes">${sim.versoes.map(v=>`<div class="versao"><div class="qr-mini">${qrSvg(qrTexto(sim,v))}</div><div><div class="nome">${esc(v.nome)}</div>${(sim.turmaIds||[]).length>1?`<div class="fonte">${esc(v.turma||"")}</div>`:""}<div class="fonte">${tipos?`Tipo <select data-trocatipo="${v.n}" aria-label="Tipo de prova de ${esc(v.nome)}">${sim.tipos.map(t=>`<option${t.t===v.tipo?" selected":""}>${t.t}</option>`).join("")}</select>`:`Versão ${v.n}`}</div><div class="gab">${v.gab}</div></div></div>`).join("")}</div></section>`;
   if(sim.cartaoSo){const ed=$("#g-edgab"),rasc={};(sim.tipos||[{t:"",gab:sim.versoes[0]?.gab||""}]).forEach(t=>rasc[t.t]=t.gab);
     const marca=(t,k,a)=>{const g=rasc[t].split("");g[k]=a;rasc[t]=g.join("");};
     ed.querySelectorAll("[data-cst]").forEach(b=>b.onclick=()=>{const box=b.closest("[data-gabtipo]"),t=box.dataset.gabtipo;marca(t,+b.dataset.k,b.dataset.a);b.parentNode.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));box.querySelector(".cs-txt").value=rasc[t];});
     ed.querySelectorAll(".cs-txt").forEach(i=>i.onchange=()=>{const t=i.closest("[data-gabtipo]").dataset.gabtipo;const v=i.value.toUpperCase().replace(/[^ABCD]/g,"");if(v.length!==sim.base.length){toast(`O gabarito precisa ter ${sim.base.length} letras (A a D).`);return;}rasc[t]=v;sim._abrirGab=true;
       Object.entries(rasc).forEach(([tt,g])=>trocarGabarito(sim,tt,g));mostrarGerado(sim);});
     $("#g-salvargab").onclick=()=>{Object.entries(rasc).forEach(([t,g])=>trocarGabarito(sim,t,g));sim._abrirGab=false;salvar();mostrarGerado(sim);toast("Gabarito salvo. As notas já lidas foram recalculadas.");};}
+  if($("#g-addturma"))$("#g-addturma").onclick=()=>{const t=S.turmas.find(x=>x.id===$("#g-maisturma").value);if(!t)return;
+    sim.versoes.forEach(v=>{if(!v.turma){v.turma=sim.turma;v.turmaId=sim.turmaId;}});
+    sim.turmaIds=[...new Set((sim.turmaIds||[sim.turmaId]).filter(Boolean).concat(t.id))];addTurmaVersoes(sim,t);sim.turma=nomesTurmas(sim);
+    salvar();G.ultimo=sim.id;renderGerador();toast(`${t.alunos.length} cartões da turma ${t.nome} adicionados ao simulado ${sim.id}.`);};
   el.querySelectorAll("[data-trocatipo]").forEach(sl=>sl.onchange=()=>{const v=sim.versoes.find(x=>x.n==sl.dataset.trocatipo),t=sim.tipos.find(x=>x.t===sl.value);Object.assign(v,{tipo:t.t,ordem:t.ordem,perms:t.perms,gab:t.gab});salvar();mostrarGerado(sim);});
   ligarListaSimulados(el);
 }
@@ -1292,27 +1373,34 @@ function ligarListaSimulados(raiz=$("#painel")){
 }
 
 /* ---- Cartão-resposta: geometria em milímetros, medida a partir do canto do QR ---- */
-const CR={Q:34, y0:48, colW:44, rowH:7.5, bx0:12, bdx:7, r:2.6};
-function crLayout(n){const cols=Math.max(1,Math.ceil(n/15)),rows=Math.ceil(n/cols);const pos=[];
+// cartão normal e cartão "grande" (até o 5º ano e até 36 questões): bolinhas, letras e números maiores.
+// O QR guarda qual dos dois foi impresso (":G" no fim), e o leitor usa a mesma geometria.
+const CR_N={Q:34, y0:48, colW:44, rowH:7.5, bx0:12, bdx:7, r:2.6, cy:3.2, porCol:15, nTop:.9, nFs:10, lFs:7};
+const CR_G={Q:34, y0:48, colW:58, rowH:10.5, bx0:14, bdx:10, r:3.6, cy:4.4, porCol:12, nTop:1.5, nFs:13, lFs:9.5};
+let CR=CR_N;
+function usarCR(grande){CR=grande?CR_G:CR_N;}
+function cartaoGrande(sim,n){const anos=(sim.anos||[]).map(Number).filter(Boolean);return anos.length>0&&Math.max(...anos)<=5&&n<=36;}
+function crLayout(n){const cols=Math.max(1,Math.ceil(n/CR.porCol)),rows=Math.ceil(n/cols);const pos=[];
   for(let k=0;k<n;k++){const c=Math.floor(k/rows),rr=k%rows;pos.push({c,rr,x:c*CR.colW,y:CR.y0+rr*CR.rowH});}
   return {cols,rows,pos,alt:CR.y0+rows*CR.rowH};}
-function bolhaCentro(p,a){return {x:p.x+CR.bx0+a*CR.bdx,y:p.y+3.2};}
+function bolhaCentro(p,a){return {x:p.x+CR.bx0+a*CR.bdx,y:p.y+CR.cy};}
 function caixas(qtd,txt,cls){const t=[...(txt||"").toUpperCase()];return `<div class="cx-linha ${cls||""}">${Array.from({length:qtd},(_,i)=>`<i>${t[i]&&t[i]!==" "?esc(t[i]):""}</i>`).join("")}</div>`;}
 function cartaoHtml(sim,v){
-  const n=v.ordem.length,lay=crLayout(n);let h="";
-  for(let c=0;c<lay.cols;c++)for(let a=0;a<4;a++){const b=bolhaCentro({x:c*CR.colW,y:CR.y0-5.5},a);h+=`<div class="crl" style="left:${b.x-2}mm;top:${b.y-2.2}mm">${L[a]}</div>`;}
-  lay.pos.forEach((p,k)=>{h+=`<div class="crn" style="left:${p.x}mm;top:${p.y+0.9}mm">${k+1}</div>`;
-    for(let a=0;a<4;a++){const b=bolhaCentro(p,a);h+=`<div class="crb" style="left:${b.x-CR.r}mm;top:${b.y-CR.r}mm"></div>`;}});
+  const n=v.ordem.length,grande=cartaoGrande(sim,n);usarCR(grande);const lay=crLayout(n);let h="";
+  lay.pos.forEach((p,k)=>{h+=`<div class="crn" style="left:${p.x-(grande?1.8:0)}mm;top:${p.y+CR.nTop}mm${grande?`;font-size:${CR.nFs}pt;width:10mm`:""}">${k+1}</div>`;
+    for(let a=0;a<4;a++){const b=bolhaCentro(p,a);h+=`<div class="crb" style="left:${b.x-CR.r}mm;top:${b.y-CR.r}mm${grande?`;width:${CR.r*2}mm;height:${CR.r*2}mm;font-size:${CR.lFs}pt;border-width:.5mm`:""}">${L[a]}</div>`;}});
   for(let c=1;c<lay.cols;c++)h+=`<div class="crsep" style="left:${c*CR.colW-3}mm;top:${CR.y0-8}mm;height:${lay.rows*CR.rowH+8}mm"></div>`;
-  const esc30=sim.escola&&sim.escola.length<=30?sim.escola:"",tur=sim.turma&&sim.turma.length<=8?sim.turma:"";
+  const esc30=sim.escola&&sim.escola.length<=30?sim.escola:"",turmaTxt=turmaDe(sim,v),tur=turmaTxt.length<=8?turmaTxt:"";
+  const fxc=sim.secs?csFaixas(sim.secs):faixasDisc(v.ordem.map(getQ)).map(f=>({disc:f.d,tema:"",a:f.a,b:f.b}));
+  const secsHtml=fxc.length>1||(fxc[0]&&fxc[0].tema)?`<div class="cr-secs">${fxc.map(f=>`<span><b>${f.a===f.b?f.a:f.a+" a "+f.b}</b> ${esc(DISC[f.disc]||f.disc)}${f.tema?" · "+esc(f.tema):""}</span>`).join("")}</div>`:"";
   return `<section class="folha cartao"><div class="cr-moldura">
    <div class="cr-tit"><div><span class="ap">Agiliza<span>Prof</span></span><b>CARTÃO-RESPOSTA</b></div>${v.tipo?`<div class="cr-tipo">TIPO ${v.tipo}</div>`:""}</div>
-   <div class="cr-sub">${esc(sim.titulo)} · código ${sim.id}${v.n?" · nº "+v.n:""} · ${n} questões${sim.prof?" · Prof.(a) "+esc(sim.prof):""}</div>
+   <div class="cr-sub">${esc(sim.titulo)} · código ${sim.id}${v.n?" · nº "+v.n:""} · ${n} questões${sim.prof?" · Prof.(a) "+esc(sim.prof):""}</div>${secsHtml}
    <div class="cr-id">
     <div class="cr-campo"><span>NOME DO(A) ALUNO(A)${v.nome?` · <em>${esc(v.nome)}</em>`:""}</span>${caixas(30,"")}${caixas(30,"")}</div>
     <div class="cr-campo"><span>ESCOLA${sim.escola&&!esc30?` · <em>${esc(sim.escola)}</em>`:""}</span>${caixas(30,esc30)}</div>
     <div class="cr-lado">
-     <div class="cr-campo"><span>TURMA${sim.turma&&!tur?` · <em>${esc(sim.turma)}</em>`:""}</span>${caixas(8,tur)}</div>
+     <div class="cr-campo"><span>TURMA${turmaTxt&&!tur?` · <em>${esc(turmaTxt)}</em>`:""}</span>${caixas(8,tur)}</div>
      <div class="cr-campo"><span>DATA</span><div class="cx-linha cx-data"><i></i><i></i><b>/</b><i></i><i></i><b>/</b><i></i><i></i><i></i><i></i></div></div>
     </div>
    </div>
@@ -1321,7 +1409,7 @@ function cartaoHtml(sim,v){
     <div class="cr-instr"><b>INSTRUÇÕES DE PREENCHIMENTO</b>
      <ol><li>Escreva nome, escola, turma e data nos quadradinhos, em letra de forma, uma letra por quadrado.</li>
      <li>Use caneta esferográfica preta ou azul-escura.</li>
-     <li>Pinte totalmente uma única bolinha por questão, sem ultrapassar o contorno.</li>
+     <li>Pinte totalmente a bolinha da letra escolhida, cobrindo a letra, sem ultrapassar o contorno. Só uma bolinha por questão.</li>
      <li>Questão com rasura ou mais de uma bolinha pintada será anulada.</li>
      <li>Não dobre, não amasse e não escreva sobre o QR code.</li></ol>
      <div class="cr-ex"><span>Certo:</span><i class="ok"></i><span>Errado:</span><i class="x">✕</i><i class="v">✓</i><i class="m"></i><i class="p">•</i></div></div>
@@ -1340,7 +1428,7 @@ function unidadesQuestoes(qs,perms,blocoTam){
     const mostra=q.texto&&q.texto!==ultimo;let aviso="";
     if(mostra){let f=k;while(f+1<qs.length&&qs[f+1].texto===q.texto)f++;if(f>k)aviso=`<p class="aviso-t">Leia o texto abaixo para responder às questões ${k+1} a ${f+1}.</p>`;}
     ultimo=q.texto||null;
-    u.push(`<div class="un">${pre}<div class="q"><div class="qn">${k+1}</div><div class="qc">${aviso}${mostra?`<div class="sup">${esc(q.texto)}</div>${q.fonte?`<div class="fnt">${esc(q.fonte)}</div>`:""}`:""}${figuraDoc(q)}<p class="en">${esc(q.enunciado)}</p>${(perms?perms[k]:[0,1,2,3]).map((o,j)=>`<div class="al"><span>(${L[j]})</span> ${esc(q.alts[o])}</div>`).join("")}</div></div></div>`);pre="";
+    u.push(`<div class="un">${pre}<div class="q"><div class="qn">${k+1}</div><div class="qc">${aviso}${mostra?`<div class="sup">${esc(q.texto)}</div>${q.fonte?`<div class="fnt">${esc(q.fonte)}</div>`:""}`:""}${figuraDoc(q)}<p class="en">${esc(q.enunciado)}</p>${(perms?perms[k]:[0,1,2,3]).map((o,j)=>`<div class="al"><span>${L[j]}</span><div>${esc(q.alts[o])}</div></div>`).join("")}</div></div></div>`);pre="";
   });return u;
 }
 function questoesDoc(qs,perms,blocoTam){return unidadesQuestoes(qs,perms,blocoTam).join("");}
@@ -1349,7 +1437,7 @@ const colunasDe=qs=>Math.min(...qs.map(q=>+q.ano||5))<=3?1:2;
 function cadernoParte(sim,v,rotulo){
   const qs=v.ordem.map(getQ);
   const cab=`<header class="cab"><div><span class="ap">Agiliza<span>Prof</span></span> · <b>${esc(sim.escola||"Escola")}</b><br>${esc(sim.titulo)}${sim.prof?" · Prof.(a) "+esc(sim.prof):""}</div><div class="cab-qr">${qrSvg(qrTexto(sim,v))}</div></header>
-   <div class="ident"><div>Aluno(a): <b>${v.nome?esc(v.nome):"______________________________"}</b></div><div>Turma: ${esc(sim.turma)}</div><div>Data: ___/___/_____</div><div>${v.tipo?`<b class="tipo-doc">TIPO ${v.tipo}</b>`:v.n?"Versão "+v.n:""}</div></div>
+   <div class="ident"><div>Aluno(a): <b>${v.nome?esc(v.nome):"______________________________"}</b></div><div>Turma: ${esc(turmaDe(sim,v))}</div><div>Data: ___/___/_____</div><div>${v.tipo?`<b class="tipo-doc">TIPO ${v.tipo}</b>`:v.n?"Versão "+v.n:""}</div></div>
    <p class="instr">Leia cada questão com atenção e marque a resposta no cartão-resposta. Cada questão tem apenas uma alternativa correta.</p>`;
   return {k:"cad",cab,uns:unidadesQuestoes(qs,v.perms,sim.blocoTam),cols:colunasDe(qs),rod:rotulo};
 }
@@ -1371,7 +1459,7 @@ const CSS_DOC=`@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font
 .qc{flex:1;min-width:0}.sup{white-space:pre-wrap;border:.25mm solid #777;padding:2mm 2.5mm;margin-bottom:1.5mm;font-family:Georgia,'Times New Roman',serif;font-size:10pt;line-height:1.35}.fnt{font-size:7.5pt;color:#333;margin:-.5mm 0 1.5mm}
 .fig{margin:1mm 0 2mm;text-align:center}.fig svg{width:auto;max-width:100%!important;height:auto;max-height:58mm}.fig img{max-width:100%;max-height:58mm}
 .c1 .fig svg,.c1 .fig img{max-width:140mm!important;max-height:80mm}
-.aviso-t{font-size:9pt;margin:0 0 1.5mm;font-style:italic}.en{margin:0 0 1.5mm;font-weight:bold}.al{margin:0 0 .6mm 1mm;padding-left:6mm;text-indent:-6mm}.al span{font-weight:bold;margin-right:.6mm}
+.aviso-t{font-size:9pt;margin:0 0 1.5mm;font-style:italic}.en{margin:0 0 1.5mm;font-weight:bold}.al{display:flex;gap:1.8mm;align-items:flex-start;margin:0 0 .9mm 1mm}.al>span{flex:none;width:1.55em;height:1.55em;border:.3mm solid #000;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:.82em;line-height:1}.al>div{flex:1;min-width:0;padding-top:.15em}
 .c1{font-size:12.5pt;line-height:1.4}.c1 .sup{font-size:12.5pt}
 .cartao .cr-moldura{border:.6mm solid #000;padding:4mm 5mm 3mm;position:relative;min-height:268mm;display:flex;flex-direction:column}
 .cr-tit{display:flex;justify-content:space-between;align-items:center;border-bottom:.6mm solid #000;padding-bottom:2mm}.cr-tit .ap{font-size:15pt;margin-right:4mm}.cr-tit b{font-size:14pt;letter-spacing:.14em}
@@ -1389,7 +1477,8 @@ const CSS_DOC=`@page{size:A4;margin:0}*{box-sizing:border-box}body{margin:0;font
 .cr-ex{display:flex;align-items:center;gap:2mm;font-size:7.6pt}.cr-ex span{font-weight:bold}.cr-ex span+i{margin-right:3mm}
 .cr-ex i{width:4mm;height:4mm;border:.35mm solid #000;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:7pt;line-height:1}
 .cr-ex .ok{background:#000}.cr-ex .m{background:linear-gradient(90deg,#000 50%,transparent 50%)}
-.crb{position:absolute;width:${CR.r*2}mm;height:${CR.r*2}mm;border:.45mm solid #000;border-radius:50%}
+.crb{position:absolute;width:${CR.r*2}mm;height:${CR.r*2}mm;border:.45mm solid #000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7pt;font-weight:bold;line-height:1;color:#ADADAD}
+.cr-secs{display:flex;flex-wrap:wrap;gap:1.2mm 3mm;font-size:8pt;margin:-1mm 0 2.5mm}.cr-secs span{border:.25mm solid #000;border-radius:1mm;padding:.4mm 2mm}
 .crn{position:absolute;width:8mm;text-align:right;font-weight:bold;font-size:10pt}
 .crl{position:absolute;width:4mm;text-align:center;font-weight:bold;font-size:9pt}
 .crsep{position:absolute;border-left:.25mm dashed #888}
@@ -1479,7 +1568,7 @@ let turmaAberta=null;
 function renderAlunos(){
   if(!S.turmas.find(t=>t.id===turmaAberta))turmaAberta=S.turmas[0]?.id||null;
   const t=S.turmas.find(x=>x.id===turmaAberta);
-  $("#painel").innerHTML=cabecalho("👩‍🏫","Alunos e turmas","Os nomes cadastrados aqui saem impressos em cada prova e dentro do QR code do cartão-resposta. Os dados ficam guardados neste navegador; use o backup para levar para outro aparelho.")+`
+  $("#painel").innerHTML=cabecalho("👩‍🏫","Alunos e turmas","Os nomes cadastrados aqui saem impressos em cada prova e dentro do QR code do cartão-resposta. As turmas, os simulados e os resultados ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.")+`
    <div class="duas">
     <section class="painel pilha">
      <h2>Turmas</h2>
@@ -1542,7 +1631,7 @@ function renderLeitor(){
     <section class="painel pilha" id="l-res"><div class="vazio">A leitura do cartão aparece aqui, com a quantidade de acertos.</div></section>
    </div>`;
   $("#l-foto").onclick=abrirCamera;$("#l-gal").onclick=()=>$("#arq-galeria").click();
-  const encherAlunos=()=>{const s=S.simulados.find(x=>x.id===$("#l-sim").value);$("#l-aluno").innerHTML=s?s.versoes.map(v=>`<option value="${v.n}">${esc(v.nome)}</option>`).join(""):"";};
+  const encherAlunos=()=>{const s=S.simulados.find(x=>x.id===$("#l-sim").value);$("#l-aluno").innerHTML=s?s.versoes.map(v=>`<option value="${v.n}">${esc(v.nome)}${v.turma&&(s.turmaIds||[]).length>1?" · "+esc(v.turma):""}</option>`).join(""):"";};
   $("#l-sim").onchange=()=>{LS.simId=$("#l-sim").value;encherAlunos();desenharLidas();};encherAlunos();
   $("#l-manual").onclick=()=>{const s=S.simulados.find(x=>x.id===$("#l-sim").value);if(!s)return;const v=s.versoes.find(x=>x.n==$("#l-aluno").value);
     LT={simId:s.id,n:v.n,nome:v.nome,tipo:v.tipo||"",gab:v.gab,ordem:v.ordem,marcas:Array(v.gab.length).fill(null),auto:false};mostrarLeitura();};
@@ -1571,7 +1660,7 @@ function desenharLidas(){
     if(r&&r.info){const marcas=r.marcas?r.marcas.res:Array(r.info.gab.length).fill(null);const sim=S.simulados.find(s=>s.id===r.info.simId);const v=sim&&sim.versoes.find(x=>x.n===r.info.n);
       const conferir=marcas.some(m=>m==null||m==="*");
       const semNome=!r.info.n;
-      registrarResultado({simId:r.info.simId,titulo:sim?sim.titulo:"Simulado "+r.info.simId,aluno:semNome?`Sem nome · tipo ${r.info.tipo} · foto ${i+1}`:v?v.nome:r.info.nome,turma:sim?sim.turma:"",respostas:marcas.map(m=>m==null?"-":m).join(""),gab:r.info.gab,ordem:r.info.ordem,versao:r.info.n,tipo:r.info.tipo,origem:conferir||semNome?"QR · conferir":"QR"});LS.simId=r.info.simId;ok++;}
+      registrarResultado({simId:r.info.simId,titulo:sim?sim.titulo:"Simulado "+r.info.simId,aluno:semNome?`Sem nome · tipo ${r.info.tipo} · foto ${i+1}`:v?v.nome:r.info.nome,turma:sim?turmaDe(sim,v):"",respostas:marcas.map(m=>m==null?"-":m).join(""),gab:r.info.gab,ordem:r.info.ordem,versao:r.info.n,tipo:r.info.tipo,origem:conferir||semNome?"QR · conferir":"QR"});LS.simId=r.info.simId;ok++;}
     else falhas++;}
   st.textContent=`${ok} ${ok===1?"prova corrigida":"provas corrigidas"}${falhas?`, ${falhas} sem QR legível`:""}. Veja os acertos de cada uma ao lado.`;montarAbas();desenharLidas();});
 // quando o simulado está neste aparelho, vale o gabarito salvo aqui (o professor pode ter corrigido depois de imprimir)
@@ -1634,7 +1723,7 @@ async function lerFoto(file){
     const k=Math.min(1,maxL/Math.max(img.width,img.height)),w=Math.round(img.width*k),h=Math.round(img.height*k);
     const cv=document.createElement("canvas");cv.width=w;cv.height=h;const cx=cv.getContext("2d",{willReadFrequently:true});cx.drawImage(img,0,0,w,h);
     const dados=cx.getImageData(0,0,w,h);const code=jsQR(dados.data,w,h,{inversionAttempts:"dontInvert"});
-    if(code){let info=lerQrTexto(code.data);if(!info)return {erro:"outro"};info=infoLocal(info);let marcas=null;try{marcas=lerBolhas({code,dados,w,h},info.gab.length);}catch(_){}
+    if(code){let info=lerQrTexto(code.data);if(!info)return {erro:"outro"};info=infoLocal(info);let marcas=null;try{marcas=lerBolhas({code,dados,w,h},info.gab.length,info.grande);}catch(_){}
       return {info,marcas,cv,w,h};}
   }
   return {erro:"semqr"};
@@ -1660,8 +1749,8 @@ function homografia(src,dst){const A=[],b=[];for(let i=0;i<4;i++){const[x,y]=src
   const n=8;for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];[b[c],b[p]]=[b[p],b[c]];
     for(let r=0;r<n;r++)if(r!==c){const f=A[r][c]/A[c][c];for(let k=c;k<n;k++)A[r][k]-=f*A[c][k];b[r]-=f*b[c];}}
   const h=b.map((v,i)=>v/A[i][i]);return (x,y)=>{const d=h[6]*x+h[7]*y+1;return[(h[0]*x+h[1]*y+h[2])/d,(h[3]*x+h[4]*y+h[5])/d];};}
-function lerBolhas({code,dados,w,h},n){
-  const l=code.location,Q=CR.Q;
+function lerBolhas({code,dados,w,h},n,grande){
+  usarCR(grande);const l=code.location,Q=CR.Q;
   const H=homografia([[0,0],[Q,0],[0,Q],[Q,Q]],[[l.topLeftCorner.x,l.topLeftCorner.y],[l.topRightCorner.x,l.topRightCorner.y],[l.bottomLeftCorner.x,l.bottomLeftCorner.y],[l.bottomRightCorner.x,l.bottomRightCorner.y]]);
   const lum=new Float32Array(w*h),d=dados.data;for(let i=0;i<w*h;i++)lum[i]=(d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114);
   const px=(x,y)=>{x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=w||y>=h)return 255;return lum[y*w+x];};
@@ -1669,21 +1758,34 @@ function lerBolhas({code,dados,w,h},n){
   const disco=[];for(let a=0;a<3;a++)for(let t=0;t<8;t++){const rr=[0,.5,.85][a],ang=t*Math.PI/4+a*.3;disco.push([Math.cos(ang)*rr,Math.sin(ang)*rr]);}
   const anel=[];for(let t=0;t<16;t++){const ang=t*Math.PI/8;anel.push([Math.cos(ang),Math.sin(ang)]);}
   const lay=crLayout(n);
-  // ajuste fino por coluna e por grupo de 5 linhas: procura o deslocamento em que os contornos das bolinhas ficam mais escuros
+  // grupos de linhas do mesmo tamanho (12 linhas = 3 grupos de 4), para nenhum grupo ficar com 1 ou 2 linhas só
+  const GT=Math.ceil(lay.rows/Math.ceil(lay.rows/5));
+  // ajuste fino por coluna e por grupo de até 5 linhas: procura o deslocamento em que os contornos das bolinhas ficam mais escuros
   const desloc={};
-  for(let c=0;c<lay.cols;c++){let base=[0,0];const ps=lay.pos.filter(p=>p.c===c);
-    for(let g=0;g*5<ps.length;g++){const grupo=ps.filter(p=>Math.floor(p.rr/5)===g);let melhor=base,mv=1e9;
-      for(let dx=-3;dx<=3;dx+=.5)for(let dy=-3;dy<=3;dy+=.5){const ox=base[0]+dx,oy=base[1]+dy;let s=0;for(const p of grupo)for(let a=0;a<4;a++){const b=bolhaCentro(p,a);s+=amostra(b.x+ox,b.y+oy,CR.r,anel);}if(s<mv){mv=s;melhor=[ox,oy];}}
-      desloc[c+":"+g]=melhor;base=melhor;}}
-  const dsl=p=>desloc[p.c+":"+Math.floor(p.rr/5)];
+  // o erro cresce com a distância do QR: cada grupo parte da tendência dos anteriores (linhas e colunas)
+  let col0=[0,0],passoCol=[0,0];
+  const centro={};
+  for(let c=0;c<lay.cols;c++){const ps=lay.pos.filter(p=>p.c===c),hist=[],hc=[];const inicio=c?[col0[0]+passoCol[0],col0[1]+passoCol[1]]:[0,0];
+    for(let g=0;g*GT<ps.length;g++){const grupo=ps.filter(p=>Math.floor(p.rr/GT)===g),k=hist.length,cg=grupo.reduce((a,p)=>a+p.rr,0)/grupo.length;
+      const f=k>=2?(cg-hc[k-1])/(hc[k-1]-hc[k-2]):0;
+      const chute=k>=2?[hist[k-1][0]+(hist[k-1][0]-hist[k-2][0])*f,hist[k-1][1]+(hist[k-1][1]-hist[k-2][1])*f]:k===1?hist[0]:inicio;let melhor=chute,mv=1e9;const jan=grupo.length<3&&k>=2?1.5:3;
+      for(let dx=-jan;dx<=jan;dx+=.5)for(let dy=-jan;dy<=jan;dy+=.5){const ox=chute[0]+dx,oy=chute[1]+dy;let s=0;for(const p of grupo)for(let a=0;a<4;a++){const b=bolhaCentro(p,a);s+=amostra(b.x+ox,b.y+oy,CR.r,anel);}if(s<mv){mv=s;melhor=[ox,oy];}}
+      desloc[c+":"+g]=melhor;centro[c+":"+g]=cg;hist.push(melhor);hc.push(cg);}
+    if(c)passoCol=[hist[0][0]-col0[0],hist[0][1]-col0[1]];col0=hist[0];}
+  // entre um grupo e outro o deslocamento muda aos poucos: interpola linha a linha pelo centro de cada grupo
+  const dslGrupo=p=>{const g=Math.floor(p.rr/GT),cen=k=>centro[p.c+":"+k],d=k=>desloc[p.c+":"+k];
+    const viz=d(g+1)&&(p.rr>=cen(g)||!d(g-1))?g+1:d(g-1)?g-1:null;if(viz==null)return d(g);
+    const a=d(g),b=d(viz),t=(p.rr-cen(g))/(cen(viz)-cen(g));return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];};
+  const dsl=dslGrupo;
   const val=lay.pos.map(p=>{const[dx,dy]=dsl(p);return[0,1,2,3].map(a=>{const b=bolhaCentro(p,a);return amostra(b.x+dx,b.y+dy,CR.r*.62,disco);});});
   const todos=val.flat().sort((a,b)=>a-b);const papel=todos[Math.floor(todos.length*.75)];
   let tinta=255;{const mod=Q/(17+4*(code.version||7)),amos=[];for(let i=0;i<7;i++)for(let j=0;j<7;j++){if(i===0||j===0||i===6||j===6||(i>=2&&i<=4&&j>=2&&j<=4)){const[u,v]=H((i+.5)*mod,(j+.5)*mod);amos.push(px(u,v));}}amos.sort((a,b)=>a-b);tinta=amos[Math.floor(amos.length/2)];}
   const corte=papel-(papel-tinta)*0.42;
   const res=val.map(vs=>{const marc=vs.map((v,a)=>v<corte?a:-1).filter(a=>a>=0);if(!marc.length)return null;if(marc.length>1)return "*";return L[marc[0]];});
-  return {res,H,lay,dsl,val,corte};
+  return {res,H,lay,dsl,val,corte,grande:!!grande};
 }
-function desenharLeitura(g,{H,lay,dsl,res},gab){
+function desenharLeitura(g,{H,lay,dsl,res,grande},gab){
+  usarCR(grande);
   const lw=Math.max(2,g.canvas.width/450);g.lineWidth=lw;
   lay.pos.forEach((p,k)=>{const[dx,dy]=dsl(p);for(let a=0;a<4;a++){const b=bolhaCentro(p,a);const[u,v]=H(b.x+dx,b.y+dy);const[u2]=H(b.x+dx+CR.r,b.y+dy);const rr=Math.abs(u2-u)||4;
     const marcada=res[k]===L[a]||res[k]==="*";const certa=gab&&gab[k]===L[a];
@@ -1712,7 +1814,7 @@ function mostrarLeitura(){
   const salvarLT=()=>{if(LT.semNome&&!LT.nome){toast("Escolha o aluno desta prova antes de salvar.");$("#l-qual")?.focus();return false;}
     // prova sem nome: guarda com o número do aluno escolhido, mas o tipo continua sendo o da folha
     const va=LT.semNome&&sim?sim.versoes.find(v=>v.nome===LT.nome):null;
-    registrarResultado({simId:LT.simId,titulo:sim?sim.titulo:"Simulado "+LT.simId,aluno:LT.nome,turma:sim?sim.turma:"",respostas:LT.marcas.map(m=>m==null?"-":m).join(""),gab:LT.gab,ordem:LT.ordem,versao:va?va.n:LT.n,tipo:LT.tipo||"",origem:LT.auto?"QR":"manual"});
+    registrarResultado({simId:LT.simId,titulo:sim?sim.titulo:"Simulado "+LT.simId,aluno:LT.nome,turma:sim?turmaDe(sim,va||sim.versoes.find(x=>x.n===LT.n)):"",respostas:LT.marcas.map(m=>m==null?"-":m).join(""),gab:LT.gab,ordem:LT.ordem,versao:va?va.n:LT.n,tipo:LT.tipo||"",origem:LT.auto?"QR":"manual"});
     toast(`${LT.nome}: ${ac} de ${n} acertos. Nota salva.`);LT=null;montarAbas();return true;};
   $("#l-salvar").onclick=()=>{if(salvarLT())renderLeitor();};
   $("#l-prox").onclick=()=>{if(salvarLT()){renderLeitor();abrirCamera();}};
@@ -1789,7 +1891,7 @@ function renderRelatos(){
 let _porId=null;function todasPorId(id){if(!_porId){_porId=new Map();BANCO.forEach(q=>_porId.set(q.id,q));}return _porId.get(id)||S.minhas.find(q=>q.id===id)||null;}
 
 /* ============ RESULTADOS ============ */
-let RF="";
+let RF="",RT="";
 const FAIXAS=[["Insuficiente","até 39%",0],["Básico","40% a 59%",.4],["Proficiente","60% a 79%",.6],["Avançado","80% ou mais",.8]];
 const faixaDe=p=>p>=.8?3:p>=.6?2:p>=.4?1:0;
 const corP=p=>p>=.7?"bom":p>=.4?"alerta":"ruim";
@@ -1847,9 +1949,10 @@ function quadroHtml(rs,sim,{imprimir=false}={}){
     <div class="painel pilha"><h2>Distribuição das notas</h2><p class="fonte" style="margin:0">Quantos alunos tiveram cada quantidade de acertos.</p>${colunasHtml(caixas.map(c=>c.n),caixas.map(c=>c.de===c.ate?String(c.de):c.de+"–"+c.ate),(v,k)=>corFaixa[faixaDe(caixas[k].ate/total)],maxC,v=>String(v))}</div>
    </div>
    ${tiposK.length>1?`<div class="painel pilha"><h2>Rendimento por tipo de prova</h2>${rankHtml(tiposK.map(t=>({pos:t,nome:"Tipo "+t,sub:porTipo[t].n+" alunos",val:pct(porTipo[t].s/porTipo[t].n),p:porTipo[t].s/porTipo[t].n})))}<p class="fonte" style="margin:0">Como as questões são as mesmas, diferenças grandes entre os tipos podem indicar cola ou um problema de impressão.</p></div>`:""}
-   ${sim&&sim.cartaoSo?"":`<div class="painel pilha"><h2>Desempenho por descritor ou habilidade</h2><div class="tabela-wrap"><table><thead><tr><th>Descritor / habilidade</th><th>Acerto</th><th style="width:30%"></th></tr></thead><tbody>${descOrd.map(([k,o])=>{const d=o.lab,p=o.a/o.n;return `<tr><td style="white-space:normal"><b>${esc(d)}</b> ${esc(descNome(o.q.disc,o.q.ano,o.d)||o.q.tema||"")}</td><td class="num">${pct(p)}</td><td><div class="medidor ${corP(p)}"><i style="width:${Math.round(p*100)}%"></i></div></td></tr>`;}).join("")}</tbody></table></div><p class="fonte" style="margin:0">Do menor para o maior acerto: o topo da lista mostra o que retomar com a turma.</p></div>`}`;
+   ${sim&&sim.cartaoSo&&!(sim.secs&&(sim.secs.length>1||sim.secs.some(x=>String(x.tema||"").trim())))?"":`<div class="painel pilha"><h2>${sim&&sim.cartaoSo?"Desempenho por conteúdo":"Desempenho por descritor ou habilidade"}</h2><div class="tabela-wrap"><table><thead><tr><th>Descritor / habilidade</th><th>Acerto</th><th style="width:30%"></th></tr></thead><tbody>${descOrd.map(([k,o])=>{const d=o.lab,p=o.a/o.n;return `<tr><td style="white-space:normal"><b>${esc(d)}</b> ${o.q.origem==="cartao"?"":esc(descNome(o.q.disc,o.q.ano,o.d)||o.q.tema||"")}</td><td class="num">${pct(p)}</td><td><div class="medidor ${corP(p)}"><i style="width:${Math.round(p*100)}%"></i></div></td></tr>`;}).join("")}</tbody></table></div><p class="fonte" style="margin:0">Do menor para o maior acerto: o topo da lista mostra o que retomar com a turma.</p></div>`}`;
 }
 function evolucaoHtml(turma){
+  if(!turma)return "";
   // todos os simulados corrigidos da mesma turma, do mais antigo para o mais novo
   const grupos={};S.resultados.filter(r=>r.turma===turma&&r.simId!=="SAEB-ONLINE").forEach(r=>(grupos[r.simId]=grupos[r.simId]||[]).push(r));
   const sims=Object.entries(grupos).map(([id,rs])=>{const s=S.simulados.find(x=>x.id===id);return {id,titulo:rs[0].titulo,quando:s?s.criado:0,rs,media:rs.reduce((a,r)=>a+r.acertos/r.total,0)/rs.length};}).sort((a,b)=>a.quando-b.quando);
@@ -1864,22 +1967,28 @@ function evolucaoHtml(turma){
 function renderResultados(){
   const grupos={};S.resultados.forEach(r=>(grupos[r.simId+"|"+r.titulo]=grupos[r.simId+"|"+r.titulo]||[]).push(r));
   const chaves=Object.keys(grupos);if(!chaves.includes(RF))RF=chaves[0]||"";
-  const rs=grupos[RF]||[];const sim=rs[0]&&S.simulados.find(s=>s.id===rs[0].simId);
+  let rs=grupos[RF]||[];const sim=rs[0]&&S.simulados.find(s=>s.id===rs[0].simId);
+  // simulado aplicado em mais de uma turma: dá para ver cada turma separada
+  const tlist=[...new Set(rs.map(r=>r.turma).filter(Boolean))];if(!tlist.includes(RT))RT="";
+  if(RT)rs=rs.filter(r=>r.turma===RT);
+  const simV=sim&&RT?{...sim,versoes:sim.versoes.filter(v=>turmaDe(sim,v)===RT)}:sim;
+  const turmaEv=RT||(tlist.length===1?tlist[0]:"");
   let analise="";
   if(rs.length){
     const {itensQ}=analisar(rs,sim);
     const nomes=sim?sim.versoes.map(v=>v.nome):[];
-    analise=quadroHtml(rs,sim)+evolucaoHtml(rs[0].turma)+`
+    analise=quadroHtml(rs,simV)+evolucaoHtml(turmaEv)+`
      <div class="painel pilha"><h2>Acertos de cada prova</h2><div class="tabela-wrap"><table><thead><tr><th>Aluno(a)</th>${rs.some(r=>r.tipo)?"<th>Tipo</th>":""}<th>Acertos</th><th>%</th><th>Faixa</th><th>Leitura</th><th></th></tr></thead><tbody>${rs.slice().sort((a,b)=>a.aluno.localeCompare(b.aluno,"pt")).map(r=>{const p=r.acertos/r.total;const semNome=/^Sem nome/.test(r.aluno);
        return `<tr><td>${semNome&&nomes.length?`<select data-nomear="${r.rid}" aria-label="Escolher aluno"><option>${esc(r.aluno)}</option>${nomes.map(n=>`<option>${esc(n)}</option>`).join("")}</select>`:esc(r.aluno)}</td>${rs.some(x=>x.tipo)?`<td>${seloTipo(r.tipo)}</td>`:""}<td class="num"><b>${r.acertos}/${r.total}</b></td><td><span class="chip ${corP(p)}">${pct(p)}</span></td><td class="fonte">${FAIXAS[faixaDe(p)][0]}</td><td><span class="chip${/conferir/.test(r.origem||"")?" alerta":""}">${esc(r.origem||"")}</span></td><td><button class="btn peq perigo" data-del="${r.rid}">Apagar</button></td></tr>`;}).join("")}</tbody></table></div></div>
      <div class="painel pilha"><h2>Análise das alternativas</h2><p class="fonte" style="margin:0">Quantos alunos marcaram cada alternativa (na ordem original da questão). Uma alternativa errada muito marcada indica um erro comum para trabalhar em sala.</p>
       <div class="tabela-wrap"><table><thead><tr><th>Questão</th><th>Acerto</th><th>A</th><th>B</th><th>C</th><th>D</th><th>Branco</th></tr></thead><tbody>${itensQ.slice().sort((a,b)=>a.o.a/a.o.n-b.o.a/b.o.n).map(({q,o,k})=>`<tr><td style="white-space:normal;min-width:220px">${q.origem==="cartao"?`<b>Questão ${k+1}</b>`:`<b>${k+1}. ${esc(q.id)}</b> ${esc((q.enunciado||"").slice(0,70))}${q.enunciado.length>70?"…":""}`}</td><td class="num">${pct(o.a/o.n)}</td>${[0,1,2,3].map(j=>`<td class="num"${j===q.correta?' style="color:var(--bom);font-weight:800"':""}>${o.alt[j]}</td>`).join("")}<td class="num">${o.alt[4]}</td></tr>`).join("")}</tbody></table></div></div>`;
   }
   $("#painel").innerHTML=cabecalho("📊","Quadro de resultados","Rendimento da turma, quem mais acertou e quem precisa de apoio, as questões mais acertadas e as mais erradas, e a análise por descritor do SAEB ou habilidade da BNCC.")+`
-   ${chaves.length?`<div class="linha-acoes" style="margin-bottom:14px;align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Simulado<select id="r-sim">${chaves.map(k=>`<option value="${esc(k)}"${k===RF?" selected":""}>${esc(k.split("|").slice(1).join("|"))} (${grupos[k].length})</option>`).join("")}</select></label><button class="btn prim" id="r-quadro">Baixar quadro para imprimir</button><button class="btn" id="r-csv">Planilha (CSV)</button></div><div class="pilha">${analise}</div>`
+   ${chaves.length?`<div class="linha-acoes" style="margin-bottom:14px;align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Simulado<select id="r-sim">${chaves.map(k=>`<option value="${esc(k)}"${k===RF?" selected":""}>${esc(k.split("|").slice(1).join("|"))} (${grupos[k].length})</option>`).join("")}</select></label>${tlist.length>1?`<label class="campo" style="min-width:180px">Turma<select id="r-turma"><option value="">Todas as turmas</option>${tlist.map(t=>`<option${t===RT?" selected":""}>${esc(t)}</option>`).join("")}</select></label>`:""}<button class="btn prim" id="r-quadro">Baixar quadro para imprimir</button><button class="btn" id="r-csv">Planilha (CSV)</button></div><div class="pilha">${analise}</div>`
    :`<div class="vazio">Ainda não há resultados. Corrija os cartões-resposta na aba Leitor QR.</div>`}`;
   if(!chaves.length)return;
-  $("#r-sim").onchange=e=>{RF=e.target.value;renderResultados();};
+  $("#r-sim").onchange=e=>{RF=e.target.value;RT="";renderResultados();};
+  if($("#r-turma"))$("#r-turma").onchange=e=>{RT=e.target.value;renderResultados();};
   $("#painel").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(!b.dataset.conf){b.dataset.conf=1;b.textContent="Confirmar";return;}S.resultados=S.resultados.filter(r=>r.rid!==b.dataset.del);salvar();montarAbas();renderResultados();});
   $("#painel").querySelectorAll("[data-nomear]").forEach(sl=>sl.onchange=()=>{const r=S.resultados.find(x=>x.rid===sl.dataset.nomear);if(!r||/^Sem nome/.test(sl.value))return;
     const va=sim&&sim.versoes.find(v=>v.nome===sl.value);S.resultados=S.resultados.filter(x=>x===r||!(x.simId===r.simId&&x.aluno===sl.value));r.aluno=sl.value;if(va)r.versao=va.n;r.origem="QR";salvar();renderResultados();toast("Prova atribuída a "+sl.value);});
@@ -1887,7 +1996,7 @@ function renderResultados(){
   $("#r-quadro").onclick=()=>{const css=document.querySelector("style").textContent;
     const html=`<!doctype html><html lang="pt-BR" data-theme="light"><head><meta charset="utf-8"><title>Quadro de resultados · ${esc(rs[0].titulo)}</title><style>${css}
      @page{size:A4;margin:10mm}body{background:#fff;padding:0 4mm}.btn,select{display:none!important}.painel,.resumo-num div{break-inside:avoid;box-shadow:inset 0 0 0 1.5px #CBD3E6}.duas{grid-template-columns:1fr 1fr}.quadro{grid-template-columns:1fr 1fr}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head>
-     <body><div class="pilha" style="max-width:1000px;margin:0 auto;padding:8mm 0"><div class="cab-pag"><div class="icone-pag">📊</div><div><span class="marca">Agiliza<span>Prof</span></span><h1>Quadro de resultados</h1><p class="sub">${esc(rs[0].titulo)} · ${esc(rs[0].turma||"")} · ${hoje()}</p></div></div>${quadroHtml(rs,sim,{imprimir:true})}${evolucaoHtml(rs[0].turma)}</div>${PRINT_JS}</body></html>`;
+     <body><div class="pilha" style="max-width:1000px;margin:0 auto;padding:8mm 0"><div class="cab-pag"><div class="icone-pag">📊</div><div><span class="marca">Agiliza<span>Prof</span></span><h1>Quadro de resultados</h1><p class="sub">${esc(rs[0].titulo)} · ${esc(RT||tlist.join(", "))} · ${hoje()}</p></div></div>${quadroHtml(rs,simV,{imprimir:true})}${evolucaoHtml(turmaEv)}</div>${PRINT_JS}</body></html>`;
     baixar(`quadro-${slug(rs[0].titulo)}.html`,html);};
   $("#r-csv").onclick=()=>{const n=rs[0].total;const cab=["Aluno","Turma","Tipo","Acertos","Total","Percentual","Faixa","Data",...Array.from({length:n},(_,k)=>"Q"+(k+1))];
     const linhas=rs.map(r=>[r.aluno,r.turma,r.tipo||"",r.acertos,r.total,Math.round(100*r.acertos/r.total)+"%",FAIXAS[faixaDe(r.acertos/r.total)][0],r.data,...[...r.respostas].map((c,k)=>c+(c===r.gab[k]?" ✓":""))]);
@@ -1901,7 +2010,14 @@ S.minhas.forEach(q=>{q.ref=q.id;q.saeb=!!q.desc;});
 // Questões do professor guardadas dentro dos simulados continuam disponíveis mesmo se forem apagadas de Minhas questões.
 if(!RENDER[S.aba])S.aba="inicio";
 aplicarZoom();montarAbas();RENDER[S.aba]();
+nuvemCarregar();
 </script>
 
+<script>
+/* Dentro do app: projetor e câmera ocupam a tela inteira. */
+(function(){if(window.parent===window)return;var ult=null;
+ function av(){var on=!!((document.getElementById('projetor')&&!document.getElementById('projetor').hidden)||document.querySelector('.camera,.proj-red'));if(on!==ult){ult=on;try{window.parent.postMessage({aprofFerramenta:"imersivo",on:on},location.origin);}catch(e){}}}
+ setInterval(av,400);av();})();
+</script>
 </body>
 </html>

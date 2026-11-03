@@ -7762,4 +7762,10 @@ Maior planeta; J\xFApiter`}),React.createElement("div",{className:"dm-botoes"},R
 </body>
 </html>
 
+<script>
+/* Dentro do app: avisa a página quando um jogo está aberto, para o jogo ocupar a tela inteira. */
+(function(){if(window.parent===window)return;var ult=null;
+ function av(){var on=!!(document.querySelector('.dm-jogando'));if(on!==ult){ult=on;try{window.parent.postMessage({aprofFerramenta:"imersivo",on:on},location.origin);}catch(e){}}}
+ setInterval(av,400);av();})();
+</script>
 </body></html>
