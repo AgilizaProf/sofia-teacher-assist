@@ -500,7 +500,7 @@ function ListField({ label, items, onChange }: { label: string; items: string[];
 // Visual "Painel" desta página: só aparência, sobre as classes existentes.
 const eiCss = `
 .ei-root{min-height:100vh;background:var(--pn-bg);font-family:var(--pn-body);color:var(--pn-ink);}
-.ei-main{max-width:880px;margin:0 auto;padding:22px 24px 120px;display:flex;flex-direction:column;gap:18px;}
+.ei-main{max-width:1240px;margin:0 auto;padding:22px 24px 120px;display:flex;flex-direction:column;gap:18px;}
 .ei-voltar{display:inline-flex;align-items:center;gap:6px;color:var(--pn-muted);font-weight:600;font-size:14px;text-decoration:none;margin-top:-6px;}
 .ei-title{font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;margin:-8px 0 0;}
 .ei-sub{margin:-10px 0 0;color:var(--pn-muted);font-size:15px;max-width:62ch;}

@@ -54,8 +54,8 @@ export function Configuracoes() {
       <style>{tempoChipCss}</style>
       <style>{`
         .cfg-grid { display: block; min-height: 100vh; }
-        .cfg-pad { padding: 22px 24px 0; width: 100%; max-width: 1100px; margin: 0 auto; }
-        .cfg-pad-b { padding: 18px 24px 120px; width: 100%; max-width: 1100px; margin: 0 auto; }
+        .cfg-pad { padding: 22px 24px 0; width: 100%; max-width: 1240px; margin: 0 auto; }
+        .cfg-pad-b { padding: 18px 24px 120px; width: 100%; max-width: 1240px; margin: 0 auto; }
         .cfg-h1 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -.045em; line-height: 1.1; margin: 14px 0 0; }
         .cfg-pad-b section, .cfg-pad-b > div > section { border-color: #D6DBE5 !important; border-width: 1.5px !important; border-radius: 16px !important; box-shadow: none !important; min-width: 0; }
         .cfg-pad-b h2 { letter-spacing: -.03em; }

@@ -643,7 +643,7 @@ function ObjectivesList<T extends { id: string } & Record<string, string>>(props
 
 const peiCss = `
 .pei-root{min-height:100vh;background:var(--pn-bg);font-family:var(--pn-body);color:var(--pn-ink);}
-.pei-main{max-width:880px;margin:0 auto;padding:22px 24px 120px;display:flex;flex-direction:column;gap:18px;}
+.pei-main{max-width:1240px;margin:0 auto;padding:22px 24px 120px;display:flex;flex-direction:column;gap:18px;}
 .pei-voltar{display:inline-flex;align-items:center;gap:6px;color:var(--pn-muted);font-weight:600;font-size:14px;text-decoration:none;margin-top:-6px;}
 .pei-voltar:hover{color:var(--pn-ink);}
 .pei-title{font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;margin:-8px 0 0;}
