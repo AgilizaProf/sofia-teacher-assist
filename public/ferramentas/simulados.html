@@ -733,12 +733,13 @@ function qrSvg(texto){
 function qrTexto(sim,v){
   const nome=semAcento(v.nome||"").replace(/[;|:]/g," ").slice(0,40);
   const pos=v.ordem.map(r=>typeof r==="number"?r.toString(36).toUpperCase().padStart(3,"0"):"---").join("");
-  return ["AP2",sim.id,v.n,nome,v.tipo||"",[v.gab,pos,BANCO_VER].join(":")].join(";");
+  const fim=[v.gab,pos,BANCO_VER];if(cartaoGrande(sim,v.ordem.length))fim.push("G");
+  return ["AP2",sim.id,v.n,nome,v.tipo||"",fim.join(":")].join(";");
 }
 function lerQrTexto(t){
   const p=String(t).split(";");
   if(p[0]==="AP1"&&p.length>=6){const ordem=(p[5].match(/.{2}/g)||[]).map(x=>x==="__"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],gab:p[4],ordem,tipo:""};}
-  if(p[0]==="AP2"&&p.length>=6){const [gab,pos=""]=p[5].split(":");const ordem=(pos.match(/.{3}/g)||[]).map(x=>x==="---"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],tipo:p[4]||"",gab,ordem};}
+  if(p[0]==="AP2"&&p.length>=6){const [gab,pos="",,tam=""]=p[5].split(":");const ordem=(pos.match(/.{3}/g)||[]).map(x=>x==="---"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],tipo:p[4]||"",gab,ordem,grande:tam==="G"};}
   return null;
 }
 
@@ -1372,16 +1373,22 @@ function ligarListaSimulados(raiz=$("#painel")){
 }
 
 /* ---- Cartão-resposta: geometria em milímetros, medida a partir do canto do QR ---- */
-const CR={Q:34, y0:48, colW:44, rowH:7.5, bx0:12, bdx:7, r:2.6};
-function crLayout(n){const cols=Math.max(1,Math.ceil(n/15)),rows=Math.ceil(n/cols);const pos=[];
+// cartão normal e cartão "grande" (até o 5º ano e até 36 questões): bolinhas, letras e números maiores.
+// O QR guarda qual dos dois foi impresso (":G" no fim), e o leitor usa a mesma geometria.
+const CR_N={Q:34, y0:48, colW:44, rowH:7.5, bx0:12, bdx:7, r:2.6, cy:3.2, porCol:15, nTop:.9, nFs:10, lFs:7};
+const CR_G={Q:34, y0:48, colW:58, rowH:10.5, bx0:14, bdx:10, r:3.6, cy:4.4, porCol:12, nTop:1.5, nFs:13, lFs:9.5};
+let CR=CR_N;
+function usarCR(grande){CR=grande?CR_G:CR_N;}
+function cartaoGrande(sim,n){const anos=(sim.anos||[]).map(Number).filter(Boolean);return anos.length>0&&Math.max(...anos)<=5&&n<=36;}
+function crLayout(n){const cols=Math.max(1,Math.ceil(n/CR.porCol)),rows=Math.ceil(n/cols);const pos=[];
   for(let k=0;k<n;k++){const c=Math.floor(k/rows),rr=k%rows;pos.push({c,rr,x:c*CR.colW,y:CR.y0+rr*CR.rowH});}
   return {cols,rows,pos,alt:CR.y0+rows*CR.rowH};}
-function bolhaCentro(p,a){return {x:p.x+CR.bx0+a*CR.bdx,y:p.y+3.2};}
+function bolhaCentro(p,a){return {x:p.x+CR.bx0+a*CR.bdx,y:p.y+CR.cy};}
 function caixas(qtd,txt,cls){const t=[...(txt||"").toUpperCase()];return `<div class="cx-linha ${cls||""}">${Array.from({length:qtd},(_,i)=>`<i>${t[i]&&t[i]!==" "?esc(t[i]):""}</i>`).join("")}</div>`;}
 function cartaoHtml(sim,v){
-  const n=v.ordem.length,lay=crLayout(n);let h="";
-  lay.pos.forEach((p,k)=>{h+=`<div class="crn" style="left:${p.x}mm;top:${p.y+0.9}mm">${k+1}</div>`;
-    for(let a=0;a<4;a++){const b=bolhaCentro(p,a);h+=`<div class="crb" style="left:${b.x-CR.r}mm;top:${b.y-CR.r}mm">${L[a]}</div>`;}});
+  const n=v.ordem.length,grande=cartaoGrande(sim,n);usarCR(grande);const lay=crLayout(n);let h="";
+  lay.pos.forEach((p,k)=>{h+=`<div class="crn" style="left:${p.x-(grande?1.8:0)}mm;top:${p.y+CR.nTop}mm${grande?`;font-size:${CR.nFs}pt;width:10mm`:""}">${k+1}</div>`;
+    for(let a=0;a<4;a++){const b=bolhaCentro(p,a);h+=`<div class="crb" style="left:${b.x-CR.r}mm;top:${b.y-CR.r}mm${grande?`;width:${CR.r*2}mm;height:${CR.r*2}mm;font-size:${CR.lFs}pt;border-width:.5mm`:""}">${L[a]}</div>`;}});
   for(let c=1;c<lay.cols;c++)h+=`<div class="crsep" style="left:${c*CR.colW-3}mm;top:${CR.y0-8}mm;height:${lay.rows*CR.rowH+8}mm"></div>`;
   const esc30=sim.escola&&sim.escola.length<=30?sim.escola:"",turmaTxt=turmaDe(sim,v),tur=turmaTxt.length<=8?turmaTxt:"";
   const fxc=sim.secs?csFaixas(sim.secs):faixasDisc(v.ordem.map(getQ)).map(f=>({disc:f.d,tema:"",a:f.a,b:f.b}));
@@ -1716,7 +1723,7 @@ async function lerFoto(file){
     const k=Math.min(1,maxL/Math.max(img.width,img.height)),w=Math.round(img.width*k),h=Math.round(img.height*k);
     const cv=document.createElement("canvas");cv.width=w;cv.height=h;const cx=cv.getContext("2d",{willReadFrequently:true});cx.drawImage(img,0,0,w,h);
     const dados=cx.getImageData(0,0,w,h);const code=jsQR(dados.data,w,h,{inversionAttempts:"dontInvert"});
-    if(code){let info=lerQrTexto(code.data);if(!info)return {erro:"outro"};info=infoLocal(info);let marcas=null;try{marcas=lerBolhas({code,dados,w,h},info.gab.length);}catch(_){}
+    if(code){let info=lerQrTexto(code.data);if(!info)return {erro:"outro"};info=infoLocal(info);let marcas=null;try{marcas=lerBolhas({code,dados,w,h},info.gab.length,info.grande);}catch(_){}
       return {info,marcas,cv,w,h};}
   }
   return {erro:"semqr"};
@@ -1742,8 +1749,8 @@ function homografia(src,dst){const A=[],b=[];for(let i=0;i<4;i++){const[x,y]=src
   const n=8;for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];[b[c],b[p]]=[b[p],b[c]];
     for(let r=0;r<n;r++)if(r!==c){const f=A[r][c]/A[c][c];for(let k=c;k<n;k++)A[r][k]-=f*A[c][k];b[r]-=f*b[c];}}
   const h=b.map((v,i)=>v/A[i][i]);return (x,y)=>{const d=h[6]*x+h[7]*y+1;return[(h[0]*x+h[1]*y+h[2])/d,(h[3]*x+h[4]*y+h[5])/d];};}
-function lerBolhas({code,dados,w,h},n){
-  const l=code.location,Q=CR.Q;
+function lerBolhas({code,dados,w,h},n,grande){
+  usarCR(grande);const l=code.location,Q=CR.Q;
   const H=homografia([[0,0],[Q,0],[0,Q],[Q,Q]],[[l.topLeftCorner.x,l.topLeftCorner.y],[l.topRightCorner.x,l.topRightCorner.y],[l.bottomLeftCorner.x,l.bottomLeftCorner.y],[l.bottomRightCorner.x,l.bottomRightCorner.y]]);
   const lum=new Float32Array(w*h),d=dados.data;for(let i=0;i<w*h;i++)lum[i]=(d[i*4]*.299+d[i*4+1]*.587+d[i*4+2]*.114);
   const px=(x,y)=>{x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=w||y>=h)return 255;return lum[y*w+x];};
@@ -1751,21 +1758,34 @@ function lerBolhas({code,dados,w,h},n){
   const disco=[];for(let a=0;a<3;a++)for(let t=0;t<8;t++){const rr=[0,.5,.85][a],ang=t*Math.PI/4+a*.3;disco.push([Math.cos(ang)*rr,Math.sin(ang)*rr]);}
   const anel=[];for(let t=0;t<16;t++){const ang=t*Math.PI/8;anel.push([Math.cos(ang),Math.sin(ang)]);}
   const lay=crLayout(n);
-  // ajuste fino por coluna e por grupo de 5 linhas: procura o deslocamento em que os contornos das bolinhas ficam mais escuros
+  // grupos de linhas do mesmo tamanho (12 linhas = 3 grupos de 4), para nenhum grupo ficar com 1 ou 2 linhas só
+  const GT=Math.ceil(lay.rows/Math.ceil(lay.rows/5));
+  // ajuste fino por coluna e por grupo de até 5 linhas: procura o deslocamento em que os contornos das bolinhas ficam mais escuros
   const desloc={};
-  for(let c=0;c<lay.cols;c++){let base=[0,0];const ps=lay.pos.filter(p=>p.c===c);
-    for(let g=0;g*5<ps.length;g++){const grupo=ps.filter(p=>Math.floor(p.rr/5)===g);let melhor=base,mv=1e9;
-      for(let dx=-3;dx<=3;dx+=.5)for(let dy=-3;dy<=3;dy+=.5){const ox=base[0]+dx,oy=base[1]+dy;let s=0;for(const p of grupo)for(let a=0;a<4;a++){const b=bolhaCentro(p,a);s+=amostra(b.x+ox,b.y+oy,CR.r,anel);}if(s<mv){mv=s;melhor=[ox,oy];}}
-      desloc[c+":"+g]=melhor;base=melhor;}}
-  const dsl=p=>desloc[p.c+":"+Math.floor(p.rr/5)];
+  // o erro cresce com a distância do QR: cada grupo parte da tendência dos anteriores (linhas e colunas)
+  let col0=[0,0],passoCol=[0,0];
+  const centro={};
+  for(let c=0;c<lay.cols;c++){const ps=lay.pos.filter(p=>p.c===c),hist=[],hc=[];const inicio=c?[col0[0]+passoCol[0],col0[1]+passoCol[1]]:[0,0];
+    for(let g=0;g*GT<ps.length;g++){const grupo=ps.filter(p=>Math.floor(p.rr/GT)===g),k=hist.length,cg=grupo.reduce((a,p)=>a+p.rr,0)/grupo.length;
+      const f=k>=2?(cg-hc[k-1])/(hc[k-1]-hc[k-2]):0;
+      const chute=k>=2?[hist[k-1][0]+(hist[k-1][0]-hist[k-2][0])*f,hist[k-1][1]+(hist[k-1][1]-hist[k-2][1])*f]:k===1?hist[0]:inicio;let melhor=chute,mv=1e9;const jan=grupo.length<3&&k>=2?1.5:3;
+      for(let dx=-jan;dx<=jan;dx+=.5)for(let dy=-jan;dy<=jan;dy+=.5){const ox=chute[0]+dx,oy=chute[1]+dy;let s=0;for(const p of grupo)for(let a=0;a<4;a++){const b=bolhaCentro(p,a);s+=amostra(b.x+ox,b.y+oy,CR.r,anel);}if(s<mv){mv=s;melhor=[ox,oy];}}
+      desloc[c+":"+g]=melhor;centro[c+":"+g]=cg;hist.push(melhor);hc.push(cg);}
+    if(c)passoCol=[hist[0][0]-col0[0],hist[0][1]-col0[1]];col0=hist[0];}
+  // entre um grupo e outro o deslocamento muda aos poucos: interpola linha a linha pelo centro de cada grupo
+  const dslGrupo=p=>{const g=Math.floor(p.rr/GT),cen=k=>centro[p.c+":"+k],d=k=>desloc[p.c+":"+k];
+    const viz=d(g+1)&&(p.rr>=cen(g)||!d(g-1))?g+1:d(g-1)?g-1:null;if(viz==null)return d(g);
+    const a=d(g),b=d(viz),t=(p.rr-cen(g))/(cen(viz)-cen(g));return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];};
+  const dsl=dslGrupo;
   const val=lay.pos.map(p=>{const[dx,dy]=dsl(p);return[0,1,2,3].map(a=>{const b=bolhaCentro(p,a);return amostra(b.x+dx,b.y+dy,CR.r*.62,disco);});});
   const todos=val.flat().sort((a,b)=>a-b);const papel=todos[Math.floor(todos.length*.75)];
   let tinta=255;{const mod=Q/(17+4*(code.version||7)),amos=[];for(let i=0;i<7;i++)for(let j=0;j<7;j++){if(i===0||j===0||i===6||j===6||(i>=2&&i<=4&&j>=2&&j<=4)){const[u,v]=H((i+.5)*mod,(j+.5)*mod);amos.push(px(u,v));}}amos.sort((a,b)=>a-b);tinta=amos[Math.floor(amos.length/2)];}
   const corte=papel-(papel-tinta)*0.42;
   const res=val.map(vs=>{const marc=vs.map((v,a)=>v<corte?a:-1).filter(a=>a>=0);if(!marc.length)return null;if(marc.length>1)return "*";return L[marc[0]];});
-  return {res,H,lay,dsl,val,corte};
+  return {res,H,lay,dsl,val,corte,grande:!!grande};
 }
-function desenharLeitura(g,{H,lay,dsl,res},gab){
+function desenharLeitura(g,{H,lay,dsl,res,grande},gab){
+  usarCR(grande);
   const lw=Math.max(2,g.canvas.width/450);g.lineWidth=lw;
   lay.pos.forEach((p,k)=>{const[dx,dy]=dsl(p);for(let a=0;a<4;a++){const b=bolhaCentro(p,a);const[u,v]=H(b.x+dx,b.y+dy);const[u2]=H(b.x+dx+CR.r,b.y+dy);const rr=Math.abs(u2-u)||4;
     const marcada=res[k]===L[a]||res[k]==="*";const certa=gab&&gab[k]===L[a];
