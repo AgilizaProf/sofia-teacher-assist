@@ -3163,7 +3163,12 @@ export function Planejamento() {
   const setMudanca = (k: MKey) => {
     setM(k);
     navigate({ search: { m: k }, replace: true });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Leva direto até a ferramenta que abriu (antes subia para o topo e a
+    // pessoa não percebia que o conteúdo tinha aparecido mais abaixo).
+    requestAnimationFrame(() => {
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById("pl-ferramenta")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
   };
 
   const showToast = (msg: string) => setToast({ msg, key: Date.now() });
@@ -3319,7 +3324,7 @@ export function Planejamento() {
               )}
             </div>
 
-            <div className="pl-mode-head">
+            <div className="pl-mode-head" id="pl-ferramenta" style={{ scrollMarginTop: 80 }}>
               <h2>{TAB_INFO[m]?.nome ?? cfg.title}</h2>
               <p>{cfg.sub}</p>
             </div>

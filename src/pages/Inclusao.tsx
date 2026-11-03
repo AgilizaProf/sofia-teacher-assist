@@ -2351,7 +2351,14 @@ ${ident}
                       key={t.k}
                       type="button"
                       className={"inc-section" + (tab === t.k ? " active" : "")}
-                      onClick={() => setActiveTab(t.k)}
+                      onClick={() => {
+                        setActiveTab(t.k);
+                        // Leva direto até a seção que abriu, logo abaixo dos botões.
+                        requestAnimationFrame(() => {
+                          const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+                          document.getElementById("inc-secao-aberta")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+                        });
+                      }}
                       role="tab"
                       aria-selected={tab === t.k}
                     >
@@ -2360,6 +2367,7 @@ ${ident}
                     </button>
                   ))}
                 </div>
+                <div id="inc-secao-aberta" style={{ scrollMarginTop: 80 }} aria-hidden />
 
                 {/* PANEL: HOJE */}
                 <div className={"panel" + (tab === "hoje" ? " active" : "")}>
