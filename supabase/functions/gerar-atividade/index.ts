@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { userIdFromAuthHeader, isBudgetExceeded, recordUsage } from "../_shared/ai-budget.ts";
 import { withConstitution } from "../_shared/sofia-constitution.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
+import { semLatexProfundo } from "../_shared/math-text.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -467,7 +468,9 @@ serve(async (req) => {
       }
       const c = d?.choices?.[0]?.message?.tool_calls?.[0];
       const a = c?.function?.arguments;
-      return typeof a === "string" ? JSON.parse(a) : (a ?? null);
+      const obj = typeof a === "string" ? JSON.parse(a) : (a ?? null);
+      // Fórmulas em LaTeX ($\frac{1}{2}$) viram texto comum (½) antes de ir para o app.
+      return obj ? semLatexProfundo(obj) : obj;
     };
 
     let parsed = await parseResp(resp);

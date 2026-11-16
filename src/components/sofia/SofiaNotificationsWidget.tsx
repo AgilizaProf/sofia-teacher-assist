@@ -11,6 +11,7 @@ import { useSofia } from "./SofiaProvider";
 import { askSofia } from "@/lib/sofia.functions";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { reportError } from "@/lib/admin/track";
+import { semLatex } from "@/lib/sofia/mathText";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Widget flutuante de notificações da Sofia.
@@ -254,7 +255,7 @@ export function SofiaNotificationsWidget() {
           <div className="sofia-notif-foot">
             {answer !== null && (
               <div className="sofia-notif-answer">
-                <ReactMarkdown>{answer || "_Sem resposta._"}</ReactMarkdown>
+                <ReactMarkdown>{semLatex(answer || "_Sem resposta._")}</ReactMarkdown>
               </div>
             )}
             {askError && (

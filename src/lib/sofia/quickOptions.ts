@@ -3,6 +3,8 @@
 // invisível ao usuário; apenas serve para o app renderizar botões de
 // resposta rápida (chips) abaixo da mensagem.
 
+import { semLatex } from "./mathText";
+
 const OPCOES_REGEX = /\[\s*OP[ÇC][ÕO]ES\s*\][\s\S]*?\[\s*\/\s*OP[ÇC][ÕO]ES\s*\]/i;
 // Marcador parcial que aparece durante o streaming, antes do bloco fechar.
 const OPCOES_PARTIAL_REGEX = /\[\s*OP[ÇC][ÕO]ES\s*\][\s\S]*$/i;
@@ -13,7 +15,8 @@ export function parseQuickOptions(raw: string): { clean: string; options: string
   if (!match) {
     // Durante o streaming pode haver um bloco "[OPÇÕES]" ainda aberto.
     // Escondemos do display, mas sem extrair opções (parciais).
-    const clean = raw.replace(OPCOES_PARTIAL_REGEX, "").trimEnd();
+    // semLatex: fórmulas que a IA mande em LaTeX viram texto comum (½, 3 × 4).
+    const clean = semLatex(raw.replace(OPCOES_PARTIAL_REGEX, "").trimEnd());
     return { clean, options: [] };
   }
   const block = match[0];
@@ -26,7 +29,7 @@ export function parseQuickOptions(raw: string): { clean: string; options: string
     .filter((l) => l.startsWith("-") || l.startsWith("•") || l.startsWith("*"))
     .map((l) => l.replace(/^[-•*]\s*/, "").trim())
     .filter(Boolean);
-  const clean = raw.replace(OPCOES_REGEX, "").trimEnd();
+  const clean = semLatex(raw.replace(OPCOES_REGEX, "").trimEnd());
   return { clean, options };
 }
 

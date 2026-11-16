@@ -1,5 +1,10 @@
 # Changelog da Constituição da Sofia
 
+## v1.3 — 2026-11-16
+
+- Nova regra: nunca usar LaTeX nem cifrões em fórmulas. Frações, contas, potências e raízes são escritas como no caderno (½, 3 × 4, x², √16).
+- Rede de segurança: o que ainda vier em LaTeX ($\frac{1}{2}$, \(x\), $$…$$) é convertido em texto comum no chat, nas notificações e nas atividades geradas (`src/lib/sofia/mathText.ts`).
+
 ## v1.2 — 2026-11-02
 
 - Novo bloco "Como pensar antes de responder": entender o objetivo, usar o contexto real, perguntar só o essencial e revisar fatos, contas e códigos BNCC.
