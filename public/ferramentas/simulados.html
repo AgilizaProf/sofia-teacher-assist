@@ -645,10 +645,40 @@ const slug=s=>semAcento(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|
 function opcoes(obj,val,todos){return (todos?`<option value="">${todos}</option>`:"")+Object.entries(obj).map(([k,v])=>`<option value="${k}"${String(val)===String(k)?" selected":""}>${esc(v)}</option>`).join("");}
 const ANOS=Object.fromEntries([1,2,3,4,5,6,7,8,9].map(a=>[a,anoTxt(a)]));
 
+
+/* ---- segurança: dados de backup, da nuvem ou deste aparelho nunca viram código na página ---- */
+// imagem só como data:image (png, jpeg ou webp) ou https do próprio site / Storage do app
+const IMG_OK=/^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+\/=\s]+$/i;
+function imgSegura(s){s=typeof s==="string"?s.trim():"";if(!s)return "";if(IMG_OK.test(s))return s;
+  try{const u=new URL(s,location.href);if(u.protocol==="https:"&&(u.origin===location.origin||(/\.supabase\.co$/i.test(u.hostname)&&u.pathname.startsWith("/storage/"))))return u.href.replace(/["'<>`\s]/g,encodeURIComponent);}catch(e){}
+  return "";}
+const TEXTO_LIVRE=new Set(["enunciado","texto","alts","explicacao","comentario","descricao","obs","tema","titulo","nome","turma","aluno","escola","prof","hab"]);
+// "<" seguido de letra nunca abre uma tag; nos campos curtos (códigos, datas, ids) aspas também saem
+function sanearValor(v,k,livre){
+  if(typeof v==="string"){if(k==="img")return imgSegura(v);v=v.replace(/<(?=[A-Za-z!\/?])/g,"< ");return livre?v:v.replace(/["`]/g,"");}
+  if(typeof v==="number")return isFinite(v)?v:0;
+  if(typeof v==="boolean"||v==null)return v;
+  if(Array.isArray(v))return v.map(x=>sanearValor(x,k,livre));
+  if(typeof v==="object"){const o={};for(const kk of Object.keys(v)){if(kk==="__proto__"||kk==="constructor"||kk==="prototype")continue;o[kk]=sanearValor(v[kk],kk,TEXTO_LIVRE.has(kk));}return o;}
+  return undefined;}
+function sanearDados(d){
+  if(!d||typeof d!=="object"||Array.isArray(d))return {};
+  const o=sanearValor(d,"",false);
+  const lista=(k,id)=>{if(o[k]===undefined)return;o[k]=Array.isArray(o[k])?o[k].filter(x=>x&&typeof x==="object"&&!Array.isArray(x)&&(!id||typeof x[id]==="string"||typeof x[id]==="number")):[];};
+  lista("turmas","id");lista("simulados","id");lista("resultados","rid");lista("minhas","id");lista("relatos");
+  (o.turmas||[]).forEach(t=>{t.alunos=Array.isArray(t.alunos)?t.alunos.filter(a=>a&&typeof a==="object"):[];});
+  (o.simulados||[]).forEach(s=>{if(!Array.isArray(s.versoes))s.versoes=[];if(!Array.isArray(s.base))s.base=[];});
+  (o.minhas||[]).forEach(q=>{if(!Array.isArray(q.alts))q.alts=["","","",""];});
+  if(o.fav!==undefined&&!Array.isArray(o.fav))o.fav=[];
+  if(o.aval!==undefined&&(typeof o.aval!=="object"||Array.isArray(o.aval)))o.aval={};
+  if(o.sel!==undefined&&!Array.isArray(o.sel))o.sel=[];
+  if(o.zoom!==undefined)o.zoom=Math.min(1.5,Math.max(.85,+o.zoom||1));
+  if(o.aba!==undefined&&typeof o.aba!=="string")o.aba="inicio";
+  return o;}
 /* ============ ARMAZENAMENTO (neste aparelho e na nuvem da conta do professor) ============ */
 const CHAVE="agilizaprof-banco-v1";
 let S={turmas:[],simulados:[],resultados:[],sel:[],minhas:[],fav:[],aval:{},relatos:[],sofiaAuto:true,aba:"inicio",zoom:1};
-function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE)||"null");if(d)S=Object.assign(S,d);}catch(e){}
+function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE)||"null");if(d)S=Object.assign(S,sanearDados(d));}catch(e){}
   S.minhas=S.minhas||[];S.fav=S.fav||[];S.aval=S.aval||{};if(S.sofiaAuto==null)S.sofiaAuto=true;
   limparExemplos();}
 // as turmas de exemplo de versões antigas não aparecem mais
@@ -668,7 +698,7 @@ async function nuvemCarregar(){
   if(!n)return;
   let r=null;try{r=await n.get(NUVEM_CHAVE);}catch(e){nuvemPronta=true;return;}
   nuvemPronta=true;
-  const d=r&&r.data;
+  const d=r&&r.data&&typeof r.data==="object"?sanearDados(r.data):null;
   if(!d||!d._ts){if(S.turmas.length||S.simulados.length||S.resultados.length||S.minhas.length)nuvemSalvar();return;}
   if(S._ts&&S._ts>=d._ts){if(S._ts>d._ts)nuvemSalvar();return;}
   if(!S._ts){
@@ -709,8 +739,8 @@ function getQ(ref){
 function todas(){return BANCO.concat(S.minhas);}
 // questões que entram nos sorteios automáticos: o banco, as escritas pelo professor e as da Sofia que já foram usadas em simulado
 function usaveis(){return BANCO.concat(S.minhas.filter(q=>q.origem!=="sofia"||q.banco));}
-function figuraHtml(q){if(q.img)return `<div class="figura"><img src="${q.img}" alt="Figura da questão"></div>`;if(q.fig){const s=FIG(q.fig);return s?`<div class="figura">${s}</div>`:"";}return "";}
-function figuraDoc(q){if(q.img)return `<div class="fig"><img src="${q.img}" alt=""></div>`;if(q.fig){const s=FIG(q.fig);return s?`<div class="fig">${s}</div>`:"";}return "";}
+function figuraHtml(q){if(imgSegura(q.img))return `<div class="figura"><img src="${esc(imgSegura(q.img))}" alt="Figura da questão"></div>`;if(q.fig){const s=FIG(q.fig);return s?`<div class="figura">${s}</div>`:"";}return "";}
+function figuraDoc(q){if(imgSegura(q.img))return `<div class="fig"><img src="${esc(imgSegura(q.img))}" alt=""></div>`;if(q.fig){const s=FIG(q.fig);return s?`<div class="fig">${s}</div>`:"";}return "";}
 
 /* ============ QR ============ */
 function qrMatriz(texto){
@@ -1086,7 +1116,7 @@ function editor(){
    <label class="campo">Tema<input id="e-tema" value="${esc(ED.tema)}" placeholder="Ex.: Frações equivalentes"></label>
    <label class="campo">Texto-base (opcional)<textarea id="e-texto" rows="3">${esc(ED.texto)}</textarea></label>
    <div class="linha-acoes"><button class="btn peq" id="e-img">${ED.img?"Trocar imagem":"Anexar imagem"}</button>${ED.img?`<button class="btn peq perigo" id="e-semimg">Tirar imagem</button>`:""}<span class="fonte">A imagem fica guardada neste navegador.</span></div>
-   ${ED.img?`<div class="figura"><img src="${ED.img}" alt="Imagem anexada"></div>`:""}
+   ${ED.img?`<div class="figura"><img src="${esc(imgSegura(ED.img))}" alt="Imagem anexada"></div>`:""}
    <label class="campo">Enunciado<textarea id="e-enun" rows="2">${esc(ED.enunciado)}</textarea></label>
    <div class="pilha" style="gap:6px">${ED.alts.map((a,k)=>`<div class="editor-alt"><label class="opc" title="Marque a correta"><input type="radio" name="e-cor" value="${k}"${ED.correta===k?" checked":""}> <b>${L[k]}</b></label><input class="entrada" id="e-alt${k}" value="${esc(a)}" aria-label="Alternativa ${L[k]}"></div>`).join("")}<span class="fonte">Marque a bolinha da alternativa correta.</span></div>
    <div class="linha-acoes"><button class="btn prim" id="e-salvar">Salvar questão</button><button class="btn" id="e-cancelar">Cancelar</button></div></section>`;
@@ -1622,7 +1652,8 @@ function renderAlunos(){
   $("#t-apagar").onclick=e=>{const b=e.currentTarget;if(!b.dataset.conf){b.dataset.conf=1;b.textContent="Confirmar: apagar turma";return;}S.turmas=S.turmas.filter(x=>x.id!==t.id);S._semExemplo=true;salvar();renderAlunos();};
 }
 $("#arq-backup").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
-  try{const d=JSON.parse(await f.text());if(d.app!=="agilizaprof-banco")throw 0;
+  try{const bruto=JSON.parse(await f.text());if(!bruto||bruto.app!=="agilizaprof-banco")throw 0;const d=sanearDados(bruto);
+    ["turmas","simulados","resultados","minhas","fav"].forEach(k=>{if(d[k]!==undefined&&!Array.isArray(d[k]))throw 0;});
     const junta=(a,b,k)=>{const ids=new Set(a.map(x=>x[k]));return a.concat(b.filter(x=>!ids.has(x[k])));};
     S.turmas=junta(S.turmas,d.turmas||[],"id");S.simulados=junta(S.simulados,d.simulados||[],"id");S.resultados=junta(S.resultados,d.resultados||[],"rid");S.minhas=junta(S.minhas,d.minhas||[],"id");
     (d.fav||[]).forEach(r=>{if(!S.fav.includes(r))S.fav.push(r);});Object.entries(d.aval||{}).forEach(([k,v])=>{if(!(k in S.aval))S.aval[k]=v;});PREF=null;
