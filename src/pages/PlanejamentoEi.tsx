@@ -5,6 +5,7 @@ import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { ArrowLeft, Sparkles, Save, Loader2, FileText, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { FolhasSugeridas } from "@/components/cadernos/FolhasSugeridas";
 import { invocarIA, mensagemAmigavel, temTexto } from "@/lib/sofia/invocarIA";
 import { useAvisoSairSemSalvar } from "@/components/documentos/useAvisoSairSemSalvar";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -311,6 +312,13 @@ export function PlanejamentoEi() {
             </button>
           </div>
         </section>
+
+        <FolhasSugeridas
+          className="ei-folhas"
+          etapa="infantil"
+          ano={faixa}
+          componentes={CAMPOS.filter((c) => campos.includes(c.id)).map((c) => c.nome)}
+        />
 
         {roteiro && (
           <RoteiroPanel

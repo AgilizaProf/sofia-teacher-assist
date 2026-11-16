@@ -7,6 +7,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { invocarIA, mensagemAmigavel, temConteudo } from "@/lib/sofia/invocarIA";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { FolhasSugeridas } from "@/components/cadernos/FolhasSugeridas";
+import { etapaDoAno } from "@/lib/cadernos/folhas";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { logActivity } from "@/lib/activity/activityLog";
@@ -2108,6 +2110,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           </div>
         </div>
       )}
+
+      {/* ────── Atividades em folha (PDF), complemento para EI e Fundamental 1 ────── */}
+      <div style={{ margin: "18px 0" }}>
+        <FolhasSugeridas
+          etapa={isEI ? "infantil" : etapaDoAno(anoEscolar)}
+          ano={anoEscolar}
+          componentes={disciplina && disciplina !== "Interdisciplinar" ? [disciplina] : []}
+          habilidades={(plano.habilidades ?? []).map((h) => h.codigo).filter(Boolean)}
+        />
+      </div>
 
       {/* ────── Histórico ────── */}
       <section className="atv-hist">

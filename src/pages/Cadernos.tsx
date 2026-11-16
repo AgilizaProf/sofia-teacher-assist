@@ -9,8 +9,9 @@ import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav
 // aviso de acesso. Quando os cadernos ficarem prontos, esta página passa a
 // listar as fichas por ano e disciplina.
 
-export const CADERNOS_LIBERA_EM = "12/03/2027";
-const CADERNOS_LIBERA_CURTO = "12/03";
+import { CADERNOS_LIBERA_EM, CADERNOS_LIBERA_CURTO, TIPOS_FOLHA } from "@/lib/cadernos/folhas";
+
+export { CADERNOS_LIBERA_EM };
 
 const PREVIAS = ["/cadernos/previa-1.jpg", "/cadernos/previa-2.jpg", "/cadernos/previa-3.jpg"];
 
@@ -135,7 +136,14 @@ export function Cadernos() {
           <ul>
             <li>Fichas separadas por ano de escolaridade e disciplina.</li>
             <li>Prontas para imprimir, em PDF.</li>
-            <li>Versão PCD, adaptada, para os alunos que precisam.</li>
+            <li>
+              Para Educação Infantil e Fundamental 1, seis tipos de folha:{" "}
+              {TIPOS_FOLHA.map((t) => t.nome).join(", ")}.
+            </li>
+            <li>
+              Ao buscar uma atividade da BNCC no Planejamento, o app sugere junto as folhas que
+              estão de acordo com a busca.
+            </li>
             <li>Um toque para guardar na Minha Biblioteca e usar de novo no próximo ano.</li>
           </ul>
           <p>

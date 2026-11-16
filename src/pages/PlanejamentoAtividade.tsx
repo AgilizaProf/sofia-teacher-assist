@@ -9,6 +9,8 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { toast } from "sonner";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { listTurmas, type TurmaUI } from "@/lib/db/turmas";
+import { FolhasSugeridas } from "@/components/cadernos/FolhasSugeridas";
+import { codigosBncc } from "@/lib/cadernos/folhas";
 
 /**
  * Página de criação de atividade pedagógica alinhada à BNCC.
@@ -346,6 +348,7 @@ export function PlanejamentoAtividade() {
           </div>
 
           <div className="pa-grid">
+            <div className="pa-col">
             <form className="pa-card" onSubmit={(e) => { e.preventDefault(); onGerar(); }}>
               <h2><span className="pa-num">1</span> Para qual turma?</h2>
 
@@ -489,6 +492,13 @@ export function PlanejamentoAtividade() {
                 <button type="submit" className="pn-btn primary"><Sparkles size={18} /> Sofia monta a atividade</button>
               </div>
             </form>
+            <FolhasSugeridas
+              etapa={etapa === "infantil" ? "infantil" : etapa === "fund1" ? "fund1" : null}
+              ano={ano}
+              componentes={isEI ? camposSelecionados : [componente]}
+              habilidades={codigosBncc(habilidade)}
+            />
+            </div>
 
             <aside className="pa-side">
               <div className="pa-card pa-como">
@@ -511,6 +521,7 @@ export function PlanejamentoAtividade() {
 const paPainelCss = `
 .pn.pa-root{background:var(--pn-bg);color:var(--pn-ink);font-family:var(--pn-body);}
 .pa-main{max-width:1240px;margin:0 auto;width:100%;}
+.pa-col{display:grid;gap:18px;min-width:0;align-content:start;}
 .pa-topo{padding:22px 24px 0;display:flex;flex-direction:column;gap:10px;align-items:flex-start;}
 .pn.pa-root .pa-back{font-size:14px;color:var(--pn-muted);padding:0;}
 .pa-title{font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;margin:0;}
