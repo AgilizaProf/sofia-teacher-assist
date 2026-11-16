@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 
 type Registro = { when?: string; cat?: string; body?: string };
@@ -22,12 +22,11 @@ serve(async (req) => {
       peiAnterior = "",
       registros = [] as Registro[],
       adaptacoes = [] as string[],
-      adaptacoes = [] as string[],
       parte = "completo", // "a" | "b" | "completo"
     } = body || {};
 
     if (!aluno || !bimestre) {
-      return new Response(JSON.stringify({ error: "Aluno e bimestre são obrigatórios." }), {
+      return new Response(JSON.stringify({ ok: false, error: "Escolha o aluno e o bimestre antes de gerar." }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
@@ -134,19 +133,29 @@ Regras:
 - Sem comparar o aluno com a turma.`
 }`;
 
-    const maxTokens = parte === "completo" ? 4096 : 2400;
+    // PEI completo com 4.096 tokens era cortado e virava {} (N8). O limite da
+    // tarefa "pei" no roteador é 8.000.
+    const maxTokens = parte === "completo" ? 8000 : 4000;
     const r = await callAI({ userId, tipo: "pei", system: sys, user, json: true, maxTokens });
     if (!r.ok) return aiErrorResponse(r);
 
-    let pei: Record<string, unknown> = {};
-    try { pei = JSON.parse(r.text || "{}"); } catch { pei = {}; }
+    const parsed = parseAiJson<Record<string, unknown>>(r.text || "{}");
+    // Cortado ou ilegível: avisa o app (que mostra "A resposta veio incompleta")
+    // em vez de devolver um PEI vazio ou pela metade.
+    if (r.truncated || jsonTruncado(parsed)) {
+      console.warn("[gerar-pei] resposta cortada", { parte, finish: r.finishReason });
+      return new Response(
+        JSON.stringify({ ok: false, truncated: true, error: "A resposta veio incompleta. Gere de novo." }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+    const pei = parsed;
 
     return new Response(JSON.stringify({ pei, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
-      status: 200, headers: { ...cors, "Content-Type": "application/json" },
-    });
+    console.error("[gerar-pei] erro interno", e);
+    return erroSimples("A Sofia não conseguiu gerar o PEI agora. Tente de novo em instantes.", e);
   }
 });

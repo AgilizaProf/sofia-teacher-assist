@@ -8,6 +8,8 @@ import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
+import { brDateKey } from "@/lib/datetime";
+import { invocarIA, mensagemAmigavel, temConteudo } from "@/lib/sofia/invocarIA";
 
 type Aluno = {
   id: string;
@@ -65,7 +67,7 @@ type GeradoItem = {
 function isoFromOffset(weeks: number): string {
   const d = new Date();
   d.setDate(d.getDate() + weeks * 7);
-  return d.toISOString().slice(0, 10);
+  return brDateKey(d);
 }
 
 export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiResumo, onSavedMany }: Props) {
@@ -129,7 +131,9 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
       aluno.anoEscolar,
       aluno.anoReferenciaPedagogico,
     );
-    const { data, error } = await supabase.functions.invoke("gerar-atividade", {
+    // Só cobra com plano válido; falha vira erro amigável (N1).
+    const data = await invocarIA<{ plano?: GeradoItem["plano"] }>("gerar-atividade", {
+      validar: (d) => temConteudo(d?.plano),
       body: {
         modo: "pcd",
         anoEscolar: aluno.anoEscolar || "",
@@ -147,8 +151,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
           : null,
       },
     });
-    if (error) throw error;
-    const plano = (data as { plano?: GeradoItem["plano"] })?.plano ?? null;
+    const plano = data.plano ?? null;
     if (plano) {
       void consumirCreditos(CUSTOS.planejamento_semanal, descricaoDoc(`Planejamento semanal (${disciplina})`, aluno?.name));
       void (await import("@/lib/tempo/acumular")).acumularTempo("planejamento_inclusao", `Planejamento inclusão (${disciplina}) — ${aluno?.name ?? ""}`);
@@ -178,6 +181,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
     setLoading(true);
     setProgresso({ feito: 0, total: tarefas.length });
     setItens([]);
+    let ultimoErro: unknown = null;
     try {
       const results = await Promise.all(
         tarefas.map(async (t) => {
@@ -198,19 +202,22 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
             return item;
           } catch (e) {
             console.error(e);
+            ultimoErro = e;
             setProgresso((g) => ({ ...g, feito: g.feito + 1 }));
             return null;
           }
         }),
       );
       const ok = results.filter((x): x is GeradoItem => !!x);
-      if (ok.length === 0) throw new Error("Nenhuma atividade foi gerada.");
+      if (ok.length === 0) throw ultimoErro ?? new Error("Nenhuma atividade foi gerada. Tente de novo.");
       ok.sort((a, b) => a.semana - b.semana || a.disciplina.localeCompare(b.disciplina));
       setItens(ok);
-      toast.success(`${ok.length} atividade(s) geradas pela Sofia`);
+      const falhas = results.length - ok.length;
+      if (falhas > 0) toast.warning(`${ok.length} atividade(s) geradas. ${falhas} não saíram: gere de novo.`);
+      else toast.success(`${ok.length} atividade(s) geradas pela Sofia`);
     } catch (e) {
       console.error(e);
-      toast.error("Erro ao gerar atividades", { description: e instanceof Error ? e.message : "Tente novamente." });
+      toast.error("Não consegui gerar as atividades.", { description: mensagemAmigavel(e) });
     } finally {
       setLoading(false);
     }

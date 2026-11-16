@@ -20,13 +20,25 @@ serve(async (req) => {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     if (userId) {
       const b = await isBudgetExceeded(userId);
+      // Falha ao consultar créditos é erro temporário, não "sem créditos" (N5).
+      if (b.erro) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            creditCheckFailed: true,
+            error: "Não consegui conferir seus créditos agora. Tente de novo em instantes.",
+          }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
       if (b.exceeded) {
         return new Response(
           JSON.stringify({
-            error: `Você não tem créditos disponíveis (${b.usedBrl}/${b.limitBrl} usados). Aguarde a renovação do seu plano ou faça upgrade.`,
+            ok: false,
+            error: "Seus créditos acabaram. Eles renovam no próximo ciclo do seu plano.",
             blocked: true, usedBrl: b.usedBrl, limitBrl: b.limitBrl, creditos: b.creditos,
           }),
-          { status: 402, headers: { ...cors, "Content-Type": "application/json" } },
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
         );
       }
     }
@@ -49,6 +61,10 @@ serve(async (req) => {
       planoAtual = null as Record<string, unknown> | null,
       etapa = "" as string, // "opcoes" para sugerir 4-5 opções de aula
       opcoesSelecionadas = [] as Array<{ titulo?: string; resumo?: string; abordagem?: string }>,
+      // Planejar (M1): atividades-base do banco BNCC, uma por cartão da semana.
+      // Com elas, a etapa "opcoes" personaliza CADA cartão mantendo a
+      // disciplina e o código (N2).
+      atividadesBase = [] as Array<{ indice: number; dia?: string; disciplina?: string; codigo?: string; titulo?: string; tipo?: string; minutos?: number }>,
       disciplinasInter = [] as string[],
       alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string; peiResumo?: string; anamneseResumo?: string } | null,
       diarioBordo = [] as Array<{ emoji?: string; titulo?: string; texto?: string; tags?: string[]; data?: string; turma?: string; atividadeTitulo?: string }>,
@@ -61,8 +77,9 @@ serve(async (req) => {
 
     const KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!KEY) {
+      console.error("[gerar-atividade] LOVABLE_API_KEY ausente");
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY ausente no servidor." }),
+        JSON.stringify({ ok: false, error: "A Sofia está temporariamente indisponível. Já fomos avisados." }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
@@ -241,6 +258,25 @@ serve(async (req) => {
             + `Devolva o plano completo, mas só esse campo deve mudar; `
             + `os demais campos devem voltar IDÊNTICOS ao plano atual.`,
         ].join("\n")
+      : etapa === "opcoes" && Array.isArray(atividadesBase) && atividadesBase.length > 0
+      ? [
+          baseContext,
+          ``,
+          `A semana já tem ${atividadesBase.length} atividade(s) definidas pela BNCC. `
+            + `Personalize CADA UMA para esta turma, sem trocar a disciplina nem a habilidade:`,
+          ...atividadesBase.map((a) =>
+            `${a.indice}. [${a.dia || ""}] ${a.disciplina || "Geral"} · ${a.codigo || "sem código"} · ${a.titulo || ""}`
+            + (a.minutos ? ` · ${a.minutos} min` : ""),
+          ),
+          ``,
+          `Para cada item devolva uma opção com: "indice" (o MESMO número da lista), `
+            + `"disciplina" (a MESMA da lista), "codigo_hab" (o MESMO código da lista), `
+            + `"titulo" (curto e concreto, sobre o tema), "resumo" (1-2 frases), `
+            + `"abordagem" (1 expressão), "tipo" (ex.: jogo, leitura, investigação), `
+            + `"objetivo" (1 frase da disciplina indicada), "materiais" (3 a 5 itens) `
+            + `e "passos" (4 a 6 passos curtos). As atividades devem ser DIFERENTES entre si, `
+            + `mesmo quando a disciplina se repete na semana: não repita título nem abordagem.`,
+        ].join("\n")
       : etapa === "opcoes"
       ? [
           baseContext,
@@ -383,7 +419,7 @@ serve(async (req) => {
       type: "function",
       function: {
         name: "sugerir_opcoes_aula",
-        description: "Retorna 4 a 5 opções distintas de aula para o tema.",
+        description: "Retorna opções distintas de aula para o tema (4 a 5, ou uma por atividade-base recebida).",
         parameters: {
           type: "object",
           properties: {
@@ -395,6 +431,14 @@ serve(async (req) => {
                   titulo: { type: "string" },
                   resumo: { type: "string" },
                   abordagem: { type: "string" },
+                  // Campos usados pelo Planejar (M1) quando há atividadesBase.
+                  indice: { type: "integer", description: "Número da atividade na lista recebida." },
+                  disciplina: { type: "string", description: "Disciplina da atividade, igual à da lista." },
+                  codigo_hab: { type: "string", description: "Código da habilidade, igual ao da lista." },
+                  tipo: { type: "string" },
+                  objetivo: { type: "string" },
+                  materiais: { type: "array", items: { type: "string" } },
+                  passos: { type: "array", items: { type: "string" } },
                 },
                 required: ["titulo", "resumo", "abordagem"],
                 additionalProperties: false,
@@ -435,20 +479,23 @@ serve(async (req) => {
     if (!resp.ok) {
       const t = await resp.text();
       console.error("AI gateway error", resp.status, t);
+      // Sempre HTTP 200 com { ok:false, error } em português simples: o app
+      // (src/lib/sofia/invocarIA.ts) mostra `error` direto na tela.
       if (resp.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Sofia está com muitas solicitações agora. Tente de novo em instantes." }),
-          { status: 429, headers: { ...cors, "Content-Type": "application/json" } },
+          JSON.stringify({ ok: false, upstreamStatus: 429, error: "A Sofia está com muitos pedidos agora. Tente de novo em instantes." }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
         );
       }
       if (resp.status === 402) {
+        // 402 do gateway = saldo do provedor de IA (não é crédito da professora).
         return new Response(
-          JSON.stringify({ error: "Créditos da IA esgotados. Adicione créditos em Settings → Workspace → Usage." }),
-          { status: 402, headers: { ...cors, "Content-Type": "application/json" } },
+          JSON.stringify({ ok: false, upstreamStatus: 402, error: "A Sofia está temporariamente indisponível. Já fomos avisados." }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
         );
       }
       return new Response(
-        JSON.stringify({ error: "Erro ao gerar atividade." }),
+        JSON.stringify({ ok: false, upstreamStatus: resp.status, error: "A Sofia não conseguiu montar a atividade agora. Tente de novo em instantes." }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
@@ -468,16 +515,29 @@ serve(async (req) => {
       }
       const c = d?.choices?.[0]?.message?.tool_calls?.[0];
       const a = c?.function?.arguments;
-      const obj = typeof a === "string" ? JSON.parse(a) : (a ?? null);
+      let obj: any = null;
+      try {
+        obj = typeof a === "string" ? JSON.parse(a) : (a ?? null);
+      } catch {
+        // Argumentos cortados (limite de tokens): sinaliza em vez de quebrar.
+        console.warn("[gerar-atividade] JSON da função cortado", d?.choices?.[0]?.finish_reason);
+        return { _truncated: true };
+      }
       // Fórmulas em LaTeX ($\frac{1}{2}$) viram texto comum (½) antes de ir para o app.
       return obj ? semLatexProfundo(obj) : obj;
     };
 
     let parsed = await parseResp(resp);
 
+    if (parsed && parsed._truncated) {
+      return new Response(
+        JSON.stringify({ ok: false, truncated: true, error: "A resposta veio incompleta. Gere de novo." }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
     if (!parsed) {
       return new Response(
-        JSON.stringify({ error: "Sofia não conseguiu estruturar a resposta." }),
+        JSON.stringify({ ok: false, error: "A Sofia não conseguiu organizar a resposta. Gere de novo." }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
@@ -512,7 +572,7 @@ serve(async (req) => {
       const resp2 = await callAI(feedback);
       if (resp2.ok) {
         const parsed2 = await parseResp(resp2);
-        if (parsed2) {
+        if (parsed2 && !parsed2._truncated) {
           const v2 = validarHabilidadesBNCC(parsed2.habilidades, anoPedagogico, disciplinasParaValidar);
           if (v2.ok) {
             parsed = parsed2;
@@ -539,7 +599,11 @@ serve(async (req) => {
   } catch (e) {
     console.error("gerar-atividade error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }),
+      JSON.stringify({
+        ok: false,
+        error: "A Sofia não conseguiu montar a atividade agora. Tente de novo em instantes.",
+        detail: e instanceof Error ? e.message.slice(0, 500) : undefined,
+      }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
     );
   }

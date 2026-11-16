@@ -4,24 +4,28 @@ import { corsHeaders as cors } from "../_shared/sofia-router.ts";
 
 const GOOGLE_KEY = Deno.env.get("GOOGLE_API_KEY")!;
 
+// Erros sempre em HTTP 200 com { ok:false, error } em português simples, para
+// o app não mostrar "Edge Function returned a non-2xx status code" (N6).
+function falha(error: string, extra: Record<string, unknown> = {}) {
+  return new Response(JSON.stringify({ ok: false, error, ...extra }), {
+    status: 200, headers: { ...cors, "Content-Type": "application/json" },
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     if (!userId) {
-      return new Response(JSON.stringify({ error: "Não autenticado." }), {
-        status: 401, headers: { ...cors, "Content-Type": "application/json" },
-      });
+      return falha("Sua sessão expirou. Entre de novo para importar o calendário.");
     }
 
     const body = await req.json().catch(() => ({}));
     const { pdf_base64 } = body as { pdf_base64: string };
 
     if (!pdf_base64) {
-      return new Response(JSON.stringify({ error: "PDF não enviado." }), {
-        status: 400, headers: { ...cors, "Content-Type": "application/json" },
-      });
+      return falha("Escolha o arquivo PDF do calendário.");
     }
 
     const prompt = `Você é um assistente especializado em calendários escolares brasileiros.
@@ -81,28 +85,31 @@ REGRAS gerais:
     if (!geminiRes.ok) {
       const err = await geminiRes.text();
       console.error("[processar-calendario] Gemini error:", err);
-      return new Response(JSON.stringify({ error: "IA indisponível. Tente novamente." }), {
-        status: 502, headers: { ...cors, "Content-Type": "application/json" },
-      });
+      return falha(
+        geminiRes.status === 429
+          ? "A Sofia está com muitos pedidos agora. Tente de novo em instantes."
+          : "A Sofia não conseguiu ler o calendário agora. Tente de novo em instantes.",
+        { upstreamStatus: geminiRes.status },
+      );
     }
 
     const geminiData = await geminiRes.json();
     const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+    const finish = String(geminiData?.candidates?.[0]?.finishReason || "");
 
     let parsed: { ano?: string; total?: number; eventos?: unknown[] } = {};
     try {
       parsed = JSON.parse(rawText.replace(/```json|```/g, "").trim());
     } catch {
-      return new Response(JSON.stringify({ error: "Documento não reconhecido como calendário escolar." }), {
-        status: 422, headers: { ...cors, "Content-Type": "application/json" },
-      });
+      if (finish === "MAX_TOKENS") {
+        return falha("O calendário tem eventos demais e a leitura veio incompleta. Tente um PDF com menos meses.", { truncated: true });
+      }
+      return falha("Não reconheci este documento como calendário escolar.");
     }
 
     const eventos = Array.isArray(parsed.eventos) ? parsed.eventos : [];
     if (eventos.length === 0) {
-      return new Response(JSON.stringify({ error: "Nenhum evento encontrado. Verifique se o PDF é um calendário escolar." }), {
-        status: 422, headers: { ...cors, "Content-Type": "application/json" },
-      });
+      return falha("Nenhum evento encontrado. Verifique se o PDF é um calendário escolar.");
     }
 
     // Registrar uso no budget
@@ -121,9 +128,9 @@ REGRAS gerais:
     );
 
   } catch (e) {
-    return new Response(
-      JSON.stringify({ error: (e as Error)?.message || "Erro interno." }),
-      { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
-    );
+    console.error("[processar-calendario] erro interno", e);
+    return falha("A Sofia não conseguiu ler o calendário agora. Tente de novo em instantes.", {
+      detail: String((e as Error)?.message || e).slice(0, 500),
+    });
   }
 });
