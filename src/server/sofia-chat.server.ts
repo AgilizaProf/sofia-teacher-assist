@@ -261,25 +261,79 @@ export function gatewayBody(
   });
 }
 
+/** Tempo máximo sem nenhum dado do gateway (início da resposta ou entre pedaços). */
+export const GATEWAY_IDLE_TIMEOUT_MS = 90_000;
+/** Sem streaming, a resposta inteira chega de uma vez: dá mais tempo. */
+const GATEWAY_TOTAL_TIMEOUT_MS = 150_000;
+export const MSG_TEMPO_ESGOTADO = "A Sofia demorou demais para responder. Tente de novo.";
+
+/**
+ * Chama o gateway de IA. Com `stream`, o tempo limite vale até chegar a
+ * resposta (os pedaços seguintes são vigiados por `lerComTempoLimite`).
+ * `signal` cancela a chamada (por exemplo, quando a professora para a
+ * resposta ou fecha a página).
+ */
 export async function callGateway(
   model: string,
   messages: Array<{ role: string; content: string }>,
   stream: boolean,
+  signal?: AbortSignal,
 ) {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey)
     throw new SofiaChatError("A Sofia está sem a chave de IA configurada no servidor.", 500);
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: gatewayBody(model, messages, stream),
-  });
+  const ctrl = new AbortController();
+  let estourou = false;
+  const timer = setTimeout(
+    () => {
+      estourou = true;
+      ctrl.abort();
+    },
+    stream ? GATEWAY_IDLE_TIMEOUT_MS : GATEWAY_TOTAL_TIMEOUT_MS,
+  );
+  const repassar = () => ctrl.abort();
+  if (signal) {
+    if (signal.aborted) ctrl.abort();
+    else signal.addEventListener("abort", repassar, { once: true });
+  }
+  let res: Response;
+  try {
+    res = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: gatewayBody(model, messages, stream),
+      signal: ctrl.signal,
+    });
+    // Sem streaming, o corpo também precisa chegar dentro do prazo.
+    if (!stream && res.ok) {
+      const txt = await res.text();
+      res = new Response(txt, { status: res.status, headers: res.headers });
+    }
+  } catch (err) {
+    if (estourou) throw new SofiaChatError(MSG_TEMPO_ESGOTADO, 504);
+    if (signal?.aborted) throw new SofiaChatError("Resposta interrompida.", 499);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+  // Depois que a resposta começou, `signal` continua ligado a `ctrl`:
+  // cancelar também interrompe a leitura do corpo.
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     console.error(`[sofia.chat] gateway ${res.status}: ${text.slice(0, 300)}`);
     throw new SofiaChatError(friendlyGatewayError(res.status), res.status);
   }
   return res;
+}
+
+/**
+ * A resposta parou antes do fim? O gateway (formato OpenAI) usa "length";
+ * o Gemini pode mandar "MAX_TOKENS". Filtro de conteúdo também corta o texto.
+ * Sem finish_reason não dá para saber: tratamos como completa.
+ */
+export function isTruncatedFinish(finish: string | null): boolean {
+  if (!finish) return false;
+  return /^(length|max_tokens|content_filter|safety|recitation)$/i.test(finish);
 }
 
 /** Valida a resposta final, grava no banco e devolve o que o app mostra. */
@@ -314,6 +368,6 @@ export async function finalizeSofiaChat(
     conversationId,
     content: validation.sanitized,
     issues,
-    truncated: finishReason === "length",
+    truncated: isTruncatedFinish(finishReason),
   };
 }

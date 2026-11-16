@@ -61,7 +61,7 @@ export function Termos() {
 
               <h2>5. Princípios da Sofia (parte integrante destes Termos)</h2>
               <p>
-                A Sofia opera sob 13 princípios públicos — entre eles <strong>Dados Reais</strong>, <strong>Linguagem Humanizada</strong>, <strong>Legalidade</strong>, <strong>Sua Autoria</strong>, <strong>Educação Inclusiva</strong> e <strong>Confidencialidade</strong>. Você é a <strong>autora</strong> do conteúdo final; a Sofia é apoio e nunca substitui sua decisão pedagógica. Consulte-os em <Link to="/configuracoes" style={{ color: "#0B7A55", fontWeight: 600 }}>Configurações → Princípios da Sofia</Link>.
+                A Sofia opera sob 14 princípios públicos — entre eles <strong>Dados Reais</strong>, <strong>Linguagem Humanizada</strong>, <strong>Legalidade</strong>, <strong>Sua Autoria</strong>, <strong>Educação Inclusiva</strong> e <strong>Confidencialidade</strong>. Você é a <strong>autora</strong> do conteúdo final; a Sofia é apoio e nunca substitui sua decisão pedagógica. Consulte-os em <Link to="/configuracoes" style={{ color: "#0B7A55", fontWeight: 600 }}>Configurações → Princípios da Sofia</Link>.
               </p>
 
               <h2>6. Conteúdo gerado por IA</h2>
