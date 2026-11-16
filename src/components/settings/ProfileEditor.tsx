@@ -162,8 +162,8 @@ export function ProfileEditor() {
         </div>
         <div>
           <label style={labelStyle}>E-mail</label>
-          <input style={fieldStyle} type="email" value={profile.email} maxLength={255}
-            onChange={(e) => update("email", e.target.value)} />
+          <input style={{ ...fieldStyle, opacity: 0.75 }} type="email" value={profile.email} maxLength={255}
+            readOnly aria-readonly="true" title="O e-mail é o do seu login e não pode ser alterado aqui." />
         </div>
         <div>
           <label style={labelStyle}>Telefone</label>
