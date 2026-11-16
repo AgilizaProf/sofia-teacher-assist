@@ -13,6 +13,12 @@ import { useCreditos } from "@/lib/creditos/useCreditos";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
 import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav";
 import { trackEvent } from "@/lib/tracking";
+import {
+  WhatsappLogo,
+  textoParaConfirmar,
+  usePendentesWhatsapp,
+} from "@/components/painel/whatsapp";
+import { ExtratoCreditos } from "@/components/painel/ExtratoCreditos";
 
 // Página inicial no visual "Painel": contador pequeno no topo, caixa para
 // escrever para a Sofia, currículo da rede e os cards de todas as funções.
@@ -99,8 +105,8 @@ const CARDS: Card[] = [
     ),
   },
   {
-    to: "/simulados",
-    title: "Simulados",
+    to: "/questoes",
+    title: "Questões",
     desc: "Banco de questões, provas e correção pela foto",
     bg: "var(--pn-pink)",
     icon: (
@@ -130,13 +136,21 @@ const css = `
 .hm-time .ic svg{width:14px;height:14px;}
 .hm-time b{font-family:var(--pn-display);font-variant-numeric:tabular-nums;}
 .hm-time .lvl{font-size:12px;font-weight:700;padding:2px 7px;border-radius:5px;background:#fff;}
-.hm-cred{background:var(--pn-surface);border:1.5px solid var(--pn-line);padding-left:12px;}
+.hm-cred{background:var(--pn-surface);border:1.5px solid var(--pn-line);padding-left:12px;font-family:inherit;cursor:pointer;}
+.hm-cred:hover{border-color:var(--pn-ink);}
 .hm-cred .bar{width:60px;height:8px;border-radius:3px;background:var(--pn-bg);overflow:hidden;}
 .hm-cred .bar span{display:block;height:100%;background:var(--pn-green);}
 .hm-cred b{font-variant-numeric:tabular-nums;}
 .hm-date{margin-left:auto;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--pn-muted);}
 .hm-hello{margin:14px 0 14px;font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.05;text-wrap:balance;}
 
+.hm-wa{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding:14px 18px;border-radius:18px;background:#D9FDD3;border:2px solid var(--pn-ink);
+  box-shadow:4px 4px 0 var(--pn-ink);color:var(--pn-ink);text-decoration:none;transition:transform .12s,box-shadow .12s;}
+.hm-wa:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--pn-ink);}
+.hm-wa .wa-ic{color:#0B7A55;display:flex;}
+.hm-wa b{font-family:var(--pn-display);font-weight:800;font-size:20px;letter-spacing:-.02em;}
+.hm-wa .sp{flex:1;}
+.hm-wa .go{width:22px;height:22px;flex:none;}
 .hm-sofia{background:var(--pn-sun);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:18px;}
 .hm-sofia-h{display:flex;align-items:center;gap:8px;font-family:var(--pn-display);font-weight:700;font-size:16px;}
 .hm-sofia-h .ic{width:28px;height:28px;border-radius:8px;background:var(--pn-ink);color:var(--pn-sun);display:flex;align-items:center;justify-content:center;}
@@ -201,6 +215,8 @@ a.hm-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);tr
   .hm-date{display:none;}
   .hm-hello{font-size:28px;margin:14px 0 10px;}
   .hm-sofia{padding:14px;}
+  .hm-wa{padding:12px 14px;}
+  .hm-wa b{font-size:18px;}
   .hm-time .lbl{display:none;}
   .hm-cred .bar{width:40px;}
   .hm-sugs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
@@ -217,7 +233,7 @@ a.hm-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);tr
   .hm-card p{font-size:12px;}
   .hm-go{display:none;}
 }
-@media (prefers-reduced-motion: reduce){.hm-card{transition:none;}}
+@media (prefers-reduced-motion: reduce){.hm-card,.hm-wa{transition:none;}}
 `;
 
 function Svg({ children, w = 2.2 }: { children: ReactNode; w?: number }) {
@@ -270,6 +286,8 @@ export function Home() {
   const { turmas } = useTurmas();
   const { curriculos, load: reloadCurriculos } = useCurriculoMunicipal();
   const cred = useCreditos();
+  const { pendentes } = usePendentesWhatsapp();
+  const [extrato, setExtrato] = useState(false);
 
   const [baixar, setBaixar] = useState(false);
   const app = useInstalarApp();
@@ -357,7 +375,13 @@ export function Home() {
         <div className="hm-strip">
           <TempoChip className="hm-chip hm-time" />
           {!cred.loading && cred.totais > 0 && (
-            <Link to="/configuracoes" className="hm-chip hm-cred" title="Créditos disponíveis">
+            <button
+              type="button"
+              className="hm-chip hm-cred"
+              title="Ver o extrato de créditos"
+              aria-haspopup="dialog"
+              onClick={() => setExtrato(true)}
+            >
               Créditos
               <span className="bar" aria-hidden>
                 <span style={{ width: `${credPct}%` }} />
@@ -365,7 +389,7 @@ export function Home() {
               <b>
                 {cred.disponiveis}/{cred.totais}
               </b>
-            </Link>
+            </button>
           )}
           {hydrated && <span className="hm-date">{dataHoje()}</span>}
         </div>
@@ -374,6 +398,35 @@ export function Home() {
           {hydrated ? saudacaoAgora() : "Olá"}
           {nome ? `, ${nome}` : ""}.
         </h1>
+
+        <Link
+          to="/confirmar"
+          className="hm-wa"
+          aria-label={
+            pendentes > 0
+              ? `${textoParaConfirmar(pendentes)}: mensagens do WhatsApp`
+              : "Nada para confirmar do WhatsApp"
+          }
+        >
+          <span className="wa-ic">
+            <WhatsappLogo size={34} />
+          </span>
+          <b>{textoParaConfirmar(pendentes)}</b>
+          <span className="sp" />
+          <svg
+            className="go"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </Link>
 
         <section className="hm-sofia" aria-labelledby="hm-sofia-h">
           <div className="hm-sofia-h" id="hm-sofia-h">
@@ -530,6 +583,7 @@ export function Home() {
           </button>
         )}
         {baixar && <InstalarApp onClose={() => setBaixar(false)} />}
+        {extrato && <ExtratoCreditos cred={cred} onClose={() => setExtrato(false)} />}
 
         <section className="hm-curr" aria-labelledby="hm-curr-h">
           <span className="hm-badge" style={{ background: "var(--pn-blue-soft)" }}>

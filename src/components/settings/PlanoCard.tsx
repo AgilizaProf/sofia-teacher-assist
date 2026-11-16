@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import {
-  getPlanoAtual,
-  cancelarAssinatura,
-  type PlanoAtualDTO,
-} from "@/lib/plano.functions";
+import { getPlanoAtual, cancelarAssinatura, type PlanoAtualDTO } from "@/lib/plano.functions";
 import { trackEvent } from "@/lib/tracking";
+import { ehCortesia } from "@/lib/creditos/useCreditos";
+import { CREDITOS_MENSAIS, PROMO_ATE_TEXTO } from "@/lib/creditos/policy";
 
 function fmtData(iso: string | null): string {
   if (!iso) return "—";
@@ -50,14 +48,14 @@ const cta = (variant: "primary" | "ghost" | "danger"): React.CSSProperties => ({
     variant === "ghost"
       ? `1px solid ${BORDER}`
       : variant === "danger"
-      ? `1px solid ${DANGER}`
-      : "none",
+        ? `1px solid ${DANGER}`
+        : "none",
   background:
     variant === "primary"
       ? `linear-gradient(135deg, ${ACCENT}, #0B7A55)`
       : variant === "danger"
-      ? "#fff"
-      : "#fff",
+        ? "#fff"
+        : "#fff",
   color: variant === "primary" ? "#fff" : variant === "danger" ? DANGER : NAVY,
   boxShadow: variant === "primary" ? "0 6px 16px rgba(11,122,85,.28)" : "none",
   textDecoration: "none",
@@ -129,7 +127,9 @@ export function PlanoCard() {
         </h2>
       </div>
       <p style={{ color: MUTED, fontSize: 13, margin: "0 0 18px" }}>
-        Assine, troque de ciclo ou cancele a qualquer momento. Pagamento processado pelo Mercado Pago.
+        {data && ehCortesia(data)
+          ? `Você está na promoção: tudo liberado e grátis até ${PROMO_ATE_TEXTO}. Nada é cobrado sem você escolher.`
+          : "Assine, troque de ciclo ou cancele a qualquer momento. Pagamento processado pelo Mercado Pago."}
       </p>
 
       {loading || !data ? (
@@ -159,9 +159,13 @@ function PlanoBody({
 }) {
   const isPro = data.plano === "pro";
   const isMpActive = isPro && data.source === "mercadopago" && data.status === "active";
-  const isMpCanceled =
-    isPro && data.source === "mercadopago" && data.status !== "active";
+  const isMpCanceled = isPro && data.source === "mercadopago" && data.status !== "active";
   const isAdminGrant = isPro && data.source === "admin_grant";
+  // Promoção "grátis até 12/03/2027" (N4): sem checkout nem oferta de compra
+  // enquanto a cortesia vale, mesmo que o servidor mande pode_assinar_*.
+  const cortesiaAtiva = ehCortesia(data);
+  const podeAssinarMensal = data.pode_assinar_mensal && !cortesiaAtiva;
+  const podeAssinarAnual = data.pode_assinar_anual && !cortesiaAtiva;
 
   // Resumo (3 campos)
   const planoNome = isPro ? "Pro" : "Free";
@@ -169,18 +173,18 @@ function PlanoBody({
     ? data.source === "admin_grant"
       ? "Cortesia"
       : data.ciclo === "anual"
-      ? "Anual"
-      : data.ciclo === "mensal"
-      ? "Mensal"
-      : "—"
+        ? "Anual"
+        : data.ciclo === "mensal"
+          ? "Mensal"
+          : "—"
     : "Semanal (gratuito)";
   const terminoLabel = isMpActive
     ? "Próxima renovação"
     : isMpCanceled
-    ? "Acesso até"
-    : isAdminGrant
-    ? "Cortesia até"
-    : "—";
+      ? "Acesso até"
+      : isAdminGrant
+        ? "Cortesia até"
+        : "—";
   const terminoData = data.current_period_end ? fmtData(data.current_period_end) : "—";
 
   // Banner de status
@@ -200,6 +204,12 @@ function PlanoBody({
     descricao = data.current_period_end
       ? `Você mantém o Pro até ${fmtData(data.current_period_end)}. Depois disso, volta para o Free.`
       : "Assinatura cancelada.";
+  } else if (cortesiaAtiva) {
+    label = `Grátis até ${PROMO_ATE_TEXTO}`;
+    labelStyle = pill("#E8F6EF", "#064E36");
+    descricao = data.current_period_end
+      ? `Tudo liberado, com ${CREDITOS_MENSAIS.toLocaleString("pt-BR")} créditos por mês, até ${fmtData(data.current_period_end)}. Você não paga nada e não precisa escolher plano agora.`
+      : `Tudo liberado, com ${CREDITOS_MENSAIS.toLocaleString("pt-BR")} créditos por mês. Você não paga nada e não precisa escolher plano agora.`;
   } else if (isAdminGrant) {
     label = "Pro · Cortesia";
     labelStyle = pill("#E8F6EF", "#064E36");
@@ -237,30 +247,42 @@ function PlanoBody({
         }}
       >
         <span style={labelStyle}>{label}</span>
-        <span style={{ color: MUTED, fontSize: 13, flex: 1, minWidth: 200 }}>
-          {descricao}
-        </span>
+        <span style={{ color: MUTED, fontSize: 13, flex: 1, minWidth: 200 }}>{descricao}</span>
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         {/* Free → assinar */}
-        {data.pode_assinar_mensal && (
+        {podeAssinarMensal && (
           <a
             href={data.checkout_mensal}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackEvent("click_fazer_plano", { location: "plan_page", plan: "mensal", value: 34.90, currency: "BRL" })}
+            onClick={() =>
+              trackEvent("click_fazer_plano", {
+                location: "plan_page",
+                plan: "mensal",
+                value: 34.9,
+                currency: "BRL",
+              })
+            }
             style={cta(data.ciclo === "anual" && isMpActive ? "ghost" : "primary")}
           >
             Assinar mensal — R$ 34,90/mês
           </a>
         )}
-        {data.pode_assinar_anual && (
+        {podeAssinarAnual && (
           <a
             href={data.checkout_anual}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackEvent("click_fazer_plano", { location: "plan_page", plan: "anual", value: 247, currency: "BRL" })}
+            onClick={() =>
+              trackEvent("click_fazer_plano", {
+                location: "plan_page",
+                plan: "anual",
+                value: 247,
+                currency: "BRL",
+              })
+            }
             style={cta("primary")}
           >
             {data.pode_migrar_anual
@@ -284,8 +306,8 @@ function PlanoBody({
 
       {data.pode_migrar_anual && (
         <p style={{ color: MUTED, fontSize: 12, marginTop: 12, lineHeight: 1.5 }}>
-          Ao migrar para o anual, a cobrança mensal é encerrada automaticamente no Mercado Pago e
-          os dias que restam do seu período mensal são somados aos 365 dias do anual.
+          Ao migrar para o anual, a cobrança mensal é encerrada automaticamente no Mercado Pago e os
+          dias que restam do seu período mensal são somados aos 365 dias do anual.
         </p>
       )}
       {isMpCanceled && (
@@ -392,12 +414,21 @@ function CancelModal({
           Tem certeza que deseja cancelar?
         </h3>
         <p style={{ color: MUTED, fontSize: 13, margin: "8px 0 18px", lineHeight: 1.5 }}>
-          Você continuará com o Pro até o fim do período já pago. Antes de confirmar, conte o
-          motivo — sua resposta nos ajuda a melhorar.
+          Você continuará com o Pro até o fim do período já pago. Antes de confirmar, conte o motivo
+          — sua resposta nos ajuda a melhorar.
         </p>
 
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8, letterSpacing: ".03em", textTransform: "uppercase" }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: NAVY,
+              marginBottom: 8,
+              letterSpacing: ".03em",
+              textTransform: "uppercase",
+            }}
+          >
             Por que está cancelando? (pode marcar mais de um)
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -435,7 +466,15 @@ function CancelModal({
         <div style={{ marginBottom: 18 }}>
           <label
             htmlFor="cancel-comment"
-            style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8, display: "block", letterSpacing: ".03em", textTransform: "uppercase" }}
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: NAVY,
+              marginBottom: 8,
+              display: "block",
+              letterSpacing: ".03em",
+              textTransform: "uppercase",
+            }}
           >
             Quer contar mais? (opcional)
           </label>

@@ -9,6 +9,7 @@ import { useSofiaOptional } from "@/components/sofia/SofiaProvider";
 import { initialsFromName } from "@/lib/mockData";
 import { InstalarApp } from "./InstalarApp";
 import { useInstalarApp } from "@/lib/pwa/useInstalarApp";
+import { WhatsappLogo, usePendentesWhatsapp } from "./whatsapp";
 
 // Visual "Painel": tokens, logo do lápis, menu do topo (computador) e
 // barra de baixo (celular). Usado pelas páginas já redesenhadas.
@@ -45,6 +46,20 @@ const navCss = `
 .pn-indique svg{width:17px;height:17px;}
 .pn-indique:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--pn-ink);}
 .pn-indique[aria-current="page"]{background:var(--pn-ink);color:#fff;}
+.pn-wa{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 10px 0 12px;border-radius:10px;background:#D9FDD3;border:2px solid var(--pn-ink);
+  box-shadow:2px 2px 0 var(--pn-ink);color:var(--pn-ink);text-decoration:none;font-family:var(--pn-body);font-weight:700;font-size:14px;white-space:nowrap;}
+.pn-wa svg{color:#0B7A55;}
+.pn-wa:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--pn-ink);}
+.pn-wa[aria-current="page"]{background:var(--pn-green-soft);}
+.pn-wa-n{min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--pn-ink);color:#fff;font-size:12px;line-height:22px;text-align:center;font-variant-numeric:tabular-nums;}
+.pn-wa-n.zero{background:#fff;color:var(--pn-muted);border:1.5px solid var(--pn-line);line-height:19px;}
+.pn-sheet-list .pn-wa-n{margin-left:auto;}
+@media (max-width: 1240px){.pn-wa .pn-wa-tx{display:none;}.pn-wa{padding:0 8px 0 10px;}}
+/* Celular: só o logo com o número; em telas bem estreitas o atalho fica na folha "Mais" e no card do Início */
+@media (max-width: 1080px){.pn-wa{position:relative;width:40px;padding:0;justify-content:center;}
+  .pn-wa .pn-wa-n{position:absolute;top:-8px;right:-8px;min-width:20px;height:20px;line-height:20px;font-size:11px;padding:0 5px;}
+  .pn-wa .pn-wa-n.zero{display:none;}}
+@media (max-width: 420px){.pn-top .pn-wa{display:none;}}
 .pn-top{position:sticky;top:0;z-index:40;height:64px;background:var(--pn-surface);border-bottom:1.5px solid var(--pn-line);}
 .pn-top-in{height:100%;max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:28px;padding:0 24px;}
 .pn-brand{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--pn-ink);font-family:var(--pn-display);font-weight:800;font-size:20px;letter-spacing:-.04em;}
@@ -98,6 +113,7 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
   .pn-top-in{padding:0 16px;}
   .pn-links,.pn-right .pn-hide-m{display:none;}
   .pn-indique{height:38px;padding:0 10px;font-size:13px;}
+  .pn-wa{height:38px;}
   .pn-top-in{gap:12px;}
 }
 @media (max-width: 420px){
@@ -230,6 +246,25 @@ export const ICONS = {
       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </>
   ),
+  book: (
+    <>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </>
+  ),
+  shelf: (
+    <>
+      <rect x="3" y="3" width="4" height="18" rx="1" />
+      <rect x="9" y="3" width="4" height="18" rx="1" />
+      <path d="M15.5 4.5l3.9-1 2.6 16.4-3.9 1z" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </>
+  ),
   star: <path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z" />,
   out: (
     <>
@@ -246,8 +281,8 @@ const LINKS: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/relatorios", label: "Pareceres" },
   { to: "/inclusao", label: "Inclusão" },
   { to: "/agenda", label: "Agenda" },
-  { to: "/jogos", label: "Jogos e atividades interativas" },
-  { to: "/simulados", label: "Simulados" },
+  { to: "/jogos", label: "Jogos" },
+  { to: "/questoes", label: "Questões" },
 ];
 
 export function PainelNav() {
@@ -261,6 +296,11 @@ export function PainelNav() {
   const [sheet, setSheet] = useState(false);
   const [baixar, setBaixar] = useState(false);
   const app = useInstalarApp();
+  const { pendentes } = usePendentesWhatsapp();
+  const waRotulo =
+    pendentes > 0
+      ? `Para confirmar: ${pendentes} ${pendentes === 1 ? "mensagem" : "mensagens"} do WhatsApp`
+      : "Para confirmar: nada esperando";
   // Android/Chrome: um toque já abre a confirmação de instalação.
   const abrirBaixar = async () => {
     if (app.podeInstalarDireto && (await app.instalar())) return;
@@ -327,6 +367,19 @@ export function PainelNav() {
             <Link to="/indicacoes" className="pn-indique" aria-current={cur("/indicacoes")}>
               <Svg>{ICONS.gift}</Svg>
               <span className="pn-indique-tx">Indique e ganhe</span>
+            </Link>
+            <Link
+              to="/confirmar"
+              className="pn-wa"
+              aria-current={cur("/confirmar")}
+              aria-label={waRotulo}
+              title={waRotulo}
+            >
+              <WhatsappLogo size={18} />
+              <span className="pn-wa-tx">Para confirmar</span>
+              <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-hidden>
+                {pendentes}
+              </span>
             </Link>
             {sofia && (
               <button
@@ -434,6 +487,21 @@ export function PainelNav() {
               >
                 <Svg>{ICONS.phone}</Svg>Baixar o app no celular
               </button>
+              <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
+                <span style={{ color: "#0B7A55", display: "flex" }}>
+                  <WhatsappLogo size={20} />
+                </span>
+                Para confirmar
+                <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
+                  {pendentes}
+                </span>
+              </Link>
+              <Link to="/cadernos">
+                <Svg>{ICONS.book}</Svg>Cadernos prontos
+              </Link>
+              <Link to="/biblioteca">
+                <Svg>{ICONS.shelf}</Svg>Minha Biblioteca
+              </Link>
               <Link to="/inclusao">
                 <Svg>{ICONS.users}</Svg>Inclusão
               </Link>
@@ -446,8 +514,8 @@ export function PainelNav() {
               <Link to="/jogos">
                 <Svg>{ICONS.game}</Svg>Jogos e atividades interativas
               </Link>
-              <Link to="/simulados">
-                <Svg>{ICONS.check}</Svg>Simulados
+              <Link to="/questoes">
+                <Svg>{ICONS.check}</Svg>Questões
               </Link>
               <Link to="/configuracoes">
                 <Svg>{ICONS.gear}</Svg>Configurações
