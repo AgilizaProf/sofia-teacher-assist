@@ -1335,8 +1335,8 @@ const seloTipo=t=>t?`<span class="selo-tipo t-${t}" title="Tipo ${t}">${t}</span
 function mostrarGerado(sim){
   const el=$("#g-saida");if(!el)return;
   const tipos=sim.modo==="tipos"&&sim.tipos;
-  el.innerHTML=`<section class="painel pilha"><div class="linha-acoes" style="justify-content:space-between"><div><h2 style="margin:0">${esc(sim.titulo)}</h2><span class="fonte">Código ${sim.id} · ${esc(sim.turma)} · ${sim.base.length} questões · ${sim.versoes.length} alunos · ${modoTxt(sim)}</span></div>
-   <div class="linha-acoes">${sim.cartaoSo?`<button class="btn prim" data-cartoes="${sim.id}">Baixar cartões com nome</button><button class="btn" data-matriz="${sim.id}">Cartões sem nome (para fotocopiar)</button>`:`<button class="btn prim" data-baixar="${sim.id}">Provas completas (cartão + questões)</button><button class="btn" data-cartoes="${sim.id}">Só os cartões-resposta (só frente)</button><button class="btn" data-cadernos="${sim.id}">Só as questões (frente e verso)</button>${tipos?`<button class="btn" data-matriz="${sim.id}">Uma prova de cada tipo (para fotocopiar)</button>`:""}`}<button class="btn" data-gab="${sim.id}">Gabaritos do professor</button><button class="btn" data-lersim="${sim.id}">Corrigir no leitor</button></div></div>
+  el.innerHTML=`<section class="painel pilha"><div class="linha-acoes" style="justify-content:space-between"><div><h2 style="margin:0">${esc(sim.titulo)}</h2><span class="fonte">Código ${sim.id} · ${esc(sim.turma)} · ${sim.base.length} questões · ${sim.versoes.length} alunos · ${modoTxt(sim)}</span>${componentesTxt(sim)?`<p class="fonte" style="margin:2px 0 0"><b>Componentes:</b> ${esc(componentesTxt(sim,true))}</p>`:""}</div>
+   <div class="linha-acoes">${sim.cartaoSo?`<button class="btn prim" data-cartoes="${sim.id}">Baixar cartões com nome</button><button class="btn" data-matriz="${sim.id}">Cartões sem nome (para fotocopiar)</button>`:`<button class="btn prim" data-baixar="${sim.id}">Provas completas (cartão + questões)</button><button class="btn" data-cartoes="${sim.id}">Só os cartões-resposta (só frente)</button><button class="btn" data-cadernos="${sim.id}">Só as questões (frente e verso)</button>${tipos?`<button class="btn" data-matriz="${sim.id}">Uma prova de cada tipo (para fotocopiar)</button>`:""}`}<button class="btn" data-gab="${sim.id}">Ficha e gabaritos do professor</button><button class="btn" data-lersim="${sim.id}">Corrigir no leitor</button></div></div>
    ${(()=>{const ja=new Set(sim.versoes.map(v=>v.turmaId||sim.turmaId));const outras=S.turmas.filter(t=>!ja.has(t.id)&&t.alunos.length);
      return outras.length?`<div class="linha-acoes" style="align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Aplicar este mesmo simulado (mesmo cartão e mesmo gabarito) em outra turma<select id="g-maisturma">${outras.map(t=>`<option value="${t.id}">${esc(t.nome)} · ${t.alunos.length} alunos</option>`).join("")}</select></label><button class="btn prim" id="g-addturma">Adicionar turma</button></div>`:"";})()}
    <p class="fonte" style="margin:0">O arquivo abre numa nova aba e já chama a impressão (lá também dá para salvar em PDF); no topo dele dá para ligar ou desligar o frente e verso. Imprima em A4, tamanho real (100%). Dica: imprima os cartões-resposta só na frente e as questões em frente e verso. Em frente e verso, cada aluno sempre começa numa folha nova.${tipos||sim.cartaoSo?" O que sai sem nome serve para fotocopiar; no leitor, você escolhe o aluno depois de ler o QR.":""}</p>
@@ -1358,7 +1358,7 @@ function mostrarGerado(sim){
 }
 function listaSimulados(){
   if(!S.simulados.length)return `<div class="vazio">Os simulados que você gerar aparecem aqui, prontos para baixar de novo ou corrigir.</div>`;
-  return `<div class="tabela-wrap"><table><thead><tr><th>Código</th><th>Título</th><th>Turma</th><th>Data</th><th>Provas</th><th>Questões</th><th>Corrigidas</th><th></th></tr></thead><tbody>${S.simulados.map(s=>{const c=S.resultados.filter(r=>r.simId===s.id).length;return `<tr><td><b>${s.id}</b></td><td>${esc(s.titulo)}</td><td>${esc(s.turma)}</td><td>${s.data}</td><td>${modoTxt(s)}</td><td class="num">${s.base.length}</td><td class="num">${c}/${s.versoes.length}</td><td><span class="linha-acoes"><button class="btn peq" data-ver="${s.id}">Abrir</button><button class="btn peq" data-baixar="${s.id}">Baixar</button><button class="btn peq" data-lersim="${s.id}">Corrigir</button><button class="btn peq perigo" data-apagar="${s.id}">Apagar</button></span></td></tr>`;}).join("")}</tbody></table></div>`;
+  return `<div class="tabela-wrap"><table><thead><tr><th>Código</th><th>Título</th><th>Componentes</th><th>Turma</th><th>Data</th><th>Provas</th><th>Questões</th><th>Corrigidas</th><th></th></tr></thead><tbody>${S.simulados.map(s=>{const c=S.resultados.filter(r=>r.simId===s.id).length;return `<tr><td><b>${s.id}</b></td><td>${esc(s.titulo)}</td><td>${esc(componentesTxt(s))}</td><td>${esc(s.turma)}</td><td>${s.data}</td><td>${modoTxt(s)}</td><td class="num">${s.base.length}</td><td class="num">${c}/${s.versoes.length}</td><td><span class="linha-acoes"><button class="btn peq" data-ver="${s.id}">Abrir</button><button class="btn peq" data-baixar="${s.id}">Baixar</button><button class="btn peq" data-lersim="${s.id}">Corrigir</button><button class="btn peq perigo" data-apagar="${s.id}">Apagar</button></span></td></tr>`;}).join("")}</tbody></table></div>`;
 }
 function ligarListaSimulados(raiz=$("#painel")){
   const achar=id=>S.simulados.find(x=>x.id===id);
@@ -1419,6 +1419,11 @@ function cartaoHtml(sim,v){
   </div></section>`;
 }
 function faixasDisc(qs){const f=[];qs.forEach((q,k)=>{if(!q)return;if(!f.length||f[f.length-1].d!==q.disc)f.push({d:q.disc,a:k+1,b:k+1});else f[f.length-1].b=k+1;});return f;}
+// componentes (disciplinas) de um simulado, para aparecer em todo lugar onde o simulado é mostrado
+function faixasDoSim(sim){try{if(sim.secs)return csFaixas(sim.secs).map(f=>({d:f.disc,a:f.a,b:f.b}));return faixasDisc((sim.base||[]).map(getQ));}catch(e){return [];}}
+function componentesTxt(sim,faixas){const fx=faixasDoSim(sim).filter(f=>f.d);if(faixas&&fx.length>1)return fx.map(f=>`${DISC[f.d]||f.d} (${f.a===f.b?"questão "+f.a:"questões "+f.a+" a "+f.b})`).join(" · ");return [...new Set(fx.map(f=>DISC[f.d]||f.d))].join(", ");}
+// " · Língua Portuguesa, Matemática" depois do título, só quando o título ainda não diz os componentes
+function compAposTitulo(sim){const fx=[...new Set(faixasDoSim(sim).filter(f=>f.d).map(f=>DISC[f.d]||f.d))];const t=String(sim.titulo||"");return fx.length&&!fx.every(n=>t.includes(n))?" · "+fx.join(", "):"";}
 // cada questão vira uma unidade indivisível; títulos de componente e de bloco vão junto com a questão seguinte
 function unidadesQuestoes(qs,perms,blocoTam){
   const u=[];let ultimo=null,pre="";const fx=faixasDisc(qs),varias=fx.length>1;
@@ -1560,7 +1565,24 @@ function docLista(refs){
 function docGabaritos(sim){
   const v0=sim.versoes[0]||{ordem:sim.base};const qa=(sim.tipos?sim.tipos[0]:v0);
   const lst=`<h2 style="margin-top:4mm">Respostas por extenso${sim.tipos?" (ordem do tipo "+sim.tipos[0].t+")":""}</h2><div class="lst">${qa.ordem.map((i,k)=>{const q=getQ(i);if(!q)return "";const p=qa.perms?qa.perms[k]:[0,1,2,3];const letra=L[p.indexOf(q.correta)];return `<div><b>${k+1}. ${letra}</b> — ${esc(q.alts[q.correta])} <span style="color:#555">(${esc(DISC[q.disc]||q.disc)}${q.desc?" · "+esc(q.desc):q.hab?" · "+esc(q.hab):""})</span></div>`;}).join("")}</div>`;
-  return docPaginado(`Gabarito ${sim.id}`,[{k:"gab",html:folhaGabarito(sim)},{k:"gab",html:lst}],false,"Gabarito do professor.");
+  return docPaginado(`Ficha e gabarito ${sim.id}`,[{k:"gab",html:fichaSimulado(sim)},{k:"gab",html:folhaGabarito(sim)},{k:"gab",html:lst}],false,"Ficha do simulado e gabarito do professor.");
+}
+// Ficha do simulado para o professor: tudo o que a prova cobra, questão por questão, para imprimir e guardar.
+function fichaSimulado(sim){
+  const v0=sim.versoes[0]||{ordem:sim.base};const qa=(sim.tipos?sim.tipos[0]:v0);const ordem=qa.ordem||sim.base||[];
+  const fx=faixasDoSim(sim);const discDe=k=>{const f=fx.find(f=>k+1>=f.a&&k+1<=f.b);return f?(DISC[f.d]||f.d):"";};
+  const td='style="border:.3mm solid #000;padding:1mm 1.5mm;vertical-align:top"',th='style="border:.3mm solid #000;padding:1mm 1.5mm;background:#eee;text-align:left"';
+  const linhas=ordem.map((i,k)=>{const q=getQ(i);const p=qa.perms?qa.perms[k]:[0,1,2,3];
+    const letra=q&&q.alts?L[p.indexOf(q.correta)]:((qa.gab||"")[k]||"");
+    const desc=q&&q.desc?`${esc(q.desc)}${descNome(q.disc,q.ano,q.desc)?" · "+esc(descNome(q.disc,q.ano,q.desc)):""}`:"";
+    return `<tr style="break-inside:avoid;page-break-inside:avoid"><td ${td}><b>${k+1}</b></td><td ${td}>${esc(q&&q.disc?(DISC[q.disc]||q.disc):discDe(k))}</td><td ${td}>${esc(q&&q.hab||"")}</td><td ${td}>${desc}</td><td ${td}>${q&&q.nivel?esc(NIVEL[q.nivel]||""):""}</td><td ${td}>${esc(q&&q.tema||"")}</td><td style="border:.3mm solid #000;padding:1mm 1.5mm;text-align:center"><b>${letra}</b></td></tr>`;}).join("");
+  const resumo=fx.filter(f=>f.d).map(f=>`<li><b>${esc(DISC[f.d]||f.d)}</b>: ${f.a===f.b?"questão "+f.a:"questões "+f.a+" a "+f.b} (${f.b-f.a+1})</li>`).join("");
+  return `<h2>Ficha do simulado</h2>
+   <p class="sub"><b>${esc(sim.titulo)}</b> · código ${sim.id} · ${sim.data}${sim.escola?" · "+esc(sim.escola):""}${sim.prof?" · Prof.(a) "+esc(sim.prof):""}</p>
+   <p style="font-size:9.5pt;margin:2mm 0"><b>Turma(s):</b> ${esc(sim.turma||"–")} · <b>Questões:</b> ${ordem.length} · <b>Provas:</b> ${esc(modoTxt(sim))} · <b>Alunos:</b> ${sim.versoes.length}</p>
+   ${resumo?`<p style="font-size:9.5pt;margin:2mm 0 1mm"><b>Componentes</b></p><ul style="font-size:9.5pt;margin:0 0 3mm 5mm;padding:0">${resumo}</ul>`:""}
+   <table style="width:100%;border-collapse:collapse;font-size:8.5pt"><thead><tr><th ${th}>Nº</th><th ${th}>Componente</th><th ${th}>Habilidade BNCC</th><th ${th}>Descritor SAEB</th><th ${th}>Nível</th><th ${th}>Tema</th><th ${th}>Resposta${sim.tipos?" (tipo "+sim.tipos[0].t+")":""}</th></tr></thead><tbody>${linhas}</tbody></table>
+   ${sim.tipos?`<p style="font-size:8.5pt;margin-top:2mm">Nos outros tipos, as mesmas questões aparecem em outra ordem. O gabarito de cada tipo está na página seguinte.</p>`:""}`;
 }
 
 /* ============ ALUNOS E TURMAS ============ */
@@ -1621,7 +1643,7 @@ function renderLeitor(){
       <div class="foto-wrap" id="l-foto-wrap" hidden><canvas id="l-canvas"></canvas></div>
       <details><summary style="cursor:pointer;font-weight:700">Corrigir sem foto</summary>
        <div class="pilha" style="margin-top:10px">
-        <label class="campo">Simulado<select id="l-sim">${sims.map(s=>`<option value="${s.id}"${s.id===LS.simId?" selected":""}>${s.id} · ${esc(s.titulo)}</option>`).join("")||"<option value=''>Nenhum simulado gerado neste aparelho</option>"}</select></label>
+        <label class="campo">Simulado<select id="l-sim">${sims.map(s=>`<option value="${s.id}"${s.id===LS.simId?" selected":""}>${s.id} · ${esc(s.titulo)}${esc(compAposTitulo(s))}</option>`).join("")||"<option value=''>Nenhum simulado gerado neste aparelho</option>"}</select></label>
         <label class="campo">Aluno<select id="l-aluno"></select></label>
         <button class="btn" id="l-manual"${sims.length?"":" disabled"}>Abrir cartão para digitar</button>
        </div></details>
@@ -1984,7 +2006,7 @@ function renderResultados(){
       <div class="tabela-wrap"><table><thead><tr><th>Questão</th><th>Acerto</th><th>A</th><th>B</th><th>C</th><th>D</th><th>Branco</th></tr></thead><tbody>${itensQ.slice().sort((a,b)=>a.o.a/a.o.n-b.o.a/b.o.n).map(({q,o,k})=>`<tr><td style="white-space:normal;min-width:220px">${q.origem==="cartao"?`<b>Questão ${k+1}</b>`:`<b>${k+1}. ${esc(q.id)}</b> ${esc((q.enunciado||"").slice(0,70))}${q.enunciado.length>70?"…":""}`}</td><td class="num">${pct(o.a/o.n)}</td>${[0,1,2,3].map(j=>`<td class="num"${j===q.correta?' style="color:var(--bom);font-weight:800"':""}>${o.alt[j]}</td>`).join("")}<td class="num">${o.alt[4]}</td></tr>`).join("")}</tbody></table></div></div>`;
   }
   $("#painel").innerHTML=cabecalho("📊","Quadro de resultados","Rendimento da turma, quem mais acertou e quem precisa de apoio, as questões mais acertadas e as mais erradas, e a análise por descritor do SAEB ou habilidade da BNCC.")+`
-   ${chaves.length?`<div class="linha-acoes" style="margin-bottom:14px;align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Simulado<select id="r-sim">${chaves.map(k=>`<option value="${esc(k)}"${k===RF?" selected":""}>${esc(k.split("|").slice(1).join("|"))} (${grupos[k].length})</option>`).join("")}</select></label>${tlist.length>1?`<label class="campo" style="min-width:180px">Turma<select id="r-turma"><option value="">Todas as turmas</option>${tlist.map(t=>`<option${t===RT?" selected":""}>${esc(t)}</option>`).join("")}</select></label>`:""}<button class="btn prim" id="r-quadro">Baixar quadro para imprimir</button><button class="btn" id="r-csv">Planilha (CSV)</button></div><div class="pilha">${analise}</div>`
+   ${chaves.length?`<div class="linha-acoes" style="margin-bottom:14px;align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Simulado<select id="r-sim">${chaves.map(k=>`<option value="${esc(k)}"${k===RF?" selected":""}>${esc(k.split("|").slice(1).join("|"))}${(x=>x?esc(compAposTitulo(x)):"")(S.simulados.find(s=>s.id===k.split("|")[0]))} (${grupos[k].length})</option>`).join("")}</select></label>${tlist.length>1?`<label class="campo" style="min-width:180px">Turma<select id="r-turma"><option value="">Todas as turmas</option>${tlist.map(t=>`<option${t===RT?" selected":""}>${esc(t)}</option>`).join("")}</select></label>`:""}<button class="btn prim" id="r-quadro">Baixar quadro para imprimir</button><button class="btn" id="r-csv">Planilha (CSV)</button></div><div class="pilha">${analise}</div>`
    :`<div class="vazio">Ainda não há resultados. Corrija os cartões-resposta na aba Leitor QR.</div>`}`;
   if(!chaves.length)return;
   $("#r-sim").onchange=e=>{RF=e.target.value;RT="";renderResultados();};
@@ -1996,7 +2018,7 @@ function renderResultados(){
   $("#r-quadro").onclick=()=>{const css=document.querySelector("style").textContent;
     const html=`<!doctype html><html lang="pt-BR" data-theme="light"><head><meta charset="utf-8"><title>Quadro de resultados · ${esc(rs[0].titulo)}</title><style>${css}
      @page{size:A4;margin:10mm}body{background:#fff;padding:0 4mm}.btn,select{display:none!important}.painel,.resumo-num div{break-inside:avoid;box-shadow:inset 0 0 0 1.5px #CBD3E6}.duas{grid-template-columns:1fr 1fr}.quadro{grid-template-columns:1fr 1fr}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head>
-     <body><div class="pilha" style="max-width:1000px;margin:0 auto;padding:8mm 0"><div class="cab-pag"><div class="icone-pag">📊</div><div><span class="marca">Agiliza<span>Prof</span></span><h1>Quadro de resultados</h1><p class="sub">${esc(rs[0].titulo)} · ${esc(RT||tlist.join(", "))} · ${hoje()}</p></div></div>${quadroHtml(rs,simV,{imprimir:true})}${evolucaoHtml(turmaEv)}</div>${PRINT_JS}</body></html>`;
+     <body><div class="pilha" style="max-width:1000px;margin:0 auto;padding:8mm 0"><div class="cab-pag"><div class="icone-pag">📊</div><div><span class="marca">Agiliza<span>Prof</span></span><h1>Quadro de resultados</h1><p class="sub">${esc(rs[0].titulo)}${sim?esc(compAposTitulo(sim)):""} · ${esc(RT||tlist.join(", "))} · ${hoje()}</p></div></div>${quadroHtml(rs,simV,{imprimir:true})}${evolucaoHtml(turmaEv)}</div>${PRINT_JS}</body></html>`;
     baixar(`quadro-${slug(rs[0].titulo)}.html`,html);};
   $("#r-csv").onclick=()=>{const n=rs[0].total;const cab=["Aluno","Turma","Tipo","Acertos","Total","Percentual","Faixa","Data",...Array.from({length:n},(_,k)=>"Q"+(k+1))];
     const linhas=rs.map(r=>[r.aluno,r.turma,r.tipo||"",r.acertos,r.total,Math.round(100*r.acertos/r.total)+"%",FAIXAS[faixaDe(r.acertos/r.total)][0],r.data,...[...r.respostas].map((c,k)=>c+(c===r.gab[k]?" ✓":""))]);
