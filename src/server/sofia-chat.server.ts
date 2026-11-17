@@ -19,6 +19,25 @@ export type SofiaChatInput = {
 type Supa = SupabaseClient<Database>;
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+/** Endpoint do Gemini direto no Google, no mesmo formato (compatível com OpenAI). */
+const GOOGLE_OPENAI_URL =
+  "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+
+/**
+ * Provedor de IA. Padrão: gateway do Lovable (como sempre foi).
+ * Com AI_PROVIDER=google, chama o Gemini direto com GOOGLE_API_KEY,
+ * para rodar fora do Lovable.
+ */
+function aiTarget(model: string) {
+  if (process.env.AI_PROVIDER === "google") {
+    return {
+      url: GOOGLE_OPENAI_URL,
+      apiKey: process.env.GOOGLE_API_KEY ?? process.env.GOOGLE_AI_API_KEY,
+      model: model.replace(/^google\//, ""),
+    };
+  }
+  return { url: GATEWAY_URL, apiKey: process.env.LOVABLE_API_KEY, model };
+}
 
 /** Modelo padrão do chat. Pode ser trocado sem mexer no código (variável SOFIA_CHAT_MODEL). */
 const DEFAULT_MODEL = "google/gemini-2.5-flash";
@@ -266,13 +285,13 @@ export async function callGateway(
   messages: Array<{ role: string; content: string }>,
   stream: boolean,
 ) {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey)
+  const target = aiTarget(model);
+  if (!target.apiKey)
     throw new SofiaChatError("A Sofia está sem a chave de IA configurada no servidor.", 500);
-  const res = await fetch(GATEWAY_URL, {
+  const res = await fetch(target.url, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: gatewayBody(model, messages, stream),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${target.apiKey}` },
+    body: gatewayBody(target.model, messages, stream),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");

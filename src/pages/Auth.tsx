@@ -109,10 +109,25 @@ export function AuthPage() {
     }
   };
 
-  const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
+  // Login social. Padrão: pelo Lovable (como sempre foi). Com
+  // VITE_OAUTH_DIRECT=true no build, vai direto pelo Supabase, sem o Lovable.
+  const entrarComProvedor = async (
+    provider: "google" | "apple",
+  ): Promise<{ error?: unknown; redirected?: boolean }> => {
+    if (import.meta.env.VITE_OAUTH_DIRECT === "true") {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      return error ? { error } : { redirected: true };
+    }
+    return lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
     });
+  };
+
+  const google = async () => {
+    const result = await entrarComProvedor("google");
     if (result.error) {
       toast.error("Não foi possível entrar com o Google. Tente novamente.");
       console.error("OAuth error:", result.error);
@@ -123,9 +138,7 @@ export function AuthPage() {
     }
   };
   const apple = async () => {
-    const result = await lovable.auth.signInWithOAuth("apple", {
-      redirect_uri: window.location.origin,
-    });
+    const result = await entrarComProvedor("apple");
     if (result.error) {
       toast.error("Não foi possível entrar com a Apple.");
       console.error("OAuth error:", result.error);

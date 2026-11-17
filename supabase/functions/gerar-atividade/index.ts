@@ -58,10 +58,17 @@ serve(async (req) => {
     // (sugestões, validação BNCC, complexidade, linguagem).
     const anoPedagogico = (anoReferenciaPedagogico || "").trim() || anoEscolar;
 
-    const KEY = Deno.env.get("LOVABLE_API_KEY");
+    // Provedor de IA: gateway do Lovable (padrão) ou Gemini direto no Google
+    // quando AI_PROVIDER=google (para rodar fora do Lovable).
+    const IA_DIRETO = Deno.env.get("AI_PROVIDER") === "google";
+    const KEY = IA_DIRETO ? Deno.env.get("GOOGLE_API_KEY") : Deno.env.get("LOVABLE_API_KEY");
+    const IA_URL = IA_DIRETO
+      ? "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+      : "https://ai.gateway.lovable.dev/v1/chat/completions";
+    const IA_MODELO = IA_DIRETO ? "gemini-2.5-flash" : "google/gemini-2.5-flash";
     if (!KEY) {
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY ausente no servidor." }),
+        JSON.stringify({ error: `${IA_DIRETO ? "GOOGLE_API_KEY" : "LOVABLE_API_KEY"} ausente no servidor.` }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
@@ -416,11 +423,11 @@ serve(async (req) => {
         { role: "user", content: userPrompt },
       ];
       if (extraUserMsg) messages.push({ role: "user", content: extraUserMsg });
-      const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const r = await fetch(IA_URL, {
         method: "POST",
         headers: { Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: IA_MODELO,
           messages,
           tools: [tool],
           tool_choice: { type: "function", function: { name: toolName } },
