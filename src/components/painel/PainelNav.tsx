@@ -78,6 +78,10 @@ const navCss = `
 }
 @media (max-width: 1140px){.pn-links{gap:12px;}.pn-links a{font-size:13.5px;}}
 .pn-right{margin-left:auto;position:relative;display:flex;align-items:center;gap:10px;}
+/* Os botões da direita nunca encolhem nem se sobrepõem; se faltar espaço, quem cede são os links. */
+.pn-right{flex:none;}
+.pn-right > a,.pn-right > button{flex:none;white-space:nowrap;}
+.pn-links{flex:0 1 auto;min-width:0;overflow:hidden;}
 .pn-av{width:40px;height:40px;border-radius:10px;background:var(--pn-sun);border:2px solid var(--pn-ink);display:flex;align-items:center;justify-content:center;
   font-family:var(--pn-display);font-weight:800;font-size:14px;color:var(--pn-ink);cursor:pointer;}
 .pn-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:14px;

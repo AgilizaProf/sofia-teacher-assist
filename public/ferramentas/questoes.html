@@ -794,7 +794,7 @@ function nAval(v){return Object.values(S.aval).filter(x=>x===v).length;}
 function avaliar(ref,v){if(S.aval[ref]===v)delete S.aval[ref];else S.aval[ref]=v;PREF=null;salvar();return S.aval[ref]||0;}
 
 /* ============ ABAS ============ */
-const ABAS=[["inicio","Início"],["banco","Banco de questões"],["redacao","Produção textual ✍️"],["sofia","Criar com a Sofia"],["minhas","Minhas questões"],["gerador","Gerador de simulados"],["alunos","Alunos e turmas"],["leitor","Leitor QR"],["resultados","Quadro de resultados"],["relatos","Relatos de erro"]];
+const ABAS=[["inicio","Início"],["banco","Banco de questões"],["redacao","Produção textual ✍️"],["sofia","Criar com a Sofia"],["minhas","Minhas questões"],["gerador","Gerador de simulados"],["alunos","Alunos e turmas"],["leitor","Leitor QR"],["resultados","Resultados e reforço"],["relatos","Relatos de erro"]];
 // sem faixa de abas: tudo se abre pelos cartões do Início, e cada seção tem um botão para voltar
 function montarAbas(){
   const el=$("#abas"),nome=(ABAS.find(a=>a[0]===S.aba)||[])[1];
@@ -816,7 +816,7 @@ function renderInicio(){
     ["redacao","✍️","Produção textual",`${REDACOES.length} propostas de redação com folha pautada e critérios de correção`,"#FFE0EC,#FF9EC1"],
     ["gerador","🖨️","Gerador de simulados","Provas tipo A, B, C e D com QR code, ou só o cartão-resposta da sua prova","#FFD3C0,#FF9A70"],
     ["leitor","📷","Leitor QR","Fotografe o cartão e veja os acertos de cada prova","#BDEFD8,#5FD3A0"],
-    ["resultados","📊","Quadro de resultados","Rendimento da turma, quem mais acertou e as questões mais erradas","#C6EEF5,#6CCFE0"],
+    ["resultados","📊","Resultados e reforço","Notas da turma, desempenho por habilidade e o reforço para quem precisa","#C6EEF5,#6CCFE0"],
     ["alunos","👩‍🏫","Alunos e turmas","Cadastre os nomes que saem nas provas","#F9D0DD,#F28AA8"],
     ["minhas","🗂️","Minhas questões","Questões suas e da Sofia, com imagem própria","#DDE3EE,#AEB9CF"]];
   const cont={minhas:S.minhas.length,resultados:S.resultados.length,relatos:relatosAbertos().length};
@@ -1971,6 +1971,20 @@ const corP=p=>p>=.7?"bom":p>=.4?"alerta":"ruim";
 const corFaixa=["var(--ruim)","var(--sol)","var(--azul)","var(--bom)"];
 const pct=p=>Math.round(p*100)+"%";
 function versaoDe(sim,r){if(!sim)return null;if(r.tipo&&sim.tipos){const t=sim.tipos.find(x=>x.t===r.tipo);if(t)return t;}return sim.versoes.find(x=>x.n===r.versao)||null;}
+/* Reforço conforme as notas: nota de 0 a 10 de cada aluno, situação e as
+   habilidades das questões que ele errou. As fichas de reforço são dos
+   Cadernos prontos, trancados até 12/03. */
+const REFORCO_LIBERA="12/03";
+function situacaoNota(n){return n<6?["Reforço","ruim"]:n<7?["Atenção","alerta"]:["No esperado","bom"];}
+function habsErradas(r){const v=[];(r.ordem||[]).forEach((qi,k)=>{if(qi==null||r.respostas[k]===r.gab[k])return;const q=getQ(refDe(qi));if(!q)return;const d=q.desc||q.hab||q.tema;if(d&&!v.includes(d))v.push(d);});return v;}
+function reforcoHtml(rs){
+  if(!rs.length)return"";
+  const linhas=rs.map(r=>({r,nota:Math.round(100*r.acertos/r.total)/10})).sort((a,b)=>a.nota-b.nota||a.r.aluno.localeCompare(b.r.aluno,"pt"));
+  const nRef=linhas.filter(x=>x.nota<6).length,nAt=linhas.filter(x=>x.nota>=6&&x.nota<7).length;
+  return `<div class="painel pilha"><h2>Reforço conforme as notas</h2><p class="fonte" style="margin:0">Nota abaixo de 6,0 pede reforço. De 6,0 a 6,9, atenção. A partir de 7,0, no esperado. ${nRef} ${nRef===1?"aluno precisa":"alunos precisam"} de reforço e ${nAt===0?"nenhum pede":nAt===1?"1 pede":nAt+" pedem"} atenção.</p>
+   <div class="tabela-wrap"><table><thead><tr><th>Aluno(a)</th><th>Nota</th><th>Situação</th><th>Habilidades a reforçar</th><th>Fichas de reforço</th></tr></thead><tbody>${linhas.map(({r,nota})=>{const [t,c]=situacaoNota(nota);const h=nota<7?habsErradas(r):[];
+     return `<tr><td>${esc(r.aluno)}</td><td class="num"><b>${nota.toFixed(1).replace(".",",")}</b></td><td><span class="chip ${c}">${t}</span></td><td style="white-space:normal;min-width:200px">${h.length?h.slice(0,4).map(x=>`<span class="chip">${esc(x)}</span>`).join(" ")+(h.length>4?` <span class="fonte">e mais ${h.length-4}</span>`:""):nota<7?'<span class="fonte">Sem habilidade identificada</span>':"—"}</td><td>${nota<7?`<span class="chip" title="As fichas de reforço ficam disponíveis nessa data">🔒 a partir de ${REFORCO_LIBERA}</span>`:"—"}</td></tr>`;}).join("")}</tbody></table></div></div>`;
+}
 function analisar(rs,sim){
   const porQ={};
   rs.forEach(r=>(r.ordem||[]).forEach((qi,k)=>{if(qi==null)return;const o=porQ[qi]=porQ[qi]||{n:0,a:0,alt:[0,0,0,0,0]};o.n++;if(r.respostas[k]===r.gab[k])o.a++;
@@ -2050,13 +2064,13 @@ function renderResultados(){
   if(rs.length){
     const {itensQ}=analisar(rs,sim);
     const nomes=sim?sim.versoes.map(v=>v.nome):[];
-    analise=quadroHtml(rs,simV)+evolucaoHtml(turmaEv)+`
+    analise=quadroHtml(rs,simV)+reforcoHtml(rs)+evolucaoHtml(turmaEv)+`
      <div class="painel pilha"><h2>Acertos de cada prova</h2><div class="tabela-wrap"><table><thead><tr><th>Aluno(a)</th>${rs.some(r=>r.tipo)?"<th>Tipo</th>":""}<th>Acertos</th><th>%</th><th>Faixa</th><th>Leitura</th><th></th></tr></thead><tbody>${rs.slice().sort((a,b)=>a.aluno.localeCompare(b.aluno,"pt")).map(r=>{const p=r.acertos/r.total;const semNome=/^Sem nome/.test(r.aluno);
        return `<tr><td>${semNome&&nomes.length?`<select data-nomear="${r.rid}" aria-label="Escolher aluno"><option>${esc(r.aluno)}</option>${nomes.map(n=>`<option>${esc(n)}</option>`).join("")}</select>`:esc(r.aluno)}</td>${rs.some(x=>x.tipo)?`<td>${seloTipo(r.tipo)}</td>`:""}<td class="num"><b>${r.acertos}/${r.total}</b></td><td><span class="chip ${corP(p)}">${pct(p)}</span></td><td class="fonte">${FAIXAS[faixaDe(p)][0]}</td><td><span class="chip${/conferir/.test(r.origem||"")?" alerta":""}">${esc(r.origem||"")}</span></td><td><button class="btn peq perigo" data-del="${r.rid}">Apagar</button></td></tr>`;}).join("")}</tbody></table></div></div>
      <div class="painel pilha"><h2>Análise das alternativas</h2><p class="fonte" style="margin:0">Quantos alunos marcaram cada alternativa (na ordem original da questão). Uma alternativa errada muito marcada indica um erro comum para trabalhar em sala.</p>
       <div class="tabela-wrap"><table><thead><tr><th>Questão</th><th>Acerto</th><th>A</th><th>B</th><th>C</th><th>D</th><th>Branco</th></tr></thead><tbody>${itensQ.slice().sort((a,b)=>a.o.a/a.o.n-b.o.a/b.o.n).map(({q,o,k})=>`<tr><td style="white-space:normal;min-width:220px">${q.origem==="cartao"?`<b>Questão ${k+1}</b>`:`<b>${k+1}. ${esc(q.id)}</b> ${esc((q.enunciado||"").slice(0,70))}${q.enunciado.length>70?"…":""}`}</td><td class="num">${pct(o.a/o.n)}</td>${[0,1,2,3].map(j=>`<td class="num"${j===q.correta?' style="color:var(--bom);font-weight:800"':""}>${o.alt[j]}</td>`).join("")}<td class="num">${o.alt[4]}</td></tr>`).join("")}</tbody></table></div></div>`;
   }
-  $("#painel").innerHTML=cabecalho("📊","Quadro de resultados","Rendimento da turma, quem mais acertou e quem precisa de apoio, as questões mais acertadas e as mais erradas, e a análise por descritor do SAEB ou habilidade da BNCC.")+`
+  $("#painel").innerHTML=cabecalho("📊","Resultados e reforço","Notas da turma, desempenho por descritor do SAEB ou habilidade da BNCC e, conforme a nota de cada aluno, o que reforçar.")+`
    ${chaves.length?`<div class="linha-acoes" style="margin-bottom:14px;align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Simulado<select id="r-sim">${chaves.map(k=>`<option value="${esc(k)}"${k===RF?" selected":""}>${esc(k.split("|").slice(1).join("|"))}${(d=>d?" · "+esc(d):"")(simDisc(S.simulados.find(s=>s.id===k.split("|")[0])))} (${grupos[k].length})</option>`).join("")}</select></label>${tlist.length>1?`<label class="campo" style="min-width:180px">Turma<select id="r-turma"><option value="">Todas as turmas</option>${tlist.map(t=>`<option${t===RT?" selected":""}>${esc(t)}</option>`).join("")}</select></label>`:""}<button class="btn prim" id="r-quadro">🖨️ Imprimir resultados</button><button class="btn" id="r-csv">Planilha (CSV)</button></div><div class="pilha">${simDisc(sim)?`<p class="fonte" style="margin:0;font-size:1rem">Disciplina: <b>${esc(simDisc(sim))}</b>${sim.turma?` · Turma: <b>${esc(RT||sim.turma)}</b>`:""}</p>`:""}${analise}</div>`
    :`<div class="vazio">Ainda não há resultados. Corrija os cartões-resposta na aba Leitor QR.</div>`}`;
   if(!chaves.length)return;
@@ -2067,9 +2081,9 @@ function renderResultados(){
     const va=sim&&sim.versoes.find(v=>v.nome===sl.value);S.resultados=S.resultados.filter(x=>x===r||!(x.simId===r.simId&&x.aluno===sl.value));r.aluno=sl.value;if(va)r.versao=va.n;r.origem="QR";salvar();renderResultados();toast("Prova atribuída a "+sl.value);});
   if($("#r-projerr"))$("#r-projerr").onclick=()=>{const {itensQ}=analisar(rs,sim);const er=itensQ.slice().sort((a,b)=>a.o.a/a.o.n-b.o.a/b.o.n).slice(0,5).map(x=>x.qi);projetar(er,0);};
   $("#r-quadro").onclick=()=>{const css=document.querySelector("style").textContent;
-    const html=`<!doctype html><html lang="pt-BR" data-theme="light"><head><meta charset="utf-8"><title>Quadro de resultados · ${esc(rs[0].titulo)}</title><style>${css}
+    const html=`<!doctype html><html lang="pt-BR" data-theme="light"><head><meta charset="utf-8"><title>Resultados e reforço · ${esc(rs[0].titulo)}</title><style>${css}
      @page{size:A4;margin:10mm}body{background:#fff;padding:0 4mm}.btn,select{display:none!important}.painel,.resumo-num div{break-inside:avoid;box-shadow:inset 0 0 0 1.5px #CBD3E6}.duas{grid-template-columns:1fr 1fr}.quadro{grid-template-columns:1fr 1fr}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head>
-     <body><div class="pilha" style="max-width:1000px;margin:0 auto;padding:8mm 0"><div class="cab-pag"><div class="icone-pag">📊</div><div><span class="marca">Agiliza<span>Prof</span></span><h1>Quadro de resultados</h1><p class="sub">${esc(rs[0].titulo)}${simDisc(sim)?" · Disciplina: "+esc(simDisc(sim)):""} · ${esc(RT||tlist.join(", "))} · ${hoje()}</p></div></div>${quadroHtml(rs,simV,{imprimir:true})}${evolucaoHtml(turmaEv)}</div>${PRINT_JS}</body></html>`;
+     <body><div class="pilha" style="max-width:1000px;margin:0 auto;padding:8mm 0"><div class="cab-pag"><div class="icone-pag">📊</div><div><span class="marca">Agiliza<span>Prof</span></span><h1>Resultados e reforço</h1><p class="sub">${esc(rs[0].titulo)}${simDisc(sim)?" · Disciplina: "+esc(simDisc(sim)):""} · ${esc(RT||tlist.join(", "))} · ${hoje()}</p></div></div>${quadroHtml(rs,simV,{imprimir:true})}${reforcoHtml(rs)}${evolucaoHtml(turmaEv)}</div>${PRINT_JS}</body></html>`;
     baixar(`quadro-${slug(rs[0].titulo)}.html`,html);};
   $("#r-csv").onclick=()=>{const n=rs[0].total;const cab=["Aluno","Turma","Tipo","Acertos","Total","Percentual","Faixa","Data",...Array.from({length:n},(_,k)=>"Q"+(k+1))];
     const linhas=rs.map(r=>[r.aluno,r.turma,r.tipo||"",r.acertos,r.total,Math.round(100*r.acertos/r.total)+"%",FAIXAS[faixaDe(r.acertos/r.total)][0],r.data,...[...r.respostas].map((c,k)=>c+(c===r.gab[k]?" ✓":""))]);
