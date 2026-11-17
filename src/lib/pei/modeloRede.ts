@@ -20,6 +20,10 @@ import JSZip from "jszip";
 const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const XML_NS = "http://www.w3.org/XML/1998/namespace";
 const MAX_LACUNAS = 300;
+// Marcas (caracteres de uso privado) que indicam, no documento mostrado na
+// tela, onde fica cada espaço: MARCA_INI + id + MARCA_FIM.
+const MARCA_INI = "\uE000";
+const MARCA_FIM = "\uE001";
 
 export type TipoLacuna =
   | "celula"
@@ -358,9 +362,15 @@ function detectar(doc: Document): Alvo[] {
               .filter(Boolean)
               .map((n) => parseInt(n, 10) - 1),
           );
+          const visual = String(v).startsWith(MARCA_INI);
           // de trás para frente para não deslocar as posições
           [...pos].reverse().forEach((x, iRev) => {
             const i = pos.length - 1 - iRev;
+            if (visual) {
+              // Para mostrar na tela: cada caixinha vira uma marca "id#n".
+              substituir(trechos, x.ini, x.fim, `${String(v).slice(0, -1)}#${i + 1}${MARCA_FIM}`);
+              return;
+            }
             if (!escolhidas.has(i)) return;
             const marcado = x.m.startsWith("(") ? "(X)" : x.m.startsWith("[") ? "[X]" : "☒";
             substituir(trechos, x.ini, x.fim, marcado);
@@ -743,4 +753,215 @@ export function valoresDeIdentificacao(
     if (v.trim()) out[l.id] = v.trim();
   }
   return out;
+}
+
+// ---------------------------------------------------------------- documento na tela
+
+export type TrechoVisual =
+  | { t: "texto"; texto: string; b?: boolean; i?: boolean; u?: boolean; tam?: number; cor?: string }
+  | { t: "campo"; id: string }
+  | { t: "opcao"; id: string; n: number }
+  | { t: "img"; src: string; w: number; h: number }
+  | { t: "br" };
+
+export type BlocoVisual =
+  | { t: "p"; filhos: TrechoVisual[]; alinh?: "center" | "right" | "justify"; titulo?: boolean }
+  | { t: "tabela"; linhas: CelulaVisual[][] };
+
+export type CelulaVisual = {
+  blocos: BlocoVisual[];
+  colSpan: number;
+  rowSpan: number;
+  fundo?: string;
+  largura?: number; // em % da linha
+};
+
+export type ModeloVisual = { lacunas: Lacuna[]; cabecalho: BlocoVisual[]; corpo: BlocoVisual[] };
+
+const MIME: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  bmp: "image/bmp",
+  svg: "image/svg+xml",
+};
+
+async function carregarImagens(zip: JSZip, parte: string): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  const rels = zip.file(`word/_rels/${parte}.rels`);
+  if (!rels) return out;
+  const doc = new DOMParser().parseFromString(await rels.async("string"), "application/xml");
+  for (const r of Array.from(doc.getElementsByTagName("Relationship"))) {
+    const alvo = r.getAttribute("Target") || "";
+    const id = r.getAttribute("Id") || "";
+    const ext = (alvo.split(".").pop() || "").toLowerCase();
+    if (!/image/.test(r.getAttribute("Type") || "") || !MIME[ext]) continue;
+    const f = zip.file(`word/${alvo.replace(/^\/?(word\/)?/, "")}`);
+    if (!f) continue;
+    out[id] = `data:${MIME[ext]};base64,${await f.async("base64")}`;
+  }
+  return out;
+}
+
+function partirMarcas(
+  texto: string,
+  base: Omit<Extract<TrechoVisual, { t: "texto" }>, "t" | "texto">,
+) {
+  const out: TrechoVisual[] = [];
+  const re = new RegExp(`${MARCA_INI}([^${MARCA_FIM}]*)${MARCA_FIM}`, "g");
+  let de = 0;
+  for (const m of texto.matchAll(re)) {
+    if (m.index! > de) out.push({ t: "texto", texto: texto.slice(de, m.index!), ...base });
+    const [id, n] = m[1].split("#");
+    out.push(n ? { t: "opcao", id, n: parseInt(n, 10) } : { t: "campo", id });
+    de = m.index! + m[0].length;
+  }
+  if (de < texto.length) out.push({ t: "texto", texto: texto.slice(de), ...base });
+  return out;
+}
+
+function ligado(rPr: Element | null, nome: string): boolean {
+  const e = filho(rPr, nome);
+  if (!e) return false;
+  const v = attr(e, "val");
+  return v !== "0" && v !== "false" && v !== "none";
+}
+
+function blocosVisuais(container: Element, imagens: Record<string, string>): BlocoVisual[] {
+  const out: BlocoVisual[] = [];
+
+  const run = (r: Element, dest: TrechoVisual[]) => {
+    const rPr = filho(r, "rPr");
+    const tam = parseInt(attr(filho(rPr, "sz"), "val") || "", 10);
+    const cor = attr(filho(rPr, "color"), "val") || "";
+    const base = {
+      ...(ligado(rPr, "b") ? { b: true } : {}),
+      ...(ligado(rPr, "i") ? { i: true } : {}),
+      ...(ligado(rPr, "u") ? { u: true } : {}),
+      ...(tam ? { tam: tam / 2 } : {}),
+      ...(/^[0-9a-f]{6}$/i.test(cor) ? { cor: `#${cor}` } : {}),
+    };
+    for (let c = r.firstElementChild; c; c = c.nextElementSibling) {
+      if (c.localName === "t") dest.push(...partirMarcas(c.textContent || "", base));
+      else if (c.localName === "tab") dest.push({ t: "texto", texto: "    ", ...base });
+      else if (c.localName === "br" || c.localName === "cr") dest.push({ t: "br" });
+      else if (c.localName === "drawing" || c.localName === "pict") {
+        const blip = c.getElementsByTagNameNS("*", "blip")[0];
+        const id = blip?.getAttribute("r:embed") || "";
+        const ext = c.getElementsByTagNameNS("*", "extent")[0];
+        if (id && imagens[id]) {
+          dest.push({
+            t: "img",
+            src: imagens[id],
+            w: Math.round(parseInt(ext?.getAttribute("cx") || "0", 10) / 9525) || 120,
+            h: Math.round(parseInt(ext?.getAttribute("cy") || "0", 10) / 9525) || 0,
+          });
+        }
+      }
+    }
+  };
+
+  const linha = (el: Element, dest: TrechoVisual[]) => {
+    for (const c of filhos(el)) {
+      if (c.localName === "r") run(c, dest);
+      else if (c.localName === "pPr" || c.localName === "sdtPr") continue;
+      else linha(c, dest); // hyperlink, sdt, sdtContent, smartTag...
+    }
+  };
+
+  const paragrafo = (p: Element) => {
+    const pPr = filho(p, "pPr");
+    const jc = attr(filho(pPr, "jc"), "val") || "";
+    const estilo = attr(filho(pPr, "pStyle"), "val") || "";
+    const filhosV: TrechoVisual[] = [];
+    linha(p, filhosV);
+    out.push({
+      t: "p",
+      filhos: filhosV,
+      ...(jc === "center" ? { alinh: "center" as const } : {}),
+      ...(jc === "right" || jc === "end" ? { alinh: "right" as const } : {}),
+      ...(jc === "both" ? { alinh: "justify" as const } : {}),
+      ...(/heading|t[ií]tulo|ttulo|title/i.test(estilo) ? { titulo: true } : {}),
+    });
+  };
+
+  const tabela = (tbl: Element) => {
+    const linhas: CelulaVisual[][] = [];
+    const abertas: Record<number, CelulaVisual> = {}; // coluna → célula mesclada na vertical
+    for (const cels of linhasDaTabela(tbl)) {
+      const total = cels.reduce(
+        (n, c) => n + (parseInt(attr(filho(filho(c.tc, "tcPr"), "tcW"), "w") || "0", 10) || 0),
+        0,
+      );
+      const row: CelulaVisual[] = [];
+      for (const c of cels) {
+        const tcPr = filho(c.tc, "tcPr");
+        const vm = filho(tcPr, "vMerge");
+        if (c.continua && abertas[c.col]) {
+          abertas[c.col].rowSpan++;
+          continue;
+        }
+        const w = parseInt(attr(filho(tcPr, "tcW"), "w") || "0", 10) || 0;
+        const fundo = attr(filho(tcPr, "shd"), "fill") || "";
+        const cel: CelulaVisual = {
+          blocos: blocosVisuais(c.tc, imagens),
+          colSpan: c.span,
+          rowSpan: 1,
+          ...(/^[0-9a-f]{6}$/i.test(fundo) && fundo.toUpperCase() !== "FFFFFF"
+            ? { fundo: `#${fundo}` }
+            : {}),
+          ...(total && w ? { largura: Math.round((w / total) * 100) } : {}),
+        };
+        if (vm) abertas[c.col] = cel;
+        else delete abertas[c.col];
+        row.push(cel);
+      }
+      linhas.push(row);
+    }
+    out.push({ t: "tabela", linhas });
+  };
+
+  for (const el of filhos(container)) {
+    if (el.localName === "p") paragrafo(el);
+    else if (el.localName === "tbl") tabela(el);
+    else if (el.localName === "sdt") {
+      const c = filho(el, "sdtContent");
+      if (c) out.push(...blocosVisuais(c, imagens));
+    }
+  }
+  return out;
+}
+
+/**
+ * Prepara o modelo para aparecer na tela: o texto, as tabelas e as imagens do
+ * documento, com um campo em cada espaço em branco (mesmos ids de analisarModelo).
+ */
+export async function visualizarModelo(buf: ArrayBuffer): Promise<ModeloVisual> {
+  const { zip, doc } = await abrir(buf);
+  const alvos = detectar(doc);
+  for (const a of [...alvos].reverse()) a.aplicar(`${MARCA_INI}${a.id}${MARCA_FIM}`);
+  const body = doc.getElementsByTagNameNS(W, "body")[0];
+  const corpo = blocosVisuais(body, await carregarImagens(zip, "document.xml"));
+
+  // Cabeçalho (onde costuma ficar o logo da rede): o mais completo dos que existirem.
+  let cabecalho: BlocoVisual[] = [];
+  let peso = 0;
+  for (const nome of Object.keys(zip.files)) {
+    const m = nome.match(/^word\/(header\d+\.xml)$/);
+    if (!m) continue;
+    const hd = new DOMParser().parseFromString(
+      await zip.file(nome)!.async("string"),
+      "application/xml",
+    );
+    const raiz = hd.documentElement;
+    if (!raiz || hd.getElementsByTagName("parsererror").length) continue;
+    const blocos = blocosVisuais(raiz, await carregarImagens(zip, m[1]));
+    const p = JSON.stringify(blocos).length;
+    if (p > peso) {
+      peso = p;
+      cabecalho = blocos;
+    }
+  }
+  return { lacunas: alvos.map(({ aplicar: _a, ...l }) => l), cabecalho, corpo };
 }

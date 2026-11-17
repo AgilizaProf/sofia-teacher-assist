@@ -18,14 +18,17 @@ import { CUSTOS, custoTexto } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import {
   analisarModelo,
+  visualizarModelo,
+  type ModeloVisual,
   preencherModelo,
   valoresDeIdentificacao,
   ErroModelo,
   type DadosIdentificacao,
-  type Lacuna,
 } from "@/lib/pei/modeloRede";
 import type { NivelBncc } from "@/lib/pei/bncc";
-import { ModeloRedeFormulario } from "./ModeloRedeFormulario";
+import { ModeloRedeDocumento } from "./ModeloRedeDocumento";
+import { PEISuggestions, appendText } from "./PEISuggestions";
+import { campoDoModelo } from "@/lib/pei/camposModelo";
 
 /** O que a professora escreveu no modelo, por aluno (vale enquanto o modelo for o mesmo). */
 type PreenchidoPorAluno = Record<
@@ -92,8 +95,9 @@ type Props = {
 
 /**
  * "Modelo da minha rede": a professora anexa o modelo de PEI da rede dela
- * (Word .docx) uma vez, e o app devolve esse mesmo modelo preenchido com o
- * PEI de cada aluno. Cada professora tem o seu modelo, salvo só na conta dela.
+ * (Word .docx) uma vez. O documento aparece na tela e ela escreve direto nos
+ * espaços dele; a Sofia pode completar o que estiver vazio. Depois baixa o
+ * mesmo arquivo preenchido. Cada professora tem o seu modelo, só na conta dela.
  */
 export function ModeloRedeModal({
   open,
@@ -110,27 +114,27 @@ export function ModeloRedeModal({
     "pei_modelo_rede_valores",
     {},
   );
-  // "inicio": anexar/trocar o modelo. "tela": preencher campo a campo, como no documento.
-  const [modo, setModo] = useState<"inicio" | "tela">("inicio");
-  const [daSofia, setDaSofia] = useState<Set<string>>(new Set());
-  const [completando, setCompletando] = useState(false);
-  const [lacunas, setLacunas] = useState<Lacuna[] | null>(null);
+  const [visual, setVisual] = useState<ModeloVisual | null>(null);
+  const [erroLeitura, setErroLeitura] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const [preenchendo, setPreenchendo] = useState(false);
+  const [completando, setCompletando] = useState(false);
+  const [daSofia, setDaSofia] = useState<Set<string>>(new Set());
+  const [ativo, setAtivo] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const creditosGate = useCreditosGate();
   const temModelo = !!modelo.base64;
 
-  // Ao abrir, confere o modelo salvo (mostra quantos espaços ele tem).
+  // Lê o modelo salvo para mostrar o documento na tela.
   useEffect(() => {
     if (!open || !modelo.base64) {
-      setLacunas(null);
+      setVisual(null);
       return;
     }
     let vivo = true;
-    analisarModelo(deBase64(modelo.base64))
-      .then((l) => vivo && setLacunas(l))
-      .catch(() => vivo && setLacunas([]));
+    setErroLeitura(false);
+    visualizarModelo(deBase64(modelo.base64))
+      .then((v) => vivo && setVisual(v))
+      .catch(() => vivo && setErroLeitura(true));
     return () => {
       vivo = false;
     };
@@ -138,8 +142,8 @@ export function ModeloRedeModal({
 
   useEffect(() => {
     if (!open) {
-      setModo("inicio");
       setDaSofia(new Set());
+      setAtivo(null);
     }
   }, [open]);
 
@@ -186,7 +190,6 @@ export function ModeloRedeModal({
         base64: paraBase64(buf),
         lacunas: l.length,
       });
-      setLacunas(l);
       if (l.length === 0) {
         toast.warning(
           'Guardei o modelo, mas não achei espaços em branco nele (linhas ____, células vazias ou "Campo:").',
@@ -210,82 +213,26 @@ export function ModeloRedeModal({
 
   const remover = () => {
     setModelo({});
-    setLacunas(null);
+    setVisual(null);
     toast.success("Modelo removido da sua conta.");
   };
 
-  const preencher = async () => {
-    if (!modelo.base64) return;
-    const custo = CUSTOS.pei_modelo_rede;
-    if (!(await creditosGate.checar({ custo, acao: "PEI no modelo da rede" }))) return;
-    setPreenchendo(true);
-    try {
-      const buf = deBase64(modelo.base64);
-      const todas = lacunas && lacunas.length ? lacunas : await analisarModelo(buf);
-      if (!todas.length) {
-        toast.error(
-          'Não achei espaços em branco no seu modelo. Confira se ele tem linhas ____, células vazias ou "Campo:".',
-        );
-        return;
-      }
-      // Identificação (nome, nascimento, escola...) vai direto, sem IA.
-      const fixos = valoresDeIdentificacao(todas, dados);
-      const resto = todas.filter((l) => !(l.id in fixos));
-      let daIA: Record<string, string> = {};
-      if (resto.length) {
-        const resp = await invocarIA<{ valores?: Record<string, string> }>("preencher-modelo-pei", {
-          body: { aluno: alunoNome, contexto, lacunas: resto },
-          validar: (d) => !!d?.valores && typeof d.valores === "object",
-        });
-        daIA = resp.valores || {};
-      }
-      const valores = { ...daIA, ...fixos };
-      const blob = await preencherModelo(buf, valores);
-      const base = (modelo.nome || "modelo").replace(/\.docx$/i, "");
-      baixar(blob, `PEI-${nomeArquivo(alunoNome)}-${nomeArquivo(base)}.docx`);
-      const feitos = Object.values(valores).filter((v) => String(v || "").trim()).length;
-      toast.success(
-        `Modelo preenchido: ${feitos} de ${todas.length} espaços. Confira no Word antes de imprimir.`,
-        { duration: 7000 },
-      );
-      if (resto.length)
-        void consumirCreditos(custo, descricaoDoc("PEI no modelo da rede", alunoNome));
-    } catch (e) {
-      toast.error(
-        e instanceof ErroIA || e instanceof ErroModelo
-          ? e.message
-          : "Não consegui preencher o modelo agora. Tente de novo.",
-      );
-      if (e instanceof ErroIA) console.warn("[modelo-rede]", e.tipo, e.detalhe);
-    } finally {
-      setPreenchendo(false);
-    }
-  };
-
-  const exemplos = (lacunas || []).slice(0, 8).map((l) => l.rotulo);
-
-  // ---- Preencher na tela ----
+  // O que está escrito no documento deste aluno. Vale enquanto o modelo for o mesmo.
+  const lacunas = visual?.lacunas || [];
   const chaveModelo = modelo.enviadoEm || modelo.nome || "";
   const salvo = preenchidos[alunoId];
-  const valoresTela: Record<string, string> =
-    salvo && salvo.modelo === chaveModelo
-      ? salvo.valores
-      : lacunas
-        ? valoresDeIdentificacao(lacunas, dados)
-        : {};
+  const valores: Record<string, string> =
+    salvo && salvo.modelo === chaveModelo ? salvo.valores : valoresDeIdentificacao(lacunas, dados);
   const gravar = (novos: Record<string, string>) =>
     setPreenchidos((prev) => ({
       ...prev,
       [alunoId]: { modelo: chaveModelo, valores: novos, em: new Date().toISOString() },
     }));
-  const mudarCampo = (id: string, valor: string) => gravar({ ...valoresTela, [id]: valor });
-  const vazios = (lacunas || []).filter((l) => !String(valoresTela[l.id] || "").trim());
+  const mudarCampo = (id: string, valor: string) => gravar({ ...valores, [id]: valor });
+  const vazios = lacunas.filter((l) => !String(valores[l.id] || "").trim());
 
   const completarComSofia = async () => {
-    if (!lacunas || !vazios.length) {
-      toast.info("Todos os campos já estão preenchidos.");
-      return;
-    }
+    if (!vazios.length) return;
     const custo = CUSTOS.pei_modelo_rede;
     if (!(await creditosGate.checar({ custo, acao: "PEI no modelo da rede" }))) return;
     setCompletando(true);
@@ -294,7 +241,7 @@ export function ModeloRedeModal({
         body: { aluno: alunoNome, contexto, lacunas: vazios },
         validar: (d) => !!d?.valores && typeof d.valores === "object",
       });
-      const novos = { ...valoresTela };
+      const novos = { ...valores };
       const marcados = new Set<string>();
       for (const l of vazios) {
         const v = String(resp.valores?.[l.id] || "").trim();
@@ -307,25 +254,26 @@ export function ModeloRedeModal({
       setDaSofia(marcados);
       toast.success(
         marcados.size
-          ? `A Sofia preencheu ${marcados.size} campo${marcados.size === 1 ? "" : "s"}. Revise e ajuste o que quiser.`
-          : "O PEI ainda não tem informação para os campos vazios.",
+          ? `A Sofia preencheu ${marcados.size} espaço${marcados.size === 1 ? "" : "s"} (em azul). Revise e ajuste o que quiser.`
+          : "O PEI ainda não tem informação para os espaços vazios.",
       );
       if (marcados.size)
         void consumirCreditos(custo, descricaoDoc("PEI no modelo da rede", alunoNome));
     } catch (e) {
       toast.error(e instanceof ErroIA ? e.message : "A Sofia não conseguiu agora. Tente de novo.");
+      if (e instanceof ErroIA) console.warn("[modelo-rede]", e.tipo, e.detalhe);
     } finally {
       setCompletando(false);
     }
   };
 
-  const baixarDaTela = async () => {
+  const baixarWord = async () => {
     if (!modelo.base64) return;
     try {
-      const blob = await preencherModelo(deBase64(modelo.base64), valoresTela);
+      const blob = await preencherModelo(deBase64(modelo.base64), valores);
       const base = (modelo.nome || "modelo").replace(/\.docx$/i, "");
       baixar(blob, `PEI-${nomeArquivo(alunoNome)}-${nomeArquivo(base)}.docx`);
-      toast.success("Word baixado com o que está na tela.");
+      toast.success("Word baixado com o que está no documento.");
     } catch (e) {
       toast.error(
         e instanceof ErroModelo ? e.message : "Não consegui gerar o Word. Tente de novo.",
@@ -333,91 +281,9 @@ export function ModeloRedeModal({
     }
   };
 
-  if (modo === "tela" && temModelo) {
-    const total = lacunas?.length || 0;
-    return (
-      <div
-        className="inc-modal-overlay open"
-        style={{ zIndex: 260 }}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
-      >
-        <div className="inc-modal" style={{ maxWidth: 980 }}>
-          <div className="inc-modal-bar" />
-          <div className="inc-modal-head">
-            <div>
-              <h2>
-                {(modelo.nome || "Modelo da rede").replace(/\.docx$/i, "")} · {alunoNome}
-              </h2>
-              <span className="meta" style={{ display: "block", marginTop: 4 }}>
-                Os campos do documento da sua rede, na mesma ordem. {total - vazios.length} de{" "}
-                {total} preenchidos · salvo automaticamente
-              </span>
-            </div>
-            <button className="inc-modal-close" onClick={onClose} aria-label="Fechar">
-              <X size={16} />
-            </button>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              alignItems: "center",
-              padding: "8px 14px",
-              borderBottom: "1px solid var(--border)",
-              background: "#fff",
-            }}
-          >
-            <button className="inc-btn-ghost" onClick={() => setModo("inicio")}>
-              <ArrowLeft size={14} /> Voltar
-            </button>
-            <button
-              className="inc-btn-ghost"
-              onClick={() => void completarComSofia()}
-              disabled={completando || !vazios.length}
-              title="A Sofia escreve só nos campos vazios, usando o PEI do aluno"
-              style={{ color: "#1F4FB8", borderColor: "#B9C8F5" }}
-            >
-              {completando ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Sparkles size={14} />
-              )}
-              {completando
-                ? " Preenchendo…"
-                : ` Sofia completa ${vazios.length === 1 ? "o campo vazio" : `os ${vazios.length} campos vazios`} (${custoTexto(CUSTOS.pei_modelo_rede)})`}
-            </button>
-          </div>
-          <div className="inc-modal-body" style={{ background: "var(--bg)" }}>
-            {!lacunas ? (
-              <p style={{ fontSize: 13, color: "var(--muted)" }}>Lendo o modelo…</p>
-            ) : (
-              <ModeloRedeFormulario
-                lacunas={lacunas}
-                valores={valoresTela}
-                onChange={mudarCampo}
-                daSofia={daSofia}
-                etapaPrefix={etapaPrefix}
-                nivelBncc={nivelBncc}
-              />
-            )}
-          </div>
-          <div className="inc-modal-foot">
-            <span className="legal">Baixar o Word não gasta créditos</span>
-            <button
-              className="btn btn-primary"
-              onClick={() => void baixarDaTela()}
-              disabled={!lacunas}
-            >
-              <Download size={14} /> Baixar Word
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const campoAtivo = lacunas.find((l) => l.id === ativo) || null;
+  const ajuda = campoAtivo && campoAtivo.tipo !== "opcoes" ? campoDoModelo(campoAtivo) : null;
+  const total = lacunas.length;
 
   return (
     <div
@@ -427,14 +293,19 @@ export function ModeloRedeModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="inc-modal" style={{ maxWidth: 560 }}>
+      <div className="inc-modal" style={{ maxWidth: temModelo ? 980 : 560 }}>
         <div className="inc-modal-bar" />
         <div className="inc-modal-head">
           <div>
-            <h2>Modelo de PEI da sua rede</h2>
+            <h2>
+              {temModelo
+                ? `${(modelo.nome || "Modelo da rede").replace(/\.docx$/i, "")} · ${alunoNome}`
+                : "Modelo de PEI da sua rede"}
+            </h2>
             <span className="meta" style={{ display: "block", marginTop: 4 }}>
-              Anexe o modelo que a sua rede usa. A Sofia preenche com o PEI de{" "}
-              {alunoNome || "cada aluno"}.
+              {temModelo
+                ? `Escreva direto nos espaços amarelos do documento. ${total - vazios.length} de ${total} preenchidos · salvo automaticamente`
+                : "Anexe o modelo que a sua rede usa e preencha direto nele."}
             </span>
           </div>
           <button className="inc-modal-close" onClick={onClose} aria-label="Fechar">
@@ -442,144 +313,165 @@ export function ModeloRedeModal({
           </button>
         </div>
 
-        <div className="inc-modal-body" style={{ background: "var(--bg)" }}>
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            hidden
-            onChange={(e) => void escolherArquivo(e.target.files?.[0])}
-          />
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          hidden
+          onChange={(e) => void escolherArquivo(e.target.files?.[0])}
+        />
 
-          {temModelo ? (
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                padding: 14,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <FileText size={28} color="#1F4FB8" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontWeight: 800,
-                      fontSize: 14,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {modelo.nome}
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                    {modelo.enviadoEm
-                      ? `Enviado em ${new Date(modelo.enviadoEm).toLocaleDateString("pt-BR")}`
-                      : ""}
-                    {lacunas
-                      ? ` · ${lacunas.length} espaço${lacunas.length === 1 ? "" : "s"} para preencher`
-                      : " · conferindo…"}
-                  </div>
-                </div>
-              </div>
-              {exemplos.length > 0 && (
-                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
-                  Espaços encontrados: {exemplos.join(" · ")}
-                  {(lacunas?.length || 0) > exemplos.length ? " …" : ""}
-                </div>
-              )}
-              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                <button
-                  className="inc-btn-ghost"
-                  onClick={() => inputRef.current?.click()}
-                  disabled={enviando || preenchendo}
-                >
-                  {enviando ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}{" "}
-                  Trocar modelo
-                </button>
-                <button
-                  className="inc-btn-ghost"
-                  onClick={remover}
-                  disabled={enviando || preenchendo}
-                  style={{ color: "#C62B2B" }}
-                >
-                  <Trash2 size={14} /> Remover
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={enviando}
-              style={{
-                width: "100%",
-                padding: "26px 14px",
-                borderRadius: 12,
-                border: "2px dashed var(--border)",
-                background: "#fff",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              {enviando ? (
-                <Loader2 size={26} className="animate-spin" />
-              ) : (
-                <Upload size={26} color="#1F4FB8" />
-              )}
-              <b style={{ fontSize: 14 }}>Anexar o modelo da rede (Word .docx)</b>
-              <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                Até 1,5 MB. Se o modelo for PDF, abra no Word e salve como .docx.
-              </span>
-            </button>
-          )}
-
-          <ul
+        {temModelo && (
+          <div
             style={{
-              fontSize: 12,
-              color: "var(--muted)",
-              margin: "12px 0 0",
-              paddingLeft: 18,
-              lineHeight: 1.5,
+              padding: "8px 14px",
+              borderBottom: "1px solid var(--border)",
+              background: "#fff",
             }}
           >
-            <li>
-              A Sofia preenche os espaços em branco: linhas ____, células vazias de tabela, "Campo:"
-              no fim da linha, caixas ( ) para marcar e campos do Word.
-            </li>
-            <li>O resto do documento (logo, cabeçalho, tabelas e letras) fica igual ao da rede.</li>
-            <li>
-              Usa o que está preenchido no PEI. O que o PEI não tiver fica em branco para você
-              completar.
-            </li>
-            <li>🔒 O modelo fica salvo só na sua conta. Outras professoras não veem.</li>
-          </ul>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <button
+                className="inc-btn-ghost"
+                onClick={() => void completarComSofia()}
+                disabled={completando || !vazios.length}
+                title="A Sofia escreve só nos espaços vazios, usando o PEI do aluno"
+                style={{ color: "#1F4FB8", borderColor: "#B9C8F5" }}
+              >
+                {completando ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Sparkles size={14} />
+                )}
+                {completando
+                  ? " Preenchendo…"
+                  : !vazios.length
+                    ? " Tudo preenchido"
+                    : ` Sofia completa ${vazios.length === 1 ? "o espaço vazio" : `os ${vazios.length} espaços vazios`} (${custoTexto(CUSTOS.pei_modelo_rede)})`}
+              </button>
+              <span style={{ flex: 1 }} />
+              <button
+                className="inc-btn-ghost"
+                onClick={() => inputRef.current?.click()}
+                disabled={enviando}
+              >
+                {enviando ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}{" "}
+                Trocar modelo
+              </button>
+              <button className="inc-btn-ghost" onClick={remover} style={{ color: "#C62B2B" }}>
+                <Trash2 size={14} /> Remover
+              </button>
+            </div>
+            {/* Sugestões do espaço em que a professora está escrevendo */}
+            <div style={{ marginTop: 6, maxHeight: "34vh", overflowY: "auto", fontSize: 12 }}>
+              {campoAtivo ? (
+                <>
+                  <span style={{ color: "var(--muted)" }}>Você está em: </span>
+                  <b>{campoAtivo.rotulo}</b>
+                  {ajuda && (ajuda.sugestao || ajuda.bncc) && (
+                    <PEISuggestions
+                      key={campoAtivo.id}
+                      fieldKey={ajuda.sugestao || "__sem__"}
+                      prefix={etapaPrefix}
+                      bncc={ajuda.bncc ? { campo: ajuda.bncc, nivel: nivelBncc } : undefined}
+                      onPick={(t) =>
+                        mudarCampo(campoAtivo.id, appendText(valores[campoAtivo.id] || "", t))
+                      }
+                    />
+                  )}
+                </>
+              ) : (
+                <span style={{ color: "var(--muted)" }}>
+                  Clique em um espaço amarelo para escrever. As sugestões rápidas e a BNCC aparecem
+                  aqui.
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="inc-modal-body" style={{ background: temModelo ? "#E4E7EC" : "var(--bg)" }}>
+          {temModelo ? (
+            erroLeitura ? (
+              <p style={{ fontSize: 13 }}>
+                Não consegui abrir o modelo guardado. Use "Trocar modelo" e anexe o arquivo de novo.
+              </p>
+            ) : !visual ? (
+              <p style={{ fontSize: 13, color: "var(--muted)" }}>Abrindo o documento…</p>
+            ) : (
+              <ModeloRedeDocumento
+                visual={visual}
+                valores={valores}
+                onChange={mudarCampo}
+                daSofia={daSofia}
+                ativo={ativo}
+                onAtivo={setAtivo}
+              />
+            )
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                disabled={enviando}
+                style={{
+                  width: "100%",
+                  padding: "26px 14px",
+                  borderRadius: 12,
+                  border: "2px dashed var(--border)",
+                  background: "#fff",
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                {enviando ? (
+                  <Loader2 size={26} className="animate-spin" />
+                ) : (
+                  <Upload size={26} color="#1F4FB8" />
+                )}
+                <b style={{ fontSize: 14 }}>Anexar o modelo da rede (Word .docx)</b>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                  Até 1,5 MB. Se o modelo for PDF, abra no Word e salve como .docx.
+                </span>
+              </button>
+              <ul
+                style={{
+                  fontSize: 12,
+                  color: "var(--muted)",
+                  margin: "12px 0 0",
+                  paddingLeft: 18,
+                  lineHeight: 1.5,
+                }}
+              >
+                <li>O documento da rede abre na tela e você escreve direto nos espaços dele.</li>
+                <li>A Sofia pode completar os espaços vazios com o que está no PEI do aluno.</li>
+                <li>No fim você baixa o mesmo Word, com logo e tabelas, já preenchido.</li>
+                <li>🔒 O modelo fica salvo só na sua conta. Outras professoras não veem.</li>
+              </ul>
+            </>
+          )}
         </div>
 
         <div className="inc-modal-foot">
-          <span className="legal">Sofia: {custoTexto(CUSTOS.pei_modelo_rede)} por aluno</span>
-          <button
-            className="inc-btn-ghost"
-            onClick={() => void preencher()}
-            disabled={!temModelo || preenchendo || enviando}
-            title="A Sofia preenche tudo e o Word já baixa, sem passar pela tela"
-          >
-            {preenchendo ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-            {preenchendo ? " Preenchendo…" : " Direto no Word"}
+          <span className="legal">
+            {temModelo
+              ? "Baixar o Word não gasta créditos"
+              : "Anexe uma vez; vale para todos os alunos"}
+          </span>
+          <button className="inc-btn-ghost" onClick={onClose}>
+            Fechar
           </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => setModo("tela")}
-            disabled={!temModelo || preenchendo || enviando}
-            title="Preencher campo a campo, seguindo o documento da rede"
-          >
-            <PencilLine size={14} /> Preencher na tela
-          </button>
+          {temModelo && (
+            <button
+              className="btn btn-primary"
+              onClick={() => void baixarWord()}
+              disabled={!visual}
+            >
+              <Download size={14} /> Baixar Word
+            </button>
+          )}
         </div>
       </div>
     </div>
