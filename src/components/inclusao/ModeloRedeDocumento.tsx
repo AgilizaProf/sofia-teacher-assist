@@ -222,6 +222,21 @@ export function ModeloRedeDocumento({ visual, valores, onChange, daSofia, ativo,
           </table>
         );
       }
+      if (b.t === "caixa") {
+        return (
+          <div
+            key={i}
+            style={{
+              border: "1px solid #777",
+              padding: "6px 8px",
+              margin: "8px 0",
+              borderRadius: 2,
+            }}
+          >
+            {blocos(b.blocos, true)}
+          </div>
+        );
+      }
       const campos = b.filhos.filter((f) => f.t === "campo");
       const temTexto = b.filhos.some((f) => f.t === "texto" && f.texto.trim());
       // Campo sozinho (linha ____ ou célula vazia) ocupa a largura toda.
@@ -272,6 +287,11 @@ export function ModeloRedeDocumento({ visual, valores, onChange, daSofia, ativo,
         </div>
       )}
       {blocos(visual.corpo, false)}
+      {visual.rodape.length > 0 && (
+        <div style={{ borderTop: "1px solid #ddd", marginTop: 14, paddingTop: 6 }}>
+          {blocos(visual.rodape, false)}
+        </div>
+      )}
     </div>
   );
 }

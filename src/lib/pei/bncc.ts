@@ -70,14 +70,24 @@ export function nivelDoTexto(...textos: Array<string | undefined | null>): Nivel
   for (const bruto of textos) {
     const t = norm(bruto || "").trim();
     if (!t) continue;
+    // "EM" só vale em maiúsculas ("1º ano EM"): em minúsculas é a palavra "em".
+    const siglaEM = /(^|[^\p{L}])EM([^\p{L}]|$)/u.test(bruto || "");
     if (/bercario|bebe/.test(t)) return { etapa: "ei", grupo: 1 };
     if (/maternal|creche|bem pequen/.test(t)) return { etapa: "ei", grupo: 2 };
     if (/\bpre\b|pre-escola|pre escola|jardim|criancas pequenas/.test(t))
       return { etapa: "ei", grupo: 3 };
     if (/\bg[1-3]\b/.test(t)) return { etapa: "ei", grupo: 2 };
     if (/\bg[45]\b/.test(t)) return { etapa: "ei", grupo: 3 };
-    if (/infantil/.test(t)) return { etapa: "ei", grupo: 3 };
-    if (/ensino medio|\bem\b|\d\s*[aoªº°]?\s*serie/.test(t)) return { etapa: "em" };
+    if (/infantil/.test(t)) {
+      // "Infantil 2", "Infantil III": turmas de 2 e 3 anos são crianças bem pequenas.
+      const n = t.match(/infantil\s*(\d|i{1,3}\b|iv\b|v\b)/);
+      const idade = n ? ({ i: 1, ii: 2, iii: 3, iv: 4, v: 5 }[n[1]] ?? parseInt(n[1], 10)) : 0;
+      return { etapa: "ei", grupo: idade >= 1 && idade <= 3 ? 2 : 3 };
+    }
+    if (/ensino medio/.test(t) || siglaEM || /\d\s*[aoªº°]?\s*serie/.test(t))
+      return { etapa: "em" };
+    // "1º período", "2º período": pré-escola em várias redes.
+    if (/\d\s*[oº°]?\s*periodo/.test(t) && !/ano|serie/.test(t)) return { etapa: "ei", grupo: 3 };
     const m = t.match(/(\d{1,2})\s*[ºo°]?\s*ano/) || t.match(/^\D*([1-9])\b/);
     if (m) {
       const n = parseInt(m[1], 10);
@@ -186,4 +196,31 @@ export function componentePadrao(campo: string, etapa: NivelBncc["etapa"]): stri
     default:
       return null;
   }
+}
+
+/** Anos a que um código da BNCC se aplica. Ex.: EF15LP03 → 1º ao 5º ano; EI02EO04 → grupo 2. */
+function alcanceDoCodigo(cod: string): NivelBncc[] {
+  const m = cod.match(/^(EI|EF|EM)(\d)(\d)/);
+  if (!m) return [];
+  if (m[1] === "EM") return [{ etapa: "em" }];
+  const a = parseInt(m[2], 10);
+  const b = parseInt(m[3], 10);
+  if (m[1] === "EI") return b >= 1 && b <= 3 ? [{ etapa: "ei", grupo: b as 1 | 2 | 3 }] : [];
+  // EF01 = 1º ano; EF15 = 1º ao 5º; EF69 = 6º ao 9º.
+  const [ini, fim] = a === 0 ? [b, b] : [a, b];
+  const out: NivelBncc[] = [];
+  for (let ano = ini; ano <= fim; ano++) out.push({ etapa: "ef", ano });
+  return out;
+}
+
+/**
+ * Uma sugestão pronta que cita códigos da BNCC só serve se algum código for do
+ * ano do aluno. Frases sem código servem sempre; sem o ano do aluno, todas servem.
+ */
+export function fraseServeAoNivel(frase: string, nivel: NivelBncc | null | undefined): boolean {
+  if (!nivel) return true;
+  const cods = frase.match(/\bE[IFM]\d{2}[A-Z]{2,3}\d{2,3}\b/g);
+  if (!cods) return true;
+  const k = chaveNivel(nivel);
+  return cods.some((c) => alcanceDoCodigo(c).some((n) => chaveNivel(n) === k));
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import { PEIBnccPanel } from "./PEIBnccPanel";
-import { componentePadrao, type NivelBncc } from "@/lib/pei/bncc";
+import { componentePadrao, fraseServeAoNivel, type NivelBncc } from "@/lib/pei/bncc";
 
 // Catálogo de sugestões rápidas por campo do PEI.
 // As frases foram redigidas para serem clicáveis e inseridas no texto.
@@ -618,7 +618,8 @@ export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = 
   const prefixed = prefix ? PEI_SUGGESTIONS[`${prefix}${fieldKey}`] : undefined;
   const direct = PEI_SUGGESTIONS[fieldKey];
   const fb = fallbackKey ? (prefix ? PEI_SUGGESTIONS[`${prefix}${fallbackKey}`] : undefined) || PEI_SUGGESTIONS[fallbackKey] : undefined;
-  const opts = prefixed || direct || fb || [];
+  // Frases prontas com código da BNCC só aparecem se o código for do ano do aluno.
+  const opts = (prefixed || direct || fb || []).filter((o) => fraseServeAoNivel(o, bncc?.nivel));
   // A BNCC aparece nos campos ligados a um componente. Sem a série do aluno,
   // abre no 1º ano e pede para a professora escolher o ano.
   const nivelBase: NivelBncc = bncc?.nivel || { etapa: "ef", ano: 1 };

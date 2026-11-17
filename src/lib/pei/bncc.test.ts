@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { readFileSync } from "node:fs";
-import { componentePadrao, itensBncc, nivelDoTexto } from "./bncc";
+import { componentePadrao, fraseServeAoNivel, itensBncc, nivelDoTexto } from "./bncc";
 import { valoresDeIdentificacao, type Lacuna } from "./modeloRede";
 
 describe("nivelDoTexto", () => {
@@ -80,5 +80,44 @@ describe("valoresDeIdentificacao", () => {
       L5: "F84.0",
       L8: "Júlia",
     });
+  });
+});
+
+describe("nivelDoTexto: casos que confundem", () => {
+  test('a palavra "em" não é Ensino Médio', () => {
+    expect(nivelDoTexto("3º ano em tempo integral")).toEqual({ etapa: "ef", ano: 3 });
+    expect(nivelDoTexto("1º ano EM")).toEqual({ etapa: "em" });
+    expect(nivelDoTexto("2ª série do Ensino Médio")).toEqual({ etapa: "em" });
+  });
+  test("Infantil com número e períodos da pré-escola", () => {
+    expect(nivelDoTexto("Infantil 2")).toEqual({ etapa: "ei", grupo: 2 });
+    expect(nivelDoTexto("Infantil III")).toEqual({ etapa: "ei", grupo: 2 });
+    expect(nivelDoTexto("Infantil 5")).toEqual({ etapa: "ei", grupo: 3 });
+    expect(nivelDoTexto("Educação Infantil")).toEqual({ etapa: "ei", grupo: 3 });
+    expect(nivelDoTexto("2º período")).toEqual({ etapa: "ei", grupo: 3 });
+  });
+});
+
+describe("fraseServeAoNivel", () => {
+  test("frase sem código serve sempre", () => {
+    expect(fraseServeAoNivel("Usar apoio visual.", { etapa: "ef", ano: 4 })).toBe(true);
+  });
+  test("código só serve para o ano a que pertence", () => {
+    const f1 = "Segmentar oralmente palavras em sílabas (EF01LP06).";
+    expect(fraseServeAoNivel(f1, { etapa: "ef", ano: 1 })).toBe(true);
+    expect(fraseServeAoNivel(f1, { etapa: "ef", ano: 4 })).toBe(false);
+    const f15 = "Localizar informações explícitas em textos (EF15LP03).";
+    expect(fraseServeAoNivel(f15, { etapa: "ef", ano: 4 })).toBe(true);
+    expect(fraseServeAoNivel(f15, { etapa: "ef", ano: 6 })).toBe(false);
+    expect(fraseServeAoNivel("(EF69LP03)", { etapa: "ef", ano: 8 })).toBe(true);
+  });
+  test("Educação Infantil pelo grupo, e basta um dos códigos servir", () => {
+    const f = "Comunicar-se com colegas (EI02EO04 / EI03EO04).";
+    expect(fraseServeAoNivel(f, { etapa: "ei", grupo: 3 })).toBe(true);
+    expect(fraseServeAoNivel("(EI02ET07)", { etapa: "ei", grupo: 3 })).toBe(false);
+    expect(fraseServeAoNivel("(EM13LP01)", { etapa: "em" })).toBe(true);
+  });
+  test("sem o ano do aluno, mostra tudo", () => {
+    expect(fraseServeAoNivel("(EF01LP06)", null)).toBe(true);
   });
 });

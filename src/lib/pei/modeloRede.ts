@@ -13,12 +13,16 @@
 //   opcoes             "( ) Sim ( ) Não", "[ ] Visual", "☐ Auditivo" → marca com X
 //   controle           controle de conteúdo do Word ("Clique aqui para inserir o texto")
 //
+// Os espaços são procurados no corpo do documento, dentro das caixas de texto
+// do Word e no cabeçalho e rodapé das páginas.
+//
 // Usa DOMParser/XMLSerializer (navegador).
 
 import JSZip from "jszip";
 
 const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const XML_NS = "http://www.w3.org/XML/1998/namespace";
+const MC = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 const MAX_LACUNAS = 300;
 // Marcas (caracteres de uso privado) que indicam, no documento mostrado na
 // tela, onde fica cada espaço: MARCA_INI + id + MARCA_FIM.
@@ -79,6 +83,8 @@ function textoDe(el: Element): string {
         else if (c.localName === "tab") s += " ";
         else if (c.localName === "br" || c.localName === "cr") s += "\n";
         else if (c.localName === "delText" || c.localName === "instrText") continue;
+        // O texto de uma caixa de texto não faz parte do parágrafo onde ela está presa.
+        else if (c.localName === "txbxContent") continue;
         else walk(c);
       } else walk(c);
     }
@@ -190,13 +196,34 @@ function mapaDeTexto(p: Element): { texto: string; trechos: Trecho[] } {
   const trechos: Trecho[] = [];
   let texto = "";
   for (const t of descendentes(p, "t")) {
-    // ignora texto dentro de controles de conteúdo (tratados à parte)
-    if (dentroDe(t, "sdt", p)) continue;
+    // ignora texto dentro de controles de conteúdo e de caixas de texto (tratados à parte)
+    if (dentroDe(t, "sdt", p) || dentroDe(t, "txbxContent", p)) continue;
     const s = t.textContent || "";
     trechos.push({ t, ini: texto.length, fim: texto.length + s.length });
     texto += s;
   }
   return { texto, trechos };
+}
+
+/** Caixas de texto do Word presas a este parágrafo (sem as que estão dentro de outra caixa). */
+function caixasDe(p: Element): Element[] {
+  return descendentes(p, "txbxContent").filter((c) => !dentroDe(c, "txbxContent", p));
+}
+
+/**
+ * O Word guarda cada caixa de texto duas vezes (a versão atual e uma cópia para
+ * versões antigas). Fica só a atual, para o texto não aparecer nem ser
+ * preenchido em dobro; o Word recria a cópia ao salvar.
+ */
+function tirarCopiasAntigas(doc: Document) {
+  for (const fb of Array.from(doc.getElementsByTagNameNS(MC, "Fallback"))) {
+    const pai = fb.parentNode as Element | null;
+    if (!pai || !fb.getElementsByTagNameNS(W, "txbxContent").length) continue;
+    const temAtual = Array.from(pai.children).some(
+      (k) => k.namespaceURI === MC && k.localName === "Choice",
+    );
+    if (temAtual) pai.removeChild(fb);
+  }
 }
 
 function dentroDe(el: Element, nome: string, ate: Element): boolean {
@@ -208,37 +235,41 @@ function dentroDe(el: Element, nome: string, ate: Element): boolean {
 
 /** Troca o intervalo [ini, fim) do texto do parágrafo por `valor`. */
 function substituir(trechos: Trecho[], ini: number, fim: number, valor: string) {
+  // Cada trecho guarda a posição do seu texto no parágrafo ORIGINAL. Ao trocar um
+  // pedaço, o trecho fica só com o que vinha antes e o que vinha depois vira um
+  // trecho novo. Assim várias trocas no mesmo parágrafo funcionam em qualquer ordem.
   let colocado = false;
-  for (const tr of trechos) {
+  for (const tr of [...trechos]) {
     if (tr.fim <= ini || tr.ini >= fim) continue;
     const s = tr.t.textContent || "";
     const a = Math.max(0, ini - tr.ini);
     const b = Math.min(s.length, fim - tr.ini);
-    const antes = s.slice(0, a);
     const depois = s.slice(b);
-    tr.t.setAttributeNS(XML_NS, "xml:space", "preserve");
-    if (colocado) {
-      tr.t.textContent = antes + depois;
-      continue;
-    }
-    colocado = true;
-    const linhas = valor.split("\n");
-    tr.t.textContent = antes + linhas[0];
     const doc = tr.t.ownerDocument;
-    let ref: Element = tr.t;
     const run = tr.t.parentElement!;
+    let ref: Element = tr.t;
     const inserir = (el: Element) => {
       run.insertBefore(el, ref.nextSibling);
       ref = el;
     };
-    // Remove o sublinhado do run (as linhas "____" costumam vir sublinhadas).
-    for (const u of filhos(filho(run, "rPr") || novoEl(doc, "rPr"), "u"))
-      u.parentElement?.removeChild(u);
-    for (const linha of linhas.slice(1)) {
-      inserir(novoEl(doc, "br"));
-      inserir(novoT(doc, linha));
+    tr.t.setAttributeNS(XML_NS, "xml:space", "preserve");
+    tr.t.textContent = s.slice(0, a);
+    if (!colocado) {
+      colocado = true;
+      // Remove o sublinhado do run (as linhas "____" costumam vir sublinhadas).
+      for (const u of filhos(filho(run, "rPr") || novoEl(doc, "rPr"), "u"))
+        u.parentElement?.removeChild(u);
+      valor.split("\n").forEach((linha, i) => {
+        if (i > 0) inserir(novoEl(doc, "br"));
+        inserir(novoT(doc, linha));
+      });
     }
-    if (depois) inserir(novoT(doc, depois));
+    if (depois) {
+      const t2 = novoT(doc, depois);
+      inserir(t2);
+      trechos.push({ t: t2, ini: tr.ini + b, fim: tr.fim });
+    }
+    tr.fim = tr.ini + a;
   }
 }
 
@@ -310,24 +341,36 @@ type Ctx = {
   rotuloSolto?: boolean;
 };
 
-function detectar(doc: Document): Alvo[] {
-  const alvos: Alvo[] = [];
-  const body = doc.getElementsByTagNameNS(W, "body")[0];
-  if (!body) throw new ErroModelo("O arquivo não parece um documento do Word.");
+/** Procura os espaços dentro de `raiz` (corpo, cabeçalho ou rodapé) e junta em `alvos`. */
+function detectar(raiz: Element, alvos: Alvo[] = []): Alvo[] {
+  const body = raiz;
   let secao = "";
+  // Caixas de texto vazias que já viraram o espaço de um "Rótulo:" logo acima.
+  const caixasUsadas = new Set<Element>();
   let anterior = ""; // texto do último parágrafo com conteúdo
   let ultimaLinha: { alvo: Alvo; p: Element; extras: Element[] } | null = null;
 
   const add = (a: Omit<Alvo, "id">) => {
     if (alvos.length >= MAX_LACUNAS) return null;
+    // Linha de assinatura, carimbo ou rubrica fica em branco: é assinada à mão.
+    if (/^(assinaturas?|carimbo|rubrica|visto)\b/i.test(a.rotulo.trim())) return null;
     const alvo = { ...a, id: `L${alvos.length + 1}` } as Alvo;
     alvos.push(alvo);
     return alvo;
   };
 
   const paragrafo = (p: Element, ctx: Ctx) => {
+    // Caixas de texto presas a este parágrafo: cada uma é um pedaço de documento.
+    for (const cx of caixasDe(p)) {
+      if (caixasUsadas.has(cx)) continue;
+      ultimaLinha = null;
+      bloco(cx, { secao, rotuloFora: "", naCelula: false, celulaSozinha: false });
+    }
+
     // Controles de conteúdo dentro da linha
-    const ctrls = descendentes(p, "sdt").filter(ehPlaceholder);
+    const ctrls = descendentes(p, "sdt")
+      .filter((x) => !dentroDe(x, "txbxContent", p))
+      .filter(ehPlaceholder);
     if (ctrls.length) {
       for (const sdt of ctrls) {
         const antes = limpaRotulo(textoAntesDe(p, sdt));
@@ -353,11 +396,18 @@ function detectar(doc: Document): Alvo[] {
     // 1) Opções para marcar: ( ) Sim ( ) Não
     const marcas = [...texto.matchAll(MARCADOR)];
     if (marcas.length) {
+      const linhasNoMeio = [...texto.matchAll(BRANCO)];
       const opcoes = marcas.map((m, i) => {
         const de = m.index! + m[0].length;
         const ate = i + 1 < marcas.length ? marcas[i + 1].index! : texto.length;
+        // O nome da opção vai até uma linha "____" ou um espaço largo ("( ) Não      Turno: ___").
+        const trecho = texto
+          .slice(de, ate)
+          .split(BRANCO)[0]
+          .trim()
+          .split(/\s{3,}/)[0];
         return (
-          limpaRotulo(texto.slice(de, ate).replace(BRANCO, " "))
+          limpaRotulo(trecho)
             .replace(/[;,/]$/, "")
             .trim() || `opção ${i + 1}`
         );
@@ -392,6 +442,26 @@ function detectar(doc: Document): Alvo[] {
           });
         },
       });
+      // Linhas "____" na mesma linha das opções: "( ) Outro: ____" ou "Turno: ____".
+      linhasNoMeio.forEach((b, i) => {
+        const ini = b.index!;
+        const fim = ini + b[0].length;
+        const marcaAntes = [...pos].reverse().find((x) => x.fim <= ini);
+        const de = Math.max(
+          marcaAntes ? marcaAntes.fim : 0,
+          i > 0 ? linhasNoMeio[i - 1].index! + linhasNoMeio[i - 1][0].length : 0,
+        );
+        const pedacos = texto.slice(de, ini).split(/\s{3,}/);
+        const nome = limpaRotulo(pedacos[pedacos.length - 1]);
+        if (!/\p{L}/u.test(nome)) return;
+        add({
+          tipo: "apos_rotulo",
+          rotulo:
+            !marcaAntes || pedacos.length > 1 || nome === rotulo ? nome : `${rotulo} — ${nome}`,
+          secao,
+          aplicar: (v) => substituir(trechos, ini, fim, v ? ` ${v} ` : ""),
+        });
+      });
       ultimaLinha = null;
       anterior = limpaRotulo(limpo);
       return;
@@ -408,12 +478,24 @@ function detectar(doc: Document): Alvo[] {
         return;
       }
       let de = 0;
+      let faixaAnterior: { ini: number; fim: number } | null = null;
       brancos.forEach((m, i) => {
         const ini = m.index!;
         const fim = ini + m[0].length;
-        const rotBruto = limpaRotulo(texto.slice(de, ini).replace(BRANCO, " "));
+        const entre = texto.slice(de, ini);
+        const rotBruto = limpaRotulo(entre.replace(BRANCO, " "));
         const rot = /\p{L}/u.test(rotBruto) ? rotBruto : "";
         de = fim;
+        // "____, ____ de ________ de 20____": é um espaço só (local e data), não quatro.
+        if (
+          !soLinha &&
+          faixaAnterior &&
+          entre.length <= 10 &&
+          (!rot || /^(de|do|da|e|a|as|às|ate|até|de 20|de 19|de 2|h|hs|min)$/i.test(rot))
+        ) {
+          faixaAnterior.fim = fim;
+          return;
+        }
         const rotulo = rot || (i === 0 ? ctx.rotuloFora || anterior || secao : "");
         if (!rotulo) return;
         if (soLinha) {
@@ -429,12 +511,14 @@ function detectar(doc: Document): Alvo[] {
           });
           if (alvo) ultimaLinha = { alvo, p, extras };
         } else {
-          add({
+          const faixa = { ini, fim };
+          const feito = add({
             tipo: "apos_rotulo",
             rotulo,
             secao,
-            aplicar: (v) => substituir(trechos, ini, fim, v ? ` ${v} ` : ""),
+            aplicar: (v) => substituir(trechos, faixa.ini, faixa.fim, v ? ` ${v} ` : ""),
           });
+          faixaAnterior = feito ? faixa : null;
         }
       });
       if (!soLinha) {
@@ -463,7 +547,25 @@ function detectar(doc: Document): Alvo[] {
       // A próxima linha já é o espaço ("____" ou "( ) Sim"): ela vira a lacuna, com este rótulo.
       const proxTx = prox && prox.localName === "p" ? textoDe(prox) : "";
       const proxEhEspaco = proxTx.search(BRANCO) >= 0 || proxTx.search(MARCADOR) >= 0;
-      if (!proxEhTabela && !proxEhEspaco) {
+      // A próxima linha é uma caixa de texto vazia: a resposta vai dentro dela.
+      const caixaVazia =
+        prox && prox.localName === "p" && !proxTx.trim()
+          ? caixasDe(prox).find((cx) => !textoDe(cx).trim() && !temObjeto(cx) && filho(cx, "p"))
+          : undefined;
+      if (caixaVazia) {
+        const alvoP = filho(caixaVazia, "p")!;
+        caixasUsadas.add(caixaVazia);
+        add({
+          tipo: "paragrafo_seguinte",
+          rotulo: limpaRotulo(m[1]),
+          secao,
+          aplicar: (v) => escreverNoParagrafo(alvoP, v),
+        });
+        anterior = limpaRotulo(limpo);
+        return;
+      }
+      const proxTemCaixa = !!prox && prox.localName === "p" && caixasDe(prox).length > 0;
+      if (!proxEhTabela && !proxEhEspaco && !proxTemCaixa) {
         const rotulo = limpaRotulo(m[1]);
         if (
           prox &&
@@ -519,8 +621,14 @@ function detectar(doc: Document): Alvo[] {
           // "Nome:" numa célula que não tem onde responder ao lado nem embaixo.
           const direita = cels[ci + 1];
           const abaixo = linhas[li + 1]?.find((x) => x.col <= c.col && c.col < x.col + x.span);
+          // Só vale quando a linha inteira é de rótulos ("Nome:" | "Nascimento:"): se alguma
+          // célula já traz texto comum, ela é a resposta e o rótulo não vira espaço.
           const rotuloSolto =
-            cels.length > 1 && !ehEspaco(direita) && !ehEspaco(abaixo) && !temObjeto(c.tc);
+            cels.length > 1 &&
+            cels.every((x) => x.continua || /:\s*$/.test(x.texto.trim())) &&
+            !ehEspaco(direita) &&
+            !ehEspaco(abaixo) &&
+            !temObjeto(c.tc);
           const esquerda = cels
             .slice(0, ci)
             .reverse()
@@ -687,10 +795,99 @@ async function abrir(buf: ArrayBuffer) {
   return { zip, doc };
 }
 
+type Parte = { nome: string; arquivo: string; doc: Document; raiz: Element };
+
+/** Cabeçalhos ("header") ou rodapés ("footer") do documento, o mais completo primeiro. */
+async function partesDe(zip: JSZip, tipo: "header" | "footer"): Promise<Parte[]> {
+  const out: Array<Parte & { peso: number }> = [];
+  const nomes = Object.keys(zip.files)
+    .filter((n) => new RegExp(`^word/${tipo}\\d+\\.xml$`).test(n))
+    .sort();
+  for (const nome of nomes) {
+    const doc = new DOMParser().parseFromString(
+      await zip.file(nome)!.async("string"),
+      "application/xml",
+    );
+    const raiz = doc.documentElement;
+    if (!raiz || doc.getElementsByTagName("parsererror").length) continue;
+    tirarCopiasAntigas(doc);
+    let peso = (temObjeto(raiz) ? 500 : 0) + textoDe(raiz).trim().length;
+    for (const cx of descendentes(raiz, "txbxContent")) peso += textoDe(cx).trim().length;
+    if (!peso) continue;
+    out.push({ nome, arquivo: nome.replace(/^word\//, ""), doc, raiz, peso });
+  }
+  return out.sort((x, y) => y.peso - x.peso);
+}
+
+type Montado = {
+  zip: JSZip;
+  doc: Document;
+  body: Element;
+  alvos: Alvo[];
+  cab: Parte | null;
+  rod: Parte | null;
+  /** Aplica os valores em tudo (inclusive nos outros cabeçalhos e rodapés) e devolve as partes mexidas. */
+  aplicar: (valorDe: (a: Alvo) => string | null) => Parte[];
+};
+
+const chaveEspelho = (a: Lacuna) => `${a.tipo}|${a.rotulo.toLowerCase()}`;
+
+/**
+ * Abre o modelo e acha todos os espaços: corpo, depois o cabeçalho e o rodapé
+ * principais. Os outros cabeçalhos e rodapés (primeira página, páginas pares)
+ * recebem o mesmo texto do principal quando têm o mesmo espaço.
+ */
+async function montar(buf: ArrayBuffer): Promise<Montado> {
+  const { zip, doc } = await abrir(buf);
+  const body = doc.getElementsByTagNameNS(W, "body")[0];
+  if (!body) throw new ErroModelo("O arquivo não parece um documento do Word.");
+  tirarCopiasAntigas(doc);
+  const alvos = detectar(body);
+  const cabs = await partesDe(zip, "header");
+  const rods = await partesDe(zip, "footer");
+  const grupos: Array<{ principal: Alvo[]; copias: Array<{ parte: Parte; alvos: Alvo[] }> }> = [];
+  for (const lista of [cabs, rods]) {
+    if (!lista.length) continue;
+    const ini = alvos.length;
+    detectar(lista[0].raiz, alvos);
+    grupos.push({
+      principal: alvos.slice(ini),
+      copias: lista.slice(1).map((parte) => ({ parte, alvos: detectar(parte.raiz) })),
+    });
+  }
+  const aplicar = (valorDe: (a: Alvo) => string | null) => {
+    const mexidas = new Set<Parte>();
+    for (const g of grupos) {
+      for (const c of g.copias) {
+        const visto: Record<string, number> = {};
+        const pares: Array<[Alvo, string]> = [];
+        for (const a of c.alvos) {
+          const k = chaveEspelho(a);
+          const n = (visto[k] = (visto[k] || 0) + 1);
+          const origem = g.principal.filter((x) => chaveEspelho(x) === k)[n - 1];
+          const v = origem ? valorDe(origem) : null;
+          if (v != null) pares.push([a, v]);
+        }
+        for (const [a, v] of pares.reverse()) a.aplicar(v);
+        if (pares.length) mexidas.add(c.parte);
+      }
+    }
+    // De trás para frente: mudanças num parágrafo não mexem nas lacunas anteriores.
+    for (const a of [...alvos].reverse()) {
+      const v = valorDe(a);
+      if (v != null) a.aplicar(v);
+    }
+    if (cabs[0]) mexidas.add(cabs[0]);
+    if (rods[0]) mexidas.add(rods[0]);
+    return [...mexidas];
+  };
+  return { zip, doc, body, alvos, cab: cabs[0] || null, rod: rods[0] || null, aplicar };
+}
+
 /** Lê o modelo e devolve os espaços a preencher, na ordem do documento. */
 export async function analisarModelo(buf: ArrayBuffer): Promise<Lacuna[]> {
-  const { doc } = await abrir(buf);
-  return detectar(doc).map(({ aplicar: _a, ...l }) => l);
+  const { alvos } = await montar(buf);
+  return alvos.map(({ aplicar: _a, ...l }) => l);
 }
 
 /** Preenche o modelo com `valores` (id da lacuna → texto) e devolve o novo .docx. */
@@ -698,17 +895,15 @@ export async function preencherModelo(
   buf: ArrayBuffer,
   valores: Record<string, string>,
 ): Promise<Blob> {
-  const { zip, doc } = await abrir(buf);
-  const alvos = detectar(doc);
-  // Aplica de trás para frente: mudanças num parágrafo não mexem nas lacunas anteriores.
-  for (const a of [...alvos].reverse()) {
+  const m = await montar(buf);
+  const partes = m.aplicar((a) => {
     const v = valores[a.id];
-    if (v == null || String(v).trim() === "") continue;
-    a.aplicar(String(v).trim());
-  }
-  const xml = new XMLSerializer().serializeToString(doc);
-  zip.file("word/document.xml", xml);
-  return zip.generateAsync({
+    return v == null || String(v).trim() === "" ? null : String(v).trim();
+  });
+  const ser = new XMLSerializer();
+  m.zip.file("word/document.xml", ser.serializeToString(m.doc));
+  for (const p of partes) m.zip.file(p.nome, ser.serializeToString(p.doc));
+  return m.zip.generateAsync({
     type: "blob",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     compression: "DEFLATE",
@@ -810,7 +1005,9 @@ export type TrechoVisual =
 
 export type BlocoVisual =
   | { t: "p"; filhos: TrechoVisual[]; alinh?: "center" | "right" | "justify"; titulo?: boolean }
-  | { t: "tabela"; linhas: CelulaVisual[][] };
+  | { t: "tabela"; linhas: CelulaVisual[][] }
+  /** Caixa de texto do Word: aparece como um quadro com o conteúdo dentro. */
+  | { t: "caixa"; blocos: BlocoVisual[] };
 
 export type CelulaVisual = {
   blocos: BlocoVisual[];
@@ -820,7 +1017,12 @@ export type CelulaVisual = {
   largura?: number; // em % da linha
 };
 
-export type ModeloVisual = { lacunas: Lacuna[]; cabecalho: BlocoVisual[]; corpo: BlocoVisual[] };
+export type ModeloVisual = {
+  lacunas: Lacuna[];
+  cabecalho: BlocoVisual[];
+  corpo: BlocoVisual[];
+  rodape: BlocoVisual[];
+};
 
 const MIME: Record<string, string> = {
   png: "image/png",
@@ -874,6 +1076,21 @@ function ligado(rPr: Element | null, nome: string): boolean {
 
 function blocosVisuais(container: Element, imagens: Record<string, string>): BlocoVisual[] {
   const out: BlocoVisual[] = [];
+  let caixas: BlocoVisual[] = []; // caixas de texto do parágrafo que está sendo lido
+
+  // Filhos do run, entrando em mc:AlternateContent (fica a versão atual do desenho).
+  const filhosDoRun = (r: Element): Element[] => {
+    const lista: Element[] = [];
+    for (let c = r.firstElementChild; c; c = c.nextElementSibling) {
+      if (c.namespaceURI === MC && c.localName === "AlternateContent") {
+        const ks = Array.from(c.children);
+        const escolha =
+          ks.find((k) => k.localName === "Choice") || ks.find((k) => k.localName === "Fallback");
+        if (escolha) lista.push(...filhosDoRun(escolha));
+      } else lista.push(c);
+    }
+    return lista;
+  };
 
   const run = (r: Element, dest: TrechoVisual[]) => {
     const rPr = filho(r, "rPr");
@@ -886,11 +1103,16 @@ function blocosVisuais(container: Element, imagens: Record<string, string>): Blo
       ...(tam ? { tam: tam / 2 } : {}),
       ...(/^[0-9a-f]{6}$/i.test(cor) ? { cor: `#${cor}` } : {}),
     };
-    for (let c = r.firstElementChild; c; c = c.nextElementSibling) {
+    for (const c of filhosDoRun(r)) {
       if (c.localName === "t") dest.push(...partirMarcas(c.textContent || "", base));
       else if (c.localName === "tab") dest.push({ t: "texto", texto: "    ", ...base });
       else if (c.localName === "br" || c.localName === "cr") dest.push({ t: "br" });
       else if (c.localName === "drawing" || c.localName === "pict") {
+        const cxs = descendentes(c, "txbxContent").filter((x) => !dentroDe(x, "txbxContent", c));
+        if (cxs.length) {
+          for (const cx of cxs) caixas.push({ t: "caixa", blocos: blocosVisuais(cx, imagens) });
+          continue;
+        }
         const blip = c.getElementsByTagNameNS("*", "blip")[0];
         const id = blip?.getAttribute("r:embed") || "";
         const ext = c.getElementsByTagNameNS("*", "extent")[0];
@@ -919,7 +1141,16 @@ function blocosVisuais(container: Element, imagens: Record<string, string>): Blo
     const jc = attr(filho(pPr, "jc"), "val") || "";
     const estilo = attr(filho(pPr, "pStyle"), "val") || "";
     const filhosV: TrechoVisual[] = [];
+    const guardadas = caixas;
+    caixas = [];
     linha(p, filhosV);
+    const daqui = caixas;
+    caixas = guardadas;
+    // Parágrafo que só segura uma caixa de texto: mostra só a caixa.
+    if (daqui.length && !filhosV.length) {
+      out.push(...daqui);
+      return;
+    }
     out.push({
       t: "p",
       filhos: filhosV,
@@ -928,6 +1159,7 @@ function blocosVisuais(container: Element, imagens: Record<string, string>): Blo
       ...(jc === "both" ? { alinh: "justify" as const } : {}),
       ...(/heading|t[ií]tulo|ttulo|title/i.test(estilo) ? { titulo: true } : {}),
     });
+    out.push(...daqui);
   };
 
   const tabela = (tbl: Element) => {
@@ -982,30 +1214,15 @@ function blocosVisuais(container: Element, imagens: Record<string, string>): Blo
  * documento, com um campo em cada espaço em branco (mesmos ids de analisarModelo).
  */
 export async function visualizarModelo(buf: ArrayBuffer): Promise<ModeloVisual> {
-  const { zip, doc } = await abrir(buf);
-  const alvos = detectar(doc);
-  for (const a of [...alvos].reverse()) a.aplicar(`${MARCA_INI}${a.id}${MARCA_FIM}`);
-  const body = doc.getElementsByTagNameNS(W, "body")[0];
-  const corpo = blocosVisuais(body, await carregarImagens(zip, "document.xml"));
-
-  // Cabeçalho (onde costuma ficar o logo da rede): o mais completo dos que existirem.
-  let cabecalho: BlocoVisual[] = [];
-  let peso = 0;
-  for (const nome of Object.keys(zip.files)) {
-    const m = nome.match(/^word\/(header\d+\.xml)$/);
-    if (!m) continue;
-    const hd = new DOMParser().parseFromString(
-      await zip.file(nome)!.async("string"),
-      "application/xml",
-    );
-    const raiz = hd.documentElement;
-    if (!raiz || hd.getElementsByTagName("parsererror").length) continue;
-    const blocos = blocosVisuais(raiz, await carregarImagens(zip, m[1]));
-    const p = JSON.stringify(blocos).length;
-    if (p > peso) {
-      peso = p;
-      cabecalho = blocos;
-    }
-  }
-  return { lacunas: alvos.map(({ aplicar: _a, ...l }) => l), cabecalho, corpo };
+  const m = await montar(buf);
+  m.aplicar((a) => `${MARCA_INI}${a.id}${MARCA_FIM}`);
+  const corpo = blocosVisuais(m.body, await carregarImagens(m.zip, "document.xml"));
+  // Cabeçalho (onde costuma ficar o logo da rede) e rodapé: o mais completo de cada.
+  const cabecalho = m.cab
+    ? blocosVisuais(m.cab.raiz, await carregarImagens(m.zip, m.cab.arquivo))
+    : [];
+  const rodape = m.rod
+    ? blocosVisuais(m.rod.raiz, await carregarImagens(m.zip, m.rod.arquivo))
+    : [];
+  return { lacunas: m.alvos.map(({ aplicar: _a, ...l }) => l), cabecalho, corpo, rodape };
 }

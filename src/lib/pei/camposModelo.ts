@@ -28,11 +28,12 @@ const REGRAS: Array<[RegExp, string, string | null]> = [
   [/crise|desregula/, "comoLidarCrises", null],
   [/comportament/, "comportamentosRelevantes", null],
   [/percurso|historico escolar|vida escolar/, "percursoEscolar", null],
+  // Antes de "atendimento": "Atendimento Educacional Especializado" é o AEE, não a clínica.
+  [/\baee\b|atendimento educacional especializado|sala de recursos/, "objetivosAEE", null],
   [/atendimento|terapia|clinic|especialista/, "atendimentosExternos", null],
   [/intervenc/, "resultadosIntervencoes", null],
   [/familia|responsave(l|is) (pode|deve)|em casa/, "comoFamiliaApoia", null],
   [/combinad/, "combinadosFamilia", null],
-  [/\baee\b|atendimento educacional especializado|sala de recursos/, "objetivosAEE", null],
   [/profissional de apoio|mediador|cuidador/, "funcaoProfissionalApoio", null],
   [/revis|atualiza/, "criteriosAtualizacao", null],
   [/tecnologia assistiva|aplicativo|software/, "softwaresAplicativos", null],
@@ -59,7 +60,8 @@ export function campoDoModelo(l: Lacuna): CampoDoModelo {
     l.tipo !== "linha" &&
     l.tipo !== "paragrafo_seguinte" &&
     l.rotulo.length <= 40 &&
-    /nome|data|nascimento|diagnostico|escola|unidade|ano|serie|turma|turno|cid|idade|telefone|contato|matricula|endereco|responsavel( legal)?$|professor|diretor|coordena|periodo|vigencia|inicio|fim|codigo|inep|municipio|cidade/.test(
+    // Palavras inteiras: "cid" não pode casar com "capacidade", nem "idade" com "habilidades".
+    /\b(nome|data|nascimento|diagnostico|escola|unidade|ano|serie|turma|turno|cid|idade|telefone|celular|contato|matricula|endereco|professor(a|es)?|diretor(a)?|coordenador(a)?|periodo|vigencia|inicio|fim|termino|codigo|inep|municipio|cidade|bairro|cep|cpf|rg|nis|sus|e-?mail|mae|pai|filiacao)\b|responsavel( legal)?$/.test(
       r,
     ) &&
     !/objetivo|meta|estrateg|descri|observa/.test(r);
