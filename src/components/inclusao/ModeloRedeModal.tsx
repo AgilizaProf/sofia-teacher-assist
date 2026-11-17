@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Upload, FileText, Trash2, Loader2, Download } from "lucide-react";
+import {
+  X,
+  Upload,
+  FileText,
+  Trash2,
+  Loader2,
+  Download,
+  ArrowLeft,
+  Sparkles,
+  PencilLine,
+} from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { invocarIA, ErroIA } from "@/lib/sofia/invocarIA";
@@ -14,6 +24,14 @@ import {
   type DadosIdentificacao,
   type Lacuna,
 } from "@/lib/pei/modeloRede";
+import type { NivelBncc } from "@/lib/pei/bncc";
+import { ModeloRedeFormulario } from "./ModeloRedeFormulario";
+
+/** O que a professora escreveu no modelo, por aluno (vale enquanto o modelo for o mesmo). */
+type PreenchidoPorAluno = Record<
+  string,
+  { modelo: string; valores: Record<string, string>; em: string }
+>;
 
 /** Modelo guardado na conta da professora (app_snapshots: só ela lê). */
 type ModeloSalvo = {
@@ -63,7 +81,10 @@ function nomeArquivo(t: string) {
 type Props = {
   open: boolean;
   onClose: () => void;
+  alunoId: string;
   alunoNome: string;
+  etapaPrefix?: string;
+  nivelBncc: NivelBncc | null;
   /** PEI do aluno em texto (buildPEIContext), mais os dados de identificação. */
   contexto: string;
   dados: DadosIdentificacao;
@@ -74,8 +95,25 @@ type Props = {
  * (Word .docx) uma vez, e o app devolve esse mesmo modelo preenchido com o
  * PEI de cada aluno. Cada professora tem o seu modelo, salvo só na conta dela.
  */
-export function ModeloRedeModal({ open, onClose, alunoNome, contexto, dados }: Props) {
+export function ModeloRedeModal({
+  open,
+  onClose,
+  alunoId,
+  alunoNome,
+  etapaPrefix,
+  nivelBncc,
+  contexto,
+  dados,
+}: Props) {
   const [modelo, setModelo] = usePersistentState<ModeloSalvo>("pei_modelo_rede", {});
+  const [preenchidos, setPreenchidos] = usePersistentState<PreenchidoPorAluno>(
+    "pei_modelo_rede_valores",
+    {},
+  );
+  // "inicio": anexar/trocar o modelo. "tela": preencher campo a campo, como no documento.
+  const [modo, setModo] = useState<"inicio" | "tela">("inicio");
+  const [daSofia, setDaSofia] = useState<Set<string>>(new Set());
+  const [completando, setCompletando] = useState(false);
   const [lacunas, setLacunas] = useState<Lacuna[] | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [preenchendo, setPreenchendo] = useState(false);
@@ -97,6 +135,13 @@ export function ModeloRedeModal({ open, onClose, alunoNome, contexto, dados }: P
       vivo = false;
     };
   }, [open, modelo.base64]);
+
+  useEffect(() => {
+    if (!open) {
+      setModo("inicio");
+      setDaSofia(new Set());
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -218,6 +263,161 @@ export function ModeloRedeModal({ open, onClose, alunoNome, contexto, dados }: P
   };
 
   const exemplos = (lacunas || []).slice(0, 8).map((l) => l.rotulo);
+
+  // ---- Preencher na tela ----
+  const chaveModelo = modelo.enviadoEm || modelo.nome || "";
+  const salvo = preenchidos[alunoId];
+  const valoresTela: Record<string, string> =
+    salvo && salvo.modelo === chaveModelo
+      ? salvo.valores
+      : lacunas
+        ? valoresDeIdentificacao(lacunas, dados)
+        : {};
+  const gravar = (novos: Record<string, string>) =>
+    setPreenchidos((prev) => ({
+      ...prev,
+      [alunoId]: { modelo: chaveModelo, valores: novos, em: new Date().toISOString() },
+    }));
+  const mudarCampo = (id: string, valor: string) => gravar({ ...valoresTela, [id]: valor });
+  const vazios = (lacunas || []).filter((l) => !String(valoresTela[l.id] || "").trim());
+
+  const completarComSofia = async () => {
+    if (!lacunas || !vazios.length) {
+      toast.info("Todos os campos já estão preenchidos.");
+      return;
+    }
+    const custo = CUSTOS.pei_modelo_rede;
+    if (!(await creditosGate.checar({ custo, acao: "PEI no modelo da rede" }))) return;
+    setCompletando(true);
+    try {
+      const resp = await invocarIA<{ valores?: Record<string, string> }>("preencher-modelo-pei", {
+        body: { aluno: alunoNome, contexto, lacunas: vazios },
+        validar: (d) => !!d?.valores && typeof d.valores === "object",
+      });
+      const novos = { ...valoresTela };
+      const marcados = new Set<string>();
+      for (const l of vazios) {
+        const v = String(resp.valores?.[l.id] || "").trim();
+        if (v) {
+          novos[l.id] = v;
+          marcados.add(l.id);
+        }
+      }
+      gravar(novos);
+      setDaSofia(marcados);
+      toast.success(
+        marcados.size
+          ? `A Sofia preencheu ${marcados.size} campo${marcados.size === 1 ? "" : "s"}. Revise e ajuste o que quiser.`
+          : "O PEI ainda não tem informação para os campos vazios.",
+      );
+      if (marcados.size)
+        void consumirCreditos(custo, descricaoDoc("PEI no modelo da rede", alunoNome));
+    } catch (e) {
+      toast.error(e instanceof ErroIA ? e.message : "A Sofia não conseguiu agora. Tente de novo.");
+    } finally {
+      setCompletando(false);
+    }
+  };
+
+  const baixarDaTela = async () => {
+    if (!modelo.base64) return;
+    try {
+      const blob = await preencherModelo(deBase64(modelo.base64), valoresTela);
+      const base = (modelo.nome || "modelo").replace(/\.docx$/i, "");
+      baixar(blob, `PEI-${nomeArquivo(alunoNome)}-${nomeArquivo(base)}.docx`);
+      toast.success("Word baixado com o que está na tela.");
+    } catch (e) {
+      toast.error(
+        e instanceof ErroModelo ? e.message : "Não consegui gerar o Word. Tente de novo.",
+      );
+    }
+  };
+
+  if (modo === "tela" && temModelo) {
+    const total = lacunas?.length || 0;
+    return (
+      <div
+        className="inc-modal-overlay open"
+        style={{ zIndex: 260 }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="inc-modal" style={{ maxWidth: 980 }}>
+          <div className="inc-modal-bar" />
+          <div className="inc-modal-head">
+            <div>
+              <h2>
+                {(modelo.nome || "Modelo da rede").replace(/\.docx$/i, "")} · {alunoNome}
+              </h2>
+              <span className="meta" style={{ display: "block", marginTop: 4 }}>
+                Os campos do documento da sua rede, na mesma ordem. {total - vazios.length} de{" "}
+                {total} preenchidos · salvo automaticamente
+              </span>
+            </div>
+            <button className="inc-modal-close" onClick={onClose} aria-label="Fechar">
+              <X size={16} />
+            </button>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              alignItems: "center",
+              padding: "8px 14px",
+              borderBottom: "1px solid var(--border)",
+              background: "#fff",
+            }}
+          >
+            <button className="inc-btn-ghost" onClick={() => setModo("inicio")}>
+              <ArrowLeft size={14} /> Voltar
+            </button>
+            <button
+              className="inc-btn-ghost"
+              onClick={() => void completarComSofia()}
+              disabled={completando || !vazios.length}
+              title="A Sofia escreve só nos campos vazios, usando o PEI do aluno"
+              style={{ color: "#1F4FB8", borderColor: "#B9C8F5" }}
+            >
+              {completando ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Sparkles size={14} />
+              )}
+              {completando
+                ? " Preenchendo…"
+                : ` Sofia completa ${vazios.length === 1 ? "o campo vazio" : `os ${vazios.length} campos vazios`} (${custoTexto(CUSTOS.pei_modelo_rede)})`}
+            </button>
+          </div>
+          <div className="inc-modal-body" style={{ background: "var(--bg)" }}>
+            {!lacunas ? (
+              <p style={{ fontSize: 13, color: "var(--muted)" }}>Lendo o modelo…</p>
+            ) : (
+              <ModeloRedeFormulario
+                lacunas={lacunas}
+                valores={valoresTela}
+                onChange={mudarCampo}
+                daSofia={daSofia}
+                etapaPrefix={etapaPrefix}
+                nivelBncc={nivelBncc}
+              />
+            )}
+          </div>
+          <div className="inc-modal-foot">
+            <span className="legal">Baixar o Word não gasta créditos</span>
+            <button
+              className="btn btn-primary"
+              onClick={() => void baixarDaTela()}
+              disabled={!lacunas}
+            >
+              <Download size={14} /> Baixar Word
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -357,25 +557,28 @@ export function ModeloRedeModal({ open, onClose, alunoNome, contexto, dados }: P
               Usa o que está preenchido no PEI. O que o PEI não tiver fica em branco para você
               completar.
             </li>
-            <li>
-              🔒 O modelo fica salvo só na sua conta.
-              Outras professoras não veem.
-            </li>
+            <li>🔒 O modelo fica salvo só na sua conta. Outras professoras não veem.</li>
           </ul>
         </div>
 
         <div className="inc-modal-foot">
-          <span className="legal">{custoTexto(CUSTOS.pei_modelo_rede)} por preenchimento</span>
-          <button className="inc-btn-ghost" onClick={onClose}>
-            Fechar
+          <span className="legal">Sofia: {custoTexto(CUSTOS.pei_modelo_rede)} por aluno</span>
+          <button
+            className="inc-btn-ghost"
+            onClick={() => void preencher()}
+            disabled={!temModelo || preenchendo || enviando}
+            title="A Sofia preenche tudo e o Word já baixa, sem passar pela tela"
+          >
+            {preenchendo ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+            {preenchendo ? " Preenchendo…" : " Direto no Word"}
           </button>
           <button
             className="btn btn-primary"
-            onClick={() => void preencher()}
+            onClick={() => setModo("tela")}
             disabled={!temModelo || preenchendo || enviando}
+            title="Preencher campo a campo, seguindo o documento da rede"
           >
-            {preenchendo ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-            {preenchendo ? " Preenchendo…" : " Preencher e baixar"}
+            <PencilLine size={14} /> Preencher na tela
           </button>
         </div>
       </div>

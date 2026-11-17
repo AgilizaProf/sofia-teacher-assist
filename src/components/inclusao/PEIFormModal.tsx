@@ -1018,7 +1018,10 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
       <ModeloRedeModal
         open={modeloOpen}
         onClose={() => setModeloOpen(false)}
+        alunoId={aluno?.id || ""}
         alunoNome={aluno?.name || ""}
+        etapaPrefix={etapaPrefix}
+        nivelBncc={nivelBncc}
         contexto={[
           `Nome do aluno: ${aluno?.name || ""}`,
           draft.serie ? `Turma / ano: ${draft.serie}` : "",
