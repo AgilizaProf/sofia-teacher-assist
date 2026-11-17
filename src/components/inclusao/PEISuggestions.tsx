@@ -648,6 +648,7 @@ export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = 
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        className="pei-sug-toggle"
         style={{
           fontSize: 11,
           padding: "3px 8px",
@@ -692,6 +693,7 @@ export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = 
                   type="button"
                   onClick={() => onPick(o)}
                   title="Clique para inserir no campo"
+                  className="pei-chip"
                   style={{ ...chip, borderColor: "#D9C2EA", background: "#FBF6FF" }}
                 >
                   + {o}
@@ -711,6 +713,7 @@ export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = 
               type="button"
               onClick={() => onPick(o)}
               title="Clique para inserir no campo"
+              className="pei-chip"
               style={{
                 fontSize: 11,
                 padding: "4px 9px",

@@ -52,6 +52,7 @@ function AreaTexto({
     <textarea
       ref={ref}
       id={`mr-${id}`}
+      className="mr-campo"
       aria-label={rotulo}
       title={rotulo}
       value={valor}
@@ -77,13 +78,16 @@ function AreaTexto({
 export function ModeloRedeDocumento({ visual, valores, onChange, daSofia, ativo, onAtivo }: Props) {
   const porId = new Map<string, Lacuna>(visual.lacunas.map((l) => [l.id, l]));
 
-  const campo = (id: string, bloco: boolean, chave: string) => {
+  const campo = (id: string, bloco: boolean, chave: string, naCelula = false) => {
     const l = porId.get(id);
     if (!l) return null;
     const v = valores[id] || "";
     const estilo = corCampo(!!v.trim(), daSofia.has(id) && !!v.trim(), ativo === id);
     if (bloco) {
-      return (
+      // Em tabela com títulos nas colunas, o celular empilha as células: o nome
+      // do espaço aparece em cima dele (escondido em telas largas).
+      const legenda = naCelula && l.rotulo.includes(" — ");
+      const area = (
         <AreaTexto
           key={chave}
           id={id}
@@ -95,11 +99,21 @@ export function ModeloRedeDocumento({ visual, valores, onChange, daSofia, ativo,
           onFocus={() => onAtivo(id)}
         />
       );
+      if (!legenda) return area;
+      return (
+        <div key={chave}>
+          <span className="mr-rot" aria-hidden="true">
+            {l.rotulo}
+          </span>
+          {area}
+        </div>
+      );
     }
     return (
       <input
         key={chave}
         id={`mr-${id}`}
+        className="mr-campo"
         aria-label={l.rotulo}
         title={l.rotulo}
         value={v}
@@ -127,6 +141,7 @@ export function ModeloRedeDocumento({ visual, valores, onChange, daSofia, ativo,
         key={chave}
         type="button"
         role="checkbox"
+        className="mr-opcao"
         aria-checked={on}
         aria-label={`${porId.get(id)?.rotulo || ""}: ${porId.get(id)?.opcoes?.[n - 1] || n}`}
         onClick={() => {
@@ -153,9 +168,9 @@ export function ModeloRedeDocumento({ visual, valores, onChange, daSofia, ativo,
     );
   };
 
-  const trecho = (t: TrechoVisual, i: number, blocoUnico: boolean) => {
+  const trecho = (t: TrechoVisual, i: number, blocoUnico: boolean, naCelula: boolean) => {
     if (t.t === "br") return <br key={i} />;
-    if (t.t === "campo") return campo(t.id, blocoUnico, `c${i}`);
+    if (t.t === "campo") return campo(t.id, blocoUnico, `c${i}`, naCelula);
     if (t.t === "opcao") return opcao(t.id, t.n, `o${i}`);
     if (t.t === "img")
       return (
@@ -262,13 +277,16 @@ export function ModeloRedeDocumento({ visual, valores, onChange, daSofia, ativo,
             lineHeight: 1.45,
           }}
         >
-          {b.filhos.map((f, fi) => trecho(f, fi, sozinho || (noFim && f === ultimo)))}
+          {b.filhos.map((f, fi) =>
+            trecho(f, fi, sozinho || (noFim && f === ultimo), naCelula && sozinho),
+          )}
         </div>
       );
     });
 
   return (
     <div
+      className="mr-doc"
       style={{
         background: "#fff",
         color: "#111",

@@ -106,6 +106,7 @@ export function PEIBnccPanel({
           value={nivelK}
           onChange={(e) => setNivelK(e.target.value)}
           aria-label="Ano da BNCC"
+          className="pei-bncc-campo"
           title="Troque se o aluno trabalha com habilidades de outro ano (ano de referência)"
           style={{
             fontSize: 11,
@@ -129,7 +130,13 @@ export function PEIBnccPanel({
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6 }}>
         {comps.map((c) => (
-          <button key={c.k} type="button" style={chip(c.k === comp)} onClick={() => setComp(c.k)}>
+          <button
+            key={c.k}
+            type="button"
+            className="pei-chip"
+            style={chip(c.k === comp)}
+            onClick={() => setComp(c.k)}
+          >
             {c.nome}
           </button>
         ))}
@@ -149,6 +156,7 @@ export function PEIBnccPanel({
               onChange={(e) => setFiltro(e.target.value)}
               placeholder={`Filtrar as ${itens.length} ${ehEI ? "metas" : "habilidades"} por palavra ou código`}
               aria-label="Filtrar habilidades da BNCC"
+              className="pei-bncc-campo"
               style={{
                 width: "100%",
                 fontSize: 12,
@@ -181,6 +189,7 @@ export function PEIBnccPanel({
                 type="button"
                 onClick={() => onPick(`${i.cod} – ${i.t}`)}
                 title="Clique para colocar no campo"
+                className="pei-bncc-item"
                 style={{
                   textAlign: "left",
                   fontSize: 11,

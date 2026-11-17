@@ -1009,7 +1009,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
           </p>
         </div>
 
-        <div className="inc-modal-foot">
+        <div className="inc-modal-foot pei-pe">
           <span className="legal">{savedAt ? `Salvo em ${new Date(savedAt).toLocaleString("pt-BR")}` : "Não salvo ainda"}</span>
           <button className="inc-btn-ghost" onClick={() => setModeloOpen(true)} title="Preencher o modelo de PEI da sua rede de ensino (Word)">
             <FileText size={14} /> Modelo da minha rede

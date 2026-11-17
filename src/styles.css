@@ -608,3 +608,54 @@ html.high-contrast body {
     max-height: 88vh !important; padding: 18px 16px calc(20px + env(safe-area-inset-bottom, 0px)) !important; animation: pn-sheet-up 0.2s ease-out;
   }
 }
+
+/* PEI no modelo da rede e sugestões rápidas: celular e tablet */
+.mr-rolagem { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.mr-sug-rola { max-height: 34vh; overflow-y: auto; }
+.mr-rot { display: none; font-size: 11px; font-weight: 700; color: #5B6272; margin: 2px 0; }
+.mr-so-estreita { display: none; }
+.mr-doc { overflow-wrap: anywhere; }
+.mr-doc .mr-campo { min-height: 28px; box-sizing: border-box; scroll-margin: 12px; }
+.mr-doc .mr-opcao { min-height: 24px; }
+/* Telas de toque: dedo precisa de alvo maior, e letra de 16px evita o zoom do iPhone/iPad ao tocar no campo. */
+@media (pointer: coarse), (max-width: 900px) {
+  .pei-sug-toggle { min-height: 36px; font-size: 13px !important; padding: 6px 12px !important; }
+  .pei-chip { min-height: 36px; font-size: 13px !important; padding: 7px 11px !important; line-height: 1.3; }
+  .pei-bncc-item { font-size: 13px !important; padding: 9px 10px !important; }
+  .pei-bncc-campo { font-size: 16px !important; min-height: 38px; }
+  .mr-doc .mr-campo { font-size: 16px !important; min-height: 38px; padding: 6px !important; }
+  .mr-doc input.mr-campo { min-width: 120px; }
+  .mr-doc .mr-opcao { min-width: 36px; min-height: 36px; margin: 2px 1px; }
+  .inc-modal textarea, .inc-modal select,
+  .inc-modal input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { font-size: 16px !important; }
+}
+/* Celular (e celular deitado): o documento ocupa a tela; só as sugestões ficam presas no topo. */
+@media (max-width: 640px), (max-height: 520px) {
+  .mr-rolagem { display: block; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .mr-rolagem > .inc-modal-body { overflow: visible; flex: none; }
+  .mr-sug { position: sticky; top: 0; z-index: 3; box-shadow: 0 2px 6px rgba(20, 22, 31, 0.08); }
+  .mr-sug-rola { max-height: 30dvh; }
+  .mr-doc .mr-campo { scroll-margin-top: calc(var(--mr-sug-h, 0px) + 12px); }
+  .inc-modal-foot.mr-pe { flex-direction: row !important; }
+  .inc-modal-foot.mr-pe > button { flex: 1; width: auto !important; }
+}
+@media (max-width: 640px) {
+  .mr-so-larga { display: none; }
+  /* Rodapé do PEI: salvar em cima, os outros dois lado a lado (sobra mais tela para escrever). */
+  .inc-modal-foot.pei-pe { flex-direction: row !important; flex-wrap: wrap; }
+  .inc-modal-foot.pei-pe > .btn-primary { order: -1; width: 100% !important; }
+  .inc-modal-foot.pei-pe > .inc-btn-ghost { flex: 1 1 0; width: auto !important; min-width: 0; padding-left: 6px; padding-right: 6px; font-size: 12.5px; white-space: nowrap; }
+  .inc-modal-foot.pei-pe > .inc-btn-ghost svg { flex-shrink: 0; }
+  .inc-modal textarea::placeholder { font-size: 14px; }
+}
+@media (max-width: 380px) {
+  .inc-modal-foot.pei-pe > .inc-btn-ghost svg { display: none; }
+  .mr-so-estreita { display: inline; }
+  .mr-rolagem > .inc-modal-body { padding: 10px 8px; }
+  .mr-doc { padding: 14px 12px !important; }
+  /* Tabelas: uma célula embaixo da outra, para o nome do campo não quebrar letra por letra. */
+  .mr-doc table, .mr-doc tbody, .mr-doc tr, .mr-doc td { display: block; width: 100% !important; box-sizing: border-box; }
+  .mr-doc td { margin-top: -1px; }
+  .mr-doc .mr-rot { display: block; }
+  .mr-doc input.mr-campo { width: 100% !important; }
+}

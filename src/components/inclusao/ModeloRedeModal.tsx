@@ -196,6 +196,10 @@ export function ModeloRedeModal({
   // O que a Sofia vai usar além do PEI (anamnese, registros, WhatsApp...).
   const [fontes, setFontes] = useState<FontesDoAluno>({ texto: "", resumo: [] });
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const rolagemRef = useRef<HTMLDivElement | null>(null);
+  const sugRef = useRef<HTMLDivElement | null>(null);
+  const ativoRef = useRef<string | null>(null);
+  ativoRef.current = ativo;
   const creditosGate = useCreditosGate();
   const temModelo = !!modelo.base64;
 
@@ -239,6 +243,21 @@ export function ModeloRedeModal({
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [open, onClose]);
+
+  // Quando a faixa de sugestões abre ou muda de tamanho, o espaço em que a
+  // professora está escrevendo não pode ficar escondido atrás dela.
+  useEffect(() => {
+    const sug = sugRef.current;
+    const rolagem = rolagemRef.current;
+    if (!open || !temModelo || !sug || !rolagem || typeof ResizeObserver === "undefined") return;
+    const obs = new ResizeObserver(() => {
+      rolagem.style.setProperty("--mr-sug-h", `${Math.round(sug.offsetHeight)}px`);
+      const el = ativoRef.current ? document.getElementById(`mr-${ativoRef.current}`) : null;
+      if (el && rolagem.contains(el)) el.scrollIntoView({ block: "nearest" });
+    });
+    obs.observe(sug);
+    return () => obs.disconnect();
+  }, [open, temModelo]);
 
   if (!open) return null;
 
@@ -447,9 +466,16 @@ export function ModeloRedeModal({
                 : "Modelo de PEI da sua rede"}
             </h2>
             <span className="meta" style={{ display: "block", marginTop: 4 }}>
-              {temModelo
-                ? `Escreva direto nos espaços amarelos do documento. ${total - vazios.length} de ${total} preenchidos · salvo automaticamente`
-                : "Anexe o modelo que a sua rede usa e preencha direto nele."}
+              {temModelo ? (
+                <>
+                  <span className="mr-so-larga">
+                    Escreva direto nos espaços amarelos do documento.{" "}
+                  </span>
+                  {total - vazios.length} de {total} preenchidos · salvo automaticamente
+                </>
+              ) : (
+                "Anexe o modelo que a sua rede usa e preencha direto nele."
+              )}
             </span>
           </div>
           <button className="inc-modal-close" onClick={onClose} aria-label="Fechar">
@@ -465,146 +491,172 @@ export function ModeloRedeModal({
           onChange={(e) => void escolherArquivo(e.target.files?.[0])}
         />
 
-        {temModelo && (
-          <div
-            style={{
-              padding: "8px 14px",
-              borderBottom: "1px solid var(--border)",
-              background: "#fff",
-            }}
-          >
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              <button
-                className="inc-btn-ghost"
-                onClick={() => void completarComSofia()}
-                disabled={completando || !vazios.length}
-                title="A Sofia escreve só nos espaços vazios, usando o PEI do aluno"
-                style={{ color: "#1F4FB8", borderColor: "#B9C8F5" }}
-              >
-                {completando ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Sparkles size={14} />
-                )}
-                {completando
-                  ? " Preenchendo…"
-                  : !vazios.length
-                    ? " Tudo preenchido"
-                    : ` Sofia completa ${vazios.length === 1 ? "o espaço vazio" : `os ${vazios.length} espaços vazios`} (${custoTexto(CUSTOS.pei_modelo_rede)})`}
-              </button>
-              <span style={{ flex: 1 }} />
-              <button
-                className="inc-btn-ghost"
-                onClick={() => inputRef.current?.click()}
-                disabled={enviando}
-              >
-                {enviando ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}{" "}
-                Trocar modelo
-              </button>
-              <button className="inc-btn-ghost" onClick={remover} style={{ color: "#C62B2B" }}>
-                <Trash2 size={14} /> Remover
-              </button>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
-              A Sofia usa o que você já registrou deste aluno: PEI
-              {fontes.resumo.length ? `, ${fontes.resumo.join(", ")}` : ""}.
-            </div>
-            {/* Sugestões do espaço em que a professora está escrevendo */}
-            <div style={{ marginTop: 6, maxHeight: "34vh", overflowY: "auto", fontSize: 12 }}>
-              {campoAtivo ? (
-                <>
-                  <span style={{ color: "var(--muted)" }}>Você está em: </span>
-                  <b>{campoAtivo.rotulo}</b>
-                  {ajuda && (
-                    <PEISuggestions
-                      key={campoAtivo.id}
-                      fieldKey={ajuda.sugestao || "__sem__"}
-                      prefix={etapaPrefix}
-                      bncc={ajuda.bncc ? { campo: ajuda.bncc, nivel: nivelBncc } : undefined}
-                      cid={dados.cid}
-                      diagnostico={dados.diagnostico}
-                      onPick={(t) =>
-                        mudarCampo(campoAtivo.id, appendText(valores[campoAtivo.id] || "", t))
-                      }
-                    />
-                  )}
-                </>
-              ) : (
-                <span style={{ color: "var(--muted)" }}>
-                  Clique em um espaço amarelo para escrever. As sugestões rápidas e a BNCC aparecem
-                  aqui.
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="inc-modal-body" style={{ background: temModelo ? "#E4E7EC" : "var(--bg)" }}>
-          {temModelo ? (
-            erroLeitura ? (
-              <p style={{ fontSize: 13 }}>
-                Não consegui abrir o modelo guardado. Use "Trocar modelo" e anexe o arquivo de novo.
-              </p>
-            ) : !visual ? (
-              <p style={{ fontSize: 13, color: "var(--muted)" }}>Abrindo o documento…</p>
-            ) : (
-              <ModeloRedeDocumento
-                visual={visual}
-                valores={valores}
-                onChange={mudarCampo}
-                daSofia={daSofia}
-                ativo={ativo}
-                onAtivo={setAtivo}
-              />
-            )
-          ) : (
+        <div className="mr-rolagem" ref={rolagemRef}>
+          {temModelo && (
             <>
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                disabled={enviando}
+              <div className="mr-acoes" style={{ padding: "8px 14px 4px", background: "#fff" }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <button
+                    className="inc-btn-ghost"
+                    onClick={() => void completarComSofia()}
+                    disabled={completando || !vazios.length}
+                    title="A Sofia escreve só nos espaços vazios, usando o PEI do aluno"
+                    style={{ color: "#1F4FB8", borderColor: "#B9C8F5" }}
+                  >
+                    {completando ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={14} />
+                    )}
+                    {completando
+                      ? " Preenchendo…"
+                      : !vazios.length
+                        ? " Tudo preenchido"
+                        : ` Sofia completa ${vazios.length === 1 ? "o espaço vazio" : `os ${vazios.length} espaços vazios`} (${custoTexto(CUSTOS.pei_modelo_rede)})`}
+                  </button>
+                  <span style={{ flex: 1 }} />
+                  <button
+                    className="inc-btn-ghost"
+                    onClick={() => inputRef.current?.click()}
+                    disabled={enviando}
+                    aria-label="Trocar modelo"
+                    title="Trocar modelo"
+                  >
+                    {enviando ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Upload size={14} />
+                    )}{" "}
+                    <span className="mr-so-larga">Trocar modelo</span>
+                    <span className="mr-so-estreita">Trocar</span>
+                  </button>
+                  <button
+                    className="inc-btn-ghost"
+                    onClick={remover}
+                    style={{ color: "#C62B2B" }}
+                    aria-label="Remover modelo"
+                    title="Remover modelo"
+                  >
+                    <Trash2 size={14} /> <span className="mr-so-larga">Remover</span>
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
+                  A Sofia usa o que você já registrou deste aluno: PEI
+                  {fontes.resumo.length ? `, ${fontes.resumo.join(", ")}` : ""}.
+                </div>
+              </div>
+              {/* Sugestões do espaço em que a professora está escrevendo */}
+              <div
+                className="mr-sug"
+                ref={sugRef}
                 style={{
-                  width: "100%",
-                  padding: "26px 14px",
-                  borderRadius: 12,
-                  border: "2px dashed var(--border)",
+                  padding: "4px 14px 8px",
+                  borderBottom: "1px solid var(--border)",
                   background: "#fff",
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                {enviando ? (
-                  <Loader2 size={26} className="animate-spin" />
-                ) : (
-                  <Upload size={26} color="#1F4FB8" />
-                )}
-                <b style={{ fontSize: 14 }}>Anexar o modelo da rede (Word .docx)</b>
-                <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                  Até 1,5 MB. Se o modelo for PDF, abra no Word e salve como .docx.
-                </span>
-              </button>
-              <ul
-                style={{
                   fontSize: 12,
-                  color: "var(--muted)",
-                  margin: "12px 0 0",
-                  paddingLeft: 18,
-                  lineHeight: 1.5,
                 }}
               >
-                <li>O documento da rede abre na tela e você escreve direto nos espaços dele.</li>
-                <li>A Sofia pode completar os espaços vazios com o que está no PEI do aluno.</li>
-                <li>No fim você baixa o mesmo Word, com logo e tabelas, já preenchido.</li>
-                <li>🔒 O modelo fica salvo só na sua conta. Outras professoras não veem.</li>
-              </ul>
+                <div className="mr-sug-rola">
+                  {campoAtivo ? (
+                    <>
+                      <span style={{ color: "var(--muted)" }}>Você está em: </span>
+                      <b>{campoAtivo.rotulo}</b>
+                      {ajuda && (
+                        <PEISuggestions
+                          key={campoAtivo.id}
+                          fieldKey={ajuda.sugestao || "__sem__"}
+                          prefix={etapaPrefix}
+                          bncc={ajuda.bncc ? { campo: ajuda.bncc, nivel: nivelBncc } : undefined}
+                          cid={dados.cid}
+                          diagnostico={dados.diagnostico}
+                          onPick={(t) =>
+                            mudarCampo(campoAtivo.id, appendText(valores[campoAtivo.id] || "", t))
+                          }
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <span style={{ color: "var(--muted)" }}>
+                      Clique em um espaço amarelo para escrever. As sugestões rápidas e a BNCC
+                      aparecem aqui.
+                    </span>
+                  )}
+                </div>
+              </div>
             </>
           )}
+
+          <div
+            className="inc-modal-body"
+            style={{ background: temModelo ? "#E4E7EC" : "var(--bg)" }}
+          >
+            {temModelo ? (
+              erroLeitura ? (
+                <p style={{ fontSize: 13 }}>
+                  Não consegui abrir o modelo guardado. Use "Trocar modelo" e anexe o arquivo de
+                  novo.
+                </p>
+              ) : !visual ? (
+                <p style={{ fontSize: 13, color: "var(--muted)" }}>Abrindo o documento…</p>
+              ) : (
+                <ModeloRedeDocumento
+                  visual={visual}
+                  valores={valores}
+                  onChange={mudarCampo}
+                  daSofia={daSofia}
+                  ativo={ativo}
+                  onAtivo={setAtivo}
+                />
+              )
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={enviando}
+                  style={{
+                    width: "100%",
+                    padding: "26px 14px",
+                    borderRadius: 12,
+                    border: "2px dashed var(--border)",
+                    background: "#fff",
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  {enviando ? (
+                    <Loader2 size={26} className="animate-spin" />
+                  ) : (
+                    <Upload size={26} color="#1F4FB8" />
+                  )}
+                  <b style={{ fontSize: 14 }}>Anexar o modelo da rede (Word .docx)</b>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                    Até 1,5 MB. Se o modelo for PDF, abra no Word e salve como .docx.
+                  </span>
+                </button>
+                <ul
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    margin: "12px 0 0",
+                    paddingLeft: 18,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <li>O documento da rede abre na tela e você escreve direto nos espaços dele.</li>
+                  <li>A Sofia pode completar os espaços vazios com o que está no PEI do aluno.</li>
+                  <li>No fim você baixa o mesmo Word, com logo e tabelas, já preenchido.</li>
+                  <li>🔒 O modelo fica salvo só na sua conta. Outras professoras não veem.</li>
+                </ul>
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="inc-modal-foot">
+        <div className={`inc-modal-foot${temModelo ? " mr-pe" : ""}`}>
           <span className="legal">
             {temModelo
               ? "Baixar o Word não gasta créditos"
