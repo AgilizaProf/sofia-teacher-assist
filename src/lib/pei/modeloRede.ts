@@ -92,6 +92,13 @@ function semConteudo(t: string): boolean {
   return !/[\p{L}\p{N}]/u.test(t);
 }
 
+/** Tem imagem ou objeto (logo da rede, por exemplo): não é espaço para escrever. */
+function temObjeto(el: Element): boolean {
+  for (const nome of ["drawing", "pict", "object"])
+    if (el.getElementsByTagNameNS(W, nome).length) return true;
+  return false;
+}
+
 function limpaRotulo(t: string): string {
   return t
     .replace(/\s+/g, " ")
@@ -171,7 +178,8 @@ function escreverNoParagrafo(p: Element, valor: string) {
   const doc = p.ownerDocument;
   const modelo = rPrModelo(p);
   for (const n of Array.from(p.childNodes)) {
-    if (n.nodeType === 1 && (n as Element).localName !== "pPr") p.removeChild(n);
+    const el = n as Element;
+    if (n.nodeType === 1 && el.localName !== "pPr" && !temObjeto(el)) p.removeChild(n);
   }
   p.appendChild(novoRun(doc, valor, modelo));
 }
@@ -293,7 +301,14 @@ function escreverNoControle(sdt: Element, valor: string) {
 
 // ---------------------------------------------------------------- detecção
 
-type Ctx = { secao: string; rotuloFora: string; naCelula: boolean; celulaSozinha: boolean };
+type Ctx = {
+  secao: string;
+  rotuloFora: string;
+  naCelula: boolean;
+  celulaSozinha: boolean;
+  /** Célula "Nome:" sem célula vazia ao lado nem embaixo: escreve-se nela mesma. */
+  rotuloSolto?: boolean;
+};
 
 function detectar(doc: Document): Alvo[] {
   const alvos: Alvo[] = [];
@@ -432,7 +447,11 @@ function detectar(doc: Document): Alvo[] {
 
     // 3) "Rótulo:" sem nada depois
     const m = limpo.match(/^([\s\S]{2,140}?)\s*[:?]$/);
-    if (m && (!ctx.naCelula || ctx.celulaSozinha)) {
+    if (
+      m &&
+      (!ctx.naCelula || ctx.celulaSozinha || (ctx.rotuloSolto && limpo.endsWith(":"))) &&
+      !temObjeto(p)
+    ) {
       let prox = p.nextElementSibling;
       while (
         prox &&
@@ -450,6 +469,7 @@ function detectar(doc: Document): Alvo[] {
           prox &&
           prox.localName === "p" &&
           semConteudo(textoDe(prox)) &&
+          !temObjeto(prox) &&
           !descendentes(prox, "sdt").length
         ) {
           const alvoP = prox;
@@ -492,9 +512,15 @@ function detectar(doc: Document): Alvo[] {
         if (c.continua) return;
         const vazio =
           semConteudo(c.texto) &&
+          !temObjeto(c.tc) &&
           !descendentes(c.tc, "tbl").length &&
           !descendentes(c.tc, "sdt").some(ehPlaceholder);
         if (!vazio) {
+          // "Nome:" numa célula que não tem onde responder ao lado nem embaixo.
+          const direita = cels[ci + 1];
+          const abaixo = linhas[li + 1]?.find((x) => x.col <= c.col && c.col < x.col + x.span);
+          const rotuloSolto =
+            cels.length > 1 && !ehEspaco(direita) && !ehEspaco(abaixo) && !temObjeto(c.tc);
           const esquerda = cels
             .slice(0, ci)
             .reverse()
@@ -504,6 +530,7 @@ function detectar(doc: Document): Alvo[] {
             rotuloFora: limpaRotulo(esquerda?.texto || ""),
             naCelula: true,
             celulaSozinha: cels.length === 1,
+            rotuloSolto,
           };
           bloco(c.tc, ctx);
           return;
@@ -522,12 +549,18 @@ function detectar(doc: Document): Alvo[] {
         else rotulo = rotEsq || rotCab;
         if (!rotulo) {
           // célula sozinha embaixo de um título (caixa de resposta)
-          const acima =
-            li > 0
-              ? linhas[li - 1].find((x) => x.col <= c.col && c.col < x.col + x.span)
-              : undefined;
+          // Sobe pela coluna até achar o título ("Objetivos:" com várias linhas vazias embaixo).
+          let acima = "";
+          let dist = 0;
+          for (let k = li - 1; k >= 0 && !acima; k--) {
+            const x = linhas[k].find((y) => y.col <= c.col && c.col < y.col + y.span);
+            if (!x) break;
+            if (x.continua) continue;
+            dist = li - k;
+            if (!semConteudo(x.texto)) acima = limpaRotulo(x.texto);
+          }
           rotulo =
-            limpaRotulo(acima?.texto || "") ||
+            (acima && dist > 1 ? `${acima} — linha ${dist}` : acima) ||
             (cels.length === 1 ? ctxPai.rotuloFora || anterior : "");
         }
         if (!rotulo) return;
@@ -596,6 +629,17 @@ function textoAntesDe(p: Element, alvo: Element): string {
 }
 
 type Cel = { tc: Element; texto: string; col: number; span: number; continua: boolean };
+
+/** A célula serve de resposta: vazia, com "____", com "( )" ou com controle do Word. */
+function ehEspaco(c: Cel | undefined): boolean {
+  if (!c || c.continua || temObjeto(c.tc)) return false;
+  return (
+    semConteudo(c.texto) ||
+    c.texto.search(BRANCO) >= 0 ||
+    c.texto.search(MARCADOR) >= 0 ||
+    descendentes(c.tc, "sdt").some(ehPlaceholder)
+  );
+}
 
 function linhasDaTabela(tbl: Element): Cel[][] {
   const linhas: Cel[][] = [];

@@ -43,7 +43,18 @@ type ModeloSalvo = {
   enviadoEm?: string;
   base64?: string;
   lacunas?: number;
+  /** Marca do conteúdo do arquivo: o mesmo arquivo anexado de novo mantém o que foi escrito. */
+  marca?: string;
 };
+
+/** A Sofia responde em partes, para modelos grandes não voltarem cortados. */
+const POR_PEDIDO = 40;
+
+function marcaDoArquivo(b64: string): string {
+  let h = 5381;
+  for (let i = 0; i < b64.length; i++) h = ((h << 5) + h + b64.charCodeAt(i)) | 0;
+  return `${b64.length}-${(h >>> 0).toString(36)}`;
+}
 
 const MAX_BYTES = 1_500_000;
 
@@ -183,12 +194,14 @@ export function ModeloRedeModal({
     try {
       const buf = await f.arrayBuffer();
       const l = await analisarModelo(buf);
+      const base64 = paraBase64(buf);
       setModelo({
         nome: f.name,
         tamanho: f.size,
         enviadoEm: new Date().toISOString(),
-        base64: paraBase64(buf),
+        base64,
         lacunas: l.length,
+        marca: marcaDoArquivo(base64),
       });
       if (l.length === 0) {
         toast.warning(
@@ -212,6 +225,12 @@ export function ModeloRedeModal({
   };
 
   const remover = () => {
+    if (
+      !window.confirm(
+        "Remover o modelo da sua conta? O que você escreveu nele volta se anexar o mesmo arquivo de novo.",
+      )
+    )
+      return;
     setModelo({});
     setVisual(null);
     toast.success("Modelo removido da sua conta.");
@@ -219,16 +238,28 @@ export function ModeloRedeModal({
 
   // O que está escrito no documento deste aluno. Vale enquanto o modelo for o mesmo.
   const lacunas = visual?.lacunas || [];
-  const chaveModelo = modelo.enviadoEm || modelo.nome || "";
+  const chaveModelo = modelo.marca || modelo.enviadoEm || modelo.nome || "";
   const salvo = preenchidos[alunoId];
   const valores: Record<string, string> =
     salvo && salvo.modelo === chaveModelo ? salvo.valores : valoresDeIdentificacao(lacunas, dados);
-  const gravar = (novos: Record<string, string>) =>
-    setPreenchidos((prev) => ({
-      ...prev,
-      [alunoId]: { modelo: chaveModelo, valores: novos, em: new Date().toISOString() },
-    }));
-  const mudarCampo = (id: string, valor: string) => gravar({ ...valores, [id]: valor });
+  // Sempre parte do que está salvo agora (a professora pode escrever enquanto a Sofia responde).
+  const gravar = (mudancas: Record<string, string>) =>
+    setPreenchidos((prev) => {
+      const atual = prev[alunoId];
+      const base =
+        atual && atual.modelo === chaveModelo
+          ? atual.valores
+          : valoresDeIdentificacao(lacunas, dados);
+      return {
+        ...prev,
+        [alunoId]: {
+          modelo: chaveModelo,
+          valores: { ...base, ...mudancas },
+          em: new Date().toISOString(),
+        },
+      };
+    });
+  const mudarCampo = (id: string, valor: string) => gravar({ [id]: valor });
   const vazios = lacunas.filter((l) => !String(valores[l.id] || "").trim());
 
   const completarComSofia = async () => {
@@ -236,29 +267,66 @@ export function ModeloRedeModal({
     const custo = CUSTOS.pei_modelo_rede;
     if (!(await creditosGate.checar({ custo, acao: "PEI no modelo da rede" }))) return;
     setCompletando(true);
+    const marcados = new Set<string>();
+    let falhou: unknown = null;
     try {
-      const resp = await invocarIA<{ valores?: Record<string, string> }>("preencher-modelo-pei", {
-        body: { aluno: alunoNome, contexto, lacunas: vazios },
-        validar: (d) => !!d?.valores && typeof d.valores === "object",
-      });
-      const novos = { ...valores };
-      const marcados = new Set<string>();
-      for (const l of vazios) {
-        const v = String(resp.valores?.[l.id] || "").trim();
-        if (v) {
-          novos[l.id] = v;
-          marcados.add(l.id);
+      const partes: (typeof vazios)[] = [];
+      for (let i = 0; i < vazios.length; i += POR_PEDIDO)
+        partes.push(vazios.slice(i, i + POR_PEDIDO));
+      for (const parte of partes) {
+        try {
+          const resp = await invocarIA<{ valores?: Record<string, string> }>(
+            "preencher-modelo-pei",
+            {
+              body: { aluno: alunoNome, contexto, lacunas: parte },
+              validar: (d) => !!d?.valores && typeof d.valores === "object",
+            },
+          );
+          const novos: Record<string, string> = {};
+          for (const l of parte) {
+            const v = String(resp.valores?.[l.id] || "").trim();
+            if (v) {
+              novos[l.id] = v;
+              marcados.add(l.id);
+            }
+          }
+          // Só entra onde continua vazio: não passa por cima do que ela escreveu enquanto esperava.
+          if (Object.keys(novos).length)
+            setPreenchidos((prev) => {
+              const atual = prev[alunoId];
+              const base =
+                atual && atual.modelo === chaveModelo
+                  ? atual.valores
+                  : valoresDeIdentificacao(lacunas, dados);
+              const junto = { ...base };
+              for (const [id, v] of Object.entries(novos))
+                if (!String(junto[id] || "").trim()) junto[id] = v;
+              return {
+                ...prev,
+                [alunoId]: { modelo: chaveModelo, valores: junto, em: new Date().toISOString() },
+              };
+            });
+        } catch (e) {
+          falhou = e;
+          break;
         }
       }
-      gravar(novos);
       setDaSofia(marcados);
-      toast.success(
-        marcados.size
-          ? `A Sofia preencheu ${marcados.size} espaço${marcados.size === 1 ? "" : "s"} (em azul). Revise e ajuste o que quiser.`
-          : "O PEI ainda não tem informação para os espaços vazios.",
-      );
-      if (marcados.size)
+      // Parou no meio: não cobra agora; a cobrança vem quando ela terminar.
+      if (marcados.size && !falhou)
         void consumirCreditos(custo, descricaoDoc("PEI no modelo da rede", alunoNome));
+      if (falhou && !marcados.size) throw falhou;
+      if (falhou) {
+        toast.warning(
+          `A Sofia preencheu ${marcados.size} espaço${marcados.size === 1 ? "" : "s"} e parou. Clique de novo para ela continuar.`,
+        );
+        if (falhou instanceof ErroIA) console.warn("[modelo-rede]", falhou.tipo, falhou.detalhe);
+      } else
+        toast.success(
+          marcados.size
+            ? `A Sofia preencheu ${marcados.size} espaço${marcados.size === 1 ? "" : "s"} (em azul). Revise e ajuste o que quiser.`
+            : "O PEI ainda não tem informação para os espaços vazios.",
+        );
     } catch (e) {
       toast.error(e instanceof ErroIA ? e.message : "A Sofia não conseguiu agora. Tente de novo.");
       if (e instanceof ErroIA) console.warn("[modelo-rede]", e.tipo, e.detalhe);
