@@ -114,15 +114,21 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
     }
   }
 
-  const KEY = Deno.env.get("LOVABLE_API_KEY");
+  // Provedor de IA: gateway do Lovable (padrão) ou Gemini direto no Google
+  // quando AI_PROVIDER=google (para rodar fora do Lovable).
+  const direto = Deno.env.get("AI_PROVIDER") === "google";
+  const KEY = direto ? Deno.env.get("GOOGLE_API_KEY") : Deno.env.get("LOVABLE_API_KEY");
   if (!KEY) {
-    return { ok: false, status: 500, text: "", error: "LOVABLE_API_KEY ausente.", ...route };
+    const nome = direto ? "GOOGLE_API_KEY" : "LOVABLE_API_KEY";
+    return { ok: false, status: 500, text: "", error: `${nome} ausente.`, ...route };
   }
 
-  const url = "https://ai.gateway.lovable.dev/v1/chat/completions";
+  const url = direto
+    ? "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+    : "https://ai.gateway.lovable.dev/v1/chat/completions";
 
   const body: Record<string, unknown> = {
-    model: route.model,
+    model: direto ? route.model.replace(/^google\//, "") : route.model,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: args.user },
