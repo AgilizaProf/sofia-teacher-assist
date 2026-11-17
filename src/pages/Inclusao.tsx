@@ -3671,6 +3671,7 @@ ${ident}
           diag: selected.diag,
           cid: selected.cid,
           anoEscolar: selected.anoEscolar,
+          anoReferencia: selected.anoReferenciaPedagogico,
           turma: selected.turma,
         } : null}
       />

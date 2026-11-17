@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Save, Printer, Plus, Trash2, Sparkles, Wand2, CheckCircle2 } from "lucide-react";
+import { X, Save, Printer, Plus, Trash2, Sparkles, Wand2, CheckCircle2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useUser } from "@/lib/mockData";
 import { printPEIDocument } from "@/lib/print/peiPrint";
 import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
 import { PEISuggestions, appendText } from "./PEISuggestions";
+import { ModeloRedeModal } from "./ModeloRedeModal";
+import { nivelDoTexto } from "@/lib/pei/bncc";
 
 type Aluno = {
   id: string;
@@ -13,6 +15,8 @@ type Aluno = {
   diag?: string;
   cid?: string;
   anoEscolar?: string;
+  /** Ano de referência pedagógico (pode ser anterior ao da matrícula). */
+  anoReferencia?: string;
   turma?: string;
   idade?: number | string;
   aee?: string;
@@ -473,6 +477,8 @@ type Props = {
 export function PEIFormModal({ open, onClose, aluno }: Props) {
   const modalRef = useRef<HTMLDivElement | null>(null);
   useKeyboardAwareModal(modalRef, open);
+  // "Modelo da rede": a professora anexa o modelo de PEI da rede e baixa preenchido.
+  const [modeloOpen, setModeloOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -553,6 +559,10 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
     return undefined;
   })();
   const isEI = etapa === "ei";
+  // Ano/etapa da BNCC para as sugestões (habilidades do ano do aluno).
+  // O ano de referência pedagógico vem primeiro: é nele que o aluno trabalha.
+  const nivelBncc = nivelDoTexto(aluno?.anoReferencia, draft.serie, aluno?.anoEscolar, aluno?.turma);
+  const bnccDe = (campo: string) => ({ campo, nivel: nivelBncc });
   const etapaPrefix = etapa ? `${etapa}:` : undefined;
   const etapaLabel: Record<NonNullable<typeof etapa>, string> = {
     ei: "Ed. Infantil",
@@ -786,7 +796,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                     <textarea style={{ ...inputCss, minHeight: 48, marginTop: 8 }} value={v.obs}
                       onChange={(e) => setAval(a.key, { obs: e.target.value })}
                       placeholder="Observações sobre esta área (opcional)" />
-                    <PEISuggestions fieldKey={`aval_obs:${a.key}`} fallbackKey="aval_obs" prefix={etapaPrefix} label={`Sugestões — ${a.label}`} onPick={(t) => setAval(a.key, { obs: appendText(v.obs, t) })} />
+                    <PEISuggestions fieldKey={`aval_obs:${a.key}`} fallbackKey="aval_obs" prefix={etapaPrefix} bncc={bnccDe(`aval_obs:${a.key}`)} label={`Sugestões — ${a.label}`} onPick={(t) => setAval(a.key, { obs: appendText(v.obs, t) })} />
                   </div>
                 );
               })}
@@ -800,7 +810,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
               <label style={labelCss}>Objetivos de longo prazo (ano letivo)</label>
               <textarea style={{ ...inputCss, minHeight: 80 }} value={draft.objetivosLongoPrazo} onChange={(e) => set("objetivosLongoPrazo", e.target.value)}
                 placeholder="O que se espera que o aluno desenvolva até o final do ano letivo..." />
-              <PEISuggestions fieldKey="objetivosLongoPrazo" prefix={etapaPrefix} onPick={(t) => set("objetivosLongoPrazo", appendText(draft.objetivosLongoPrazo, t))} />
+              <PEISuggestions fieldKey="objetivosLongoPrazo" prefix={etapaPrefix} bncc={bnccDe("objetivosLongoPrazo")} onPick={(t) => set("objetivosLongoPrazo", appendText(draft.objetivosLongoPrazo, t))} />
 
               <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ fontWeight: 700, fontSize: 13 }}>Metas de curto prazo com indicadores</div>
@@ -827,7 +837,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   <label style={labelCss}>Meta</label>
                   <textarea style={{ ...inputCss, minHeight: 50, marginBottom: 6 }} value={m.meta} onChange={(e) => updMeta(m.id, { meta: e.target.value })}
                     placeholder="O que se quer alcançar..." />
-                  <PEISuggestions fieldKey={`meta_texto:${m.area}`} fallbackKey="meta_texto" prefix={etapaPrefix} label={`Sugestões — ${m.area}${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => updMeta(m.id, { meta: appendText(m.meta, t) })} />
+                  <PEISuggestions fieldKey={`meta_texto:${m.area}`} fallbackKey="meta_texto" prefix={etapaPrefix} bncc={bnccDe(`meta_texto:${m.area}`)} label={`Sugestões — ${m.area}${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => updMeta(m.id, { meta: appendText(m.meta, t) })} />
                   <label style={labelCss}>Como saber que foi atingida (indicador)</label>
                   <input style={inputCss} value={m.indicador} onChange={(e) => updMeta(m.id, { indicador: e.target.value })}
                     placeholder="Critério observável para considerar a meta atingida" />
@@ -879,7 +889,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                   <div key={c.k} style={{ marginBottom: 10 }}>
                     <label style={labelCss}>{c.l}</label>
                      <textarea style={{ ...inputCss, minHeight: 60 }} value={draft[c.k] as string} onChange={(e) => set(c.k, e.target.value)} placeholder={c.ph} />
-                    <PEISuggestions fieldKey={c.k} prefix={etapaPrefix} label={`Sugestões rápidas${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => set(c.k, appendText(draft[c.k] as string, t))} />
+                    <PEISuggestions fieldKey={c.k} prefix={etapaPrefix} bncc={bnccDe(c.k)} label={`Sugestões rápidas${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => set(c.k, appendText(draft[c.k] as string, t))} />
                   </div>
                 ))}
               </div>
@@ -888,7 +898,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
                 <label style={labelCss}>Estratégias específicas por área</label>
                 <textarea style={{ ...inputCss, minHeight: 70 }} value={draft.estrategiasArea} onChange={(e) => set("estrategiasArea", e.target.value)}
                   placeholder="Estratégias que funcionam para cada componente curricular ou campo de experiência..." />
-                <PEISuggestions fieldKey="estrategiasArea" prefix={etapaPrefix} label={`Sugestões rápidas${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => set("estrategiasArea", appendText(draft.estrategiasArea, t))} />
+                <PEISuggestions fieldKey="estrategiasArea" prefix={etapaPrefix} bncc={bnccDe("estrategiasArea")} label={`Sugestões rápidas${etapa ? ` · ${etapaLabel[etapa]}` : ""}`} onPick={(t) => set("estrategiasArea", appendText(draft.estrategiasArea, t))} />
                 <div style={{ marginTop: 12 }}>
                   <label style={labelCss}>Recursos pedagógicos necessários (múltipla escolha)</label>
                   <CheckGroup multi
@@ -996,12 +1006,40 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
 
         <div className="inc-modal-foot">
           <span className="legal">{savedAt ? `Salvo em ${new Date(savedAt).toLocaleString("pt-BR")}` : "Não salvo ainda"}</span>
+          <button className="inc-btn-ghost" onClick={() => setModeloOpen(true)} title="Preencher o modelo de PEI da sua rede de ensino (Word)">
+            <FileText size={14} /> Modelo da minha rede
+          </button>
           <button className="inc-btn-ghost" onClick={imprimir}><Printer size={14} /> Imprimir / PDF</button>
           <button className="btn btn-primary" onClick={salvar}>
             <Save size={14} /> Salvar PEI
           </button>
         </div>
       </div>
+      <ModeloRedeModal
+        open={modeloOpen}
+        onClose={() => setModeloOpen(false)}
+        alunoNome={aluno?.name || ""}
+        contexto={[
+          `Nome do aluno: ${aluno?.name || ""}`,
+          draft.serie ? `Turma / ano: ${draft.serie}` : "",
+          aluno?.anoReferencia ? `Ano de referência pedagógico (use para a BNCC): ${aluno.anoReferencia}` : "",
+          draft.dataNascimento ? `Data de nascimento: ${draft.dataNascimento}` : "",
+          `Professor(a) que elabora: ${user.name || ""}`,
+          buildPEIContext(draft),
+        ].filter(Boolean).join("\n")}
+        dados={{
+          nome: aluno?.name,
+          dataNascimento: draft.dataNascimento,
+          escola: draft.escola,
+          serie: draft.serie,
+          cid: draft.cid,
+          diagnostico: draft.diagnostico,
+          responsavel: draft.responsavelNome,
+          contato: draft.responsavelContato,
+          professor: user.name,
+          dataHoje: new Date().toLocaleDateString("pt-BR"),
+        }}
+      />
     </div>
   );
 }

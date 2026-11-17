@@ -7,6 +7,7 @@ export const CUSTOS = {
   parecer_descritivo: 20,
   relatorio_inclusao: 20,
   pei_completo: 50,
+  pei_modelo_rede: 10, // preencher o modelo de PEI da rede da professora
   plano_aula: 10,
   adaptacao_pcd: 10,
   anamnese: 20,
@@ -181,6 +182,7 @@ export const TABELA_CUSTOS: LinhaCusto[] = [
   { nome: "Relatório de inclusão", custo: CUSTOS.relatorio_inclusao },
   { nome: "Anamnese", custo: CUSTOS.anamnese },
   { nome: "PEI completo", custo: CUSTOS.pei_completo },
+  { nome: "PEI no modelo da rede", custo: CUSTOS.pei_modelo_rede },
   { nome: "Plano de aula", custo: CUSTOS.plano_aula },
   { nome: "Planejamento semanal", custo: CUSTOS.planejamento_semanal },
   {
@@ -218,6 +220,7 @@ export function categoriaDoLancamento(descricao: string, tipo?: string | null): 
   if (d.startsWith("parecer")) return "Parecer descritivo";
   if (d.startsWith("relatório pedagógico")) return "Parecer descritivo";
   if (d.startsWith("relatório de inclusão")) return "Relatório de inclusão";
+  if (d.startsWith("pei no modelo")) return "PEI no modelo da rede";
   if (d.startsWith("pei")) return "PEI completo";
   if (d.startsWith("anamnese")) return "Anamnese";
   if (d.startsWith("plano de aula")) return "Plano de aula";
