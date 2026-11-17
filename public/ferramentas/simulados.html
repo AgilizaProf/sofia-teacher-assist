@@ -747,7 +747,7 @@ function qrMatriz(texto){
   qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
   const q=qrcode(0,"M");
   // AP2: o cabeçalho vai em modo Byte e o gabarito com as posições em modo alfanumérico, que ocupa menos espaço no QR
-  const k=texto.startsWith("AP2;")?texto.lastIndexOf(";")+1:-1;
+  const k=/^AP[24];/.test(texto)?texto.lastIndexOf(";")+1:-1;
   if(k>0){q.addData(texto.slice(0,k),"Byte");q.addData(texto.slice(k),"Alphanumeric");}else q.addData(texto,"Byte");
   q.make();
   const n=q.getModuleCount(),m=[];for(let r=0;r<n;r++){m.push([]);for(let c=0;c<n;c++)m[r].push(q.isDark(r,c));}return m;
@@ -761,14 +761,15 @@ function qrSvg(texto){
 // posições = 3 caracteres base 36 por questão ("---" = questão do professor). Versão 0 = prova sem nome (matriz para fotocopiar).
 // O leitor ainda entende o formato antigo AP1 (2 caracteres por posição).
 function qrTexto(sim,v){
-  const nome=semAcento(v.nome||"").replace(/[;|:]/g," ").slice(0,40);
-  const pos=v.ordem.map(r=>typeof r==="number"?r.toString(36).toUpperCase().padStart(3,"0"):"---").join("");
-  const fim=[v.gab,pos,BANCO_VER];if(cartaoGrande(sim,v.ordem.length))fim.push("G");
-  return ["AP2",sim.id,v.n,nome,v.tipo||"",fim.join(":")].join(";");
+  // AP4 (QR enxuto): só o que o leitor precisa para corrigir. A ordem das questões vem do simulado salvo na conta.
+  // Com menos dados, os quadradinhos do QR ficam maiores e a câmera lê com a folha inteira na foto.
+  const nome=semAcento(v.nome||"").replace(/[;|:]/g," ").trim().slice(0,16);
+  return ["AP4",sim.id,v.n,nome,v.tipo||"",v.gab+(cartaoGrande(sim,v.ordem.length)?":G":"")].join(";");
 }
 function lerQrTexto(t){
   const p=String(t).split(";");
   if(p[0]==="AP1"&&p.length>=6){const ordem=(p[5].match(/.{2}/g)||[]).map(x=>x==="__"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],gab:p[4],ordem,tipo:""};}
+  if(p[0]==="AP4"&&p.length>=6){const [gab,tam=""]=p[5].split(":");return {simId:p[1],n:+p[2],nome:p[3],tipo:p[4]||"",gab,ordem:Array(gab.length).fill(null),grande:tam==="G"};}
   if(p[0]==="AP2"&&p.length>=6){const [gab,pos="",,tam=""]=p[5].split(":");const ordem=(pos.match(/.{3}/g)||[]).map(x=>x==="---"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],tipo:p[4]||"",gab,ordem,grande:tam==="G"};}
   return null;
 }
@@ -1734,7 +1735,7 @@ async function abrirCamera(){
   if(st)st.textContent="";
   const el=document.createElement("div");el.className="camera";el.setAttribute("role","dialog");el.setAttribute("aria-label","Câmera");
   el.innerHTML=`<div class="cam-vid"><video playsinline muted autoplay></video></div>
-   <div class="cam-msg" aria-live="polite">Enquadre o cartão inteiro, de frente e com boa luz.</div>
+   <div class="cam-msg" aria-live="polite">Mostre a folha inteira, de frente e com boa luz, e tire a foto. Não precisa chegar perto do QR.</div>
    <div class="cam-bar"><button class="btn" data-c="sair">Cancelar</button><button class="disparo" data-c="foto" aria-label="Tirar foto">Tirar foto</button><button class="btn" data-c="trocar" hidden>Trocar câmera</button></div>`;
   document.body.appendChild(el);
   const video=el.querySelector("video");
@@ -1747,8 +1748,11 @@ async function abrirCamera(){
       try{ligarFluxo(await pedirCamera(CAM.disp[CAM.idx].deviceId));}catch(_){fecharCamera();if(st)st.textContent="Não consegui trocar de câmera.";}}
     else if(c==="foto"){if(!video.videoWidth)return;b.disabled=true;
       const cv=document.createElement("canvas");cv.width=video.videoWidth;cv.height=video.videoHeight;cv.getContext("2d").drawImage(video,0,0);
+      let blob=null;
+      try{const tr=CAM.fluxo&&CAM.fluxo.getVideoTracks()[0];
+        if(tr&&typeof ImageCapture==="function")blob=await Promise.race([new ImageCapture(tr).takePhoto(),new Promise(r=>setTimeout(()=>r(null),3500))]);}catch(_){blob=null;}
       fecharCamera();
-      const blob=await new Promise(r=>cv.toBlob(r,"image/jpeg",.92));
+      if(!blob||!blob.size)blob=await new Promise(r=>cv.toBlob(r,"image/jpeg",.92));
       if(blob)await processarFoto(blob);}};
   document.addEventListener("keydown",escCamera);
 }
@@ -1760,33 +1764,56 @@ function ligarFluxo(f){
   CAM.fluxo=f;CAM.video.srcObject=f;CAM.video.play().catch(()=>{});
   clearInterval(CAM.timer);
   // procura o QR no vídeo para avisar quando o cartão está bem enquadrado
-  const cv=document.createElement("canvas"),cx=cv.getContext("2d",{willReadFrequently:true});
+  let passo=0,visto=0;
   CAM.timer=setInterval(()=>{const v=CAM&&CAM.video;if(!v||!v.videoWidth||typeof jsQR!=="function")return;
-    const k=Math.min(1,640/Math.max(v.videoWidth,v.videoHeight));cv.width=Math.round(v.videoWidth*k);cv.height=Math.round(v.videoHeight*k);
-    cx.drawImage(v,0,0,cv.width,cv.height);const code=jsQR(cx.getImageData(0,0,cv.width,cv.height).data,cv.width,cv.height,{inversionAttempts:"dontInvert"});
-    const m=CAM.el.querySelector(".cam-msg");m.classList.toggle("achou",!!code);
-    m.textContent=code?"QR encontrado. Pode tirar a foto.":"Enquadre o cartão inteiro, de frente e com boa luz.";},500);
+    const W=v.videoWidth,H=v.videoHeight;let code=null;
+    try{code=qrTentar(v,0,0,W,H,Math.min(1,1280/Math.max(W,H)));
+      if(!code){const ps=qrPedacos(W,H);for(let i=0;i<2&&!code;i++){const[x,y,w,h,k]=ps[passo++%ps.length];code=qrTentar(v,x,y,w,h,Math.min(k,2));}}}catch(_){}
+    if(code)visto=Date.now();const achou=Date.now()-visto<2500;
+    const m=CAM.el.querySelector(".cam-msg");m.classList.toggle("achou",achou);
+    m.textContent=achou?"QR encontrado. Pode tirar a foto.":"Mostre a folha inteira, de frente e com boa luz, e tire a foto. Não precisa chegar perto do QR.";},600);
 }
 function escCamera(e){if(e.key==="Escape")fecharCamera();}
 function fecharCamera(){if(!CAM)return;clearInterval(CAM.timer);CAM.fluxo&&CAM.fluxo.getTracks().forEach(t=>t.stop());CAM.el.remove();CAM=null;document.removeEventListener("keydown",escCamera);}
+// Procura o QR em qualquer coisa desenhável (foto ou vídeo). Primeiro na imagem inteira; se não achar,
+// em pedaços sobrepostos na resolução original, ampliados quando a imagem é pequena. Assim o QR é lido
+// com a folha inteira na foto, sem precisar chegar perto. Devolve os cantos nas coordenadas da imagem original.
+function qrTentar(fonte,sx,sy,sw,sh,k){
+  const cv=qrTentar.cv||(qrTentar.cv=document.createElement("canvas")),cx=qrTentar.cx||(qrTentar.cx=cv.getContext("2d",{willReadFrequently:true}));
+  const w=Math.max(1,Math.round(sw*k)),h=Math.max(1,Math.round(sh*k));cv.width=w;cv.height=h;cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality="high";
+  cx.drawImage(fonte,sx,sy,sw,sh,0,0,w,h);
+  const code=jsQR(cx.getImageData(0,0,w,h).data,w,h,{inversionAttempts:"dontInvert"});if(!code||!code.data)return null;
+  const P=q=>({x:sx+q.x/k,y:sy+q.y/k}),l=code.location;
+  return {data:code.data,version:code.version,location:{topLeftCorner:P(l.topLeftCorner),topRightCorner:P(l.topRightCorner),bottomLeftCorner:P(l.bottomLeftCorner),bottomRightCorner:P(l.bottomRightCorner)}};
+}
+function qrPedacos(W,H){const tw=Math.ceil(W*.5),th=Math.ceil(H*.5),k=Math.min(3,Math.max(1,1500/Math.max(tw,th))),v=[];
+  for(const fy of [0,.5,.25])for(const fx of [0,.5,.25])v.push([Math.floor((W-tw)*fx*2),Math.floor((H-th)*fy*2),tw,th,k]);return v;}
+function acharQR(fonte,W,H){
+  const M=Math.max(W,H),vistos=new Set();
+  for(const maxL of [1600,2400,1100]){const k=Math.min(1,maxL/M);if(vistos.has(k))continue;vistos.add(k);const r=qrTentar(fonte,0,0,W,H,k);if(r)return r;}
+  for(const[x,y,w,h,k]of qrPedacos(W,H)){const r=qrTentar(fonte,x,y,w,h,k);if(r)return r;}
+  return null;
+}
 async function lerFoto(file){
   let img;try{img=await createImageBitmap(file,{imageOrientation:"from-image"});}catch(_){try{img=await carregarImg(file);}catch(__){return null;}}
   if(typeof jsQR!=="function")return {erro:"lib"};
-  for(const maxL of [1600,2400,1100]){
-    const k=Math.min(1,maxL/Math.max(img.width,img.height)),w=Math.round(img.width*k),h=Math.round(img.height*k);
-    const cv=document.createElement("canvas");cv.width=w;cv.height=h;const cx=cv.getContext("2d",{willReadFrequently:true});cx.drawImage(img,0,0,w,h);
-    const dados=cx.getImageData(0,0,w,h);const code=jsQR(dados.data,w,h,{inversionAttempts:"dontInvert"});
-    if(code){let info=lerQrTexto(code.data);if(!info)return {erro:"outro"};info=infoLocal(info);let marcas=null;try{marcas=lerBolhas({code,dados,w,h},info.gab.length,info.grande);}catch(_){}
-      return {info,marcas,cv,w,h};}
-  }
-  return {erro:"semqr"};
+  const achado=acharQR(img,img.width,img.height);
+  if(!achado)return {erro:"semqr"};
+  let info=lerQrTexto(achado.data);if(!info)return {erro:"outro"};info=infoLocal(info);
+  // as bolinhas são lidas numa cópia de até 2400 px (ampliada quando a foto é pequena); os cantos do QR acompanham a escala
+  const M=Math.max(img.width,img.height),k=M>2400?2400/M:M<1400?1400/M:1,w=Math.round(img.width*k),h=Math.round(img.height*k);
+  const cv=document.createElement("canvas");cv.width=w;cv.height=h;const cx=cv.getContext("2d",{willReadFrequently:true});cx.imageSmoothingQuality="high";cx.drawImage(img,0,0,w,h);
+  const dados=cx.getImageData(0,0,w,h),E=q=>({x:q.x*k,y:q.y*k}),l=achado.location;
+  const code={data:achado.data,version:achado.version,location:{topLeftCorner:E(l.topLeftCorner),topRightCorner:E(l.topRightCorner),bottomLeftCorner:E(l.bottomLeftCorner),bottomRightCorner:E(l.bottomRightCorner)}};
+  let marcas=null;try{marcas=lerBolhas({code,dados,w,h},info.gab.length,info.grande);}catch(_){}
+  return {info,marcas,cv,w,h};
 }
 async function processarFoto(file){
   const st=$("#l-status");st.textContent="Lendo a foto…";
   const r=await lerFoto(file);
   if(!r){st.textContent="Não consegui abrir essa imagem. Tente outra foto.";return;}
   if(r.erro==="lib"){st.textContent="O leitor de QR não carregou. Verifique a internet e recarregue a página.";return;}
-  if(r.erro==="semqr"){st.textContent="Não encontrei o QR code. Fotografe mais de perto, de frente e sem sombra sobre o QR.";return;}
+  if(r.erro==="semqr"){st.textContent="Não encontrei o QR code. Deixe a folha inteira na foto, de frente, com boa luz e sem sombra ou dobra sobre o QR.";return;}
   if(r.erro==="outro"){st.textContent="Esse QR não é de um simulado do AgilizaProf.";return;}
   const info=r.info,local=S.simulados.find(s=>s.id===info.simId),v=local&&local.versoes.find(x=>x.n===info.n);
   LT={...info,nome:info.n?(v?v.nome:info.nome):"",semNome:!info.n,marcas:r.marcas?r.marcas.res:Array(info.gab.length).fill(null),auto:true};LS.simId=info.simId;
