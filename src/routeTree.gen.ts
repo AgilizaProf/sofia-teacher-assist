@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SimuladosRouteImport } from './routes/simulados'
+import { Route as QuestoesRouteImport } from './routes/questoes'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RelatoriosRouteImport } from './routes/relatorios'
 import { Route as RelatorioPedagogicoRouteImport } from './routes/relatorio-pedagogico'
-import { Route as QuestoesRouteImport } from './routes/questoes'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PlanejamentoPedagogicoRouteImport } from './routes/planejamento-pedagogico'
 import { Route as PlanejamentoRouteImport } from './routes/planejamento'
@@ -26,14 +26,14 @@ import { Route as JogosRouteImport } from './routes/jogos'
 import { Route as IndicacoesRouteImport } from './routes/indicacoes'
 import { Route as InclusaoRouteImport } from './routes/inclusao'
 import { Route as EiRouteImport } from './routes/ei'
-import { Route as ConfirmarRouteImport } from './routes/confirmar'
 import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
-import { Route as CadernosRouteImport } from './routes/cadernos'
-import { Route as BibliotecaRouteImport } from './routes/biblioteca'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AtividadeRouteImport } from './routes/atividade'
 import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as AgendaRouteImport } from './routes/agenda'
+import { Route as ConfirmarRouteImport } from './routes/confirmar'
+import { Route as CadernosRouteImport } from './routes/cadernos'
+import { Route as BibliotecaRouteImport } from './routes/biblioteca'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as RefRouteImport } from './routes/$ref'
 import { Route as IndexRouteImport } from './routes/index'
@@ -71,6 +71,11 @@ const SimuladosRoute = SimuladosRouteImport.update({
   path: '/simulados',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuestoesRoute = QuestoesRouteImport.update({
+  id: '/questoes',
+  path: '/questoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -84,11 +89,6 @@ const RelatoriosRoute = RelatoriosRouteImport.update({
 const RelatorioPedagogicoRoute = RelatorioPedagogicoRouteImport.update({
   id: '/relatorio-pedagogico',
   path: '/relatorio-pedagogico',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QuestoesRoute = QuestoesRouteImport.update({
-  id: '/questoes',
-  path: '/questoes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
@@ -148,24 +148,9 @@ const EiRoute = EiRouteImport.update({
   path: '/ei',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ConfirmarRoute = ConfirmarRouteImport.update({
-  id: '/confirmar',
-  path: '/confirmar',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CadernosRoute = CadernosRouteImport.update({
-  id: '/cadernos',
-  path: '/cadernos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BibliotecaRoute = BibliotecaRouteImport.update({
-  id: '/biblioteca',
-  path: '/biblioteca',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -186,6 +171,21 @@ const AssistenteRoute = AssistenteRouteImport.update({
 const AgendaRoute = AgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmarRoute = ConfirmarRouteImport.update({
+  id: '/confirmar',
+  path: '/confirmar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadernosRoute = CadernosRouteImport.update({
+  id: '/cadernos',
+  path: '/cadernos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BibliotecaRoute = BibliotecaRouteImport.update({
+  id: '/biblioteca',
+  path: '/biblioteca',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -326,13 +326,13 @@ export interface FileRoutesByFullPath {
   '/$ref': typeof RefRoute
   '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
+  '/confirmar': typeof ConfirmarRoute
+  '/cadernos': typeof CadernosRoute
+  '/biblioteca': typeof BibliotecaRoute
   '/assistente': typeof AssistenteRoute
   '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRouteWithChildren
-  '/biblioteca': typeof BibliotecaRoute
-  '/cadernos': typeof CadernosRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/confirmar': typeof ConfirmarRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
@@ -344,11 +344,11 @@ export interface FileRoutesByFullPath {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/questoes': typeof QuestoesRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/simulados': typeof SimuladosRoute
+  '/questoes': typeof QuestoesRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/avisos': typeof AdminAvisosRoute
@@ -378,13 +378,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$ref': typeof RefRoute
   '/agenda': typeof AgendaRoute
+  '/confirmar': typeof ConfirmarRoute
+  '/cadernos': typeof CadernosRoute
+  '/biblioteca': typeof BibliotecaRoute
   '/assistente': typeof AssistenteRoute
   '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRouteWithChildren
-  '/biblioteca': typeof BibliotecaRoute
-  '/cadernos': typeof CadernosRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/confirmar': typeof ConfirmarRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
@@ -396,11 +396,11 @@ export interface FileRoutesByTo {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/questoes': typeof QuestoesRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/simulados': typeof SimuladosRoute
+  '/questoes': typeof QuestoesRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/avisos': typeof AdminAvisosRoute
@@ -432,13 +432,13 @@ export interface FileRoutesById {
   '/$ref': typeof RefRoute
   '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
+  '/confirmar': typeof ConfirmarRoute
+  '/cadernos': typeof CadernosRoute
+  '/biblioteca': typeof BibliotecaRoute
   '/assistente': typeof AssistenteRoute
   '/atividade': typeof AtividadeRoute
   '/auth': typeof AuthRouteWithChildren
-  '/biblioteca': typeof BibliotecaRoute
-  '/cadernos': typeof CadernosRoute
   '/configuracoes': typeof ConfiguracoesRoute
-  '/confirmar': typeof ConfirmarRoute
   '/ei': typeof EiRoute
   '/inclusao': typeof InclusaoRouteWithChildren
   '/indicacoes': typeof IndicacoesRoute
@@ -450,11 +450,11 @@ export interface FileRoutesById {
   '/planejamento': typeof PlanejamentoRouteWithChildren
   '/planejamento-pedagogico': typeof PlanejamentoPedagogicoRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/questoes': typeof QuestoesRoute
   '/relatorio-pedagogico': typeof RelatorioPedagogicoRoute
   '/relatorios': typeof RelatoriosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/simulados': typeof SimuladosRoute
+  '/questoes': typeof QuestoesRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
   '/admin/avisos': typeof AdminAvisosRoute
@@ -487,13 +487,13 @@ export interface FileRouteTypes {
     | '/$ref'
     | '/admin'
     | '/agenda'
+    | '/confirmar'
+    | '/cadernos'
+    | '/biblioteca'
     | '/assistente'
     | '/atividade'
     | '/auth'
-    | '/biblioteca'
-    | '/cadernos'
     | '/configuracoes'
-    | '/confirmar'
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
@@ -505,11 +505,11 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/planejamento-pedagogico'
     | '/privacidade'
-    | '/questoes'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
     | '/simulados'
+    | '/questoes'
     | '/termos'
     | '/admin/atividades'
     | '/admin/avisos'
@@ -539,13 +539,13 @@ export interface FileRouteTypes {
     | '/'
     | '/$ref'
     | '/agenda'
+    | '/confirmar'
+    | '/cadernos'
+    | '/biblioteca'
     | '/assistente'
     | '/atividade'
     | '/auth'
-    | '/biblioteca'
-    | '/cadernos'
     | '/configuracoes'
-    | '/confirmar'
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
@@ -557,11 +557,11 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/planejamento-pedagogico'
     | '/privacidade'
-    | '/questoes'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
     | '/simulados'
+    | '/questoes'
     | '/termos'
     | '/admin/atividades'
     | '/admin/avisos'
@@ -592,13 +592,13 @@ export interface FileRouteTypes {
     | '/$ref'
     | '/admin'
     | '/agenda'
+    | '/confirmar'
+    | '/cadernos'
+    | '/biblioteca'
     | '/assistente'
     | '/atividade'
     | '/auth'
-    | '/biblioteca'
-    | '/cadernos'
     | '/configuracoes'
-    | '/confirmar'
     | '/ei'
     | '/inclusao'
     | '/indicacoes'
@@ -610,11 +610,11 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/planejamento-pedagogico'
     | '/privacidade'
-    | '/questoes'
     | '/relatorio-pedagogico'
     | '/relatorios'
     | '/reset-password'
     | '/simulados'
+    | '/questoes'
     | '/termos'
     | '/admin/atividades'
     | '/admin/avisos'
@@ -646,13 +646,13 @@ export interface RootRouteChildren {
   RefRoute: typeof RefRoute
   AdminRoute: typeof AdminRouteWithChildren
   AgendaRoute: typeof AgendaRoute
+  ConfirmarRoute: typeof ConfirmarRoute
+  CadernosRoute: typeof CadernosRoute
+  BibliotecaRoute: typeof BibliotecaRoute
   AssistenteRoute: typeof AssistenteRoute
   AtividadeRoute: typeof AtividadeRoute
   AuthRoute: typeof AuthRouteWithChildren
-  BibliotecaRoute: typeof BibliotecaRoute
-  CadernosRoute: typeof CadernosRoute
   ConfiguracoesRoute: typeof ConfiguracoesRoute
-  ConfirmarRoute: typeof ConfirmarRoute
   EiRoute: typeof EiRoute
   InclusaoRoute: typeof InclusaoRouteWithChildren
   IndicacoesRoute: typeof IndicacoesRoute
@@ -664,11 +664,11 @@ export interface RootRouteChildren {
   PlanejamentoRoute: typeof PlanejamentoRouteWithChildren
   PlanejamentoPedagogicoRoute: typeof PlanejamentoPedagogicoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
-  QuestoesRoute: typeof QuestoesRoute
   RelatorioPedagogicoRoute: typeof RelatorioPedagogicoRoute
   RelatoriosRoute: typeof RelatoriosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SimuladosRoute: typeof SimuladosRoute
+  QuestoesRoute: typeof QuestoesRoute
   TermosRoute: typeof TermosRoute
   ApiSofiaChatRoute: typeof ApiSofiaChatRoute
   ApiSofiaSuggestionsRoute: typeof ApiSofiaSuggestionsRoute
@@ -692,6 +692,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SimuladosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/questoes': {
+      id: '/questoes'
+      path: '/questoes'
+      fullPath: '/questoes'
+      preLoaderRoute: typeof QuestoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -711,13 +718,6 @@ declare module '@tanstack/react-router' {
       path: '/relatorio-pedagogico'
       fullPath: '/relatorio-pedagogico'
       preLoaderRoute: typeof RelatorioPedagogicoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/questoes': {
-      id: '/questoes'
-      path: '/questoes'
-      fullPath: '/questoes'
-      preLoaderRoute: typeof QuestoesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidade': {
@@ -797,32 +797,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/confirmar': {
-      id: '/confirmar'
-      path: '/confirmar'
-      fullPath: '/confirmar'
-      preLoaderRoute: typeof ConfirmarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/configuracoes': {
       id: '/configuracoes'
       path: '/configuracoes'
       fullPath: '/configuracoes'
       preLoaderRoute: typeof ConfiguracoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cadernos': {
-      id: '/cadernos'
-      path: '/cadernos'
-      fullPath: '/cadernos'
-      preLoaderRoute: typeof CadernosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/biblioteca': {
-      id: '/biblioteca'
-      path: '/biblioteca'
-      fullPath: '/biblioteca'
-      preLoaderRoute: typeof BibliotecaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -851,6 +830,27 @@ declare module '@tanstack/react-router' {
       path: '/agenda'
       fullPath: '/agenda'
       preLoaderRoute: typeof AgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirmar': {
+      id: '/confirmar'
+      path: '/confirmar'
+      fullPath: '/confirmar'
+      preLoaderRoute: typeof ConfirmarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadernos': {
+      id: '/cadernos'
+      path: '/cadernos'
+      fullPath: '/cadernos'
+      preLoaderRoute: typeof CadernosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/biblioteca': {
+      id: '/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/biblioteca'
+      preLoaderRoute: typeof BibliotecaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -1117,13 +1117,13 @@ const rootRouteChildren: RootRouteChildren = {
   RefRoute: RefRoute,
   AdminRoute: AdminRouteWithChildren,
   AgendaRoute: AgendaRoute,
+  ConfirmarRoute: ConfirmarRoute,
+  CadernosRoute: CadernosRoute,
+  BibliotecaRoute: BibliotecaRoute,
   AssistenteRoute: AssistenteRoute,
   AtividadeRoute: AtividadeRoute,
   AuthRoute: AuthRouteWithChildren,
-  BibliotecaRoute: BibliotecaRoute,
-  CadernosRoute: CadernosRoute,
   ConfiguracoesRoute: ConfiguracoesRoute,
-  ConfirmarRoute: ConfirmarRoute,
   EiRoute: EiRoute,
   InclusaoRoute: InclusaoRouteWithChildren,
   IndicacoesRoute: IndicacoesRoute,
@@ -1135,11 +1135,11 @@ const rootRouteChildren: RootRouteChildren = {
   PlanejamentoRoute: PlanejamentoRouteWithChildren,
   PlanejamentoPedagogicoRoute: PlanejamentoPedagogicoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
-  QuestoesRoute: QuestoesRoute,
   RelatorioPedagogicoRoute: RelatorioPedagogicoRoute,
   RelatoriosRoute: RelatoriosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SimuladosRoute: SimuladosRoute,
+  QuestoesRoute: QuestoesRoute,
   TermosRoute: TermosRoute,
   ApiSofiaChatRoute: ApiSofiaChatRoute,
   ApiSofiaSuggestionsRoute: ApiSofiaSuggestionsRoute,
