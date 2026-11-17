@@ -18,7 +18,8 @@ function sem(t: string) {
     .toLowerCase();
 }
 
-const REGRAS: Array<[RegExp, string, string | null]> = [
+/** rótulo do espaço → campo do PEI (sugestões) e campo da BNCC. */
+export const REGRAS_CAMPOS: Array<[RegExp, string, string | null]> = [
   [
     /potencialidade|ponto(s)? forte|habilidades (ja )?desenvolvid|o que (ja )?sabe/,
     "potencialidades",
@@ -36,6 +37,8 @@ const REGRAS: Array<[RegExp, string, string | null]> = [
   [/combinad/, "combinadosFamilia", null],
   [/profissional de apoio|mediador|cuidador/, "funcaoProfissionalApoio", null],
   [/revis|atualiza/, "criteriosAtualizacao", null],
+  // "Estratégias e recursos": o campo é de estratégias, não só de materiais.
+  [/estrateg.*(recurso|materia)/, "estrategiasArea", "estrategiasArea"],
   [/tecnologia assistiva|aplicativo|software/, "softwaresAplicativos", null],
   [/material(is)? adaptad|adaptac(ao|oes) fisica|recurso/, "adaptacoesFisicasMateriais", null],
   [/avalia/, "adaptacoesAvaliacao", null],
@@ -78,11 +81,11 @@ export function campoDoModelo(l: Lacuna): CampoDoModelo {
           ? "aval_obs:socializacao"
           : null;
 
-  for (const [re, sugestao, bncc] of REGRAS) {
+  for (const [re, sugestao, bncc] of REGRAS_CAMPOS) {
     if (re.test(r)) return { sugestao, bncc: bncc ? area || bncc : area, curto: false };
   }
   // Rótulo genérico ("Língua Portuguesa", "Meta — linha 2"): usa a seção.
-  for (const [re, sugestao, bncc] of REGRAS) {
+  for (const [re, sugestao, bncc] of REGRAS_CAMPOS) {
     if (re.test(s)) return { sugestao, bncc: bncc ? area || bncc : area, curto: false };
   }
   return { sugestao: "", bncc: area, curto: false };

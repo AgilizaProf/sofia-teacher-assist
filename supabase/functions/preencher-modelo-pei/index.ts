@@ -30,7 +30,7 @@ serve(async (req) => {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     const body = await req.json().catch(() => ({}));
     const aluno = String(body?.aluno || "").slice(0, 120);
-    const contexto = String(body?.contexto || "").slice(0, 30000);
+    const contexto = String(body?.contexto || "").slice(0, 45000);
     const lacunas = (Array.isArray(body?.lacunas) ? body.lacunas : [])
       .slice(0, 300)
       .filter((l: Lacuna) => l && typeof l.id === "string" && typeof l.rotulo === "string")
@@ -48,24 +48,26 @@ serve(async (req) => {
       return json({ ok: false, error: "Não encontrei espaços para preencher no modelo." }, 400);
     }
 
-    const sys = `Você é a Sofia, assistente pedagógica do AgilizaProf. A professora usa o modelo oficial de PEI (Plano Educacional Individualizado) da rede de ensino dela. Sua tarefa é preencher os espaços em branco desse modelo com as informações do PEI do aluno.
+    const sys = `Você é a Sofia, assistente pedagógica do AgilizaProf. A professora usa o modelo oficial de PEI (Plano Educacional Individualizado) da rede de ensino dela. Sua tarefa é preencher os espaços em branco desse modelo com o que a professora já registrou sobre o aluno no app: o PEI e, quando vierem, a anamnese, os registros de sala, o relatório de inclusão, o diário de bordo e as mensagens do WhatsApp que ela confirmou.
 
 Regras:
-- Use APENAS as informações do PEI enviado. Nunca invente nomes, datas, diagnósticos, CID, telefones, laudos ou profissionais.
+- Use APENAS as informações enviadas abaixo. Nunca invente nomes, datas, diagnósticos, CID, telefones, laudos ou profissionais.
+- O PEI vale mais: use os outros registros para completar o que o PEI não traz. Se um registro contradiz o PEI, fique com o PEI.
+- Registros de sala, diário e mensagens do WhatsApp são observações do dia a dia: use-os para descrever o aluno (o que já faz, do que precisa, o que funciona), sem copiar a mensagem inteira e sem citar a data ou o WhatsApp.
 - Se não houver informação para um espaço, devolva "" (vazio) para ele. Espaço vazio é melhor que informação inventada.
 - Títulos de seção que não pedem resposta: devolva "".
 - Escreva em português do Brasil, linguagem técnica pedagógica, frases completas e objetivas.
 - Ajuste o tamanho ao espaço: dados de identificação e células curtas recebem só o dado (ex.: "15/03/2016", "3º ano A"); campos descritivos recebem um parágrafo curto ou itens separados por quebra de linha (\\n).
-- Quando o espaço pedir objetivos, metas, habilidades ou conteúdos, alinhe à BNCC do ano de referência do aluno. Só cite códigos da BNCC (ex.: EF01LP02, EI03EO04) que estejam no PEI enviado; não crie códigos.
-- Espaços do tipo "opcoes": devolva os números (começando em 1) das opções que devem ser marcadas, separados por vírgula (ex.: "1,3"). Marque só o que o PEI confirma; se nada confirmar, "".
+- Quando o espaço pedir objetivos, metas, habilidades ou conteúdos, alinhe à BNCC do ano de referência do aluno. Só cite códigos da BNCC (ex.: EF01LP02, EI03EO04) que estejam no material enviado; não crie códigos.
+- Espaços do tipo "opcoes": devolva os números (começando em 1) das opções que devem ser marcadas, separados por vírgula (ex.: "1,3"). Marque só o que o material confirma; se nada confirmar, "".
 - Não repita o rótulo na resposta (para "Nome:" devolva só o nome).
 - Não diga de onde veio a informação ("segundo o registro", "conforme a anamnese"): escreva diretamente.
 Responda APENAS com JSON válido: {"valores": {"<id>": "<texto>", ...}} com todos os ids.`;
 
     const user = `ALUNO: ${aluno}
 
-PEI DO ALUNO (fonte única de informação):
-${contexto || "(PEI ainda sem conteúdo)"}
+O QUE A PROFESSORA JÁ REGISTROU (fonte única de informação):
+${contexto || "(ainda sem conteúdo)"}
 
 ESPAÇOS DO MODELO DA REDE (na ordem do documento):
 ${JSON.stringify(lacunas)}`;

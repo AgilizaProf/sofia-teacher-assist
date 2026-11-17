@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import { PEIBnccPanel } from "./PEIBnccPanel";
 import { componentePadrao, fraseServeAoNivel, type NivelBncc } from "@/lib/pei/bncc";
+import { condicoesDoAluno, sugestoesDoCid } from "@/lib/pei/sugestoesPorCid";
 
 // Catálogo de sugestões rápidas por campo do PEI.
 // As frases foram redigidas para serem clicáveis e inseridas no texto.
@@ -606,6 +607,9 @@ type Props = {
    * componente que abre primeiro (ver componentePadrao); `nivel` vem da série.
    */
   bncc?: { campo: string; nivel: NivelBncc | null };
+  /** CID e diagnóstico do aluno: trazem sugestões próprias da condição (TEA, TDAH...). */
+  cid?: string;
+  diagnostico?: string;
 };
 
 /**
@@ -613,7 +617,7 @@ type Props = {
  * Ao clicar em um chip, o texto é enviado para `onPick` (que normalmente faz append
  * no campo de texto do PEI).
  */
-export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = "Sugestões rápidas", bncc }: Props) {
+export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = "Sugestões rápidas", bncc, cid, diagnostico }: Props) {
   const [open, setOpen] = useState(false);
   const prefixed = prefix ? PEI_SUGGESTIONS[`${prefix}${fieldKey}`] : undefined;
   const direct = PEI_SUGGESTIONS[fieldKey];
@@ -624,7 +628,20 @@ export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = 
   // abre no 1º ano e pede para a professora escolher o ano.
   const nivelBase: NivelBncc = bncc?.nivel || { etapa: "ef", ano: 1 };
   const nivelBncc = bncc && componentePadrao(bncc.campo, nivelBase.etapa) ? nivelBase : null;
-  if (opts.length === 0 && !nivelBncc) return null;
+  // Sugestões da condição do aluno (pelo CID ou pelo diagnóstico escrito).
+  const doCid = sugestoesDoCid(fieldKey, condicoesDoAluno(cid, diagnostico));
+  if (opts.length === 0 && !nivelBncc && doCid.length === 0) return null;
+  const chip: React.CSSProperties = {
+    fontSize: 11,
+    padding: "4px 9px",
+    borderRadius: 999,
+    border: "1px solid var(--border)",
+    background: "#fff",
+    color: "var(--text)",
+    cursor: "pointer",
+    textAlign: "left",
+    maxWidth: "100%",
+  };
 
   return (
     <div style={{ marginTop: 4 }}>
@@ -663,10 +680,29 @@ export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = 
             gap: 6,
           }}
         >
+          {doCid.map((g) => (
+            <div key={g.condicao} style={{ width: "100%", display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#7A3E9D", width: "100%" }}>
+                Para {g.nome}
+                {cid ? ` (CID ${cid.replace(/^\s*cid\s*/i, "")})` : ""}:
+              </span>
+              {g.frases.map((o) => (
+                <button
+                  key={o}
+                  type="button"
+                  onClick={() => onPick(o)}
+                  title="Clique para inserir no campo"
+                  style={{ ...chip, borderColor: "#D9C2EA", background: "#FBF6FF" }}
+                >
+                  + {o}
+                </button>
+              ))}
+            </div>
+          ))}
           {open && nivelBncc && bncc && (
             <PEIBnccPanel campo={bncc.campo} nivel={nivelBncc} incerto={!bncc.nivel} onPick={onPick} />
           )}
-          {nivelBncc && opts.length > 0 && (
+          {(nivelBncc || doCid.length > 0) && opts.length > 0 && (
             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", width: "100%" }}>Outras sugestões:</span>
           )}
           {opts.map((o) => (

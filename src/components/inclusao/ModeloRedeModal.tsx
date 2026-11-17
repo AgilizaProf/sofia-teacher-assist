@@ -29,6 +29,68 @@ import type { NivelBncc } from "@/lib/pei/bncc";
 import { ModeloRedeDocumento } from "./ModeloRedeDocumento";
 import { PEISuggestions, appendText } from "./PEISuggestions";
 import { campoDoModelo } from "@/lib/pei/camposModelo";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  diarioDoAluno,
+  montarFontesDoAluno,
+  type FontesBrutas,
+  type FontesDoAluno,
+} from "@/lib/pei/fontesDoAluno";
+
+/** Lê um bloco salvo pelo app (mesmas chaves do usePersistentState), sem criar outra sincronização. */
+function lerLocal<T>(chave: string): T | null {
+  try {
+    const raw = window.localStorage.getItem(`aprof:${chave}`);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+const semAcento = (t: string) =>
+  t
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
+
+/**
+ * O que o app já sabe do aluno fora do PEI: anamnese, registros, relatório de
+ * inclusão, diário de bordo e mensagens do WhatsApp confirmadas.
+ */
+async function juntarFontes(alunoId: string, alunoNome: string): Promise<FontesDoAluno> {
+  const por = <T,>(chave: string) => lerLocal<Record<string, T>>(chave)?.[alunoId] ?? null;
+  const brutas: FontesBrutas = {
+    anamnese: por<FontesBrutas["anamnese"]>("inc_anam"),
+    anamneseObsGeral: por<string>("inc_anam_obs_geral"),
+    registros: por<FontesBrutas["registros"]>("inc_reg"),
+    parecer: por<FontesBrutas["parecer"]>("inc_parecer"),
+    diario: diarioDoAluno(
+      lerLocal<
+        Array<{ date?: string; title?: string; text?: string; tags?: string[]; alunoIds?: unknown }>
+      >("plan_m6_entries"),
+      alunoId,
+      alunoNome,
+    ),
+  };
+  try {
+    // Só as mensagens que a professora já conferiu em "Para confirmar".
+    const { data } = await supabase
+      .from("whatsapp_entradas")
+      .select("recebido_em, texto, aluno_id, aluno_nome")
+      .eq("status", "confirmado")
+      .order("recebido_em", { ascending: false })
+      .limit(200);
+    const nome = semAcento(alunoNome);
+    brutas.whatsapp = (data || []).filter(
+      (m) =>
+        m.aluno_id === alunoId || (!!nome && !m.aluno_id && semAcento(m.aluno_nome || "") === nome),
+    );
+  } catch {
+    // Sem a tabela ou sem internet: segue só com o que está no app.
+  }
+  return montarFontesDoAluno(brutas);
+}
 
 /** O que a professora escreveu no modelo, por aluno (vale enquanto o modelo for o mesmo). */
 type PreenchidoPorAluno = Record<
@@ -131,6 +193,8 @@ export function ModeloRedeModal({
   const [completando, setCompletando] = useState(false);
   const [daSofia, setDaSofia] = useState<Set<string>>(new Set());
   const [ativo, setAtivo] = useState<string | null>(null);
+  // O que a Sofia vai usar além do PEI (anamnese, registros, WhatsApp...).
+  const [fontes, setFontes] = useState<FontesDoAluno>({ texto: "", resumo: [] });
   const inputRef = useRef<HTMLInputElement | null>(null);
   const creditosGate = useCreditosGate();
   const temModelo = !!modelo.base64;
@@ -155,8 +219,14 @@ export function ModeloRedeModal({
     if (!open) {
       setDaSofia(new Set());
       setAtivo(null);
+      return;
     }
-  }, [open]);
+    let vivo = true;
+    void juntarFontes(alunoId, alunoNome).then((f) => vivo && setFontes(f));
+    return () => {
+      vivo = false;
+    };
+  }, [open, alunoId, alunoNome]);
 
   useEffect(() => {
     if (!open) return;
@@ -267,6 +337,12 @@ export function ModeloRedeModal({
     const custo = CUSTOS.pei_modelo_rede;
     if (!(await creditosGate.checar({ custo, acao: "PEI no modelo da rede" }))) return;
     setCompletando(true);
+    // Lê de novo na hora: a professora pode ter acabado de confirmar uma mensagem.
+    const f = await juntarFontes(alunoId, alunoNome).catch(() => fontes);
+    setFontes(f);
+    const tudo = f.texto
+      ? `${contexto}\n\nOUTROS REGISTROS DO ALUNO NO APP (use quando o PEI não trouxer a informação):\n${f.texto}`
+      : contexto;
     const marcados = new Set<string>();
     let falhou: unknown = null;
     try {
@@ -278,7 +354,7 @@ export function ModeloRedeModal({
           const resp = await invocarIA<{ valores?: Record<string, string> }>(
             "preencher-modelo-pei",
             {
-              body: { aluno: alunoNome, contexto, lacunas: parte },
+              body: { aluno: alunoNome, contexto: tudo, lacunas: parte },
               validar: (d) => !!d?.valores && typeof d.valores === "object",
             },
           );
@@ -429,18 +505,24 @@ export function ModeloRedeModal({
                 <Trash2 size={14} /> Remover
               </button>
             </div>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
+              A Sofia usa o que você já registrou deste aluno: PEI
+              {fontes.resumo.length ? `, ${fontes.resumo.join(", ")}` : ""}.
+            </div>
             {/* Sugestões do espaço em que a professora está escrevendo */}
             <div style={{ marginTop: 6, maxHeight: "34vh", overflowY: "auto", fontSize: 12 }}>
               {campoAtivo ? (
                 <>
                   <span style={{ color: "var(--muted)" }}>Você está em: </span>
                   <b>{campoAtivo.rotulo}</b>
-                  {ajuda && (ajuda.sugestao || ajuda.bncc) && (
+                  {ajuda && (
                     <PEISuggestions
                       key={campoAtivo.id}
                       fieldKey={ajuda.sugestao || "__sem__"}
                       prefix={etapaPrefix}
                       bncc={ajuda.bncc ? { campo: ajuda.bncc, nivel: nivelBncc } : undefined}
+                      cid={dados.cid}
+                      diagnostico={dados.diagnostico}
                       onPick={(t) =>
                         mudarCampo(campoAtivo.id, appendText(valores[campoAtivo.id] || "", t))
                       }

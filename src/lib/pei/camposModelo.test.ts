@@ -49,6 +49,13 @@ describe("campoDoModelo", () => {
     expect(campoDoModelo(l("Objetivos")).bncc).toBe("objetivosLongoPrazo");
   });
 
+  it("estratégias e recursos é campo de estratégias", () => {
+    expect(campoDoModelo(l("Estratégias e recursos")).sugestao).toBe("estrategiasArea");
+    expect(campoDoModelo(l("Recursos e materiais adaptados")).sugestao).toBe(
+      "adaptacoesFisicasMateriais",
+    );
+  });
+
   it("rótulo genérico usa a seção do documento", () => {
     expect(campoDoModelo(l("Língua Portuguesa", "celula", "3. METAS")).sugestao).toBe(
       "objetivosLongoPrazo",
