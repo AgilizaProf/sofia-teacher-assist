@@ -72,19 +72,6 @@ const CARDS: Card[] = [
     icon: ICONS.users,
   },
   {
-    to: "/indicacoes",
-    title: "Indique e ganhe",
-    desc: "Convide colegas e ganhe créditos e meses grátis",
-    bg: "var(--pn-sun)",
-    icon: (
-      <>
-        <rect x="3" y="8" width="18" height="4" rx="1" />
-        <path d="M12 8v13M19 12v9H5v-9" />
-        <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
-      </>
-    ),
-  },
-  {
     to: "/agenda",
     title: "Agenda",
     desc: "Reuniões, provas e prazos da escola",
@@ -116,6 +103,19 @@ const CARDS: Card[] = [
       </>
     ),
   },
+  {
+    to: "/indicacoes",
+    title: "Indique e ganhe",
+    desc: "Convide colegas e ganhe créditos e meses grátis",
+    bg: "var(--pn-sun)",
+    icon: (
+      <>
+        <rect x="3" y="8" width="18" height="4" rx="1" />
+        <path d="M12 8v13M19 12v9H5v-9" />
+        <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
+      </>
+    ),
+  },
 ];
 
 const SUGESTOES = [
@@ -144,13 +144,8 @@ const css = `
 .hm-date{margin-left:auto;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--pn-muted);}
 .hm-hello{margin:14px 0 14px;font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.05;text-wrap:balance;}
 
-.hm-wa{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding:14px 18px;border-radius:18px;background:#D9FDD3;border:2px solid var(--pn-ink);
-  box-shadow:4px 4px 0 var(--pn-ink);color:var(--pn-ink);text-decoration:none;transition:transform .12s,box-shadow .12s;}
-.hm-wa:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--pn-ink);}
-.hm-wa .wa-ic{color:#0B7A55;display:flex;}
-.hm-wa b{font-family:var(--pn-display);font-weight:800;font-size:20px;letter-spacing:-.02em;}
-.hm-wa .sp{flex:1;}
-.hm-wa .go{width:22px;height:22px;flex:none;}
+.hm-conta{min-width:30px;height:30px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--pn-display);font-weight:800;font-size:15px;background:var(--pn-bg);color:var(--pn-muted);border:1.5px solid var(--pn-line);}
+.hm-conta.on{background:#25D366;color:var(--pn-ink);border-color:var(--pn-ink);}
 .hm-sofia{background:var(--pn-sun);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:18px;}
 .hm-sofia-h{display:flex;align-items:center;gap:8px;font-family:var(--pn-display);font-weight:700;font-size:16px;}
 .hm-sofia-h .ic{width:28px;height:28px;border-radius:8px;background:var(--pn-ink);color:var(--pn-sun);display:flex;align-items:center;justify-content:center;}
@@ -215,12 +210,9 @@ a.hm-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);tr
   .hm-date{display:none;}
   .hm-hello{font-size:28px;margin:14px 0 10px;}
   .hm-sofia{padding:14px;}
-  .hm-wa{padding:12px 14px;}
-  .hm-wa b{font-size:18px;}
   .hm-time .lbl{display:none;}
   .hm-cred .bar{width:40px;}
-  .hm-sugs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
-  .hm-sugs button{flex-shrink:0;font-size:13px;height:34px;}
+  .hm-sugs{display:none;}
   .hm-curr{padding:12px;gap:10px;}
   .hm-curr .hm-badge{width:36px;height:36px;}
   .hm-curr-txt{min-width:0;flex:1 1 200px;}
@@ -233,7 +225,7 @@ a.hm-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);tr
   .hm-card p{font-size:12px;}
   .hm-go{display:none;}
 }
-@media (prefers-reduced-motion: reduce){.hm-card,.hm-wa{transition:none;}}
+@media (prefers-reduced-motion: reduce){.hm-card{transition:none;}}
 `;
 
 function Svg({ children, w = 2.2 }: { children: ReactNode; w?: number }) {
@@ -399,35 +391,6 @@ export function Home() {
           {nome ? `, ${nome}` : ""}.
         </h1>
 
-        <Link
-          to="/confirmar"
-          className="hm-wa"
-          aria-label={
-            pendentes > 0
-              ? `${textoParaConfirmar(pendentes)}: mensagens do WhatsApp`
-              : "Nada para confirmar do WhatsApp"
-          }
-        >
-          <span className="wa-ic">
-            <WhatsappLogo size={34} />
-          </span>
-          <b>{textoParaConfirmar(pendentes)}</b>
-          <span className="sp" />
-          <svg
-            className="go"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </Link>
-
         <section className="hm-sofia" aria-labelledby="hm-sofia-h">
           <div className="hm-sofia-h" id="hm-sofia-h">
             <span className="ic">
@@ -531,9 +494,42 @@ export function Home() {
 
         <div className="hm-sec">
           <h2>Suas ferramentas</h2>
-          <span>{CARDS.length} funções</span>
+          <span>{CARDS.length + 1} funções</span>
         </div>
         <nav className="hm-cards" aria-label="Funcionalidades">
+          <Link
+            to="/confirmar"
+            className="hm-card hm-card-wa"
+            aria-label={
+              pendentes > 0
+                ? `${textoParaConfirmar(pendentes)}: mensagens do WhatsApp`
+                : "Para confirmar: nada esperando do WhatsApp"
+            }
+          >
+            <span className="hm-card-top">
+              <span className="hm-badge" style={{ background: "#D9FDD3", color: "#0B7A55" }}>
+                <WhatsappLogo size={24} />
+              </span>
+              <span className={"hm-conta" + (pendentes > 0 ? " on" : "")} aria-hidden>
+                {pendentes}
+              </span>
+            </span>
+            <span>
+              <h3>Para confirmar</h3>
+              <p>
+                {pendentes > 0
+                  ? "O que chegou pelo WhatsApp e espera seu sim"
+                  : "Nada esperando do WhatsApp"}
+              </p>
+            </span>
+            <span className="hm-go">
+              Abrir
+              <Svg w={2.5}>
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </Svg>
+            </span>
+          </Link>
           {CARDS.map((c) => {
             const inner = (
               <>
