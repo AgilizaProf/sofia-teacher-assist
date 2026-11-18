@@ -1,11 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import {
-  TEST_SECRET,
-  buildSignedRequest,
-  setEnv,
-  clearEnv,
-  mockMpFetch,
-} from "./test-helpers";
+import { TEST_SECRET, buildSignedRequest, setEnv, clearEnv, mockMpFetch } from "./test-helpers";
 
 /* Hoisted mock — vi.hoisted runs before any imports, including the route.
  * Everything used inside MUST be defined inside the factory (no outer refs). */
@@ -37,15 +31,22 @@ const { sb } = vi.hoisted(() => {
       call.filters.push({ kind: "ilike", column, value });
       return b;
     };
+    b.limit = () => b;
     b.maybeSingle = () => finalize();
     b.single = () => finalize();
     b.then = (
       onFulfilled?: (v: { data: unknown; error: unknown }) => unknown,
-      onRejected?: (e: unknown) => unknown
+      onRejected?: (e: unknown) => unknown,
     ) => finalize().then(onFulfilled, onRejected);
     return b;
   };
   const client = {
+    auth: {
+      getUser: async (token: string) => ({
+        data: { user: token === "admin-token" ? { id: "admin-1" } : null },
+        error: null,
+      }),
+    },
     from(table: string) {
       const baseCall: SupabaseCall = { table, op: "select", filters: [] };
       return {
@@ -122,13 +123,20 @@ const subscriptionEvent = {
 };
 
 function queueProfile(found = true) {
+  // A busca por e-mail usa .ilike().limit() e devolve uma lista.
   sb.queue["profiles:select"] = {
-    data: found ? { user_id: USER_ID } : null,
+    data: found ? [{ user_id: USER_ID, email: EMAIL }] : [],
     error: null,
   };
 }
 function queueCurrentSub(
-  current: { source?: string; plano?: string; current_period_end?: string } | null
+  current: {
+    source?: string;
+    plano?: string;
+    ciclo?: string;
+    current_period_end?: string;
+    metadata?: Record<string, unknown>;
+  } | null,
 ) {
   sb.queue["subscriptions:select"] = { data: current, error: null };
 }
@@ -153,9 +161,7 @@ afterEach(() => {
 describe("POST /api/public/webhooks/mercadopago (production)", () => {
   it("returns 500 when server is not configured", async () => {
     clearEnv();
-    const res = await callProd(
-      buildSignedRequest({ url: URL_PROD, body: subscriptionEvent })
-    );
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
     expect(res.status).toBe(500);
   });
 
@@ -165,7 +171,7 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
         url: URL_PROD,
         body: "{not json",
         dataId: PREAPPROVAL_ID,
-      })
+      }),
     );
     expect(res.status).toBe(400);
   });
@@ -176,7 +182,7 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(subscriptionEvent),
-      })
+      }),
     );
     expect(res.status).toBe(401);
   });
@@ -187,7 +193,7 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
         url: URL_PROD,
         body: subscriptionEvent,
         v1Override: "0".repeat(64),
-      })
+      }),
     );
     expect(res.status).toBe(401);
   });
@@ -198,7 +204,7 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
       buildSignedRequest({
         url: URL_PROD,
         body: { type: "payment", data: { id: "pay_1" } },
-      })
+      }),
     );
     expect(res.status).toBe(200);
     expect(fetchSpy).not.toHaveBeenCalled();
@@ -207,9 +213,7 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
 
   it("returns 502 when MP upstream call fails", async () => {
     mockMpFetch(() => ({ status: 500, body: "boom" }));
-    const res = await callProd(
-      buildSignedRequest({ url: URL_PROD, body: subscriptionEvent })
-    );
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
     expect(res.status).toBe(502);
   });
 
@@ -217,9 +221,7 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
     mockMpFetch(() => ({
       body: { id: PREAPPROVAL_ID, status: "authorized", payer_email: "" },
     }));
-    const res = await callProd(
-      buildSignedRequest({ url: URL_PROD, body: subscriptionEvent })
-    );
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
     expect(res.status).toBe(200);
     // No DB writes attempted
     expect(sb.callsFor("subscriptions").length).toBe(0);
@@ -230,11 +232,91 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
       body: { id: PREAPPROVAL_ID, status: "authorized", payer_email: EMAIL },
     }));
     queueProfile(false);
-    const res = await callProd(
-      buildSignedRequest({ url: URL_PROD, body: subscriptionEvent })
-    );
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
     expect(res.status).toBe(200);
     expect(sb.callsFor("subscriptions").length).toBe(0);
+    // "pagamento sem perfil" fica registrado para o admin
+    const erros = sb.calls.filter((c) => c.table === "platform_errors" && c.op === "insert");
+    expect(erros).toHaveLength(1);
+    expect(erros[0].payload).toMatchObject({
+      metadata: expect.objectContaining({ tipo: "pagamento_sem_perfil" }),
+    });
+  });
+
+  it("e-mail é buscado sem curingas (ilike escapado)", async () => {
+    mockMpFetch(() => ({
+      body: { id: PREAPPROVAL_ID, status: "authorized", payer_email: "Ana_Paula@X.com" },
+    }));
+    sb.queue["profiles:select"] = {
+      data: [{ user_id: "outra", email: "anaXpaula@x.com" }],
+      error: null,
+    };
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
+    expect(res.status).toBe(200);
+    const lookup = sb.calls.find((c) => c.table === "profiles" && c.op === "select");
+    expect(lookup?.filters).toContainEqual({
+      kind: "ilike",
+      column: "email",
+      value: "ana\\_paula@x.com",
+    });
+    expect(sb.callsFor("subscriptions").length).toBe(0);
+  });
+
+  it("casa por external_reference (user_id) antes do e-mail", async () => {
+    const UID = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
+    mockMpFetch(() => ({
+      body: {
+        id: PREAPPROVAL_ID,
+        status: "authorized",
+        payer_email: "outro-email@pagador.com",
+        external_reference: UID,
+        next_payment_date: "2026-06-12T00:00:00.000Z",
+      },
+    }));
+    sb.queue["profiles:select"] = { data: { user_id: UID }, error: null };
+    queueCurrentSub(null);
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
+    expect(res.status).toBe(200);
+    const first = sb.calls.find((c) => c.table === "profiles" && c.op === "select");
+    expect(first?.filters).toContainEqual({ kind: "eq", column: "user_id", value: UID });
+    const upserts = sb.calls.filter((c) => c.table === "subscriptions" && c.op === "upsert");
+    expect(upserts[0].payload).toMatchObject({ user_id: UID });
+  });
+
+  it("'authorized' repetido do mesmo anual não soma outro ano", async () => {
+    const FIM = "2027-11-16T00:00:00.000Z";
+    mockMpFetch(() => ({
+      body: {
+        id: PREAPPROVAL_ID,
+        status: "authorized",
+        payer_email: EMAIL,
+        next_payment_date: FIM,
+        auto_recurring: { frequency: 12, frequency_type: "months" },
+      },
+    }));
+    queueProfile(true);
+    queueCurrentSub({
+      source: "mercadopago",
+      plano: "pro",
+      ciclo: "anual",
+      current_period_end: FIM,
+      metadata: { preapproval_id: PREAPPROVAL_ID },
+    });
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
+    expect(res.status).toBe(200);
+    const upserts = sb.calls.filter((c) => c.table === "subscriptions" && c.op === "upsert");
+    expect(upserts[0].payload).toMatchObject({ ciclo: "anual", current_period_end: FIM });
+  });
+
+  it("devolve 500 quando a gravação falha (o MP tenta de novo)", async () => {
+    mockMpFetch(() => ({
+      body: { id: PREAPPROVAL_ID, status: "authorized", payer_email: EMAIL },
+    }));
+    queueProfile(true);
+    queueCurrentSub(null);
+    sb.queue["subscriptions:upsert"] = { data: null, error: { message: "boom" } };
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
+    expect(res.status).toBe(500);
   });
 
   it("upserts active subscription when MP status=authorized", async () => {
@@ -250,24 +332,18 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
     queueProfile(true);
     queueCurrentSub(null);
 
-    const res = await callProd(
-      buildSignedRequest({ url: URL_PROD, body: subscriptionEvent })
-    );
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
 
     expect(res.status).toBe(200);
     // Upstream MP called with bearer token
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     const [calledUrl, calledInit] = fetchSpy.mock.calls[0];
-    expect(String(calledUrl)).toBe(
-      `https://api.mercadopago.com/preapproval/${PREAPPROVAL_ID}`
-    );
+    expect(String(calledUrl)).toBe(`https://api.mercadopago.com/preapproval/${PREAPPROVAL_ID}`);
     expect((calledInit as RequestInit)?.headers).toMatchObject({
       Authorization: expect.stringMatching(/^Bearer /),
     });
 
-    const upserts = sb.calls.filter(
-      (c) => c.table === "subscriptions" && c.op === "upsert"
-    );
+    const upserts = sb.calls.filter((c) => c.table === "subscriptions" && c.op === "upsert");
     expect(upserts).toHaveLength(1);
     expect(upserts[0].payload).toMatchObject({
       user_id: USER_ID,
@@ -279,9 +355,9 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
     });
     expect(upserts[0].upsertOptions).toEqual({ onConflict: "user_id" });
     // No update path triggered
-    expect(
-      sb.calls.filter((c) => c.table === "subscriptions" && c.op === "update")
-    ).toHaveLength(0);
+    expect(sb.calls.filter((c) => c.table === "subscriptions" && c.op === "update")).toHaveLength(
+      0,
+    );
   });
 
   it("marks subscription canceled when MP status=cancelled", async () => {
@@ -296,13 +372,9 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
     queueProfile(true);
     queueCurrentSub({ source: "mercadopago", plano: "pro" });
 
-    const res = await callProd(
-      buildSignedRequest({ url: URL_PROD, body: subscriptionEvent })
-    );
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
     expect(res.status).toBe(200);
-    const updates = sb.calls.filter(
-      (c) => c.table === "subscriptions" && c.op === "update"
-    );
+    const updates = sb.calls.filter((c) => c.table === "subscriptions" && c.op === "update");
     expect(updates).toHaveLength(1);
     expect(updates[0].payload).toMatchObject({ status: "canceled" });
     // Update is scoped by user_id AND source=mercadopago
@@ -310,7 +382,7 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
       expect.arrayContaining([
         { kind: "eq", column: "user_id", value: USER_ID },
         { kind: "eq", column: "source", value: "mercadopago" },
-      ])
+      ]),
     );
   });
 
@@ -320,13 +392,9 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
     }));
     queueProfile(true);
     queueCurrentSub(null);
-    const res = await callProd(
-      buildSignedRequest({ url: URL_PROD, body: subscriptionEvent })
-    );
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
     expect(res.status).toBe(200);
-    const updates = sb.calls.filter(
-      (c) => c.table === "subscriptions" && c.op === "update"
-    );
+    const updates = sb.calls.filter((c) => c.table === "subscriptions" && c.op === "update");
     expect(updates).toHaveLength(1);
     expect(updates[0].payload).toMatchObject({
       metadata: expect.objectContaining({ mp_status: "pending" }),
@@ -346,16 +414,13 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
       current_period_end: new Date(Date.now() + 86_400_000).toISOString(),
     });
 
-    const res = await callProd(
-      buildSignedRequest({ url: URL_PROD, body: subscriptionEvent })
-    );
+    const res = await callProd(buildSignedRequest({ url: URL_PROD, body: subscriptionEvent }));
     expect(res.status).toBe(200);
     // Only the SELECTs ran; no upsert/update
     expect(
       sb.calls.filter(
-        (c) =>
-          c.table === "subscriptions" && (c.op === "upsert" || c.op === "update")
-      )
+        (c) => c.table === "subscriptions" && (c.op === "upsert" || c.op === "update"),
+      ),
     ).toHaveLength(0);
   });
 });
@@ -364,16 +429,33 @@ describe("POST /api/public/webhooks/mercadopago (production)", () => {
  * DRY-RUN endpoint
  * ============================================================= */
 describe("POST /api/public/webhooks/mercadopago_debug (dry-run)", () => {
-  it("returns 401 when x-debug-token is missing/wrong", async () => {
+  beforeEach(() => {
+    process.env.ENABLE_MP_DEBUG = "1";
+    sb.queue["user_roles:select"] = { data: { role: "admin" }, error: null };
+  });
+  afterEach(() => {
+    delete process.env.ENABLE_MP_DEBUG;
+  });
+
+  it("returns 404 when ENABLE_MP_DEBUG is off", async () => {
+    delete process.env.ENABLE_MP_DEBUG;
     const req = new Request(URL_DRY + "?fetch=0", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-debug-token": "nope" },
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
       body: JSON.stringify(subscriptionEvent),
     });
     const res = await callDry(req);
-    expect(res.status).toBe(401);
-    const json = (await res.json()) as { ok: boolean };
-    expect(json.ok).toBe(false);
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 404 without an admin session (the old x-debug-token is not enough)", async () => {
+    const req = new Request(URL_DRY + "?fetch=0", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-debug-token": TEST_SECRET },
+      body: JSON.stringify(subscriptionEvent),
+    });
+    const res = await callDry(req);
+    expect(res.status).toBe(404);
   });
 
   it("simulate=1 produces a valid signature and predicts upsert:active", async () => {
@@ -390,7 +472,7 @@ describe("POST /api/public/webhooks/mercadopago_debug (dry-run)", () => {
 
     const req = new Request(URL_DRY + "?simulate=1", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-debug-token": TEST_SECRET },
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
       body: JSON.stringify(subscriptionEvent),
     });
     const res = await callDry(req);
@@ -412,9 +494,8 @@ describe("POST /api/public/webhooks/mercadopago_debug (dry-run)", () => {
     // Crucially: dry-run never writes
     expect(
       sb.calls.filter(
-        (c) =>
-          c.table === "subscriptions" && (c.op === "upsert" || c.op === "update")
-      )
+        (c) => c.table === "subscriptions" && (c.op === "upsert" || c.op === "update"),
+      ),
     ).toHaveLength(0);
   });
 
@@ -423,7 +504,7 @@ describe("POST /api/public/webhooks/mercadopago_debug (dry-run)", () => {
       url: URL_DRY,
       body: subscriptionEvent,
       v1Override: "0".repeat(64),
-      extraHeaders: { "x-debug-token": TEST_SECRET },
+      extraHeaders: { authorization: "Bearer admin-token" },
     });
     const res = await callDry(req);
     expect(res.status).toBe(200);
@@ -444,7 +525,7 @@ describe("POST /api/public/webhooks/mercadopago_debug (dry-run)", () => {
 
     const req = new Request(URL_DRY + "?simulate=1", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-debug-token": TEST_SECRET },
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
       body: JSON.stringify(subscriptionEvent),
     });
     const res = await callDry(req);
@@ -460,12 +541,12 @@ describe("POST /api/public/webhooks/mercadopago_debug (dry-run)", () => {
 
     const req = new Request(URL_DRY + "?simulate=1", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-debug-token": TEST_SECRET },
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
       body: JSON.stringify(subscriptionEvent),
     });
     const res = await callDry(req);
     const json = (await res.json()) as {
-      userLookup: { email: string; user_id: string | null };
+      userLookup: { by: string; user_id: string | null };
       plannedAction: string;
     };
     expect(json.userLookup.user_id).toBeNull();
@@ -476,7 +557,7 @@ describe("POST /api/public/webhooks/mercadopago_debug (dry-run)", () => {
     const fetchSpy = mockMpFetch(() => ({ body: {} }));
     const req = new Request(URL_DRY + "?simulate=1&fetch=0", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-debug-token": TEST_SECRET },
+      headers: { "content-type": "application/json", authorization: "Bearer admin-token" },
       body: JSON.stringify(subscriptionEvent),
     });
     const res = await callDry(req);

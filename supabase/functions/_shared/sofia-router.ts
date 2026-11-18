@@ -63,6 +63,8 @@ export type CallAIResult = {
   limitBrl?: number;
   truncated?: boolean;
   finishReason?: string;
+  /** A consulta de créditos falhou (instabilidade). Não é "sem créditos". */
+  creditCheckFailed?: boolean;
 };
 
 const TOKEN_LIMITS: Record<SofiaTaskType, number> = {
@@ -96,6 +98,18 @@ export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
 
   if (args.userId) {
     const b = await isBudgetExceeded(args.userId);
+    // Falha ao consultar os créditos NÃO é "saldo zero": responde como erro
+    // temporário, sem falar em upgrade (N5).
+    if (b.erro) {
+      return {
+        ok: false,
+        status: 503,
+        text: "",
+        error: "Falha ao consultar créditos (garantir_creditos_usuario).",
+        creditCheckFailed: true,
+        ...route,
+      };
+    }
     // Bloqueia quando o saldo não cobre o custo desta operação.
     // Sem custoCreditos informado, custo = 1 → equivale ao comportamento antigo
     // (bloquear apenas quando o saldo está zerado).
@@ -193,18 +207,22 @@ export const corsHeaders = {
 export function aiErrorResponse(r: CallAIResult): Response {
   // Sempre devolvemos HTTP 200 com envelope { ok:false, error } para que o
   // cliente (supabase.functions.invoke) nunca dispare "Edge Function returned
-  // a non-2xx status code". Os callers devem checar `data.ok === false`.
-  let mensagem = "Estou com dificuldade de conexão com a IA. Tente em instantes.";
-  if (r.blocked) {
-    mensagem = `Você não tem créditos disponíveis (${r.usedBrl ?? 0}/${r.limitBrl ?? 0} usados). Aguarde a renovação do seu plano ou faça upgrade.`;
+  // a non-2xx status code". No app, use src/lib/sofia/invocarIA.ts, que confere
+  // `data.ok === false` e mostra `error` (sempre em português simples).
+  let mensagem = "A Sofia não conseguiu agora. Tente de novo em instantes.";
+  if (r.creditCheckFailed) {
+    mensagem = "Não consegui conferir seus créditos agora. Tente de novo em instantes.";
+  } else if (r.blocked) {
+    mensagem = r.error && /^Créditos insuficientes/.test(r.error)
+      ? r.error
+      : "Seus créditos acabaram. Eles renovam no próximo ciclo do seu plano.";
   } else if (r.status === 429) {
-    mensagem = "Estou com muitas conversas agora. Tente em instantes.";
+    mensagem = "A Sofia está com muitos pedidos agora. Tente de novo em instantes.";
   } else if (r.status === 402) {
-    mensagem = "Créditos de IA esgotados. Adicione créditos no workspace.";
-  } else if (r.status === 401 || r.status === 403) {
-    mensagem = "Estou com dificuldade de conexão com a IA. Tente em instantes.";
+    // 402 do gateway = saldo do provedor de IA, não da professora.
+    mensagem = "A Sofia está temporariamente indisponível. Já fomos avisados.";
   } else if (r.status >= 500) {
-    mensagem = "A IA demorou para responder. Tente novamente em alguns segundos.";
+    mensagem = "A Sofia está instável agora. Tente de novo em alguns segundos.";
   }
   return new Response(
     JSON.stringify({
@@ -212,12 +230,30 @@ export function aiErrorResponse(r: CallAIResult): Response {
       error: mensagem,
       detail: r.error ? String(r.error).slice(0, 500) : undefined,
       blocked: r.blocked || undefined,
+      creditCheckFailed: r.creditCheckFailed || undefined,
       usedBrl: r.usedBrl,
       limitBrl: r.limitBrl,
       upstreamStatus: r.status,
     }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
+}
+
+/** Resposta de erro simples (HTTP 200, { ok:false, error }) para os catch das funções. */
+export function erroSimples(mensagem: string, detalhe?: unknown): Response {
+  return new Response(
+    JSON.stringify({
+      ok: false,
+      error: mensagem,
+      detail: detalhe ? String((detalhe as Error)?.message || detalhe).slice(0, 500) : undefined,
+    }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
+}
+
+/** Verdadeiro quando o objeto veio do parseAiJson como irrecuperável. */
+export function jsonTruncado(v: unknown): boolean {
+  return !!v && typeof v === "object" && (v as { _truncated?: boolean })._truncated === true;
 }
 
 // ---------------------------------------------------------------------------

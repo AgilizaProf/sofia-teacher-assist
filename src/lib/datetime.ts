@@ -46,6 +46,19 @@ export function brDateKey(date: Date = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * YYYY-MM-DD pelos campos LOCAIS de um Date (getFullYear/getMonth/getDate).
+ * Use para datas montadas no calendário local (ex.: "segunda desta semana" à
+ * meia-noite), em vez de `toISOString().slice(0, 10)`, que usa UTC e muda o dia
+ * depois das 21h em Brasília (A12).
+ */
+export function localDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 /** Diferença em dias entre duas datas YYYY-MM-DD (b - a). */
 export function diffDaysBR(a: string, b: string): number {
   const da = new Date(`${a}T00:00:00Z`).getTime();

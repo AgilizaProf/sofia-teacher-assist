@@ -5,6 +5,9 @@ import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { ArrowLeft, Sparkles, Save, Loader2, FileText, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { FolhasSugeridas } from "@/components/cadernos/FolhasSugeridas";
+import { invocarIA, mensagemAmigavel, temTexto } from "@/lib/sofia/invocarIA";
+import { useAvisoSairSemSalvar } from "@/components/documentos/useAvisoSairSemSalvar";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { consumirCreditos } from "@/lib/creditos/consume";
@@ -88,6 +91,9 @@ export function PlanejamentoEi() {
   const [saving, setSaving] = useState(false);
 
   const [roteiro, setRoteiro] = useState<Roteiro | null>(null);
+  // Roteiro gerado/editado e não salvo: avisa antes de sair (A17).
+  const [naoSalvo, setNaoSalvo] = useState(false);
+  useAvisoSairSemSalvar(naoSalvo && !!roteiro);
   const [currentId, setCurrentId] = useState<string | null>(null);
 
   const [list, setList] = useState<RoteiroRow[]>([]);
@@ -136,7 +142,9 @@ export function PlanejamentoEi() {
           habilidades: habs,
         };
       }
-      const { data, error } = await supabase.functions.invoke("gerar-roteiro-ei", {
+      // Só segue com roteiro de verdade; falha/corte vira mensagem amigável (N1/N8).
+      const data = await invocarIA<{ roteiro?: Roteiro }>("gerar-roteiro-ei", {
+        validar: (d) => temTexto(d?.roteiro?.titulo),
         body: {
           turma, faixa_etaria: faixa,
           campos_experiencia: camposNomes,
@@ -145,9 +153,7 @@ export function PlanejamentoEi() {
           curriculo_municipal,
         },
       });
-      if (error) throw error;
-      const r = (data as { roteiro?: Roteiro })?.roteiro;
-      if (!r || !r.titulo) throw new Error("Resposta inválida da Sofia");
+      const r = data.roteiro as Roteiro;
       setRoteiro({
         titulo: r.titulo || "",
         intencao_pedagogica: { ...empty.intencao_pedagogica, ...r.intencao_pedagogica },
@@ -159,10 +165,11 @@ export function PlanejamentoEi() {
         adaptacoes_pcd: r.adaptacoes_pcd || "",
       });
       setCurrentId(null);
-      toast.success("Roteiro gerado pela Sofia");
+      setNaoSalvo(true);
+      toast.success("Roteiro gerado pela Sofia. Revise e salve.");
       void consumirCreditos(CUSTOS.planejamento_semanal, "Roteiro EI (Sofia)");
     } catch (e) {
-      toast.error((e as Error).message || "Falha ao gerar roteiro");
+      toast.error("Não consegui gerar o roteiro.", { description: mensagemAmigavel(e) });
     } finally {
       setGenerating(false);
     }
@@ -191,8 +198,9 @@ export function PlanejamentoEi() {
       : await supabase.from("roteiros_ei").insert([payload]).select("id").single();
     const isNovo = !currentId;
     setSaving(false);
-    if (error) { toast.error("Falha ao salvar: " + error.message); return; }
+    if (error) { toast.error("Não consegui salvar o roteiro na nuvem. Tente de novo."); return; }
     if (data?.id) setCurrentId(data.id);
+    setNaoSalvo(false);
     toast.success("Roteiro salvo");
     void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent(currentId ? "roteiro_ei_atualizado" : "roteiro_ei_gerado", { turma, faixa_etaria: faixa, tema, tipo_experiencia: tipo, duracao }));
     if (isNovo) {
@@ -213,6 +221,7 @@ export function PlanejamentoEi() {
     setTipo(row.tipo_experiencia || TIPOS[0]);
     setDuracao(row.duracao || 30);
     setRoteiro({ ...empty, ...row.conteudo });
+    setNaoSalvo(false);
     setCurrentId(row.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -304,10 +313,17 @@ export function PlanejamentoEi() {
           </div>
         </section>
 
+        <FolhasSugeridas
+          className="ei-folhas"
+          etapa="infantil"
+          ano={faixa}
+          componentes={CAMPOS.filter((c) => campos.includes(c.id)).map((c) => c.nome)}
+        />
+
         {roteiro && (
           <RoteiroPanel
             roteiro={roteiro}
-            onChange={setRoteiro}
+            onChange={(r: Roteiro) => { setRoteiro(r); setNaoSalvo(true); }}
             onSave={salvar}
             saving={saving}
             currentId={currentId}

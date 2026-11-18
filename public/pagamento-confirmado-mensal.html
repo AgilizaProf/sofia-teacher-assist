@@ -114,22 +114,35 @@
 
 <script>
   (function(){
-    var qs = new URLSearchParams(window.location.search);
+    // Nome e e-mail chegam da página do app por postMessage (mesma origem),
+    // nunca pela URL (A14: e-mail em URL vai para logs e referrer).
     var fmt = function(d){ return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }); };
-    var name = (qs.get('name') || '').trim();
-    var email = (qs.get('email') || '').trim();
-    var purchase = new Date(qs.get('purchase') || Date.now());
-    if (isNaN(purchase.getTime())) purchase = new Date();
-    var guarantee = new Date(purchase); guarantee.setDate(guarantee.getDate() + 7);
-    var renewal = new Date(purchase); renewal.setDate(renewal.getDate() + 30);
     var set = function(id, v){ var el = document.getElementById(id); if (el && v) el.textContent = v; };
-    set('rcp-name', name);
-    set('rcp-email', email);
-    if (name) set('hello-name', ", " + name.split(" ")[0]);
-    set('rcp-purchase', fmt(purchase));
-    set('rcp-guarantee', fmt(guarantee));
-    set('rcp-guarantee2', fmt(guarantee));
-    set('rcp-renewal', fmt(renewal));
+    var render = function(info){
+      info = info || {};
+      var name = String(info.name || '').trim();
+      var email = String(info.email || '').trim();
+      var purchase = new Date(info.purchase || Date.now());
+      if (isNaN(purchase.getTime())) purchase = new Date();
+      var guarantee = new Date(purchase); guarantee.setDate(guarantee.getDate() + 7);
+      var renewal = new Date(purchase); renewal.setDate(renewal.getDate() + 30);
+      set('rcp-name', name);
+      set('rcp-email', email);
+      if (name) set('hello-name', ", " + name.split(" ")[0]);
+      set('rcp-purchase', fmt(purchase));
+      set('rcp-guarantee', fmt(guarantee));
+      set('rcp-guarantee2', fmt(guarantee));
+      set('rcp-renewal', fmt(renewal));
+    };
+    render({});
+    window.addEventListener('message', function(ev){
+      if (ev.origin !== window.location.origin) return;
+      var d = ev.data;
+      if (d && d.type === 'agp-recibo') render(d);
+    });
+    if (window.parent && window.parent !== window) {
+      try { window.parent.postMessage({ type: 'agp-recibo-pronto' }, window.location.origin); } catch (e) {}
+    }
 
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var colors = ['#0B7A55', '#FFB224', '#3D8BFD', '#F2604B', '#C9BDFF'];

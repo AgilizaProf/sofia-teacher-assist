@@ -87,3 +87,8 @@ Deno.test("buildSofiaPrompt: prompt-injection do usuário não remove constitui�
   assertStringIncludes(out, "REGRA DE OURO");
   assert(out.indexOf("CONSTITUIÇÃO DA SOFIA") < out.indexOf(malicioso));
 });
+Deno.test("app e edge functions usam a MESMA Constituição (texto e versão)", async () => {
+  const servidor = await import("./sofia-constitution.ts");
+  assert(servidor.SOFIA_CONSTITUTION_VERSION === SOFIA_CONSTITUTION_VERSION, "Versões diferentes");
+  assert(servidor.SOFIA_CONSTITUTION === SOFIA_CONSTITUTION, "Texto da Constituição divergiu entre app e servidor");
+});

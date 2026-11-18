@@ -5,6 +5,8 @@ import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { ArrowLeft, Sparkles, Save, Loader2, FileText, ChevronDown, ChevronUp, Plus, Trash2, RefreshCw, Bug, Eraser } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { invocarIA, mensagemAmigavel, temConteudo, ErroIA } from "@/lib/sofia/invocarIA";
+import { useAvisoSairSemSalvar } from "@/components/documentos/useAvisoSairSemSalvar";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
@@ -69,6 +71,9 @@ export function PeiPdi() {
   const creditosGate = useCreditosGate();
 
   const [pei, setPei] = useState<PeiData | null>(null);
+  // PEI gerado (ou editado) e ainda não salvo: avisa antes de sair (A17).
+  const [naoSalvo, setNaoSalvo] = useState(false);
+  useAvisoSairSemSalvar(naoSalvo && !!pei);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [versao, setVersao] = useState<number>(1);
 
@@ -150,73 +155,23 @@ export function PeiPdi() {
 
     const callPei = async (parte: "completo" | "a" | "b") => {
       const payload = { ...basePayload, parte };
-      console.log(`[PEI] → request (parte=${parte})`, payload);
       pushDebug({ parte, stage: "request", payload });
-      const { data, error } = await supabase.functions.invoke("gerar-pei", { body: payload });
-      console.log(`[PEI] ← raw response (parte=${parte})`, { data, error });
-      pushDebug({ parte, stage: "raw", payload: { data, error: error ? { message: error.message, name: error.name } : null } });
-      if (error) {
-        pushDebug({ parte, stage: "error", payload: error.message || error.name });
-        throw new Error(`Sofia falhou (parte=${parte}): ${error.message || error.name}`);
+      try {
+        // invocarIA lança erro amigável para falha, resposta vazia ou cortada
+        // (N1/N8): um PEI cortado nunca vira {}.
+        const data = await invocarIA<{ pei?: Record<string, unknown> }>("gerar-pei", {
+          body: payload,
+          validar: (d) => temConteudo(d?.pei),
+        });
+        pushDebug({ parte, stage: "parsed", payload: data.pei ?? null });
+        return data.pei as Record<string, unknown>;
+      } catch (e) {
+        pushDebug({ parte, stage: "error", payload: e instanceof ErroIA ? `${e.tipo}: ${e.detalhe || e.message}` : String(e) });
+        throw e;
       }
-      const peiResp = (data as { pei?: Record<string, unknown> })?.pei;
-      console.log(`[PEI] ← parsed pei (parte=${parte})`, peiResp);
-      pushDebug({ parte, stage: "parsed", payload: peiResp ?? null });
-      if (!peiResp || typeof peiResp !== "object") {
-        throw new Error(`Resposta vazia da Sofia (parte=${parte}). Conteúdo: ${JSON.stringify(data).slice(0, 200)}`);
-      }
-      return peiResp;
     };
 
-    const explicarFaltantes = (obj: Record<string, unknown>, esperados: string[]) => {
-      const presentes = esperados.filter((k) => obj[k] != null);
-      const faltando = esperados.filter((k) => obj[k] == null);
-      return `Recebido: [${presentes.join(", ") || "nada"}]. Faltando: [${faltando.join(", ") || "nenhum"}].`;
-    };
-
-    const isTokenOverflow = (msg: string) =>
-      /token|max_tokens|too long|context length|truncat/i.test(msg);
-
-    try {
-      // 1) Tenta gerar tudo de uma vez.
-      const peiResp = (await callPei("completo")) as Partial<PeiData> & Record<string, unknown>;
-
-      let merged: PeiData;
-      if (!peiResp.perfil_aluno) {
-        // 2) Cenário 3: resposta sem perfil_aluno → split em 2 chamadas.
-        const motivo = explicarFaltantes(peiResp, [
-          "perfil_aluno", "objetivos_longo", "objetivos_curto",
-          "estrategias", "avaliacao", "responsaveis",
-        ]);
-        console.warn("[PEI] resposta inválida — dividindo em 2 chamadas. " + motivo);
-        toast.warning("Sofia devolveu resposta incompleta — gerando em 2 partes…");
-
-        const [a, b] = await Promise.all([
-          callPei("a") as Promise<ParteA>,
-          callPei("b") as Promise<ParteB>,
-        ]);
-
-        if (!a.perfil_aluno) {
-          throw new Error(
-            `Falha na parte A do PEI (perfil/objetivos). ${explicarFaltantes(
-              a as unknown as Record<string, unknown>,
-              ["perfil_aluno", "objetivos_longo", "objetivos_curto"],
-            )}`,
-          );
-        }
-        if (!b.estrategias) {
-          throw new Error(
-            `Falha na parte B do PEI (estratégias/avaliação). ${explicarFaltantes(
-              b as unknown as Record<string, unknown>,
-              ["estrategias", "avaliacao", "responsaveis"],
-            )}`,
-          );
-        }
-        merged = { ...a, ...b };
-      } else {
-        merged = peiResp as PeiData;
-      }
-
+    const aplicar = (merged: PeiData, emDuasPartes: boolean) => {
       setPei({
         perfil_aluno: { ...emptyPei.perfil_aluno, ...merged.perfil_aluno },
         objetivos_longo: merged.objetivos_longo || [],
@@ -226,50 +181,49 @@ export function PeiPdi() {
         responsaveis: { ...emptyPei.responsaveis, ...merged.responsaveis },
       });
       setCurrentId(null);
+      // Nova versão também quando o PEI vem em 2 partes (A17).
       const next = versions
         .filter((v) => v.aluno_client_id === aluno.id && v.bimestre === bimestre)
         .reduce((m, v) => Math.max(m, v.versao), 0) + 1;
       setVersao(next);
-      toast.success("PEI gerado pela Sofia");
+      setNaoSalvo(true);
+      toast.success(emDuasPartes ? "PEI gerado pela Sofia (em 2 partes). Revise e salve." : "PEI gerado pela Sofia. Revise e salve.");
+      // Cobra só depois de ter um PEI válido na tela.
       void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
       void acumularTempo("pei_aluno", `PEI — ${aluno?.name ?? "aluno"}`);
-    } catch (e) {
-      const msg = (e as Error).message || "Falha ao gerar PEI";
-      console.error("[PEI] erro final:", e);
+    };
 
-      // Última tentativa: se foi estouro de tokens, divide em 2 e tenta de novo.
-      if (isTokenOverflow(msg)) {
-        try {
-          toast.warning("Resposta longa demais — tentando em 2 partes…");
-          const [a, b] = await Promise.all([
-            callPei("a") as Promise<ParteA>,
-            callPei("b") as Promise<ParteB>,
-          ]);
-          if (!a.perfil_aluno || !b.estrategias) {
-            throw new Error("Sofia ainda devolveu partes incompletas após o split.");
-          }
-          const merged: PeiData = { ...a, ...b };
-          setPei({
-            perfil_aluno: { ...emptyPei.perfil_aluno, ...merged.perfil_aluno },
-            objetivos_longo: merged.objetivos_longo || [],
-            objetivos_curto: merged.objetivos_curto || [],
-            estrategias: { ...emptyPei.estrategias, ...merged.estrategias },
-            avaliacao: { ...emptyPei.avaliacao, ...merged.avaliacao },
-            responsaveis: { ...emptyPei.responsaveis, ...merged.responsaveis },
-          });
-          setCurrentId(null);
-          toast.success("PEI gerado pela Sofia (em 2 partes)");
-          void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
-          void acumularTempo("pei_aluno", `PEI — ${aluno?.name ?? "aluno"}`);
-          return;
-        } catch (e2) {
-          console.error("[PEI] split também falhou:", e2);
-          toast.error(`Falha ao gerar PEI em 2 partes: ${(e2 as Error).message}`);
-          return;
-        }
+    const gerarEmDuasPartes = async () => {
+      const [a, b] = await Promise.all([
+        callPei("a") as Promise<ParteA>,
+        callPei("b") as Promise<ParteB>,
+      ]);
+      if (!a?.perfil_aluno || !b?.estrategias) {
+        throw new ErroIA("A resposta veio incompleta. Gere de novo.", "incompleta");
       }
+      return { ...a, ...b } as PeiData;
+    };
 
-      toast.error(msg);
+    try {
+      let completo: (Partial<PeiData> & Record<string, unknown>) | null = null;
+      try {
+        // 1) Tenta gerar tudo de uma vez.
+        completo = (await callPei("completo")) as Partial<PeiData> & Record<string, unknown>;
+      } catch (e) {
+        // Só vale dividir quando a resposta veio cortada ou vazia. Rede,
+        // créditos ou "muitos pedidos" vão direto para a mensagem de erro.
+        if (!(e instanceof ErroIA) || (e.tipo !== "incompleta" && e.tipo !== "vazia")) throw e;
+      }
+      if (completo?.perfil_aluno && completo?.estrategias) {
+        aplicar(completo as PeiData, false);
+      } else {
+        // 2) Resposta incompleta: gera em 2 partes menores.
+        toast.info("A resposta veio longa. Gerando em 2 partes…");
+        aplicar(await gerarEmDuasPartes(), true);
+      }
+    } catch (e) {
+      console.error("[PEI] erro final:", e);
+      toast.error("Não consegui gerar o PEI.", { description: mensagemAmigavel(e) });
     } finally {
       setGenerating(false);
     }
@@ -300,8 +254,9 @@ export function PeiPdi() {
       ? await supabase.from("pei_pdi").update(payload).eq("id", currentId).select("id").single()
       : await supabase.from("pei_pdi").insert([payload]).select("id").single();
     setSaving(false);
-    if (error) { toast.error("Falha ao salvar: " + error.message); return; }
+    if (error) { toast.error("Não consegui salvar o PEI na nuvem. Tente de novo."); return; }
     if (data?.id) setCurrentId(data.id);
+    setNaoSalvo(false);
     toast.success("PEI salvo");
     void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent(currentId ? "pei_atualizado" : "pei_criado", { aluno_nome: aluno?.name ?? null, bimestre }));
     loadVersions();
@@ -318,7 +273,8 @@ export function PeiPdi() {
       .select("perfil_aluno,objetivos_longo,objetivos_curto,estrategias,avaliacao,responsaveis")
       .eq("id", row.id)
       .single();
-    if (error || !full) { toast.error("Falha ao abrir PEI"); return; }
+    if (error || !full) { toast.error("Não consegui abrir este PEI. Tente de novo."); return; }
+    setNaoSalvo(false);
     setPei({
       perfil_aluno: { ...emptyPei.perfil_aluno, ...(full.perfil_aluno as PeiData["perfil_aluno"]) },
       objetivos_longo: (full.objetivos_longo as PeiData["objetivos_longo"]) || [],
@@ -410,7 +366,7 @@ export function PeiPdi() {
             versao={versao}
             currentId={currentId}
             pei={pei}
-            onChange={setPei}
+            onChange={(p) => { setPei(p); setNaoSalvo(true); }}
             onSave={salvar}
             saving={saving}
           />

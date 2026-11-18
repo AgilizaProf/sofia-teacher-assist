@@ -3,7 +3,7 @@ import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
 import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { supabase } from "@/integrations/supabase/client";
 
-// Página do app que abriga uma ferramenta completa (Jogos e atividades interativas, Simulados)
+// Página do app que abriga uma ferramenta completa (Jogos e atividades interativas, Questões)
 // no visual "Painel": menu do app, contador pequeno no topo, título e a
 // ferramenta logo abaixo, ocupando o resto da tela.
 //
@@ -35,7 +35,17 @@ type Snapshot = { data: unknown; updated_at: string } | null;
 type AprofNuvem = {
   get: (key: string) => Promise<Snapshot>;
   set: (key: string, data: unknown) => Promise<boolean>;
+  usuario: () => Promise<string | null>;
 };
+
+// Só estas chaves podem ser lidas ou gravadas pelas ferramentas (lista branca).
+// simulados_dados: Questões (questoes.html) e a página antiga simulados.html.
+// jogos_dados: Jogos e atividades interativas (jogos.html).
+const CHAVES_FERRAMENTAS = ["simulados_dados", "jogos_dados"] as const;
+
+function chavePermitida(key: unknown): key is (typeof CHAVES_FERRAMENTAS)[number] {
+  return typeof key === "string" && (CHAVES_FERRAMENTAS as readonly string[]).includes(key);
+}
 
 async function usuarioId(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
@@ -44,6 +54,7 @@ async function usuarioId(): Promise<string | null> {
 
 const aprofNuvem: AprofNuvem = {
   async get(key) {
+    if (!chavePermitida(key)) throw new Error("Chave não permitida");
     const uid = await usuarioId();
     if (!uid) return null;
     const { data, error } = await supabase
@@ -56,6 +67,7 @@ const aprofNuvem: AprofNuvem = {
     return (data as Snapshot) ?? null;
   },
   async set(key, value) {
+    if (!chavePermitida(key)) throw new Error("Chave não permitida");
     const uid = await usuarioId();
     if (!uid) return false;
     const { error } = await supabase.from("app_snapshots").upsert(
@@ -71,6 +83,10 @@ const aprofNuvem: AprofNuvem = {
     );
     if (error) throw error;
     return true;
+  },
+  // id da conta, para a ferramenta separar a cópia local de cada professora no mesmo navegador
+  async usuario() {
+    return usuarioId();
   },
 };
 
@@ -111,6 +127,10 @@ export function Ferramenta({ titulo, sub, src }: { titulo: string; sub: string; 
         src={src}
         title={titulo}
         allow="fullscreen; camera; autoplay"
+        // Testado: câmera (leitor QR), tela cheia, provas que abrem em nova aba e downloads continuam
+        // funcionando. Como a ferramenta precisa do mesmo domínio (allow-same-origin) para usar a ponte,
+        // isto é uma camada a mais (bloqueia navegar a página do app, por exemplo), não um isolamento total.
+        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms allow-modals"
       />
     </div>
   );

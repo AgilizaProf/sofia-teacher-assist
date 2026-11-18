@@ -10,6 +10,8 @@
 // 3. Os avisos de BNCC/transparência (P2/P6) são métricas internas: voltam
 //    em `quality`, mas NÃO entram em `issues` (que aparecem para a professora).
 
+import { semLatex } from "@/lib/sofia/mathText";
+
 export interface ValidationIssue {
   term: string;
   suggestion: string;
@@ -129,7 +131,8 @@ export function validateSofiaOutput(text: string): {
 } {
   const issues: ValidationIssue[] = [];
   const quality: ValidationIssue[] = [];
-  let sanitized = text || "";
+  // Fórmulas em LaTeX ($\frac{1}{2}$) viram texto comum (½): o app não mostra LaTeX.
+  let sanitized = semLatex(text || "");
 
   // P3 — linguagem não-capacitista
   for (const rule of AUTO_REPLACE) {

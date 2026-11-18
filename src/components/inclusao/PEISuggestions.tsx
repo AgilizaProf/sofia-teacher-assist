@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
+import { PEIBnccPanel } from "./PEIBnccPanel";
+import { componentePadrao, fraseServeAoNivel, type NivelBncc } from "@/lib/pei/bncc";
+import { condicoesDoAluno, sugestoesDoCid } from "@/lib/pei/sugestoesPorCid";
 
 // Catálogo de sugestões rápidas por campo do PEI.
 // As frases foram redigidas para serem clicáveis e inseridas no texto.
+// Os códigos entre parênteses são da BNCC (EI = objetivos de aprendizagem da
+// Educação Infantil; EF/EM = habilidades). Além destas frases, os campos
+// pedagógicos mostram a lista completa da BNCC do ano do aluno (PEIBnccPanel).
 export const PEI_SUGGESTIONS: Record<string, string[]> = {
   // Perfil
   potencialidades: [
@@ -285,11 +291,11 @@ export const PEI_SUGGESTIONS: Record<string, string[]> = {
     "Demonstra interesse por animais, carrinhos ou bonecas.",
   ],
   "ei:objetivosLongoPrazo": [
-    "Ampliar a comunicação expressiva (gestos, palavras ou CAA) ao longo do ano.",
-    "Desenvolver autonomia nas atividades de cuidado (alimentação, higiene, vestir).",
-    "Participar de brincadeiras coletivas com mediação reduzida.",
-    "Explorar diferentes linguagens (corporal, sonora, plástica) com prazer.",
-    "Construir vínculos seguros com adultos e pares na rotina escolar.",
+    "Comunicar-se com colegas e adultos, fazendo-se compreender por gestos, palavras ou CAA (EI02EO04 / EI03EO04).",
+    "Demonstrar progressiva independência no cuidado do próprio corpo: alimentação, higiene e vestir (EI02CG04 / EI03CG04).",
+    "Ampliar as relações com os colegas, participando e cooperando nas brincadeiras com mediação reduzida (EI03EO03).",
+    "Expressar-se livremente por desenho, pintura, colagem e modelagem (EI03TS02).",
+    "Demonstrar imagem positiva de si e confiança para enfrentar desafios da rotina (EI02EO02).",
   ],
   "ei:objetivosAEE": [
     "Estimular a comunicação alternativa por meio do brincar.",
@@ -298,24 +304,24 @@ export const PEI_SUGGESTIONS: Record<string, string[]> = {
     "Promover a interação com pares em pequenos grupos.",
   ],
   "ei:meta_texto:Cognitiva/Pedagógica": [
-    "Reconhecer 5 a 10 figuras do cotidiano nomeando-as com apoio.",
+    "Contar oralmente objetos e pessoas em situações do dia a dia (EI02ET07).",
     "Encaixar peças em quebra-cabeças de 4 a 8 peças com autonomia.",
     "Imitar sequências curtas de movimentos em brincadeiras dirigidas.",
-    "Participar de leitura compartilhada virando páginas e apontando figuras.",
+    "Demonstrar interesse e atenção ao ouvir histórias, acompanhando as ilustrações (EI02EF03).",
     "Permanecer em atividade dirigida por pelo menos 8 minutos.",
-    "Identificar e nomear cores primárias em situações lúdicas.",
+    "Classificar objetos por cor, forma e tamanho em situações lúdicas (EI02ET05).",
   ],
   "ei:meta_texto:Social e emocional": [
     "Brincar lado a lado com um colega por pelo menos 5 minutos.",
     "Despedir-se do(a) responsável na entrada sem crise prolongada.",
     "Reconhecer e apontar emoções básicas em figuras ou espelho.",
-    "Aguardar a vez em pequenas rodas dirigidas pela professora.",
+    "Respeitar regras básicas de convívio nas brincadeiras, como aguardar a vez (EI02EO06).",
     "Aceitar o toque afetuoso de adultos de referência.",
     "Participar de momentos de roda com apoio do adulto.",
   ],
   "ei:meta_texto:Motora": [
-    "Subir e descer rampas e degraus baixos com apoio.",
-    "Realizar rabiscos circulares e lineares com giz ou tinta.",
+    "Deslocar-se no espaço (pular, saltar, dançar) seguindo orientações (EI02CG03).",
+    "Desenhar, pintar, rasgar e folhear com controle progressivo das mãos (EI02CG05).",
     "Empilhar 4 a 6 blocos com coordenação adequada à idade.",
     "Encaixar peças grandes (LEGO Duplo, blocos de montar).",
     "Andar em diferentes superfícies mantendo o equilíbrio.",
@@ -323,9 +329,9 @@ export const PEI_SUGGESTIONS: Record<string, string[]> = {
   ],
   "ei:meta_texto:Comunicação e linguagem": [
     "Apontar para o que deseja em vez de chorar ou gritar.",
-    "Usar 5 a 10 palavras ou sinais funcionais no dia a dia.",
+    "Dialogar com crianças e adultos expressando desejos e necessidades com 5 a 10 palavras ou sinais (EI02EF01).",
     "Responder ao próprio nome olhando para o adulto.",
-    "Participar de cantigas com gestos e onomatopeias.",
+    "Identificar sons e rimas em cantigas de roda, acompanhando com gestos (EI02EF02).",
     "Usar prancha CAA com 4 a 6 figuras em rotinas (banheiro, água, ajuda).",
     "Imitar sons de animais e objetos em brincadeiras dirigidas.",
   ],
@@ -334,8 +340,77 @@ export const PEI_SUGGESTIONS: Record<string, string[]> = {
     "Alimentar-se sozinho(a) com colher, com mínima ajuda.",
     "Calçar e descalçar sapatos com velcro de forma autônoma.",
     "Guardar brinquedos no lugar combinado após a brincadeira.",
-    "Lavar as mãos seguindo a sequência visual da rotina.",
+    "Lavar as mãos seguindo a sequência visual da rotina (EI03CG04).",
     "Beber água na garrafinha sem auxílio.",
+  ],
+
+  // ===== Objetivos e metas com códigos da BNCC — Fundamental I =====
+  "fund1:objetivosLongoPrazo": [
+    "Consolidar a alfabetização: escrever palavras e frases de forma alfabética (EF01LP02) e ler palavras de uso frequente com precisão (EF12LP01).",
+    "Localizar informações explícitas em textos curtos do cotidiano (EF15LP03).",
+    "Expressar-se oralmente com clareza nas conversas da turma, respeitando os turnos de fala (EF15LP09 / EF15LP11).",
+    "Construir fatos básicos da adição e da subtração e usá-los para resolver problemas (EF02MA05 / EF02MA06).",
+    "Participar de brincadeiras e jogos coletivos respeitando as regras e os colegas (EF12EF01).",
+    "Desenvolver autonomia na rotina escolar e na organização dos próprios materiais.",
+  ],
+  "fund1:meta_texto:Cognitiva/Pedagógica": [
+    "Segmentar oralmente palavras em sílabas (EF01LP06).",
+    "Relacionar sílabas e sons à sua representação escrita (EF01LP08).",
+    "Escrever palavras e frases de forma alfabética, por ditado ou espontaneamente (EF01LP02).",
+    "Ler palavras de uso frequente com precisão na decodificação (EF12LP01).",
+    "Contar quantidades usando estratégias como o pareamento e agrupamentos (EF01MA02).",
+    "Resolver problemas de adição e subtração com números de até dois algarismos, com material concreto (EF01MA08).",
+    "Identificar e nomear círculo, quadrado, retângulo e triângulo (EF01MA14).",
+  ],
+  "fund1:meta_texto:Comunicação e linguagem": [
+    "Expressar-se em situações de conversa com clareza e tom de voz audível (EF15LP09).",
+    "Escutar com atenção as falas da professora e dos colegas, fazendo perguntas sobre o tema (EF15LP10).",
+    "Respeitar os turnos de fala nas conversas da turma (EF15LP11).",
+    "Usar prancha de comunicação alternativa em 3 contextos diários.",
+    "Narrar oralmente uma sequência de 3 fatos vivenciados na rotina.",
+  ],
+  "fund1:meta_texto:Motora": [
+    "Experimentar elementos básicos da ginástica (equilíbrios, saltos, giros) com apoio (EF12EF07).",
+    "Participar de brincadeiras e jogos populares respeitando regras simples (EF12EF01 / EF35EF01).",
+    "Realizar o traçado de letras do próprio nome com preensão adequada.",
+    "Recortar figuras simples seguindo a linha com tesoura adaptada.",
+  ],
+  "fund1:aval_obs:leitura_escrita": [
+    "Segmenta oralmente palavras em sílabas com apoio (EF01LP06).",
+    "Escreve palavras de forma alfabética com mediação (EF01LP02).",
+    "Lê palavras de uso frequente com apoio (EF12LP01).",
+    "Localiza informações explícitas em textos curtos lidos pelo adulto (EF15LP03).",
+    "Apresenta defasagem na leitura em relação ao ano de referência.",
+  ],
+  "fund1:aval_obs:raciocinio_logico": [
+    "Conta quantidades com estratégias de pareamento e agrupamento (EF01MA02).",
+    "Compõe e decompõe números de até duas ordens com material manipulável (EF01MA07).",
+    "Resolve problemas simples de adição e subtração com material concreto (EF01MA08).",
+    "Necessita de manipuláveis para operações básicas.",
+  ],
+
+  // ===== Objetivos e metas com códigos da BNCC — Fundamental II =====
+  "fund2:objetivosLongoPrazo": [
+    "Ler e compreender textos de diferentes gêneros, identificando o fato central de notícias e reportagens (EF69LP03).",
+    "Produzir textos adequados à situação de comunicação, com apoio de roteiro (EF69LP07).",
+    "Participar de discussões da turma respeitando os turnos de fala (EF69LP15).",
+    "Resolver problemas com números naturais usando estratégias variadas e calculadora quando necessário (EF06MA03).",
+    "Desenvolver organização e autonomia nos estudos (agenda, prazos e materiais).",
+  ],
+  "fund2:meta_texto:Cognitiva/Pedagógica": [
+    "Identificar o fato central de uma notícia curta com apoio de perguntas-guia (EF69LP03).",
+    "Comparar, ordenar, ler e escrever números naturais e decimais usando a reta numérica (EF06MA01).",
+    "Resolver problemas com números naturais por estratégias variadas (EF06MA03).",
+    "Produzir um parágrafo com planejamento prévio em organizador gráfico (EF69LP07).",
+    "Permanecer engajado(a) em atividade dirigida por pelo menos 20 minutos.",
+  ],
+
+  // ===== Ensino Médio =====
+  "em:objetivosLongoPrazo": [
+    "Analisar o funcionamento das linguagens para interpretar e produzir textos de diversas semioses (EM13LGG103).",
+    "Relacionar o texto às suas condições de produção e circulação na leitura e na escrita (EM13LP01).",
+    "Analisar tabelas e gráficos de pesquisas divulgadas na mídia (EM13MAT102).",
+    "Construir um projeto de vida com metas de curto e médio prazo.",
   ],
 
   // ===== Adaptações — Educação Infantil =====
@@ -527,6 +602,14 @@ type Props = {
   prefix?: string;
   onPick: (text: string) => void;
   label?: string;
+  /**
+   * Mostra também as habilidades da BNCC do ano do aluno. `campo` escolhe o
+   * componente que abre primeiro (ver componentePadrao); `nivel` vem da série.
+   */
+  bncc?: { campo: string; nivel: NivelBncc | null };
+  /** CID e diagnóstico do aluno: trazem sugestões próprias da condição (TEA, TDAH...). */
+  cid?: string;
+  diagnostico?: string;
 };
 
 /**
@@ -534,19 +617,38 @@ type Props = {
  * Ao clicar em um chip, o texto é enviado para `onPick` (que normalmente faz append
  * no campo de texto do PEI).
  */
-export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = "Sugestões rápidas" }: Props) {
+export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = "Sugestões rápidas", bncc, cid, diagnostico }: Props) {
   const [open, setOpen] = useState(false);
   const prefixed = prefix ? PEI_SUGGESTIONS[`${prefix}${fieldKey}`] : undefined;
   const direct = PEI_SUGGESTIONS[fieldKey];
   const fb = fallbackKey ? (prefix ? PEI_SUGGESTIONS[`${prefix}${fallbackKey}`] : undefined) || PEI_SUGGESTIONS[fallbackKey] : undefined;
-  const opts = prefixed || direct || fb || [];
-  if (opts.length === 0) return null;
+  // Frases prontas com código da BNCC só aparecem se o código for do ano do aluno.
+  const opts = (prefixed || direct || fb || []).filter((o) => fraseServeAoNivel(o, bncc?.nivel));
+  // A BNCC aparece nos campos ligados a um componente. Sem a série do aluno,
+  // abre no 1º ano e pede para a professora escolher o ano.
+  const nivelBase: NivelBncc = bncc?.nivel || { etapa: "ef", ano: 1 };
+  const nivelBncc = bncc && componentePadrao(bncc.campo, nivelBase.etapa) ? nivelBase : null;
+  // Sugestões da condição do aluno (pelo CID ou pelo diagnóstico escrito).
+  const doCid = sugestoesDoCid(fieldKey, condicoesDoAluno(cid, diagnostico));
+  if (opts.length === 0 && !nivelBncc && doCid.length === 0) return null;
+  const chip: React.CSSProperties = {
+    fontSize: 11,
+    padding: "4px 9px",
+    borderRadius: 999,
+    border: "1px solid var(--border)",
+    background: "#fff",
+    color: "var(--text)",
+    cursor: "pointer",
+    textAlign: "left",
+    maxWidth: "100%",
+  };
 
   return (
     <div style={{ marginTop: 4 }}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        className="pei-sug-toggle"
         style={{
           fontSize: 11,
           padding: "3px 8px",
@@ -579,12 +681,39 @@ export function PEISuggestions({ fieldKey, fallbackKey, prefix, onPick, label = 
             gap: 6,
           }}
         >
+          {doCid.map((g) => (
+            <div key={g.condicao} style={{ width: "100%", display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#7A3E9D", width: "100%" }}>
+                Para {g.nome}
+                {cid ? ` (CID ${cid.replace(/^\s*cid\s*/i, "")})` : ""}:
+              </span>
+              {g.frases.map((o) => (
+                <button
+                  key={o}
+                  type="button"
+                  onClick={() => onPick(o)}
+                  title="Clique para inserir no campo"
+                  className="pei-chip"
+                  style={{ ...chip, borderColor: "#D9C2EA", background: "#FBF6FF" }}
+                >
+                  + {o}
+                </button>
+              ))}
+            </div>
+          ))}
+          {open && nivelBncc && bncc && (
+            <PEIBnccPanel campo={bncc.campo} nivel={nivelBncc} incerto={!bncc.nivel} onPick={onPick} />
+          )}
+          {(nivelBncc || doCid.length > 0) && opts.length > 0 && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", width: "100%" }}>Outras sugestões:</span>
+          )}
           {opts.map((o) => (
             <button
               key={o}
               type="button"
               onClick={() => onPick(o)}
               title="Clique para inserir no campo"
+              className="pei-chip"
               style={{
                 fontSize: 11,
                 padding: "4px 9px",

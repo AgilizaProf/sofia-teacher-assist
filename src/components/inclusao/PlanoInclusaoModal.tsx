@@ -8,6 +8,8 @@ import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
+import { brDateKey } from "@/lib/datetime";
+import { invocarIA, mensagemAmigavel, temConteudo } from "@/lib/sofia/invocarIA";
 
 export type PlanoInclusao = {
   id: string;
@@ -358,7 +360,9 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
       aluno.anoEscolar,
       aluno.anoReferenciaPedagogico,
     );
-    const { data, error } = await supabase.functions.invoke("gerar-atividade", {
+    // Só cobra com plano válido; falha vira erro amigável (N1).
+    const data = await invocarIA<{ plano?: PlanoCore }>("gerar-atividade", {
+      validar: (d) => temConteudo(d?.plano),
       body: {
         modo: "pcd",
         anoEscolar: aluno.anoEscolar || "",
@@ -381,8 +385,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
         diarioBordo,
       },
     });
-    if (error) throw error;
-    const plano = (data as { plano?: PlanoCore })?.plano ?? null;
+    const plano = data.plano ?? null;
     if (plano) {
       void consumirCreditos(CUSTOS.adaptacao_pcd, descricaoDoc("Adaptação inclusiva (PCD)", aluno?.name));
       void (await import("@/lib/tempo/acumular")).acumularTempo("planejamento_inclusao", `Adaptação PCD — ${aluno?.name ?? ""}`);
@@ -413,18 +416,20 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
         const results = await Promise.all(disciplinas.map((d) => gerarUm(d).then((p) => ({ d, p })).catch((e) => ({ d, p: null, e }))));
         const okItens: PlanoItem[] = [];
         let falhou = 0;
+        let ultimoErro: unknown = null;
         for (const r of results) {
           if (r.p) okItens.push({ disciplina: r.d, plano: r.p, metodologia: "", avaliacao: "", observacoes: "", incluir: true });
-          else falhou++;
+          else { falhou++; if ("e" in r) ultimoErro = r.e; }
         }
-        if (okItens.length === 0) throw new Error("Nenhum plano foi gerado.");
+        if (okItens.length === 0) throw ultimoErro ?? new Error("Nenhum plano foi gerado. Tente de novo.");
         setPlanos(okItens);
         setAbaAtiva(0);
-        toast.success(`${okItens.length} plano(s) gerado(s)${falhou ? ` · ${falhou} falhou` : ""}`);
+        if (falhou) toast.warning(`${okItens.length} plano(s) gerado(s). ${falhou} não saiu: gere de novo.`);
+        else toast.success(`${okItens.length} plano(s) gerado(s)`);
       }
     } catch (e) {
       console.error(e);
-      toast.error("Erro ao gerar plano", { description: e instanceof Error ? e.message : "Tente novamente." });
+      toast.error("Não consegui gerar o plano.", { description: mensagemAmigavel(e) });
     } finally {
       setLoading(false);
     }
@@ -450,7 +455,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
       patchAtual({ plano: p });
       toast.success("Plano regerado");
     } catch (e) {
-      toast.error("Erro ao regerar", { description: e instanceof Error ? e.message : "" });
+      toast.error("Não consegui gerar de novo.", { description: mensagemAmigavel(e) });
     } finally {
       setLoading(false);
     }
@@ -463,7 +468,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
       toast.error("Marque ao menos um plano para salvar.");
       return;
     }
-    const hoje = new Date().toISOString().slice(0, 10);
+    const hoje = brDateKey();
     for (const it of escolhidos) {
       const novo: PlanoInclusao = {
         id: crypto.randomUUID(),

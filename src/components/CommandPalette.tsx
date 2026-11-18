@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, Home, Sparkles, BookOpen, FileText, Heart, Calendar, Settings, LogOut, ArrowRight } from "lucide-react";
+import {
+  Search,
+  Home,
+  Sparkles,
+  BookOpen,
+  FileText,
+  Heart,
+  Calendar,
+  Settings,
+  LogOut,
+  ArrowRight,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { clearLocalAppData } from "@/lib/persist/clearLocalData";
 
@@ -28,24 +39,104 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const actions: Action[] = useMemo(
     () => [
-      { id: "home", label: "Página inicial", group: "Ir para", icon: Home, shortcut: "G H", run: go("/"), keywords: "dashboard início home" },
-      { id: "assistente", label: "Assistente IA (Sofia)", group: "Ir para", icon: Sparkles, shortcut: "G S", run: go("/assistente"), keywords: "sofia chat ia ai" },
-      { id: "planejamento", label: "Planejamento", group: "Ir para", icon: BookOpen, shortcut: "G P", run: go("/planejamento"), keywords: "aulas plano" },
-      { id: "relatorios", label: "Relatórios e pareceres", group: "Ir para", icon: FileText, shortcut: "G R", run: go("/relatorios"), keywords: "parecer relatorio bimestral" },
-      { id: "inclusao", label: "Inclusão", group: "Ir para", icon: Heart, shortcut: "G I", run: go("/inclusao"), keywords: "pcd anamnese pei" },
-      { id: "agenda", label: "Agenda escolar", group: "Ir para", icon: Calendar, shortcut: "G A", run: go("/agenda"), keywords: "calendario eventos" },
-      { id: "configuracoes", label: "Configurações", group: "Conta", icon: Settings, run: go("/configuracoes"), keywords: "perfil ajustes acessibilidade indicação convide" },
-      { id: "novo-plano", label: "Novo plano de aula", group: "Ações", icon: BookOpen, run: go("/planejamento/atividade"), keywords: "criar gerar atividade" },
-      { id: "novo-parecer", label: "Gerar parecer descritivo", group: "Ações", icon: FileText, run: go("/relatorios"), keywords: "bimestral bncc" },
-      { id: "indique", label: "Convidar educador(a) (ganhe dias grátis)", group: "Ações", icon: Sparkles, run: go("/configuracoes"), keywords: "indicação referral convide" },
+      {
+        id: "home",
+        label: "Página inicial",
+        group: "Ir para",
+        icon: Home,
+        shortcut: "G H",
+        run: go("/"),
+        keywords: "dashboard início home",
+      },
+      {
+        id: "assistente",
+        label: "Sofia",
+        group: "Ir para",
+        icon: Sparkles,
+        shortcut: "G S",
+        run: go("/assistente"),
+        keywords: "sofia chat ia ai assistente",
+      },
+      {
+        id: "planejamento",
+        label: "Planejar",
+        group: "Ir para",
+        icon: BookOpen,
+        shortcut: "G P",
+        run: go("/planejamento"),
+        keywords: "planejamento aulas plano diário de bordo trilhas",
+      },
+      {
+        id: "relatorios",
+        label: "Pareceres",
+        group: "Ir para",
+        icon: FileText,
+        shortcut: "G R",
+        run: go("/relatorios"),
+        keywords: "parecer relatorio relatórios bimestral",
+      },
+      {
+        id: "inclusao",
+        label: "Inclusão",
+        group: "Ir para",
+        icon: Heart,
+        shortcut: "G I",
+        run: go("/inclusao"),
+        keywords: "pcd anamnese pei",
+      },
+      {
+        id: "agenda",
+        label: "Agenda escolar",
+        group: "Ir para",
+        icon: Calendar,
+        shortcut: "G A",
+        run: go("/agenda"),
+        keywords: "calendario eventos",
+      },
+      {
+        id: "configuracoes",
+        label: "Configurações",
+        group: "Conta",
+        icon: Settings,
+        run: go("/configuracoes"),
+        keywords: "perfil ajustes acessibilidade indicação convide",
+      },
+      {
+        id: "novo-plano",
+        label: "Novo plano de aula",
+        group: "Ações",
+        icon: BookOpen,
+        run: go("/planejamento/atividade"),
+        keywords: "criar gerar atividade",
+      },
+      {
+        id: "novo-parecer",
+        label: "Gerar parecer descritivo",
+        group: "Ações",
+        icon: FileText,
+        run: go("/relatorios"),
+        keywords: "bimestral bncc",
+      },
+      {
+        id: "indique",
+        label: "Convidar educador(a) (ganhe dias grátis)",
+        group: "Ações",
+        icon: Sparkles,
+        run: go("/configuracoes"),
+        keywords: "indicação referral convide",
+      },
       {
         id: "logout",
         label: "Sair da conta",
         group: "Conta",
         icon: LogOut,
-       run: async () => {
+        run: async () => {
           clearLocalAppData();
-          try { await supabase.auth.signOut(); } catch { /* ignore */ }
+          try {
+            await supabase.auth.signOut();
+          } catch {
+            /* ignore */
+          }
           navigate({ to: "/auth" });
           onClose();
         },
@@ -87,10 +178,16 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { e.preventDefault(); onClose(); }
-      else if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => Math.min(filtered.length - 1, i + 1)); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(0, i - 1)); }
-      else if (e.key === "Enter") {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActive((i) => Math.min(filtered.length - 1, i + 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActive((i) => Math.max(0, i - 1));
+      } else if (e.key === "Enter") {
         e.preventDefault();
         const item = filtered[active];
         if (item) item.run();
@@ -108,15 +205,41 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       role="dialog"
       aria-modal="true"
       aria-label="Buscar ou navegar"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       style={{
-        position: "fixed", inset: 0, background: "rgba(20,22,31,.55)",
-        backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-start",
-        justifyContent: "center", paddingTop: 110, zIndex: 1100,
+        position: "fixed",
+        inset: 0,
+        background: "rgba(20,22,31,.55)",
+        backdropFilter: "blur(6px)",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        paddingTop: 110,
+        zIndex: 1100,
       }}
     >
-      <div style={{ width: "100%", maxWidth: 580, background: "#fff", borderRadius: 20, border: "2px solid #14161F", boxShadow: "5px 5px 0 #14161F", overflow: "hidden" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", borderBottom: "1px solid #E4E8F0" }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 580,
+          background: "#fff",
+          borderRadius: 20,
+          border: "2px solid #14161F",
+          boxShadow: "5px 5px 0 #14161F",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "14px 18px",
+            borderBottom: "1px solid #E4E8F0",
+          }}
+        >
           <Search size={16} color="#6B7691" />
           <input
             ref={inputRef}
@@ -124,19 +247,50 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar páginas, ações, atalhos…"
             autoComplete="off"
-            style={{ flex: 1, border: "none", outline: "none", fontSize: 15, fontFamily: "inherit", color: "#14161F", background: "transparent" }}
+            style={{
+              flex: 1,
+              border: "none",
+              outline: "none",
+              fontSize: 15,
+              fontFamily: "inherit",
+              color: "#14161F",
+              background: "transparent",
+            }}
           />
-          <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, background: "#EDF0F5", border: "1px solid #E4E8F0", borderRadius: 4, padding: "2px 6px", color: "#6B7691" }}>ESC</kbd>
+          <kbd
+            style={{
+              fontFamily: "'JetBrains Mono',monospace",
+              fontSize: 10,
+              background: "#EDF0F5",
+              border: "1px solid #E4E8F0",
+              borderRadius: 4,
+              padding: "2px 6px",
+              color: "#6B7691",
+            }}
+          >
+            ESC
+          </kbd>
         </div>
         <div style={{ padding: 8, maxHeight: 420, overflowY: "auto" }}>
           {grouped.length === 0 && (
-            <div style={{ padding: "22px 14px", textAlign: "center", color: "#6B7691", fontSize: 13 }}>
+            <div
+              style={{ padding: "22px 14px", textAlign: "center", color: "#6B7691", fontSize: 13 }}
+            >
               Nada encontrado para "{q}".
             </div>
           )}
           {grouped.map(([group, items]) => (
             <div key={group}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: "#6B7691", textTransform: "uppercase", letterSpacing: ".10em", padding: "10px 12px 4px" }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  color: "#6B7691",
+                  textTransform: "uppercase",
+                  letterSpacing: ".10em",
+                  padding: "10px 12px 4px",
+                }}
+              >
                 {group}
               </div>
               {items.map((a) => {
@@ -150,17 +304,33 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                     onMouseEnter={() => setActive(filtered.indexOf(a))}
                     onClick={() => a.run()}
                     style={{
-                      width: "100%", display: "flex", alignItems: "center", gap: 10,
-                      padding: "10px 12px", borderRadius: 8, border: "none",
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      border: "none",
                       background: isActive ? "#E8F6EF" : "transparent",
-                      color: "#14161F", fontSize: 13.5, cursor: "pointer", textAlign: "left",
+                      color: "#14161F",
+                      fontSize: 13.5,
+                      cursor: "pointer",
+                      textAlign: "left",
                       fontFamily: "inherit",
                     }}
                   >
                     <Icon size={15} />
                     <span style={{ flex: 1 }}>{a.label}</span>
                     {a.shortcut && (
-                      <kbd style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: "#6B7691" }}>{a.shortcut}</kbd>
+                      <kbd
+                        style={{
+                          fontFamily: "'JetBrains Mono',monospace",
+                          fontSize: 10,
+                          color: "#6B7691",
+                        }}
+                      >
+                        {a.shortcut}
+                      </kbd>
                     )}
                     {isActive && <ArrowRight size={13} color="#0B7A55" />}
                   </button>
@@ -169,7 +339,16 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             </div>
           ))}
         </div>
-        <div style={{ padding: "8px 14px", borderTop: "1px solid #E4E8F0", display: "flex", gap: 14, fontSize: 11, color: "#6B7691" }}>
+        <div
+          style={{
+            padding: "8px 14px",
+            borderTop: "1px solid #E4E8F0",
+            display: "flex",
+            gap: 14,
+            fontSize: 11,
+            color: "#6B7691",
+          }}
+        >
           <span>↑↓ navegar</span>
           <span>↵ abrir</span>
           <span>esc fechar</span>

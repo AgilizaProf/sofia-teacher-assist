@@ -49,6 +49,8 @@ import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusa
 import { PEIFormModal, buildPEIContext, peiTemConteudo, type PEIData } from "@/components/inclusao/PEIFormModal";
 import { createAgendaEvent } from "@/lib/db/agenda";
 import { supabase } from "@/integrations/supabase/client";
+import { invocarIA, mensagemAmigavel, temTexto } from "@/lib/sofia/invocarIA";
+import { brDateKey } from "@/lib/datetime";
 
 const css = `
 .inc-root{
@@ -546,7 +548,7 @@ function buildAnamneseDocData(
       turma: student?.turma || "",
       anoReferencia: student?.anoEscolar || "",
       diagnosticoCid: [student?.diag, student?.cid].filter(Boolean).join(" · "),
-      dataPreenchimento: new Date().toISOString().slice(0, 10),
+      dataPreenchimento: brDateKey(),
     },
     secoesCustom,
   };
@@ -1400,7 +1402,7 @@ ${corpo}
     }
     const start = nextWeekday(new Date());
     if (periodo === "dia") {
-      const iso = start.toISOString().slice(0, 10);
+      const iso = brDateKey(start);
       return Array(n).fill(iso);
     }
     const totalDias = PERIODO_DIAS[periodo];
@@ -1418,11 +1420,11 @@ ${corpo}
       const step = uteis.length / n;
       for (let i = 0; i < n; i++) {
         const idx = Math.min(uteis.length - 1, Math.floor(i * step));
-        resultado.push(uteis[idx].toISOString().slice(0, 10));
+        resultado.push(brDateKey(uteis[idx]));
       }
     } else {
       // mais planos do que dias — ciclo
-      for (let i = 0; i < n; i++) resultado.push(uteis[i % uteis.length].toISOString().slice(0, 10));
+      for (let i = 0; i < n; i++) resultado.push(brDateKey(uteis[i % uteis.length]));
     }
     return resultado;
   };
@@ -1684,7 +1686,12 @@ ${blocos}
       const anamAnteriorResumo = anamSnaps.length > 0
         ? `Registro anterior (${anamSnaps[anamSnaps.length - 1].data}):\n${anamSnaps[anamSnaps.length - 1].resumo}`
         : "";
-      const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
+      // Só segue com parecer de verdade (N1/N8): sem conteúdo, nada é gravado,
+      // o parecer anterior fica e não há cobrança.
+      const data = await invocarIA<{ parecer?: Parecer }>("gerar-parecer-inclusao", {
+        validar: (d) =>
+          !!d?.parecer &&
+          (temTexto(d.parecer.texto) || temTexto(d.parecer.resumo) || temTexto(d.parecer.pedagogico)),
         body: {
           aluno: selected.name,
           diagnostico: selected.diag || "",
@@ -1704,9 +1711,8 @@ ${blocos}
           ),
         },
       });
-      if (error) throw error;
       const parecer: Parecer = {
-        ...(data?.parecer || {}),
+        ...(data.parecer as Parecer),
         periodoLabel: relIntervalo.label,
         formato: relFormato,
         geradoEm: new Date().toLocaleString("pt-BR"),
@@ -1731,8 +1737,7 @@ ${blocos}
       void consumirCreditos(CUSTOS.relatorio_inclusao, descricaoDoc("Relatório de inclusão", selected?.name));
       void acumularTempo("relatorio_pcd", `Relatório PCD — ${selected?.name ?? ""}`);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Não foi possível gerar o parecer. ${msg}`);
+      toast.error("Não consegui gerar o parecer.", { description: mensagemAmigavel(e) });
     } finally {
       setGerandoParecer(false);
     }
@@ -3666,6 +3671,7 @@ ${ident}
           diag: selected.diag,
           cid: selected.cid,
           anoEscolar: selected.anoEscolar,
+          anoReferencia: selected.anoReferenciaPedagogico,
           turma: selected.turma,
         } : null}
       />

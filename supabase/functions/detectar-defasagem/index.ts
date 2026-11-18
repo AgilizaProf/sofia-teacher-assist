@@ -43,13 +43,16 @@ Responda APENAS em JSON:
     const r = await callAI({ userId, tipo: "trilha_defasagem", system: sys, user, json: true });
     if (!r.ok) return aiErrorResponse(r);
     let result: Record<string, unknown> = {};
-    try { result = JSON.parse(r.text || "{}"); } catch { result = { erro: "JSON inválido", raw: r.text }; }
-    return new Response(JSON.stringify({ ...result, model: r.model }), {
+    let truncated = !!r.truncated;
+    try { result = JSON.parse(r.text || "{}"); } catch { result = {}; truncated = true; }
+    return new Response(JSON.stringify({ ...result, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
-      status: 200, headers: { ...cors, "Content-Type": "application/json" },
-    });
+    console.error("[detectar-defasagem] erro interno", e);
+    return new Response(
+      JSON.stringify({ ok: false, error: "A Sofia não conseguiu analisar agora. Tente de novo em instantes.", detail: String((e as Error)?.message || e).slice(0, 500) }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+    );
   }
 });

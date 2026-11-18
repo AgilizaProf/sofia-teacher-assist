@@ -1,16 +1,34 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Bell, X, Send, Loader2, Check, Bell as BellIcon, Baby, ClipboardList, BarChart3, AlertTriangle } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import {
+  Bell,
+  X,
+  Send,
+  Loader2,
+  Check,
+  Bell as BellIcon,
+  Baby,
+  ClipboardList,
+  BarChart3,
+  AlertTriangle,
+} from "lucide-react";
 import { useHydrated } from "@/hooks/useHydrated";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { useSofiaNotifications, type SofiaNotifAction, type SofiaNotifCategory, type SofiaNotification } from "@/lib/sofia/notifications";
+import {
+  useSofiaNotifications,
+  type SofiaNotifAction,
+  type SofiaNotifCategory,
+  type SofiaNotification,
+} from "@/lib/sofia/notifications";
 import { useSofia } from "./SofiaProvider";
 import { askSofia } from "@/lib/sofia.functions";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { reportError } from "@/lib/admin/track";
+import { parseQuickOptions, isFreeTextOption } from "@/lib/sofia/quickOptions";
+import { SofiaMarkdown } from "./SofiaMarkdown";
+import { comControle, SofiaCanceladaError } from "./streamControl";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Widget flutuante de notificações da Sofia.
@@ -24,12 +42,15 @@ import { reportError } from "@/lib/admin/track";
 //     contexto dos dados reais do usuário (turmas, alunos, planos, diário).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CAT_META: Record<SofiaNotifCategory, { icon: typeof Bell; label: string; color: string; bg: string }> = {
-  lembrete: { icon: BellIcon,        label: "Lembrete",   color: "#064E36", bg: "#CDEFE2" },
-  pcd:      { icon: Baby,            label: "Aluno PCD",  color: "#7C3AED", bg: "#EDE9FE" },
-  plano:    { icon: ClipboardList,   label: "Planejamento", color: "#1D4ED8", bg: "#DBEAFE" },
-  padrao:   { icon: BarChart3,       label: "Padrão",     color: "#0F766E", bg: "#CCFBF1" },
-  alerta:   { icon: AlertTriangle,   label: "Alerta",     color: "#B91C1C", bg: "#FEE2E2" },
+const CAT_META: Record<
+  SofiaNotifCategory,
+  { icon: typeof Bell; label: string; color: string; bg: string }
+> = {
+  lembrete: { icon: BellIcon, label: "Lembrete", color: "#064E36", bg: "#CDEFE2" },
+  pcd: { icon: Baby, label: "Aluno PCD", color: "#7C3AED", bg: "#EDE9FE" },
+  plano: { icon: ClipboardList, label: "Planejamento", color: "#1D4ED8", bg: "#DBEAFE" },
+  padrao: { icon: BarChart3, label: "Padrão", color: "#0F766E", bg: "#CCFBF1" },
+  alerta: { icon: AlertTriangle, label: "Alerta", color: "#B91C1C", bg: "#FEE2E2" },
 };
 
 function timeAgo(ts: number): string {
@@ -55,33 +76,58 @@ export function SofiaNotificationsWidget() {
   const [asking, setAsking] = useState(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [askError, setAskError] = useState<string | null>(null);
+  // Pergunta que gerou a resposta (para continuar a conversa ao tocar numa opção).
+  const [askedText, setAskedText] = useState("");
+  const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const handleAsk = useCallback(async () => {
     const text = draft.trim();
     if (!text || asking) return;
-    if (!sofia.isAuthed) { navigate({ to: "/auth" }); return; }
-    setAsking(true); setAskError(null); setAnswer(null);
+    if (!sofia.isAuthed) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    setAsking(true);
+    setAskError(null);
+    setAnswer(null);
+    setAskedText(text);
+    abortRef.current?.abort();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
     // Compõe um contexto factual a partir do que o usuário cadastrou.
     const ctxParts: string[] = [];
-    ctxParts.push(`Turmas cadastradas: ${userData.turmas.length === 0 ? "nenhuma" : userData.turmas.map((t) => `${t.nome} (${t.total_alunos} alunos)`).join("; ")}.`);
+    ctxParts.push(
+      `Turmas cadastradas: ${userData.turmas.length === 0 ? "nenhuma" : userData.turmas.map((t) => `${t.nome} (${t.total_alunos} alunos)`).join("; ")}.`,
+    );
     ctxParts.push(`Alunos cadastrados: ${userData.alunos.length}.`);
     if (userData.alunosPCD.length) {
-      ctxParts.push(`Alunos PCD: ${userData.alunosPCD.map((a) => `${a.primeiro_nome} (${a.pcd_codigo ?? "PCD"})`).join("; ")}.`);
+      ctxParts.push(
+        `Alunos PCD: ${userData.alunosPCD.map((a) => `${a.primeiro_nome} (${a.pcd_codigo ?? "PCD"})`).join("; ")}.`,
+      );
     }
-    ctxParts.push(`Diário de bordo: ${userData.diario.entries.length} registros (mês: ${userData.diario.total_no_mes}/${userData.diario.meta_mes}).`);
-    ctxParts.push(`Sequência didática: ${userData.sequencia.total === 0 ? "nenhuma em andamento" : `${userData.sequencia.done_count}/${userData.sequencia.total} etapas`}.`);
-    ctxParts.push("Regra: responda apenas com base nesses dados; se faltar informação, pergunte ao(à) educador(a) antes de inventar.");
+    ctxParts.push(
+      `Diário de bordo: ${userData.diario.entries.length} registros (mês: ${userData.diario.total_no_mes}/${userData.diario.meta_mes}).`,
+    );
+    ctxParts.push(
+      `Sequência didática: ${userData.sequencia.total === 0 ? "nenhuma em andamento" : `${userData.sequencia.done_count}/${userData.sequencia.total} etapas`}.`,
+    );
+    ctxParts.push(
+      "Regra: responda apenas com base nesses dados; se faltar informação, pergunte ao(à) educador(a) antes de inventar.",
+    );
     try {
       const stream = await askSofia({
         data: {
           messages: [{ role: "user", content: text }],
-          routeContext: ctxParts.join(" "),
+          // O contexto da tela inclui o nível de ensino: sem ele a Sofia
+          // só perguntaria "qual nível?" aqui.
+          routeContext: `${sofia.routeContext}\n${ctxParts.join(" ")}`,
           originRoute: typeof window !== "undefined" ? window.location.pathname : undefined,
         },
       });
       let acc = "";
       let finalContent = "";
-      for await (const chunk of stream) {
+      for await (const chunk of comControle(stream, { signal: ctrl.signal })) {
         if (chunk.type === "delta") {
           acc += chunk.content;
           setAnswer(acc);
@@ -91,6 +137,7 @@ export function SofiaNotificationsWidget() {
       }
       setAnswer(finalContent || acc);
     } catch (err) {
+      if (err instanceof SofiaCanceladaError) return;
       setAskError(err instanceof Error ? err.message : "Não consegui responder agora.");
       // Telemetria: registra erro do stream em platform_errors sem expor
       // pergunta do educador nem dados de aluno.
@@ -103,40 +150,73 @@ export function SofiaNotificationsWidget() {
         },
       });
     } finally {
-      setAsking(false);
-    }
-  }, [draft, asking, sofia.isAuthed, navigate, userData]);
-
-  const runAction = useCallback((action: SofiaNotifAction) => {
-    if (action.to) {
-      // `search` aceita chaves opcionais; o TanStack Router faz o merge.
-      navigate({ to: action.to, search: (action.search ?? {}) as never });
-      setOpen(false);
-      return;
-    }
-    if (action.prompt) {
-      sofia.openSofia({ prompt: action.prompt, send: false });
-      setOpen(false);
-      return;
-    }
-    if (action.intent) {
-      // dispara um evento global; outras telas podem escutar.
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("sofia:intent", { detail: { intent: action.intent } }));
+      if (abortRef.current === ctrl) {
+        abortRef.current = null;
+        setAsking(false);
       }
-      setOpen(false);
     }
-  }, [navigate, sofia]);
+  }, [draft, asking, sofia.isAuthed, sofia.routeContext, navigate, userData]);
 
-  const handleAction = useCallback((n: SofiaNotification) => {
-    markRead(n.id);
-    if (n.action) runAction(n.action);
-  }, [markRead, runAction]);
+  // Opção rápida: continua na Sofia, com a pergunta original e a escolha.
+  const escolherOpcao = useCallback(
+    (opt: string) => {
+      setOpen(false);
+      if (isFreeTextOption(opt)) {
+        sofia.openSofia({ prompt: askedText ? `${askedText}\n\n` : "", newConversation: true });
+        return;
+      }
+      sofia.openSofia({
+        prompt: askedText ? `${askedText}\n\nResposta: ${opt}` : opt,
+        send: true,
+        newConversation: true,
+      });
+    },
+    [sofia, askedText],
+  );
 
-  const handleSecondary = useCallback((n: SofiaNotification, action: SofiaNotifAction) => {
-    markRead(n.id);
-    runAction(action);
-  }, [markRead, runAction]);
+  const resposta = answer !== null ? parseQuickOptions(answer, !asking) : null;
+
+  const runAction = useCallback(
+    (action: SofiaNotifAction) => {
+      if (action.to) {
+        // `search` aceita chaves opcionais; o TanStack Router faz o merge.
+        navigate({ to: action.to, search: (action.search ?? {}) as never });
+        setOpen(false);
+        return;
+      }
+      if (action.prompt) {
+        sofia.openSofia({ prompt: action.prompt, send: false });
+        setOpen(false);
+        return;
+      }
+      if (action.intent) {
+        // dispara um evento global; outras telas podem escutar.
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("sofia:intent", { detail: { intent: action.intent } }),
+          );
+        }
+        setOpen(false);
+      }
+    },
+    [navigate, sofia],
+  );
+
+  const handleAction = useCallback(
+    (n: SofiaNotification) => {
+      markRead(n.id);
+      if (n.action) runAction(n.action);
+    },
+    [markRead, runAction],
+  );
+
+  const handleSecondary = useCallback(
+    (n: SofiaNotification, action: SofiaNotifAction) => {
+      markRead(n.id);
+      runAction(action);
+    },
+    [markRead, runAction],
+  );
 
   if (!hydrated) return null;
 
@@ -163,6 +243,9 @@ export function SofiaNotificationsWidget() {
         .sofia-notif-foot textarea:focus{border-color:var(--sofia-primary,#0B7A55);}
         .sofia-notif-answer{margin:8px 0 4px;padding:10px;border-radius:10px;background:#F8FAFC;border:1px solid #E2E8F0;font-size:13px;line-height:1.5;color:#14161F;}
         .sofia-notif-answer p{margin:0 0 8px;} .sofia-notif-answer p:last-child{margin-bottom:0;}
+        .sofia-notif-answer ul,.sofia-notif-answer ol{margin:4px 0 8px 18px;padding:0;}
+        .sofia-notif-answer ul{list-style:disc;} .sofia-notif-answer ol{list-style:decimal;}
+        .sofia-notif-answer a{color:#0B7A55;font-weight:600;text-decoration:underline;}
       `}</style>
 
       <button
@@ -172,7 +255,11 @@ export function SofiaNotificationsWidget() {
         onClick={() => setOpen(true)}
       >
         <Bell size={20} />
-        {unread > 0 && <span className="sofia-notif-badge" aria-hidden>{unread > 9 ? "9+" : unread}</span>}
+        {unread > 0 && (
+          <span className="sofia-notif-badge" aria-hidden>
+            {unread > 9 ? "9+" : unread}
+          </span>
+        )}
       </button>
 
       <Sheet open={open} onOpenChange={setOpen}>
@@ -200,7 +287,10 @@ export function SofiaNotificationsWidget() {
               {items.length === 0 && (
                 <div className="sofia-notif-empty">
                   <h4>Tudo em dia ✨</h4>
-                  <p>Quando eu notar algo importante sobre suas turmas, planos ou diário, aviso por aqui.</p>
+                  <p>
+                    Quando eu notar algo importante sobre suas turmas, planos ou diário, aviso por
+                    aqui.
+                  </p>
                 </div>
               )}
               {items.map((n) => {
@@ -208,7 +298,10 @@ export function SofiaNotificationsWidget() {
                 const Icon = meta.icon;
                 return (
                   <div key={n.id} className={`sofia-notif-item ${n.read ? "" : "unread"}`}>
-                    <div className="sofia-notif-icon" style={{ background: meta.bg, color: meta.color }}>
+                    <div
+                      className="sofia-notif-icon"
+                      style={{ background: meta.bg, color: meta.color }}
+                    >
                       <Icon size={16} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -220,7 +313,11 @@ export function SofiaNotificationsWidget() {
                       </div>
                       <div className="sofia-notif-actions">
                         {n.action && (
-                          <Button size="sm" className="h-7 px-3 text-xs" onClick={() => handleAction(n)}>
+                          <Button
+                            size="sm"
+                            className="h-7 px-3 text-xs"
+                            onClick={() => handleAction(n)}
+                          >
                             {n.action.label}
                           </Button>
                         )}
@@ -252,22 +349,44 @@ export function SofiaNotificationsWidget() {
           </ScrollArea>
 
           <div className="sofia-notif-foot">
-            {answer !== null && (
+            {resposta && (
               <div className="sofia-notif-answer">
-                <ReactMarkdown>{answer || "_Sem resposta._"}</ReactMarkdown>
+                <SofiaMarkdown onInternalNavigate={() => setOpen(false)}>
+                  {resposta.clean || (asking ? "" : "Sem resposta.")}
+                </SofiaMarkdown>
+                {!asking && resposta.options.length > 0 && (
+                  <div className="sofia-notif-actions" role="group" aria-label="Respostas rápidas">
+                    {resposta.options.map((opt) => (
+                      <Button
+                        key={opt}
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-xs"
+                        onClick={() => escolherOpcao(opt)}
+                      >
+                        {opt}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-            {askError && (
-              <div className="text-xs text-red-600 mb-2">{askError}</div>
-            )}
+            {askError && <div className="text-xs text-red-600 mb-2">{askError}</div>}
             <div className="flex gap-2 items-end">
               <textarea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={sofia.isAuthed ? "Pergunte algo à Sofia..." : "Faça login para conversar com a Sofia"}
+                placeholder={
+                  sofia.isAuthed
+                    ? "Pergunte algo à Sofia..."
+                    : "Faça login para conversar com a Sofia"
+                }
                 disabled={!sofia.isAuthed || asking}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAsk(); }
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAsk();
+                  }
                 }}
               />
               <Button

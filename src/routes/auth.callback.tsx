@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { TelaStatus } from "@/components/RootErrorBoundary";
 
 export const Route = createFileRoute("/auth/callback")({
+  head: () => ({ meta: [{ title: "AgilizaProf · Entrando" }] }),
   component: AuthCallback,
 });
 
@@ -26,9 +28,5 @@ function AuthCallback() {
     handleCallback();
   }, [navigate]);
 
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">Autenticando...</p>
-    </div>
-  );
+  return <TelaStatus titulo="Entrando na sua conta" texto="Só um instante." carregando />;
 }

@@ -1,7 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHydrated } from "@/hooks/useHydrated";
-import { Sparkles, X, Send, Plus, ChevronRight, Maximize2, AlertTriangle, RefreshCw, RotateCcw } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import {
+  Sparkles,
+  X,
+  Send,
+  Plus,
+  ChevronRight,
+  Maximize2,
+  AlertTriangle,
+  RefreshCw,
+  RotateCcw,
+  Square,
+} from "lucide-react";
+import { SofiaMarkdown } from "./SofiaMarkdown";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useSofia } from "./SofiaProvider";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
@@ -87,6 +98,15 @@ const css = `
 .sofia-composer textarea{flex:1;min-width:0;border:0;padding:8px 0;font-family:inherit;font-size:16px;line-height:1.4;resize:none;outline:none;min-height:24px;max-height:140px;color:var(--pn-ink,#14161F);background:transparent;}
 .sofia-send{flex:none;width:42px;height:42px;background:var(--pn-green,#0B7A55);color:#fff;border:2px solid var(--pn-ink,#14161F);border-radius:11px;display:grid;place-items:center;cursor:pointer;}
 .sofia-send:disabled{background:#C5CAD6;cursor:not-allowed;}
+.sofia-send.stop{background:#fff;color:var(--pn-ink,#14161F);}
+.sofia-send.stop:hover{background:#FFF4F2;}
+.sofia-note{margin-top:8px;padding:7px 10px;border-radius:9px;background:#FFF1CC;color:#5C3D00;font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sofia-note button{height:32px;padding:0 10px;border-radius:8px;border:2px solid var(--pn-ink,#14161F);background:#fff;color:var(--pn-ink,#14161F);font-weight:700;font-size:12.5px;cursor:pointer;}
+.sofia-msg.assistant blockquote{margin:8px 0;padding:6px 10px;border-left:4px solid var(--pn-sun,#FFB224);background:#FFF8E6;border-radius:0 8px 8px 0;}
+.sofia-msg.assistant pre{background:#EDF0F5;padding:8px 10px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;}
+.sofia-msg.assistant li{margin:2px 0;}
+.sofia-msg.assistant li > p{margin:0;}
+.sofia-msg.assistant hr{border:0;border-top:1.5px dashed var(--pn-line,#D6DBE5);margin:10px 0;}
 .sofia-composer-hint{margin-top:6px;font-size:11.5px;color:var(--pn-muted,#596074);text-align:center;}
 .sofia-boot-error{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#FFF4F2;border-bottom:1.5px solid #F2604B;color:#7A1F12;font-size:13px;}
 .sofia-boot-error svg{flex-shrink:0;}
@@ -112,12 +132,6 @@ function greeting(hydrated: boolean) {
   return "Boa noite";
 }
 
-const mdLinks = {
-  a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-  ),
-};
-
 export function SofiaWidget() {
   const s = useSofia();
   const navigate = useNavigate();
@@ -132,7 +146,11 @@ export function SofiaWidget() {
   const turmaFoco = sofiaCtx.entity?.turma_atual?.nome;
   const [isTouch, setIsTouch] = useState(false);
   useEffect(() => {
-    try { setIsTouch(window.matchMedia("(pointer: coarse)").matches); } catch { /* ignore */ }
+    try {
+      setIsTouch(window.matchMedia("(pointer: coarse)").matches);
+    } catch {
+      /* ignore */
+    }
   }, []);
   // Caixa de texto cresce com o conteúdo.
   useEffect(() => {
@@ -146,7 +164,9 @@ export function SofiaWidget() {
     if (!hydrated) return;
     try {
       setAlreadyGreeted(localStorage.getItem("sofia-greeted") === "1");
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [hydrated]);
 
   useEffect(() => {
@@ -155,7 +175,9 @@ export function SofiaWidget() {
       if (localStorage.getItem("sofia-greeted") !== "1") {
         localStorage.setItem("sofia-greeted", "1");
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [s.open, hydrated]);
 
   useEffect(() => {
@@ -170,6 +192,9 @@ export function SofiaWidget() {
     }
   };
 
+  // Link interno numa resposta: fecha a janela para mostrar a tela.
+  const fecharAoNavegar = React.useCallback(() => s.setOpen(false), [s.setOpen]);
+
   // Na página /assistente o chat já está aberto na tela inteira.
   if (naPaginaDoChat) return null;
 
@@ -178,8 +203,12 @@ export function SofiaWidget() {
       <style dangerouslySetInnerHTML={{ __html: css }} />
       {hydrated && !s.open && s.proactive && (
         <div className="sofia-bubble" role="status">
-          <button className="sofia-bubble-close" aria-label="Fechar" onClick={s.dismissProactive}><X size={14} /></button>
-          <div className="sofia-bubble-head"><Sparkles size={11} /> Sofia</div>
+          <button className="sofia-bubble-close" aria-label="Fechar" onClick={s.dismissProactive}>
+            <X size={14} />
+          </button>
+          <div className="sofia-bubble-head">
+            <Sparkles size={11} /> Sofia
+          </div>
           <div>{s.proactive.message}</div>
           {s.proactive.action && (
             <button
@@ -200,7 +229,9 @@ export function SofiaWidget() {
         <button className="sofia-fab" aria-label="Abrir Sofia" onClick={() => s.setOpen(true)}>
           <span className="sofia-fab-pulse" />
           <Sparkles size={24} style={{ position: "relative", zIndex: 1 }} />
-          {s.unread > 0 && <span className="sofia-fab-badge">{s.unread > 9 ? "9+" : s.unread}</span>}
+          {s.unread > 0 && (
+            <span className="sofia-fab-badge">{s.unread > 9 ? "9+" : s.unread}</span>
+          )}
         </button>
       )}
       {s.open && (
@@ -208,21 +239,50 @@ export function SofiaWidget() {
           <div className="sofia-overlay" onClick={() => s.setOpen(false)} />
           <aside className="sofia-drawer" role="dialog" aria-label="Sofia">
             <header className="sofia-head">
-              <span className="sofia-head-av" aria-hidden><Sparkles size={19} /></span>
+              <span className="sofia-head-av" aria-hidden>
+                <Sparkles size={19} />
+              </span>
               <div style={{ minWidth: 0 }}>
                 <div className="sofia-head-name">Sofia</div>
-                <div className="sofia-head-sub"><span className="dot" /> Assistente pedagógica · {s.routeName}</div>
+                <div className="sofia-head-sub">
+                  <span className="dot" /> Assistente pedagógica · {s.routeName}
+                </div>
               </div>
               <div className="sofia-head-actions">
-                <button className="sofia-head-btn" title="Nova conversa" aria-label="Nova conversa" onClick={s.startNew}><Plus size={18} /></button>
-                <button className="sofia-head-btn" title="Fechar" aria-label="Fechar" onClick={() => s.setOpen(false)}><X size={18} /></button>
+                <button
+                  className="sofia-head-btn"
+                  title="Nova conversa"
+                  aria-label="Nova conversa"
+                  onClick={s.startNew}
+                >
+                  <Plus size={18} />
+                </button>
+                <button
+                  className="sofia-head-btn"
+                  title="Fechar"
+                  aria-label="Fechar"
+                  onClick={() => s.setOpen(false)}
+                >
+                  <X size={18} />
+                </button>
               </div>
             </header>
 
             <div className="sofia-expand">
-              <span>{turmaFoco ? <>Turma em foco: <b>{turmaFoco}</b></> : "Conversa rápida"}</span>
+              <span>
+                {turmaFoco ? (
+                  <>
+                    Turma em foco: <b>{turmaFoco}</b>
+                  </>
+                ) : (
+                  "Conversa rápida"
+                )}
+              </span>
               <button
-                onClick={() => { s.setOpen(false); navigate({ to: "/assistente" }); }}
+                onClick={() => {
+                  s.setOpen(false);
+                  navigate({ to: "/assistente" });
+                }}
                 title="Abrir a conversa em tela cheia, com histórico"
               >
                 <Maximize2 size={14} /> Tela cheia
@@ -250,8 +310,22 @@ export function SofiaWidget() {
               <div className="sofia-conversations">
                 <div className="sofia-conv-label">Conversas recentes</div>
                 {s.conversations.slice(0, 3).map((c) => (
-                  <button key={c.id} className={"sofia-conv-item" + (c.id === s.conversationId ? " active" : "")} onClick={() => s.loadConversation(c.id)}>
-                    <ChevronRight size={12} /> <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{c.title}</span>
+                  <button
+                    key={c.id}
+                    className={"sofia-conv-item" + (c.id === s.conversationId ? " active" : "")}
+                    onClick={() => s.loadConversation(c.id)}
+                  >
+                    <ChevronRight size={12} />{" "}
+                    <span
+                      style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        flex: 1,
+                      }}
+                    >
+                      {c.title}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -261,12 +335,22 @@ export function SofiaWidget() {
               {s.messages.length === 0 ? (
                 <div className="sofia-empty">
                   <div style={{ display: "grid", placeItems: "center", marginBottom: 10 }}>
-                    <div className="sofia-avatar-token sofia-avatar-token--lg"><Sparkles size={28} /></div>
+                    <div className="sofia-avatar-token sofia-avatar-token--lg">
+                      <Sparkles size={28} />
+                    </div>
                   </div>
-                  {(
-                    <h3>{greeting(hydrated)}{firstName ? `, ${firstName}` : ""} 👋</h3>
-                  )}
-                  <p>Vamos juntos(as)? Posso preparar um <span className="sofia-em">parecer em ~4 min</span>, um <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação inclusiva — escolha por onde começar.</p>
+                  {
+                    <h3>
+                      {greeting(hydrated)}
+                      {firstName ? `, ${firstName}` : ""} 👋
+                    </h3>
+                  }
+                  <p>
+                    Vamos juntos(as)? Posso preparar um{" "}
+                    <span className="sofia-em">parecer em ~4 min</span>, um{" "}
+                    <span className="sofia-em">plano BNCC em ~6 min</span> ou uma adaptação
+                    inclusiva — escolha por onde começar.
+                  </p>
                   <div className="sofia-suggest">
                     {SUGGESTIONS.map((q) => (
                       <button key={q} className="sofia-sg-btn" onClick={() => s.send(q)}>
@@ -279,10 +363,19 @@ export function SofiaWidget() {
                 <>
                   {s.messages.length > 6 && (
                     <button
-                      onClick={() => { s.setOpen(false); navigate({ to: "/assistente" }); }}
+                      onClick={() => {
+                        s.setOpen(false);
+                        navigate({ to: "/assistente" });
+                      }}
                       style={{
-                        alignSelf: "center", background: "transparent", border: "1px dashed #E7E9EF",
-                        color: "#6B7691", fontSize: 11.5, padding: "6px 10px", borderRadius: 8, cursor: "pointer",
+                        alignSelf: "center",
+                        background: "transparent",
+                        border: "1px dashed #E7E9EF",
+                        color: "#6B7691",
+                        fontSize: 11.5,
+                        padding: "6px 10px",
+                        borderRadius: 8,
+                        cursor: "pointer",
                       }}
                     >
                       Ver {s.messages.length - 6} mensagens anteriores na conversa completa →
@@ -290,7 +383,11 @@ export function SofiaWidget() {
                   )}
                   {s.messages.slice(-6).map((m, i, arr) => {
                     if (m.role !== "assistant") {
-                      return <div key={i} className="sofia-msg user">{m.content}</div>;
+                      return (
+                        <div key={i} className="sofia-msg user">
+                          {m.content}
+                        </div>
+                      );
                     }
                     if (m.error) {
                       return (
@@ -298,7 +395,11 @@ export function SofiaWidget() {
                           {m.content}
                           {m.retryText && i === arr.length - 1 && (
                             <div>
-                              <button className="sofia-retry" onClick={() => s.send(m.retryText)} disabled={s.busy}>
+                              <button
+                                className="sofia-retry"
+                                onClick={() => s.send(m.retryText)}
+                                disabled={s.busy}
+                              >
                                 <RotateCcw size={14} /> Tentar de novo
                               </button>
                             </div>
@@ -306,11 +407,36 @@ export function SofiaWidget() {
                         </div>
                       );
                     }
-                    const { clean, options } = parseQuickOptions(m.content);
                     const isLast = i === arr.length - 1;
+                    const streaming = isLast && s.busy;
+                    const { clean, options } = parseQuickOptions(m.content, !streaming);
                     return (
                       <React.Fragment key={i}>
-                        <div className="sofia-msg assistant"><ReactMarkdown components={mdLinks}>{clean}</ReactMarkdown></div>
+                        <div className="sofia-msg assistant">
+                          <SofiaMarkdown onInternalNavigate={fecharAoNavegar}>
+                            {clean}
+                          </SofiaMarkdown>
+                          {m.interrupted && (
+                            <div className="sofia-note">Você parou a resposta aqui.</div>
+                          )}
+                          {m.truncated && isLast && !s.busy && (
+                            <div className="sofia-note">
+                              <span style={{ flex: 1, minWidth: 140 }}>
+                                A resposta ficou longa e parou no meio.
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  s.send(
+                                    "Continue exatamente de onde parou, sem repetir o que já foi dito.",
+                                  )
+                                }
+                              >
+                                Continuar
+                              </button>
+                            </div>
+                          )}
+                        </div>
                         {isLast && !s.busy && options.length > 0 && (
                           <div className="sofia-quick" role="group" aria-label="Respostas rápidas">
                             {options.map((opt) => (
@@ -338,7 +464,11 @@ export function SofiaWidget() {
               )}
               {s.loading && (
                 <div className="sofia-typing" aria-live="polite">
-                  <span className="sofia-typing-dots"><span /><span /><span /></span>
+                  <span className="sofia-typing-dots">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
                   <span className="sofia-typing-text">A Sofia está pensando…</span>
                 </div>
               )}
@@ -356,15 +486,27 @@ export function SofiaWidget() {
                   aria-label="Mensagem para a Sofia"
                   enterKeyHint="send"
                 />
-                <button
-                  className="sofia-send"
-                  aria-label="Enviar mensagem"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => s.send()}
-                  disabled={!s.draft.trim() || s.busy}
-                >
-                  <Send size={17} />
-                </button>
+                {s.busy ? (
+                  <button
+                    className="sofia-send stop"
+                    aria-label="Parar a resposta"
+                    title="Parar a resposta"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => s.stop()}
+                  >
+                    <Square size={15} fill="currentColor" />
+                  </button>
+                ) : (
+                  <button
+                    className="sofia-send"
+                    aria-label="Enviar mensagem"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => s.send()}
+                    disabled={!s.draft.trim()}
+                  >
+                    <Send size={17} />
+                  </button>
+                )}
               </div>
               <div className="sofia-composer-hint">A Sofia pode errar. Revise antes de usar.</div>
             </div>

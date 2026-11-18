@@ -63,6 +63,12 @@ serve(async (req) => {
       }
       const rf = await callAI({ userId, tipo: "parecer", system: sysFam, user: userFam, json: true, maxTokens: 1200 });
       if (!rf.ok) return aiErrorResponse(rf);
+      if (rf.truncated) {
+        return new Response(
+          JSON.stringify({ ok: false, truncated: true, error: "A resposta veio incompleta. Gere de novo." }),
+          { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+        );
+      }
       let vf = parseAiJson<{ texto?: string; destaques?: string[] }>(rf.text || "{}");
       if (!vf || !vf.texto) {
         // Fallback: usa o texto bruto da IA como mensagem se o JSON não veio no formato esperado.
@@ -71,7 +77,7 @@ serve(async (req) => {
       }
       if (!vf?.texto) {
         return new Response(
-          JSON.stringify({ ok: false, error: "A IA não retornou texto. Tente novamente." }),
+          JSON.stringify({ ok: false, error: "A Sofia não devolveu texto desta vez. Gere de novo." }),
           { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
         );
       }
@@ -193,6 +199,9 @@ ${(parecerAnteriorTexto || "").trim() ? `  "evolucao": "1 parágrafo comparando 
     const r = await callAI({ userId, tipo: "parecer", system: sys, user, json: true, maxTokens: 8000 });
     if (!r.ok) return aiErrorResponse(r);
     let parecer = parseAiJson<Record<string, unknown>>(r.text || "{}");
+    // Cortado pelo limite de tokens: o app avisa e não grava (N8). O fallback
+    // abaixo continua para o caso de JSON ilegível mas completo.
+    const truncated = !!r.truncated;
     if ((parecer as { _truncated?: boolean })._truncated) {
       console.warn("[gerar-parecer-inclusao] JSON truncado/inválido — devolvendo fallback");
       // Fallback: tenta extrair o conteúdo bruto preservando o formato escolhido.
@@ -221,12 +230,12 @@ ${(parecerAnteriorTexto || "").trim() ? `  "evolucao": "1 parágrafo comparando 
       }
     }
     parecer = sanitizarTextoSofia(parecer) as Record<string, unknown>;
-    return new Response(JSON.stringify({ parecer, model: r.model }), {
+    return new Response(JSON.stringify({ parecer, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("[gerar-parecer-inclusao] erro interno", e);
-    return new Response(JSON.stringify({ ok: false, error: "Falha ao gerar parecer.", detail: String((e as Error)?.message || e).slice(0, 500) }), {
+    return new Response(JSON.stringify({ ok: false, error: "A Sofia não conseguiu gerar o parecer agora. Tente de novo em instantes.", detail: String((e as Error)?.message || e).slice(0, 500) }), {
       status: 200, headers: { ...cors, "Content-Type": "application/json" },
     });
   }

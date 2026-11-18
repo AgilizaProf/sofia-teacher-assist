@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useCreditos, useHistoricoCreditos, type MovimentacaoCredito } from "@/lib/creditos/useCreditos";
+import {
+  useAssinatura,
+  useCreditos,
+  useHistoricoCreditos,
+  type MovimentacaoCredito,
+} from "@/lib/creditos/useCreditos";
 import { trackEvent } from "@/lib/admin/track";
 import {
   CREDITOS_ANUAIS_TOTAL,
@@ -9,7 +14,10 @@ import {
   MP_ANUAL_URL,
   PRECO_ANUAL,
   PRECO_MENSAL,
+  PROMO_ATE_TEXTO,
+  TABELA_CUSTOS,
   corDaBarra,
+  custoTexto,
   diasAteRenovacaoMensal,
   diasAteRenovacaoSemanal,
   horasAteRenovacaoSemanal,
@@ -97,38 +105,35 @@ const css = `
 }
 `;
 
-type TabelaItem = { icone: string; nome: string; custo: string; free?: boolean };
-const TABELA_CREDITOS: TabelaItem[] = [
-  { icone: "💬", nome: "Chat curto com a Sofia", custo: "1 crédito a cada 10 msgs" },
-  { icone: "💬", nome: "Geração longa no chat", custo: "5 créditos" },
-  { icone: "✍️", nome: "Parecer descritivo", custo: "10 créditos" },
-  { icone: "📘", nome: "Plano de aula BNCC", custo: "10 créditos" },
-  { icone: "🎗️", nome: "Adaptação PCD", custo: "10 créditos" },
-  { icone: "📋", nome: "Anamnese", custo: "10 créditos" },
-  { icone: "🎯", nome: "Atividades geradas", custo: "10 créditos" },
-  { icone: "🌈", nome: "Atividades PCD", custo: "10 créditos" },
-  { icone: "📅", nome: "Planejamento semanal", custo: "15 créditos" },
-  { icone: "📊", nome: "Relatório de inclusão", custo: "20 créditos" },
-  { icone: "📄", nome: "PEI completo", custo: "50 créditos" },
-  { icone: "🗓️", nome: "Trilha semestral", custo: "50 créditos" },
-  { icone: "📄", nome: "Exportar PDF / Word", custo: "Grátis 🎁", free: true },
-  { icone: "🎁", nome: "Trial (14 dias)", custo: "1000 créditos" },
-];
+// Tabela montada a partir de CUSTOS (policy.ts), a mesma fonte usada na
+// cobrança. Antes ela era escrita à mão e divergia (N12).
+const TABELA_CREDITOS = TABELA_CUSTOS.map((t) => ({
+  nome: t.nome,
+  custo: custoTexto(t.custo) + (t.obs ? ` (${t.obs})` : ""),
+  free: t.custo <= 0,
+}));
 
 function HistItem({ m }: { m: MovimentacaoCredito }) {
   const pos = m.quantidade >= 0;
   return (
     <li className="cp-hist-item">
       <span className={`cp-hist-q ${pos ? "pos" : "neg"}`}>
-        {pos ? "+" : ""}{m.quantidade}
+        {pos ? "+" : ""}
+        {m.quantidade}
       </span>
-      <span className="cp-hist-d" title={m.descricao}>{m.descricao}</span>
+      <span className="cp-hist-d" title={m.descricao}>
+        {m.descricao}
+      </span>
     </li>
   );
 }
 
 export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
   const c = useCreditos();
+  const assinatura = useAssinatura();
+  // Promoção/cortesia (source admin_grant): nada de oferta de upgrade nem
+  // checkout. Enquanto carrega, também não mostra a oferta (N4).
+  const semOferta = assinatura.loading || assinatura.cortesia;
   const { items } = useHistoricoCreditos(5);
   const [showModal, setShowModal] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -148,9 +153,11 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
   }, [c.plano]);
 
   const escopo =
-    c.plano === "anual" ? "no ano letivo"
-    : c.plano === "mensal" ? "este mês"
-    : "esta semana (grátis)";
+    c.plano === "anual"
+      ? "no ano letivo"
+      : c.plano === "mensal"
+        ? "este mês"
+        : "esta semana (grátis)";
 
   const diasRenov = useMemo(() => diasAteRenovacaoMensal(c.data_renovacao), [c.data_renovacao]);
   const diasRenovSemana = useMemo(() => diasAteRenovacaoSemanal(), [c.data_renovacao]);
@@ -159,19 +166,25 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
   const mesAtualNome = MESES_PT_LONGO[new Date().getMonth()];
 
   // dismiss do banner de pico — por mês
-  const peakKey = useMemo(() => `cred_peak_dismiss:${new Date().getFullYear()}-${new Date().getMonth() + 1}`, []);
+  const peakKey = useMemo(
+    () => `cred_peak_dismiss:${new Date().getFullYear()}-${new Date().getMonth() + 1}`,
+    [],
+  );
   useEffect(() => {
     if (typeof window === "undefined") return;
     setPeakDismissed(!!window.localStorage.getItem(peakKey));
   }, [peakKey]);
   function dismissPeak() {
     setPeakDismissed(true);
-    try { window.localStorage.setItem(peakKey, "1"); } catch {}
+    try {
+      window.localStorage.setItem(peakKey, "1");
+    } catch {}
   }
 
-  const showBanner = !c.loading && c.totais > 0 && (pct <= 20);
+  const showBanner = !c.loading && c.totais > 0 && pct <= 20;
   const bannerLevel: "warn" | "danger" = pct <= 5 ? "danger" : "warn";
-  const showPeakBanner = !c.loading && c.plano === "mensal" && mesPico && !peakDismissed;
+  const showPeakBanner =
+    !c.loading && !semOferta && c.plano === "mensal" && mesPico && !peakDismissed;
 
   return (
     <>
@@ -181,14 +194,24 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
         <div className="cp-peak" role="note">
           <span>📅</span>
           <div className="cp-peak-body">
-            <strong>Mês de maior uso pedagógico.</strong> Seus créditos podem acabar antes do previsto.
+            <strong>Mês de maior uso pedagógico.</strong> Seus créditos podem acabar antes do
+            previsto.
             <br />
-            No <strong>plano anual</strong> você receberia <strong>+500 créditos bônus agora</strong>, além de 19.500 créditos no ano.{" "}
-            <a href="#" onClick={(e) => { e.preventDefault(); setShowUpgrade(true); }}>
+            No <strong>plano anual</strong> você receberia{" "}
+            <strong>+500 créditos bônus agora</strong>, além de 19.500 créditos no ano.{" "}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowUpgrade(true);
+              }}
+            >
               Fazer upgrade para o anual →
             </a>
           </div>
-          <button className="cp-peak-close" aria-label="Dispensar aviso" onClick={dismissPeak}>×</button>
+          <button className="cp-peak-close" aria-label="Dispensar aviso" onClick={dismissPeak}>
+            ×
+          </button>
         </div>
       )}
 
@@ -205,12 +228,51 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
         </div>
       )}
 
-      <section className={`cp-card${collapsed ? " collapsed" : ""}`} aria-label="Painel de créditos">
+      <section
+        className={`cp-card${collapsed ? " collapsed" : ""}`}
+        aria-label="Painel de créditos"
+      >
         <div>
           <div className="cp-head">
             <span className="dot" /> ⚡ Seus créditos
-            {c.plano === "mensal" && <span style={{ marginLeft: 6, fontWeight: 600, color: "#5B6B82", textTransform: "none", letterSpacing: 0 }}>— Mensal</span>}
-            {c.plano === "anual" && <span style={{ marginLeft: 6, fontWeight: 600, color: "#5B6B82", textTransform: "none", letterSpacing: 0 }}>— Anual</span>}
+            {assinatura.cortesia ? (
+              <span
+                style={{
+                  marginLeft: 6,
+                  fontWeight: 600,
+                  color: "#5B6B82",
+                  textTransform: "none",
+                  letterSpacing: 0,
+                }}
+              >
+                · Grátis até {PROMO_ATE_TEXTO}
+              </span>
+            ) : c.plano === "mensal" ? (
+              <span
+                style={{
+                  marginLeft: 6,
+                  fontWeight: 600,
+                  color: "#5B6B82",
+                  textTransform: "none",
+                  letterSpacing: 0,
+                }}
+              >
+                · Mensal
+              </span>
+            ) : null}
+            {c.plano === "anual" && (
+              <span
+                style={{
+                  marginLeft: 6,
+                  fontWeight: 600,
+                  color: "#5B6B82",
+                  textTransform: "none",
+                  letterSpacing: 0,
+                }}
+              >
+                · Anual
+              </span>
+            )}
             <button
               className="cp-toggle"
               aria-label={collapsed ? "Expandir painel de créditos" : "Recolher painel de créditos"}
@@ -225,8 +287,12 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
             <small>disponíveis</small>
           </div>
           <div className="cp-totalrow">
-            <span>de <strong>{c.totais.toLocaleString("pt-BR")}</strong> {escopo}</span>
-            <span><strong>{c.utilizados.toLocaleString("pt-BR")}</strong> utilizados</span>
+            <span>
+              de <strong>{c.totais.toLocaleString("pt-BR")}</strong> {escopo}
+            </span>
+            <span>
+              <strong>{c.utilizados.toLocaleString("pt-BR")}</strong> utilizados
+            </span>
           </div>
           <div className="cp-bar">
             <div className={`cp-bar-fill ${cor}`} style={{ width: `${pct}%` }} />
@@ -241,9 +307,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
               <div className="cp-msg">{msg}</div>
 
               {proxBonus && (
-                <div className="cp-bonus">
-                  🎁 Próximo bônus: +500 em {proxBonus.mes}
-                </div>
+                <div className="cp-bonus">🎁 Próximo bônus: +500 em {proxBonus.mes}</div>
               )}
 
               {c.plano === "mensal" && (
@@ -254,43 +318,91 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
 
               {c.plano === "free" && (
                 <div className="cp-renew">
-                  🔄 Renovam {diasRenovSemana <= 1
-                    ? `em ${horasRenovSemana}h`
-                    : `em ${diasRenovSemana} dias`} (sexta às 14h)
+                  🔄 Renovam{" "}
+                  {diasRenovSemana <= 1 ? `em ${horasRenovSemana}h` : `em ${diasRenovSemana} dias`}{" "}
+                  (sexta às 14h)
                 </div>
               )}
 
-              {c.plano === "mensal" && !c.loading && (
+              {assinatura.cortesia && !c.loading && (
+                <div className="cp-renew" style={{ background: "#E8F6EF", color: "#064E36" }}>
+                  🎁 Grátis até {PROMO_ATE_TEXTO} · {c.totais.toLocaleString("pt-BR")} créditos por
+                  mês. Nada é cobrado sem você escolher.
+                </div>
+              )}
+
+              {c.plano === "mensal" && !c.loading && !semOferta && (
                 <>
                   <div className="cp-upgrade-mod">
                     <span className="cp-upgrade-text">
-                  💡 No plano anual você teria <strong>{CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos</strong> em janeiro, junho e novembro.
-                  Economize <strong>R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
+                      💡 No plano anual você teria{" "}
+                      <strong>{CREDITOS_ANUAIS_TOTAL.toLocaleString("pt-BR")} créditos</strong> em
+                      janeiro, junho e dezembro. Economize{" "}
+                      <strong>R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
                     </span>
-                    <button className="cp-upgrade-btn" onClick={() => { void trackEvent("upgrade_click", { origin: "painel_oferta", plano_atual: "mensal" }); setShowUpgrade(true); }}>
+                    <button
+                      className="cp-upgrade-btn"
+                      onClick={() => {
+                        void trackEvent("upgrade_click", {
+                          origin: "painel_oferta",
+                          plano_atual: "mensal",
+                        });
+                        setShowUpgrade(true);
+                      }}
+                    >
                       Ver oferta
                     </button>
                   </div>
 
                   <div className="cp-compare">
                     <h5>📊 Plano Mensal vs Anual</h5>
-                    <div className="cp-compare-row"><span>Mensal</span><strong>1.500/mês</strong></div>
-                <div className="cp-compare-row"><span>Anual</span><strong>1.625/mês</strong></div>
-                    <div className="cp-compare-eco">Economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano</div>
-                    <button className="cp-compare-cta" onClick={() => { void trackEvent("upgrade_click", { origin: "painel_anual", plano_atual: "mensal" }); setShowUpgrade(true); }}>
+                    <div className="cp-compare-row">
+                      <span>Mensal</span>
+                      <strong>1.500/mês</strong>
+                    </div>
+                    <div className="cp-compare-row">
+                      <span>Anual</span>
+                      <strong>1.625/mês</strong>
+                    </div>
+                    <div className="cp-compare-eco">
+                      Economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano
+                    </div>
+                    <button
+                      className="cp-compare-cta"
+                      onClick={() => {
+                        void trackEvent("upgrade_click", {
+                          origin: "painel_anual",
+                          plano_atual: "mensal",
+                        });
+                        setShowUpgrade(true);
+                      }}
+                    >
                       Mudar para anual →
                     </button>
                   </div>
                 </>
               )}
 
-              {c.plano === "free" && !c.loading && (
+              {c.plano === "free" && !c.loading && !semOferta && (
                 <div className="cp-upgrade">
                   <span className="cp-upgrade-text">
-                    🔒 Plano gratuito: <strong>{FREE_CREDITOS_SEMANAIS} créditos/semana</strong> (renovam toda sexta às 14h, não acumulam).
-                    Faça upgrade para ter 18.000 créditos anuais + bônus em janeiro, junho e novembro.
+                    🔒 Plano gratuito: <strong>{FREE_CREDITOS_SEMANAIS} créditos/semana</strong>{" "}
+                    (renovam toda sexta às 14h, não acumulam). Faça upgrade para ter 18.000 créditos
+                    anuais + bônus em janeiro, junho e dezembro.
                   </span>
-                  <a className="cp-upgrade-btn" href={MP_ANUAL_URL} target="_blank" rel="noopener noreferrer" onClick={() => void trackEvent("upgrade_click", { origin: "painel_free", plano_atual: "free", destino: "mp_anual" })}>
+                  <a
+                    className="cp-upgrade-btn"
+                    href={MP_ANUAL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      void trackEvent("upgrade_click", {
+                        origin: "painel_free",
+                        plano_atual: "free",
+                        destino: "mp_anual",
+                      })
+                    }
+                  >
                     Ver oferta
                   </a>
                 </div>
@@ -306,16 +418,23 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
               <p className="cp-hist-empty">Sem movimentações ainda. Use a Sofia para começar!</p>
             ) : (
               <ul className="cp-hist-list">
-                {items.map((m) => (<HistItem key={m.id} m={m} />))}
+                {items.map((m) => (
+                  <HistItem key={m.id} m={m} />
+                ))}
               </ul>
             )}
             {c.plano === "mensal" && c.utilizados > 0 && (
               <div style={{ marginTop: 8, fontSize: 11, color: "#5B6B82" }}>
-                Total usado: <strong style={{ color: "#14161F" }}>{c.utilizados.toLocaleString("pt-BR")} créditos</strong>
+                Total usado:{" "}
+                <strong style={{ color: "#14161F" }}>
+                  {c.utilizados.toLocaleString("pt-BR")} créditos
+                </strong>
               </div>
             )}
             {onSeeAll && (
-              <button className="cp-hist-more" onClick={onSeeAll}>Ver histórico completo →</button>
+              <button className="cp-hist-more" onClick={onSeeAll}>
+                Ver histórico completo →
+              </button>
             )}
 
             <div className="cp-tabela" aria-label="Tabela de créditos por ação">
@@ -331,7 +450,7 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
                 <ul>
                   {TABELA_CREDITOS.map((t) => (
                     <li key={t.nome}>
-                      <span><span aria-hidden>{t.icone}</span> {t.nome}</span>
+                      <span>{t.nome}</span>
                       <span className={`preco${t.free ? " free" : ""}`}>{t.custo}</span>
                     </li>
                   ))}
@@ -346,38 +465,65 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
         <div className="cp-modal-bg" onClick={() => setShowModal(false)}>
           <div className="cp-modal" onClick={(e) => e.stopPropagation()}>
             <h3>⚡ Seus créditos por plano</h3>
-            <p>
-              Cada plano tem sua própria cota de créditos. Veja quanto você recebe:
-            </p>
+            <p>Cada plano tem sua própria cota de créditos. Veja quanto você recebe:</p>
             <ul className="cp-modal-list">
               <li style={{ fontWeight: c.plano === "free" ? 700 : 400 }}>
                 🆓 <strong>Gratuito</strong>: {FREE_CREDITOS_SEMANAIS} créditos por semana
-                <br /><span style={{ fontSize: 12, color: "#5B6B82" }}>Renovam toda sexta-feira às 14h. Não acumulam.</span>
+                <br />
+                <span style={{ fontSize: 12, color: "#5B6B82" }}>
+                  Renovam toda sexta-feira às 14h. Não acumulam.
+                </span>
               </li>
               <li style={{ fontWeight: c.plano === "mensal" ? 700 : 400 }}>
                 📅 <strong>Mensal</strong>: 1.500 créditos por mês
-                <br /><span style={{ fontSize: 12, color: "#5B6B82" }}>Renovam todo mês na data da assinatura. Não acumulam.</span>
+                <br />
+                <span style={{ fontSize: 12, color: "#5B6B82" }}>
+                  Renovam todo mês na data da assinatura. Não acumulam.
+                </span>
               </li>
               <li style={{ fontWeight: c.plano === "anual" ? 700 : 400 }}>
                 🏆 <strong>Anual</strong>: 18.000 créditos por ano
-                <br /><span style={{ fontSize: 12, color: "#5B6B82" }}>
-                  + 500 créditos bônus em <strong>janeiro</strong>, <strong>junho</strong> e <strong>dezembro</strong> (total 19.500/ano).
+                <br />
+                <span style={{ fontSize: 12, color: "#5B6B82" }}>
+                  + 500 créditos bônus em <strong>janeiro</strong>, <strong>junho</strong> e{" "}
+                  <strong>dezembro</strong> (total 19.500/ano).
                 </span>
               </li>
             </ul>
             <p style={{ fontSize: 12, color: "#5B6B82" }}>
-              Seu plano atual: <strong>{c.plano === "anual" ? "Anual" : c.plano === "mensal" ? "Mensal" : "Gratuito"}</strong>
-              {" — "}{c.disponiveis.toLocaleString("pt-BR")} de {c.totais.toLocaleString("pt-BR")} créditos disponíveis.
+              Seu plano atual:{" "}
+              <strong>
+                {assinatura.cortesia
+                  ? `Grátis até ${PROMO_ATE_TEXTO}`
+                  : c.plano === "anual"
+                    ? "Anual"
+                    : c.plano === "mensal"
+                      ? "Mensal"
+                      : "Gratuito"}
+              </strong>
+              {". "}
+              {c.disponiveis.toLocaleString("pt-BR")} de {c.totais.toLocaleString("pt-BR")} créditos
+              disponíveis.
             </p>
             <div className="cp-modal-actions">
-              <button className="ghost" onClick={() => setShowModal(false)}>Fechar</button>
-              {c.plano !== "anual" && (
+              <button className="ghost" onClick={() => setShowModal(false)}>
+                Fechar
+              </button>
+              {c.plano !== "anual" && !semOferta && (
                 <a
                   className="primary"
                   href={MP_ANUAL_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", padding: "10px 16px", borderRadius: 8, fontWeight: 600, fontSize: 13 }}
+                  style={{
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "10px 16px",
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    fontSize: 13,
+                  }}
                   onClick={() => setShowModal(false)}
                 >
                   Ver plano anual →
@@ -388,14 +534,15 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
         </div>
       )}
 
-      {showUpgrade && (
+      {showUpgrade && !semOferta && (
         <div className="cp-modal-bg" onClick={() => setShowUpgrade(false)}>
           <div className="cp-modal" onClick={(e) => e.stopPropagation()}>
             <h3>💡 Mude para o Plano Anual</h3>
             <p>
-              Você paga hoje: <strong>R$ {PRECO_MENSAL.toFixed(2).replace(".", ",")}/mês</strong>
-              {" "}= <strong>R$ {(PRECO_MENSAL * 12).toFixed(2).replace(".", ",")}/ano</strong>.<br />
-              No anual você paga apenas <strong>R$ {PRECO_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
+              Você paga hoje: <strong>R$ {PRECO_MENSAL.toFixed(2).replace(".", ",")}/mês</strong> ={" "}
+              <strong>R$ {(PRECO_MENSAL * 12).toFixed(2).replace(".", ",")}/ano</strong>.<br />
+              No anual você paga apenas{" "}
+              <strong>R$ {PRECO_ANUAL.toFixed(2).replace(".", ",")}/ano</strong>.
             </p>
             <div className="cp-modal-eco">
               🎉 Sua economia: R$ {ECONOMIA_ANUAL.toFixed(2).replace(".", ",")}/ano
@@ -407,7 +554,9 @@ export function CreditosPainel({ onSeeAll }: { onSeeAll?: () => void }) {
               <li>+ Créditos já usados no mês são preservados na migração</li>
             </ul>
             <div className="cp-modal-actions">
-              <button className="ghost" onClick={() => setShowUpgrade(false)}>Continuar no mensal</button>
+              <button className="ghost" onClick={() => setShowUpgrade(false)}>
+                Continuar no mensal
+              </button>
               <a
                 className="primary"
                 href={MP_ANUAL_URL}

@@ -5,7 +5,10 @@ import {
   Search, Trash2, FileText, Star, Printer, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invocarIA, mensagemAmigavel, temConteudo } from "@/lib/sofia/invocarIA";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { FolhasSugeridas } from "@/components/cadernos/FolhasSugeridas";
+import { etapaDoAno } from "@/lib/cadernos/folhas";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { logActivity } from "@/lib/activity/activityLog";
@@ -500,17 +503,20 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       diarioBordo,
       curriculo_municipal: municipalAtivo && curriculoMunicipalDados ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] } : null,
     };
-    const { data, error } = await supabase.functions.invoke("gerar-atividade", {
-      body: payload,
-    });
-    if (error) {
-      const msg = (error as { context?: { error?: string } })?.context?.error
-        || (error as Error)?.message || "Falha ao gerar.";
-      setErro(msg);
+    // invocarIA lê o corpo do erro (antes aparecia "Edge Function returned a
+    // non-2xx status code") e só devolve com plano válido (N1/N6).
+    let novo: PlanoAtividade | undefined;
+    try {
+      const data = await invocarIA<{ plano?: PlanoAtividade }>("gerar-atividade", {
+        body: payload,
+        validar: (d) => temConteudo(d?.plano),
+      });
+      novo = data.plano;
+    } catch (e) {
+      setErro(mensagemAmigavel(e));
       return null;
     }
-    const novo = data?.plano as PlanoAtividade | undefined;
-    if (!novo) { setErro("Sofia não retornou um plano válido."); return null; }
+    if (!novo) { setErro("A Sofia não devolveu um plano desta vez. Gere de novo."); return null; }
     void consumirCreditos(CUSTOS.plano_aula, "Plano de aula BNCC");
     return novo;
   };
@@ -550,17 +556,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       diarioBordo,
       curriculo_municipal: municipalAtivo && curriculoMunicipalDados ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] } : null,
     };
-    const { data, error } = await supabase.functions.invoke("gerar-atividade", {
-      body: payload,
-    });
-    setLoadingOpcoes(false);
-    if (error) {
-      const msg = (error as { context?: { error?: string } })?.context?.error
-        || (error as Error)?.message || "Falha ao sugerir opções.";
-      setErro(msg);
+    let lista: OpcaoAula[] = [];
+    try {
+      const data = await invocarIA<{ opcoes?: OpcaoAula[] }>("gerar-atividade", { body: payload });
+      lista = data.opcoes ?? [];
+    } catch (e) {
+      setLoadingOpcoes(false);
+      setErro(mensagemAmigavel(e));
       return;
     }
-    const lista = (data?.opcoes as OpcaoAula[] | undefined) ?? [];
+    setLoadingOpcoes(false);
     if (lista.length === 0) {
       setErro("Sofia não retornou opções. Tente reformular o tema.");
       return;
@@ -671,6 +676,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     setLoteProg({ atual: 0, total, nome: "" });
 
     const resultados: LoteItem[] = [];
+    let falhasNuvem = 0;
     for (let i = 0; i < alunosPCDDaTurma.length; i++) {
       const a = alunosPCDDaTurma[i];
       setLoteProg({ atual: i + 1, total, nome: a.primeiro_nome });
@@ -699,17 +705,22 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       };
 
       try {
-        const { data, error } = await supabase.functions.invoke("gerar-atividade", {
-          body: payload,
-        });
-        if (error) {
-          const msg = (error as { context?: { error?: string } })?.context?.error
-            || (error as Error)?.message || "Falha ao gerar.";
-          resultados.push({ aluno: a.primeiro_nome, codigo: a.pcd_codigo || undefined, erro: msg });
+        let novo: PlanoAtividade | undefined;
+        let erroIA = "";
+        try {
+          const data = await invocarIA<{ plano?: PlanoAtividade }>("gerar-atividade", {
+            body: payload,
+            validar: (d) => temConteudo(d?.plano),
+          });
+          novo = data.plano;
+        } catch (e) {
+          erroIA = mensagemAmigavel(e);
+        }
+        if (erroIA) {
+          resultados.push({ aluno: a.primeiro_nome, codigo: a.pcd_codigo || undefined, erro: erroIA });
         } else {
-          const novo = data?.plano as PlanoAtividade | undefined;
           if (!novo) {
-            resultados.push({ aluno: a.primeiro_nome, codigo: a.pcd_codigo || undefined, erro: "Plano vazio" });
+            resultados.push({ aluno: a.primeiro_nome, codigo: a.pcd_codigo || undefined, erro: "A Sofia não devolveu o plano. Gere de novo." });
           } else {
             const enriched: PlanoAtividade = {
               ...EMPTY, ...novo, materiaisCheck: {},
@@ -742,15 +753,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
               const { data: auth } = await supabase.auth.getUser();
               const uid = auth.user?.id;
               if (uid) {
-                await supabase.from("planos_aula").insert({
+                const { error: insErr } = await supabase.from("planos_aula").insert({
                   user_id: uid,
                   client_id: id,
                   titulo: tituloComAluno,
                   data: { ...registro, plano: registro.plano },
                 });
+                if (insErr) falhasNuvem += 1;
                 void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("atividade_pcd_gerada", { aluno: a.primeiro_nome, ano: anoEscolar, disciplina, titulo: enriched.titulo }));
               }
-            } catch { /* offline ok */ }
+            } catch { falhasNuvem += 1; }
 
             logActivity({
               type: "planejamento",
@@ -764,7 +776,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         resultados.push({
           aluno: a.primeiro_nome,
           codigo: a.pcd_codigo || undefined,
-          erro: e instanceof Error ? e.message : "Falha",
+          erro: mensagemAmigavel(e),
         });
       }
 
@@ -774,7 +786,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
     setGerandoLote(false);
     const ok = resultados.filter((r) => r.plano).length;
-    showToast(`${ok}/${total} atividades geradas e salvas no histórico`);
+    showToast(
+      falhasNuvem > 0
+        ? `${ok}/${total} atividades geradas. ${falhasNuvem} ficaram só neste aparelho: não consegui salvar na nuvem.`
+        : `${ok}/${total} atividades geradas e salvas no histórico`,
+    );
   };
 
   const carregarDoLote = (item: LoteItem) => {
@@ -877,7 +893,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     // 1) commit local imediato
     setHistorico([registro, ...historico].slice(0, 100));
 
-    // 2) commit remoto best-effort (planos_aula)
+    // 2) commit remoto (planos_aula). Falha é avisada, não escondida (N16).
+    let nuvemFalhou = false;
     try {
       const { data: auth } = await supabase.auth.getUser();
       const uid = auth.user?.id;
@@ -894,9 +911,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           .single();
         if (!error && data?.id) {
           setHistorico((h) => h.map((p) => p.id === id ? { ...p, remoteId: data.id } : p));
+        } else {
+          nuvemFalhou = true;
         }
       }
-    } catch { /* offline ok */ }
+    } catch { nuvemFalhou = true; }
 
     logActivity({
       type: "planejamento",
@@ -906,7 +925,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       detail: `${anoEscolar} · ${disciplina}`,
     });
     setSalvo(true);
-    showToast("Plano salvo no histórico");
+    showToast(nuvemFalhou ? "Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo." : "Plano salvo no histórico");
     window.setTimeout(() => setSalvo(false), 2000);
   };
 
@@ -932,7 +951,17 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     setHistorico(historico.filter((x) => x.id !== p.id));
     setConfirmDel("");
     if (p.remoteId) {
-      try { await supabase.from("planos_aula").delete().eq("id", p.remoteId); } catch { /* noop */ }
+      let falhou = false;
+      try {
+        const { error } = await supabase.from("planos_aula").delete().eq("id", p.remoteId);
+        falhou = !!error;
+      } catch { falhou = true; }
+      if (falhou) {
+        // Devolve o plano à lista: ele continua salvo na nuvem.
+        setHistorico((h) => (h.some((x) => x.id === p.id) ? h : [p, ...h]));
+        showToast("Não consegui remover o plano da nuvem. Tente de novo.");
+        return;
+      }
     }
     showToast("Plano removido");
   };
@@ -1053,8 +1082,12 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           .single();
         if (!error && data?.id) {
           setHistorico((h) => h.map((p) => p.id === histId ? { ...p, remoteId: data.id } : p));
+        } else {
+          showToast("Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo.");
         }
-      } catch { /* offline ok */ }
+      } catch {
+        showToast("Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo.");
+      }
     })();
 
     logActivity({
@@ -1096,6 +1129,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     setBulkSaving(true);
     let okSave = 0;
     let okSched = 0;
+    let falhasNuvemLote = 0;
     const m1Acc: M1Plan = { ...m1Plan };
     const m4Acc: M4UserStore = { ...m4UserEvents };
     for (let i = 0; i < planosParaSalvar.length; i++) {
@@ -1117,15 +1151,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth.user?.id;
         if (uid) {
-          await supabase.from("planos_aula").insert({
+          const { error: insErr } = await supabase.from("planos_aula").insert({
             user_id: uid,
             client_id: id,
             titulo: p.titulo,
             data: { ...registro, plano: p },
           });
+          if (insErr) falhasNuvemLote += 1;
           void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("plano_aula_gerado", { titulo: p.titulo, turma, disciplina, ano: anoEscolar, modo }));
         }
-      } catch { /* offline */ }
+      } catch { falhasNuvemLote += 1; }
       okSave++;
 
       // 2) Agendar (M1 + M4)
@@ -1175,7 +1210,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     });
     setBulkSaving(false);
     setSalvarTodosOpen(false);
-    showToast(`${okSave} planos salvos · ${okSched} agendados no calendário ✓`);
+    showToast(
+      falhasNuvemLote > 0
+        ? `${okSave} planos salvos neste aparelho · ${okSched} agendados. ${falhasNuvemLote} não foram para a nuvem: tente salvar de novo.`
+        : `${okSave} planos salvos · ${okSched} agendados no calendário ✓`,
+    );
   };
 
   /* ─────────── PDF ─────────── */
@@ -2071,6 +2110,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           </div>
         </div>
       )}
+
+      {/* ────── Atividades em folha (PDF), complemento para EI e Fundamental 1 ────── */}
+      <div style={{ margin: "18px 0" }}>
+        <FolhasSugeridas
+          etapa={isEI ? "infantil" : etapaDoAno(anoEscolar)}
+          ano={anoEscolar}
+          componentes={disciplina && disciplina !== "Interdisciplinar" ? [disciplina] : []}
+          habilidades={(plano.habilidades ?? []).map((h) => h.codigo).filter(Boolean)}
+        />
+      </div>
 
       {/* ────── Histórico ────── */}
       <section className="atv-hist">

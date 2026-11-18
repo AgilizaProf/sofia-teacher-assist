@@ -67,16 +67,25 @@ export function useCreditos(): CreditosState & { refresh: () => Promise<void> } 
     if (data) {
       const next = rowToState(data, false);
       setState(next);
-      lastBonusRef.current = next.ultimo_bonus_mes && next.ultimo_bonus_ano
-        ? `${next.ultimo_bonus_ano}-${next.ultimo_bonus_mes}` : null;
-      lastMesRef.current = next.ano_referencia && next.mes_referencia
-        ? `${next.ano_referencia}-${next.mes_referencia}` : null;
+      lastBonusRef.current =
+        next.ultimo_bonus_mes && next.ultimo_bonus_ano
+          ? `${next.ultimo_bonus_ano}-${next.ultimo_bonus_mes}`
+          : null;
+      lastMesRef.current =
+        next.ano_referencia && next.mes_referencia
+          ? `${next.ano_referencia}-${next.mes_referencia}`
+          : null;
 
       // Alerta 3 dias antes da renovação (apenas mensal/free), 1x por ciclo.
       if (next.plano !== "anual") {
         const dias = diasAteRenovacaoMensal();
         const cicloKey = `cred_renov_alert:${lastMesRef.current ?? ""}`;
-        if (dias <= 3 && dias > 0 && typeof window !== "undefined" && !window.localStorage.getItem(cicloKey)) {
+        if (
+          dias <= 3 &&
+          dias > 0 &&
+          typeof window !== "undefined" &&
+          !window.localStorage.getItem(cicloKey)
+        ) {
           window.localStorage.setItem(cicloKey, "1");
           renovAlertRef.current = cicloKey;
           toast.info("🔄 Renovação em breve", {
@@ -89,7 +98,9 @@ export function useCreditos(): CreditosState & { refresh: () => Promise<void> } 
   }, []);
 
   const ensureAndFetch = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       setState({ ...EMPTY, loading: false });
       return;
@@ -109,20 +120,29 @@ export function useCreditos(): CreditosState & { refresh: () => Promise<void> } 
     (async () => {
       await ensureAndFetch();
       if (cancelled) return;
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user || cancelled) return;
 
       channel = supabase
         .channel(`creditos:${user.id}:${crypto.randomUUID()}`)
         .on(
           "postgres_changes",
-          { event: "UPDATE", schema: "public", table: "creditos_usuario", filter: `user_id=eq.${user.id}` },
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "creditos_usuario",
+            filter: `user_id=eq.${user.id}`,
+          },
           (payload) => {
             const next = rowToState(payload.new, false);
             setState(next);
             // Toast quando bônus mensal mudar
-            const key = next.ultimo_bonus_mes && next.ultimo_bonus_ano
-              ? `${next.ultimo_bonus_ano}-${next.ultimo_bonus_mes}` : null;
+            const key =
+              next.ultimo_bonus_mes && next.ultimo_bonus_ano
+                ? `${next.ultimo_bonus_ano}-${next.ultimo_bonus_mes}`
+                : null;
             if (key && key !== lastBonusRef.current && next.ultimo_bonus_mes) {
               const nome = BONUS_NOMES[next.ultimo_bonus_mes];
               if (nome) {
@@ -135,9 +155,16 @@ export function useCreditos(): CreditosState & { refresh: () => Promise<void> } 
               lastBonusRef.current = key;
             }
             // Toast de renovação mensal (mês de referência mudou e plano não-anual)
-            const mesKey = next.ano_referencia && next.mes_referencia
-              ? `${next.ano_referencia}-${next.mes_referencia}` : null;
-            if (mesKey && lastMesRef.current && mesKey !== lastMesRef.current && next.plano !== "anual") {
+            const mesKey =
+              next.ano_referencia && next.mes_referencia
+                ? `${next.ano_referencia}-${next.mes_referencia}`
+                : null;
+            if (
+              mesKey &&
+              lastMesRef.current &&
+              mesKey !== lastMesRef.current &&
+              next.plano !== "anual"
+            ) {
               toast.success("✅ Créditos renovados!", {
                 description: `Seus ${next.totais.toLocaleString("pt-BR")} créditos foram renovados. Bom trabalho este mês!`,
                 duration: 8000,
@@ -168,7 +195,10 @@ export type MovimentacaoCredito = {
   created_at: string;
 };
 
-export function useHistoricoCreditos(limit = 5): { items: MovimentacaoCredito[]; loading: boolean } {
+export function useHistoricoCreditos(limit = 5): {
+  items: MovimentacaoCredito[];
+  loading: boolean;
+} {
   const [items, setItems] = useState<MovimentacaoCredito[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -177,8 +207,13 @@ export function useHistoricoCreditos(limit = 5): { items: MovimentacaoCredito[];
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       const { data } = await supabase
         .from("creditos_historico" as any)
         .select("*")
@@ -194,8 +229,15 @@ export function useHistoricoCreditos(limit = 5): { items: MovimentacaoCredito[];
         .channel(`creditos_hist:${user.id}:${crypto.randomUUID()}`)
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "creditos_historico", filter: `user_id=eq.${user.id}` },
-          () => { void load(); },
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "creditos_historico",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            void load();
+          },
         )
         .subscribe();
     }
@@ -207,4 +249,76 @@ export function useHistoricoCreditos(limit = 5): { items: MovimentacaoCredito[];
   }, [limit]);
 
   return { items, loading };
+}
+// ===== Assinatura: promoção / cortesia (N4) =====
+// Quem está na promoção "grátis até 12/03/2027" entra como plano "pro" mensal
+// com source = 'admin_grant'. Essa pessoa não paga nada: não pode ver
+// "Você paga hoje R$ 34,90/mês" nem ser levada ao checkout.
+export type AssinaturaInfo = {
+  loading: boolean;
+  source: string | null;
+  cortesia: boolean;
+  cortesiaAte: string | null;
+};
+
+export function ehCortesia(
+  sub: {
+    plano?: string | null;
+    source?: string | null;
+    status?: string | null;
+    current_period_end?: string | null;
+  } | null,
+  now: Date = new Date(),
+): boolean {
+  if (!sub) return false;
+  if (sub.source !== "admin_grant") return false;
+  if (sub.plano && sub.plano !== "pro") return false;
+  if (sub.status && sub.status !== "active") return false;
+  if (!sub.current_period_end) return true;
+  const fim = new Date(sub.current_period_end);
+  return isNaN(fim.getTime()) || fim.getTime() > now.getTime();
+}
+
+export function useAssinatura(): AssinaturaInfo {
+  const [info, setInfo] = useState<AssinaturaInfo>({
+    loading: true,
+    source: null,
+    cortesia: false,
+    cortesiaAte: null,
+  });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          if (!cancelled)
+            setInfo({ loading: false, source: null, cortesia: false, cortesiaAte: null });
+          return;
+        }
+        const { data } = await supabase
+          .from("subscriptions")
+          .select("plano, source, status, current_period_end")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (cancelled) return;
+        const cortesia = ehCortesia(data);
+        setInfo({
+          loading: false,
+          source: data?.source ?? null,
+          cortesia,
+          cortesiaAte: cortesia ? (data?.current_period_end ?? null) : null,
+        });
+      } catch {
+        if (!cancelled)
+          setInfo({ loading: false, source: null, cortesia: false, cortesiaAte: null });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return info;
 }

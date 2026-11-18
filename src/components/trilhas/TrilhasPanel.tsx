@@ -12,6 +12,11 @@ import { PrintInfoModal, type PrintInfo } from "@/components/print/PrintInfoModa
 import { feriadosNacionaisBR } from "@/lib/calendar/feriadosBR";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { brDateKey } from "@/lib/datetime";
+import { toast } from "sonner";
+import { invocarIA, mensagemAmigavel, ErroIA, temConteudo } from "@/lib/sofia/invocarIA";
+
+const MSG_SALVAR_FALHOU = "Não consegui salvar na nuvem. Tente de novo.";
 
 const DISCIPLINAS_COMUNS = [
   "Português", "Matemática", "Ciências", "História", "Geografia",
@@ -204,9 +209,15 @@ export function TrilhasPanel() {
           ? { municipio: curriculoMunicipal.municipio, habilidades: curriculoMunicipal.habilidades || [] }
           : null,
       };
-      const { data, error: fnErr } = await supabase.functions.invoke("gerar-trilha", { body: payload });
-      if (fnErr) throw fnErr;
-      const t = (data as { trilha?: Record<string, unknown> })?.trilha || {};
+      // Sem semanas não há trilha: nada é gravado e nada é cobrado (N1/N8).
+      const data = await invocarIA<{ trilha?: Record<string, unknown> }>("gerar-trilha", {
+        body: payload,
+        validar: (d) =>
+          Array.isArray(d?.trilha?.semanas) && (d.trilha!.semanas as unknown[]).length > 0
+            ? true
+            : "A Sofia devolveu a trilha sem semanas. Gere de novo.",
+      });
+      const t = data.trilha as Record<string, unknown>;
       const tema = (t.tema_central as { titulo?: string; justificativa?: string }) || {};
       const semanasArr = ((t.semanas as unknown[]) || []) as Array<{ semana: number; titulo: string; habilidades_foco?: string[]; tipo_atividade?: string; conecta_anterior?: string; prepara_proxima?: string }>;
 
@@ -238,7 +249,12 @@ export function TrilhasPanel() {
           prepara_proxima: s.prepara_proxima || "",
           status: s.semana === 1 ? "em_andamento" : "futura",
         }));
-        await supabase.from("trilha_semanas").insert(rows);
+        const { error: semErr } = await supabase.from("trilha_semanas").insert(rows);
+        if (semErr) {
+          // Não deixa uma trilha "vazia" para trás.
+          await supabase.from("trilhas").delete().eq("id", trilhaRow!.id);
+          throw new Error(MSG_SALVAR_FALHOU);
+        }
       }
       await carregar();
       setSelected(trilhaRow!.id);
@@ -250,7 +266,7 @@ export function TrilhasPanel() {
       }
       void import("@/lib/admin/track").then(({ trackEvent }) => trackEvent("trilha_gerada", { turma: form.turma, ano: form.ano, semestre: form.semestre, tema: tema.titulo ?? null, semanas: semanasArr.length }));
     } catch (e) {
-      setError((e as Error).message || "Não consegui gerar a trilha agora. Tente em instantes.");
+      setError(mensagemAmigavel(e, "Não consegui gerar a trilha agora. Tente em instantes."));
     } finally {
       setLoading(false);
     }
@@ -258,7 +274,11 @@ export function TrilhasPanel() {
 
   const excluir = async (id: string) => {
     if (!confirm("Apagar esta trilha?")) return;
-    await supabase.from("trilhas").delete().eq("id", id);
+    const { error: delErr } = await supabase.from("trilhas").delete().eq("id", id);
+    if (delErr) {
+      toast.error("Não consegui apagar a trilha. Tente de novo.");
+      return;
+    }
     if (selected === id) setSelected(null);
     carregar();
   };
@@ -281,7 +301,12 @@ export function TrilhasPanel() {
       const idx = semanas.findIndex((x) => x.id === s.id);
       const anterior = idx > 0 ? semanas[idx - 1] : null;
       const proxima = idx >= 0 && idx < semanas.length - 1 ? semanas[idx + 1] : null;
-      const { data, error: fnErr } = await supabase.functions.invoke("gerar-plano-semanal-trilha", {
+      // Plano sem dias não substitui o anterior nem é cobrado (N1).
+      const data = await invocarIA<{ plano?: { dias?: unknown[] } }>("gerar-plano-semanal-trilha", {
+        validar: (d) =>
+          Array.isArray(d?.plano?.dias) && d.plano!.dias!.length > 0 && temConteudo(d.plano)
+            ? true
+            : "A Sofia devolveu o plano sem os dias da semana. Gere de novo.",
         body: {
           semana: s.semana,
           tema_central: trilha.tema_central || "",
@@ -299,33 +324,21 @@ export function TrilhasPanel() {
             : null,
         },
       });
-      if (fnErr) {
-        // Tenta extrair mensagem amigável do corpo da resposta (ex.: 402 limite mensal)
-        let msg = (fnErr as Error).message || "Falha ao gerar o plano.";
-        let blocked = false;
-        try {
-          const ctx = (fnErr as unknown as { context?: Response }).context;
-          if (ctx && typeof ctx.json === "function") {
-            const body = await ctx.clone().json().catch(() => null);
-            if (body?.error) msg = String(body.error);
-            if (body?.blocked) blocked = true;
-          }
-        } catch { /* ignore */ }
-        const err = new Error(msg) as Error & { blocked?: boolean };
-        err.blocked = blocked;
-        throw err;
-      }
-      const plano = (data as { plano?: unknown })?.plano || {};
-      await supabase.from("trilha_semanas")
+      const plano = data.plano as Record<string, unknown>;
+      const { error: upErr } = await supabase.from("trilha_semanas")
         .update({ plano_gerado: plano as never, status: s.status === "futura" ? "em_andamento" : s.status })
         .eq("id", s.id);
+      if (upErr) throw new Error(MSG_SALVAR_FALHOU);
       const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilha.id).order("semana");
       setSemanas((novas as Semana[]) || []);
       setPlanoAberto(s.id);
       void consumirCreditos(CUSTOS.planejamento_semanal, `Planejamento semanal · Semana ${s.semana}`);
       void acumularTempo("planejamento_ia", `Planejamento semanal · Semana ${s.semana}`);
     } catch (e) {
-      alert((e as Error).message || "Não consegui gerar o plano agora.");
+      toast.error(`Não consegui gerar o plano da semana ${s.semana}.`, { description: mensagemAmigavel(e) });
+      if (e instanceof ErroIA && e.tipo === "sem_creditos") {
+        (e as ErroIA & { blocked?: boolean }).blocked = true;
+      }
       throw e;
     } finally {
       setGerandoSemana(null);
@@ -333,7 +346,8 @@ export function TrilhasPanel() {
   };
 
   const concluirSemana = async (s: Semana, trilhaId: string) => {
-    await supabase.from("trilha_semanas").update({ status: "concluida", concluida_em: new Date().toISOString() }).eq("id", s.id);
+    const { error: upErr } = await supabase.from("trilha_semanas").update({ status: "concluida", concluida_em: new Date().toISOString() }).eq("id", s.id);
+    if (upErr) toast.error(MSG_SALVAR_FALHOU);
     const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilhaId).order("semana");
     setSemanas((novas as Semana[]) || []);
   };
@@ -397,22 +411,46 @@ export function TrilhasPanel() {
     if (!confirm(`Excluir a semana S${s.semana}${s.titulo ? ` — ${s.titulo}` : ""}? As demais serão renumeradas.`)) return;
     // Apaga e recompacta a numeração para manter S1..Sn sem buracos.
     const restantes = semanas.filter((x) => x.id !== s.id);
-    await supabase.from("trilha_semanas").delete().eq("id", s.id);
+    const { error: delErr } = await supabase.from("trilha_semanas").delete().eq("id", s.id);
+    if (delErr) {
+      toast.error("Não consegui excluir a semana. Tente de novo.");
+      return;
+    }
     // Renumera somente as que vinham depois da apagada (otimização: evita updates desnecessários).
     const updates = restantes
       .map((x, idx) => ({ id: x.id, novo: idx + 1, atual: x.semana }))
       .filter((u) => u.novo !== u.atual);
     // Etapa 1: move para faixa alta temporária para evitar conflito com a unique constraint.
-    for (const u of updates) {
-      await supabase.from("trilha_semanas").update({ semana: 1000 + u.novo }).eq("id", u.id);
-    }
-    // Etapa 2: define a numeração final.
-    for (const u of updates) {
-      await supabase.from("trilha_semanas").update({ semana: u.novo }).eq("id", u.id);
-    }
+    // Etapa 2: define a numeração final. Uma falha no meio é avisada (N16).
+    const okRenum = await renumerarSemanas(updates, 1000);
+    if (!okRenum) toast.error("A semana foi excluída, mas não consegui renumerar as outras. Recarregue a página e confira.");
     const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilhaId).order("semana");
     setSemanas((novas as Semana[]) || []);
     if (planoAberto === s.id) setPlanoAberto(null);
+  };
+
+  // Renumera em duas etapas (faixa alta temporária → final) por causa do
+  // UNIQUE(trilha_id, semana). Lê o { error } de cada escrita; se a segunda
+  // etapa falhar, tenta devolver a numeração original para não deixar "S1003".
+  const renumerarSemanas = async (
+    updates: Array<{ id: string; novo: number; atual: number }>,
+    faixa: number,
+  ): Promise<boolean> => {
+    for (const u of updates) {
+      const { error: e1 } = await supabase.from("trilha_semanas").update({ semana: faixa + u.novo }).eq("id", u.id);
+      if (e1) {
+        for (const v of updates) await supabase.from("trilha_semanas").update({ semana: v.atual }).eq("id", v.id);
+        return false;
+      }
+    }
+    for (const u of updates) {
+      const { error: e2 } = await supabase.from("trilha_semanas").update({ semana: u.novo }).eq("id", u.id);
+      if (e2) {
+        for (const v of updates) await supabase.from("trilha_semanas").update({ semana: v.novo }).eq("id", v.id);
+        return false;
+      }
+    }
+    return true;
   };
 
   const reordenarSemanas = async (fromId: string, toId: string, trilhaId: string) => {
@@ -430,12 +468,8 @@ export function TrilhasPanel() {
     const updates = renum
       .map((x) => ({ id: x.id, novo: x.semana, atual: semanas.find((y) => y.id === x.id)?.semana ?? x.semana }))
       .filter((u) => u.novo !== u.atual);
-    for (const u of updates) {
-      await supabase.from("trilha_semanas").update({ semana: 9000 + u.novo }).eq("id", u.id);
-    }
-    for (const u of updates) {
-      await supabase.from("trilha_semanas").update({ semana: u.novo }).eq("id", u.id);
-    }
+    const okRenum = await renumerarSemanas(updates, 9000);
+    if (!okRenum) toast.error("Não consegui salvar a nova ordem das semanas. Tente de novo.");
     const { data: rec } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilhaId).order("semana");
     if (rec) setSemanas(rec as Semana[]);
   };
@@ -729,7 +763,7 @@ useEffect(() => {
   const objetivoGeral = pInicial.objetivo_geral || "";
   const avaliacao = pInicial.avaliacao_formativa || "";
   const ponte = pInicial.ponte_proxima_semana || "";
-  const today = new Date().toISOString().slice(0, 10);
+  const today = brDateKey();
   const [datas, setDatas] = useState<Record<number, string>>({});
   const [salvos, setSalvos] = useState<Record<number, "salvando" | "ok" | string>>({});
   const [salvandoTodos, setSalvandoTodos] = useState(false);
