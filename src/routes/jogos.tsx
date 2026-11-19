@@ -6,7 +6,7 @@ function Jogos() {
     <Ferramenta
       titulo="Jogos e atividades interativas"
       sub="Mais de 120 jogos para criar a partir da aula e jogar com a turma, no computador ou projetados na sala."
-      src="/ferramentas/jogos.html"
+      ferramenta="jogos"
     />
   );
 }

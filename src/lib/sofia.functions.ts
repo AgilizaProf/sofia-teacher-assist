@@ -95,13 +95,16 @@ const askSofiaServer = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => d as AskArgs["data"])
   .handler(async ({ data: raw, context }) => {
     const { supabase, userId } = context;
-    const { callGateway, finalizeSofiaChat, parseChatInput, prepareSofiaChat } = await import("@/server/sofia-chat.server");
+    const { callGateway, cobrarMensagemChat, finalizeSofiaChat, parseChatInput, prepareSofiaChat } = await import("@/server/sofia-chat.server");
     const data = parseChatInput(raw);
     const prep = await prepareSofiaChat(supabase, userId, data);
     const res = await callGateway(prep.model, prep.chatMessages, false);
     const json = await res.json();
     const choice = json?.choices?.[0];
-    return finalizeSofiaChat(supabase, userId, prep.conversationId, choice?.message?.content ?? "", choice?.finish_reason ?? null);
+    const texto: string = choice?.message?.content ?? "";
+    const final = await finalizeSofiaChat(supabase, userId, prep.conversationId, texto, choice?.finish_reason ?? null);
+    await cobrarMensagemChat(supabase, userId, texto);
+    return final;
   });
 
 export type SofiaChunk =

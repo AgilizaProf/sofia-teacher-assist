@@ -14,7 +14,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { imprimirListaAgenda, type PrintAgendaItem } from "@/lib/print/agendaListPrint";
-import { consumirCreditos } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
@@ -1055,7 +1054,7 @@ const deleteCalendar = async () => {
       // invocarIA lê a mensagem real do servidor (antes aparecia "Edge
       // Function returned a non-2xx status code") (N6).
       const data = await invocarIA<{ eventos?: unknown[] }>("processar-calendario", {
-        body: { pdf_base64: base64 },
+        body: { pdf_base64: base64, descricaoCobranca: "Anexo de Agenda (calendário escolar)" },
       });
 
       const eventos = (data?.eventos ?? []) as Array<{
@@ -1068,7 +1067,6 @@ const deleteCalendar = async () => {
         return;
       }
 
-      void consumirCreditos(CUSTOS.anexar_agenda, "Anexo de Agenda (calendário escolar)");
       void acumularTempo("calendario_anexado", "Calendário escolar anexado");
       setEventosPendentes(eventos);
       setModalRevisaoAberto(true);

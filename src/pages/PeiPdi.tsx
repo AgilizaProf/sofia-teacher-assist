@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { invocarIA, mensagemAmigavel, temConteudo, ErroIA } from "@/lib/sofia/invocarIA";
 import { useAvisoSairSemSalvar } from "@/components/documentos/useAvisoSairSemSalvar";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
-import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { descricaoDoc } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
@@ -160,7 +160,7 @@ export function PeiPdi() {
         // invocarIA lança erro amigável para falha, resposta vazia ou cortada
         // (N1/N8): um PEI cortado nunca vira {}.
         const data = await invocarIA<{ pei?: Record<string, unknown> }>("gerar-pei", {
-          body: payload,
+          body: { ...payload, descricaoCobranca: descricaoDoc(parte === "completo" ? "PEI completo" : `PEI completo (parte ${parte.toUpperCase()})`, aluno?.name) },
           validar: (d) => temConteudo(d?.pei),
         });
         pushDebug({ parte, stage: "parsed", payload: data.pei ?? null });
@@ -189,7 +189,6 @@ export function PeiPdi() {
       setNaoSalvo(true);
       toast.success(emDuasPartes ? "PEI gerado pela Sofia (em 2 partes). Revise e salve." : "PEI gerado pela Sofia. Revise e salve.");
       // Cobra só depois de ter um PEI válido na tela.
-      void consumirCreditos(CUSTOS.pei_completo, descricaoDoc("PEI completo", aluno?.name));
       void acumularTempo("pei_aluno", `PEI — ${aluno?.name ?? "aluno"}`);
     };
 

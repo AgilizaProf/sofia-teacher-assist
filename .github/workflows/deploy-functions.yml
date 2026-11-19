@@ -6,12 +6,19 @@ on:
       - main
     paths:
       - "supabase/functions/**"
+      - "ferramentas-privadas/**"
+      - "scripts/empacotar-ferramentas.mjs"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Questões e Jogos: o conteúdo vai embutido na função `ferramenta`
+      # (só entregue a quem está logado). Regera a partir de ferramentas-privadas/.
+      - name: Empacotar ferramentas
+        run: node scripts/empacotar-ferramentas.mjs
 
       - uses: supabase/setup-cli@v1
         with:

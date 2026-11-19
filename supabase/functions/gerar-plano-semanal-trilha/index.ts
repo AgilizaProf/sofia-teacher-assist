@@ -1,11 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca, respostaSemLogin } from "../_shared/cobranca.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    if (!userId) return respostaSemLogin(cors);
     const body = await req.json().catch(() => ({}));
     const {
       semana = 1,
@@ -63,7 +65,7 @@ Responda APENAS em JSON:
   "ponte_proxima_semana": ""
 }`;
 
-    const r = await callAI({ userId, tipo: "trilha_semana", system: sys, user, json: true, maxTokens: 4000 });
+    const r = await callAI({ userId, tipo: "trilha_semana", system: sys, user, json: true, maxTokens: 4000, custoCreditos: CUSTOS.planejamento_semanal });
     if (!r.ok) return aiErrorResponse(r);
     const plano = parseAiJson<Record<string, unknown>>(r.text || "{}");
     if (r.truncated || jsonTruncado(plano)) {
@@ -73,6 +75,7 @@ Responda APENAS em JSON:
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
+    await cobrarCreditos(userId, CUSTOS.planejamento_semanal, descricaoCobranca(body, "Planejamento semanal da trilha"));
     return new Response(JSON.stringify({ plano, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

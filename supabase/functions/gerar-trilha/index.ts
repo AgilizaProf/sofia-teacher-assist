@@ -1,12 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca, respostaSemLogin } from "../_shared/cobranca.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    if (!userId) return respostaSemLogin(cors);
     const body = await req.json().catch(() => ({}));
     const {
       turma = "",
@@ -91,12 +93,13 @@ Responda APENAS em JSON válido neste formato:
 
     const user = isEdInfantil ? userEI : userBase;
 
-    const r = await callAI({ userId, tipo: "trilha_geracao", system: sys, user, json: true, maxTokens: 8000 });
+    const r = await callAI({ userId, tipo: "trilha_geracao", system: sys, user, json: true, maxTokens: 8000, custoCreditos: CUSTOS.trilha_semestral });
     if (!r.ok) return aiErrorResponse(r);
     const trilha = parseAiJson<Record<string, unknown>>(r.text || "{}");
     // Cortada (limite de tokens) ou ilegível: o app avisa e não grava (N8).
     const truncated = !!r.truncated || !!(trilha as { _truncated?: boolean })._truncated;
     if (truncated) console.warn("[gerar-trilha] resposta cortada", r.finishReason);
+    else await cobrarCreditos(userId, CUSTOS.trilha_semestral, descricaoCobranca(body, "Trilha semestral"));
     return new Response(JSON.stringify({ trilha, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

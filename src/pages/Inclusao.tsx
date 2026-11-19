@@ -15,7 +15,7 @@ import { EmptyState, emptyStateCss } from "@/components/EmptyState";
 import { CID_OPTIONS } from "@/lib/cidsBR";
 import { buildCidsPromptBlock } from "@/lib/inclusao/cidPrompt";
 import { toast } from "sonner";
-import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { acumularTempo } from "@/lib/tempo/acumular";
@@ -1693,6 +1693,7 @@ ${blocos}
           !!d?.parecer &&
           (temTexto(d.parecer.texto) || temTexto(d.parecer.resumo) || temTexto(d.parecer.pedagogico)),
         body: {
+          descricaoCobranca: descricaoDoc("Relatório de inclusão", selected?.name),
           aluno: selected.name,
           diagnostico: selected.diag || "",
           periodo: relIntervalo.label,
@@ -1734,7 +1735,6 @@ ${blocos}
           diagnostico: selected.diag || null,
         })
       );
-      void consumirCreditos(CUSTOS.relatorio_inclusao, descricaoDoc("Relatório de inclusão", selected?.name));
       void acumularTempo("relatorio_pcd", `Relatório PCD — ${selected?.name ?? ""}`);
     } catch (e) {
       toast.error("Não consegui gerar o parecer.", { description: mensagemAmigavel(e) });
