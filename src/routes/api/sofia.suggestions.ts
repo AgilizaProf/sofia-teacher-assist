@@ -15,16 +15,18 @@ export const Route = createFileRoute("/api/sofia/suggestions")({
     handlers: {
       GET: async ({ request }) => {
         const url = new URL(request.url);
-        const screen = url.searchParams.get("screen") || "home";
+        const screen = (url.searchParams.get("screen") || "home").slice(0, 60);
         const entityType = url.searchParams.get("entityType");
         const entityId = url.searchParams.get("entityId");
-        // professoraId vem do header (auth) ou query (anônimo / dev)
-        const professoraId =
-          request.headers.get("x-professora-id") ||
-          url.searchParams.get("professoraId") ||
-          "anon";
+        // As sugestões ainda não usam dados da professora (o contexto é fixo),
+        // então o resultado só depende da tela. Antes a chave do cache incluía
+        // `professoraId` e `entityId` vindos da URL: trocando esses valores,
+        // qualquer pessoa sem login forçava uma chamada nova à IA a cada pedido
+        // (custo) e enchia a memória do cache. Agora a chave é só a tela, e
+        // telas sem sugestões não chamam a IA nem entram no cache.
+        const professoraId = "anon";
 
-        const key = cacheKey({ professoraId, screen, entityId });
+        const key = cacheKey({ professoraId, screen });
         const cached = getCached(key);
         if (cached) {
           return Response.json({ screen, entityId, suggestions: cached, cached: true });
@@ -46,7 +48,7 @@ export const Route = createFileRoute("/api/sofia/suggestions")({
         const polished = await maybePolishTitlesWithAI(items, { enabled: true });
         items = polished.items;
 
-        setCached(key, items);
+        if (items.length > 0) setCached(key, items);
         return Response.json({
           screen,
           entityId,

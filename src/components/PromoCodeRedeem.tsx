@@ -8,7 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function PromoCodeRedeem() {
   const [code, setCode] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "invalid" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "ok" | "invalid" | "error" | "limite"
+  >("idle");
   const [links, setLinks] = useState<{ mensal?: string; anual?: string }>({});
 
   async function aplicar() {
@@ -19,7 +21,8 @@ export function PromoCodeRedeem() {
     try {
       const { data, error } = await supabase.rpc("redeem_promo_code" as any, { p_code: c });
       if (error) {
-        setStatus("error");
+        // O servidor limita a 10 tentativas por hora (evita adivinhar códigos).
+        setStatus(/muitas_tentativas/.test(error.message || "") ? "limite" : "error");
         return;
       }
       const row = (Array.isArray(data) ? data[0] : data) as
@@ -103,6 +106,11 @@ export function PromoCodeRedeem() {
 
       {status === "invalid" && (
         <div style={{ marginTop: 10, fontSize: 13, color: "#DC2626" }}>Código inválido ou expirado.</div>
+      )}
+      {status === "limite" && (
+        <div style={{ marginTop: 10, fontSize: 13, color: "#DC2626" }}>
+          Muitas tentativas seguidas. Espere uma hora e tente de novo.
+        </div>
       )}
       {status === "error" && (
         <div style={{ marginTop: 10, fontSize: 13, color: "#DC2626" }}>

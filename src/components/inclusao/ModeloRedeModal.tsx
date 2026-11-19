@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { invocarIA, ErroIA } from "@/lib/sofia/invocarIA";
-import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS, custoTexto } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import {
@@ -373,7 +373,12 @@ export function ModeloRedeModal({
           const resp = await invocarIA<{ valores?: Record<string, string> }>(
             "preencher-modelo-pei",
             {
-              body: { aluno: alunoNome, contexto: tudo, lacunas: parte },
+              body: {
+                aluno: alunoNome,
+                contexto: tudo,
+                lacunas: parte,
+                descricaoCobranca: descricaoDoc("PEI no modelo da rede", alunoNome),
+              },
               validar: (d) => !!d?.valores && typeof d.valores === "object",
             },
           );
@@ -407,9 +412,7 @@ export function ModeloRedeModal({
         }
       }
       setDaSofia(marcados);
-      // Parou no meio: não cobra agora; a cobrança vem quando ela terminar.
-      if (marcados.size && !falhou)
-        void consumirCreditos(custo, descricaoDoc("PEI no modelo da rede", alunoNome));
+      // Créditos: cada pedido à Sofia é cobrado no servidor (preencher-modelo-pei).
       if (falhou && !marcados.size) throw falhou;
       if (falhou) {
         toast.warning(

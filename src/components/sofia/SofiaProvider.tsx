@@ -19,8 +19,6 @@ import {
 import { useSofiaContextOptional } from "@/lib/sofia/sofiaContext";
 import { inferirNivelEnsino } from "@/lib/sofia/nivelEnsino";
 import { reportError } from "@/lib/admin/track";
-import { registrarMensagemSofia, consumirCreditos } from "@/lib/creditos/consume";
-import { CUSTOS } from "@/lib/creditos/policy";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useSofiaUserDataOptional } from "@/lib/sofia/SofiaUserContext";
 import { brDateKey } from "@/lib/datetime";
@@ -517,14 +515,8 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
         if (finalConversationId) setConversationId(finalConversationId);
         if (!open) setUnread((n) => n + 1);
         refreshConversations();
-        // Cobrança:
-        // - Geração longa (resposta com 1500+ caracteres): 5 créditos nesta mensagem.
-        // - Chat curto: 1 crédito a cada 10 mensagens.
-        if ((acc || "").trim().length >= 1500) {
-          void consumirCreditos(CUSTOS.chat_sofia_longa, "Chat — geração longa");
-        } else {
-          void registrarMensagemSofia();
-        }
+        // Cobrança (geração longa = 5 créditos; chat curto = 1 a cada 10
+        // mensagens) é feita no servidor, em /api/sofia/chat.
       } catch (err) {
         // Conversa trocada ou nova conversa: o envio antigo some sem aviso.
         if (!atual()) return;

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca, respostaSemLogin } from "../_shared/cobranca.ts";
 
 type Registro = { when?: string; cat?: string; body?: string };
 
@@ -9,6 +10,7 @@ serve(async (req) => {
 
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    if (!userId) return respostaSemLogin(cors);
     const body = await req.json().catch(() => ({}));
     const {
       aluno = "",
@@ -136,7 +138,9 @@ Regras:
     // PEI completo com 4.096 tokens era cortado e virava {} (N8). O limite da
     // tarefa "pei" no roteador é 8.000.
     const maxTokens = parte === "completo" ? 8000 : 4000;
-    const r = await callAI({ userId, tipo: "pei", system: sys, user, json: true, maxTokens });
+    // PEI completo custa 50; quando vem em 2 partes (A e B), cada parte custa a metade.
+    const custo = parte === "completo" ? CUSTOS.pei_completo : Math.ceil(CUSTOS.pei_completo / 2);
+    const r = await callAI({ userId, tipo: "pei", system: sys, user, json: true, maxTokens, custoCreditos: custo });
     if (!r.ok) return aiErrorResponse(r);
 
     const parsed = parseAiJson<Record<string, unknown>>(r.text || "{}");
@@ -150,6 +154,7 @@ Regras:
       );
     }
     const pei = parsed;
+    await cobrarCreditos(userId, custo, descricaoCobranca(body, `PEI completo — ${aluno}`));
 
     return new Response(JSON.stringify({ pei, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },

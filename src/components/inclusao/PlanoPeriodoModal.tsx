@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { PlanoInclusao } from "./PlanoInclusaoModal";
 import { buildAnoReferenciaPromptBlock } from "@/lib/inclusao/anoReferencia";
-import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -135,6 +135,7 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
     const data = await invocarIA<{ plano?: GeradoItem["plano"] }>("gerar-atividade", {
       validar: (d) => temConteudo(d?.plano),
       body: {
+        descricaoCobranca: descricaoDoc(`Planejamento semanal (${disciplina})`, aluno?.name),
         modo: "pcd",
         anoEscolar: aluno.anoEscolar || "",
         anoReferenciaPedagogico: aluno.anoReferenciaPedagogico || "",
@@ -153,7 +154,6 @@ export function PlanoPeriodoModal({ open, onClose, aluno, anamneseResumo, peiRes
     });
     const plano = data.plano ?? null;
     if (plano) {
-      void consumirCreditos(CUSTOS.planejamento_semanal, descricaoDoc(`Planejamento semanal (${disciplina})`, aluno?.name));
       void (await import("@/lib/tempo/acumular")).acumularTempo("planejamento_inclusao", `Planejamento inclusão (${disciplina}) — ${aluno?.name ?? ""}`);
     }
     return plano;

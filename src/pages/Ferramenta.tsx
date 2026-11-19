@@ -7,6 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 // no visual "Painel": menu do app, contador pequeno no topo, título e a
 // ferramenta logo abaixo, ocupando o resto da tela.
 //
+// O conteúdo da ferramenta não fica mais em public/: vem da edge function
+// `ferramenta`, que só entrega para quem está logado (antes o banco de
+// questões, com gabaritos, abria sem login em /ferramentas/questoes.html).
+// O app coloca esse conteúdo no iframe com srcdoc, que herda o domínio do app.
+//
 // A ferramenta roda num iframe do mesmo domínio e conversa com o app de dois jeitos:
 // - window.aprofNuvem: guarda e lê os dados da ferramenta (turmas, simulados,
 //   resultados…) na tabela app_snapshots da conta do professor, para não ficarem
@@ -21,6 +26,7 @@ const css = `
 .tl-title{margin:14px 0 0;font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;color:var(--pn-ink);}
 .tl-sub{margin:4px 0 0;max-width:72ch;font-size:14.5px;line-height:1.45;color:var(--pn-muted);}
 .tl-frame{flex:1;min-height:0;width:100%;border:0;display:block;background:var(--pn-bg);}
+.tl-aviso{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:var(--pn-muted);font-size:15px;}
 .tl-frame.tl-imersivo{position:fixed;inset:0;width:100vw;height:100dvh;z-index:1000;}
 @media (max-width:860px){
   .pn.tl-root{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));}
@@ -90,9 +96,51 @@ const aprofNuvem: AprofNuvem = {
   },
 };
 
-export function Ferramenta({ titulo, sub, src }: { titulo: string; sub: string; src: string }) {
+export type NomeFerramenta = "questoes" | "jogos";
+
+type EstadoConteudo =
+  | { tipo: "carregando" }
+  | { tipo: "pronto"; html: string }
+  | { tipo: "erro"; mensagem: string };
+
+async function carregarFerramenta(nome: NomeFerramenta): Promise<string> {
+  const { data: sessao } = await supabase.auth.getSession();
+  if (!sessao.session) throw new Error("Entre na sua conta para abrir esta ferramenta.");
+  const { data, error } = await supabase.functions.invoke(`ferramenta?nome=${nome}`, {
+    method: "GET",
+  });
+  if (error || typeof data !== "string" || !data.trim()) {
+    throw new Error("Não consegui abrir a ferramenta agora. Tente de novo em instantes.");
+  }
+  return data;
+}
+
+export function Ferramenta({
+  titulo,
+  sub,
+  ferramenta,
+}: {
+  titulo: string;
+  sub: string;
+  ferramenta: NomeFerramenta;
+}) {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [imersivo, setImersivo] = useState(false);
+  const [conteudo, setConteudo] = useState<EstadoConteudo>({ tipo: "carregando" });
+
+  useEffect(() => {
+    let ativo = true;
+    setConteudo({ tipo: "carregando" });
+    carregarFerramenta(ferramenta).then(
+      (html) => ativo && setConteudo({ tipo: "pronto", html }),
+      (e) =>
+        ativo &&
+        setConteudo({ tipo: "erro", mensagem: e instanceof Error ? e.message : String(e) }),
+    );
+    return () => {
+      ativo = false;
+    };
+  }, [ferramenta]);
 
   // a ponte precisa existir antes do script do iframe rodar: fica pronta já no primeiro render
   if (typeof window !== "undefined") {
@@ -121,17 +169,25 @@ export function Ferramenta({ titulo, sub, src }: { titulo: string; sub: string; 
         <h1 className="tl-title">{titulo}</h1>
         <p className="tl-sub">{sub}</p>
       </div>
-      <iframe
-        ref={frameRef}
-        className={"tl-frame" + (imersivo ? " tl-imersivo" : "")}
-        src={src}
-        title={titulo}
-        allow="fullscreen; camera; autoplay"
-        // Testado: câmera (leitor QR), tela cheia, provas que abrem em nova aba e downloads continuam
-        // funcionando. Como a ferramenta precisa do mesmo domínio (allow-same-origin) para usar a ponte,
-        // isto é uma camada a mais (bloqueia navegar a página do app, por exemplo), não um isolamento total.
-        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms allow-modals"
-      />
+      {conteudo.tipo === "carregando" && <div className="tl-aviso">Abrindo a ferramenta…</div>}
+      {conteudo.tipo === "erro" && (
+        <div className="tl-aviso" role="alert">
+          {conteudo.mensagem}
+        </div>
+      )}
+      {conteudo.tipo === "pronto" && (
+        <iframe
+          ref={frameRef}
+          className={"tl-frame" + (imersivo ? " tl-imersivo" : "")}
+          srcDoc={conteudo.html}
+          title={titulo}
+          allow="fullscreen; camera; autoplay"
+          // Testado: câmera (leitor QR), tela cheia, provas que abrem em nova aba e downloads continuam
+          // funcionando. Como a ferramenta precisa do mesmo domínio (allow-same-origin) para usar a ponte,
+          // isto é uma camada a mais (bloqueia navegar a página do app, por exemplo), não um isolamento total.
+          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms allow-modals"
+        />
+      )}
     </div>
   );
 }

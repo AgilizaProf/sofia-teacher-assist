@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { userIdFromAuthHeader, isBudgetExceeded, recordUsage } from "../_shared/ai-budget.ts";
+import { userIdFromAuthHeader, isBudgetExceeded, muitasChamadasRecentes, recordUsage } from "../_shared/ai-budget.ts";
 import { withConstitution } from "../_shared/sofia-constitution.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 import { semLatexProfundo } from "../_shared/math-text.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca, respostaSemLogin } from "../_shared/cobranca.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -18,7 +19,17 @@ serve(async (req) => {
 
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
-    if (userId) {
+    // Sem login não gera (antes gerava de graça, sem conferir créditos).
+    if (!userId) return respostaSemLogin(cors);
+    // Limite de ritmo (sugerir opções é grátis e podia ser chamado sem parar).
+    if (await muitasChamadasRecentes(userId)) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "A Sofia está com muitos pedidos agora. Tente de novo em instantes." }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
+    let saldoCreditos = 0;
+    {
       const b = await isBudgetExceeded(userId);
       // Falha ao consultar créditos é erro temporário, não "sem créditos" (N5).
       if (b.erro) {
@@ -41,6 +52,7 @@ serve(async (req) => {
           { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
         );
       }
+      saldoCreditos = b.creditos;
     }
     const body = await req.json().catch(() => ({}));
     const {
@@ -452,6 +464,18 @@ serve(async (req) => {
     };
 
     const useOpcoes = etapa === "opcoes";
+    // Sugerir opções de aula é grátis; o plano/atividade completo custa 10.
+    const custo = useOpcoes ? 0 : CUSTOS.atividade_gerada;
+    if (custo > 0 && saldoCreditos < custo) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          blocked: true,
+          error: `Créditos insuficientes para esta ação (precisa de ${custo}, você tem ${saldoCreditos}).`,
+        }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
     const tool = useOpcoes ? toolOpcoes : toolPlano;
     const toolName = useOpcoes ? "sugerir_opcoes_aula" : "criar_plano_atividade";
 
@@ -502,7 +526,7 @@ serve(async (req) => {
 
     const parseResp = async (r: Response) => {
       const d = await r.json();
-      if (userId) {
+      {
         const inTok = Number(d?.usage?.prompt_tokens ?? 0);
         const outTok = Number(d?.usage?.completion_tokens ?? 0);
         if (inTok || outTok) {
@@ -550,6 +574,7 @@ serve(async (req) => {
 
     // === Validação dos códigos BNCC (pulada quando currículo municipal está ativo) ===
     if (usandoMunicipal) {
+      await cobrarCreditos(userId, custo, descricaoCobranca(body, "Atividade gerada"));
       return new Response(JSON.stringify({ plano: parsed }), {
         headers: { ...cors, "Content-Type": "application/json" },
       });
@@ -593,6 +618,7 @@ serve(async (req) => {
       }
     }
 
+    await cobrarCreditos(userId, custo, descricaoCobranca(body, "Atividade gerada"));
     return new Response(JSON.stringify({ plano: parsed }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

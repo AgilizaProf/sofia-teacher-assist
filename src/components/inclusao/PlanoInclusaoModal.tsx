@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { buildAnoReferenciaPromptBlock, isAnoReferenciaDivergente } from "@/lib/inclusao/anoReferencia";
 import { useKeyboardAwareModal } from "@/hooks/useKeyboardAwareModal";
-import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { descricaoDoc } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
@@ -364,6 +364,7 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
     const data = await invocarIA<{ plano?: PlanoCore }>("gerar-atividade", {
       validar: (d) => temConteudo(d?.plano),
       body: {
+        descricaoCobranca: descricaoDoc("Adaptação inclusiva (PCD)", aluno?.name),
         modo: "pcd",
         anoEscolar: aluno.anoEscolar || "",
         anoReferenciaPedagogico: aluno.anoReferenciaPedagogico || "",
@@ -387,7 +388,6 @@ export function PlanoInclusaoModal({ open, onClose, aluno, anamneseResumo, peiRe
     });
     const plano = data.plano ?? null;
     if (plano) {
-      void consumirCreditos(CUSTOS.adaptacao_pcd, descricaoDoc("Adaptação inclusiva (PCD)", aluno?.name));
       void (await import("@/lib/tempo/acumular")).acumularTempo("planejamento_inclusao", `Adaptação PCD — ${aluno?.name ?? ""}`);
     }
     return plano;

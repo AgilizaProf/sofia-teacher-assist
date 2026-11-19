@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca, respostaSemLogin } from "../_shared/cobranca.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 import { sanitizarTextoSofia } from "../_shared/sanitize-texto.ts";
 
@@ -11,6 +12,7 @@ serve(async (req) => {
 
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    if (!userId) return respostaSemLogin(cors);
     const body = await req.json().catch(() => ({}));
     const {
       aluno = "",
@@ -196,7 +198,7 @@ ${(parecerAnteriorTexto || "").trim() ? `  "evolucao": "1 parágrafo comparando 
   "comunicacao_familias": "1 parágrafo curto pronto para enviar à família"
 }`}`;
 
-    const r = await callAI({ userId, tipo: "parecer", system: sys, user, json: true, maxTokens: 8000 });
+    const r = await callAI({ userId, tipo: "parecer", system: sys, user, json: true, maxTokens: 8000, custoCreditos: CUSTOS.parecer_descritivo });
     if (!r.ok) return aiErrorResponse(r);
     let parecer = parseAiJson<Record<string, unknown>>(r.text || "{}");
     // Cortado pelo limite de tokens: o app avisa e não grava (N8). O fallback
@@ -230,6 +232,8 @@ ${(parecerAnteriorTexto || "").trim() ? `  "evolucao": "1 parágrafo comparando 
       }
     }
     parecer = sanitizarTextoSofia(parecer) as Record<string, unknown>;
+    // A versão para a família (modo "familia", acima) é gratuita, como antes.
+    if (!truncated) await cobrarCreditos(userId, CUSTOS.parecer_descritivo, descricaoCobranca(body, "Parecer descritivo"));
     return new Response(JSON.stringify({ parecer, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

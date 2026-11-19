@@ -14,6 +14,11 @@ import {
   erroSimples,
 } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca, respostaSemLogin } from "../_shared/cobranca.ts";
+
+// O app manda no máximo 40 espaços por pedido (POR_PEDIDO em ModeloRedeModal);
+// cada pedido custa CUSTOS.pei_modelo_rede.
+const MAX_LACUNAS_POR_PEDIDO = 40;
 
 type Lacuna = { id: string; tipo: string; rotulo: string; secao?: string; opcoes?: string[] };
 
@@ -28,11 +33,12 @@ serve(async (req) => {
 
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    if (!userId) return respostaSemLogin(cors);
     const body = await req.json().catch(() => ({}));
     const aluno = String(body?.aluno || "").slice(0, 120);
     const contexto = String(body?.contexto || "").slice(0, 45000);
     const lacunas = (Array.isArray(body?.lacunas) ? body.lacunas : [])
-      .slice(0, 300)
+      .slice(0, MAX_LACUNAS_POR_PEDIDO)
       .filter((l: Lacuna) => l && typeof l.id === "string" && typeof l.rotulo === "string")
       .map((l: Lacuna) => ({
         id: l.id.slice(0, 10),
@@ -79,7 +85,7 @@ ${JSON.stringify(lacunas)}`;
       user,
       json: true,
       maxTokens: 8000,
-      custoCreditos: 10,
+      custoCreditos: CUSTOS.pei_modelo_rede,
     });
     if (!r.ok) return aiErrorResponse(r);
 
@@ -102,6 +108,7 @@ ${JSON.stringify(lacunas)}`;
       const t = Array.isArray(v) ? v.map(String).join("\n") : v == null ? "" : String(v);
       valores[k] = t.slice(0, 4000);
     }
+    await cobrarCreditos(userId, CUSTOS.pei_modelo_rede, descricaoCobranca(body, `PEI no modelo da rede — ${aluno}`));
     return json({ valores, model: r.model });
   } catch (e) {
     console.error("[preencher-modelo-pei] erro interno", e);
