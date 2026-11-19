@@ -24,8 +24,10 @@ jobs:
         with:
           version: latest
 
+      # --yes: sem ele a CLI pede confirmação, não consegue perguntar no CI
+      # e sai com erro sem publicar nada (foi o que aconteceu no deploy de 18/11).
       - name: Deploy all edge functions
         run: |
-          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID }}
+          supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID }} --yes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

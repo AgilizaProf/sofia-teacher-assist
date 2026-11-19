@@ -72,6 +72,34 @@ export async function isBudgetExceeded(
   return { exceeded: disponiveis <= 0, usedBrl: utilizados, limitBrl: totais, creditos: disponiveis };
 }
 
+/**
+ * Limite de ritmo por pessoa: no máximo LIMITE_CHAMADAS_10MIN chamadas de IA
+ * em 10 minutos. Protege as funções que não cobram créditos (análises do
+ * diário, progressão, defasagem), que antes podiam ser chamadas sem parar por
+ * quem tivesse qualquer saldo. Uso normal no app fica bem abaixo disso.
+ * Se a consulta falhar, deixa passar (não trava a professora por instabilidade).
+ */
+export const LIMITE_CHAMADAS_10MIN = Number(Deno.env.get("AI_LIMITE_CHAMADAS_10MIN") ?? 40);
+
+export async function muitasChamadasRecentes(userId: string): Promise<boolean> {
+  try {
+    const desde = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { count, error } = await admin
+      .from("ai_usage")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", desde);
+    if (error) {
+      console.error("[ai-budget] contagem de ritmo falhou:", error.message);
+      return false;
+    }
+    return (count ?? 0) >= LIMITE_CHAMADAS_10MIN;
+  } catch (e) {
+    console.error("[ai-budget] contagem de ritmo falhou:", e);
+    return false;
+  }
+}
+
 export async function recordUsage(args: {
   userId: string;
   provider: "google";

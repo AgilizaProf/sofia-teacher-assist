@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { userIdFromAuthHeader, isBudgetExceeded, recordUsage } from "../_shared/ai-budget.ts";
+import { userIdFromAuthHeader, isBudgetExceeded, muitasChamadasRecentes, recordUsage } from "../_shared/ai-budget.ts";
 import { withConstitution } from "../_shared/sofia-constitution.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 import { semLatexProfundo } from "../_shared/math-text.ts";
@@ -21,6 +21,13 @@ serve(async (req) => {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     // Sem login não gera (antes gerava de graça, sem conferir créditos).
     if (!userId) return respostaSemLogin(cors);
+    // Limite de ritmo (sugerir opções é grátis e podia ser chamado sem parar).
+    if (await muitasChamadasRecentes(userId)) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "A Sofia está com muitos pedidos agora. Tente de novo em instantes." }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
     let saldoCreditos = 0;
     {
       const b = await isBudgetExceeded(userId);
