@@ -1,3 +1,5 @@
+import { FolhaTurma } from "@/components/alfabetizacao/FolhaTurma";
+import { codigoDeTexto } from "@/lib/alfabetizacao/folha";
 import { obsDoAluno, useObsWhatsapp, type ObsWhatsapp } from "@/lib/alfabetizacao/whatsapp";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -25,6 +27,7 @@ import {
   useAlfaDados,
 } from "@/lib/alfabetizacao/store";
 import {
+  CARTAO_FOLHA,
   METAS_PADRAO,
   NIVEIS_ESCRITA,
   NIVEIS_LEITURA,
@@ -210,9 +213,15 @@ function Ficha({
                 {nomeNivelLeitura(l.nivel)}
               </span>
               <span>
-                {l.cartaoId === "LIVRE" ? "Sem cartão" : `Cartão ${l.cartaoId}`}: {l.corretas} de{" "}
-                {l.total} certas
-                {l.tipo === "texto" || l.tipo === "frases" ? `, ${l.pcpm} por minuto` : ""}
+                {l.cartaoId === CARTAO_FOLHA ? (
+                  "Marcado na folha da turma"
+                ) : (
+                  <>
+                    {l.cartaoId === "LIVRE" ? "Sem cartão" : `Cartão ${l.cartaoId}`}: {l.corretas}{" "}
+                    de {l.total} certas
+                    {l.tipo === "texto" || l.tipo === "frases" ? `, ${l.pcpm} por minuto` : ""}
+                  </>
+                )}
               </span>
               {l.obs && <span style={{ color: "var(--pn-muted)" }}>{l.obs}</span>}
               <span className="sp" />
@@ -298,11 +307,27 @@ function Ficha({
 export function Alfabetizacao() {
   const { students, loading, create } = useInclusaoStudents();
   const { turmas } = useTurmas();
-  const { dados, salvarLeitura, salvarEscrita, apagarLeitura, apagarEscrita, salvarMetas } =
-    useAlfaDados();
+  const {
+    dados,
+    salvarLeitura,
+    salvarEscrita,
+    apagarLeitura,
+    apagarEscrita,
+    salvarMetas,
+    salvarFolha,
+    salvarLeiturasDaFolha,
+  } = useAlfaDados();
 
   const obsWhatsapp = useObsWhatsapp();
   const [aba, setAba] = useState<Aba>("turma");
+  // Chegou pelo QR code da folha da turma (…/alfabetizacao?folha=CÓDIGO): abre
+  // direto onde se envia a foto.
+  const [veioDoQr, setVeioDoQr] = useState(false);
+  useEffect(() => {
+    if (codigoDeTexto(new URLSearchParams(window.location.search).get("folha")) === null) return;
+    setVeioDoQr(true);
+    setAba("cartoes");
+  }, []);
   const [turma, setTurma] = useState("");
   const [alunoSel, setAlunoSel] = useState<string | undefined>(undefined);
   const [fichaId, setFichaId] = useState<string | null>(null);
@@ -794,7 +819,19 @@ export function Alfabetizacao() {
             salvarEscrita={salvarEscrita}
           />
         )}
-        {aba === "cartoes" && <CartoesLeitura />}
+        {aba === "cartoes" && (
+          <>
+            <FolhaTurma
+              alunos={alunos}
+              turma={turma}
+              dados={dados}
+              salvarFolha={salvarFolha}
+              salvarLeiturasDaFolha={salvarLeiturasDaFolha}
+              pedirFoto={veioDoQr}
+            />
+            <CartoesLeitura />
+          </>
+        )}
       </main>
 
       {ficha && (

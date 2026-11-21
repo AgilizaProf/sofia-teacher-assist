@@ -10,6 +10,7 @@ import {
   type AlfaDados,
   type AvaliacaoEscrita,
   type AvaliacaoLeitura,
+  type FolhaGuardada,
 } from "./tipos";
 import { errosPorCategoria } from "./erros";
 
@@ -20,6 +21,7 @@ export function sanear(d: Partial<AlfaDados> | null | undefined): AlfaDados {
     leituras: Array.isArray(d?.leituras) ? d!.leituras : [],
     escritas: Array.isArray(d?.escritas) ? d!.escritas : [],
     metas: { ...METAS_PADRAO, ...(d?.metas && typeof d.metas === "object" ? d.metas : {}) },
+    folhas: Array.isArray(d?.folhas) ? d!.folhas : [],
   };
 }
 
@@ -137,7 +139,41 @@ export function useAlfaDados() {
     [setBruto],
   );
 
-  return { dados, salvarLeitura, salvarEscrita, apagarLeitura, apagarEscrita, salvarMetas };
+  /** Guarda a folha impressa (ficam as 40 mais novas). */
+  const salvarFolha = useCallback(
+    (f: FolhaGuardada) =>
+      setBruto((d) => {
+        const s = sanear(d);
+        const outras = (s.folhas || []).filter((x) => x.cod !== f.cod);
+        return { ...s, folhas: [...outras, f].slice(-40) };
+      }),
+    [setBruto],
+  );
+  /**
+   * Grava os níveis marcados em uma folha. Se a mesma folha for enviada de
+   * novo, troca o que tinha sido gravado dela para estes alunos (não duplica).
+   */
+  const salvarLeiturasDaFolha = useCallback(
+    (cod: number, novas: AvaliacaoLeitura[]) =>
+      setBruto((d) => {
+        const s = sanear(d);
+        const ids = new Set(novas.map((n) => n.alunoId));
+        const resto = s.leituras.filter((l) => !(l.folha === cod && ids.has(l.alunoId)));
+        return { ...s, leituras: [...resto, ...novas] };
+      }),
+    [setBruto],
+  );
+
+  return {
+    dados,
+    salvarLeitura,
+    salvarEscrita,
+    apagarLeitura,
+    apagarEscrita,
+    salvarMetas,
+    salvarFolha,
+    salvarLeiturasDaFolha,
+  };
 }
 
 /** Quem já tem leitura ou escrita registrada (pelo que foi salvo nas avaliações). */

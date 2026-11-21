@@ -133,6 +133,15 @@ export const alfaCss = `
 .af-campo select:focus,.af-campo input:focus,.af-campo textarea:focus,.af-in:focus{outline:2px solid var(--pn-green);outline-offset:1px;}
 .af-botoes{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center;}
 .af-link{border:0;background:none;padding:0;font-family:inherit;font-size:14px;font-weight:700;color:var(--pn-muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.af-fl{display:grid;gap:6px;margin-top:10px;}
+.af-fl-l{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:12px;background:var(--pn-bg);border:1.5px solid transparent;}
+.af-fl-l.duv{background:var(--pn-cream);border-color:var(--pn-ink);}
+.af-fl-l .nm{min-width:0;}
+.af-fl-l .nm b{display:block;font-size:15px;}
+.af-fl-l .nm span{display:block;font-size:13px;color:var(--pn-muted);}
+.af-fl-l .nv{display:flex;gap:5px;flex:none;}
+.af-fl-l .nv button{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--pn-line);background:#fff;font-family:var(--pn-display);font-weight:800;font-size:15px;color:var(--pn-ink);cursor:pointer;}
+.af-fl-l .nv button[aria-pressed="true"]{border-color:var(--pn-ink);box-shadow:2px 2px 0 var(--pn-ink);}
 .af-aviso{padding:10px 12px;border-radius:12px;background:var(--pn-blue-soft);font-size:14px;line-height:1.5;margin:10px 0;}
 .af-aviso.sol{background:var(--pn-cream);}
 .af-vazio{padding:18px;border:1.5px dashed var(--pn-line);border-radius:14px;color:var(--pn-muted);font-size:14.5px;text-align:center;line-height:1.5;}
@@ -245,6 +254,9 @@ export const alfaCss = `
   /* o app deixa toda tabela rolar de lado no celular; aqui cada aluno já é um cartão */
   .af-tabela{overflow:visible;}
   .af-nv{white-space:normal;}
+  .af-fl-l{flex-direction:column;align-items:stretch;gap:8px;}
+  .af-fl-l .nv{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;}
+  .af-fl-l .nv button{width:auto;height:44px;}
   /* cartões em duas colunas */
   .af-grid{grid-template-columns:1fr 1fr;gap:8px;}
   .af-item{padding:8px;}
