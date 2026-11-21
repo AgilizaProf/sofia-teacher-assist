@@ -93,3 +93,12 @@ html.pn .resumo-num b{font-family:var(--f-marca);font-weight:800;letter-spacing:
   html.pn .resumo-num{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
   html.pn .resumo-num b{font-size:1.35rem;}
 }
+
+/* Título da página desenhado pelo app no topo desta página (#aprof-cab): tudo rola junto.
+   O tamanho da letra fica na linha do contador e o conteúdo começa logo abaixo do título. */
+html.pn #aprof-cab ~ .topo:has(.abas[hidden]) .wrap{padding-top:22px;}
+html.pn #aprof-cab ~ main#painel{padding-top:18px;}
+html.pn #aprof-cab ~ main#painel > h2.pn-bloco:first-child{margin-top:0;}
+@media (max-width:860px){
+  html.pn #aprof-cab ~ .topo:has(.abas[hidden]) .wrap{padding-top:16px;}
+}

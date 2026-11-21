@@ -8,17 +8,21 @@ html.pn .dm-site{background:#EDF0F5;color:#14161F;font-family:'DM Sans',system-u
   --text:#14161F;--text-mute:#596074;--border:#D6DBE5;--accent:#0B7A55;--accent-soft:#CDEFE2;}
 html.pn .jg-root{--primary:#14161F;--accent:#0B7A55;--accent-warm:#0B7A55;--accent-soft:#CDEFE2;--bg:#EDF0F5;--text:#14161F;--text-mute:#596074;--border:#D6DBE5;}
 
-/* Barra de cima: sem marca nem nota (o menu do app já está acima); fica só o "Tela cheia" */
-html.pn .dm-site{position:relative;}
-html.pn .dm-cab{position:absolute;top:14px;right:max(24px,calc((100% - 1240px) / 2 + 24px));z-index:5;background:transparent;border-bottom:0;padding:0;justify-content:flex-end;}
+/* Barra de cima: sem marca nem nota (o menu do app já está acima); fica só o "Tela cheia",
+   no canto direito da linha do contador. O título da página vem do app, desenhado no
+   topo desta página (#aprof-cab), então tudo rola junto como uma tela só. */
+html.pn body{position:relative;margin:0;}
+html.pn .dm-site{position:static;}
+html.pn .dm-cab{position:absolute;top:22px;right:max(24px,calc((100% - 1240px) / 2 + 24px));z-index:5;background:transparent;border-bottom:0;padding:0;justify-content:flex-end;}
+html.pn .dm-cheia{min-height:36px;height:36px;}
 html.pn .dm-marca,html.pn .dm-cab-nota{display:none;}
 html.pn .dm-cheia{box-shadow:none;border:1.5px solid #D6DBE5;border-radius:10px;font-family:'DM Sans',system-ui,sans-serif;}
 html.pn .dm-cheia:hover{background:#fff;border-color:#14161F;}
 
 /* Títulos */
 html.pn .dm-miolo{padding-top:18px;padding-inline:24px;}
-html.pn .dm-miolo-largo{max-width:1240px;}
-html.pn .dm-miolo .dm-heroi{padding-right:150px;}
+html.pn .dm-miolo,html.pn .dm-miolo-largo{max-width:1240px;}
+html.pn .dm-miolo-largo .dm-heroi{display:none;}
 html.pn .dm-heroi{margin:0;}
 html.pn .dm-heroi-emoji{display:none;}
 html.pn .dm-heroi-titulo,html.pn .jg-h1{font-family:'Sora',system-ui,sans-serif;font-weight:800;letter-spacing:-.04em;color:#14161F;}
@@ -82,10 +86,11 @@ html.pn .dm-barra-voltar,html.pn .dm-barra-proximo{border:2px solid #14161F;bord
 html.pn .dm-jogar-btn{background:#0B7A55;border:2px solid #14161F;border-radius:12px;box-shadow:3px 3px 0 #14161F;font-family:'Sora',system-ui,sans-serif;font-weight:800;font-size:18px;letter-spacing:-.02em;}
 html.pn .dm-jogar-btn:active{box-shadow:1px 1px 0 #14161F;transform:translate(2px,2px);}
 
+@media (max-width:860px){
+  html.pn .dm-cab{top:16px;right:16px;}
+}
 @media (max-width:640px){
-  html.pn .dm-cab{top:12px;right:16px;}
   html.pn .dm-miolo{padding-inline:16px;padding-top:14px;}
-  html.pn .dm-miolo .dm-heroi{padding-right:52px;}
   html.pn .jg-formatos{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
   html.pn .jg-formato-op{flex-direction:column;align-items:flex-start;gap:8px;min-height:0;}
   html.pn .jg-formato-capa{width:40px;height:40px;}
