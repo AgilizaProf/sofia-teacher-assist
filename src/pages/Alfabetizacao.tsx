@@ -113,8 +113,6 @@ const IC = {
   livro:
     "M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15ZM4 20.5A2.5 2.5 0 0 0 6.5 23H20",
   mic: "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3ZM5 11a7 7 0 0 0 14 0M12 18v3",
-  foto: "M4 8h3l2-3h6l2 3h3v11H4V8ZM12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z",
-  cartoes: "M7 7h13v13H7V7ZM4 16V4h12M10.5 11.5h6M10.5 15.5h4",
   alunos:
     "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM2.5 20a6.5 6.5 0 0 1 13 0M16.5 4.3a3.5 3.5 0 0 1 0 6.4M18 14.2a6.5 6.5 0 0 1 3.5 5.8",
   lapis: "M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1ZM14.5 6.5l3 3",
@@ -487,35 +485,6 @@ export function Alfabetizacao() {
                 ))}
               </div>
             )}
-          </div>
-          <div className="af-atalhos">
-            <button type="button" className="a1" onClick={() => setAba("leitura")}>
-              <span className="ic">
-                <Ico d={IC.mic} />
-              </span>
-              <span>
-                <b>Ouvir a leitura</b>
-                <small>Grave a criança lendo e veja o nível.</small>
-              </span>
-            </button>
-            <button type="button" className="a2" onClick={() => setAba("texto")}>
-              <span className="ic">
-                <Ico d={IC.foto} />
-              </span>
-              <span>
-                <b>Corrigir um texto</b>
-                <small>Tire a foto e receba os erros por tipo.</small>
-              </span>
-            </button>
-            <button type="button" className="a3" onClick={() => setAba("cartoes")}>
-              <span className="ic">
-                <Ico d={IC.cartoes} />
-              </span>
-              <span>
-                <b>Cartões de leitura</b>
-                <small>1000 cartões por nível para imprimir.</small>
-              </span>
-            </button>
           </div>
         </header>
 
