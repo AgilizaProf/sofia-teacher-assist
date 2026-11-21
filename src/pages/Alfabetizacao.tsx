@@ -477,7 +477,7 @@ export function Alfabetizacao() {
   };
 
   return (
-    <div className={"pn af" + (aba === "turma" ? "" : " foco")}>
+    <div className="pn af">
       <style dangerouslySetInnerHTML={{ __html: painelTokensCss + alfaCss }} />
       <PainelNav />
       <main className="af-wrap">
