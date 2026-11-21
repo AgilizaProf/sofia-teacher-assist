@@ -1,3 +1,4 @@
+import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
 import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from "react";
 import { AlunoCard } from "@/components/inclusao/AlunoCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -4215,6 +4216,9 @@ ${ident}
                     placeholder={`Descrição livre para ${REG_CAT_LABEL[k]} (opcional)…`}
                     style={{ width: "100%", padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 12.5, resize: "vertical" }}
                   />
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+                    <BotaoDitado onTexto={(t) => setNrBodies((prev) => ({ ...prev, [k]: juntarDitado(prev[k] || "", t) }))} />
+                  </div>
                 </div>
               );
             })}

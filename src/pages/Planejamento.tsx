@@ -1,3 +1,4 @@
+import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
@@ -4663,6 +4664,9 @@ export function Planejamento() {
                       value={m6Text}
                       onChange={(e) => setM6Text(e.target.value)}
                     />
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                      <BotaoDitado onTexto={(t) => setM6Text((v) => juntarDitado(v, t))} />
+                    </div>
                     {m6Emoji && M6_QUICK_BY_EMOJI[m6Emoji] && (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, alignItems: "center" }}>
                         <button

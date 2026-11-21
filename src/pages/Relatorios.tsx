@@ -1,3 +1,4 @@
+import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
@@ -2233,8 +2234,11 @@ ${parecerHtml}
                               : "Descreva avanços, dificuldades, comportamentos e informações relevantes sobre o aluno no período…"}
                             style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, resize: "vertical", fontFamily: "inherit", background: "#FAFAFB" }}
                           />
-                          <div style={{ fontSize: 11, color: "var(--text-soft)", marginTop: 6 }}>
-                            Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o {ei ? "parecer descritivo" : "parecer"}.
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
+                            <div style={{ fontSize: 11, color: "var(--text-soft)", flex: 1 }}>
+                              Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o {ei ? "parecer descritivo" : "parecer"}.
+                            </div>
+                            <BotaoDitado onTexto={(t) => setBnccObsByAluno((p) => ({ ...p, [id]: juntarDitado(p[id] || "", t) }))} />
                           </div>
                         </>
                       )}
