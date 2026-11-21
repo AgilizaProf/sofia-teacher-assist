@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { falhouSalvarNaNuvem, salvouNaNuvem } from "./avisoNuvem";
 import { detectShapeMismatch, reportStorageIssue, previewOf, shapeOf } from "./storageDiagnostics";
 
 /**
@@ -190,13 +191,33 @@ export function usePersistentState<T>(key: string, initial: T) {
   const pushRemote = useCallback((uid: string, value: T) => {
     if (pushTimer.current) clearTimeout(pushTimer.current);
     pushTimer.current = setTimeout(async () => {
-      try {
-        await supabase
-          .from("app_snapshots")
-          .upsert([{ user_id: uid, key, data: JSON.parse(JSON.stringify(value)), updated_at: new Date().toISOString() }], { onConflict: "user_id,key" });
-      } catch { /* ignore */ }
+      // Envia o valor; na nova tentativa usa o que estiver no aparelho (o mais novo).
+      const enviar = async (v: unknown): Promise<boolean> => {
+        try {
+          const { error } = await supabase
+            .from("app_snapshots")
+            .upsert([{ user_id: uid, key, data: JSON.parse(JSON.stringify(v)), updated_at: new Date().toISOString() }], { onConflict: "user_id,key" });
+          return !error;
+        } catch {
+          return false;
+        }
+      };
+      const ok = await enviar(value);
+      if (ok) {
+        salvouNaNuvem(`${uid}:${key}`);
+        return;
+      }
+      falhouSalvarNaNuvem(`${uid}:${key}`, async () => {
+        if (userIdRef.current !== uid) return true; // trocou de conta: não envia para a errada
+        let atual: unknown = value;
+        try {
+          const raw = window.localStorage.getItem(lsKey);
+          if (raw) atual = JSON.parse(raw);
+        } catch { /* usa o valor da última tentativa */ }
+        return enviar(atual);
+      });
     }, 800);
-  }, [key]);
+  }, [key, lsKey]);
 
   // Subscribe to auth: hydrate remote on login, push on changes.
   useEffect(() => {
