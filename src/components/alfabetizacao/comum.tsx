@@ -117,7 +117,7 @@ export const alfaCss = `
 .af-tabela th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--pn-muted);padding:6px 8px;border-bottom:1.5px solid var(--pn-line);}
 .af-tabela td{padding:8px;border-bottom:1px solid var(--pn-line);vertical-align:middle;}
 .af-tabela tr:last-child td{border-bottom:0;}
-.af-rol{overflow-x:auto;}
+.af-rol{min-width:0;}
 .af-nv{display:inline-block;padding:3px 8px;border-radius:7px;border:1.5px solid var(--pn-ink);font-size:12.5px;font-weight:700;white-space:nowrap;}
 .af-nv.vazio{border-color:var(--pn-line);color:var(--pn-muted);background:#fff;font-weight:500;}
 .af-seta{font-size:12px;font-weight:700;margin-left:6px;white-space:nowrap;}
@@ -183,13 +183,25 @@ export const alfaCss = `
 .af-barra-fixa{position:sticky;bottom:76px;z-index:20;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-radius:14px;background:var(--pn-ink);color:#fff;font-size:14.5px;font-weight:700;margin-top:12px;}
 .af-barra-fixa .sp{flex:1;}
 .af-bg{position:fixed;inset:0;z-index:80;background:rgba(20,22,31,.5);display:flex;align-items:center;justify-content:center;padding:16px;}
-.af-modal{width:100%;max-width:720px;max-height:90vh;overflow:auto;background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:6px 6px 0 var(--pn-ink);padding:20px;}
+.af-modal{width:100%;max-width:720px;max-height:90vh;overflow:auto;scrollbar-width:none;background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:6px 6px 0 var(--pn-ink);padding:20px;}
+.af-modal::-webkit-scrollbar{display:none;}
 .af-modal h2{margin:0;font-family:var(--pn-display);font-size:22px;letter-spacing:-.03em;}
 .af-hist{display:grid;gap:8px;margin:8px 0 14px;}
 .af-hist>div{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px 10px;border-radius:11px;background:var(--pn-bg);font-size:14px;}
 .af-hist .sp{flex:1;}
 .af-graf{display:flex;align-items:flex-end;gap:6px;height:74px;margin:6px 0 10px;}
 .af-graf span{flex:1;max-width:44px;border:1.5px solid var(--pn-ink);border-radius:6px 6px 0 0;display:flex;align-items:flex-start;justify-content:center;font-size:12px;font-weight:700;padding-top:2px;}
+/* tela estreita: a tabela não cabe, então cada aluno vira um cartão (sem rolar de lado) */
+@media (max-width:880px){
+  .af-tabela thead{display:none;}
+  .af-tabela,.af-tabela tbody{display:block;}
+  .af-tabela tr{display:block;padding:12px 0;border-bottom:1px solid var(--pn-line);}
+  .af-tabela tr:last-child{border-bottom:0;padding-bottom:0;}
+  .af-tabela td{display:block;padding:0;border:0;margin-bottom:6px;}
+  .af-tabela td:first-child b{font-size:16px;}
+  .af-tabela td[data-rot]::before{content:attr(data-rot) ": ";font-size:13px;font-weight:700;color:var(--pn-muted);margin-right:4px;}
+  .af-tabela td:last-child{margin:10px 0 0;}
+}
 @media (max-width:760px){
   .af-wrap{padding:14px 14px 0;}
   .af-title{font-size:26px;margin:10px 0 6px;}
@@ -198,10 +210,9 @@ export const alfaCss = `
   .af-g2{grid-template-columns:1fr;}
   .af-card{padding:14px;border-radius:14px;}
   .af-card.forte{border-radius:18px;}
-  /* abas em uma linha só, que rola de lado */
-  .af-tabs{display:flex;flex-wrap:nowrap;overflow-x:auto;margin:14px 0 12px;padding:5px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-  .af-tabs::-webkit-scrollbar{display:none;}
-  .af-tabs button{flex:0 0 auto;height:44px;}
+  /* abas em duas linhas, sem rolar de lado */
+  .af-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:14px 0 12px;padding:5px;}
+  .af-tabs button{height:44px;padding:0 6px;}
   .af-chips button{height:40px;}
   /* dedo: alvos de toque de 44px e letras de 16px (sem zoom no iPhone) */
   .af-mini{height:44px;padding:0 12px;font-size:14px;}
@@ -229,17 +240,11 @@ export const alfaCss = `
   .af-cartao.txt p{font-size:19px;line-height:1.65;}
   .af-pals button{min-height:46px;font-size:17px;padding:4px 12px;}
   .af-barra{grid-template-columns:110px 1fr 28px;}
-  /* lista de alunos vira um cartão por aluno */
-  .af-tabela thead{display:none;}
-  .af-tabela,.af-tabela tbody{display:block;}
-  .af-tabela tr{display:block;padding:12px 0;border-bottom:1px solid var(--pn-line);}
-  .af-tabela tr:last-child{border-bottom:0;padding-bottom:0;}
-  .af-tabela td{display:block;padding:0;border:0;margin-bottom:6px;}
-  .af-tabela td:first-child b{font-size:16px;}
-  .af-tabela td[data-rot]::before{content:attr(data-rot) ": ";font-size:13px;font-weight:700;color:var(--pn-muted);margin-right:4px;}
-  .af-tabela td:last-child{margin:10px 0 0;}
-  .af-acoes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .af-acoes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
   .af-acoes .af-mini{padding:0 4px;font-size:13.5px;}
+  /* o app deixa toda tabela rolar de lado no celular; aqui cada aluno já é um cartão */
+  .af-tabela{overflow:visible;}
+  .af-nv{white-space:normal;}
   /* cartões em duas colunas */
   .af-grid{grid-template-columns:1fr 1fr;gap:8px;}
   .af-item{padding:8px;}
@@ -254,5 +259,9 @@ export const alfaCss = `
   .af-bg{align-items:flex-end;padding:0;}
   .af-modal{max-width:none;max-height:92dvh;border-radius:20px 20px 0 0;border-width:2px 0 0;box-shadow:none;padding:16px 14px calc(18px + env(safe-area-inset-bottom));}
   .af-hist>div{padding:10px;}
+}
+@media (max-width:359px){
+  .af-acoes{grid-template-columns:1fr 1fr;}
+  .af-acoes .af-mini:last-child{grid-column:1/-1;}
 }
 `;
