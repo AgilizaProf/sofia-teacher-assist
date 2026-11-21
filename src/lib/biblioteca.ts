@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 // continua onde foi feito: o plano em planos_aula, a trilha em trilhas, o
 // simulado e o jogo na conta da ferramenta.
 
-export type TipoBiblioteca = "plano" | "atividade" | "ficha" | "simulado" | "jogo" | "sequencia";
+export type TipoBiblioteca = "plano" | "atividade" | "ficha" | "simulado" | "jogo" | "sequencia" | "conversa";
 
 export type ItemBiblioteca = {
   tipo: TipoBiblioteca;
@@ -97,6 +97,8 @@ export function linkDoItem(tipo: string, refId: string | null): { to: string; se
       return { to: "/questoes" };
     case "jogo":
       return { to: "/jogos" };
+    case "conversa":
+      return refId ? { to: "/assistente", search: { conversa: refId } } : { to: "/assistente" };
     default:
       return { to: "/" };
   }

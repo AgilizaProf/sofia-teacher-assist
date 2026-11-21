@@ -52,6 +52,7 @@ const TIPO_COR: Record<string, string> = {
   simulado: "var(--pn-pink)",
   jogo: "var(--pn-lilac)",
   sequencia: "var(--pn-blue-soft)",
+  conversa: "var(--pn-green-soft)",
 };
 const TIPO_NOME: Record<string, string> = {
   plano: "Plano de aula",
@@ -60,6 +61,7 @@ const TIPO_NOME: Record<string, string> = {
   simulado: "Simulado",
   jogo: "Jogo",
   sequencia: "Sequência didática",
+  conversa: "Resposta da Sofia",
 };
 
 export function nomeAno(n: number | null): string {

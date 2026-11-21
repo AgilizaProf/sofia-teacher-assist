@@ -10,5 +10,10 @@ export const Route = createFileRoute("/assistente")({
       { property: "og:description", content: "Sua assistente pedagógica com IA, alinhada à BNCC." },
     ],
   }),
+  // ?conversa=<id>: abre uma conversa guardada (vem da Minha Biblioteca).
+  validateSearch: (s: Record<string, unknown>): { conversa?: string } => {
+    const c = typeof s.conversa === "string" ? s.conversa : "";
+    return /^[0-9a-f-]{36}$/i.test(c) ? { conversa: c } : {};
+  },
   component: Assistente,
 });
