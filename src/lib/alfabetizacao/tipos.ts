@@ -124,7 +124,12 @@ export type AvaliacaoLeitura = {
   /** Nível confirmado (ou corrigido) pela professora. */
   nivel: NivelLeitura;
   obs?: string;
+  /** Código da folha da turma, quando o nível veio marcado no papel. */
+  folha?: number;
 };
+
+/** Marca no lugar do cartão quando o nível veio da folha marcada no papel. */
+export const CARTAO_FOLHA = "FOLHA";
 
 export type ErroEscrita = {
   /** Como a criança escreveu. */
@@ -160,11 +165,21 @@ export type AvaliacaoEscrita = {
   pontosFortes?: string;
 };
 
+/** Folha da turma impressa para marcar o nível no papel (ver folha.ts). */
+export type FolhaGuardada = {
+  cod: number;
+  turma: string;
+  criada: string;
+  alunos: Array<{ id: string; nome: string }>;
+};
+
 export type AlfaDados = {
   leituras: AvaliacaoLeitura[];
   escritas: AvaliacaoEscrita[];
   /** Palavras corretas por minuto esperadas para "leitor fluente", por ano. */
   metas: Record<string, number>;
+  /** Folhas impressas (as mais novas no fim). */
+  folhas?: FolhaGuardada[];
 };
 
 export const METAS_PADRAO: Record<string, number> = {
