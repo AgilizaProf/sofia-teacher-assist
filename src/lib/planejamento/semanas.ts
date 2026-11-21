@@ -91,3 +91,24 @@ export function useSemanasPlano<C>() {
 
   return { semanas, planoDe, atualizar, agendar, semanaAtual };
 }
+
+const DIAS: DiaSemana[] = ["seg", "ter", "qua", "qui", "sex"];
+
+/** Cada cartão do plano por semana com a sua data (AAAA-MM-DD), a partir de `desde`. */
+export function cartoesComData<C>(
+  semanas: Record<string, Partial<PlanoSemana<C>>>,
+  desde: string,
+): Array<{ date: string; card: C }> {
+  const out: Array<{ date: string; card: C }> = [];
+  for (const [segunda, plano] of Object.entries(semanas || {})) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(segunda);
+    if (!m || !plano) continue;
+    DIAS.forEach((dia, i) => {
+      const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + i);
+      const date = localDateKey(d);
+      if (date < desde) return;
+      for (const card of plano[dia] ?? []) out.push({ date, card });
+    });
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}

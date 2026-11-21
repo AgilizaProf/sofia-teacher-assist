@@ -19,3 +19,17 @@ describe("plano por semana", () => {
     expect(diaDaData(new Date(2026, 10, 28))).toBeNull();
   });
 });
+
+describe("cartões do plano com data", () => {
+  it("põe cada cartão no dia certo e ignora o passado", async () => {
+    const { cartoesComData } = await import("./semanas");
+    const r = cartoesComData<{ t: string }>(
+      { "2026-11-23": { seg: [{ t: "a" }], sex: [{ t: "b" }] }, "2026-11-16": { qua: [{ t: "velho" }] } },
+      "2026-11-20",
+    );
+    expect(r).toEqual([
+      { date: "2026-11-23", card: { t: "a" } },
+      { date: "2026-11-27", card: { t: "b" } },
+    ]);
+  });
+});
