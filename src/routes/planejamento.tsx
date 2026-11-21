@@ -18,6 +18,8 @@ type Search = {
   turma?: string;
   /** Filtro por nome de aluno mencionado no diário (M6). */
   aluno?: string;
+  /** Plano guardado (planos_aula.id) para abrir direto na Atividade. */
+  abrir?: string;
 };
 
 // Mapa "rótulo visível para o usuário (M1..M7)" → chave interna da aba.
@@ -52,14 +54,15 @@ export const Route = createFileRoute("/planejamento")({
       tag: sanitizeFilter(s.tag),
       turma: sanitizeFilter(s.turma),
       aluno: sanitizeFilter(s.aluno),
+      abrir: typeof s.abrir === "string" && /^[0-9a-f-]{36}$/i.test(s.abrir) ? s.abrir : undefined,
     };
   },
   head: () => ({
     meta: [
-      { title: "Planejamento · Drag & drop e replicar — AgilizaProf" },
-      { name: "description", content: "Planeje a semana com Sofia: arraste atividades entre dias, replique em outras turmas e ajuste em segundos." },
+      { title: "Planejamento — AgilizaProf" },
+      { name: "description", content: "Planeje atividades, a semana, o semestre e o diário de bordo com a Sofia." },
       { property: "og:title", content: "Planejamento · AgilizaProf" },
-      { property: "og:description", content: "Drag & drop entre dias + replicar em N turmas. Choveu? Arrasta. Deu certo? Replica." },
+      { property: "og:description", content: "Planeje atividades, a semana, o semestre e o diário de bordo com a Sofia." },
     ],
   }),
   component: PlanejamentoRota,

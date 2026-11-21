@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
 import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { supabase } from "@/integrations/supabase/client";
+import { guardarNaBiblioteca, type ResultadoGuardar, type TipoBiblioteca } from "@/lib/biblioteca";
 
 // Página do app que abriga uma ferramenta completa (Jogos e atividades interativas, Questões)
 // no visual "Painel": menu do app, contador pequeno no topo, título e a
@@ -54,6 +55,7 @@ type AprofNuvem = {
   usuario: () => Promise<string | null>;
   planejamento: () => Promise<PlanejamentoTurma[]>;
   relatar: (relato: unknown) => Promise<boolean>;
+  guardar: (item: unknown) => Promise<ResultadoGuardar>;
 };
 
 // Só estas chaves podem ser lidas ou gravadas pelas ferramentas (lista branca).
@@ -191,6 +193,21 @@ const aprofNuvem: AprofNuvem = {
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 300) : null,
     });
     return !error;
+  },
+  // Guarda um simulado ou jogo na Minha Biblioteca do app.
+  async guardar(item) {
+    const r = (item ?? {}) as Record<string, unknown>;
+    const tipos: TipoBiblioteca[] = ["simulado", "ficha", "jogo", "atividade"];
+    const tipo = tipos.includes(r.tipo as TipoBiblioteca) ? (r.tipo as TipoBiblioteca) : "simulado";
+    const txt = (v: unknown, n = 160) => (typeof v === "string" || typeof v === "number" ? String(v).slice(0, n) : "");
+    return guardarNaBiblioteca({
+      tipo,
+      refId: txt(r.refId, 80) || null,
+      titulo: txt(r.titulo, 160) || "Sem título",
+      ano: txt(r.ano, 20) || null,
+      componente: txt(r.componente, 80) || null,
+      habilidades: Array.isArray(r.habilidades) ? r.habilidades.map((h) => txt(h, 20)).filter(Boolean).slice(0, 30) : [],
+    });
   },
   // só leitura, e só da conta de quem está logado
   async planejamento() {

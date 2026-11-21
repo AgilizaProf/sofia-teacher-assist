@@ -1954,7 +1954,7 @@ function mostrarGerado(sim){
 }
 function listaSimulados(){
   if(!S.simulados.length)return `<div class="vazio">Os simulados que você gerar aparecem aqui, prontos para baixar de novo ou corrigir.</div>`;
-  return `<div class="tabela-wrap"><table><thead><tr><th>Código</th><th>Título</th><th>Disciplina</th><th>Turma</th><th>Data</th><th>Provas</th><th>Questões</th><th>Corrigidas</th><th></th></tr></thead><tbody>${S.simulados.map(s=>{const c=S.resultados.filter(r=>r.simId===s.id).length;return `<tr><td><b>${s.id}</b></td><td>${esc(s.titulo)}</td><td><b>${esc(simDisc(s))}</b></td><td>${esc(s.turma)}</td><td>${s.data}</td><td>${modoTxt(s)}</td><td class="num">${s.base.length}</td><td class="num">${c}/${s.versoes.length}</td><td><span class="linha-acoes"><button class="btn peq" data-ver="${s.id}">Abrir</button><button class="btn peq" data-baixar="${s.id}">Baixar</button><button class="btn peq" data-lersim="${s.id}">Corrigir</button><button class="btn peq perigo" data-apagar="${s.id}">Apagar</button></span></td></tr>`;}).join("")}</tbody></table></div>`;
+  return `<div class="tabela-wrap"><table><thead><tr><th>Código</th><th>Título</th><th>Disciplina</th><th>Turma</th><th>Data</th><th>Provas</th><th>Questões</th><th>Corrigidas</th><th></th></tr></thead><tbody>${S.simulados.map(s=>{const c=S.resultados.filter(r=>r.simId===s.id).length;return `<tr><td><b>${s.id}</b></td><td>${esc(s.titulo)}</td><td><b>${esc(simDisc(s))}</b></td><td>${esc(s.turma)}</td><td>${s.data}</td><td>${modoTxt(s)}</td><td class="num">${s.base.length}</td><td class="num">${c}/${s.versoes.length}</td><td><span class="linha-acoes"><button class="btn peq" data-ver="${s.id}">Abrir</button><button class="btn peq" data-baixar="${s.id}">Baixar</button><button class="btn peq" data-lersim="${s.id}">Corrigir</button>${nuvem()&&nuvem().guardar?`<button class="btn peq" data-biblio="${s.id}" title="Guardar na Minha Biblioteca do app">📚 Guardar</button>`:""}<button class="btn peq perigo" data-apagar="${s.id}">Apagar</button></span></td></tr>`;}).join("")}</tbody></table></div>`;
 }
 function ligarListaSimulados(raiz=$("#painel")){
   const achar=id=>S.simulados.find(x=>x.id===id);
@@ -1965,6 +1965,10 @@ function ligarListaSimulados(raiz=$("#painel")){
   raiz.querySelectorAll("[data-gab]").forEach(b=>b.onclick=()=>{const s=achar(b.dataset.gab);baixar(`gabaritos-${s.id}.html`,docGabaritos(s));});
   raiz.querySelectorAll("[data-lersim]").forEach(b=>b.onclick=()=>{LS.simId=b.dataset.lersim;irPara("leitor");});
   raiz.querySelectorAll("[data-ver]").forEach(b=>b.onclick=()=>{G.ultimo=b.dataset.ver;renderGerador();document.getElementById("g-saida").scrollIntoView({behavior:"smooth"});});
+  raiz.querySelectorAll("[data-biblio]").forEach(b=>b.onclick=async()=>{const s=achar(b.dataset.biblio);const n=nuvem();if(!s||!n||!n.guardar)return;b.disabled=true;
+    const habs=new Set();(s.base||[]).forEach(r=>{const q=getQ(r);if(q&&q.hab)String(q.hab).split(/[\s,;]+/).forEach(h=>{if(/^E[FI]\d{2}[A-Z]{2}\d{2}$/.test(h))habs.add(h);});});
+    try{const r=await n.guardar({tipo:"simulado",refId:String(s.id),titulo:s.titulo||"Simulado",ano:(s.anos||[])[0]??null,componente:simDisc(s)||null,habilidades:[...habs]});toast(r&&r.mensagem||"Pronto.");}catch(e){toast("Não deu para guardar agora. Tente de novo.");}
+    b.disabled=false;});
   raiz.querySelectorAll("[data-apagar]").forEach(b=>b.onclick=()=>{if(!b.dataset.conf){b.dataset.conf=1;b.textContent="Confirmar";return;}S.simulados=S.simulados.filter(x=>x.id!==b.dataset.apagar);if(G.ultimo===b.dataset.apagar)G.ultimo=null;salvar();renderGerador();});
 }
 

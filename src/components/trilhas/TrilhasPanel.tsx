@@ -1,3 +1,4 @@
+import { guardarNaBiblioteca, codigosBncc } from "@/lib/biblioteca";
 import { useEffect, useMemo, useState } from "react";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
@@ -596,7 +597,29 @@ export function TrilhasPanel() {
                   <div style={{ fontWeight: 600, fontSize: 14, overflowWrap: "break-word", wordBreak: "normal" }}><BookOpen size={14} style={{ display: "inline", marginRight: 6 }} />{t.tema_central}</div>
                   <div style={{ color: "var(--muted)", fontSize: 12.5, marginTop: 4, overflowWrap: "break-word" }}>{t.turma} · {t.ano_escolar} · {t.disciplina} · {t.semestre}</div>
                 </div>
-                <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); excluir(t.id); }} title="Excluir trilha"><Trash2 size={14} /></button>
+                <div style={{ display: "flex", gap: 4, flex: "none" }}>
+                  <button
+                    className="pl-btn ghost"
+                    title="Guardar na Minha Biblioteca"
+                    aria-label="Guardar na Minha Biblioteca"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const r = await guardarNaBiblioteca({
+                        tipo: "sequencia",
+                        refId: t.id,
+                        titulo: t.tema_central || "Trilha do semestre",
+                        ano: t.ano_escolar,
+                        componente: t.disciplina,
+                        habilidades: selected === t.id ? codigosBncc(semanas) : [],
+                      });
+                      if (r.ok) toast.success(r.mensagem);
+                      else toast.error(r.mensagem);
+                    }}
+                  >
+                    📚
+                  </button>
+                  <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); excluir(t.id); }} title="Excluir trilha"><Trash2 size={14} /></button>
+                </div>
               </div>
               {selected === t.id && (
                 <div style={{ marginTop: 14, borderTop: "1px solid var(--line)", paddingTop: 14 }}>

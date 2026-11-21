@@ -1,5 +1,6 @@
+import { guardarNaBiblioteca } from "@/lib/biblioteca";
 import { useSemanasPlano } from "@/lib/planejamento/semanas";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
   Check, Pencil, Lightbulb, AlertTriangle, Save, FileDown, CalendarPlus,
@@ -878,10 +879,12 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   /* ─────────── Salvar / Histórico (local + remoto) ─────────── */
 
-  const salvarPlano = async () => {
+  // Salva no histórico e na nuvem. Devolve o id do plano na nuvem (ou null).
+  const salvarPlano = async (opts?: { silencioso?: boolean }): Promise<string | null> => {
     const f = validar();
     setMissing(f);
-    if (f.length > 0) { setSalvo(false); return; }
+    if (f.length > 0) { setSalvo(false); return null; }
+    let idNuvem: string | null = null;
 
     const id = `p_${Date.now()}`;
     const registro: PlanoSalvo = {
@@ -910,6 +913,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           .select("id")
           .single();
         if (!error && data?.id) {
+          idNuvem = data.id;
           setHistorico((h) => h.map((p) => p.id === id ? { ...p, remoteId: data.id } : p));
         } else {
           nuvemFalhou = true;
@@ -925,9 +929,68 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       detail: `${anoEscolar} · ${disciplina}`,
     });
     setSalvo(true);
-    showToast(nuvemFalhou ? "Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo." : "Plano salvo no histórico");
+    if (!opts?.silencioso) showToast(nuvemFalhou ? "Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo." : "Plano salvo no histórico");
     window.setTimeout(() => setSalvo(false), 2000);
+    return idNuvem;
   };
+
+  // Guardar na Minha Biblioteca: salva o plano (se ainda não foi) e põe a ficha
+  // dele na Biblioteca, no ano e na matéria certos, para usar de novo.
+  const [guardando, setGuardando] = useState(false);
+  const guardadoRef = useRef<{ plano: PlanoAtividade; id: string } | null>(null);
+  const guardarBiblioteca = async () => {
+    setGuardando(true);
+    try {
+      // Mesmo plano, sem mudanças: não salva outra cópia.
+      const idNuvem =
+        guardadoRef.current?.plano === plano ? guardadoRef.current.id : await salvarPlano({ silencioso: true });
+      if (idNuvem) guardadoRef.current = { plano, id: idNuvem };
+      if (!idNuvem) {
+        if (validar().length === 0) showToast("Não consegui salvar o plano na nuvem. Tente de novo.");
+        return;
+      }
+      const r = await guardarNaBiblioteca({
+        tipo: "plano",
+        refId: idNuvem,
+        titulo: plano.titulo,
+        ano: anoEscolar,
+        componente: disciplina,
+        habilidades: plano.habilidades.map((h) => h.codigo.trim()).filter(Boolean),
+      });
+      showToast(r.ok ? "📚 " + r.mensagem : r.mensagem);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  // Abrir um plano guardado (vem da Minha Biblioteca: ?abrir=<id>).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const abrir = new URLSearchParams(window.location.search).get("abrir");
+    if (!abrir || !/^[0-9a-f-]{36}$/i.test(abrir)) return;
+    let vivo = true;
+    void (async () => {
+      const { data } = await supabase.from("planos_aula").select("id, data").eq("id", abrir).maybeSingle();
+      const reg = (data?.data ?? null) as (Partial<PlanoSalvo> & { plano?: PlanoAtividade }) | null;
+      if (!vivo || !reg?.plano) return;
+      if ((reg.modo ?? "regular") !== modo) return;
+      carregarPlano({
+        id: reg.id ?? abrir,
+        remoteId: abrir,
+        titulo: reg.titulo ?? reg.plano.titulo,
+        turma: reg.turma ?? "",
+        disciplina: reg.disciplina ?? "",
+        ano: reg.ano ?? "",
+        modo: reg.modo ?? "regular",
+        salvoEm: reg.salvoEm ?? "",
+        plano: { ...EMPTY, ...reg.plano },
+      });
+    })();
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const carregarPlano = (p: PlanoSalvo) => {
     setPlano(p.plano);
@@ -1959,8 +2022,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
       {temPlano && (
         <div className="atv-actionbar">
-          <button className="atv-btn primary" onClick={salvarPlano}>
+          <button className="atv-btn primary" onClick={() => void salvarPlano()}>
             <Save size={14} /> {salvo ? "Salvo!" : "Salvar plano"}
+          </button>
+          <button className="atv-btn" onClick={() => void guardarBiblioteca()} disabled={guardando}>
+            📚 {guardando ? "Guardando…" : "Guardar na Biblioteca"}
           </button>
           <button className="atv-btn" onClick={exportarPDF}>
             <FileDown size={14} /> Exportar PDF / Word
