@@ -180,7 +180,8 @@ function Ficha({
                 {nomeNivelLeitura(l.nivel)}
               </span>
               <span>
-                Cartão {l.cartaoId}: {l.corretas} de {l.total} certas
+                {l.cartaoId === "LIVRE" ? "Sem cartão" : `Cartão ${l.cartaoId}`}: {l.corretas} de{" "}
+                {l.total} certas
                 {l.tipo === "texto" || l.tipo === "frases" ? `, ${l.pcpm} por minuto` : ""}
               </span>
               {l.obs && <span style={{ color: "var(--pn-muted)" }}>{l.obs}</span>}

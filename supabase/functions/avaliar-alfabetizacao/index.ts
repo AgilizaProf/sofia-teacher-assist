@@ -286,12 +286,16 @@ serve(async (req) => {
         : "audio/wav";
       const cartao = String(body?.cartao_texto || "").slice(0, 1500);
       const tipo = String(body?.cartao_tipo || "").slice(0, 20);
-      const user = `Tipo de cartão: ${tipo || "não informado"}.${ano ? ` Ano escolar: ${ano}.` : ""}
+      // Sem cartão: a criança leu um livro ou outro texto que não temos.
+      const user = cartao.trim()
+        ? `Tipo de cartão: ${tipo || "não informado"}.${ano ? ` Ano escolar: ${ano}.` : ""}
 Texto do cartão (só referência de vocabulário):
 """
 ${cartao}
 """
-Transcreva o áudio.`;
+Transcreva o áudio.`
+        : `A criança leu em voz alta um livro ou outro texto que não temos aqui.${ano ? ` Ano escolar: ${ano}.` : ""}
+Não há texto de referência. Transcreva o áudio exatamente como a criança leu, sem corrigir nem completar.`;
       usada = await chamarIA({
         model: MODELO_LEITURA,
         system: SYS_LEITURA,

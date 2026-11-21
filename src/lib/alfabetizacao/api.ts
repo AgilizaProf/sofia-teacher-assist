@@ -34,6 +34,11 @@ export async function ouvirLeitura(args: {
   alunoNome: string;
 }): Promise<RespostaLeitura> {
   if (emTeste()) {
+    if (!args.cartaoTexto.trim())
+      return {
+        transcricao: "o menino foi na feira com a mãe e comprou banana laranja e um peixe bem grande",
+        observacao: "Leu com ritmo, sem pausas longas.",
+      };
     const ps = args.cartaoTexto.split(/\s+/).filter(Boolean);
     const dito = ps.slice(0, Math.ceil(ps.length * 0.8)).map((p, k) => (k % 7 === 3 ? "bola" : p));
     return {

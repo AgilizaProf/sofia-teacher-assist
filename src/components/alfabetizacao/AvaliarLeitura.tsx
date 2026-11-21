@@ -35,6 +35,8 @@ import {
 import { CartaoVisual, type AlunoAlfa } from "./comum";
 
 const LIMITE_SEGUNDOS = 60;
+/** Leitura feita sem cartão do app (livro, folha da professora). */
+export const CARTAO_LIVRE = "LIVRE";
 const ORDEM: Marca[] = ["ok", "troca", "pulou", "nao"];
 const ROTULO: Record<Marca, string> = {
   ok: "leu certo",
@@ -94,11 +96,35 @@ export function AvaliarLeitura({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alunoId]);
 
-  const cartao = useMemo(() => {
+  // Sem cartão: a criança lê um livro ou outro texto. Se a professora colar o
+  // texto, o app compara; se não, a Sofia escreve o que ouviu e a professora
+  // marca os erros.
+  const [fonte, setFonte] = useState<"cartao" | "livre">("cartao");
+  const [textoLivre, setTextoLivre] = useState("");
+  const [alvosLivres, setAlvosLivres] = useState<string[]>([]);
+  const temTextoLivre = palavrasDe(textoLivre).length >= 3;
+
+  const cartao = useMemo<Cartao>(() => {
+    if (fonte === "livre") {
+      const texto = temTextoLivre ? textoLivre.trim() : "";
+      return {
+        id: CARTAO_LIVRE,
+        nivel: 5,
+        tipo: "texto",
+        titulo: "Texto escolhido por você",
+        itens: [],
+        texto,
+        total: palavrasDe(texto).length,
+      };
+    }
     const usados = [...historico.map((h) => h.cartaoId), ...pulados];
     return proximoCartao(nivelCartao, usados);
-  }, [nivelCartao, historico, pulados]);
-  const alvos = useMemo(() => alvosDoCartao(cartao), [cartao]);
+  }, [fonte, textoLivre, temTextoLivre, nivelCartao, historico, pulados]);
+  const semTexto = fonte === "livre" && !temTextoLivre;
+  const alvos = useMemo(
+    () => (semTexto ? alvosLivres : alvosDoCartao(cartao)),
+    [semTexto, alvosLivres, cartao],
+  );
 
   function apagarAudio() {
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
@@ -184,10 +210,22 @@ export function AvaliarLeitura({
           audioBase64: env.base64,
           mime: env.mime,
           cartaoTexto: alvos.join(" "),
-          cartaoTipo: cartao.tipo,
+          cartaoTipo: semTexto ? "livre" : cartao.tipo,
           ano: aluno?.ano || "",
           alunoNome: aluno?.nome || "",
         });
+        if (semTexto) {
+          // Sem texto de referência: o que a Sofia ouviu vira a lista de palavras.
+          const ouvidas = palavrasDe(r.transcricao);
+          if (!ouvidas.length) throw new Error("A Sofia não ouviu nenhuma palavra na gravação.");
+          const ms = ouvidas.map(() => "ok" as Marca);
+          setAlvosLivres(ouvidas);
+          setMarcas(ms);
+          setDitos(ouvidas.map(() => undefined));
+          setObsSofia(r.observacao);
+          abrirRevisao(ms, seg);
+          return;
+        }
         const al = alinhar(alvos, palavrasDe(r.transcricao));
         const ms = al.map((x) => x.marca);
         setMarcas(ms);
@@ -197,8 +235,15 @@ export function AvaliarLeitura({
       } catch (e) {
         toast.error(
           (e instanceof Error ? e.message : "A Sofia não conseguiu ouvir agora.") +
-            " Você pode ouvir a gravação e marcar as palavras. Nada foi cobrado.",
+            (semTexto
+              ? " Grave de novo. Nada foi cobrado."
+              : " Você pode ouvir a gravação e marcar as palavras. Nada foi cobrado."),
         );
+        if (semTexto) {
+          apagarAudio();
+          setPasso("preparar");
+          return;
+        }
         const ms = alvos.map(() => "ok" as Marca);
         setMarcas(ms);
         setDitos(alvos.map(() => undefined));
@@ -247,6 +292,7 @@ export function AvaliarLeitura({
     gravador.current?.cancelar();
     gravador.current = null;
     apagarAudio();
+    setAlvosLivres([]);
     setMexeuNivel(false);
     setPasso("preparar");
   }
@@ -274,6 +320,7 @@ export function AvaliarLeitura({
     });
     const tinhaAudio = !!urlRef.current;
     apagarAudio();
+    setAlvosLivres([]);
     setMexeuNivel(false);
     setPasso("preparar");
     toast.success(
@@ -294,11 +341,28 @@ export function AvaliarLeitura({
       {passo === "preparar" && (
         <>
           <div className="af-card">
-            <h2>1. Escolha o aluno e o cartão</h2>
+            <h2>1. Escolha o aluno e o que ele vai ler</h2>
             <p className="dica">
-              O app já sugere um cartão do nível do aluno. A criança lê em voz alta por até um
-              minuto. Você pode mostrar o cartão nesta tela ou imprimir.
+              A criança lê em voz alta por até um minuto. Pode ser um cartão do app, que já vem no
+              nível do aluno, ou um livro ou outro texto que você escolher.
             </p>
+            <div className="af-chips" role="group" aria-label="O que a criança vai ler">
+              <button
+                type="button"
+                aria-pressed={fonte === "cartao"}
+                onClick={() => setFonte("cartao")}
+              >
+                Com cartão do app
+              </button>
+              <button
+                type="button"
+                aria-pressed={fonte === "livre"}
+                onClick={() => setFonte("livre")}
+              >
+                Sem cartão (livro ou outro texto)
+              </button>
+            </div>
+            <div style={{ height: 12 }} />
             <div className="af-linha">
               <label className="af-campo">
                 Aluno
@@ -311,7 +375,7 @@ export function AvaliarLeitura({
                   ))}
                 </select>
               </label>
-              <label className="af-campo">
+              <label className="af-campo" hidden={fonte === "livre"}>
                 Tipo de cartão
                 <select
                   value={nivelCartao}
@@ -335,31 +399,62 @@ export function AvaliarLeitura({
               </div>
             ) : (
               <div className="af-aviso">
-                Primeira avaliação deste aluno. Comece por palavras simples. Se ficar fácil ou
-                difícil, troque o tipo de cartão.
+                Primeira avaliação deste aluno.
+                {fonte === "cartao"
+                  ? " Comece por palavras simples. Se ficar fácil ou difícil, troque o tipo de cartão."
+                  : ""}
               </div>
             )}
           </div>
           <div className="af-card forte">
-            <div className="af-linha" style={{ alignItems: "center", marginBottom: 10 }}>
-              <h2 style={{ flex: 1, margin: 0 }}>
-                Cartão {cartao.id}
-                {cartao.foco ? ` · ${cartao.foco}` : ""}
-              </h2>
-              <button
-                type="button"
-                className="af-mini"
-                onClick={() => setPulados((p) => [...p, cartao.id])}
-              >
-                Trocar cartão
-              </button>
-            </div>
-            <CartaoVisual c={cartao} />
+            {fonte === "cartao" ? (
+              <>
+                <div className="af-linha" style={{ alignItems: "center", marginBottom: 10 }}>
+                  <h2 style={{ flex: 1, margin: 0 }}>
+                    Cartão {cartao.id}
+                    {cartao.foco ? ` · ${cartao.foco}` : ""}
+                  </h2>
+                  <button
+                    type="button"
+                    className="af-mini"
+                    onClick={() => setPulados((p) => [...p, cartao.id])}
+                  >
+                    Trocar cartão
+                  </button>
+                </div>
+                <CartaoVisual c={cartao} />
+              </>
+            ) : (
+              <>
+                <h2>Leitura sem cartão</h2>
+                <p className="dica">
+                  Se quiser, cole ou digite aqui o trecho que a criança vai ler. Assim o app compara
+                  palavra por palavra. Se deixar em branco, a Sofia escreve o que ouviu e você marca
+                  o que a criança errou.
+                </p>
+                <label className="af-campo">
+                  Texto que a criança vai ler (opcional)
+                  <textarea
+                    rows={5}
+                    value={textoLivre}
+                    onChange={(e) => setTextoLivre(e.target.value)}
+                    maxLength={1500}
+                    placeholder="Ex.: o primeiro parágrafo do livro da semana"
+                  />
+                </label>
+              </>
+            )}
             <div className="af-botoes">
               <button type="button" className="pn-btn primary" onClick={() => void comecar(true)}>
                 Gravar e a Sofia ouve ({CUSTOS.leitura_avaliada} créditos)
               </button>
-              <button type="button" className="pn-btn" onClick={() => void comecar(false)}>
+              <button
+                type="button"
+                className="pn-btn"
+                disabled={semTexto}
+                title={semTexto ? "Para marcar sem gravar, escreva o texto acima" : undefined}
+                onClick={() => void comecar(false)}
+              >
                 Marcar eu mesma, sem gravar (grátis)
               </button>
             </div>
@@ -372,7 +467,13 @@ export function AvaliarLeitura({
 
       {passo === "gravando" && (
         <div className="af-card forte">
-          <CartaoVisual c={cartao} />
+          {semTexto ? (
+            <div className="af-aviso">
+              A criança lê o livro ou a folha que você escolheu. A Sofia vai escrever o que ouvir.
+            </div>
+          ) : (
+            <CartaoVisual c={cartao} />
+          )}
           <div className="af-grav">
             {comAudio ? (
               <span className="af-rec">
@@ -414,8 +515,10 @@ export function AvaliarLeitura({
         <div className="af-card forte">
           <h2>2. Confira o que {aluno?.nome.split(" ")[0]} leu</h2>
           <p className="dica">
-            Toque em uma palavra para corrigir a marcação. Cada toque muda entre: leu certo, trocou,
-            pulou e não leu.
+            {semTexto
+              ? "Estas são as palavras que a Sofia ouviu. Toque nas que a criança leu errado. "
+              : "Toque em uma palavra para corrigir a marcação. "}
+            Cada toque muda entre: leu certo, trocou, pulou e não leu.
           </p>
           {audioUrl && (
             <audio controls src={audioUrl} style={{ width: "100%", margin: "4px 0 8px" }}>
