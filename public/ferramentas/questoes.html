@@ -1855,7 +1855,7 @@ function trocarGabarito(sim,t,novo){
   ordem.forEach((qid,k)=>{if(sim.extra[qid])sim.extra[qid].correta=L.indexOf(novo[k]);});
   if(alvo)alvo.gab=novo;
   sim.versoes.forEach(v=>{if((v.tipo||"")===(alvo?t:""))v.gab=novo;});
-  S.resultados.forEach(r=>{if(r.simId!==sim.id)return;const v=versaoDe(sim,r);if(!v)return;r.gab=v.gab;r.acertos=[...r.respostas].filter((c,k)=>c===r.gab[k]).length;});
+  S.resultados.forEach(r=>{if(r.simId!==sim.id)return;const v=versaoDe(sim,r);if(!v)return;r.gab=v.gab;r.acertos=[...r.respostas].filter((c,k)=>c===r.gab[k]).length;r.hab=habsDoResultado(r);});
   salvar();
 }
 function lerDiscs(){const d={};document.querySelectorAll("[data-gd]").forEach(c=>{if(c.checked)d[c.dataset.gd]=String(Math.max(1,Math.min(60,+document.querySelector(`[data-gq="${c.dataset.gd}"]`).value||10)));});return d;}
@@ -2480,7 +2480,13 @@ function mostrarLeitura(){
   $("#l-prox").onclick=()=>{if(salvarLT()){renderLeitor();abrirCamera();}};
   $("#l-limpar").onclick=()=>{LT=null;renderLeitor();};
 }
+// Acertos por habilidade BNCC de um resultado: {EF05MA01:[acertos,questões]}.
+// Fica guardado no resultado para o Pareceres do app usar (lá o banco não existe).
+function habsDoResultado(r){const m={};(r.ordem||[]).forEach((qi,k)=>{if(qi==null)return;const q=getQ(refDe(qi));if(!q)return;const ok=r.respostas[k]===r.gab[k];
+  (String(q.hab||"").toUpperCase().match(/E[FI]\d{2}[A-Z]{2}\d{2}/g)||[]).forEach(h=>{const o=m[h]=m[h]||[0,0];o[1]++;if(ok)o[0]++;});});return m;}
+function preencherHabs(){let mudou=false;(S.resultados||[]).forEach(r=>{if(r&&!r.hab&&Array.isArray(r.ordem)){r.hab=habsDoResultado(r);mudou=true;}});if(mudou)salvar();}
 function registrarResultado(r){
+  r.hab=habsDoResultado(r);
   const ac=[...r.respostas].filter((c,k)=>c===r.gab[k]).length;
   r.acertos=ac;r.total=r.gab.length;r.data=new Date().toLocaleString("pt-BR");r.rid=novoId()+Math.floor(Math.random()*99);
   if(r.versao!==0)S.resultados=S.resultados.filter(x=>!(x.simId===r.simId&&x.simId!=="SAEB-ONLINE"&&x.aluno===r.aluno&&(x.versao===r.versao||x.versao===0)));
@@ -2723,7 +2729,7 @@ S.minhas.forEach(q=>{q.ref=q.id;q.saeb=!!q.desc;});
 // Questões do professor guardadas dentro dos simulados continuam disponíveis mesmo se forem apagadas de Minhas questões.
 S.aba="inicio";
 aplicarZoom();montarAbas();RENDER[S.aba]();
-nuvemCarregar();
+nuvemCarregar().then(preencherHabs,preencherHabs);
 </script>
 
 <script>

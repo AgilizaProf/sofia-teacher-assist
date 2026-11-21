@@ -1,6 +1,17 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
 import { ColarAlunos } from "@/components/shared/ColarAlunos";
 import { peiPdiPorAluno, resumoPeiPdi, type LinhaPeiPdi } from "@/lib/pei/resumoPeiPdi";
+import {
+  areaDaRubrica,
+  lerResultados,
+  provasDoAluno,
+  somarProvas,
+  statusPelaProva,
+  textoDiario,
+  textoProvas,
+  type EntradaDiario,
+  type ResultadoProva,
+} from "@/lib/pareceres/evidencias";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
@@ -793,6 +804,27 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       vivo = false;
     };
   }, []);
+  // Provas corrigidas no Leitor QR de Questões (guardadas na conta) e diário de bordo.
+  const [provas, setProvas] = useState<ResultadoProva[]>([]);
+  useEffect(() => {
+    let vivo = true;
+    void supabase.auth.getUser().then(({ data: u }) => {
+      if (!u.user) return;
+      void supabase
+        .from("app_snapshots")
+        .select("data")
+        .eq("user_id", u.user.id)
+        .eq("key", "simulados_dados")
+        .maybeSingle()
+        .then(({ data }) => {
+          if (vivo) setProvas(lerResultados(data?.data));
+        });
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+  const [diarioEntradas] = usePersistentState<EntradaDiario[]>("plan_m6_entries", []);
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
   // Estado de expansão do campo de observações no modal BNCC.
   // Começa sempre recolhido (Set vazio) para liberar espaço visual.
@@ -1041,9 +1073,14 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
           observacoesProfessor: bnccObsByAluno[a.id]?.trim() || "",
-          avaliacaoBncc: leituraEscrita
-            ? `${linhas}\n\nLeitura e escrita (níveis confirmados pela professora)\n  - ${leituraEscrita}`
-            : linhas,
+          avaliacaoBncc: [
+            linhas,
+            leituraEscrita ? `Leitura e escrita (níveis confirmados pela professora)\n  - ${leituraEscrita}` : "",
+            textoProvas(provasDoAluno(provas, a.nome, a.turma)),
+            textoDiario(diarioEntradas, a.turma, a.nome, [a.id, a.id.replace(/^db:/, "")]),
+          ]
+            .filter(Boolean)
+            .join("\n\n"),
           temPeiReal: Boolean(peiDoAluno || peiPdi),
           parecerAnteriorTexto,
           parecerAnteriorIntervalo: parecerAnterior?.periodoLabel || "",
@@ -2078,6 +2115,58 @@ ${parecerHtml}
         const { pctPreenchido, pctDesempenho } = computeProgress(id, turma, pcd);
         const year = yearForAluno(id, turma);
         const areas = areasFor(id, turma, pcd);
+        const provasAluno = provasDoAluno(provas, nome, turma);
+        const somaProvas = somarProvas(provasAluno).porArea;
+        // Áreas da rubrica com sugestão pelas provas (só completa o que está em branco).
+        const sugestoesProva: Array<{ ai: number; n: number; st: BnccStatus; o: { a: number; n: number } }> = [];
+        areas.forEach((area, ai) => {
+          const k = areaDaRubrica(area.area);
+          const o = k ? somaProvas[k] : undefined;
+          const st = statusPelaProva(o);
+          if (st && o) sugestoesProva.push({ ai, n: area.comps.length, st, o });
+        });
+        const preencherPelaProva = () => {
+          setBnccByAluno((prev) => {
+            const cur = { ...(prev[id] || {}) };
+            let n = 0;
+            for (const sp of sugestoesProva)
+              for (let j = 0; j < sp.n; j++) {
+                const k = `${sp.ai}.${j}`;
+                if (!cur[k] || cur[k] === "no") {
+                  cur[k] = sp.st;
+                  n++;
+                }
+              }
+            setTimeout(() => (n ? toast.success(`${n} itens preenchidos pelas provas. Confira e ajuste.`) : toast.message("Os itens dessas áreas já estavam marcados.")), 0);
+            return { ...prev, [id]: cur };
+          });
+        };
+        // Usa as marcas desta área para a turma toda, só onde ainda está em branco.
+        const colegas = alunosLista.filter((x) => x.turma === turma && x.id !== id);
+        const areaParaTurma = (ai: number, count: number) => {
+          const minhas = rub;
+          setBnccByAluno((prev) => {
+            const out = { ...prev };
+            let n = 0;
+            for (const c of colegas) {
+              const cur = { ...(out[c.id] || {}) };
+              let mudou = false;
+              for (let j = 0; j < count; j++) {
+                const k = `${ai}.${j}`;
+                if (minhas[k] && (!cur[k] || cur[k] === "no")) {
+                  cur[k] = minhas[k];
+                  mudou = true;
+                }
+              }
+              if (mudou) {
+                out[c.id] = cur;
+                n++;
+              }
+            }
+            setTimeout(() => (n ? toast.success(`Marcas copiadas para ${n} ${n === 1 ? "colega" : "colegas"} da turma (só onde estava em branco).`) : toast.message("Os colegas já tinham marcas nesta área.")), 0);
+            return out;
+          });
+        };
         const cls = turmaByName(turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
@@ -2160,6 +2249,26 @@ ${parecerHtml}
                     Esta turma ainda não tem <b>etapa/ano</b> definidos. Defina em <b>Início → Turmas</b> (Educação Infantil ou o ano do Fundamental) para a avaliação usar a base correta da BNCC.
                   </div>
                 )}
+                {provasAluno.length > 0 && (
+                  <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line-soft)", borderRadius: 10, background: "#F4FAF7", fontSize: 13 }}>
+                    <b>Provas corrigidas em Questões</b>
+                    <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                      {provasAluno.slice(0, 4).map((p, k) => (
+                        <li key={k}>{p.titulo || "Prova"}: {p.acertos} de {p.total} acertos</li>
+                      ))}
+                    </ul>
+                    {sugestoesProva.length > 0 ? (
+                      <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                        <button type="button" className="pn-btn" onClick={preencherPelaProva}>Preencher pela prova</button>
+                        <span style={{ fontSize: 12, color: "var(--text-soft)" }}>
+                          {sugestoesProva.map((sp) => `${areas[sp.ai].area}: ${Math.round((100 * sp.o.a) / sp.o.n)}%`).join(" · ")}. Só completa o que está em branco.
+                        </span>
+                      </div>
+                    ) : (
+                      <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--text-soft)" }}>Estas provas entram no parecer. Para sugerir as marcas, cada matéria precisa de pelo menos 3 questões com habilidade.</p>
+                    )}
+                  </div>
+                )}
                 {areas.map((area, ai) => (
                   <div key={area.area} style={{ marginTop: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
@@ -2181,6 +2290,14 @@ ${parecerHtml}
                           title="Resetar competências desta área para o estado padrão (não observada)"
                           style={{ cursor: "pointer", border: "1px dashed var(--line)", background: "#fff", color: "var(--text-soft)", borderRadius: 8, padding: "3px 7px", fontSize: 10, fontWeight: 800 }}
                         >Limpar área</button>
+                        {colegas.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => areaParaTurma(ai, area.comps.length)}
+                            title="Usar as marcas desta área para os colegas da turma, só onde ainda está em branco"
+                            style={{ cursor: "pointer", border: "1px dashed var(--line)", background: "#fff", color: "var(--text)", borderRadius: 8, padding: "3px 7px", fontSize: 10, fontWeight: 800 }}
+                          >Turma toda</button>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
