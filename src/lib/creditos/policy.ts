@@ -20,6 +20,8 @@ export const CUSTOS = {
   chat_sofia_longa: 5, // geração longa no chat
   anexar_rede: 100, // anexar arquivo de Rede (currículo municipal)
   anexar_agenda: 30, // anexar arquivo de Agenda (calendário escolar)
+  leitura_avaliada: 5, // a Sofia ouve a leitura de um aluno (cobrado na função)
+  texto_corrigido: 10, // a Sofia corrige a foto de um texto (cobrado na função)
   exportacao: 0,
 } as const;
 
@@ -193,6 +195,8 @@ export const TABELA_CUSTOS: LinhaCusto[] = [
   { nome: "Atividade gerada", custo: CUSTOS.atividade_gerada },
   { nome: "Atividade PCD", custo: CUSTOS.atividade_pcd },
   { nome: "Adaptação PCD", custo: CUSTOS.adaptacao_pcd },
+  { nome: "Ouvir a leitura de um aluno", custo: CUSTOS.leitura_avaliada },
+  { nome: "Corrigir um texto pela foto", custo: CUSTOS.texto_corrigido },
   { nome: "Anexar calendário na Agenda", custo: CUSTOS.anexar_agenda },
   { nome: "Anexar currículo da rede", custo: CUSTOS.anexar_rede },
   { nome: "Exportar PDF ou Word", custo: CUSTOS.exportacao },

@@ -24,6 +24,7 @@ import { CUSTOS } from "@/lib/creditos/policy";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useSofiaUserDataOptional } from "@/lib/sofia/SofiaUserContext";
 import { brDateKey } from "@/lib/datetime";
+import { alunosAvaliados, resumoParaSofia, useAlfaDados } from "@/lib/alfabetizacao/store";
 import { comControle, SofiaCanceladaError, SofiaTempoEsgotadoError } from "./streamControl";
 
 export type SofiaMessage = {
@@ -117,6 +118,7 @@ function useRouteContext() {
   const sofia = useSofiaContextOptional();
   const { curriculo, isAtivo: municipalAtivo } = useCurriculoMunicipal();
   const userData = useSofiaUserDataOptional();
+  const { dados: alfa } = useAlfaDados();
   return useMemo(() => {
     const p = loc.pathname;
     let tela = "Você está na Página inicial (painel do(a) educador(a)).";
@@ -146,6 +148,9 @@ function useRouteContext() {
     else if (p.startsWith("/questoes") || p.startsWith("/simulados"))
       tela = "Você está na tela Questões (banco de questões e provas).";
     else if (p.startsWith("/biblioteca")) tela = "Você está na tela Minha Biblioteca.";
+    else if (p.startsWith("/alfabetizacao"))
+      tela =
+        "Você está na tela Criança alfabetizada (avaliação de leitura, correção de texto pela foto, cartões de leitura e evolução da turma).";
     else if (p.startsWith("/confirmar"))
       tela = "Você está na tela Para confirmar (mensagens do WhatsApp).";
     else if (p.startsWith("/cadernos")) tela = "Você está na tela Cadernos prontos.";
@@ -196,6 +201,16 @@ function useRouteContext() {
         'Nível de ensino: NÃO INFORMADO. Antes de responder qualquer pedido pedagógico, pergunte: "Para te ajudar melhor, com qual nível de ensino você está trabalhando? 🧸 Educação Infantil  📚 Ensino Fundamental  🎓 Ensino Médio". Use a resposta para adaptar toda a conversa.',
       );
     }
+    // ── Leitura e escrita (níveis confirmados em /alfabetizacao) ────────
+    const leituraEscrita = resumoParaSofia(alfa, alunosAvaliados(alfa), 1800);
+    if (leituraEscrita) {
+      linhas.push(
+        `\nLEITURA E ESCRITA DOS ALUNOS (níveis confirmados pela professora na tela Criança alfabetizada):\n${leituraEscrita}`,
+      );
+      linhas.push(
+        "Use esses níveis ao sugerir atividades, agrupamentos e pareceres para esses alunos.",
+      );
+    }
     // ── Currículo municipal ─────────────────────────────────────────────
     if (
       municipalAtivo &&
@@ -241,6 +256,7 @@ function useRouteContext() {
 
     return linhas.join("\n");
   }, [
+    alfa,
     loc.pathname,
     sofia?.user?.primeiro_nome,
     sofia?.entity?.turma_atual,

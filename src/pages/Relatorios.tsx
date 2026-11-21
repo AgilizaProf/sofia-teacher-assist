@@ -7,6 +7,7 @@ import { useUser } from "@/lib/mockData";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { resumoDoAluno, useAlfaDados } from "@/lib/alfabetizacao/store";
 import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useDashClasses } from "@/hooks/useDashLegacyData";
@@ -764,6 +765,8 @@ export function Relatorios() {
   // Observações livres do(a) professor(a) por aluno (persistido junto à avaliação BNCC)
   // ← NOVO: lê dados do /inclusao para alimentar a Sofia no parecer
 const [anamByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_anam", {});
+  // Leitura e escrita confirmadas em /alfabetizacao: entram como evidência no parecer.
+  const { dados: alfaDados } = useAlfaDados();
 const [peiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
 const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; cat: string; body: string }>>>("inc_reg", {});
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
@@ -920,6 +923,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         }).join("\n");
         return `${area.area}\n${itens}`;
       }).join("\n\n");
+      const leituraEscrita = resumoDoAluno(alfaDados, a.id, a.nome);
       const contextoPedagogico = pedagogicalContextForAluno(a.id, a.turma);
       const { aluno, cls, nivelTexto, anoEscolar, anoReferenciaPedagogico } = contextoPedagogico;
       // Período resolvido por aluno (override individual > padrão da turma > padrão global).
@@ -1009,7 +1013,9 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
           observacoesProfessor: bnccObsByAluno[a.id]?.trim() || "",
-          avaliacaoBncc: linhas,
+          avaliacaoBncc: leituraEscrita
+            ? `${linhas}\n\nLeitura e escrita (níveis confirmados pela professora)\n  - ${leituraEscrita}`
+            : linhas,
           temPeiReal: Boolean(peiByStudent[a.id]),
           parecerAnteriorTexto,
           parecerAnteriorIntervalo: parecerAnterior?.periodoLabel || "",

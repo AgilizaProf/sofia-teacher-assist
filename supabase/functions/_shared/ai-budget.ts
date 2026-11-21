@@ -14,6 +14,10 @@ const CREDITS_PER_BRL = Number(Deno.env.get("CREDITS_PER_BRL") ?? 100);
 const PRICING: Record<string, { in: number; out: number }> = {
   "gemini-2.5-flash":      { in: 0.30, out: 2.50 },
   "gemini-2.5-flash-lite": { in: 0.10, out: 0.40 },
+  // Áudio (leitura em voz alta): a entrada custa mais que texto e imagem.
+  "gemini-2.5-flash-audio": { in: 1.00, out: 2.50 },
+  // Modelo mais forte, usado para ler a letra da criança na foto.
+  "gemini-2.5-pro":        { in: 1.25, out: 10.00 },
 };
 
 export function costBrl(model: string, inTok: number, outTok: number): number {
