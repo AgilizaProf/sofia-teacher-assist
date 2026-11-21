@@ -65,6 +65,14 @@ const CARDS: Card[] = [
     icon: ICONS.pen,
   },
   {
+    to: "/alfabetizacao",
+    title: "Criança alfabetizada",
+    desc: "Leitura e escrita de cada aluno, com cartões e evolução",
+    bg: "var(--pn-blue-soft)",
+    tag: "Novo",
+    icon: ICONS.book,
+  },
+  {
     to: "/inclusao",
     title: "Inclusão e PEI",
     desc: "Adaptações, registros e plano individual",

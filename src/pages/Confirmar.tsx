@@ -27,6 +27,7 @@ type Entrada = {
   aluno_id: string | null;
   aluno_nome: string | null;
   destino_sugerido: string | null;
+  payload?: unknown;
 };
 
 type Estado = "carregando" | "pronto" | "sem_login" | "erro";
@@ -116,7 +117,7 @@ export function Confirmar() {
       }
       const { data, error } = await supabase
         .from("whatsapp_entradas")
-        .select("id, recebido_em, tipo, texto, aluno_id, aluno_nome, destino_sugerido")
+        .select("id, recebido_em, tipo, texto, aluno_id, aluno_nome, destino_sugerido, payload")
         .eq("user_id", user.id)
         .eq("status", "pendente")
         .order("recebido_em", { ascending: false })
@@ -178,8 +179,9 @@ export function Confirmar() {
         {estado === "pronto" && itens.length > 0 && (
           <>
             <p className="cf-note">
-              Ao confirmar, a mensagem fica guardada com o destino escolhido. A cópia automática
-              para a ficha do aluno chega numa próxima versão.
+              Ao confirmar, a mensagem fica guardada com o destino escolhido. As de “Leitura e
+              escrita” já aparecem na ficha do aluno em Criança alfabetizada. Para os outros
+              destinos, a cópia automática chega numa próxima versão.
             </p>
             <div className="cf-list">
               {itens.map((x) => (
@@ -222,8 +224,9 @@ function Vazio() {
         <li>
           <b className="k">3</b>
           <span>
-            O AgilizaProf separa por aluno e sugere o destino: registro, relatório e parecer,
-            planejamento, diário de bordo, atividade PCD, inclusão e PEI ou agenda.
+            O AgilizaProf separa por aluno e sugere o destino: registro, leitura e escrita,
+            relatório e parecer, planejamento, diário de bordo, atividade PCD, inclusão e PEI ou
+            agenda.
           </span>
         </li>
         <li>
@@ -252,7 +255,26 @@ function Item({ x, onFeito }: { x: Entrada; onFeito: (id: string) => void }) {
       status === "confirmado"
         ? { status, texto: texto.trim(), destino_final: destino, confirmado_em: agora }
         : { status };
-    const { error } = await supabase.from("whatsapp_entradas").update(patch).eq("id", x.id);
+    let { error } = await supabase.from("whatsapp_entradas").update(patch).eq("id", x.id);
+    // Banco ainda sem o destino "Leitura e escrita" na regra da tabela: guarda
+    // como registro do aluno e marca no payload, para a tela Criança
+    // alfabetizada achar do mesmo jeito.
+    if (error && status === "confirmado" && destino === "alfabetizacao" && error.code === "23514") {
+      const base =
+        x.payload && typeof x.payload === "object" && !Array.isArray(x.payload)
+          ? (x.payload as Record<string, unknown>)
+          : {};
+      ({ error } = await supabase
+        .from("whatsapp_entradas")
+        .update({
+          status,
+          texto: texto.trim(),
+          destino_final: "registro",
+          confirmado_em: agora,
+          payload: { ...base, destino_extra: "alfabetizacao" },
+        } as never)
+        .eq("id", x.id));
+    }
     setOcupado(false);
     if (error) {
       toast.error("Não consegui salvar. Tente de novo.");

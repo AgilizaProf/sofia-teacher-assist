@@ -143,6 +143,24 @@ tr:last-child td{border-bottom:0}
 .resumo-num b{font-family:var(--f-marca);font-size:1.7rem;font-variant-numeric:tabular-nums;line-height:1.1}
 .resumo-num span{font-size:.76rem;color:var(--texto-2);font-weight:600}
 /* Sofia */
+.gs-add{display:flex;gap:8px;align-items:flex-end}.gs-add label.campo{flex:1}
+.gs-chips{display:flex;flex-wrap:wrap;gap:6px}
+.gs-chip{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:100%;border-radius:14px;padding:5px 4px 5px 12px;background:var(--roxo-suave);color:var(--texto);font-size:.82rem;line-height:1.3}
+.gs-chip small{color:var(--texto-2);font-size:.72rem;font-weight:600}
+.gs-chip button{border:0;background:transparent;font-size:1.05rem;line-height:1;cursor:pointer;color:var(--texto-2);padding:2px 8px;border-radius:999px}
+.gs-chip button:hover{background:var(--superficie)}
+.gs-chip.vazio{background:var(--alerta-suave)}
+button.gs-chip.sug{border:0;background:var(--superficie-2);cursor:pointer;padding:6px 12px;font:inherit;font-size:.82rem;text-align:left}
+button.gs-chip.sug:hover,button.gs-chip.sug:focus-visible{background:var(--roxo-suave)}
+.gs-porque{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
+.gs-lista{display:flex;flex-direction:column;gap:8px}
+.gs-item{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;background:var(--superficie);border-radius:12px;padding:10px 12px;box-shadow:inset 0 0 0 2px var(--linha)}
+.gs-n{font-weight:800;color:var(--roxo);padding-top:2px}
+.gs-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px}
+.gs-enun{font-size:.9rem;overflow-wrap:anywhere}
+.gs-acoes{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.gs-ver{grid-column:1/-1}
+@media (max-width:700px){.gs-item{grid-template-columns:24px 1fr}.gs-acoes{grid-column:2;justify-content:flex-start}}
 .sofia-cab{display:flex;gap:12px;align-items:flex-start;background:var(--roxo-suave);border-radius:16px;padding:14px 16px}
 .avatar{flex:none;width:3rem;height:3rem;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#0B7A55);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--f-marca);font-weight:900;font-size:1.35rem;box-shadow:0 3px 0 #4C1D95}
 .balao{background:var(--superficie);border-radius:4px 16px 16px 16px;padding:10px 14px;box-shadow:inset 0 0 0 2px var(--linha);font-size:.93rem;min-width:0}
@@ -993,7 +1011,7 @@ function sanearDados(d){
   return o;}
 /* ============ ARMAZENAMENTO (neste aparelho e na nuvem da conta do professor) ============ */
 const CHAVE="agilizaprof-banco-v1";
-let S={turmas:[],simulados:[],resultados:[],sel:[],minhas:[],fav:[],aval:{},relatos:[],sofiaAuto:true,aba:"inicio",zoom:1};
+let S={turmas:[],simulados:[],resultados:[],sel:[],minhas:[],fav:[],aval:{},relatos:[],sofiaAuto:true,hist:{buscas:[],pedidos:{}},aba:"inicio",zoom:1};
 function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE)||"null");if(d)S=Object.assign(S,sanearDados(d));}catch(e){}
   S.minhas=S.minhas||[];S.fav=S.fav||[];S.aval=S.aval||{};if(S.sofiaAuto==null)S.sofiaAuto=true;
   limparExemplos();}
@@ -1003,7 +1021,7 @@ function salvarLocal(){try{localStorage.setItem(CHAVE,JSON.stringify(S));}catch(
 function salvar(){S._ts=Date.now();salvarLocal();nuvemSalvar();}
 /* ---- nuvem: a página do app (mesmo domínio) empresta o acesso à conta do professor ---- */
 const NUVEM_CHAVE="simulados_dados";
-const NUVEM_CAMPOS=["turmas","simulados","resultados","minhas","fav","aval","relatos","sofiaAuto","_ts"];
+const NUVEM_CAMPOS=["turmas","simulados","resultados","minhas","fav","aval","relatos","sofiaAuto","hist","_ts"];
 function nuvem(){try{return window.parent!==window&&window.parent.aprofNuvem||null;}catch(e){return null;}}
 let nuvemTimer=0,nuvemPronta=false;
 function nuvemSalvar(){if(!nuvemPronta||!nuvem())return;clearTimeout(nuvemTimer);
@@ -1026,7 +1044,7 @@ async function nuvemCarregar(){
     S._ts=Date.now();
   }else NUVEM_CAMPOS.forEach(k=>{if(d[k]!==undefined)S[k]=d[k];});
   S.minhas=S.minhas||[];S.fav=S.fav||[];S.aval=S.aval||{};limparExemplos();
-  S.minhas.forEach(q=>{q.ref=q.id;q.saeb=!!q.desc;});PREF=null;
+  S.minhas.forEach(q=>{q.ref=q.id;q.saeb=!!q.desc;});PREF=null;HIDX=null;
   salvarLocal();if(S._ts>d._ts)nuvemSalvar();
   montarAbas();RENDER[S.aba]();
 }
@@ -1197,7 +1215,7 @@ function renderBanco(){
   $("#painel").querySelectorAll("[data-disc]").forEach(b=>b.onclick=()=>upd("disc",b.dataset.disc));
   $("#f-ano").onchange=e=>upd("ano",e.target.value);$("#f-nivel").onchange=e=>upd("nivel",e.target.value);$("#f-tipo").onchange=e=>upd("tipo",e.target.value);$("#f-ordem").onchange=e=>upd("ordem",e.target.value);
   $("#f-gab").onchange=e=>{F.gab=e.target.checked;renderBanco();};
-  let tb;$("#f-busca").oninput=e=>{clearTimeout(tb);tb=setTimeout(()=>{F.busca=e.target.value;F.pag=0;renderBanco();const i=$("#f-busca");i.focus();i.setSelectionRange(i.value.length,i.value.length);},350);};
+  let tb;$("#f-busca").oninput=e=>{clearTimeout(tb);tb=setTimeout(()=>{F.busca=e.target.value;F.pag=0;registrarBusca(F.busca,F.ano,F.disc);renderBanco();const i=$("#f-busca");i.focus();i.setSelectionRange(i.value.length,i.value.length);},350);};
   if($("#pg-ant"))$("#pg-ant").onclick=()=>{F.pag--;renderBanco();window.scrollTo({top:0});};
   if($("#pg-prox"))$("#pg-prox").onclick=()=>{F.pag++;renderBanco();window.scrollTo({top:0});};
   $("#sel-todas").onclick=()=>{lista.slice(0,60).forEach(q=>{if(!S.sel.includes(q.ref)&&S.sel.length<60)S.sel.push(q.ref);});salvar();renderBanco();toast(S.sel.length+" questões no simulado");};
@@ -1468,8 +1486,210 @@ function tabelaDescritores(itens,acertos){
   return `<div class="tabela-wrap"><table><thead><tr><th>Descritor / habilidade</th><th>Acertos</th><th style="width:30%">Desempenho</th></tr></thead><tbody>${linhas.map(([d,o])=>{const p=o.a/o.n,cls=p>=.7?"bom":p>=.4?"alerta":"ruim";return `<tr><td style="white-space:normal"><b>${esc(d)}</b> ${esc(descNome(o.q.disc,o.q.ano,o.d)||o.q.tema||"")}</td><td class="num">${o.a}/${o.n}</td><td><div class="medidor ${cls}"><i style="width:${Math.round(p*100)}%"></i></div></td></tr>`;}).join("")}</tbody></table></div>`;
 }
 
+/* ============ A SOFIA MONTA PELAS HABILIDADES ============ */
+// O professor diz as habilidades e os níveis; a Sofia escolhe as questões do banco olhando o histórico da turma:
+// não repete o que a turma já recebeu, põe mais questões onde a turma acertou menos, segue o 👍/👎 do professor
+// e aproveita o que ele planejou no app e pesquisou no banco. Cada uso fica guardado e alimenta as próximas montagens.
+function histOk(){if(!S.hist||typeof S.hist!=="object"||Array.isArray(S.hist))S.hist={};if(!Array.isArray(S.hist.buscas))S.hist.buscas=[];if(!S.hist.pedidos||typeof S.hist.pedidos!=="object"||Array.isArray(S.hist.pedidos))S.hist.pedidos={};return S.hist;}
+const RE_BNCC=/^EF\d{2}[A-Z]{2}\d{2}$/,RE_DESC=/^(D\d{1,2}|\d[A-Z]\d\.\d)$/;
+const discBase=d=>d==="GEOM"?"MAT":d;
+const idHab=h=>h.k+(h.disc?"|"+h.disc:"")+(h.livre?"|livre":"");
+function habDeId(id){const [k,d]=String(id).split("|");return d?{k,disc:d}:{k};}
+function habsDe(q){const v=String(q.hab||"").toUpperCase().match(/EF\d{2}[A-Z]{2}\d{2}/g)||[];if(q.desc)v.push(String(q.desc).toUpperCase()+"|"+discBase(q.disc));return v;}
+// código BNCC: EF05MA08 vale para o 5º ano; EF15LP03 vale do 1º ao 5º
+function bnccServe(k,ano){const a=+k[2],b=+k[3];return a===0?b===ano:ano>=a&&ano<=b;}
+function casaHab(q,h){
+  if(h.livre){const b=semAcento(h.k).toLowerCase();return semAcento([q.tema,q.hab].join(" ")).toLowerCase().includes(b);}
+  if(RE_BNCC.test(h.k))return String(q.hab||"").toUpperCase().includes(h.k);
+  return String(q.desc||"").toUpperCase()===h.k&&(!h.disc||discBase(q.disc)===h.disc);}
+let HIDX=null;
+function idxHabs(){if(HIDX)return HIDX;const m=new Map();
+  usaveis().forEach(q=>habsDe(q).forEach(id=>{let o=m.get(id);if(!o){o={n:0,anos:{},tema:q.tema||"",disc:discBase(q.disc)};m.set(id,o);}o.n++;o.anos[q.ano]=(o.anos[q.ano]||0)+1;}));
+  return HIDX=m;}
+function contaHab(h,ano){
+  if(h.livre)return usaveis().filter(q=>q.ano==ano&&casaHab(q,h)).length;
+  const o=idxHabs().get(idHab(h));if(!o)return 0;return RE_BNCC.test(h.k)?(o.anos[ano]||o.n):(o.anos[ano]||0);}
+function rotuloHab(h,ano){
+  if(h.livre)return "tema";
+  const o=idxHabs().get(idHab(h));
+  if(!RE_BNCC.test(h.k)&&h.disc)return descNome(h.disc,ano,h.k)||(o?o.tema:"");
+  return o?o.tema:"";}
+// um texto digitado vira uma ou mais habilidades: código BNCC, descritor SAEB (um por componente) ou tema livre
+function habsDoTexto(txt,ano,disc){
+  const s=String(txt||"").trim();if(!s)return [];
+  const m=s.match(/^(\S+)\s*\((.+)\)\s*$/);const cod=semAcento(m?m[1]:s).toUpperCase().replace(/\s+/g,"");
+  if(RE_BNCC.test(cod))return [{k:cod}];
+  if(RE_DESC.test(cod)){
+    let ds=disc?[discBase(disc)]:[...new Set(Object.keys(DISC).map(discBase))].filter(d=>(idxHabs().get(cod+"|"+d)?.anos[ano]));
+    if(m){const dn=semAcento(m[2]).toLowerCase().trim();const d=Object.entries(DISC).find(([k,v])=>semAcento(v).toLowerCase()===dn);if(d)ds=[discBase(d[0])];}
+    return ds.map(d=>({k:cod,disc:d}));}
+  return m?[]:[{k:s.slice(0,60),livre:true}];}
+function opcoesHabs(ano){const out=[];
+  idxHabs().forEach((o,id)=>{if(!o.anos[ano])return;const h=habDeId(id);
+    if(RE_BNCC.test(h.k))out.push([h.k,`${DISC[o.disc]||""} · ${o.tema} (${o.anos[ano]} questões)`]);
+    else out.push([`${h.k} (${DISC[h.disc]})`,`${descNome(h.disc,ano,h.k)||o.tema} (${o.anos[ano]} questões)`]);});
+  return out.sort((a,b)=>a[0].localeCompare(b[0],"pt",{numeric:true})).map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join("");}
+
+/* ---- histórico da turma ---- */
+function turmasAlvo(){return S.turmas.filter(t=>G.turmas.includes(t.id));}
+function simsDaTurma(ts){const ids=ts.map(t=>t.id);return S.simulados.filter(s=>(s.turmaIds||[s.turmaId]).some(id=>ids.includes(id)));}
+function refsUsadas(ts){const u=new Set();simsDaTurma(ts).forEach(s=>(s.base||[]).forEach(r=>u.add(String(r))));return u;}
+// acertos da turma em cada habilidade, somando todos os simulados corrigidos
+function desempTurma(ts){
+  const nomes=ts.map(t=>t.nome),ids=new Set(simsDaTurma(ts).map(s=>s.id)),m={};
+  if(!ts.length)return m;
+  S.resultados.forEach(r=>{if(!(nomes.includes(r.turma)||(!r.turma&&ids.has(r.simId))))return;
+    (r.ordem||[]).forEach((qi,k)=>{if(qi==null)return;const q=getQ(refDe(qi));if(!q)return;const ok=r.respostas[k]===r.gab[k];
+      habsDe(q).forEach(id=>{const o=m[id]=m[id]||{a:0,n:0};o.n++;if(ok)o.a++;});});});
+  return m;}
+function acertoDe(d,h){const o=d[idHab(h)];return o&&o.n?o.a/o.n:null;}
+// habilidades do planejamento do app (planos de aula e trilhas), vindas da página-mãe
+let PLAN=null;
+async function carregarPlanejamento(){if(PLAN)return PLAN;const n=nuvem();if(!n||typeof n.planejamento!=="function")return PLAN=[];
+  try{const r=await n.planejamento();PLAN=Array.isArray(r)?r:[];}catch(e){PLAN=[];}return PLAN;}
+const chaveTurma=s=>semAcento(String(s||"")).toLowerCase().replace(/[º°ª]/g,"").replace(/\b(anos?|series?|turma|ensino|fundamental|ef|do|da|de)\b/g," ").replace(/(\d)\s*o\b/g,"$1").replace(/[^a-z0-9]/g,"");
+function registrarBusca(t,ano,disc){const s=semAcento(String(t||"")).toUpperCase().replace(/\s+/g,"");if(!RE_BNCC.test(s)&&!RE_DESC.test(s))return;
+  const H=histOk();H.buscas=[{t:s,ano:String(ano||""),disc:String(disc||""),ts:Date.now()}].concat(H.buscas.filter(b=>!(b.t===s&&b.ano===String(ano||"")))).slice(0,40);salvar();}
+let SUG=[];
+function sugestoes(ts,ano,plan){
+  const grupos=[],visto=new Set(G.sofia.habs.map(idHab));
+  const grupo=(titulo,lista,max)=>{const it=[];for(const x of lista){if(it.length>=max)break;const id=idHab(x.h);if(visto.has(id))continue;
+      if(!x.h.livre&&!contaHab(x.h,ano))continue;if(RE_BNCC.test(x.h.k)&&!bnccServe(x.h.k,ano)&&!x.forcar)continue;visto.add(id);it.push(x);}
+    if(it.length)grupos.push({titulo,itens:it});};
+  const nome=ts.length===1?ts[0].nome:"estas turmas";
+  const d=desempTurma(ts);
+  grupo(`${ts.length===1?"A turma "+nome:"As turmas"} acertou menos`,Object.entries(d).filter(([id,o])=>o.n>=2&&o.a/o.n<.6).sort((a,b)=>a[1].a/a[1].n-b[1].a/b[1].n).map(([id,o])=>({h:habDeId(id),info:`${pct(o.a/o.n)} de acertos`,forcar:true})),6);
+  if(plan.length){const ch=new Set(ts.map(t=>chaveTurma(t.nome)));let es=plan.filter(p=>ch.has(chaveTurma(p.turma)));let tit=`No seu planejamento de ${nome}`;
+    if(!es.length){es=plan.filter(p=>String(p.ano||p.turma||"").match(/\d/)?.[0]==String(ano));tit=`No seu planejamento do ${anoTxt(ano)}`;}
+    const cods=[];es.forEach(p=>(p.codigos||[]).forEach(c=>{if(!cods.includes(c))cods.push(c);}));
+    grupo(tit,cods.map(c=>({h:{k:c},info:""})),8);}
+  const ped=[];ts.forEach(t=>(histOk().pedidos[t.id]||[]).forEach(p=>(p.habs||[]).forEach(h=>ped.push({h,info:""}))));
+  grupo(`Você já pediu para ${nome}`,ped,6);
+  const bus=[];histOk().buscas.filter(b=>!b.ano||b.ano==ano).forEach(b=>habsDoTexto(b.t,ano,b.disc).forEach(h=>bus.push({h,info:""})));
+  grupo("Você pesquisou no banco",bus,6);
+  return grupos;}
+
+/* ---- montagem ---- */
+function poolHab(h,ano){let p=usaveis().filter(q=>casaHab(q,h));const doAno=p.filter(q=>q.ano==ano);if(doAno.length)p=doAno;
+  const temFig=q=>!!(q.fig||q.img);if(G.sofia.fig==="so")p=p.filter(temFig);else if(G.sofia.fig==="sem")p=p.filter(q=>!temFig(q));
+  return p;}
+// reparte o total entre as habilidades (método de D'Hondt), sem passar do que existe no banco
+function repartir(N,it){const q=it.map(()=>0);let resto=N;
+  it.forEach((x,i)=>{if(resto>0&&x.max>0){q[i]=1;resto--;}});
+  while(resto>0){let best=-1,bv=-1;it.forEach((x,i)=>{if(q[i]>=x.max)return;const v=x.w/(q[i]+1);if(v>bv){bv=v;best=i;}});if(best<0)break;q[best]++;resto--;}
+  return q;}
+function niveisSofia(){return (G.sofia.niveis.length?G.sofia.niveis:["1","2","3"]).map(Number);}
+function ineditasPrimeiro(l,usadas){return l.filter(q=>!usadas.has(String(q.ref))).concat(l.filter(q=>usadas.has(String(q.ref))));}
+function montarSofia(){
+  const ts=turmasAlvo(),ano=+G.sofia.ano,habs=G.sofia.habs.slice();
+  if(!habs.length){toast("Diga pelo menos uma habilidade para a Sofia.");return false;}
+  const niveis=niveisSofia(),N=Math.max(1,Math.min(60,+G.sofia.n||10));
+  const usadas=refsUsadas(ts),d=desempTurma(ts),r=rng(String(Date.now())),porque=[];
+  const cand=habs.map(h=>{const p=poolHab(h,ano).filter(q=>niveis.includes(q.nivel||2));const porN={};
+    niveis.forEach(nv=>{const l=ordenarPeso(p.filter(q=>(q.nivel||2)===nv),r);porN[nv]=[l.filter(q=>!usadas.has(String(q.ref))),l.filter(q=>usadas.has(String(q.ref)))];});
+    return {h,porN,total:p.length,repetidas:p.filter(q=>usadas.has(String(q.ref))).length};});
+  const peso=c=>{const a=acertoDe(d,c.h);return a==null?1.2:.6+1.4*(1-a);};
+  const quota=repartir(N,cand.map(c=>({w:peso(c),max:c.total})));
+  const esc_=[],pegos=new Set();let repetiu=0;
+  // primeiro só questões inéditas para a turma, alternando os níveis; se acabarem, repete as mais antigas
+  cand.forEach((c,i)=>{let k=quota[i];
+    for(const fase of [0,1]){let j=0,vazios=0;const ptr={};niveis.forEach(nv=>ptr[nv]=0);
+      while(k>0&&vazios<niveis.length){const nv=niveis[j++%niveis.length],l=c.porN[nv][fase];
+        while(ptr[nv]<l.length&&pegos.has(l[ptr[nv]].ref))ptr[nv]++;
+        if(ptr[nv]>=l.length){vazios++;continue;}vazios=0;
+        const q=l[ptr[nv]++];pegos.add(q.ref);if(fase)repetiu++;esc_.push({ref:q.ref,h:c.h,nv:q.nivel||2});k--;}}});
+  esc_.sort((a,b)=>a.nv-b.nv);
+  const ordem=porDisc(agrupar(esc_.map(x=>x.ref)));
+  G.sofia.itens=ordem.map(ref=>esc_.find(x=>x.ref===ref));G.sofia.fora=[];
+  // o porquê de cada escolha, em linguagem de professor
+  const nome=ts.length===1?ts[0].nome:ts.length?"as turmas marcadas":"";
+  const semBanco=cand.filter(c=>!c.total).map(c=>c.h.k);
+  if(semBanco.length)porque.push(`Não achei questões de ${semBanco.join(", ")} no banco para o ${anoTxt(ano)} com os níveis marcados. Tente outro nível, o código da habilidade ou crie questões em "Criar com a Sofia".`);
+  cand.forEach((c,i)=>{if(!quota[i])return;const a=acertoDe(d,c.h);const n=G.sofia.itens.filter(x=>idHab(x.h)===idHab(c.h)).length;
+    porque.push(`${c.h.k}${c.h.disc?" ("+DISC[c.h.disc]+")":""}: ${n} ${n===1?"questão":"questões"}${a==null?"":a<.6?`, mais que as outras, porque ${nome} acertou só ${pct(a)} nos simulados anteriores`:` (${nome} acertou ${pct(a)} antes)`}.`);});
+  const evitadas=cand.reduce((s,c)=>s+c.repetidas,0);
+  if(ts.length&&evitadas)porque.push(repetiu?`Usei ${repetiu} ${repetiu===1?"questão que":"questões que"} ${nome} já recebeu, porque as inéditas dessas habilidades acabaram.`:`Deixei de fora ${evitadas} ${evitadas===1?"questão que":"questões que"} ${nome} já recebeu em simulados anteriores.`);
+  const PLURAL={1:["fácil","fáceis"],2:["média","médias"],3:["difícil","difíceis"]};
+  const nv=niveis.map(n=>{const c=G.sofia.itens.filter(x=>x.nv===n).length;return `${c} ${PLURAL[n][c===1?0:1]}`;});
+  if(niveis.length>1)porque.push(`Níveis: ${nv.join(", ")}, da mais fácil para a mais difícil.`);
+  if(nAval(1)||nAval(-1))porque.push("Dei preferência ao estilo das questões que você marcou com 👍 e evitei as parecidas com as marcadas com 👎.");
+  if(G.sofia.itens.length<N)porque.push(`Montei ${G.sofia.itens.length} de ${N}: não há mais questões dessas habilidades com esses filtros.`);
+  G.sofia.porque=porque;
+  // cada pedido fica no histórico da turma e vira sugestão da próxima vez
+  const H=histOk();ts.forEach(t=>{H.pedidos[t.id]=[{habs,niveis:niveis.map(String),n:N,ts:Date.now()}].concat(H.pedidos[t.id]||[]).slice(0,15);});
+  salvar();
+  return G.sofia.itens.length>0;}
+function trocarSofia(i){const it=G.sofia.itens[i];if(!it)return;
+  const usadas=refsUsadas(turmasAlvo()),atuais=new Set(G.sofia.itens.map(x=>x.ref));G.sofia.fora=(G.sofia.fora||[]).concat(it.ref);
+  const p=poolHab(it.h,+G.sofia.ano).filter(q=>!atuais.has(q.ref)&&!G.sofia.fora.includes(q.ref));
+  const ord=l=>ineditasPrimeiro(ordenarPeso(l,rng(String(Date.now())+i)),usadas);
+  const q=ord(p.filter(q=>(q.nivel||2)===it.nv))[0]||ord(p.filter(q=>niveisSofia().includes(q.nivel||2)))[0];
+  if(!q){toast("Não há outra questão dessa habilidade com esses filtros.");return;}
+  G.sofia.itens[i]={ref:q.ref,h:it.h,nv:q.nivel||2};desenharSofiaPrev();}
+function limparMontagem(){if(G.sofia.itens.length){G.sofia.itens=[];G.sofia.porque=[];desenharSofiaPrev();}}
+
+/* ---- tela ---- */
+function sofiaHtml(turma){
+  return `<div id="g-sofia" class="pilha"${G.origem==="sofia"?"":" hidden"}>
+   <div class="sofia-cab"><div class="avatar" aria-hidden="true">S</div><div class="balao">Me diga as habilidades e os níveis que você quer trabalhar. Eu escolho as questões do banco olhando o que ${turma?`a turma <b>${esc(turma.nome)}</b>`:"a turma"} já fez: não repito questões, coloco mais onde ela acertou menos e aproveito o que você planejou e pesquisou.</div></div>
+   <div class="grade-filtros">
+    <label class="campo">Ano<select id="gs-ano">${opcoes(ANOS,G.sofia.ano)}</select></label>
+    <label class="campo">Quantas questões<input id="gs-n" type="number" min="1" max="60" value="${esc(G.sofia.n)}"></label>
+   </div>
+   <div class="pilha" style="gap:6px"><span class="fonte" style="font-weight:700">Habilidades que você quer trabalhar</span>
+    <div class="gs-add"><label class="campo"><input id="gs-hab" aria-label="Habilidade" list="gs-lista-habs" placeholder="Código BNCC (EF05MA08), descritor SAEB (D3) ou tema" autocomplete="off"></label><button class="btn" id="gs-addbtn" type="button">Adicionar</button></div>
+    <datalist id="gs-lista-habs"></datalist>
+    <div id="gs-chips" class="gs-chips"></div>
+   </div>
+   <div id="gs-sug" class="pilha" style="gap:8px"></div>
+   <div class="pilha" style="gap:6px"><span class="fonte" style="font-weight:700">Níveis de dificuldade (pode marcar mais de um)</span>
+    <div class="linha-acoes">${Object.entries(NIVEL).map(([k,v])=>`<label class="opc"><input type="checkbox" data-gs-nv="${k}"${G.sofia.niveis.includes(k)?" checked":""}> ${v}</label>`).join("")}</div></div>
+   <label class="campo">Questões com figura<select id="gs-fig">${opcoes({tanto:"Tanto faz",so:"Só questões com figura",sem:"Sem figura"},G.sofia.fig)}</select></label>
+   <div class="linha-acoes"><button class="btn roxo" id="gs-montar" type="button">✨ Sofia, montar as questões</button></div>
+  </div>`;}
+function lerSofia(){if(!$("#gs-n"))return;G.sofia.n=$("#gs-n").value;G.sofia.fig=$("#gs-fig").value;G.sofia.niveis=[...document.querySelectorAll("[data-gs-nv]")].filter(c=>c.checked).map(c=>c.dataset.gsNv);}
+function desenharChips(){const el=$("#gs-chips");if(!el)return;const ano=+G.sofia.ano;
+  el.innerHTML=G.sofia.habs.length?G.sofia.habs.map((h,i)=>{const n=contaHab(h,ano),r=rotuloHab(h,ano);
+    return `<span class="gs-chip${n?"":" vazio"}"${r?` title="${esc(r)}"`:""}><b>${esc(h.k)}</b>${h.disc?` · ${esc(DISC[h.disc])}`:""}${r&&!h.livre?`<small>${esc(r.length>60?r.slice(0,58)+"…":r)}</small>`:""}<small>${n?n+" no banco":"nenhuma no banco"}</small><button type="button" data-gs-tira="${i}" aria-label="Tirar ${esc(h.k)}">×</button></span>`;}).join("")
+    :`<span class="fonte">Nenhuma ainda. Digite acima ou toque numa sugestão.</span>`;
+  el.querySelectorAll("[data-gs-tira]").forEach(b=>b.onclick=()=>{G.sofia.habs.splice(+b.dataset.gsTira,1);limparMontagem();desenharChips();desenharSug();});}
+async function desenharSug(){const el=$("#gs-sug");if(!el)return;
+  const plan=await carregarPlanejamento();if(!$("#gs-sug")||G.origem!=="sofia")return;
+  const ts=turmasAlvo(),ano=+G.sofia.ano,grupos=sugestoes(ts,ano,plan);SUG=[];
+  if(!grupos.length){el.innerHTML=`<p class="fonte" style="margin:0">Conforme você usar o banco${ts.length?" com "+esc(ts.length===1?ts[0].nome:"estas turmas"):""}, eu passo a sugerir habilidades aqui: as que a turma acertou menos, as do seu planejamento e as que você pesquisou.</p>`;return;}
+  el.innerHTML=`<span class="fonte" style="font-weight:700">Sugestões da Sofia</span>`+grupos.map(g=>`<div class="pilha" style="gap:4px"><span class="fonte">${esc(g.titulo)}</span><div class="gs-chips">${g.itens.map(x=>{SUG.push(x.h);
+    return `<button type="button" class="gs-chip sug" data-gs-sug="${SUG.length-1}">+ <b>${esc(x.h.k)}</b>${x.h.disc?" · "+esc(DISC[x.h.disc]):""}${x.info?`<small>${esc(x.info)}</small>`:""}</button>`;}).join("")}</div></div>`).join("");
+  el.querySelectorAll("[data-gs-sug]").forEach(b=>b.onclick=()=>{const h=SUG[+b.dataset.gsSug];if(h&&!G.sofia.habs.some(x=>idHab(x)===idHab(h)))G.sofia.habs.push(h);limparMontagem();desenharChips();desenharSug();});}
+function desenharSofiaPrev(){const el=$("#gs-prev");if(!el)return;const it=(G.origem==="sofia"&&G.sofia.itens)||[];
+  if(!it.length){el.innerHTML="";return;}
+  el.innerHTML=`<div class="painel pilha"><h2>Questões que a Sofia escolheu</h2>
+   <div class="sofia-cab"><div class="avatar" aria-hidden="true">S</div><div class="balao"><b>Montei ${it.length} ${it.length===1?"questão":"questões"}.</b> Confira, troque o que quiser e depois gere os simulados.<ul class="gs-porque">${G.sofia.porque.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div></div>
+   <div class="gs-lista">${it.map((x,i)=>{const q=getQ(x.ref);if(!q)return "";const e=String(q.enunciado||"");
+     return `<div class="gs-item"><span class="gs-n">${i+1}</span><div><div class="gs-tags"><span class="chip ia">${esc(x.h.k)}</span><span class="chip">${esc(NIVEL[q.nivel||2])}</span><span class="chip">${esc(DISC[q.disc]||q.disc)}</span>${q.fig||q.img?'<span class="chip fig">figura</span>':""}</div><div class="gs-enun">${esc(e.length>200?e.slice(0,198)+"…":e)}</div></div>
+      <div class="gs-acoes"><button type="button" class="btn peq" data-gs-ver="${i}" aria-expanded="false">Ver</button><button type="button" class="btn peq" data-gs-trocar="${i}">Trocar</button><button type="button" class="btn peq perigo" data-gs-tirar="${i}">Tirar</button></div><div class="gs-ver" hidden></div></div>`;}).join("")}</div>
+   <div class="linha-acoes"><button type="button" class="btn" id="gs-refazer">Montar de novo</button></div></div>`;
+  el.querySelectorAll("[data-gs-ver]").forEach(b=>b.onclick=()=>{const box=b.closest(".gs-item").querySelector(".gs-ver"),abrir=box.hidden;box.hidden=!abrir;b.setAttribute("aria-expanded",abrir);b.textContent=abrir?"Fechar":"Ver";
+    if(abrir&&!box.innerHTML){const q=getQ(G.sofia.itens[+b.dataset.gsVer].ref);box.innerHTML=htmlQuestao(q,{gab:true,acoes:false});}});
+  el.querySelectorAll("[data-gs-trocar]").forEach(b=>b.onclick=()=>trocarSofia(+b.dataset.gsTrocar));
+  el.querySelectorAll("[data-gs-tirar]").forEach(b=>b.onclick=()=>{G.sofia.itens.splice(+b.dataset.gsTirar,1);desenharSofiaPrev();});
+  $("#gs-refazer").onclick=()=>{lerSofia();if(montarSofia())desenharSofiaPrev();};}
+function ligarSofia(){if(!$("#g-sofia"))return;
+  const ano=()=>{$("#gs-lista-habs").innerHTML=opcoesHabs(+G.sofia.ano);};ano();
+  const add=()=>{const i=$("#gs-hab");const hs=habsDoTexto(i.value,+G.sofia.ano);if(!hs.length&&i.value.trim()){toast("Não achei essa habilidade neste ano.");return;}
+    hs.forEach(h=>{if(!G.sofia.habs.some(x=>idHab(x)===idHab(h)))G.sofia.habs.push(h);});i.value="";limparMontagem();desenharChips();desenharSug();};
+  $("#gs-addbtn").onclick=add;
+  $("#gs-hab").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add();}};
+  // escolher uma opção da lista já adiciona
+  $("#gs-hab").oninput=e=>{if(e.inputType==="insertReplacementText"||!e.inputType){const v=e.target.value;if([...$("#gs-lista-habs").options].some(o=>o.value===v))add();}};
+  $("#gs-ano").onchange=e=>{G.sofia.ano=e.target.value;G.sofia.anoManual=true;ano();limparMontagem();desenharChips();desenharSug();};
+  $("#g-sofia").querySelectorAll("[data-gs-nv],#gs-n,#gs-fig").forEach(c=>c.onchange=()=>{lerSofia();limparMontagem();});
+  $("#gs-montar").onclick=()=>{lerSofia();if(montarSofia()){desenharSofiaPrev();$("#gs-prev").scrollIntoView({behavior:"smooth",block:"start"});}else desenharSofiaPrev();};
+  desenharChips();desenharSug();desenharSofiaPrev();}
+// o ano acompanha a turma marcada, até o professor escolher outro
+function anoDaTurma(){const t=turmasAlvo()[0];if(t&&!G.sofia.anoManual&&t.ano)G.sofia.ano=String(t.ano);}
+
 /* ============ GERADOR DE SIMULADOS ============ */
-let G={origem:"auto",titulo:"",escola:"",prof:"",turma:"",turmas:[],ano:"5",disc:"MAT",discs:{MAT:"10"},qtd:"10",nivel:"",fig:"algumas",modo:"tipos",nTipos:"4",embQ:true,embA:true,saeb:false,blocoTam:0,ultimo:null,cs:{n:"20",nt:"1",gabs:{A:"",B:"",C:"",D:""},secs:null}};
+let G={origem:"sofia",sofia:{ano:"5",anoManual:false,n:"10",niveis:["1","2","3"],fig:"tanto",habs:[],itens:[],porque:[],fora:[]},titulo:"",escola:"",prof:"",turma:"",turmas:[],ano:"5",disc:"MAT",discs:{MAT:"10"},qtd:"10",nivel:"",fig:"algumas",modo:"tipos",nTipos:"4",embQ:true,embA:true,saeb:false,blocoTam:0,ultimo:null,cs:{n:"20",nt:"1",gabs:{A:"",B:"",C:"",D:""},secs:null}};
 const TIPOS="ABCD";
 // turmas marcadas no gerador: o mesmo simulado (mesmo código e mesmo gabarito) vale para todas
 function lerTurmas(){return [...document.querySelectorAll("[data-gt]")].filter(c=>c.checked).map(c=>c.dataset.gt);}
@@ -1498,16 +1718,19 @@ function renderGerador(){
   G.turmas=(G.turmas||[]).filter(id=>S.turmas.some(t=>t.id===id));
   if(!G.turmas.length&&S.turmas[0])G.turmas=[S.turmas[0].id];
   const turma=S.turmas.find(t=>G.turmas.includes(t.id));
+  anoDaTurma();
   $("#painel").innerHTML=cabecalho("🖨️","Gerador de simulados","Gere uma prova para cada aluno da turma, com o nome impresso e um cartão-resposta com QR code próprio. Escolha tipos de prova A, B, C e D com as mesmas questões em ordens diferentes, uma versão por aluno ou prova única. O QR guarda o aluno, o tipo e o gabarito. Se a prova foi feita fora do AgilizaProf, gere só o cartão-resposta com o seu gabarito.")+`
    <div class="duas">
     <section class="painel pilha">
      <h2>1. Questões</h2>
      <div class="linha-acoes">
-      <label class="opc"><input type="radio" name="g-origem" value="sel"${G.origem==="sel"?" checked":""}> Escolhidas no banco (${S.sel.length})</label>
+      <label class="opc"><input type="radio" name="g-origem" value="sofia"${G.origem==="sofia"?" checked":""}> <span><b>✨ A Sofia monta pelas habilidades</b> (você diz as habilidades e os níveis)</span></label>
+      <label class="opc"><input type="radio" name="g-origem" value="sel"${G.origem==="sel"?" checked":""}> Escolhidas no banco, uma a uma (${S.sel.length})</label>
       <label class="opc"><input type="radio" name="g-origem" value="auto"${G.origem==="auto"?" checked":""}> Sortear automaticamente</label>
       <label class="opc"><input type="radio" name="g-origem" value="cartao"${G.origem==="cartao"?" checked":""}> <span><b>Só o cartão-resposta</b> (prova feita fora do AgilizaProf)</span></label>
      </div>
      ${G.origem==="cartao"?cartaoSoHtml():""}
+     ${sofiaHtml(turma)}
      <div id="g-auto" class="pilha"${G.origem==="auto"?"":" hidden"}>
       <div class="grade-filtros">
        <label class="campo">Ano<select id="g-ano">${opcoes(ANOS,G.ano)}</select></label>
@@ -1550,13 +1773,15 @@ function renderGerador(){
      <p class="fonte" style="margin:0">A lista de exercícios sai em uma única versão, sem nomes e sem QR, com o gabarito no final.</p>`}
     </section>
    </div>
+   <div id="gs-prev" style="margin-top:18px"></div>
    <div id="g-saida" style="margin-top:18px"></div>
    <section style="margin-top:22px" class="pilha"><h2>Simulados gerados</h2>${listaSimulados()}</section>`;
   const lerCampos=()=>{G.titulo=$("#g-titulo").value;G.escola=$("#g-escola").value;G.prof=$("#g-prof").value;if(document.querySelector("[data-gt]"))G.turmas=lerTurmas();
     G.ano=$("#g-ano").value;G.discs=lerDiscs();G.nivel=$("#g-nivel").value;G.fig=$("#g-fig").value;G.embQ=$("#g-embq").checked;G.embA=$("#g-emba").checked;G.saeb=$("#g-saeb")?.checked??G.saeb;
-    G.modo=$("#painel").querySelector("[name=g-modo]:checked").value;G.nTipos=$("#g-ntipos").value;};
+    G.modo=$("#painel").querySelector("[name=g-modo]:checked").value;G.nTipos=$("#g-ntipos").value;lerSofia();};
   $("#painel").querySelectorAll('[name=g-modo]').forEach(r=>r.onchange=()=>{$("#g-tipos").hidden=r.value!=="tipos";$("#g-emb").hidden=r.value==="igual";});
-  $("#painel").querySelectorAll("[data-gt]").forEach(c=>c.onchange=()=>{G.turmas=lerTurmas();$("#g-gerar").disabled=!G.turmas.length;});
+  $("#painel").querySelectorAll("[data-gt]").forEach(c=>c.onchange=()=>{G.turmas=lerTurmas();$("#g-gerar").disabled=!G.turmas.length;
+    if(G.origem==="sofia"){lerCampos();G.sofia.itens=[];G.sofia.porque=[];renderGerador();}});
   if($("#g-irturmas"))$("#g-irturmas").onclick=e=>{e.preventDefault();irPara("alunos");};
   const total=()=>{const d=lerDiscs(),n=Object.values(d).reduce((a,b)=>a+(+b||0),0);$("#g-total").textContent=Object.keys(d).length?`Total: ${n} questões em ${Object.keys(d).length} ${Object.keys(d).length>1?"componentes":"componente"}, todas no mesmo cartão-resposta${n>60?" · o máximo é 60":""}.`:"Marque pelo menos um componente.";};
   $("#painel").querySelectorAll("[data-gd],[data-gq]").forEach(i=>i.oninput=total);total();
@@ -1564,6 +1789,7 @@ function renderGerador(){
   if($("#g-verbanco"))$("#g-verbanco").onclick=e=>{e.preventDefault();lerCampos();irPara("banco");};
   $("#g-gerar").onclick=()=>{lerCampos();if(G.origem==="cartao"){lerCS();gerarCartaoSo();}else gerar();};
   if(G.origem==="cartao")ligarCartaoSo();
+  ligarSofia();
   if($("#g-lista"))$("#g-lista").onclick=()=>{lerCampos();const refs=escolherRefs();if(!refs)return;baixar(`lista-${slug(G.titulo||"exercicios")}.html`,docLista(refs));};
   ligarListaSimulados();
   if(G.ultimo){const s=S.simulados.find(x=>x.id===G.ultimo);if(s)mostrarGerado(s);}
@@ -1637,6 +1863,7 @@ function lerDiscs(){const d={};document.querySelectorAll("[data-gd]").forEach(c=
 function porDisc(idx){const m=new Map();idx.forEach(i=>{const d=getQ(i).disc;if(!m.has(d))m.set(d,[]);m.get(d).push(i);});return [...m.values()].flat();}
 function escolherRefs(){
   if(G.origem==="sel"){if(!S.sel.length){toast("Escolha questões no banco primeiro.");return null;}return porDisc(S.sel.slice());}
+  if(G.origem==="sofia"){if(!G.sofia.itens.length&&!montarSofia()){desenharSofiaPrev();return null;}return G.sofia.itens.map(x=>x.ref);}
   if(!G.discs||!Object.keys(G.discs).length){toast("Marque pelo menos um componente.");return null;}
   const tot=Object.values(G.discs).reduce((a,b)=>a+(+b||0),0);if(tot>60){toast(`São ${tot} questões; o cartão-resposta comporta até 60.`);return null;}
   let refs=[];for(const [d,n] of Object.entries(G.discs)){const r=sortearDisc(d,+n);if(!r)return null;refs=refs.concat(r);}
@@ -1677,12 +1904,13 @@ function gerar(){
   const modo=G.modo||"aluno";
   const sim={id:novoId(),titulo:G.titulo.trim()||`Simulado de ${discs.map(d=>DISC[d]).join(", ")}`,escola:G.escola.trim(),prof:G.prof.trim(),turmaIds:tsel.map(t=>t.id),turma:tsel.map(t=>t.nome).join(", "),
     anos,discs,base:idx,extra,modo,embQ:modo!=="igual"&&G.embQ,embA:modo!=="igual"&&G.embA,saeb:G.saeb,blocoTam:G.saeb?(G.blocoTam||SAEB_FMT[anos[0]]?.itens||13):0,data:hoje(),criado:Date.now(),ver:BANCO_VER,versoes:[]};
+  if(G.origem==="sofia")sim.sofia={habs:G.sofia.habs.slice(),niveis:niveisSofia().map(String)};
   if(modo==="tipos"){
     const nt=Math.max(2,Math.min(4,+G.nTipos||4));
     // tipo A segue a ordem original; B, C e D embaralham
     sim.tipos=[...TIPOS.slice(0,nt)].map((t,k)=>({t,...(k===0?montarVersao(sim,idx,sim.id+"|A",false,false):montarVersao(sim,idx,sim.id+"|"+t,sim.embQ,sim.embA))}));
   }
-  S.simulados.unshift(sim);tsel.forEach(t=>addTurmaVersoes(sim,t));G.ultimo=sim.id;salvar();montarAbas();renderGerador();toast(`${sim.versoes.length} provas geradas${novasNoBanco?` · ${novasNoBanco} questões da Sofia entraram no banco`:""}`);
+  S.simulados.unshift(sim);tsel.forEach(t=>addTurmaVersoes(sim,t));G.ultimo=sim.id;if(G.origem==="sofia"){G.sofia.itens=[];G.sofia.porque=[];}salvar();montarAbas();renderGerador();toast(`${sim.versoes.length} provas geradas${novasNoBanco?` · ${novasNoBanco} questões da Sofia entraram no banco`:""}`);
   document.getElementById("g-saida").scrollIntoView({behavior:"smooth"});
 }
 function secoes(idx){const out=[];idx.forEach(i=>{const d=getQ(i).disc;if(!out.length||getQ(out[out.length-1][0]).disc!==d)out.push([i]);else out[out.length-1].push(i);});return out;}
@@ -2391,6 +2619,43 @@ function evolucaoHtml(turma){
      return `<tr><td>${esc(n)}</td>${vs.map(v=>`<td class="cel" style="color:var(--${v==null?"texto-2":corP(v)==="alerta"?"alerta":corP(v)})">${v==null?"–":pct(v)}</td>`).join("")}<td class="cel">${m==null?"–":pct(m)}</td></tr>`;}).join("")}</tbody></table></div>
    <p class="fonte" style="margin:0">${sims.map((x,k)=>`S${k+1}: ${esc(x.titulo)}`).join(" · ")}</p></div>`;
 }
+// Evolução por habilidade: compara a primeira e a última vez em que cada
+// habilidade (ou descritor) caiu nos simulados da turma, na turma e por aluno.
+function evolucaoHabHtml(turma){
+  if(!turma)return "";
+  const grupos={};S.resultados.filter(r=>r.turma===turma&&r.simId!=="SAEB-ONLINE").forEach(r=>(grupos[r.simId]=grupos[r.simId]||[]).push(r));
+  const sims=Object.entries(grupos).map(([id,rs])=>{const s=S.simulados.find(x=>x.id===id);return {id,titulo:rs[0].titulo,quando:s?s.criado:0,rs};}).sort((a,b)=>a.quando-b.quando);
+  if(sims.length<2)return "";
+  const dn=q=>q.disc==="GEOM"&&q.desc?"MAT":q.disc;
+  // habs[chave] = {lab, vezes:[{k, n, a, al:{aluno:{n,a}}}]}
+  const habs={};
+  sims.forEach((x,k)=>x.rs.forEach(r=>(r.ordem||[]).forEach((qi,j)=>{if(qi==null)return;const q=getQ(refDe(qi));if(!q)return;const d=q.desc||q.hab||q.tema;if(!d)return;
+    const ch=dn(q)+"|"+d;const h=habs[ch]=habs[ch]||{d,disc:dn(q),vezes:[]};let v=h.vezes.find(z=>z.k===k);if(!v)h.vezes.push(v={k,n:0,a:0,al:{}});
+    const ok=r.respostas[j]===r.gab[j]?1:0;v.n++;v.a+=ok;const o=v.al[r.aluno]=v.al[r.aluno]||{n:0,a:0};o.n++;o.a+=ok;})));
+  const varias=new Set(Object.values(habs).map(h=>h.disc)).size>1;
+  const todas=Object.values(habs);
+  const comp=todas.filter(h=>h.vezes.length>1).map(h=>{const p=h.vezes[0],u=h.vezes[h.vezes.length-1];return {h,lab:varias&&DISC[h.disc]?`${DISC[h.disc]} · ${h.d}`:h.d,p,u,v0:p.a/p.n,v1:u.a/u.n,dif:u.a/u.n-p.a/p.n};}).sort((a,b)=>a.dif-b.dif);
+  const sos=todas.length-comp.length;
+  if(!comp.length)return `<div class="painel pilha"><h2>Evolução por habilidade</h2><p class="fonte" style="margin:0">Ainda não dá para comparar. Os ${sims.length} simulados desta turma cobraram habilidades diferentes. Quando uma mesma habilidade cair em dois simulados, a comparação aparece aqui.</p></div>`;
+  const LIM=0.05,pts=v=>Math.round(Math.abs(v)*100);
+  const seta=d=>d>LIM?`<b style="color:var(--bom)">▲ subiu ${pts(d)} pontos</b>`:d<-LIM?`<b style="color:var(--ruim)">▼ caiu ${pts(d)} pontos</b>`:`<span class="fonte">= igual</span>`;
+  const sub=comp.filter(c=>c.dif>LIM).length,cai=comp.filter(c=>c.dif<-LIM).length,ig=comp.length-sub-cai;
+  const melhor=comp[comp.length-1],pior=comp[0];
+  const frases=[`De ${comp.length} ${comp.length===1?"habilidade cobrada":"habilidades cobradas"} mais de uma vez, ${sub} ${sub===1?"melhorou":"melhoraram"}, ${cai} ${cai===1?"piorou":"pioraram"} e ${ig} ${ig===1?"ficou igual":"ficaram iguais"}.`];
+  if(melhor.dif>LIM)frases.push(`Maior avanço: ${melhor.lab} (de ${pct(melhor.v0)} para ${pct(melhor.v1)}).`);
+  if(pior.dif<-LIM)frases.push(`Pede mais atenção: ${pior.lab} (de ${pct(pior.v0)} para ${pct(pior.v1)}).`);
+  if(sos)frases.push(`${sos} ${sos===1?"habilidade só caiu":"habilidades só caíram"} em um simulado e ainda não ${sos===1?"entra":"entram"} na comparação.`);
+  const nomes=[...new Set(sims.flatMap(x=>x.rs.map(r=>r.aluno)))].filter(n=>!/^Sem nome/.test(n)).sort((a,b)=>a.localeCompare(b,"pt"));
+  const cols=comp.slice(0,8);
+  const cel=(c,n)=>{const a=c.p.al[n],b=c.u.al[n];if(!b&&!a)return `<td class="cel" style="color:var(--texto-2)">–</td>`;if(!a||!b){const o=b||a;return `<td class="cel" title="Fez só um dos dois simulados">${pct(o.a/o.n)}</td>`;}
+    const v0=a.a/a.n,v1=b.a/b.n,d=v1-v0;return `<td class="cel" title="De ${pct(v0)} para ${pct(v1)}" style="color:var(--${d>LIM?"bom":d<-LIM?"ruim":"texto"});font-weight:${Math.abs(d)>LIM?800:500}">${d>LIM?"▲ ":d<-LIM?"▼ ":"= "}${pct(v1)}</td>`;};
+  return `<div class="painel pilha"><h2>Evolução por habilidade</h2><p class="fonte" style="margin:0">${esc(turma)} · compara a primeira e a última vez em que cada habilidade caiu nos simulados da turma.</p>
+   <p style="margin:0">${frases.map(esc).join(" ")}</p>
+   <div class="tabela-wrap"><table><thead><tr><th>Habilidade</th><th>Primeira vez</th><th>Última vez</th><th>O que mudou</th></tr></thead><tbody>${comp.map(c=>`<tr><td style="white-space:normal;min-width:200px">${esc(c.lab)}</td><td class="num">${pct(c.v0)} <span class="fonte">S${c.p.k+1}</span></td><td class="num">${pct(c.v1)} <span class="fonte">S${c.u.k+1}</span></td><td>${seta(c.dif)}</td></tr>`).join("")}</tbody></table></div>
+   <h3 style="margin:6px 0 0">Aluno por aluno</h3><p class="fonte" style="margin:0">Acerto de cada aluno na última vez em que a habilidade caiu. A seta compara com a primeira vez.${comp.length>cols.length?` Aparecem as ${cols.length} habilidades que mais pedem atenção.`:""}</p>
+   <div class="tabela-wrap"><table><thead><tr><th>Aluno(a)</th>${cols.map(c=>`<th title="${esc(c.lab)}" style="white-space:normal;max-width:110px">${esc(c.h.d.length>22?c.h.d.slice(0,21)+"…":c.h.d)}</th>`).join("")}</tr></thead><tbody>${nomes.map(n=>`<tr><td>${esc(n)}</td>${cols.map(c=>cel(c,n)).join("")}</tr>`).join("")}</tbody></table></div>
+   <p class="fonte" style="margin:0">${sims.map((x,k)=>`S${k+1}: ${esc(x.titulo)}`).join(" · ")}</p></div>`;
+}
 function renderResultados(){
   const grupos={};S.resultados.forEach(r=>(grupos[r.simId+"|"+r.titulo]=grupos[r.simId+"|"+r.titulo]||[]).push(r));
   const chaves=Object.keys(grupos);if(!chaves.includes(RF))RF=chaves[0]||"";
@@ -2404,7 +2669,7 @@ function renderResultados(){
   if(rs.length){
     const {itensQ}=analisar(rs,sim);
     const nomes=sim?sim.versoes.map(v=>v.nome):[];
-    analise=quadroHtml(rs,simV)+reforcoHtml(rs)+evolucaoHtml(turmaEv)+`
+    analise=quadroHtml(rs,simV)+reforcoHtml(rs)+evolucaoHtml(turmaEv)+evolucaoHabHtml(turmaEv)+`
      <div class="painel pilha"><h2>Acertos de cada prova</h2><div class="tabela-wrap"><table><thead><tr><th>Aluno(a)</th>${rs.some(r=>r.tipo)?"<th>Tipo</th>":""}<th>Acertos</th><th>%</th><th>Faixa</th><th>Leitura</th><th></th></tr></thead><tbody>${rs.slice().sort((a,b)=>a.aluno.localeCompare(b.aluno,"pt")).map(r=>{const p=r.acertos/r.total;const semNome=/^Sem nome/.test(r.aluno);
        return `<tr><td>${semNome&&nomes.length?`<select data-nomear="${r.rid}" aria-label="Escolher aluno"><option>${esc(r.aluno)}</option>${nomes.map(n=>`<option>${esc(n)}</option>`).join("")}</select>`:esc(r.aluno)}</td>${rs.some(x=>x.tipo)?`<td>${seloTipo(r.tipo)}</td>`:""}<td class="num"><b>${r.acertos}/${r.total}</b></td><td><span class="chip ${corP(p)}">${pct(p)}</span></td><td class="fonte">${FAIXAS[faixaDe(p)][0]}</td><td><span class="chip${/conferir/.test(r.origem||"")?" alerta":""}">${esc(r.origem||"")}</span></td><td><button class="btn peq perigo" data-del="${r.rid}">Apagar</button></td></tr>`;}).join("")}</tbody></table></div></div>
      <div class="painel pilha"><h2>Análise das alternativas</h2><p class="fonte" style="margin:0">Quantos alunos marcaram cada alternativa (na ordem original da questão). Uma alternativa errada muito marcada indica um erro comum para trabalhar em sala.</p>

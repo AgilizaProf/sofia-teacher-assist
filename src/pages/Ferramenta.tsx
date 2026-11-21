@@ -32,10 +32,15 @@ const css = `
 
 type Snapshot = { data: unknown; updated_at: string } | null;
 
+// Habilidades BNCC que o professor já planejou para cada turma (planos de aula e trilhas).
+// A Sofia das Questões usa isto para sugerir habilidades ao montar um simulado.
+type PlanejamentoTurma = { turma: string; ano: string; codigos: string[]; quando: string };
+
 type AprofNuvem = {
   get: (key: string) => Promise<Snapshot>;
   set: (key: string, data: unknown) => Promise<boolean>;
   usuario: () => Promise<string | null>;
+  planejamento: () => Promise<PlanejamentoTurma[]>;
 };
 
 // Só estas chaves podem ser lidas ou gravadas pelas ferramentas (lista branca).
@@ -45,6 +50,66 @@ const CHAVES_FERRAMENTAS = ["simulados_dados", "jogos_dados"] as const;
 
 function chavePermitida(key: unknown): key is (typeof CHAVES_FERRAMENTAS)[number] {
   return typeof key === "string" && (CHAVES_FERRAMENTAS as readonly string[]).includes(key);
+}
+
+const RE_BNCC = /EF\d{2}[A-Z]{2}\d{2}/g;
+
+// Os planos guardam as habilidades em lugares diferentes conforme a origem (plano de aula,
+// atividade PCD, trilha): procuramos os códigos BNCC no conteúdo inteiro.
+function codigosBncc(valor: unknown): string[] {
+  const achados =
+    JSON.stringify(valor ?? "")
+      .toUpperCase()
+      .match(RE_BNCC) ?? [];
+  return [...new Set(achados)];
+}
+
+function texto(v: unknown): string {
+  return typeof v === "string" ? v : typeof v === "number" ? String(v) : "";
+}
+
+async function planejamentoPorTurma(uid: string): Promise<PlanejamentoTurma[]> {
+  const out: PlanejamentoTurma[] = [];
+  const [planos, trilhas] = await Promise.all([
+    supabase
+      .from("planos_aula")
+      .select("data, created_at")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(300),
+    supabase
+      .from("trilhas")
+      .select("id, turma, ano_escolar, data, updated_at")
+      .eq("user_id", uid)
+      .order("updated_at", { ascending: false })
+      .limit(60),
+  ]);
+  for (const p of planos.data ?? []) {
+    const d = (p.data ?? {}) as Record<string, unknown>;
+    const codigos = codigosBncc(d);
+    if (codigos.length)
+      out.push({ turma: texto(d.turma), ano: texto(d.ano), codigos, quando: p.created_at });
+  }
+  const lista = trilhas.data ?? [];
+  if (lista.length) {
+    const { data: semanas } = await supabase
+      .from("trilha_semanas")
+      .select("trilha_id, habilidades_bncc")
+      .eq("user_id", uid)
+      .in(
+        "trilha_id",
+        lista.map((t) => t.id),
+      );
+    for (const t of lista) {
+      const daTrilha = (semanas ?? [])
+        .filter((s) => s.trilha_id === t.id)
+        .map((s) => s.habilidades_bncc);
+      const codigos = codigosBncc([t.data, daTrilha]);
+      if (codigos.length)
+        out.push({ turma: t.turma ?? "", ano: t.ano_escolar ?? "", codigos, quando: t.updated_at });
+    }
+  }
+  return out.sort((a, b) => (a.quando < b.quando ? 1 : -1));
 }
 
 async function usuarioId(): Promise<string | null> {
@@ -87,6 +152,16 @@ const aprofNuvem: AprofNuvem = {
   // id da conta, para a ferramenta separar a cópia local de cada professora no mesmo navegador
   async usuario() {
     return usuarioId();
+  },
+  // só leitura, e só da conta de quem está logado
+  async planejamento() {
+    const uid = await usuarioId();
+    if (!uid) return [];
+    try {
+      return await planejamentoPorTurma(uid);
+    } catch {
+      return [];
+    }
   },
 };
 

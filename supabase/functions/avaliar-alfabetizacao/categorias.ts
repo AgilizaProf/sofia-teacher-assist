@@ -1,0 +1,33 @@
+// Categorias de erro de escrita que a Sofia pode usar.
+// Os ids precisam ser os mesmos de src/lib/alfabetizacao/erros.ts
+// (o teste src/lib/alfabetizacao/categoriasSync.test.ts confere).
+export const CATEGORIAS_ERRO: Array<[string, string]> = [
+  ["m_pb", "trocou M por N antes de P e B, ou N por M antes de outras consoantes (canpo, bonba, demte)"],
+  ["r_rr", "trocou R por RR ou RR por R entre vogais (caro por carro, barrata)"],
+  ["s_ss", "trocou S por SS ou SS por S entre vogais (pasaro, cassa)"],
+  ["c_cedilha", "trocou Ç, C, S ou SS com som de S (cabesa, masã, sebola, crianssa)"],
+  ["s_z", "trocou S por Z ou Z por S com som de Z (caza, cosinha, azulejo com s)"],
+  ["x_ch", "trocou X por CH ou CH por X (xuva, peiche)"],
+  ["g_j", "trocou G por J ou J por G antes de E e I (jelo, tijela, hoge)"],
+  ["gu_g", "esqueceu o U de GUE/GUI ou pôs U sem precisar (fogete, gitarra)"],
+  ["qu_c", "trocou QU por C ou K (ceijo, kilo, maquaco)"],
+  ["lh", "trocou LH por L ou LI, ou o contrário (foia, olio, abela, familha)"],
+  ["nh", "trocou NH por N ou NI, ou o contrário (nino, galina)"],
+  ["l_u", "trocou L por U ou U por L no fim da sílaba (sau, papeu, auface, chapel)"],
+  ["o_u", "escreveu U no lugar do O átono, principalmente no fim da palavra (bolu, gatu, muito por muitu)"],
+  ["e_i", "escreveu I no lugar do E átono, principalmente no fim da palavra (leiti, denti, iscola)"],
+  ["am_ao", "trocou AM por ÃO ou ÃO por AM no fim dos verbos (cantarão por cantaram, forão)"],
+  ["r_final", "esqueceu o R do fim do verbo no infinitivo (vou brinca, quero come)"],
+  ["h_inicial", "esqueceu o H inicial ou pôs H onde não tem (oje, omem, hontem)"],
+  ["p_b", "trocou P por B ou B por P (pola por bola)"],
+  ["t_d", "trocou T por D ou D por T (tato por dado)"],
+  ["f_v", "trocou F por V ou V por F (faca por vaca)"],
+  ["c_g", "trocou C por G ou G por C com som de K/G (cato por gato)"],
+  ["encontro", "esqueceu o R ou o L de um encontro consonantal (pato por prato, banco por branco, for por flor)"],
+  ["ditongo", "omitiu uma vogal de ditongo (pexe, otro, bejo, falo por falou)"],
+  ["segmentacao", "juntou palavras (derepente, agente foi, concerteza) ou separou uma palavra (a gora, em bora)"],
+  ["pontuacao", "falta de ponto final, vírgula, interrogação ou travessão onde era necessário"],
+  ["maiuscula", "falta de letra maiúscula no começo da frase ou em nome próprio"],
+  ["acentuacao", "falta ou troca de acento agudo, circunflexo ou til (vovo, cafe, mao)"],
+  ["outro", "qualquer outro erro que não se encaixe nas categorias acima"],
+];
