@@ -36,7 +36,8 @@ export async function ouvirLeitura(args: {
   if (emTeste()) {
     if (!args.cartaoTexto.trim())
       return {
-        transcricao: "o menino foi na feira com a mãe e comprou banana laranja e um peixe bem grande",
+        transcricao:
+          "o menino foi na feira com a mãe e comprou banana laranja e um peixe bem grande",
         observacao: "Leu com ritmo, sem pausas longas.",
       };
     const ps = args.cartaoTexto.split(/\s+/).filter(Boolean);
