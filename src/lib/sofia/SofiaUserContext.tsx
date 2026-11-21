@@ -1,3 +1,4 @@
+import { useSemanasPlano } from "@/lib/planejamento/semanas";
 import React, { createContext, useContext, useMemo } from "react";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useDashClasses, useDashStudents } from "@/hooks/useDashLegacyData";
@@ -130,7 +131,11 @@ export function SofiaUserDataProvider({ children }: { children: React.ReactNode 
 
   // Planejamento
   const [m1Tema] = usePersistentState<string>("plan_m1_tema", "");
-  const [m1Plan] = usePersistentState<M1Plan>("plan_m1_plan", null);
+  // Plano da semana atual (cada semana tem o seu plano).
+  const semanasPlano = useSemanasPlano<unknown>();
+  const planoDaSemana = semanasPlano.planoDe;
+  const semanaAtual = semanasPlano.semanaAtual;
+  const m1Plan: M1Plan = useMemo(() => planoDaSemana(semanaAtual), [planoDaSemana, semanaAtual]);
   const [week] = usePersistentState<Week>("plan_week", null);
   const [m5Turma] = usePersistentState<string>("plan_m5_turma", "");
   const [diary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});

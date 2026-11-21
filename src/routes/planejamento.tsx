@@ -29,7 +29,8 @@ const UI_TO_INTERNAL: Record<string, MKey> = {
   m2: "pcd",
   m3: "m1",
   m4: "m4",
-  m5: "m5",
+  // "Organizar a semana" saiu do Planejar: os links antigos abrem a Semana.
+  m5: "m1",
   m6: "m6",
   m7: "trilhas",
 };

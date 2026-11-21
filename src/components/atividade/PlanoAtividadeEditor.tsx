@@ -1,3 +1,4 @@
+import { useSemanasPlano } from "@/lib/planejamento/semanas";
 import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
@@ -158,8 +159,6 @@ type M1Card = {
   // segundo evento espelho (o editor já grava o evento atv/pcd na data exata).
   noM4Sync?: boolean;
 };
-type M1Plan = Record<DayKey, M1Card[]>;
-const EMPTY_M1: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
 const VARIANT_BY_DISC: Record<string, Variant> = {
   "Língua Portuguesa": "port",
@@ -247,7 +246,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   );
 
   // M1 plan (mesma chave usada em Planejamento.tsx)
-  const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1);
+  // Plano da semana: cada semana tem o seu (mesma regra do Planejamento).
+  const semanasPlano = useSemanasPlano<M1Card>();
 
   // Eventos do usuário no calendário M4 (camadas). Mesma chave lida em
   // src/pages/Planejamento.tsx no módulo M4 para integrar visualmente as
@@ -1028,7 +1028,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (${modo === "pcd" ? "PCD" : "regular"}).`,
         noM4Sync: true,
       };
-      setM1Plan({ ...m1Plan, [alvo]: [...(m1Plan[alvo] || []), card] });
+      semanasPlano.agendar(dt, card);
     }
 
     // 2) Adiciona ao calendário M4 (camadas) na data exata escolhida.
@@ -1130,7 +1130,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     let okSave = 0;
     let okSched = 0;
     let falhasNuvemLote = 0;
-    const m1Acc: M1Plan = { ...m1Plan };
+    const agendarNaSemana: Array<{ dt: Date; card: M1Card }> = [];
     const m4Acc: M4UserStore = { ...m4UserEvents };
     for (let i = 0; i < planosParaSalvar.length; i++) {
       const p = planosParaSalvar[i];
@@ -1183,7 +1183,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (lote · ${modo === "pcd" ? "PCD" : "regular"}).`,
             noM4Sync: true,
           };
-          m1Acc[alvo] = [...(m1Acc[alvo] || []), card];
+          agendarNaSemana.push({ dt, card });
         }
         const evt: M4UserEvt = {
           id: `m4u_${Date.now()}_${i}`,
@@ -1201,7 +1201,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         void exportarM4ParaAgenda(data, evt);
       }
     }
-    setM1Plan(m1Acc);
+    agendarNaSemana.forEach(({ dt, card }) => semanasPlano.agendar(dt, card));
     setM4UserEvents(m4Acc);
     logActivity({
       type: "planejamento",
