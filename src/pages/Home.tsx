@@ -19,6 +19,7 @@ import {
   usePendentesWhatsapp,
 } from "@/components/painel/whatsapp";
 import { ExtratoCreditos } from "@/components/painel/ExtratoCreditos";
+import { AvisosSofia } from "@/components/painel/AvisosSofia";
 
 // Página inicial no visual "Painel": contador pequeno no topo, caixa para
 // escrever para a Sofia, currículo da rede e os cards de todas as funções.
@@ -499,6 +500,8 @@ export function Home() {
             ))}
           </div>
         </section>
+
+        {hydrated && <AvisosSofia />}
 
         <div className="hm-sec">
           <h2>Suas ferramentas</h2>
