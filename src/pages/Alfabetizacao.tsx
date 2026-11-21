@@ -1,3 +1,4 @@
+import { obsDoAluno, useObsWhatsapp, type ObsWhatsapp } from "@/lib/alfabetizacao/whatsapp";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
@@ -108,6 +109,33 @@ function Distribuicao({
   );
 }
 
+const IC = {
+  livro:
+    "M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15ZM4 20.5A2.5 2.5 0 0 0 6.5 23H20",
+  mic: "M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3ZM5 11a7 7 0 0 0 14 0M12 18v3",
+  alunos:
+    "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM2.5 20a6.5 6.5 0 0 1 13 0M16.5 4.3a3.5 3.5 0 0 1 0 6.4M18 14.2a6.5 6.5 0 0 1 3.5 5.8",
+  lapis: "M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1ZM14.5 6.5l3 3",
+};
+
+function Ico({ d }: { d: string }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d={d} />
+    </svg>
+  );
+}
+
 function Ficha({
   linha,
   dados,
@@ -115,6 +143,7 @@ function Ficha({
   apagarLeitura,
   apagarEscrita,
   abrir,
+  obs,
 }: {
   linha: Linha;
   dados: AlfaDados;
@@ -122,6 +151,7 @@ function Ficha({
   apagarLeitura: (id: string) => void;
   apagarEscrita: (id: string) => void;
   abrir: (aba: Aba) => void;
+  obs: ObsWhatsapp[];
 }) {
   const { aluno, leituras, escritas } = linha;
   useEffect(() => {
@@ -237,6 +267,21 @@ function Ficha({
             );
           })}
         </div>
+        {obs.length > 0 && (
+          <>
+            <h3 style={{ margin: "8px 0 0", fontFamily: "var(--pn-display)", fontSize: 16 }}>
+              Observações pelo WhatsApp
+            </h3>
+            <div className="af-hist">
+              {obs.slice(0, 10).map((o) => (
+                <div key={o.id}>
+                  <b>{dataCurta(o.data)}</b>
+                  <span style={{ flex: 1, minWidth: 0 }}>{o.texto}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
         <div className="af-botoes">
           <button type="button" className="pn-btn primary" onClick={() => abrir("leitura")}>
             Avaliar a leitura
@@ -256,6 +301,7 @@ export function Alfabetizacao() {
   const { dados, salvarLeitura, salvarEscrita, apagarLeitura, apagarEscrita, salvarMetas } =
     useAlfaDados();
 
+  const obsWhatsapp = useObsWhatsapp();
   const [aba, setAba] = useState<Aba>("turma");
   const [turma, setTurma] = useState("");
   const [alunoSel, setAlunoSel] = useState<string | undefined>(undefined);
@@ -410,26 +456,37 @@ export function Alfabetizacao() {
       <style dangerouslySetInnerHTML={{ __html: painelTokensCss + alfaCss }} />
       <PainelNav />
       <main className="af-wrap">
-        <span className="af-eyebrow">Criança alfabetizada</span>
-        <h1 className="af-title">Leitura e escrita, aluno por aluno.</h1>
-        <p className="af-sub">
-          Ouça a leitura, corrija o texto pela foto e veja em que nível cada criança está. O app
-          sugere e você confirma. Nem o áudio nem a foto ficam guardados.
-        </p>
-
-        {nomesTurmas.length > 0 && (
-          <div className="af-chips" role="group" aria-label="Turma">
-            <span>Turma:</span>
-            <button type="button" aria-pressed={turma === ""} onClick={() => setTurma("")}>
-              Todas
-            </button>
-            {nomesTurmas.map((t) => (
-              <button key={t} type="button" aria-pressed={turma === t} onClick={() => setTurma(t)}>
-                {t}
-              </button>
-            ))}
+        <header className="af-hero">
+          <div className="af-hero-txt">
+            <span className="af-eyebrow">
+              <Ico d={IC.livro} />
+              Criança alfabetizada
+            </span>
+            <h1 className="af-title">Leitura e escrita, aluno por aluno.</h1>
+            <p className="af-sub">
+              Ouça a leitura, corrija o texto pela foto e veja em que nível cada criança está. O app
+              sugere e você confirma. Nem o áudio nem a foto ficam guardados.
+            </p>
+            {nomesTurmas.length > 0 && (
+              <div className="af-chips" role="group" aria-label="Turma">
+                <span>Turma:</span>
+                <button type="button" aria-pressed={turma === ""} onClick={() => setTurma("")}>
+                  Todas
+                </button>
+                {nomesTurmas.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={turma === t}
+                    onClick={() => setTurma(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </header>
 
         <div className="af-tabs" role="tablist">
           {(
@@ -467,19 +524,31 @@ export function Alfabetizacao() {
             ) : (
               <>
                 <div className="af-nums">
-                  <div className="af-num">
+                  <div className="af-num n1">
+                    <i>
+                      <Ico d={IC.alunos} />
+                    </i>
                     <b>{linhas.length}</b>
                     <span>{linhas.length === 1 ? "aluno" : "alunos"}</span>
                   </div>
-                  <div className="af-num">
+                  <div className="af-num n2">
+                    <i>
+                      <Ico d={IC.mic} />
+                    </i>
                     <b>{avaliadosL}</b>
                     <span>com leitura avaliada</span>
                   </div>
-                  <div className="af-num">
+                  <div className="af-num n3">
+                    <i>
+                      <Ico d={IC.livro} />
+                    </i>
                     <b>{fluentes}</b>
                     <span>já leem textos</span>
                   </div>
-                  <div className="af-num">
+                  <div className="af-num n4">
+                    <i>
+                      <Ico d={IC.lapis} />
+                    </i>
                     <b>{linhas.length - painel.semE}</b>
                     <span>com texto corrigido</span>
                   </div>
@@ -736,6 +805,7 @@ export function Alfabetizacao() {
           apagarLeitura={apagarLeitura}
           apagarEscrita={apagarEscrita}
           abrir={(d) => abrirPara(ficha.aluno.id, d)}
+          obs={obsDoAluno(obsWhatsapp, ficha.aluno.id, ficha.aluno.nome)}
         />
       )}
     </div>
