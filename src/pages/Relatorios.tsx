@@ -1,5 +1,6 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
 import { ColarAlunos } from "@/components/shared/ColarAlunos";
+import { peiPdiPorAluno, resumoPeiPdi, type LinhaPeiPdi } from "@/lib/pei/resumoPeiPdi";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
@@ -771,6 +772,27 @@ const [anamByStudent] = usePersistentState<Record<string, Record<string, unknown
   const { dados: alfaDados } = useAlfaDados();
 const [peiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
 const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; cat: string; body: string }>>>("inc_reg", {});
+  // Inclusão guarda anamnese, PEI e registros pelo id do aluno no banco; aqui a
+  // lista usa "db:<id>". Antes a busca era feita com "db:<id>" e nunca achava
+  // nada, então o parecer saía sem PEI, anamnese e registros.
+  const doInc = <T,>(mapa: Record<string, T>, id: string): T | undefined =>
+    mapa[id.startsWith("db:") ? id.slice(3) : id] ?? mapa[id];
+  // PEI feito na tela PEI/PDI (tabela pei_pdi): entra quando a ficha não tem PEI.
+  const [acharPeiPdi, setAcharPeiPdi] = useState<ReturnType<typeof peiPdiPorAluno>>(() => () => undefined);
+  useEffect(() => {
+    let vivo = true;
+    void supabase
+      .from("pei_pdi")
+      .select("aluno_client_id, aluno_nome, bimestre, objetivos_longo, objetivos_curto, estrategias, avaliacao, gerado_em")
+      .order("gerado_em", { ascending: false })
+      .limit(300)
+      .then(({ data }) => {
+        if (vivo && data) setAcharPeiPdi(() => peiPdiPorAluno(data as LinhaPeiPdi[]));
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
   // Estado de expansão do campo de observações no modal BNCC.
   // Começa sempre recolhido (Set vazio) para liberar espaço visual.
@@ -968,24 +990,28 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       // ignoramos esses dados na geração — sem apagá-los (Opção B).
       const ehPcd = !!(a.pcd && a.pcd.trim());
       // Busca dados reais do aluno cadastrados em /inclusao (apenas se PCD)
-      const anamData = ehPcd ? anamByStudent[a.id] : undefined;
+      const anamData = ehPcd ? doInc(anamByStudent, a.id) : undefined;
       const anamResumoTexto = anamData
         ? Object.entries(anamData)
             .filter(([, v]) => v && typeof v === "object")
             .map(([k, v]) => `${k}: ${JSON.stringify(v).slice(0, 200)}`)
             .join("\n")
         : "";
-      const peiDoAluno = ehPcd ? peiByStudent[a.id] : undefined;
+      const peiDoAluno = ehPcd ? doInc(peiByStudent, a.id) : undefined;
+      const peiPdi = ehPcd ? acharPeiPdi(a.id.startsWith("db:") ? a.id.slice(3) : a.id, a.nome) : undefined;
       const peiResumoCompleto = peiDoAluno
         ? [
             peiDoAluno.objetivos ? `Objetivos: ${peiDoAluno.objetivos}` : "",
             peiDoAluno.estrategias ? `Estratégias: ${peiDoAluno.estrategias}` : "",
             peiDoAluno.adaptacoes ? `Adaptações: ${peiDoAluno.adaptacoes}` : "",
+            peiPdi ? resumoPeiPdi(peiPdi) : "",
             peiResumo,
           ].filter(Boolean).join("\n")
-        : peiResumo;
+        : peiPdi
+          ? [resumoPeiPdi(peiPdi), peiResumo].filter(Boolean).join("\n")
+          : peiResumo;
       // Registros do diário de inclusão (inc_reg) também só entram para PCD.
-      const registrosDoAluno = ehPcd ? (regByStudent[a.id] || []).slice(0, 50) : [];
+      const registrosDoAluno = ehPcd ? (doInc(regByStudent, a.id) || []).slice(0, 50) : [];
 
       // Parecer do período anterior (do histórico) p/ a IA descrever a evolução (longitudinal).
       const anteriores = (parecerHist[a.id] || []).filter((p) => p.periodoLabel && p.periodoLabel !== periodoLabel);
@@ -1018,7 +1044,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           avaliacaoBncc: leituraEscrita
             ? `${linhas}\n\nLeitura e escrita (níveis confirmados pela professora)\n  - ${leituraEscrita}`
             : linhas,
-          temPeiReal: Boolean(peiByStudent[a.id]),
+          temPeiReal: Boolean(peiDoAluno || peiPdi),
           parecerAnteriorTexto,
           parecerAnteriorIntervalo: parecerAnterior?.periodoLabel || "",
           registros: registrosDoAluno,
