@@ -1,4 +1,5 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { ColarAlunos } from "@/components/shared/ColarAlunos";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
@@ -2320,6 +2321,12 @@ ${parecerHtml}
               <button onClick={fecharModalAluno} aria-label="Fechar" style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--muted)" }}><X size={18} /></button>
             </div>
             <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+              {!editAluno && (
+                <div style={{ paddingBottom: 12, borderBottom: "1px solid var(--line-soft)" }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 12.5, color: "var(--muted)" }}>Tem a turma inteira? Cole todos os nomes de uma vez.</p>
+                  <ColarAlunos turmas={dashClasses.map((c) => c.name)} turmaInicial={novoAluno.classRef} />
+                </div>
+              )}
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
                 Nome completo
                 <input

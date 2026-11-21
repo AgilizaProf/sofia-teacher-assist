@@ -2194,6 +2194,7 @@ function renderAlunos(){
      ${S.turmas.length?`<div class="alunos-lista">${S.turmas.map(x=>`<div><span><b>${esc(x.nome)}</b> · ${x.alunos.length} alunos ${x.exemplo?'<span class="chip alerta">exemplo</span>':""}</span><button class="btn peq${x.id===turmaAberta?" marinho":""}" data-abrir="${x.id}">${x.id===turmaAberta?"Aberta":"Abrir"}</button></div>`).join("")}</div>`:`<div class="vazio">Nenhuma turma ainda.</div>`}
      <div class="grade-filtros"><label class="campo">Nova turma<input id="t-nome" placeholder="Ex.: 5º ano B"></label><label class="campo">Ano<select id="t-ano">${opcoes(ANOS,5)}</select></label></div>
      <button class="btn prim" id="t-criar">Criar turma</button>
+     ${nuvem()&&nuvem().alunos?`<button class="btn" id="t-app" title="Usa as turmas e os alunos que você já cadastrou no AgilizaProf">Trazer turmas e alunos do app</button>`:""}
      <h2 style="margin-top:8px">Backup</h2>
      <p class="fonte" style="margin:0">Leva turmas, simulados, minhas questões, avaliações (gostei / não gostei) e resultados para outro aparelho ou navegador.</p>
      <div class="linha-acoes"><button class="btn" id="b-exp">Exportar backup</button><button class="btn" id="b-imp">Importar backup</button></div>
@@ -2209,6 +2210,19 @@ function renderAlunos(){
   $("#painel").querySelectorAll("[data-abrir]").forEach(b=>b.onclick=()=>{turmaAberta=b.dataset.abrir;renderAlunos();});
   $("#t-criar").onclick=()=>{const nome=$("#t-nome").value.trim();if(!nome){toast("Dê um nome à turma.");return;}const nt={id:novoId(),nome,ano:+$("#t-ano").value,alunos:[]};S.turmas.push(nt);turmaAberta=nt.id;salvar();renderAlunos();$("#t-lista").focus();};
   $("#b-exp").onclick=()=>baixar(`agilizaprof-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify({app:"agilizaprof-banco",v:2,turmas:S.turmas,simulados:S.simulados,resultados:S.resultados,minhas:S.minhas,fav:S.fav,aval:S.aval}));
+  if($("#t-app"))$("#t-app").onclick=async e=>{const btn=e.currentTarget;btn.disabled=true;btn.textContent="Buscando…";
+    try{const lista=await nuvem().alunos();const chave=x=>String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+      let novasT=0,novosA=0;
+      (lista||[]).forEach(g=>{if(!g||!g.turma||!Array.isArray(g.alunos))return;
+        let tt=S.turmas.find(x=>chave(x.nome)===chave(g.turma));
+        if(!tt){tt={id:novoId(),nome:String(g.turma).slice(0,80),ano:ANOS[+g.ano]?+g.ano:5,alunos:[]};S.turmas.push(tt);novasT++;}
+        const ja=new Set(tt.alunos.map(a=>chave(a.nome)));
+        g.alunos.forEach(n=>{const nome=String(n||"").trim().slice(0,120);if(!nome||ja.has(chave(nome)))return;ja.add(chave(nome));tt.alunos.push({id:tt.id+"-"+novoId()+tt.alunos.length,nome});novosA++;});
+        tt.exemplo=false;});
+      if(!novasT&&!novosA){toast((lista||[]).length?"Tudo já estava aqui.":"Nenhum aluno com turma no app ainda. Cadastre em Pareceres ou Alfabetização.");}
+      else{salvar();toast(`${novasT?novasT+" turma(s) e ":""}${novosA} aluno(s) trazidos do app.`);}
+      renderAlunos();
+    }catch(err){toast("Não deu para buscar os alunos agora. Tente de novo.");btn.disabled=false;btn.textContent="Trazer turmas e alunos do app";}};
   $("#b-imp").onclick=()=>$("#arq-backup").click();
   if(!t)return;
   $("#painel").querySelectorAll("[data-tirar]").forEach(b=>b.onclick=()=>{t.alunos=t.alunos.filter(a=>a.id!==b.dataset.tirar);salvar();renderAlunos();});

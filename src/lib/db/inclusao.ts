@@ -219,3 +219,34 @@ export async function bulkAssignTurmaInclusao(
     .in("id", ids);
   if (error) throw error;
 }
+
+/** Ficha nova só com o nome (cadastro rápido, inclusive de vários de uma vez). */
+export function fichaSoNome(nome: string, turma: string): StudentInput {
+  return {
+    name: nome,
+    initials:
+      nome.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0] ?? "").join("").toUpperCase() || "AL",
+    age: "—",
+    turma: turma || "Sem turma",
+    diag: "",
+    cid: "",
+    aee: "",
+    anamnese: "0/14",
+    registros: "0",
+    trend: "—",
+    trendTone: "muted",
+    pcd: "nao",
+  };
+}
+
+/** Cadastra vários alunos de uma vez (lista colada), num único insert. */
+export async function createInclusaoStudentsEmLote(nomes: string[], turma: string): Promise<number> {
+  if (nomes.length === 0) return 0;
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) throw new Error("Usuário não autenticado");
+  const linhas = nomes.map((n) => ({ ...uiToPayload(fichaSoNome(n, turma)), user_id: userId }));
+  const { error } = await supabase.from("alunos_inclusao").insert(linhas);
+  if (error) throw error;
+  return linhas.length;
+}

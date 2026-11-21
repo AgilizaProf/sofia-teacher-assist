@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
 import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { supabase } from "@/integrations/supabase/client";
-import { guardarNaBiblioteca, type ResultadoGuardar, type TipoBiblioteca } from "@/lib/biblioteca";
+import { anoDaTurma, guardarNaBiblioteca, type ResultadoGuardar, type TipoBiblioteca } from "@/lib/biblioteca";
 
 // Página do app que abriga uma ferramenta completa (Jogos e atividades interativas, Questões)
 // no visual "Painel": menu do app, contador pequeno no topo, título e a
@@ -49,6 +49,10 @@ type Snapshot = { data: unknown; updated_at: string } | null;
 // A Sofia das Questões usa isto para sugerir habilidades ao montar um simulado.
 type PlanejamentoTurma = { turma: string; ano: string; codigos: string[]; quando: string };
 
+// Alunos cadastrados no app (Pareceres, Alfabetização, Inclusão), por turma.
+// Questões e Jogos usam isto para não pedir a lista de novo.
+type AlunosDaTurma = { turma: string; ano: number | null; alunos: string[] };
+
 type AprofNuvem = {
   get: (key: string) => Promise<Snapshot>;
   set: (key: string, data: unknown) => Promise<boolean>;
@@ -56,6 +60,7 @@ type AprofNuvem = {
   planejamento: () => Promise<PlanejamentoTurma[]>;
   relatar: (relato: unknown) => Promise<boolean>;
   guardar: (item: unknown) => Promise<ResultadoGuardar>;
+  alunos: () => Promise<AlunosDaTurma[]>;
 };
 
 // Só estas chaves podem ser lidas ou gravadas pelas ferramentas (lista branca).
@@ -193,6 +198,28 @@ const aprofNuvem: AprofNuvem = {
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 300) : null,
     });
     return !error;
+  },
+  // só leitura, e só da conta de quem está logado
+  async alunos() {
+    const uid = await usuarioId();
+    if (!uid) return [];
+    const [{ data: alunos }, { data: turmas }] = await Promise.all([
+      supabase.from("alunos_inclusao").select("nome, turma").eq("user_id", uid).limit(2000),
+      supabase.from("turmas").select("nome, ano").eq("user_id", uid).limit(500),
+    ]);
+    const anoDe = new Map((turmas ?? []).map((t) => [t.nome, anoDaTurma(`${t.ano ?? ""} ${t.nome}`)]));
+    const porTurma = new Map<string, string[]>();
+    for (const a of alunos ?? []) {
+      const turma = (a.turma ?? "").trim();
+      const nome = (a.nome ?? "").trim();
+      if (!turma || turma === "Sem turma" || !nome) continue;
+      porTurma.set(turma, [...(porTurma.get(turma) ?? []), nome]);
+    }
+    return [...porTurma.entries()].map(([turma, nomes]) => ({
+      turma,
+      ano: anoDe.get(turma) ?? anoDaTurma(turma),
+      alunos: nomes.sort((x, y) => x.localeCompare(y, "pt-BR")),
+    }));
   },
   // Guarda um simulado ou jogo na Minha Biblioteca do app.
   async guardar(item) {
