@@ -126,17 +126,19 @@ Responda APENAS com JSON válido neste formato:
     const r = await callAI({ userId, tipo: "relatorio_bimestral", system: sys, user, json: true, maxTokens: 8000 });
     if (!r.ok) return aiErrorResponse(r);
     let parsed = parseAiJson<Record<string, unknown>>(r.text || "{}");
+    // Cortado pelo limite de tokens: o app avisa "A resposta veio incompleta" (N8).
+    const truncated = !!r.truncated || !!(parsed as { _truncated?: boolean })._truncated;
     if ((parsed as { _truncated?: boolean })._truncated) {
       console.warn("[gerar-relatorio] JSON truncado/inválido — devolvendo fallback");
       parsed = { resumo: String((parsed as { _raw?: string })._raw || "").slice(0, 1500) };
     }
     parsed = sanitizarTextoSofia(parsed) as Record<string, unknown>;
-    return new Response(JSON.stringify({ relatorio: parsed, model: r.model }), {
+    return new Response(JSON.stringify({ relatorio: parsed, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("[gerar-relatorio] erro interno", e);
-    return new Response(JSON.stringify({ ok: false, error: "Falha ao gerar relatório.", detail: String((e as Error)?.message || e).slice(0, 500) }), {
+    return new Response(JSON.stringify({ ok: false, error: "A Sofia não conseguiu gerar o relatório agora. Tente de novo em instantes.", detail: String((e as Error)?.message || e).slice(0, 500) }), {
       status: 200,
       headers: { ...cors, "Content-Type": "application/json" },
     });

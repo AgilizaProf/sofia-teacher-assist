@@ -94,15 +94,15 @@ Responda APENAS em JSON válido neste formato:
     const r = await callAI({ userId, tipo: "trilha_geracao", system: sys, user, json: true, maxTokens: 8000 });
     if (!r.ok) return aiErrorResponse(r);
     const trilha = parseAiJson<Record<string, unknown>>(r.text || "{}");
-    if ((trilha as { _truncated?: boolean })._truncated) {
-      console.warn("[gerar-trilha] JSON truncado mesmo após reparo");
-    }
-    return new Response(JSON.stringify({ trilha, model: r.model }), {
+    // Cortada (limite de tokens) ou ilegível: o app avisa e não grava (N8).
+    const truncated = !!r.truncated || !!(trilha as { _truncated?: boolean })._truncated;
+    if (truncated) console.warn("[gerar-trilha] resposta cortada", r.finishReason);
+    return new Response(JSON.stringify({ trilha, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("[gerar-trilha] erro interno", e);
-    return new Response(JSON.stringify({ ok: false, error: "Falha ao gerar trilha.", detail: String((e as Error)?.message || e).slice(0, 500) }), {
+    return new Response(JSON.stringify({ ok: false, error: "A Sofia não conseguiu gerar a trilha agora. Tente de novo em instantes.", detail: String((e as Error)?.message || e).slice(0, 500) }), {
       status: 200, headers: { ...cors, "Content-Type": "application/json" },
     });
   }

@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { invocarIA, mensagemAmigavel } from "@/lib/sofia/invocarIA";
 import { useCurriculoMunicipal, type CurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { toast } from "sonner";
 import { consumirCreditos } from "@/lib/creditos/consume";
@@ -112,8 +113,10 @@ export function CurriculoMunicipalCard() {
       const okGate = await creditosGate.checar({ custo: CUSTOS.anexar_rede, acao: `Anexo de Rede — ${municipio.trim()}` });
       if (!okGate) return;
 
-      await supabase.functions.invoke("processar-curriculo", {
+      // Só cobra se o envio para leitura foi aceito (N1/N6).
+      await invocarIA<{ ok?: boolean; status?: string }>("processar-curriculo", {
         body: { curriculo_id: row.id, arquivo_path: path, municipio: municipio.trim(), ordem },
+        validar: (d) => d?.ok === true,
       });
       void consumirCreditos(CUSTOS.anexar_rede, `Anexo de Rede — ${municipio.trim()}`);
       void acumularTempo("curriculo_municipio", `Currículo Municipal — ${municipio.trim()}`);
@@ -128,7 +131,7 @@ export function CurriculoMunicipalCard() {
       );
       await load();
     } catch (e) {
-      toast.error((e as Error)?.message || "Erro no upload.");
+      toast.error("Não consegui enviar o currículo.", { description: mensagemAmigavel(e, "Tente de novo em instantes.") });
     } finally {
       setUploading(false);
     }

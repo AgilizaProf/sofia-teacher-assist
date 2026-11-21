@@ -1,9 +1,36 @@
-// ====== AgilizaProf — Tracking Service (Meta Pixel) ======
-// GA4 será adicionado em outro momento; por ora só Meta Pixel.
+// ====== AgilizaProf — Meta Pixel (só marketing) ======
+//
+// LGPD (auditoria A2): ao Meta só vão eventos de marketing de uma lista
+// FECHADA, com parâmetros fixos. Nunca texto de botão, nome de aluno,
+// diagnóstico, e-mail, rota com id ou parâmetros de busca.
+//  - `trackEvent` com um nome fora da lista não envia nada ao Meta.
+//  - O Pixel só dispara em páginas públicas/de funil (`META_ROTAS_PERMITIDAS`).
+//  - O carregamento do Pixel (em __root.tsx) desliga a coleta automática
+//    (`autoConfig`) e o PageView automático em mudança de rota.
+// Telemetria interna (uso do app) fica em `@/lib/admin/track` (Supabase).
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  interface Window { fbq?: (...args: any[]) => void }
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fbq?: ((...args: any[]) => void) & { disablePushState?: boolean };
+  }
+}
+
+export const META_PIXEL_ID = "966501615841208";
+
+/**
+ * Páginas onde o Pixel pode disparar: entrada, cadastro, onboarding, planos,
+ * indicações e confirmação de pagamento. Nenhuma tem dado de aluno.
+ * Também vale o link curto de indicação (`/CODIGO`).
+ * Mantido como string para ser usado também no script inline de __root.tsx.
+ */
+export const META_ROTAS_PERMITIDAS_RE_SRC =
+  "^/(|auth|auth/callback|reset-password|termos|privacidade|onboarding|configuracoes|indicacoes|pagamento-confirmado-mensal|pagamento-confirmado-anual|[A-Z0-9]{4,12})/?$";
+
+const META_ROTAS_PERMITIDAS = new RegExp(META_ROTAS_PERMITIDAS_RE_SRC);
+
+export function metaPermitidoNaRota(pathname: string): boolean {
+  return META_ROTAS_PERMITIDAS.test(pathname || "/");
 }
 
 type TrackLocation =
@@ -29,64 +56,77 @@ export interface TrackProps {
 
 function fbqSafe(...args: unknown[]) {
   if (typeof window === "undefined") return;
+  if (!metaPermitidoNaRota(window.location.pathname)) return;
   const fb = window.fbq;
   if (typeof fb !== "function") return;
-  try { fb(...args); } catch { /* noop */ }
+  try {
+    fb(...args);
+  } catch {
+    /* noop */
+  }
 }
 
 export function trackPageView() {
   fbqSafe("track", "PageView");
 }
 
+const PLANOS = new Set(["mensal", "anual"]);
+const plano = (p: unknown) => (typeof p === "string" && PLANOS.has(p) ? p : "plano");
+const valor = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
+
+/**
+ * Lista fechada de eventos que chegam ao Meta. Os parâmetros são montados
+ * aqui, nunca repassados de quem chama.
+ */
+const META_EVENTOS: Record<string, (props: TrackProps) => void> = {
+  // Autenticação
+  click_logar: () => fbqSafe("track", "Lead", { content_name: "login" }),
+  click_entrar: () => fbqSafe("track", "Lead", { content_name: "entrar" }),
+  click_cadastrar_gratis: () =>
+    fbqSafe("track", "CompleteRegistration", { content_name: "cadastro_gratuito" }),
+  cadastro_concluido: () =>
+    fbqSafe("track", "CompleteRegistration", { content_name: "registro_completo" }),
+  login_concluido: () => fbqSafe("track", "Lead", { content_name: "login_sucesso" }),
+  // Planos
+  click_fazer_plano: (p) =>
+    fbqSafe("track", "InitiateCheckout", {
+      content_name: plano(p.plan),
+      value: valor(p.value),
+      currency: "BRL",
+    }),
+  click_ver_planos: () => fbqSafe("track", "ViewContent", { content_name: "pagina_planos" }),
+  plano_contratado: (p) =>
+    fbqSafe(
+      "track",
+      "Purchase",
+      { content_name: plano(p.plan), value: valor(p.value), currency: "BRL" },
+      // eventID permite ao Meta descartar duplicatas do mesmo pagamento
+      typeof p.event_id === "string" ? { eventID: p.event_id } : undefined,
+    ),
+  // Onboarding
+  onboarding_iniciado: () => fbqSafe("track", "ViewContent", { content_name: "onboarding_start" }),
+  onboarding_concluido: () => fbqSafe("trackCustom", "OnboardingConcluido"),
+  // Indicação (só o que é funil de aquisição)
+  ref_cadastro_via_link: () =>
+    fbqSafe("track", "Lead", { content_name: "ref_link", content_category: "referral" }),
+};
+
 export function trackEvent(eventName: string, props: TrackProps = {}) {
-  const defaultProps = { app: "agilizaprof", ...props };
-
-  const metaEventMap: Record<string, () => void> = {
-    // Autenticação
-    click_logar:            () => fbqSafe("track", "Lead", { content_name: "login", content_category: props.location }),
-    click_entrar:           () => fbqSafe("track", "Lead", { content_name: "entrar", content_category: props.location }),
-    click_cadastrar_gratis: () => fbqSafe("track", "CompleteRegistration", { content_name: "cadastro_gratuito" }),
-    cadastro_concluido:     () => fbqSafe("track", "CompleteRegistration", { content_name: "registro_completo" }),
-    login_concluido:        () => fbqSafe("track", "Lead", { content_name: "login_sucesso" }),
-    // Planos
-    click_fazer_plano:      () => fbqSafe("track", "InitiateCheckout", { content_name: props.plan || "plano", value: props.value, currency: "BRL" }),
-    click_ver_planos:       () => fbqSafe("track", "ViewContent", { content_name: "pagina_planos" }),
-    plano_contratado:       () => fbqSafe("track", "Purchase", { content_name: props.plan || "plano", value: props.value, currency: "BRL" }),
-    // Engajamento
-    clicou_gerar_relatorio: () => fbqSafe("trackCustom", "GerarRelatorio", defaultProps),
-    relatorio_gerado:       () => fbqSafe("trackCustom", "RelatorioGerado", defaultProps),
-    clicou_criar_plano:     () => fbqSafe("trackCustom", "CriarPlano", defaultProps),
-    plano_gerado:           () => fbqSafe("trackCustom", "PlanoGerado", defaultProps),
-    adaptacao_inclusiva:    () => fbqSafe("trackCustom", "AdaptacaoInclusiva", defaultProps),
-    clicou_sofia_chat:      () => fbqSafe("trackCustom", "SofiaChat", defaultProps),
-    // Tour / Onboarding
-    onboarding_iniciado:    () => fbqSafe("track", "ViewContent", { content_name: "onboarding_start" }),
-    onboarding_concluido:   () => fbqSafe("trackCustom", "OnboardingConcluido", defaultProps),
-    // Indicação (referral funnel)
-    ref_visualizar_secao:   () => fbqSafe("trackCustom", "RefViewSection", defaultProps),
-    ref_copiar_link:        () => fbqSafe("trackCustom", "RefCopyLink", defaultProps),
-    ref_compartilhar:       () => fbqSafe("trackCustom", "RefShare", defaultProps),
-    ref_cadastro_via_link:  () => fbqSafe("track", "Lead", { content_name: "ref_link", content_category: "referral", ...defaultProps }),
-    ref_registrado:         () => fbqSafe("trackCustom", "RefRegistered", defaultProps),
-    ref_registro_falhou:    () => fbqSafe("trackCustom", "RefRegisterFailed", defaultProps),
-    ref_conversao:          () => fbqSafe("track", "Purchase", { content_name: "ref_conversao", currency: "BRL", ...defaultProps }),
-  };
-
-  if (metaEventMap[eventName]) metaEventMap[eventName]();
-  // Dispara também como custom genérico para análise no Events Manager
-  fbqSafe("trackCustom", eventName, defaultProps);
+  const enviar = Object.prototype.hasOwnProperty.call(META_EVENTOS, eventName)
+    ? META_EVENTOS[eventName]
+    : undefined;
+  if (enviar) enviar(props);
 
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "development") {
     // eslint-disable-next-line no-console
-    console.log("[AgilizaProf Track]", eventName, defaultProps);
+    console.log("[AgilizaProf Track]", eventName, enviar ? "(Meta)" : "(só local)");
   }
 }
 
 /**
- * Dispara um evento do funil de indicação no Meta Pixel **e** persiste no
- * backend (`referral_events`) para o painel interno do funil de indicação.
- * Pode ser chamado anônimo (ex: visita /CODIGO) — o backend resolve o
- * referrer pelo código.
+ * Evento do funil de indicação: grava no backend (`referral_events`) para o
+ * painel interno. Ao Meta só vai o que estiver em `META_EVENTOS` (sem o
+ * código nem metadados). Pode ser chamado sem login (visita /CODIGO).
  */
 export async function trackReferral(
   event:
@@ -99,7 +139,7 @@ export async function trackReferral(
     | "ref_conversao",
   opts: { code?: string | null; meta?: Record<string, unknown> } = {},
 ) {
-  trackEvent(event, { location: "referral", code: opts.code || undefined, ...(opts.meta || {}) });
+  trackEvent(event);
   try {
     const { supabase } = await import("@/integrations/supabase/client");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

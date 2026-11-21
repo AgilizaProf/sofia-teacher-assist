@@ -31,11 +31,18 @@ export function costToCredits(costBrlValue: number): number {
 
 export async function isBudgetExceeded(
   userId: string,
-): Promise<{ exceeded: boolean; usedBrl: number; limitBrl: number; creditos: number }> {
-  const { data, error } = await supabaseAdmin.rpc("garantir_creditos_usuario", { _user_id: userId });
-  if (error) {
-    console.error("[aiBudget] garantir_creditos_usuario error:", error);
-    return { exceeded: false, usedBrl: 0, limitBrl: 0, creditos: 0 };
+): Promise<{ exceeded: boolean; usedBrl: number; limitBrl: number; creditos: number; erro?: boolean }> {
+  // Falha ao consultar NÃO é "0 créditos": devolve erro: true (N5).
+  let data: unknown = null;
+  let error: unknown = null;
+  try {
+    ({ data, error } = await supabaseAdmin.rpc("garantir_creditos_usuario", { _user_id: userId }));
+  } catch (e) {
+    error = e;
+  }
+  if (error || !data) {
+    console.error("[aiBudget] garantir_creditos_usuario error:", error ?? "sem dados");
+    return { exceeded: false, usedBrl: 0, limitBrl: 0, creditos: 0, erro: true };
   }
   const d = data as any;
   const totais = Number(d?.creditos_totais ?? 0);
@@ -48,15 +55,24 @@ export class BudgetExceededError extends Error {
   usedBrl: number;
   limitBrl: number;
   constructor(usedBrl: number, limitBrl: number) {
-    super(`Você não tem créditos disponíveis (${usedBrl}/${limitBrl} usados). Aguarde a renovação do seu plano ou faça upgrade.`);
+    super("Seus créditos acabaram. Eles renovam no próximo ciclo do seu plano.");
     this.usedBrl = usedBrl;
     this.limitBrl = limitBrl;
     this.name = "BudgetExceededError";
   }
 }
 
+/** Falha temporária ao consultar créditos (não é falta de créditos). */
+export class BudgetCheckError extends Error {
+  constructor() {
+    super("Não consegui conferir seus créditos agora. Tente de novo em instantes.");
+    this.name = "BudgetCheckError";
+  }
+}
+
 export async function assertBudget(userId: string): Promise<void> {
   const b = await isBudgetExceeded(userId);
+  if (b.erro) throw new BudgetCheckError();
   if (b.exceeded) throw new BudgetExceededError(b.usedBrl, b.limitBrl);
 }
 

@@ -13,6 +13,12 @@ import { useCreditos } from "@/lib/creditos/useCreditos";
 import { CurriculoMunicipalCard } from "@/components/settings/CurriculoMunicipalCard";
 import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav";
 import { trackEvent } from "@/lib/tracking";
+import {
+  WhatsappLogo,
+  textoParaConfirmar,
+  usePendentesWhatsapp,
+} from "@/components/painel/whatsapp";
+import { ExtratoCreditos } from "@/components/painel/ExtratoCreditos";
 
 // Página inicial no visual "Painel": contador pequeno no topo, caixa para
 // escrever para a Sofia, currículo da rede e os cards de todas as funções.
@@ -59,24 +65,19 @@ const CARDS: Card[] = [
     icon: ICONS.pen,
   },
   {
+    to: "/alfabetizacao",
+    title: "Criança alfabetizada",
+    desc: "Leitura e escrita de cada aluno, com cartões e evolução",
+    bg: "var(--pn-blue-soft)",
+    tag: "Novo",
+    icon: ICONS.book,
+  },
+  {
     to: "/inclusao",
     title: "Inclusão e PEI",
     desc: "Adaptações, registros e plano individual",
     bg: "var(--pn-lilac)",
     icon: ICONS.users,
-  },
-  {
-    to: "/indicacoes",
-    title: "Indique e ganhe",
-    desc: "Convide colegas e ganhe créditos e meses grátis",
-    bg: "var(--pn-sun)",
-    icon: (
-      <>
-        <rect x="3" y="8" width="18" height="4" rx="1" />
-        <path d="M12 8v13M19 12v9H5v-9" />
-        <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
-      </>
-    ),
   },
   {
     to: "/agenda",
@@ -99,14 +100,27 @@ const CARDS: Card[] = [
     ),
   },
   {
-    to: "/simulados",
-    title: "Simulados",
+    to: "/questoes",
+    title: "Questões",
     desc: "Banco de questões, provas e correção pela foto",
     bg: "var(--pn-pink)",
     icon: (
       <>
         <path d="M9 11l3 3L22 4" />
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+      </>
+    ),
+  },
+  {
+    to: "/indicacoes",
+    title: "Indique e ganhe",
+    desc: "Convide colegas e ganhe créditos e meses grátis",
+    bg: "var(--pn-sun)",
+    icon: (
+      <>
+        <rect x="3" y="8" width="18" height="4" rx="1" />
+        <path d="M12 8v13M19 12v9H5v-9" />
+        <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
       </>
     ),
   },
@@ -130,13 +144,16 @@ const css = `
 .hm-time .ic svg{width:14px;height:14px;}
 .hm-time b{font-family:var(--pn-display);font-variant-numeric:tabular-nums;}
 .hm-time .lvl{font-size:12px;font-weight:700;padding:2px 7px;border-radius:5px;background:#fff;}
-.hm-cred{background:var(--pn-surface);border:1.5px solid var(--pn-line);padding-left:12px;}
+.hm-cred{background:var(--pn-surface);border:1.5px solid var(--pn-line);padding-left:12px;font-family:inherit;cursor:pointer;}
+.hm-cred:hover{border-color:var(--pn-ink);}
 .hm-cred .bar{width:60px;height:8px;border-radius:3px;background:var(--pn-bg);overflow:hidden;}
 .hm-cred .bar span{display:block;height:100%;background:var(--pn-green);}
 .hm-cred b{font-variant-numeric:tabular-nums;}
 .hm-date{margin-left:auto;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--pn-muted);}
 .hm-hello{margin:14px 0 14px;font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.05;text-wrap:balance;}
 
+.hm-conta{min-width:30px;height:30px;padding:0 8px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--pn-display);font-weight:800;font-size:15px;background:var(--pn-bg);color:var(--pn-muted);border:1.5px solid var(--pn-line);}
+.hm-conta.on{background:#25D366;color:var(--pn-ink);border-color:var(--pn-ink);}
 .hm-sofia{background:var(--pn-sun);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:18px;}
 .hm-sofia-h{display:flex;align-items:center;gap:8px;font-family:var(--pn-display);font-weight:700;font-size:16px;}
 .hm-sofia-h .ic{width:28px;height:28px;border-radius:8px;background:var(--pn-ink);color:var(--pn-sun);display:flex;align-items:center;justify-content:center;}
@@ -203,8 +220,7 @@ a.hm-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);tr
   .hm-sofia{padding:14px;}
   .hm-time .lbl{display:none;}
   .hm-cred .bar{width:40px;}
-  .hm-sugs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
-  .hm-sugs button{flex-shrink:0;font-size:13px;height:34px;}
+  .hm-sugs{display:none;}
   .hm-curr{padding:12px;gap:10px;}
   .hm-curr .hm-badge{width:36px;height:36px;}
   .hm-curr-txt{min-width:0;flex:1 1 200px;}
@@ -270,6 +286,8 @@ export function Home() {
   const { turmas } = useTurmas();
   const { curriculos, load: reloadCurriculos } = useCurriculoMunicipal();
   const cred = useCreditos();
+  const { pendentes } = usePendentesWhatsapp();
+  const [extrato, setExtrato] = useState(false);
 
   const [baixar, setBaixar] = useState(false);
   const app = useInstalarApp();
@@ -357,7 +375,13 @@ export function Home() {
         <div className="hm-strip">
           <TempoChip className="hm-chip hm-time" />
           {!cred.loading && cred.totais > 0 && (
-            <Link to="/configuracoes" className="hm-chip hm-cred" title="Créditos disponíveis">
+            <button
+              type="button"
+              className="hm-chip hm-cred"
+              title="Ver o extrato de créditos"
+              aria-haspopup="dialog"
+              onClick={() => setExtrato(true)}
+            >
               Créditos
               <span className="bar" aria-hidden>
                 <span style={{ width: `${credPct}%` }} />
@@ -365,7 +389,7 @@ export function Home() {
               <b>
                 {cred.disponiveis}/{cred.totais}
               </b>
-            </Link>
+            </button>
           )}
           {hydrated && <span className="hm-date">{dataHoje()}</span>}
         </div>
@@ -478,9 +502,42 @@ export function Home() {
 
         <div className="hm-sec">
           <h2>Suas ferramentas</h2>
-          <span>{CARDS.length} funções</span>
+          <span>{CARDS.length + 1} funções</span>
         </div>
         <nav className="hm-cards" aria-label="Funcionalidades">
+          <Link
+            to="/confirmar"
+            className="hm-card hm-card-wa"
+            aria-label={
+              pendentes > 0
+                ? `${textoParaConfirmar(pendentes)}: mensagens do WhatsApp`
+                : "Para confirmar: nada esperando do WhatsApp"
+            }
+          >
+            <span className="hm-card-top">
+              <span className="hm-badge" style={{ background: "#D9FDD3", color: "#0B7A55" }}>
+                <WhatsappLogo size={24} />
+              </span>
+              <span className={"hm-conta" + (pendentes > 0 ? " on" : "")} aria-hidden>
+                {pendentes}
+              </span>
+            </span>
+            <span>
+              <h3>Para confirmar</h3>
+              <p>
+                {pendentes > 0
+                  ? "O que chegou pelo WhatsApp e espera seu sim"
+                  : "Nada esperando do WhatsApp"}
+              </p>
+            </span>
+            <span className="hm-go">
+              Abrir
+              <Svg w={2.5}>
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </Svg>
+            </span>
+          </Link>
           {CARDS.map((c) => {
             const inner = (
               <>
@@ -530,6 +587,7 @@ export function Home() {
           </button>
         )}
         {baixar && <InstalarApp onClose={() => setBaixar(false)} />}
+        {extrato && <ExtratoCreditos cred={cred} onClose={() => setExtrato(false)} />}
 
         <section className="hm-curr" aria-labelledby="hm-curr-h">
           <span className="hm-badge" style={{ background: "var(--pn-blue-soft)" }}>

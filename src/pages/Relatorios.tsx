@@ -7,6 +7,7 @@ import { useUser } from "@/lib/mockData";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { resumoDoAluno, useAlfaDados } from "@/lib/alfabetizacao/store";
 import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useDashClasses } from "@/hooks/useDashLegacyData";
@@ -27,6 +28,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { invocarIA, mensagemAmigavel, temTexto, ErroIA } from "@/lib/sofia/invocarIA";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useTurmas } from "@/hooks/useTurmas";
 import { matchAnoCurriculo } from "@/lib/curriculo/matchAno";
@@ -645,10 +647,11 @@ export function Relatorios() {
   const combinedStudents = useMemo<DashStudentWithId[]>(() => {
     const seen = new Set<string>();
     const out: DashStudentWithId[] = [];
+    // Chave pelo id do aluno (A11): homônimos em turmas diferentes são
+    // alunos diferentes e precisam aparecer os dois.
     const push = (s: DashStudent, id: string) => {
-      const key = s.name.trim().toLowerCase();
-      if (!key || seen.has(key)) return;
-      seen.add(key);
+      if (!s.name.trim() || !id || seen.has(id)) return;
+      seen.add(id);
       out.push({ ...s, id });
     };
     // Alunos do banco (Inclusão) — fonte única de verdade.
@@ -762,6 +765,8 @@ export function Relatorios() {
   // Observações livres do(a) professor(a) por aluno (persistido junto à avaliação BNCC)
   // ← NOVO: lê dados do /inclusao para alimentar a Sofia no parecer
 const [anamByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_anam", {});
+  // Leitura e escrita confirmadas em /alfabetizacao: entram como evidência no parecer.
+  const { dados: alfaDados } = useAlfaDados();
 const [peiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
 const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; cat: string; body: string }>>>("inc_reg", {});
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
@@ -887,7 +892,18 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
   const [editandoParecer, setEditandoParecer] = useState(false);
   const [parecerDraft, setParecerDraft] = useState<ParecerNarrativo | null>(null);
 
-  const handleGerarParecerSofia = async (a: { id: string; nome: string; turma: string; pcd: string }, opts?: { silent?: boolean; formatoOverride?: "topicos" | "texto" }) => {
+  // Parecer só conta como gerado se tiver texto de verdade (N1).
+  const parecerTemConteudo = (p?: ParecerNarrativo | null): boolean =>
+    !!p &&
+    (temTexto(p.texto) ||
+      temTexto(p.resumo) ||
+      temTexto(p.pedagogico) ||
+      (Array.isArray(p.campos) && p.campos.some((c) => temTexto(c?.texto))));
+
+  const handleGerarParecerSofia = async (
+    a: { id: string; nome: string; turma: string; pcd: string },
+    opts?: { silent?: boolean; formatoOverride?: "topicos" | "texto" },
+  ): Promise<boolean | "aguardar"> => {
     const formatoEfetivo = opts?.formatoOverride ?? formatoParecer;
     if (formatoEfetivo !== "topicos" && formatoEfetivo !== "texto") {
       toast.error("Selecione o formato (estruturado ou texto corrido) antes de gerar.");
@@ -907,6 +923,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
         }).join("\n");
         return `${area.area}\n${itens}`;
       }).join("\n\n");
+      const leituraEscrita = resumoDoAluno(alfaDados, a.id, a.nome);
       const contextoPedagogico = pedagogicalContextForAluno(a.id, a.turma);
       const { aluno, cls, nivelTexto, anoEscolar, anoReferenciaPedagogico } = contextoPedagogico;
       // Período resolvido por aluno (override individual > padrão da turma > padrão global).
@@ -983,7 +1000,10 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
               ].filter(Boolean).join("\n"))
         : "";
 
-      const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
+      // invocarIA só devolve com parecer de verdade (N1/N8): sem conteúdo,
+      // nada é gravado, o parecer anterior do período fica e não há cobrança.
+      const data = await invocarIA<{ parecer?: ParecerNarrativo }>("gerar-parecer-inclusao", {
+        validar: (d) => parecerTemConteudo(d?.parecer),
         body: {
           aluno: a.nome,
           diagnostico: a.pcd || "",
@@ -993,7 +1013,9 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
           observacoesProfessor: bnccObsByAluno[a.id]?.trim() || "",
-          avaliacaoBncc: linhas,
+          avaliacaoBncc: leituraEscrita
+            ? `${linhas}\n\nLeitura e escrita (níveis confirmados pela professora)\n  - ${leituraEscrita}`
+            : linhas,
           temPeiReal: Boolean(peiByStudent[a.id]),
           parecerAnteriorTexto,
           parecerAnteriorIntervalo: parecerAnterior?.periodoLabel || "",
@@ -1011,9 +1033,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           curriculo_municipal: null,
         },
       });
-      if (error) throw error;
       const parecer: ParecerNarrativo = {
-        ...((data as { parecer?: ParecerNarrativo })?.parecer || {}),
+        ...(data.parecer as ParecerNarrativo),
         periodoLabel,
         formato: (formatoEfetivo || "topicos") as "topicos" | "texto",
         geradoEm: new Date().toLocaleString("pt-BR"),
@@ -1043,8 +1064,8 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
      void acumularTempo("relatorio_aluno", `Relatório — ${a.nome}`);
       return true;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Não foi possível gerar o parecer. ${msg}`);
+      toast.error(`Não consegui gerar o parecer de ${a.nome}.`, { description: mensagemAmigavel(e) });
+      if (e instanceof ErroIA && e.tipo === "muitos_pedidos") return "aguardar";
       return false;
     } finally {
       setGerandoParecerId(null);
@@ -1073,15 +1094,20 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     for (const a of pendentes) {
       setLote((l) => ({ ...l, itens: l.itens.map((it) => (it.id === a.id ? { ...it, status: "gerando" as const } : it)) }));
       const sucesso = await handleGerarParecerSofia({ id: a.id, nome: a.nome, turma: a.turma, pcd: a.pcd }, { silent: true, formatoOverride: formatoEfetivo });
-      if (sucesso) ok += 1;
+      if (sucesso === true) ok += 1;
       setLote((l) => ({
         ...l,
         feitos: l.feitos + 1,
-        itens: l.itens.map((it) => (it.id === a.id ? { ...it, status: sucesso ? ("ok" as const) : ("erro" as const) } : it)),
+        itens: l.itens.map((it) => (it.id === a.id ? { ...it, status: sucesso === true ? ("ok" as const) : ("erro" as const) } : it)),
       }));
+      // Depois de uma falha (principalmente "muitos pedidos"), dá um respiro
+      // antes do próximo aluno para não falhar em cascata.
+      if (sucesso !== true) await new Promise((r) => setTimeout(r, sucesso === "aguardar" ? 5000 : 2000));
     }
     setLote((l) => ({ ...l, ativo: false }));
-    toast.success(`Lote concluído: ${ok} de ${pendentes.length} gerado(s).`);
+    const falhas = pendentes.length - ok;
+    if (falhas === 0) toast.success(`Lote concluído: ${ok} de ${pendentes.length} gerado(s).`);
+    else toast.warning(`Lote concluído: ${ok} de ${pendentes.length} gerado(s). ${falhas} com erro: gere de novo esses alunos.`);
   };
 
   // Versão família: reescreve o parecer JÁ finalizado numa mensagem curta e calorosa.
@@ -1099,15 +1125,12 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     if (!base.trim()) { toast.error("Gere o parecer antes de criar a versão para a família."); return; }
     setGerandoFamiliaId(a.id);
     try {
-      const { data, error } = await supabase.functions.invoke("gerar-parecer-inclusao", {
+      const env = await invocarIA<{ versao_familia?: { texto?: string; destaques?: string[] } }>("gerar-parecer-inclusao", {
         body: { modo: "familia", textoBaseFamilia: base, aluno: a.nome, periodo: p.periodoLabel || "Bimestral", intervalo: p.periodoLabel || "" },
+        validar: (d) => temTexto(d?.versao_familia?.texto),
       });
-      if (error) throw error;
-      const env = data as { ok?: boolean; error?: string; versao_familia?: { texto?: string; destaques?: string[] } };
-      if (env?.ok === false) throw new Error(env.error || "Falha ao gerar.");
-      const vf = env?.versao_familia;
-      if (!vf?.texto) throw new Error("A IA não retornou texto. Tente novamente.");
-      const versao_familia = { texto: vf.texto, destaques: vf.destaques || [], geradoEm: new Date().toLocaleString("pt-BR") };
+      const vf = env.versao_familia!;
+      const versao_familia = { texto: String(vf.texto), destaques: vf.destaques || [], geradoEm: new Date().toLocaleString("pt-BR") };
       setParecerByAluno((all) => ({ ...all, [a.id]: { ...(all[a.id] || p), versao_familia } }));
       setParecerHist((h) => ({
         ...h,
@@ -1115,8 +1138,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       }));
       toast.success("Versão para a família gerada.");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Não foi possível gerar a versão da família. ${msg}`);
+      toast.error("Não consegui gerar a versão para a família.", { description: mensagemAmigavel(e) });
     } finally {
       setGerandoFamiliaId(null);
     }

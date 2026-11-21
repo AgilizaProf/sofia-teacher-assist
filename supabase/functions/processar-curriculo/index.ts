@@ -190,7 +190,7 @@ OUTRAS REGRAS:
 
     if (!geminiRes.ok) {
       const err = await geminiRes.text();
-      await admin.from("user_curriculo_municipal").update({ status: "erro", erro_msg: `IA indisponível: ${err.slice(0, 200)}` }).eq("id", curriculo_id);
+      await admin.from("user_curriculo_municipal").update({ status: "erro", erro_msg: "A Sofia não conseguiu ler o documento agora. Tente enviar de novo em alguns minutos." }).eq("id", curriculo_id);
       return;
     }
 
@@ -263,7 +263,7 @@ OUTRAS REGRAS:
     console.log(`[processar-curriculo:bg] concluído curriculo_id=${curriculo_id} habilidades=${habilidades.length}`);
   } catch (e) {
     console.error(`[processar-curriculo:bg] erro:`, e);
-    await admin.from("user_curriculo_municipal").update({ status: "erro", erro_msg: (e as Error)?.message?.slice(0, 200) || "Erro interno no processamento." }).eq("id", curriculo_id);
+    await admin.from("user_curriculo_municipal").update({ status: "erro", erro_msg: "A Sofia não conseguiu ler o documento agora. Tente enviar de novo em alguns minutos." }).eq("id", curriculo_id);
   }
 }
 
@@ -272,7 +272,7 @@ serve(async (req) => {
 
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
-    if (!userId) return new Response(JSON.stringify({ error: "Não autenticado." }), { status: 401, headers: cors });
+    if (!userId) return new Response(JSON.stringify({ ok: false, error: "Sua sessão expirou. Entre de novo e tente outra vez." }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
 
     const body = await req.json().catch(() => ({}));
     const { curriculo_id, arquivo_path, municipio, ordem } = body as { curriculo_id: string; arquivo_path: string; municipio: string; ordem?: number };
@@ -280,7 +280,7 @@ serve(async (req) => {
     console.log(`[processar-curriculo] curriculo_id=${curriculo_id} ordem=${ordemValida}`);
 
     if (!curriculo_id || !arquivo_path) {
-      return new Response(JSON.stringify({ error: "Parâmetros inválidos." }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: false, error: "Não consegui identificar o arquivo enviado. Envie de novo." }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     // Verificar ownership
@@ -291,7 +291,7 @@ serve(async (req) => {
       .eq("user_id", userId)
       .maybeSingle();
     if (!ownerCheck) {
-      return new Response(JSON.stringify({ error: "Currículo não encontrado." }), { status: 404, headers: { ...cors, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: false, error: "Não encontrei este currículo. Envie o PDF de novo." }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     // Confirmar que o arquivo existe (HEAD via createSignedUrl barato seria overkill; tenta listar)
@@ -299,8 +299,8 @@ serve(async (req) => {
     const fname = arquivo_path.includes("/") ? arquivo_path.substring(arquivo_path.lastIndexOf("/") + 1) : arquivo_path;
     const { data: listed } = await admin.storage.from("documentos-professor").list(folder, { search: fname });
     if (!listed || !listed.some((f) => f.name === fname)) {
-      await admin.from("user_curriculo_municipal").update({ status: "erro", erro_msg: "Arquivo não encontrado no storage." }).eq("id", curriculo_id);
-      return new Response(JSON.stringify({ error: "Arquivo não encontrado." }), { status: 404, headers: { ...cors, "Content-Type": "application/json" } });
+      await admin.from("user_curriculo_municipal").update({ status: "erro", erro_msg: "Não encontrei o arquivo enviado. Envie o PDF de novo." }).eq("id", curriculo_id);
+      return new Response(JSON.stringify({ ok: false, error: "Não encontrei o arquivo enviado. Envie o PDF de novo." }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     // Fire and forget: processa em background
@@ -318,8 +318,9 @@ serve(async (req) => {
     );
 
   } catch (e) {
+    console.error("[processar-curriculo] erro interno", e);
     return new Response(
-      JSON.stringify({ error: (e as Error)?.message || "Erro interno." }),
+      JSON.stringify({ ok: false, error: "A Sofia não conseguiu receber o documento agora. Tente de novo em instantes.", detail: String((e as Error)?.message || e).slice(0, 500) }),
       { status: 200, headers: { ...cors, "Content-Type": "application/json" } }
     );
   }

@@ -17,7 +17,7 @@ const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: strin
   { n: 3, emoji: "💛", name: "Linguagem humanizada", summary: "Zero linguagem capacitista. Pessoa antes da condição." },
   { n: 4, emoji: "⚖️", name: "Legalidade", summary: "Respeita LBI, Lei 14.254/2021, LDB, ECA, LGPD e BNCC." },
   { n: 5, emoji: "🎓", name: "Autores de referência", summary: "Apoiada em Freire, Vygotsky, Mantoan e mais." },
-  { n: 6, emoji: "🔍", name: "Transparência", summary: "Toda resposta mostra fontes, habilidades e base teórica." },
+  { n: 6, emoji: "🔍", name: "Transparência", summary: "Planos e documentos formais mostram fontes, habilidades e base teórica." },
   { n: 7, emoji: "✍️", name: "Sua autoria", summary: "Você é a autora. A Sofia é apoio, nunca substitui." },
   { n: 8, emoji: "🤝", name: "Educação inclusiva", summary: "Adapta automaticamente para alunos PCD, considerando CIDs e acessibilidade." },
   { n: 9, emoji: "🧒", name: "Faixa etária e desenvolvimento", summary: "Sugestões sempre adequadas à fase cognitiva, emocional e social da turma." },
@@ -25,6 +25,7 @@ const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: strin
   { n: 11, emoji: "🔒", name: "Confidencialidade", summary: "Trata dados de alunos com sigilo total, conforme LGPD e ECA." },
   { n: 12, emoji: "🫶", name: "Saúde mental do(a) educador(a)", summary: "A Sofia alivia. Nunca cobra. Soluções aplicáveis à realidade da escola brasileira." },
   { n: 13, emoji: "📈", name: "Progressividade", summary: "A Sofia não vê retratos. Vê percursos. Compara registros anteriores para revelar avanços." },
+  { n: 14, emoji: "🔁", name: "Adaptabilidade ao erro", summary: "Quando erra, reconhece e corrige. Quando não sabe, diz que não sabe, sem inventar." },
 ];
 
 export function Configuracoes() {

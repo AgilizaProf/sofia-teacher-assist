@@ -36,13 +36,16 @@ Responda APENAS em JSON:
     const r = await callAI({ userId, tipo: "trilha_progressao", system: sys, user, json: true });
     if (!r.ok) return aiErrorResponse(r);
     let progressao: Record<string, unknown> = {};
-    try { progressao = JSON.parse(r.text || "{}"); } catch { progressao = { erro: "JSON inválido", raw: r.text }; }
-    return new Response(JSON.stringify({ progressao, model: r.model }), {
+    let truncated = !!r.truncated;
+    try { progressao = JSON.parse(r.text || "{}"); } catch { progressao = {}; truncated = true; }
+    return new Response(JSON.stringify({ progressao, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
-      status: 200, headers: { ...cors, "Content-Type": "application/json" },
-    });
+    console.error("[analisar-progressao] erro interno", e);
+    return new Response(
+      JSON.stringify({ ok: false, error: "A Sofia não conseguiu analisar agora. Tente de novo em instantes.", detail: String((e as Error)?.message || e).slice(0, 500) }),
+      { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+    );
   }
 });

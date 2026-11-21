@@ -645,10 +645,40 @@ const slug=s=>semAcento(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|
 function opcoes(obj,val,todos){return (todos?`<option value="">${todos}</option>`:"")+Object.entries(obj).map(([k,v])=>`<option value="${k}"${String(val)===String(k)?" selected":""}>${esc(v)}</option>`).join("");}
 const ANOS=Object.fromEntries([1,2,3,4,5,6,7,8,9].map(a=>[a,anoTxt(a)]));
 
+
+/* ---- segurança: dados de backup, da nuvem ou deste aparelho nunca viram código na página ---- */
+// imagem só como data:image (png, jpeg ou webp) ou https do próprio site / Storage do app
+const IMG_OK=/^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+\/=\s]+$/i;
+function imgSegura(s){s=typeof s==="string"?s.trim():"";if(!s)return "";if(IMG_OK.test(s))return s;
+  try{const u=new URL(s,location.href);if(u.protocol==="https:"&&(u.origin===location.origin||(/\.supabase\.co$/i.test(u.hostname)&&u.pathname.startsWith("/storage/"))))return u.href.replace(/["'<>`\s]/g,encodeURIComponent);}catch(e){}
+  return "";}
+const TEXTO_LIVRE=new Set(["enunciado","texto","alts","explicacao","comentario","descricao","obs","tema","titulo","nome","turma","aluno","escola","prof","hab"]);
+// "<" seguido de letra nunca abre uma tag; nos campos curtos (códigos, datas, ids) aspas também saem
+function sanearValor(v,k,livre){
+  if(typeof v==="string"){if(k==="img")return imgSegura(v);v=v.replace(/<(?=[A-Za-z!\/?])/g,"< ");return livre?v:v.replace(/["`]/g,"");}
+  if(typeof v==="number")return isFinite(v)?v:0;
+  if(typeof v==="boolean"||v==null)return v;
+  if(Array.isArray(v))return v.map(x=>sanearValor(x,k,livre));
+  if(typeof v==="object"){const o={};for(const kk of Object.keys(v)){if(kk==="__proto__"||kk==="constructor"||kk==="prototype")continue;o[kk]=sanearValor(v[kk],kk,TEXTO_LIVRE.has(kk));}return o;}
+  return undefined;}
+function sanearDados(d){
+  if(!d||typeof d!=="object"||Array.isArray(d))return {};
+  const o=sanearValor(d,"",false);
+  const lista=(k,id)=>{if(o[k]===undefined)return;o[k]=Array.isArray(o[k])?o[k].filter(x=>x&&typeof x==="object"&&!Array.isArray(x)&&(!id||typeof x[id]==="string"||typeof x[id]==="number")):[];};
+  lista("turmas","id");lista("simulados","id");lista("resultados","rid");lista("minhas","id");lista("relatos");
+  (o.turmas||[]).forEach(t=>{t.alunos=Array.isArray(t.alunos)?t.alunos.filter(a=>a&&typeof a==="object"):[];});
+  (o.simulados||[]).forEach(s=>{if(!Array.isArray(s.versoes))s.versoes=[];if(!Array.isArray(s.base))s.base=[];});
+  (o.minhas||[]).forEach(q=>{if(!Array.isArray(q.alts))q.alts=["","","",""];});
+  if(o.fav!==undefined&&!Array.isArray(o.fav))o.fav=[];
+  if(o.aval!==undefined&&(typeof o.aval!=="object"||Array.isArray(o.aval)))o.aval={};
+  if(o.sel!==undefined&&!Array.isArray(o.sel))o.sel=[];
+  if(o.zoom!==undefined)o.zoom=Math.min(1.5,Math.max(.85,+o.zoom||1));
+  if(o.aba!==undefined&&typeof o.aba!=="string")o.aba="inicio";
+  return o;}
 /* ============ ARMAZENAMENTO (neste aparelho e na nuvem da conta do professor) ============ */
 const CHAVE="agilizaprof-banco-v1";
 let S={turmas:[],simulados:[],resultados:[],sel:[],minhas:[],fav:[],aval:{},relatos:[],sofiaAuto:true,aba:"inicio",zoom:1};
-function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE)||"null");if(d)S=Object.assign(S,d);}catch(e){}
+function carregar(){try{const d=JSON.parse(localStorage.getItem(CHAVE)||"null");if(d)S=Object.assign(S,sanearDados(d));}catch(e){}
   S.minhas=S.minhas||[];S.fav=S.fav||[];S.aval=S.aval||{};if(S.sofiaAuto==null)S.sofiaAuto=true;
   limparExemplos();}
 // as turmas de exemplo de versões antigas não aparecem mais
@@ -668,7 +698,7 @@ async function nuvemCarregar(){
   if(!n)return;
   let r=null;try{r=await n.get(NUVEM_CHAVE);}catch(e){nuvemPronta=true;return;}
   nuvemPronta=true;
-  const d=r&&r.data;
+  const d=r&&r.data&&typeof r.data==="object"?sanearDados(r.data):null;
   if(!d||!d._ts){if(S.turmas.length||S.simulados.length||S.resultados.length||S.minhas.length)nuvemSalvar();return;}
   if(S._ts&&S._ts>=d._ts){if(S._ts>d._ts)nuvemSalvar();return;}
   if(!S._ts){
@@ -709,15 +739,15 @@ function getQ(ref){
 function todas(){return BANCO.concat(S.minhas);}
 // questões que entram nos sorteios automáticos: o banco, as escritas pelo professor e as da Sofia que já foram usadas em simulado
 function usaveis(){return BANCO.concat(S.minhas.filter(q=>q.origem!=="sofia"||q.banco));}
-function figuraHtml(q){if(q.img)return `<div class="figura"><img src="${q.img}" alt="Figura da questão"></div>`;if(q.fig){const s=FIG(q.fig);return s?`<div class="figura">${s}</div>`:"";}return "";}
-function figuraDoc(q){if(q.img)return `<div class="fig"><img src="${q.img}" alt=""></div>`;if(q.fig){const s=FIG(q.fig);return s?`<div class="fig">${s}</div>`:"";}return "";}
+function figuraHtml(q){if(imgSegura(q.img))return `<div class="figura"><img src="${esc(imgSegura(q.img))}" alt="Figura da questão"></div>`;if(q.fig){const s=FIG(q.fig);return s?`<div class="figura">${s}</div>`:"";}return "";}
+function figuraDoc(q){if(imgSegura(q.img))return `<div class="fig"><img src="${esc(imgSegura(q.img))}" alt=""></div>`;if(q.fig){const s=FIG(q.fig);return s?`<div class="fig">${s}</div>`:"";}return "";}
 
 /* ============ QR ============ */
 function qrMatriz(texto){
   qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
   const q=qrcode(0,"M");
   // AP2: o cabeçalho vai em modo Byte e o gabarito com as posições em modo alfanumérico, que ocupa menos espaço no QR
-  const k=texto.startsWith("AP2;")?texto.lastIndexOf(";")+1:-1;
+  const k=/^AP[24];/.test(texto)?texto.lastIndexOf(";")+1:-1;
   if(k>0){q.addData(texto.slice(0,k),"Byte");q.addData(texto.slice(k),"Alphanumeric");}else q.addData(texto,"Byte");
   q.make();
   const n=q.getModuleCount(),m=[];for(let r=0;r<n;r++){m.push([]);for(let c=0;c<n;c++)m[r].push(q.isDark(r,c));}return m;
@@ -731,14 +761,15 @@ function qrSvg(texto){
 // posições = 3 caracteres base 36 por questão ("---" = questão do professor). Versão 0 = prova sem nome (matriz para fotocopiar).
 // O leitor ainda entende o formato antigo AP1 (2 caracteres por posição).
 function qrTexto(sim,v){
-  const nome=semAcento(v.nome||"").replace(/[;|:]/g," ").slice(0,40);
-  const pos=v.ordem.map(r=>typeof r==="number"?r.toString(36).toUpperCase().padStart(3,"0"):"---").join("");
-  const fim=[v.gab,pos,BANCO_VER];if(cartaoGrande(sim,v.ordem.length))fim.push("G");
-  return ["AP2",sim.id,v.n,nome,v.tipo||"",fim.join(":")].join(";");
+  // AP4 (QR enxuto): só o que o leitor precisa para corrigir. A ordem das questões vem do simulado salvo na conta.
+  // Com menos dados, os quadradinhos do QR ficam maiores e a câmera lê com a folha inteira na foto.
+  const nome=semAcento(v.nome||"").replace(/[;|:]/g," ").trim().slice(0,16);
+  return ["AP4",sim.id,v.n,nome,v.tipo||"",v.gab+(cartaoGrande(sim,v.ordem.length)?":G":"")].join(";");
 }
 function lerQrTexto(t){
   const p=String(t).split(";");
   if(p[0]==="AP1"&&p.length>=6){const ordem=(p[5].match(/.{2}/g)||[]).map(x=>x==="__"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],gab:p[4],ordem,tipo:""};}
+  if(p[0]==="AP4"&&p.length>=6){const [gab,tam=""]=p[5].split(":");return {simId:p[1],n:+p[2],nome:p[3],tipo:p[4]||"",gab,ordem:Array(gab.length).fill(null),grande:tam==="G"};}
   if(p[0]==="AP2"&&p.length>=6){const [gab,pos="",,tam=""]=p[5].split(":");const ordem=(pos.match(/.{3}/g)||[]).map(x=>x==="---"?null:parseInt(x,36));return {simId:p[1],n:+p[2],nome:p[3],tipo:p[4]||"",gab,ordem,grande:tam==="G"};}
   return null;
 }
@@ -1086,7 +1117,7 @@ function editor(){
    <label class="campo">Tema<input id="e-tema" value="${esc(ED.tema)}" placeholder="Ex.: Frações equivalentes"></label>
    <label class="campo">Texto-base (opcional)<textarea id="e-texto" rows="3">${esc(ED.texto)}</textarea></label>
    <div class="linha-acoes"><button class="btn peq" id="e-img">${ED.img?"Trocar imagem":"Anexar imagem"}</button>${ED.img?`<button class="btn peq perigo" id="e-semimg">Tirar imagem</button>`:""}<span class="fonte">A imagem fica guardada neste navegador.</span></div>
-   ${ED.img?`<div class="figura"><img src="${ED.img}" alt="Imagem anexada"></div>`:""}
+   ${ED.img?`<div class="figura"><img src="${esc(imgSegura(ED.img))}" alt="Imagem anexada"></div>`:""}
    <label class="campo">Enunciado<textarea id="e-enun" rows="2">${esc(ED.enunciado)}</textarea></label>
    <div class="pilha" style="gap:6px">${ED.alts.map((a,k)=>`<div class="editor-alt"><label class="opc" title="Marque a correta"><input type="radio" name="e-cor" value="${k}"${ED.correta===k?" checked":""}> <b>${L[k]}</b></label><input class="entrada" id="e-alt${k}" value="${esc(a)}" aria-label="Alternativa ${L[k]}"></div>`).join("")}<span class="fonte">Marque a bolinha da alternativa correta.</span></div>
    <div class="linha-acoes"><button class="btn prim" id="e-salvar">Salvar questão</button><button class="btn" id="e-cancelar">Cancelar</button></div></section>`;
@@ -1335,8 +1366,8 @@ const seloTipo=t=>t?`<span class="selo-tipo t-${t}" title="Tipo ${t}">${t}</span
 function mostrarGerado(sim){
   const el=$("#g-saida");if(!el)return;
   const tipos=sim.modo==="tipos"&&sim.tipos;
-  el.innerHTML=`<section class="painel pilha"><div class="linha-acoes" style="justify-content:space-between"><div><h2 style="margin:0">${esc(sim.titulo)}</h2><span class="fonte">Código ${sim.id} · ${esc(sim.turma)} · ${sim.base.length} questões · ${sim.versoes.length} alunos · ${modoTxt(sim)}</span></div>
-   <div class="linha-acoes">${sim.cartaoSo?`<button class="btn prim" data-cartoes="${sim.id}">Baixar cartões com nome</button><button class="btn" data-matriz="${sim.id}">Cartões sem nome (para fotocopiar)</button>`:`<button class="btn prim" data-baixar="${sim.id}">Provas completas (cartão + questões)</button><button class="btn" data-cartoes="${sim.id}">Só os cartões-resposta (só frente)</button><button class="btn" data-cadernos="${sim.id}">Só as questões (frente e verso)</button>${tipos?`<button class="btn" data-matriz="${sim.id}">Uma prova de cada tipo (para fotocopiar)</button>`:""}`}<button class="btn" data-gab="${sim.id}">Gabaritos do professor</button><button class="btn" data-lersim="${sim.id}">Corrigir no leitor</button></div></div>
+  el.innerHTML=`<section class="painel pilha"><div class="linha-acoes" style="justify-content:space-between"><div><h2 style="margin:0">${esc(sim.titulo)}</h2><span class="fonte">Código ${sim.id} · ${esc(sim.turma)} · ${sim.base.length} questões · ${sim.versoes.length} alunos · ${modoTxt(sim)}</span>${componentesTxt(sim)?`<p class="fonte" style="margin:2px 0 0"><b>Componentes:</b> ${esc(componentesTxt(sim,true))}</p>`:""}</div>
+   <div class="linha-acoes">${sim.cartaoSo?`<button class="btn prim" data-cartoes="${sim.id}">Baixar cartões com nome</button><button class="btn" data-matriz="${sim.id}">Cartões sem nome (para fotocopiar)</button>`:`<button class="btn prim" data-baixar="${sim.id}">Provas completas (cartão + questões)</button><button class="btn" data-cartoes="${sim.id}">Só os cartões-resposta (só frente)</button><button class="btn" data-cadernos="${sim.id}">Só as questões (frente e verso)</button>${tipos?`<button class="btn" data-matriz="${sim.id}">Uma prova de cada tipo (para fotocopiar)</button>`:""}`}<button class="btn" data-gab="${sim.id}">Ficha e gabaritos do professor</button><button class="btn" data-lersim="${sim.id}">Corrigir no leitor</button></div></div>
    ${(()=>{const ja=new Set(sim.versoes.map(v=>v.turmaId||sim.turmaId));const outras=S.turmas.filter(t=>!ja.has(t.id)&&t.alunos.length);
      return outras.length?`<div class="linha-acoes" style="align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Aplicar este mesmo simulado (mesmo cartão e mesmo gabarito) em outra turma<select id="g-maisturma">${outras.map(t=>`<option value="${t.id}">${esc(t.nome)} · ${t.alunos.length} alunos</option>`).join("")}</select></label><button class="btn prim" id="g-addturma">Adicionar turma</button></div>`:"";})()}
    <p class="fonte" style="margin:0">O arquivo abre numa nova aba e já chama a impressão (lá também dá para salvar em PDF); no topo dele dá para ligar ou desligar o frente e verso. Imprima em A4, tamanho real (100%). Dica: imprima os cartões-resposta só na frente e as questões em frente e verso. Em frente e verso, cada aluno sempre começa numa folha nova.${tipos||sim.cartaoSo?" O que sai sem nome serve para fotocopiar; no leitor, você escolhe o aluno depois de ler o QR.":""}</p>
@@ -1358,7 +1389,7 @@ function mostrarGerado(sim){
 }
 function listaSimulados(){
   if(!S.simulados.length)return `<div class="vazio">Os simulados que você gerar aparecem aqui, prontos para baixar de novo ou corrigir.</div>`;
-  return `<div class="tabela-wrap"><table><thead><tr><th>Código</th><th>Título</th><th>Turma</th><th>Data</th><th>Provas</th><th>Questões</th><th>Corrigidas</th><th></th></tr></thead><tbody>${S.simulados.map(s=>{const c=S.resultados.filter(r=>r.simId===s.id).length;return `<tr><td><b>${s.id}</b></td><td>${esc(s.titulo)}</td><td>${esc(s.turma)}</td><td>${s.data}</td><td>${modoTxt(s)}</td><td class="num">${s.base.length}</td><td class="num">${c}/${s.versoes.length}</td><td><span class="linha-acoes"><button class="btn peq" data-ver="${s.id}">Abrir</button><button class="btn peq" data-baixar="${s.id}">Baixar</button><button class="btn peq" data-lersim="${s.id}">Corrigir</button><button class="btn peq perigo" data-apagar="${s.id}">Apagar</button></span></td></tr>`;}).join("")}</tbody></table></div>`;
+  return `<div class="tabela-wrap"><table><thead><tr><th>Código</th><th>Título</th><th>Componentes</th><th>Turma</th><th>Data</th><th>Provas</th><th>Questões</th><th>Corrigidas</th><th></th></tr></thead><tbody>${S.simulados.map(s=>{const c=S.resultados.filter(r=>r.simId===s.id).length;return `<tr><td><b>${s.id}</b></td><td>${esc(s.titulo)}</td><td>${esc(componentesTxt(s))}</td><td>${esc(s.turma)}</td><td>${s.data}</td><td>${modoTxt(s)}</td><td class="num">${s.base.length}</td><td class="num">${c}/${s.versoes.length}</td><td><span class="linha-acoes"><button class="btn peq" data-ver="${s.id}">Abrir</button><button class="btn peq" data-baixar="${s.id}">Baixar</button><button class="btn peq" data-lersim="${s.id}">Corrigir</button><button class="btn peq perigo" data-apagar="${s.id}">Apagar</button></span></td></tr>`;}).join("")}</tbody></table></div>`;
 }
 function ligarListaSimulados(raiz=$("#painel")){
   const achar=id=>S.simulados.find(x=>x.id===id);
@@ -1419,6 +1450,11 @@ function cartaoHtml(sim,v){
   </div></section>`;
 }
 function faixasDisc(qs){const f=[];qs.forEach((q,k)=>{if(!q)return;if(!f.length||f[f.length-1].d!==q.disc)f.push({d:q.disc,a:k+1,b:k+1});else f[f.length-1].b=k+1;});return f;}
+// componentes (disciplinas) de um simulado, para aparecer em todo lugar onde o simulado é mostrado
+function faixasDoSim(sim){try{if(sim.secs)return csFaixas(sim.secs).map(f=>({d:f.disc,a:f.a,b:f.b}));return faixasDisc((sim.base||[]).map(getQ));}catch(e){return [];}}
+function componentesTxt(sim,faixas){const fx=faixasDoSim(sim).filter(f=>f.d);if(faixas&&fx.length>1)return fx.map(f=>`${DISC[f.d]||f.d} (${f.a===f.b?"questão "+f.a:"questões "+f.a+" a "+f.b})`).join(" · ");return [...new Set(fx.map(f=>DISC[f.d]||f.d))].join(", ");}
+// " · Língua Portuguesa, Matemática" depois do título, só quando o título ainda não diz os componentes
+function compAposTitulo(sim){const fx=[...new Set(faixasDoSim(sim).filter(f=>f.d).map(f=>DISC[f.d]||f.d))];const t=String(sim.titulo||"");return fx.length&&!fx.every(n=>t.includes(n))?" · "+fx.join(", "):"";}
 // cada questão vira uma unidade indivisível; títulos de componente e de bloco vão junto com a questão seguinte
 function unidadesQuestoes(qs,perms,blocoTam){
   const u=[];let ultimo=null,pre="";const fx=faixasDisc(qs),varias=fx.length>1;
@@ -1560,7 +1596,24 @@ function docLista(refs){
 function docGabaritos(sim){
   const v0=sim.versoes[0]||{ordem:sim.base};const qa=(sim.tipos?sim.tipos[0]:v0);
   const lst=`<h2 style="margin-top:4mm">Respostas por extenso${sim.tipos?" (ordem do tipo "+sim.tipos[0].t+")":""}</h2><div class="lst">${qa.ordem.map((i,k)=>{const q=getQ(i);if(!q)return "";const p=qa.perms?qa.perms[k]:[0,1,2,3];const letra=L[p.indexOf(q.correta)];return `<div><b>${k+1}. ${letra}</b> — ${esc(q.alts[q.correta])} <span style="color:#555">(${esc(DISC[q.disc]||q.disc)}${q.desc?" · "+esc(q.desc):q.hab?" · "+esc(q.hab):""})</span></div>`;}).join("")}</div>`;
-  return docPaginado(`Gabarito ${sim.id}`,[{k:"gab",html:folhaGabarito(sim)},{k:"gab",html:lst}],false,"Gabarito do professor.");
+  return docPaginado(`Ficha e gabarito ${sim.id}`,[{k:"gab",html:fichaSimulado(sim)},{k:"gab",html:folhaGabarito(sim)},{k:"gab",html:lst}],false,"Ficha do simulado e gabarito do professor.");
+}
+// Ficha do simulado para o professor: tudo o que a prova cobra, questão por questão, para imprimir e guardar.
+function fichaSimulado(sim){
+  const v0=sim.versoes[0]||{ordem:sim.base};const qa=(sim.tipos?sim.tipos[0]:v0);const ordem=qa.ordem||sim.base||[];
+  const fx=faixasDoSim(sim);const discDe=k=>{const f=fx.find(f=>k+1>=f.a&&k+1<=f.b);return f?(DISC[f.d]||f.d):"";};
+  const td='style="border:.3mm solid #000;padding:1mm 1.5mm;vertical-align:top"',th='style="border:.3mm solid #000;padding:1mm 1.5mm;background:#eee;text-align:left"';
+  const linhas=ordem.map((i,k)=>{const q=getQ(i);const p=qa.perms?qa.perms[k]:[0,1,2,3];
+    const letra=q&&q.alts?L[p.indexOf(q.correta)]:((qa.gab||"")[k]||"");
+    const desc=q&&q.desc?`${esc(q.desc)}${descNome(q.disc,q.ano,q.desc)?" · "+esc(descNome(q.disc,q.ano,q.desc)):""}`:"";
+    return `<tr style="break-inside:avoid;page-break-inside:avoid"><td ${td}><b>${k+1}</b></td><td ${td}>${esc(q&&q.disc?(DISC[q.disc]||q.disc):discDe(k))}</td><td ${td}>${esc(q&&q.hab||"")}</td><td ${td}>${desc}</td><td ${td}>${q&&q.nivel?esc(NIVEL[q.nivel]||""):""}</td><td ${td}>${esc(q&&q.tema||"")}</td><td style="border:.3mm solid #000;padding:1mm 1.5mm;text-align:center"><b>${letra}</b></td></tr>`;}).join("");
+  const resumo=fx.filter(f=>f.d).map(f=>`<li><b>${esc(DISC[f.d]||f.d)}</b>: ${f.a===f.b?"questão "+f.a:"questões "+f.a+" a "+f.b} (${f.b-f.a+1})</li>`).join("");
+  return `<h2>Ficha do simulado</h2>
+   <p class="sub"><b>${esc(sim.titulo)}</b> · código ${sim.id} · ${sim.data}${sim.escola?" · "+esc(sim.escola):""}${sim.prof?" · Prof.(a) "+esc(sim.prof):""}</p>
+   <p style="font-size:9.5pt;margin:2mm 0"><b>Turma(s):</b> ${esc(sim.turma||"–")} · <b>Questões:</b> ${ordem.length} · <b>Provas:</b> ${esc(modoTxt(sim))} · <b>Alunos:</b> ${sim.versoes.length}</p>
+   ${resumo?`<p style="font-size:9.5pt;margin:2mm 0 1mm"><b>Componentes</b></p><ul style="font-size:9.5pt;margin:0 0 3mm 5mm;padding:0">${resumo}</ul>`:""}
+   <table style="width:100%;border-collapse:collapse;font-size:8.5pt"><thead><tr><th ${th}>Nº</th><th ${th}>Componente</th><th ${th}>Habilidade BNCC</th><th ${th}>Descritor SAEB</th><th ${th}>Nível</th><th ${th}>Tema</th><th ${th}>Resposta${sim.tipos?" (tipo "+sim.tipos[0].t+")":""}</th></tr></thead><tbody>${linhas}</tbody></table>
+   ${sim.tipos?`<p style="font-size:8.5pt;margin-top:2mm">Nos outros tipos, as mesmas questões aparecem em outra ordem. O gabarito de cada tipo está na página seguinte.</p>`:""}`;
 }
 
 /* ============ ALUNOS E TURMAS ============ */
@@ -1600,7 +1653,8 @@ function renderAlunos(){
   $("#t-apagar").onclick=e=>{const b=e.currentTarget;if(!b.dataset.conf){b.dataset.conf=1;b.textContent="Confirmar: apagar turma";return;}S.turmas=S.turmas.filter(x=>x.id!==t.id);S._semExemplo=true;salvar();renderAlunos();};
 }
 $("#arq-backup").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
-  try{const d=JSON.parse(await f.text());if(d.app!=="agilizaprof-banco")throw 0;
+  try{const bruto=JSON.parse(await f.text());if(!bruto||bruto.app!=="agilizaprof-banco")throw 0;const d=sanearDados(bruto);
+    ["turmas","simulados","resultados","minhas","fav"].forEach(k=>{if(d[k]!==undefined&&!Array.isArray(d[k]))throw 0;});
     const junta=(a,b,k)=>{const ids=new Set(a.map(x=>x[k]));return a.concat(b.filter(x=>!ids.has(x[k])));};
     S.turmas=junta(S.turmas,d.turmas||[],"id");S.simulados=junta(S.simulados,d.simulados||[],"id");S.resultados=junta(S.resultados,d.resultados||[],"rid");S.minhas=junta(S.minhas,d.minhas||[],"id");
     (d.fav||[]).forEach(r=>{if(!S.fav.includes(r))S.fav.push(r);});Object.entries(d.aval||{}).forEach(([k,v])=>{if(!(k in S.aval))S.aval[k]=v;});PREF=null;
@@ -1621,7 +1675,7 @@ function renderLeitor(){
       <div class="foto-wrap" id="l-foto-wrap" hidden><canvas id="l-canvas"></canvas></div>
       <details><summary style="cursor:pointer;font-weight:700">Corrigir sem foto</summary>
        <div class="pilha" style="margin-top:10px">
-        <label class="campo">Simulado<select id="l-sim">${sims.map(s=>`<option value="${s.id}"${s.id===LS.simId?" selected":""}>${s.id} · ${esc(s.titulo)}</option>`).join("")||"<option value=''>Nenhum simulado gerado neste aparelho</option>"}</select></label>
+        <label class="campo">Simulado<select id="l-sim">${sims.map(s=>`<option value="${s.id}"${s.id===LS.simId?" selected":""}>${s.id} · ${esc(s.titulo)}${esc(compAposTitulo(s))}</option>`).join("")||"<option value=''>Nenhum simulado gerado neste aparelho</option>"}</select></label>
         <label class="campo">Aluno<select id="l-aluno"></select></label>
         <button class="btn" id="l-manual"${sims.length?"":" disabled"}>Abrir cartão para digitar</button>
        </div></details>
@@ -1681,7 +1735,7 @@ async function abrirCamera(){
   if(st)st.textContent="";
   const el=document.createElement("div");el.className="camera";el.setAttribute("role","dialog");el.setAttribute("aria-label","Câmera");
   el.innerHTML=`<div class="cam-vid"><video playsinline muted autoplay></video></div>
-   <div class="cam-msg" aria-live="polite">Enquadre o cartão inteiro, de frente e com boa luz.</div>
+   <div class="cam-msg" aria-live="polite">Mostre a folha inteira, de frente e com boa luz, e tire a foto. Não precisa chegar perto do QR.</div>
    <div class="cam-bar"><button class="btn" data-c="sair">Cancelar</button><button class="disparo" data-c="foto" aria-label="Tirar foto">Tirar foto</button><button class="btn" data-c="trocar" hidden>Trocar câmera</button></div>`;
   document.body.appendChild(el);
   const video=el.querySelector("video");
@@ -1694,8 +1748,11 @@ async function abrirCamera(){
       try{ligarFluxo(await pedirCamera(CAM.disp[CAM.idx].deviceId));}catch(_){fecharCamera();if(st)st.textContent="Não consegui trocar de câmera.";}}
     else if(c==="foto"){if(!video.videoWidth)return;b.disabled=true;
       const cv=document.createElement("canvas");cv.width=video.videoWidth;cv.height=video.videoHeight;cv.getContext("2d").drawImage(video,0,0);
+      let blob=null;
+      try{const tr=CAM.fluxo&&CAM.fluxo.getVideoTracks()[0];
+        if(tr&&typeof ImageCapture==="function")blob=await Promise.race([new ImageCapture(tr).takePhoto(),new Promise(r=>setTimeout(()=>r(null),3500))]);}catch(_){blob=null;}
       fecharCamera();
-      const blob=await new Promise(r=>cv.toBlob(r,"image/jpeg",.92));
+      if(!blob||!blob.size)blob=await new Promise(r=>cv.toBlob(r,"image/jpeg",.92));
       if(blob)await processarFoto(blob);}};
   document.addEventListener("keydown",escCamera);
 }
@@ -1707,33 +1764,56 @@ function ligarFluxo(f){
   CAM.fluxo=f;CAM.video.srcObject=f;CAM.video.play().catch(()=>{});
   clearInterval(CAM.timer);
   // procura o QR no vídeo para avisar quando o cartão está bem enquadrado
-  const cv=document.createElement("canvas"),cx=cv.getContext("2d",{willReadFrequently:true});
+  let passo=0,visto=0;
   CAM.timer=setInterval(()=>{const v=CAM&&CAM.video;if(!v||!v.videoWidth||typeof jsQR!=="function")return;
-    const k=Math.min(1,640/Math.max(v.videoWidth,v.videoHeight));cv.width=Math.round(v.videoWidth*k);cv.height=Math.round(v.videoHeight*k);
-    cx.drawImage(v,0,0,cv.width,cv.height);const code=jsQR(cx.getImageData(0,0,cv.width,cv.height).data,cv.width,cv.height,{inversionAttempts:"dontInvert"});
-    const m=CAM.el.querySelector(".cam-msg");m.classList.toggle("achou",!!code);
-    m.textContent=code?"QR encontrado. Pode tirar a foto.":"Enquadre o cartão inteiro, de frente e com boa luz.";},500);
+    const W=v.videoWidth,H=v.videoHeight;let code=null;
+    try{code=qrTentar(v,0,0,W,H,Math.min(1,1280/Math.max(W,H)));
+      if(!code){const ps=qrPedacos(W,H);for(let i=0;i<2&&!code;i++){const[x,y,w,h,k]=ps[passo++%ps.length];code=qrTentar(v,x,y,w,h,Math.min(k,2));}}}catch(_){}
+    if(code)visto=Date.now();const achou=Date.now()-visto<2500;
+    const m=CAM.el.querySelector(".cam-msg");m.classList.toggle("achou",achou);
+    m.textContent=achou?"QR encontrado. Pode tirar a foto.":"Mostre a folha inteira, de frente e com boa luz, e tire a foto. Não precisa chegar perto do QR.";},600);
 }
 function escCamera(e){if(e.key==="Escape")fecharCamera();}
 function fecharCamera(){if(!CAM)return;clearInterval(CAM.timer);CAM.fluxo&&CAM.fluxo.getTracks().forEach(t=>t.stop());CAM.el.remove();CAM=null;document.removeEventListener("keydown",escCamera);}
+// Procura o QR em qualquer coisa desenhável (foto ou vídeo). Primeiro na imagem inteira; se não achar,
+// em pedaços sobrepostos na resolução original, ampliados quando a imagem é pequena. Assim o QR é lido
+// com a folha inteira na foto, sem precisar chegar perto. Devolve os cantos nas coordenadas da imagem original.
+function qrTentar(fonte,sx,sy,sw,sh,k){
+  const cv=qrTentar.cv||(qrTentar.cv=document.createElement("canvas")),cx=qrTentar.cx||(qrTentar.cx=cv.getContext("2d",{willReadFrequently:true}));
+  const w=Math.max(1,Math.round(sw*k)),h=Math.max(1,Math.round(sh*k));cv.width=w;cv.height=h;cx.imageSmoothingEnabled=true;cx.imageSmoothingQuality="high";
+  cx.drawImage(fonte,sx,sy,sw,sh,0,0,w,h);
+  const code=jsQR(cx.getImageData(0,0,w,h).data,w,h,{inversionAttempts:"dontInvert"});if(!code||!code.data)return null;
+  const P=q=>({x:sx+q.x/k,y:sy+q.y/k}),l=code.location;
+  return {data:code.data,version:code.version,location:{topLeftCorner:P(l.topLeftCorner),topRightCorner:P(l.topRightCorner),bottomLeftCorner:P(l.bottomLeftCorner),bottomRightCorner:P(l.bottomRightCorner)}};
+}
+function qrPedacos(W,H){const tw=Math.ceil(W*.5),th=Math.ceil(H*.5),k=Math.min(3,Math.max(1,1500/Math.max(tw,th))),v=[];
+  for(const fy of [0,.5,.25])for(const fx of [0,.5,.25])v.push([Math.floor((W-tw)*fx*2),Math.floor((H-th)*fy*2),tw,th,k]);return v;}
+function acharQR(fonte,W,H){
+  const M=Math.max(W,H),vistos=new Set();
+  for(const maxL of [1600,2400,1100]){const k=Math.min(1,maxL/M);if(vistos.has(k))continue;vistos.add(k);const r=qrTentar(fonte,0,0,W,H,k);if(r)return r;}
+  for(const[x,y,w,h,k]of qrPedacos(W,H)){const r=qrTentar(fonte,x,y,w,h,k);if(r)return r;}
+  return null;
+}
 async function lerFoto(file){
   let img;try{img=await createImageBitmap(file,{imageOrientation:"from-image"});}catch(_){try{img=await carregarImg(file);}catch(__){return null;}}
   if(typeof jsQR!=="function")return {erro:"lib"};
-  for(const maxL of [1600,2400,1100]){
-    const k=Math.min(1,maxL/Math.max(img.width,img.height)),w=Math.round(img.width*k),h=Math.round(img.height*k);
-    const cv=document.createElement("canvas");cv.width=w;cv.height=h;const cx=cv.getContext("2d",{willReadFrequently:true});cx.drawImage(img,0,0,w,h);
-    const dados=cx.getImageData(0,0,w,h);const code=jsQR(dados.data,w,h,{inversionAttempts:"dontInvert"});
-    if(code){let info=lerQrTexto(code.data);if(!info)return {erro:"outro"};info=infoLocal(info);let marcas=null;try{marcas=lerBolhas({code,dados,w,h},info.gab.length,info.grande);}catch(_){}
-      return {info,marcas,cv,w,h};}
-  }
-  return {erro:"semqr"};
+  const achado=acharQR(img,img.width,img.height);
+  if(!achado)return {erro:"semqr"};
+  let info=lerQrTexto(achado.data);if(!info)return {erro:"outro"};info=infoLocal(info);
+  // as bolinhas são lidas numa cópia de até 2400 px (ampliada quando a foto é pequena); os cantos do QR acompanham a escala
+  const M=Math.max(img.width,img.height),k=M>2400?2400/M:M<1400?1400/M:1,w=Math.round(img.width*k),h=Math.round(img.height*k);
+  const cv=document.createElement("canvas");cv.width=w;cv.height=h;const cx=cv.getContext("2d",{willReadFrequently:true});cx.imageSmoothingQuality="high";cx.drawImage(img,0,0,w,h);
+  const dados=cx.getImageData(0,0,w,h),E=q=>({x:q.x*k,y:q.y*k}),l=achado.location;
+  const code={data:achado.data,version:achado.version,location:{topLeftCorner:E(l.topLeftCorner),topRightCorner:E(l.topRightCorner),bottomLeftCorner:E(l.bottomLeftCorner),bottomRightCorner:E(l.bottomRightCorner)}};
+  let marcas=null;try{marcas=lerBolhas({code,dados,w,h},info.gab.length,info.grande);}catch(_){}
+  return {info,marcas,cv,w,h};
 }
 async function processarFoto(file){
   const st=$("#l-status");st.textContent="Lendo a foto…";
   const r=await lerFoto(file);
   if(!r){st.textContent="Não consegui abrir essa imagem. Tente outra foto.";return;}
   if(r.erro==="lib"){st.textContent="O leitor de QR não carregou. Verifique a internet e recarregue a página.";return;}
-  if(r.erro==="semqr"){st.textContent="Não encontrei o QR code. Fotografe mais de perto, de frente e sem sombra sobre o QR.";return;}
+  if(r.erro==="semqr"){st.textContent="Não encontrei o QR code. Deixe a folha inteira na foto, de frente, com boa luz e sem sombra ou dobra sobre o QR.";return;}
   if(r.erro==="outro"){st.textContent="Esse QR não é de um simulado do AgilizaProf.";return;}
   const info=r.info,local=S.simulados.find(s=>s.id===info.simId),v=local&&local.versoes.find(x=>x.n===info.n);
   LT={...info,nome:info.n?(v?v.nome:info.nome):"",semNome:!info.n,marcas:r.marcas?r.marcas.res:Array(info.gab.length).fill(null),auto:true};LS.simId=info.simId;
@@ -1984,7 +2064,7 @@ function renderResultados(){
       <div class="tabela-wrap"><table><thead><tr><th>Questão</th><th>Acerto</th><th>A</th><th>B</th><th>C</th><th>D</th><th>Branco</th></tr></thead><tbody>${itensQ.slice().sort((a,b)=>a.o.a/a.o.n-b.o.a/b.o.n).map(({q,o,k})=>`<tr><td style="white-space:normal;min-width:220px">${q.origem==="cartao"?`<b>Questão ${k+1}</b>`:`<b>${k+1}. ${esc(q.id)}</b> ${esc((q.enunciado||"").slice(0,70))}${q.enunciado.length>70?"…":""}`}</td><td class="num">${pct(o.a/o.n)}</td>${[0,1,2,3].map(j=>`<td class="num"${j===q.correta?' style="color:var(--bom);font-weight:800"':""}>${o.alt[j]}</td>`).join("")}<td class="num">${o.alt[4]}</td></tr>`).join("")}</tbody></table></div></div>`;
   }
   $("#painel").innerHTML=cabecalho("📊","Quadro de resultados","Rendimento da turma, quem mais acertou e quem precisa de apoio, as questões mais acertadas e as mais erradas, e a análise por descritor do SAEB ou habilidade da BNCC.")+`
-   ${chaves.length?`<div class="linha-acoes" style="margin-bottom:14px;align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Simulado<select id="r-sim">${chaves.map(k=>`<option value="${esc(k)}"${k===RF?" selected":""}>${esc(k.split("|").slice(1).join("|"))} (${grupos[k].length})</option>`).join("")}</select></label>${tlist.length>1?`<label class="campo" style="min-width:180px">Turma<select id="r-turma"><option value="">Todas as turmas</option>${tlist.map(t=>`<option${t===RT?" selected":""}>${esc(t)}</option>`).join("")}</select></label>`:""}<button class="btn prim" id="r-quadro">Baixar quadro para imprimir</button><button class="btn" id="r-csv">Planilha (CSV)</button></div><div class="pilha">${analise}</div>`
+   ${chaves.length?`<div class="linha-acoes" style="margin-bottom:14px;align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Simulado<select id="r-sim">${chaves.map(k=>`<option value="${esc(k)}"${k===RF?" selected":""}>${esc(k.split("|").slice(1).join("|"))}${(x=>x?esc(compAposTitulo(x)):"")(S.simulados.find(s=>s.id===k.split("|")[0]))} (${grupos[k].length})</option>`).join("")}</select></label>${tlist.length>1?`<label class="campo" style="min-width:180px">Turma<select id="r-turma"><option value="">Todas as turmas</option>${tlist.map(t=>`<option${t===RT?" selected":""}>${esc(t)}</option>`).join("")}</select></label>`:""}<button class="btn prim" id="r-quadro">Baixar quadro para imprimir</button><button class="btn" id="r-csv">Planilha (CSV)</button></div><div class="pilha">${analise}</div>`
    :`<div class="vazio">Ainda não há resultados. Corrija os cartões-resposta na aba Leitor QR.</div>`}`;
   if(!chaves.length)return;
   $("#r-sim").onchange=e=>{RF=e.target.value;RT="";renderResultados();};
@@ -1996,7 +2076,7 @@ function renderResultados(){
   $("#r-quadro").onclick=()=>{const css=document.querySelector("style").textContent;
     const html=`<!doctype html><html lang="pt-BR" data-theme="light"><head><meta charset="utf-8"><title>Quadro de resultados · ${esc(rs[0].titulo)}</title><style>${css}
      @page{size:A4;margin:10mm}body{background:#fff;padding:0 4mm}.btn,select{display:none!important}.painel,.resumo-num div{break-inside:avoid;box-shadow:inset 0 0 0 1.5px #CBD3E6}.duas{grid-template-columns:1fr 1fr}.quadro{grid-template-columns:1fr 1fr}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head>
-     <body><div class="pilha" style="max-width:1000px;margin:0 auto;padding:8mm 0"><div class="cab-pag"><div class="icone-pag">📊</div><div><span class="marca">Agiliza<span>Prof</span></span><h1>Quadro de resultados</h1><p class="sub">${esc(rs[0].titulo)} · ${esc(RT||tlist.join(", "))} · ${hoje()}</p></div></div>${quadroHtml(rs,simV,{imprimir:true})}${evolucaoHtml(turmaEv)}</div>${PRINT_JS}</body></html>`;
+     <body><div class="pilha" style="max-width:1000px;margin:0 auto;padding:8mm 0"><div class="cab-pag"><div class="icone-pag">📊</div><div><span class="marca">Agiliza<span>Prof</span></span><h1>Quadro de resultados</h1><p class="sub">${esc(rs[0].titulo)}${sim?esc(compAposTitulo(sim)):""} · ${esc(RT||tlist.join(", "))} · ${hoje()}</p></div></div>${quadroHtml(rs,simV,{imprimir:true})}${evolucaoHtml(turmaEv)}</div>${PRINT_JS}</body></html>`;
     baixar(`quadro-${slug(rs[0].titulo)}.html`,html);};
   $("#r-csv").onclick=()=>{const n=rs[0].total;const cab=["Aluno","Turma","Tipo","Acertos","Total","Percentual","Faixa","Data",...Array.from({length:n},(_,k)=>"Q"+(k+1))];
     const linhas=rs.map(r=>[r.aluno,r.turma,r.tipo||"",r.acertos,r.total,Math.round(100*r.acertos/r.total)+"%",FAIXAS[faixaDe(r.acertos/r.total)][0],r.data,...[...r.respostas].map((c,k)=>c+(c===r.gab[k]?" ✓":""))]);

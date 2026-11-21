@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 
 serve(async (req) => {
@@ -20,7 +20,7 @@ serve(async (req) => {
 
     if (!faixa_etaria || !Array.isArray(campos_experiencia) || campos_experiencia.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Faixa etária e ao menos um Campo de Experiência são obrigatórios." }),
+        JSON.stringify({ ok: false, error: "Escolha a faixa etária e ao menos um Campo de Experiência." }),
         { status: 400, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
@@ -88,15 +88,20 @@ Regras:
     const r = await callAI({ userId, tipo: "roteiro_ei", system: sys, user, json: true, maxTokens: 3500 });
     if (!r.ok) return aiErrorResponse(r);
 
-    let roteiro: Record<string, unknown> = {};
-    try { roteiro = JSON.parse(r.text || "{}"); } catch { roteiro = {}; }
+    const roteiro = parseAiJson<Record<string, unknown>>(r.text || "{}");
+    if (r.truncated || jsonTruncado(roteiro)) {
+      console.warn("[gerar-roteiro-ei] resposta cortada", r.finishReason);
+      return new Response(
+        JSON.stringify({ ok: false, truncated: true, error: "A resposta veio incompleta. Gere de novo." }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
 
     return new Response(JSON.stringify({ roteiro, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
-      status: 200, headers: { ...cors, "Content-Type": "application/json" },
-    });
+    console.error("[gerar-roteiro-ei] erro interno", e);
+    return erroSimples("A Sofia não conseguiu gerar o roteiro agora. Tente de novo em instantes.", e);
   }
 });

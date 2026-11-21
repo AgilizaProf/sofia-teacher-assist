@@ -1,25 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Ferramenta } from "@/pages/Ferramenta";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-function Simulados() {
-  return (
-    <Ferramenta
-      titulo="Simulados"
-      sub="Banco de questões alinhado à BNCC e ao SAEB. Monte provas com tipos A, B, C e D e corrija pela foto do cartão-resposta."
-      src="/ferramentas/simulados.html"
-    />
-  );
-}
-
+// "Simulados" agora se chama "Questões". O endereço antigo continua funcionando
+// (links salvos, favoritos, mensagens antigas da Sofia) e leva para /questoes.
 export const Route = createFileRoute("/simulados")({
-  head: () => ({
-    meta: [
-      { title: "Simulados e banco de questões — AgilizaProf" },
-      {
-        name: "description",
-        content: "Banco de questões, gerador de simulados e correção pelo cartão-resposta.",
-      },
-    ],
-  }),
-  component: Simulados,
+  beforeLoad: () => {
+    throw redirect({ to: "/questoes", replace: true });
+  },
 });

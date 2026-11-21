@@ -9,6 +9,7 @@ import { brNow } from "@/lib/datetime";
 import { useSofiaContext } from "@/lib/sofia/sofiaContext";
 import { useSofia } from "@/components/sofia/SofiaProvider";
 import { useAgenda } from "@/hooks/useAgenda";
+import { invocarIA, mensagemAmigavel } from "@/lib/sofia/invocarIA";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -854,6 +855,7 @@ const [eventosPendentes, setEventosPendentes] = useState<Array<{
   tipo: "meeting" | "eval" | "report" | "plan" | "personal"; descricao?: string | null;
 }>>([]);
 const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
+  const [confirmandoImport, setConfirmandoImport] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -1017,7 +1019,7 @@ const deleteCalendar = async () => {
     setImportandoCalendario(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast.error("Não autenticado."); return; }
+      if (!user) { toast.error("Sua sessão expirou. Entre de novo para importar."); return; }
       const calendarioPath = `calendario-${user.id}.pdf`;
 
       // Validação de espaço — soma todos os arquivos exceto o próprio calendário (se já existir)
@@ -1033,11 +1035,15 @@ const deleteCalendar = async () => {
         return;
       }
 
+      // Confere os créditos ANTES de subir o arquivo (A13).
+      const okGate = await creditosGate.checar({ custo: CUSTOS.anexar_agenda, acao: "Anexo de Agenda (calendário escolar)" });
+      if (!okGate) return;
+
       // Salva o PDF no bucket para que conte no uso total compartilhado
       const { error: upErr } = await supabase.storage
         .from("documentos-professor")
         .upload(calendarioPath, file, { upsert: true });
-      if (upErr) throw upErr;
+      if (upErr) throw new Error("Não consegui enviar o arquivo. Confira a conexão e tente de novo.");
 
       const base64 = await new Promise<string>((res, rej) => {
         const reader = new FileReader();
@@ -1046,14 +1052,11 @@ const deleteCalendar = async () => {
         reader.readAsDataURL(file);
       });
 
-      const okGate = await creditosGate.checar({ custo: CUSTOS.anexar_agenda, acao: "Anexo de Agenda (calendário escolar)" });
-      if (!okGate) return;
-
-      const { data, error } = await supabase.functions.invoke("processar-calendario", {
+      // invocarIA lê a mensagem real do servidor (antes aparecia "Edge
+      // Function returned a non-2xx status code") (N6).
+      const data = await invocarIA<{ eventos?: unknown[] }>("processar-calendario", {
         body: { pdf_base64: base64 },
       });
-
-      if (error) throw error;
 
       const eventos = (data?.eventos ?? []) as Array<{
         titulo: string; data: string; hora?: string | null;
@@ -1075,9 +1078,7 @@ const deleteCalendar = async () => {
       });
       toast.success(`${eventos.length} evento(s) encontrado(s) — revise antes de confirmar.`);
     } catch (e) {
-      const msg = (e as { context?: { error?: string } })?.context?.error
-        || (e as Error)?.message || "Erro ao processar o calendário.";
-      toast.error(msg);
+      toast.error("Não consegui ler o calendário.", { description: mensagemAmigavel(e) });
     } finally {
       setImportandoCalendario(false);
       if (calendarFileRef.current) calendarFileRef.current.value = "";
@@ -1105,34 +1106,76 @@ const deleteCalendar = async () => {
     }
   };
 
+  // A13: cria os eventos novos PRIMEIRO e só depois apaga os da importação
+  // anterior. Se a criação falhar, a agenda antiga fica intacta.
   const confirmarImportacaoCalendario = async () => {
-    const { data: { user: userAtual } } = await supabase.auth.getUser();
-    if (userAtual) {
-      await supabase
+    if (confirmandoImport) return;
+    if (eventosPendentes.length === 0) {
+      setModalRevisaoAberto(false);
+      return;
+    }
+    setConfirmandoImport(true);
+    try {
+      const { data: { user: userAtual } } = await supabase.auth.getUser();
+      if (!userAtual) {
+        toast.error("Sua sessão expirou. Entre de novo para importar.");
+        return;
+      }
+      // Guarda os ids da importação anterior antes de criar os novos.
+      const { data: antigos, error: selErr } = await supabase
         .from("agenda_eventos")
-        .delete()
+        .select("id")
         .eq("user_id", userAtual.id)
         .contains("data", { origem: "calendario" });
-    }
-    let criados = 0;
-    for (const ev of eventosPendentes) {
-      try {
-        await create({
-          date: ev.data,
-          title: ev.titulo,
-          time: ev.hora || "",
-          type: ev.tipo,
-          notes: ev.descricao || "",
-          data: { origem: "calendario", importadoEm: new Date().toISOString() },
-        });
-        criados++;
-      } catch (e) {
-        console.error("[Agenda] falha ao criar evento do calendário:", e);
+      const idsAntigos = selErr ? null : (antigos ?? []).map((r) => (r as { id: string }).id);
+
+      const importadoEm = new Date().toISOString();
+      let criados = 0;
+      let falhas = 0;
+      for (const ev of eventosPendentes) {
+        try {
+          await create({
+            date: ev.data,
+            title: ev.titulo,
+            time: ev.hora || "",
+            type: ev.tipo,
+            notes: ev.descricao || "",
+            data: { origem: "calendario", importadoEm },
+          });
+          criados++;
+        } catch (e) {
+          falhas++;
+          console.error("[Agenda] falha ao criar evento do calendário:", e);
+        }
       }
+
+      if (criados === 0) {
+        toast.error("Não consegui importar os eventos. Sua agenda continua como estava. Tente de novo.");
+        return;
+      }
+
+      let avisoAntigos = "";
+      if (falhas > 0) {
+        avisoAntigos = ` ${falhas} não entraram. Mantive os eventos da importação anterior: confira a agenda.`;
+      } else if (idsAntigos === null) {
+        avisoAntigos = " Não consegui remover os eventos da importação anterior: confira a agenda.";
+      } else if (idsAntigos.length > 0) {
+        const { error: delErr } = await supabase
+          .from("agenda_eventos")
+          .delete()
+          .eq("user_id", userAtual.id)
+          .in("id", idsAntigos);
+        if (delErr) avisoAntigos = " Não consegui remover os eventos da importação anterior: confira a agenda.";
+      }
+      await refresh();
+      setModalRevisaoAberto(false);
+      setEventosPendentes([]);
+      const msg = `${criados} evento${criados !== 1 ? "s" : ""} importado${criados !== 1 ? "s" : ""} do calendário escolar.`;
+      if (avisoAntigos) toast.warning(msg + avisoAntigos);
+      else toast.success(msg);
+    } finally {
+      setConfirmandoImport(false);
     }
-    setModalRevisaoAberto(false);
-    setEventosPendentes([]);
-    toast.success(`${criados} evento${criados !== 1 ? "s" : ""} importado${criados !== 1 ? "s" : ""} do calendário escolar.`);
   };
 
   const tomorrowKey = useMemo(() => {
@@ -2102,12 +2145,15 @@ const deleteCalendar = async () => {
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => { setModalRevisaoAberto(false); setEventosPendentes([]); }}
-                className="px-4 py-2 rounded-lg border text-sm hover:bg-muted"
+                disabled={confirmandoImport}
+                className="px-4 py-2 rounded-lg border text-sm hover:bg-muted disabled:opacity-50"
               >Cancelar</button>
               <button
                 onClick={confirmarImportacaoCalendario}
-                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90"
-              >Confirmar {eventosPendentes.length} evento(s)</button>
+                disabled={confirmandoImport || eventosPendentes.length === 0}
+                aria-busy={confirmandoImport}
+                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:opacity-90 disabled:opacity-50"
+              >{confirmandoImport ? "Importando…" : `Confirmar ${eventosPendentes.length} evento(s)`}</button>
             </div>
           </div>
         </div>

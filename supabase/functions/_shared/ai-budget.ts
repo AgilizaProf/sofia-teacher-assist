@@ -14,6 +14,10 @@ const CREDITS_PER_BRL = Number(Deno.env.get("CREDITS_PER_BRL") ?? 100);
 const PRICING: Record<string, { in: number; out: number }> = {
   "gemini-2.5-flash":      { in: 0.30, out: 2.50 },
   "gemini-2.5-flash-lite": { in: 0.10, out: 0.40 },
+  // Áudio (leitura em voz alta): a entrada custa mais que texto e imagem.
+  "gemini-2.5-flash-audio": { in: 1.00, out: 2.50 },
+  // Modelo mais forte, usado para ler a letra da criança na foto.
+  "gemini-2.5-pro":        { in: 1.25, out: 10.00 },
 };
 
 export function costBrl(model: string, inTok: number, outTok: number): number {
@@ -52,11 +56,19 @@ export function costToCredits(costBrlValue: number): number {
 // Mantém os nomes usedBrl/limitBrl por compatibilidade, mas representam créditos.
 export async function isBudgetExceeded(
   userId: string,
-): Promise<{ exceeded: boolean; usedBrl: number; limitBrl: number; creditos: number }> {
-  const { data, error } = await admin.rpc("garantir_creditos_usuario", { _user_id: userId });
-  if (error) {
-    console.error("[ai-budget] garantir_creditos_usuario error:", error);
-    return { exceeded: false, usedBrl: 0, limitBrl: 0, creditos: 0 };
+): Promise<{ exceeded: boolean; usedBrl: number; limitBrl: number; creditos: number; erro?: boolean }> {
+  // Falha ao consultar NÃO pode virar "0 créditos": devolve erro: true e quem
+  // chama responde "Não consegui conferir seus créditos agora" (N5).
+  let data: unknown = null;
+  let error: unknown = null;
+  try {
+    ({ data, error } = await admin.rpc("garantir_creditos_usuario", { _user_id: userId }));
+  } catch (e) {
+    error = e;
+  }
+  if (error || !data) {
+    console.error("[ai-budget] garantir_creditos_usuario error:", error ?? "sem dados");
+    return { exceeded: false, usedBrl: 0, limitBrl: 0, creditos: 0, erro: true };
   }
   const totais = Number((data as any)?.creditos_totais ?? 0);
   const utilizados = Number((data as any)?.creditos_utilizados ?? 0);

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { callAI, aiErrorResponse, corsHeaders as cors } from "../_shared/sofia-router.ts";
+import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 
 serve(async (req) => {
@@ -65,14 +65,19 @@ Responda APENAS em JSON:
 
     const r = await callAI({ userId, tipo: "trilha_semana", system: sys, user, json: true, maxTokens: 4000 });
     if (!r.ok) return aiErrorResponse(r);
-    let plano: Record<string, unknown> = {};
-    try { plano = JSON.parse(r.text || "{}"); } catch { plano = { erro: "JSON inválido", raw: r.text }; }
+    const plano = parseAiJson<Record<string, unknown>>(r.text || "{}");
+    if (r.truncated || jsonTruncado(plano)) {
+      console.warn("[gerar-plano-semanal-trilha] resposta cortada", r.finishReason);
+      return new Response(
+        JSON.stringify({ ok: false, truncated: true, error: "A resposta veio incompleta. Gere de novo." }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
+    }
     return new Response(JSON.stringify({ plano, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String((e as Error)?.message || e) }), {
-      status: 200, headers: { ...cors, "Content-Type": "application/json" },
-    });
+    console.error("[gerar-plano-semanal-trilha] erro interno", e);
+    return erroSimples("A Sofia não conseguiu gerar o plano da semana agora. Tente de novo em instantes.", e);
   }
 });
