@@ -500,6 +500,9 @@ export function PainelNav() {
                   {pendentes}
                 </span>
               </Link>
+              <Link to="/alfabetizacao">
+                <Svg>{ICONS.book}</Svg>Criança alfabetizada
+              </Link>
               <Link to="/cadernos">
                 <Svg>{ICONS.book}</Svg>Cadernos prontos
               </Link>

@@ -2306,6 +2306,43 @@ function evolucaoHtml(turma){
      return `<tr><td>${esc(n)}</td>${vs.map(v=>`<td class="cel" style="color:var(--${v==null?"texto-2":corP(v)==="alerta"?"alerta":corP(v)})">${v==null?"–":pct(v)}</td>`).join("")}<td class="cel">${m==null?"–":pct(m)}</td></tr>`;}).join("")}</tbody></table></div>
    <p class="fonte" style="margin:0">${sims.map((x,k)=>`S${k+1}: ${esc(x.titulo)}`).join(" · ")}</p></div>`;
 }
+// Evolução por habilidade: compara a primeira e a última vez em que cada
+// habilidade (ou descritor) caiu nos simulados da turma, na turma e por aluno.
+function evolucaoHabHtml(turma){
+  if(!turma)return "";
+  const grupos={};S.resultados.filter(r=>r.turma===turma&&r.simId!=="SAEB-ONLINE").forEach(r=>(grupos[r.simId]=grupos[r.simId]||[]).push(r));
+  const sims=Object.entries(grupos).map(([id,rs])=>{const s=S.simulados.find(x=>x.id===id);return {id,titulo:rs[0].titulo,quando:s?s.criado:0,rs};}).sort((a,b)=>a.quando-b.quando);
+  if(sims.length<2)return "";
+  const dn=q=>q.disc==="GEOM"&&q.desc?"MAT":q.disc;
+  // habs[chave] = {lab, vezes:[{k, n, a, al:{aluno:{n,a}}}]}
+  const habs={};
+  sims.forEach((x,k)=>x.rs.forEach(r=>(r.ordem||[]).forEach((qi,j)=>{if(qi==null)return;const q=getQ(refDe(qi));if(!q)return;const d=q.desc||q.hab||q.tema;if(!d)return;
+    const ch=dn(q)+"|"+d;const h=habs[ch]=habs[ch]||{d,disc:dn(q),vezes:[]};let v=h.vezes.find(z=>z.k===k);if(!v)h.vezes.push(v={k,n:0,a:0,al:{}});
+    const ok=r.respostas[j]===r.gab[j]?1:0;v.n++;v.a+=ok;const o=v.al[r.aluno]=v.al[r.aluno]||{n:0,a:0};o.n++;o.a+=ok;})));
+  const varias=new Set(Object.values(habs).map(h=>h.disc)).size>1;
+  const todas=Object.values(habs);
+  const comp=todas.filter(h=>h.vezes.length>1).map(h=>{const p=h.vezes[0],u=h.vezes[h.vezes.length-1];return {h,lab:varias&&DISC[h.disc]?`${DISC[h.disc]} · ${h.d}`:h.d,p,u,v0:p.a/p.n,v1:u.a/u.n,dif:u.a/u.n-p.a/p.n};}).sort((a,b)=>a.dif-b.dif);
+  const sos=todas.length-comp.length;
+  if(!comp.length)return `<div class="painel pilha"><h2>Evolução por habilidade</h2><p class="fonte" style="margin:0">Ainda não dá para comparar. Os ${sims.length} simulados desta turma cobraram habilidades diferentes. Quando uma mesma habilidade cair em dois simulados, a comparação aparece aqui.</p></div>`;
+  const LIM=0.05,pts=v=>Math.round(Math.abs(v)*100);
+  const seta=d=>d>LIM?`<b style="color:var(--bom)">▲ subiu ${pts(d)} pontos</b>`:d<-LIM?`<b style="color:var(--ruim)">▼ caiu ${pts(d)} pontos</b>`:`<span class="fonte">= igual</span>`;
+  const sub=comp.filter(c=>c.dif>LIM).length,cai=comp.filter(c=>c.dif<-LIM).length,ig=comp.length-sub-cai;
+  const melhor=comp[comp.length-1],pior=comp[0];
+  const frases=[`De ${comp.length} ${comp.length===1?"habilidade cobrada":"habilidades cobradas"} mais de uma vez, ${sub} ${sub===1?"melhorou":"melhoraram"}, ${cai} ${cai===1?"piorou":"pioraram"} e ${ig} ${ig===1?"ficou igual":"ficaram iguais"}.`];
+  if(melhor.dif>LIM)frases.push(`Maior avanço: ${melhor.lab} (de ${pct(melhor.v0)} para ${pct(melhor.v1)}).`);
+  if(pior.dif<-LIM)frases.push(`Pede mais atenção: ${pior.lab} (de ${pct(pior.v0)} para ${pct(pior.v1)}).`);
+  if(sos)frases.push(`${sos} ${sos===1?"habilidade só caiu":"habilidades só caíram"} em um simulado e ainda não ${sos===1?"entra":"entram"} na comparação.`);
+  const nomes=[...new Set(sims.flatMap(x=>x.rs.map(r=>r.aluno)))].filter(n=>!/^Sem nome/.test(n)).sort((a,b)=>a.localeCompare(b,"pt"));
+  const cols=comp.slice(0,8);
+  const cel=(c,n)=>{const a=c.p.al[n],b=c.u.al[n];if(!b&&!a)return `<td class="cel" style="color:var(--texto-2)">–</td>`;if(!a||!b){const o=b||a;return `<td class="cel" title="Fez só um dos dois simulados">${pct(o.a/o.n)}</td>`;}
+    const v0=a.a/a.n,v1=b.a/b.n,d=v1-v0;return `<td class="cel" title="De ${pct(v0)} para ${pct(v1)}" style="color:var(--${d>LIM?"bom":d<-LIM?"ruim":"texto"});font-weight:${Math.abs(d)>LIM?800:500}">${d>LIM?"▲ ":d<-LIM?"▼ ":"= "}${pct(v1)}</td>`;};
+  return `<div class="painel pilha"><h2>Evolução por habilidade</h2><p class="fonte" style="margin:0">${esc(turma)} · compara a primeira e a última vez em que cada habilidade caiu nos simulados da turma.</p>
+   <p style="margin:0">${frases.map(esc).join(" ")}</p>
+   <div class="tabela-wrap"><table><thead><tr><th>Habilidade</th><th>Primeira vez</th><th>Última vez</th><th>O que mudou</th></tr></thead><tbody>${comp.map(c=>`<tr><td style="white-space:normal;min-width:200px">${esc(c.lab)}</td><td class="num">${pct(c.v0)} <span class="fonte">S${c.p.k+1}</span></td><td class="num">${pct(c.v1)} <span class="fonte">S${c.u.k+1}</span></td><td>${seta(c.dif)}</td></tr>`).join("")}</tbody></table></div>
+   <h3 style="margin:6px 0 0">Aluno por aluno</h3><p class="fonte" style="margin:0">Acerto de cada aluno na última vez em que a habilidade caiu. A seta compara com a primeira vez.${comp.length>cols.length?` Aparecem as ${cols.length} habilidades que mais pedem atenção.`:""}</p>
+   <div class="tabela-wrap"><table><thead><tr><th>Aluno(a)</th>${cols.map(c=>`<th title="${esc(c.lab)}" style="white-space:normal;max-width:110px">${esc(c.h.d.length>22?c.h.d.slice(0,21)+"…":c.h.d)}</th>`).join("")}</tr></thead><tbody>${nomes.map(n=>`<tr><td>${esc(n)}</td>${cols.map(c=>cel(c,n)).join("")}</tr>`).join("")}</tbody></table></div>
+   <p class="fonte" style="margin:0">${sims.map((x,k)=>`S${k+1}: ${esc(x.titulo)}`).join(" · ")}</p></div>`;
+}
 function renderResultados(){
   const grupos={};S.resultados.forEach(r=>(grupos[r.simId+"|"+r.titulo]=grupos[r.simId+"|"+r.titulo]||[]).push(r));
   const chaves=Object.keys(grupos);if(!chaves.includes(RF))RF=chaves[0]||"";
@@ -2319,7 +2356,7 @@ function renderResultados(){
   if(rs.length){
     const {itensQ}=analisar(rs,sim);
     const nomes=sim?sim.versoes.map(v=>v.nome):[];
-    analise=quadroHtml(rs,simV)+reforcoHtml(rs)+evolucaoHtml(turmaEv)+`
+    analise=quadroHtml(rs,simV)+reforcoHtml(rs)+evolucaoHtml(turmaEv)+evolucaoHabHtml(turmaEv)+`
      <div class="painel pilha"><h2>Acertos de cada prova</h2><div class="tabela-wrap"><table><thead><tr><th>Aluno(a)</th>${rs.some(r=>r.tipo)?"<th>Tipo</th>":""}<th>Acertos</th><th>%</th><th>Faixa</th><th>Leitura</th><th></th></tr></thead><tbody>${rs.slice().sort((a,b)=>a.aluno.localeCompare(b.aluno,"pt")).map(r=>{const p=r.acertos/r.total;const semNome=/^Sem nome/.test(r.aluno);
        return `<tr><td>${semNome&&nomes.length?`<select data-nomear="${r.rid}" aria-label="Escolher aluno"><option>${esc(r.aluno)}</option>${nomes.map(n=>`<option>${esc(n)}</option>`).join("")}</select>`:esc(r.aluno)}</td>${rs.some(x=>x.tipo)?`<td>${seloTipo(r.tipo)}</td>`:""}<td class="num"><b>${r.acertos}/${r.total}</b></td><td><span class="chip ${corP(p)}">${pct(p)}</span></td><td class="fonte">${FAIXAS[faixaDe(p)][0]}</td><td><span class="chip${/conferir/.test(r.origem||"")?" alerta":""}">${esc(r.origem||"")}</span></td><td><button class="btn peq perigo" data-del="${r.rid}">Apagar</button></td></tr>`;}).join("")}</tbody></table></div></div>
      <div class="painel pilha"><h2>Análise das alternativas</h2><p class="fonte" style="margin:0">Quantos alunos marcaram cada alternativa (na ordem original da questão). Uma alternativa errada muito marcada indica um erro comum para trabalhar em sala.</p>
