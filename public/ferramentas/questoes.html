@@ -1155,7 +1155,7 @@ function renderInicio(){
   $("#painel").innerHTML=`<h2 class="pn-bloco">O que você quer fazer?</h2>
    <div class="inicio-cards">${cards.map(([k,ic,t,d,g])=>`<button class="card-ini" data-ir="${k}"><div class="faixa-c" style="background:linear-gradient(135deg,${g})"><span>${ic}</span>${cont[k]?`<em class="cont">${cont[k]}</em>`:""}</div><div class="corpo"><b>${t}</b><p>${d}</p></div></button>`).join("")}</div>
    <div class="novidade"><div><b>Novo: banco ampliado para ${(todas().length-S.minhas.length).toLocaleString("pt-BR")} questões</b><p>${(BANCO.length-N_ORIG).toLocaleString("pt-BR")} questões novas de Língua Portuguesa, Matemática, Geometria, Ciências, História e Geografia, todas com texto-base ou situação-problema.${BANCO.length>N_R1?` As ${(BANCO.length-N_R1).toLocaleString("pt-BR")} mais recentes reforçam os simulados SAEB do 2º, 5º e 9º ano.`:""}</p></div><div class="linha-acoes"><button class="btn peq prim" id="ver-novas">Ver as novas</button>${BANCO.length>N_R1?`<button class="btn peq" id="ver-novas2">Novas para SAEB</button>`:""}</div></div>
-   <div class="pn-bloco-linha"><h2 class="pn-bloco">Situação do banco</h2><button class="btn peq relatar" data-ir="relatos">⚠️ Relatos de erro${cont.relatos?` (${cont.relatos})`:""}</button></div>
+   <div class="pn-bloco-linha"><h2 class="pn-bloco">Situação do banco</h2>${RPODE?`<button class="btn peq relatar" data-ir="relatos">⚠️ Relatos de erro${cont.relatos?` (${cont.relatos})`:""}</button>`:""}</div>
    <div class="resumo-num"><div><b>${todas().length.toLocaleString("pt-BR")}</b><span>questões disponíveis</span></div><div><b>${nSaeb.toLocaleString("pt-BR")}</b><span>itens SAEB com descritor</span></div><div><b>${nFig.toLocaleString("pt-BR")}</b><span>questões com figura</span></div><div><b>${nAval(1)}</b><span>marcadas com 👍 Gostei</span></div><div><b>${S.simulados.length}</b><span>simulados gerados</span></div><div><b>${S.resultados.length}</b><span>provas corrigidas</span></div></div>`;
   $("#painel").querySelectorAll("[data-ir]").forEach(b=>b.onclick=()=>irPara(b.dataset.ir));
   $("#ver-novas").onclick=()=>{F=Object.assign(F,{tipo:"novas",pag:0});irPara("banco");};
@@ -1445,12 +1445,12 @@ function desenharResSofia(){
 let ED=null;
 function renderMinhas(){
   $("#painel").innerHTML=cabecalho("🗂️","Minhas questões","Questões que você escreveu ou guardou da Sofia. Elas entram no banco, nos simulados e no leitor QR como qualquer outra. Você pode anexar uma imagem própria.")+`
-   <div class="linha-acoes" style="margin-bottom:14px"><button class="btn prim" id="m-nova">+ Escrever questão</button><button class="btn roxo" id="m-sofia">✨ Pedir à Sofia</button></div>
+   <div class="linha-acoes" style="margin-bottom:14px"><button class="btn prim" id="m-nova">+ Escrever questão</button>${SOFIA_LIGADA?`<button class="btn roxo" id="m-sofia">✨ Pedir à Sofia</button>`:""}</div>
    <div id="m-editor"></div>
    <div class="lista" id="m-lista">${S.minhas.length?S.minhas.map(q=>`<div class="pilha" style="gap:6px">${htmlQuestao(q,{gab:true})}<div class="linha-acoes"><button class="btn peq" data-editar="${q.id}">Editar</button><button class="btn peq perigo" data-apagarq="${q.id}">Apagar</button></div></div>`).join(""):`<div class="vazio">Você ainda não tem questões próprias. Escreva uma ou peça à Sofia.</div>`}</div>
    ${barraSel()}`;
   $("#m-nova").onclick=()=>{ED={id:null,ano:5,disc:"MAT",nivel:2,tema:"",hab:"",texto:"",enunciado:"",alts:["","","",""],correta:0,img:""};editor();};
-  $("#m-sofia").onclick=()=>{SF.base=null;irPara("sofia");};
+  if($("#m-sofia"))$("#m-sofia").onclick=()=>{SF.base=null;irPara("sofia");};
   $("#painel").querySelectorAll("[data-editar]").forEach(b=>b.onclick=()=>{ED=JSON.parse(JSON.stringify(S.minhas.find(q=>q.id===b.dataset.editar)));editor();});
   $("#painel").querySelectorAll("[data-apagarq]").forEach(b=>b.onclick=()=>{if(!b.dataset.conf){b.dataset.conf=1;b.textContent="Confirmar";return;}S.minhas=S.minhas.filter(q=>q.id!==b.dataset.apagarq);S.sel=S.sel.filter(r=>r!==b.dataset.apagarq);salvar();montarAbas();renderMinhas();});
   ligarQuestoes(renderMinhas);
@@ -1604,7 +1604,7 @@ function montarSofia(){
   // o porquê de cada escolha, em linguagem de professor
   const nome=ts.length===1?ts[0].nome:ts.length?"as turmas marcadas":"";
   const semBanco=cand.filter(c=>!c.total).map(c=>c.h.k);
-  if(semBanco.length)porque.push(`Não achei questões de ${semBanco.join(", ")} no banco para o ${anoTxt(ano)} com os níveis marcados. Tente outro nível, o código da habilidade ou crie questões em "Criar com a Sofia".`);
+  if(semBanco.length)porque.push(`Não achei questões de ${semBanco.join(", ")} no banco para o ${anoTxt(ano)} com os níveis marcados. Tente outro nível ou o código da habilidade${SOFIA_LIGADA?', ou crie questões em "Criar com a Sofia"':""}.`);
   cand.forEach((c,i)=>{if(!quota[i])return;const a=acertoDe(d,c.h);const n=G.sofia.itens.filter(x=>idHab(x.h)===idHab(c.h)).length;
     porque.push(`${c.h.k}${c.h.disc?" ("+DISC[c.h.disc]+")":""}: ${n} ${n===1?"questão":"questões"}${a==null?"":a<.6?`, mais que as outras, porque ${nome} acertou só ${pct(a)} nos simulados anteriores`:` (${nome} acertou ${pct(a)} antes)`}.`);});
   const evitadas=cand.reduce((s,c)=>s+c.repetidas,0);
@@ -2476,8 +2476,9 @@ const TIPOS_RELATO={gabarito:"Gabarito errado",figura:"Figura com problema",text
 let RDB=null,RUSER=null,RELATOS=[],RF2="abertos",RPODE=false;
 function relatosTodos(){return RELATOS.concat((S.relatos||[]).map(r=>({...r,local:true})));}
 function relatosAbertos(){return relatosTodos().filter(r=>r.status==="aberto");}
-(async()=>{// a base compartilhada de relatos ainda não existe no app: os relatos ficam na conta da professora
-  if(!RDB)return;
+(async()=>{// dentro do app, os relatos guardados antes vão para a equipe do AgilizaProf
+  if(!RDB){const nv=nuvem();if(nv&&nv.relatar){await new Promise(r=>setTimeout(r,4000));const pend=(S.relatos||[]).filter(r=>r.status==="aberto"&&!r.enviado);
+    let mudou=false;for(const r of pend){try{if(await nv.relatar(r)){r.enviado=true;mudou=true;}}catch(_){break;}}if(mudou)salvar();}return;}
   RDB.collection("relatos").orderBy("criado","desc").limit(1000).onSnapshot(snap=>{RELATOS=snap.docs.map(d=>({...d.data(),_id:d.id}));montarAbas();if(S.aba==="relatos")renderRelatos();},()=>{});
   // relatos guardados neste aparelho antes de haver acesso: tenta enviar
   if((S.relatos||[]).length){const pend=S.relatos.slice();for(const r of pend){try{await RDB.collection("relatos").add({...r});S.relatos=S.relatos.filter(x=>x!==r);}catch(_){break;}}salvar();}
@@ -2500,8 +2501,10 @@ function abrirRelato(ref){
     const r={qid:q.id,ano:q.ano,disc:q.disc,tipo:tipoSel(),letra:tipoSel()==="gabarito"?$("#rl-letra").value:"",detalhe:$("#rl-detalhe").value.trim().slice(0,800),
       enunciado:String(q.enunciado).slice(0,160),gabarito:L[q.correta],autor,criado:Date.now(),status:"aberto"};
     let ok=false;if(RDB){try{await RDB.collection("relatos").add(r);ok=true;}catch(_){}}
+    // Dentro do app, o relato vai para a equipe do AgilizaProf (Administração > Erros).
+    if(!ok){const nv=nuvem();if(nv&&nv.relatar){try{ok=await nv.relatar(r);}catch(_){ok=false;}}}
     if(!ok){S.relatos=S.relatos||[];S.relatos.unshift(r);salvar();}
-    dlg.close();montarAbas();toast(ok?"Obrigado! O relato foi enviado.":"Relato guardado neste aparelho. Ele será enviado quando a página tiver acesso.");};
+    dlg.close();montarAbas();toast(ok?"Obrigado! O relato foi enviado para a equipe do AgilizaProf.":"Relato guardado neste aparelho. Ele será enviado quando a página tiver acesso.");};
   dlg.showModal();
 }
 async function mudarRelato(r,status){

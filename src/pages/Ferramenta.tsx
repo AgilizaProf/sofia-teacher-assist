@@ -53,6 +53,7 @@ type AprofNuvem = {
   set: (key: string, data: unknown) => Promise<boolean>;
   usuario: () => Promise<string | null>;
   planejamento: () => Promise<PlanejamentoTurma[]>;
+  relatar: (relato: unknown) => Promise<boolean>;
 };
 
 // Só estas chaves podem ser lidas ou gravadas pelas ferramentas (lista branca).
@@ -164,6 +165,32 @@ const aprofNuvem: AprofNuvem = {
   // id da conta, para a ferramenta separar a cópia local de cada professora no mesmo navegador
   async usuario() {
     return usuarioId();
+  },
+  // Relato de questão com erro: vai para Administração > Erros, onde a equipe do
+  // AgilizaProf corrige o banco. Antes ficava só na conta da professora.
+  async relatar(relato) {
+    const r = (relato ?? {}) as Record<string, unknown>;
+    const txt = (v: unknown, n = 200) => (typeof v === "string" || typeof v === "number" ? String(v).slice(0, n) : "");
+    const uid = await usuarioId();
+    const { error } = await supabase.from("platform_errors").insert({
+      user_id: uid,
+      route: "/questoes",
+      severity: "info",
+      message: `Relato de questão ${txt(r.qid, 40)}: ${txt(r.tipo, 40)}${r.detalhe ? ` · ${txt(r.detalhe, 800)}` : ""}`,
+      metadata: {
+        tipo: "relato_questao",
+        qid: txt(r.qid, 40),
+        ano: txt(r.ano, 10),
+        disc: txt(r.disc, 10),
+        problema: txt(r.tipo, 40),
+        letra_sugerida: txt(r.letra, 2),
+        gabarito_atual: txt(r.gabarito, 2),
+        enunciado: txt(r.enunciado, 200),
+        detalhe: txt(r.detalhe, 800),
+      },
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 300) : null,
+    });
+    return !error;
   },
   // só leitura, e só da conta de quem está logado
   async planejamento() {
