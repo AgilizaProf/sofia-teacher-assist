@@ -53,6 +53,9 @@ type PlanejamentoTurma = { turma: string; ano: string; codigos: string[]; quando
 // Questões e Jogos usam isto para não pedir a lista de novo.
 type AlunosDaTurma = { turma: string; ano: number | null; alunos: string[] };
 
+// Últimas aulas planejadas: os Jogos oferecem o tema delas para a Sofia montar o jogo.
+type AulaPlanejada = { titulo: string; tema: string; turma: string; ano: string };
+
 type AprofNuvem = {
   get: (key: string) => Promise<Snapshot>;
   set: (key: string, data: unknown) => Promise<boolean>;
@@ -61,6 +64,8 @@ type AprofNuvem = {
   relatar: (relato: unknown) => Promise<boolean>;
   guardar: (item: unknown) => Promise<ResultadoGuardar>;
   alunos: () => Promise<AlunosDaTurma[]>;
+  aulas: () => Promise<AulaPlanejada[]>;
+  sofiaJogo: (pedido: unknown) => Promise<{ itens: Array<{ pergunta: string; resposta: string }> } | { erro: string }>;
 };
 
 // Só estas chaves podem ser lidas ou gravadas pelas ferramentas (lista branca).
@@ -220,6 +225,42 @@ const aprofNuvem: AprofNuvem = {
       ano: anoDe.get(turma) ?? anoDaTurma(turma),
       alunos: nomes.sort((x, y) => x.localeCompare(y, "pt-BR")),
     }));
+  },
+  // só leitura, e só da conta de quem está logado
+  async aulas() {
+    const uid = await usuarioId();
+    if (!uid) return [];
+    const { data } = await supabase
+      .from("planos_aula")
+      .select("titulo, data, created_at")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    const vistos = new Set<string>();
+    const out: AulaPlanejada[] = [];
+    for (const p of data ?? []) {
+      const d = (p.data ?? {}) as Record<string, unknown>;
+      const plano = (d.plano ?? {}) as Record<string, unknown>;
+      const tema = texto(d.tema) || texto(plano.titulo) || texto(p.titulo);
+      if (!tema || vistos.has(tema.toLowerCase())) continue;
+      vistos.add(tema.toLowerCase());
+      out.push({ titulo: texto(p.titulo) || tema, tema, turma: texto(d.turma), ano: texto(d.ano) });
+      if (out.length >= 6) break;
+    }
+    return out;
+  },
+  // Sofia preenche perguntas e respostas de um jogo (função gerar-jogo).
+  async sofiaJogo(pedido) {
+    try {
+      const { invocarIA } = await import("@/lib/sofia/invocarIA");
+      const r = await invocarIA<{ itens?: Array<{ pergunta: string; resposta: string }> }>("gerar-jogo", {
+        body: pedido,
+        validar: (d) => (Array.isArray(d.itens) && d.itens.length > 0) || "A Sofia não conseguiu montar o jogo agora.",
+      });
+      return { itens: r.itens ?? [] };
+    } catch (e) {
+      return { erro: e instanceof Error && e.message ? e.message : "A Sofia não conseguiu montar o jogo agora." };
+    }
   },
   // Guarda um simulado ou jogo na Minha Biblioteca do app.
   async guardar(item) {
