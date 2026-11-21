@@ -25,6 +25,7 @@ import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useSofiaUserDataOptional } from "@/lib/sofia/SofiaUserContext";
 import { brDateKey } from "@/lib/datetime";
 import { alunosAvaliados, resumoParaSofia, useAlfaDados } from "@/lib/alfabetizacao/store";
+import { obsParaSofia, useObsWhatsapp } from "@/lib/alfabetizacao/whatsapp";
 import { comControle, SofiaCanceladaError, SofiaTempoEsgotadoError } from "./streamControl";
 
 export type SofiaMessage = {
@@ -119,6 +120,7 @@ function useRouteContext() {
   const { curriculo, isAtivo: municipalAtivo } = useCurriculoMunicipal();
   const userData = useSofiaUserDataOptional();
   const { dados: alfa } = useAlfaDados();
+  const obsWhatsapp = useObsWhatsapp();
   return useMemo(() => {
     const p = loc.pathname;
     let tela = "Você está na Página inicial (painel do(a) educador(a)).";
@@ -211,6 +213,12 @@ function useRouteContext() {
         "Use esses níveis ao sugerir atividades, agrupamentos e pareceres para esses alunos.",
       );
     }
+    const obsLeitura = obsParaSofia(obsWhatsapp);
+    if (obsLeitura) {
+      linhas.push(
+        `\nOBSERVAÇÕES DE LEITURA E ESCRITA (enviadas pelo WhatsApp e confirmadas pela professora):\n${obsLeitura}`,
+      );
+    }
     // ── Currículo municipal ─────────────────────────────────────────────
     if (
       municipalAtivo &&
@@ -257,6 +265,7 @@ function useRouteContext() {
     return linhas.join("\n");
   }, [
     alfa,
+    obsWhatsapp,
     loc.pathname,
     sofia?.user?.primeiro_nome,
     sofia?.entity?.turma_atual,
