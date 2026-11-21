@@ -181,22 +181,65 @@ export const alfaCss = `
 .af-graf{display:flex;align-items:flex-end;gap:6px;height:74px;margin:6px 0 10px;}
 .af-graf span{flex:1;max-width:44px;border:1.5px solid var(--pn-ink);border-radius:6px 6px 0 0;display:flex;align-items:flex-start;justify-content:center;font-size:12px;font-weight:700;padding-top:2px;}
 @media (max-width:760px){
-  .af-wrap{padding:16px 14px 0;}
-  .af-title{font-size:26px;}
+  .af-wrap{padding:14px 14px 0;}
+  .af-title{font-size:24px;}
+  .af-sub{font-size:14.5px;}
+  .af.foco .af-sub{display:none;}
   .af-g2{grid-template-columns:1fr;}
-  .af-erro{grid-template-columns:1fr 1fr 40px;}
+  .af-card{padding:14px;border-radius:14px;}
+  .af-card.forte{border-radius:18px;}
+  /* abas em uma linha só, que rola de lado */
+  .af-tabs{flex-wrap:nowrap;overflow-x:auto;margin:14px -14px 12px;padding:0 14px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .af-tabs::-webkit-scrollbar{display:none;}
+  .af-tabs button{flex:0 0 auto;height:44px;}
+  .af-chips button{height:40px;}
+  /* dedo: alvos de toque de 44px e letras de 16px (sem zoom no iPhone) */
+  .af-mini{height:44px;padding:0 12px;font-size:14px;}
+  .af-link{padding:12px 4px;}
+  .af-campo select,.af-campo input,.af-campo textarea,.af-in,.af-erro input,.af-erro select{font-size:16px;}
+  .af-campo{min-width:100%;}
+  .af-botoes{flex-direction:column;align-items:stretch;}
+  .af-botoes .pn-btn{width:100%;height:50px;}
+  .af-botoes .af-link{align-self:center;}
+  .af-linha>.pn-btn{width:100%;}
+  .af-nums{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .af-num{min-width:0;}
+  .af-num b{font-size:21px;}
+  .af-erro{grid-template-columns:1fr 1fr 44px;}
+  .af-erro input,.af-erro select,.af-erro button{height:44px;}
   .af-erro select{grid-column:1 / 3;grid-row:2;}
   .af-erro button{grid-row:1 / 3;height:100%;}
-  .af-cartao.sil{font-size:28px;}
+  .af-cartao{padding:14px;}
+  .af-cartao.sil{font-size:30px;}
   .af-cartao.pal{font-size:23px;}
-  .af-cartao.fra p{font-size:21px;}
-  .af-cartao.txt p{font-size:19px;}
+  .af-cartao.fra p{font-size:22px;}
+  .af-cartao.txt p{font-size:19px;line-height:1.65;}
+  .af-pals button{min-height:46px;font-size:17px;padding:4px 12px;}
   .af-barra{grid-template-columns:110px 1fr 28px;}
+  /* lista de alunos vira um cartão por aluno */
   .af-tabela thead{display:none;}
   .af-tabela,.af-tabela tbody{display:block;}
-  .af-tabela tr{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--pn-line);}
-  .af-tabela tr:last-child{border-bottom:0;}
-  .af-tabela td{display:block;padding:0;border:0;}
-  .af-tabela td:first-child,.af-tabela td:last-child{flex-basis:100%;}
+  .af-tabela tr{display:block;padding:12px 0;border-bottom:1px solid var(--pn-line);}
+  .af-tabela tr:last-child{border-bottom:0;padding-bottom:0;}
+  .af-tabela td{display:block;padding:0;border:0;margin-bottom:6px;}
+  .af-tabela td:first-child b{font-size:16px;}
+  .af-tabela td[data-rot]::before{content:attr(data-rot) ": ";font-size:13px;font-weight:700;color:var(--pn-muted);margin-right:4px;}
+  .af-tabela td:last-child{margin:10px 0 0;}
+  .af-acoes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .af-acoes .af-mini{padding:0 4px;font-size:13.5px;}
+  /* cartões em duas colunas */
+  .af-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .af-item{padding:8px;}
+  .af-item .cab{flex-direction:column;gap:2px;font-size:12px;}
+  .af-cartao.peq{padding:8px;}
+  .af-cartao.peq.sil{font-size:15px;}
+  .af-cartao.peq.pal{font-size:12.5px;grid-template-columns:1fr;gap:4px;}
+  .af-cartao.peq.fra p{font-size:12.5px;}
+  .af-barra-fixa{bottom:calc(84px + env(safe-area-inset-bottom));}
+  .af-barra-fixa .af-mini{height:40px;}
+  /* ficha do aluno sobe de baixo, como uma gaveta */
+  .af-bg{align-items:flex-end;padding:0;}
+  .af-modal{max-width:none;max-height:92dvh;border-radius:20px 20px 0 0;border-width:2px 0 0;box-shadow:none;padding:16px 14px calc(18px + env(safe-area-inset-bottom));}
+  .af-hist>div{padding:10px;}
 }
 `;

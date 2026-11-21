@@ -331,13 +331,20 @@ export function AvaliarLeitura({
     aoSalvar?.();
   }
 
+  // No celular, cada etapa começa no topo do quadro (o cartão fica inteiro na tela).
+  const quadro = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (passo === "preparar") return;
+    quadro.current?.scrollIntoView({ block: "start", behavior: "auto" });
+  }, [passo]);
+
   if (!alunos.length)
     return <div className="af-vazio">Cadastre os alunos na aba Turma para começar a avaliar.</div>;
 
   const unidade = cartao.tipo === "silabas" ? "sílabas" : "palavras";
 
   return (
-    <div>
+    <div ref={quadro} style={{ scrollMarginTop: 70 }}>
       {passo === "preparar" && (
         <>
           <div className="af-card">

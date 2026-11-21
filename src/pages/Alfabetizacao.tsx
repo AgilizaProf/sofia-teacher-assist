@@ -406,7 +406,7 @@ export function Alfabetizacao() {
   };
 
   return (
-    <div className="pn af">
+    <div className={"pn af" + (aba === "turma" ? "" : " foco")}>
       <style dangerouslySetInnerHTML={{ __html: painelTokensCss + alfaCss }} />
       <PainelNav />
       <main className="af-wrap">
@@ -537,7 +537,7 @@ export function Alfabetizacao() {
                                   </div>
                                 )}
                               </td>
-                              <td>
+                              <td data-rot="Leitura">
                                 {ul ? (
                                   <>
                                     <span
@@ -554,7 +554,7 @@ export function Alfabetizacao() {
                                   <span className="af-nv vazio">Sem avaliação</span>
                                 )}
                               </td>
-                              <td>
+                              <td data-rot="Escrita">
                                 {ue ? (
                                   <>
                                     <span
@@ -571,7 +571,10 @@ export function Alfabetizacao() {
                                   <span className="af-nv vazio">Sem avaliação</span>
                                 )}
                               </td>
-                              <td style={{ whiteSpace: "nowrap", color: "var(--pn-muted)" }}>
+                              <td
+                                data-rot="Última vez"
+                                style={{ whiteSpace: "nowrap", color: "var(--pn-muted)" }}
+                              >
                                 {ultima ? dataCurta(ultima) : "—"}
                               </td>
                               <td>
