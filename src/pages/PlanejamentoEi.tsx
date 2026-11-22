@@ -79,7 +79,7 @@ const empty: Roteiro = {
   adaptacoes_pcd: "",
 };
 
-export function PlanejamentoEi() {
+export function PlanejamentoEi({ embutido = false }: { embutido?: boolean } = {}) {
   const [students] = usePersistentState<Student[]>("inc_students", []);
   const { curriculos } = useCurriculoMunicipal();
   const curriculoPadrao = useMemo(
@@ -251,13 +251,17 @@ export function PlanejamentoEi() {
   };
 
   return (
-    <div className="pn ei-root">
-      <style>{painelTokensCss + tempoChipCss + eiCss}</style>
-      <PainelNav />
+    <div className={embutido ? "ei-root ei-embutido" : "pn ei-root"}>
+      <style>{(embutido ? "" : painelTokensCss + tempoChipCss) + eiCss}</style>
+      {!embutido && <PainelNav />}
       <main className="ei-main">
-        <div className="pn-strip"><TempoChip /></div>
-        <Link to="/planejamento" className="ei-voltar"><ArrowLeft size={16} /> Planejamento</Link>
-        <h1 className="ei-title">Educação Infantil</h1>
+        {!embutido && (
+          <>
+            <div className="pn-strip"><TempoChip /></div>
+            <Link to="/planejamento" className="ei-voltar"><ArrowLeft size={16} /> Planejamento</Link>
+            <h1 className="ei-title">Educação Infantil</h1>
+          </>
+        )}
         <p className="ei-sub">A Sofia cria um roteiro de experiência para Creche e Pré-escola, com Campos de Experiência e direitos de aprendizagem.</p>
 
         <section className="ei-card">
@@ -556,6 +560,8 @@ function ListField({ label, items, onChange }: { label: string; items: string[];
 // Visual "Painel" desta página: só aparência, sobre as classes existentes.
 const eiCss = `
 .ei-root{min-height:100vh;background:var(--pn-bg);font-family:var(--pn-body);color:var(--pn-ink);}
+.ei-embutido{min-height:0;background:transparent;}
+.ei-embutido .ei-main{padding:12px 0 40px;}
 .ei-main{max-width:1240px;margin:0 auto;padding:22px 24px 120px;display:flex;flex-direction:column;gap:18px;}
 .ei-voltar{display:inline-flex;align-items:center;gap:6px;color:var(--pn-muted);font-weight:600;font-size:14px;text-decoration:none;margin-top:-6px;}
 .ei-title{font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.1;margin:-8px 0 0;}

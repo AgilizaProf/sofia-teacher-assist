@@ -29,6 +29,7 @@ import { CUSTOS } from "@/lib/creditos/policy";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PlanoAtividadeEditor } from "@/components/atividade/PlanoAtividadeEditor";
+import { PlanejamentoEi } from "@/pages/PlanejamentoEi";
 import { TrilhasPanel } from "@/components/trilhas/TrilhasPanel";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { useTurmas } from "@/hooks/useTurmas";
@@ -1304,6 +1305,20 @@ export function Planejamento() {
   };
   const navigate = useNavigate({ from: "/planejamento" });
   const isEi = useEiMode();
+  // Roteiro da Educação Infantil dentro do Planejamento, sem abrir outra
+  // página. Abre sozinho quando a professora escolhe uma turma ou ano da
+  // Educação Infantil; se ela voltar ao plano comum, só reabre depois que a
+  // etapa sair da Educação Infantil e voltar.
+  const [eiInline, setEiInline] = useState(false);
+  const eiDispensado = useRef(false);
+  const aoMudarEtapaEi = useCallback((ei: boolean) => {
+    if (!ei) { eiDispensado.current = false; return; }
+    if (!eiDispensado.current) setEiInline(true);
+  }, []);
+  const fecharRoteiroEi = useCallback(() => {
+    eiDispensado.current = true;
+    setEiInline(false);
+  }, []);
   const { curriculos } = useCurriculoMunicipal();
   const curriculosAtivos = useMemo(
     () => curriculos.filter((c) => c.status === "ativo"),
@@ -3374,6 +3389,12 @@ export function Planejamento() {
     showToast("Plano restaurado ao original. ✓");
   };
 
+  const abrirRoteiroEi = () => {
+    eiDispensado.current = false;
+    setEiInline(true);
+    setMudanca("atv");
+  };
+
   const setMudanca = (k: MKey) => {
     setM(k);
     navigate({ search: { m: k }, replace: true });
@@ -3528,9 +3549,12 @@ export function Planejamento() {
                 );
               })}
             </div>
-            {!isEi && (
+            {!isEi && !eiInline && (
               <p className="pl-ei-link">
-                🌱 Dá aula na Educação Infantil? <Link to="/planejamento/ei">Use os roteiros por Campos de Experiência →</Link>
+                🌱 Dá aula na Educação Infantil?{" "}
+                <button type="button" className="pl-ei-btn" onClick={abrirRoteiroEi}>
+                  Use os roteiros por Campos de Experiência
+                </button>
               </p>
             )}
 
@@ -4702,8 +4726,20 @@ export function Planejamento() {
               </>
             )}
 
-            {m === "atv" && (
-              <PlanoAtividadeEditor modo="regular" />
+            {m === "atv" && eiInline && (
+              <section className="pl-ei-inline" aria-label="Roteiro de experiência da Educação Infantil">
+                <div className="pl-ei-inline-head">
+                  <strong>🌱 Educação Infantil · Roteiro por Campos de Experiência</strong>
+                  <button type="button" className="pn-btn" onClick={fecharRoteiroEi}>
+                    Voltar ao plano de atividade
+                  </button>
+                </div>
+                <PlanejamentoEi embutido />
+              </section>
+            )}
+
+            {m === "atv" && !eiInline && (
+              <PlanoAtividadeEditor modo="regular" onEducacaoInfantil={aoMudarEtapaEi} />
             )}
 
             {m === "pcd" && (
