@@ -32,7 +32,6 @@ import { MaintenanceBanner } from "@/components/admin/MaintenanceBanner";
 import { useLocation } from "@tanstack/react-router";
 import { PencilLogo } from "@/components/painel/PainelNav";
 import { META_PIXEL_ID, trackPageView } from "@/lib/tracking";
-import { AvisoCookies } from "@/components/legal/AvisoCookies";
 
 import appCss from "../styles.css?url";
 
@@ -131,8 +130,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
           s.parentNode.insertBefore(t,s)}(window, document,'script',
           'https://connect.facebook.net/en_US/fbevents.js');
           fbq.disablePushState = true;
-          var ck=null;try{ck=localStorage.getItem('aprof:cookies')}catch(e){}
-          fbq('consent', ck==='aceito'?'grant':'revoke');
           fbq('set', 'autoConfig', false, '${META_PIXEL_ID}');
           fbq('init', '${META_PIXEL_ID}');
         `,
@@ -392,7 +389,6 @@ function RootComponent() {
                     </SofiaErrorBoundary>
                   </>
                 )}
-                <AvisoCookies comBarraInferior={authed && !isPublicRoute && loc.pathname !== "/onboarding"} />
                 <Toaster position="top-right" richColors />
               </SofiaProvider>
             </SofiaNotificationsProvider>
