@@ -1361,20 +1361,26 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     const keys = competKeysFor(id, turma, pcd);
     let preenchido = 0; let pesoTotal = 0; let pontos = 0;
     let naoObservadas = 0; let semAvaliacao = 0;
+    let consolidados = 0; let emDesenvolvimento = 0;
     keys.forEach((k) => {
       const s = rub[k];
       if (!s) { semAvaliacao += 1; return; }
       if (s === "no") { naoObservadas += 1; return; }
       preenchido += 1;
       pesoTotal += 3;
-      if (s === "ed") pontos += 2;
-      else if (s === "co") pontos += 3;
+      if (s === "ed") { pontos += 2; emDesenvolvimento += 1; }
+      else if (s === "co") { pontos += 3; consolidados += 1; }
     });
     // Itens marcados como "Não observada" são desconsiderados do denominador.
     const universo = Math.max(0, keys.length - naoObservadas);
     const pctPreenchido = universo > 0 ? Math.round((preenchido / universo) * 100) : 0;
     const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
-    return { pctPreenchido, pctDesempenho, naoObservadas, semAvaliacao, total: keys.length };
+    // Na Educação Infantil não há nota (LDB, art. 31): o resumo mostra marcos
+    // descritivos em vez de porcentagem de desempenho.
+    const resumo = isEiAluno(turma, id)
+      ? `${consolidados} ${consolidados === 1 ? "conquista consolidada" : "conquistas consolidadas"} · ${emDesenvolvimento} em desenvolvimento`
+      : `Desempenho ${pctDesempenho}%`;
+    return { pctPreenchido, pctDesempenho, naoObservadas, semAvaliacao, total: keys.length, resumo };
   };
 
   // ===== Helpers de impressão (parecer único e em lote) =====
@@ -1878,14 +1884,19 @@ ${parecerHtml}
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
-                   const { pctPreenchido, pctDesempenho, naoObservadas } = computeProgress(a.id, a.turma, a.pcd);
+                   const { pctPreenchido, resumo, naoObservadas } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 6 }}>
                       <div className="rel-card-prog">
                         <span>{pctPreenchido === 0 ? "Avaliação ainda não começou" : `Avaliação ${pctPreenchido}% feita`}</span>
-                        {pctPreenchido > 0 && <span>Desempenho {pctDesempenho}%</span>}
+                        {pctPreenchido > 0 && <span>{resumo}</span>}
                       </div>
                       <div className="rel-progress"><i style={{ width: `${pctPreenchido}%` }} /></div>
+                      {a.status === "done" && pctPreenchido < 50 && (
+                        <div style={{ marginTop: 6, fontSize: 11.5, fontWeight: 600, color: "#92400E" }}>
+                          Parecer finalizado com só {pctPreenchido}% da avaliação feita. Vale completar e gerar de novo.
+                        </div>
+                      )}
                       {naoObservadas > 0 && (
                         <div
                           title="Itens marcados como 'Não observada' não entram no cálculo. Avalie-os para refletir no parecer."
@@ -2112,7 +2123,7 @@ ${parecerHtml}
       {bnccOpen && (() => {
         const { id, nome, turma, pcd } = bnccOpen;
         const rub = getAlunoRubric(id);
-        const { pctPreenchido, pctDesempenho } = computeProgress(id, turma, pcd);
+        const { pctPreenchido, resumo } = computeProgress(id, turma, pcd);
         const year = yearForAluno(id, turma);
         const areas = areasFor(id, turma, pcd);
         const provasAluno = provasDoAluno(provas, nome, turma);
@@ -2224,7 +2235,7 @@ ${parecerHtml}
               <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--line-soft)", background: "#FAF8F2" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
                   <span>Progresso da avaliação</span>
-                  <span>{pctPreenchido}% avaliado · Desempenho {pctDesempenho}%</span>
+                  <span>{pctPreenchido}% avaliado · {resumo}</span>
                 </div>
                 <div style={{ height: 8, background: "#EEE9DC", borderRadius: 99, overflow: "hidden" }}>
                   <div style={{ width: `${pctPreenchido}%`, height: "100%", background: "#0B7A55", transition: "width .3s" }} />
@@ -2804,12 +2815,12 @@ ${parecerHtml}
               <div style={{ marginTop: 14 }} className="rel-modal-body">
                 <p style={{ margin: 0 }}>{descricao}</p>
                 {(() => {
-                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+                  const { pctPreenchido, resumo } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 14 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
-                        <span>Avaliação BNCC</span>
-                        <span>{pctPreenchido}% avaliado · Desempenho {pctDesempenho}%</span>
+                        <span>{isEiAluno(a.turma, a.id) ? "Avaliação dos campos de experiência" : "Avaliação BNCC"}</span>
+                        <span>{pctPreenchido}% avaliado · {resumo}</span>
                       </div>
                       <div className="rel-progress" style={{ marginTop: 6 }}><i style={{ width: `${pctPreenchido}%` }} /></div>
                     </div>

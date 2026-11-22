@@ -32,7 +32,7 @@ const COMPLIANCE_BY_TYPE: Record<DocType, string> = {
   planejamento:
     "Documento elaborado com suporte do AgilizaProf | Em conformidade com a BNCC (Base Nacional Comum Curricular)",
   pei:
-    "Documento elaborado com suporte do AgilizaProf | Em conformidade com a Lei nº 14.254/2021 — Lei do PEI",
+    "Documento elaborado com suporte do AgilizaProf | Com base na Lei Brasileira de Inclusão — Lei nº 13.146/2015",
   "plano-adaptado":
     "Documento elaborado com suporte do AgilizaProf | Em conformidade com a Lei Brasileira de Inclusão — Lei nº 13.146/2015",
 };

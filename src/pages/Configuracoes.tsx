@@ -15,7 +15,7 @@ const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: strin
   { n: 1, emoji: "📋", name: "Dados reais", summary: "A Sofia só usa o que você cadastrou. Nunca inventa." },
   { n: 2, emoji: "📚", name: "BNCC", summary: "Todo plano e parecer cita habilidades BNCC oficiais." },
   { n: 3, emoji: "💛", name: "Linguagem humanizada", summary: "Zero linguagem capacitista. Pessoa antes da condição." },
-  { n: 4, emoji: "⚖️", name: "Legalidade", summary: "Respeita LBI, Lei 14.254/2021, LDB, ECA, LGPD e BNCC." },
+  { n: 4, emoji: "⚖️", name: "Legalidade", summary: "Respeita LBI, Lei do TEA, Lei 14.254/2021 (TDAH e dislexia), LDB, ECA, LGPD e BNCC." },
   { n: 5, emoji: "🎓", name: "Autores de referência", summary: "Apoiada em Freire, Vygotsky, Mantoan e mais." },
   { n: 6, emoji: "🔍", name: "Transparência", summary: "Planos e documentos formais mostram fontes, habilidades e base teórica." },
   { n: 7, emoji: "✍️", name: "Sua autoria", summary: "Você é a autora. A Sofia é apoio, nunca substitui." },
