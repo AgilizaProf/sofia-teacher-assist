@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PlanejamentoAtividade } from "@/pages/PlanejamentoAtividade";
 
-type Search = { dia?: string; turma?: string };
+type Search = { dia?: string; turma?: string; tema?: string };
 
 export const Route = createFileRoute("/planejamento/atividade")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     dia: typeof s.dia === "string" ? s.dia : undefined,
     turma: typeof s.turma === "string" ? s.turma : undefined,
+    tema: typeof s.tema === "string" ? s.tema.slice(0, 200) : undefined,
   }),
   head: () => ({
     meta: [
