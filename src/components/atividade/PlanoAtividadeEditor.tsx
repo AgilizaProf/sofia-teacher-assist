@@ -93,6 +93,10 @@ export type PlanoAtividade = {
   abertura: string;
   desenvolvimento: string;
   fechamento: string;
+  /** Como acompanhar a aprendizagem na aula (o que observar e registrar). */
+  avaliacao?: string;
+  /** Aviso da conferência das habilidades com a BNCC oficial. */
+  bnccAviso?: string;
   habilidades: Habilidade[];
   adaptacoes: Adaptacao[];
   sugestoes: Sugestao[];
@@ -198,10 +202,11 @@ function lerDiarioBordo(turma: string): DiarioBordoItem[] {
     if (!raw) return [];
     const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return [];
+    // Diário só da turma escolhida. Sem turma, nenhum registro vai para a
+    // Sofia (senão ela cita aulas e alunos de outra turma).
     const tnorm = (turma || "").toLowerCase().trim();
-    const filtered = tnorm
-      ? arr.filter((e: { turma?: string }) => !e.turma || e.turma.toLowerCase() === tnorm)
-      : arr;
+    if (!tnorm) return [];
+    const filtered = arr.filter((e: { turma?: string }) => (e.turma || "").toLowerCase().trim() === tnorm);
     return filtered.slice(0, 8).map((e: { emoji?: string; title?: string; text?: string; tags?: string[]; date?: string; turma?: string; atividadeTitulo?: string }) => ({
       emoji: e.emoji || "",
       titulo: e.title || "",
@@ -365,10 +370,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anoTurma]);
 
+  // Sem turma escolhida, o plano da turma não leva nomes de alunos: as
+  // adaptações saem gerais. Só a atividade "Para aluno PCD" deixa escolher
+  // qualquer aluno cadastrado, porque ela é feita para um aluno específico.
   const alunosPCDDaTurma = useMemo(() => {
-    if (!turma) return sofia.alunosPCD;
+    if (!turma) return modo === "pcd" ? sofia.alunosPCD : [];
     return sofia.alunosPCDPorTurma[turma] ?? [];
-  }, [sofia, turma]);
+  }, [sofia, turma, modo]);
 
   // Toggle PCD: ligado por padrão se a turma tiver PCD
   const [incluirPCD, setIncluirPCD] = useState<boolean>(true);
@@ -657,7 +665,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     const novo = await callSofia(field as string);
     setRegenField("");
     if (!novo) return;
-    setPlano({ ...plano, [field]: novo[field] as PlanoAtividade[typeof field] });
+    setPlano({
+      ...plano,
+      [field]: novo[field] as PlanoAtividade[typeof field],
+      ...(field === "habilidades" ? { bnccAviso: novo.bnccAviso } : {}),
+    });
     showToast(`Sofia regenerou: ${field}`);
   };
 
@@ -1428,6 +1440,10 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       p.desenvolvimento ? `Desenvolvimento\n${p.desenvolvimento}` : "",
       p.fechamento ? `Fechamento\n${p.fechamento}` : "",
     ].filter(Boolean).join("\n\n")));
+    if (p.avaliacao?.trim()) {
+      partes.push(editorialSection("Avaliação"));
+      partes.push(editorialLongField(p.avaliacao));
+    }
     if (p.habilidades.length > 0) {
       partes.push(editorialSection(
         municipalAtivo && curriculoMunicipalDados
@@ -1709,7 +1725,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
               <span>Incluir adaptações PCD</span>
               {alunosPCDDaTurma.length > 0 && (
                 <span className="atv-toggle-hint">
-                  {alunosPCDDaTurma.length} aluno(s) PCD em {turma || "—"}
+                  {alunosPCDDaTurma.length === 1 ? "1 aluno PCD" : `${alunosPCDDaTurma.length} alunos PCD`} em {turma}
                 </span>
               )}
             </label>
@@ -1991,6 +2007,24 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
               }}
             >
               <X size={12} /> Descartar esta versão
+            </button>
+          </div>
+        </section>
+      )}
+
+      {temPlano && plano.meta && (
+        (plano.meta.ano && anoEscolar && plano.meta.ano !== anoEscolar) ||
+        (plano.meta.disciplina && disciplina && plano.meta.disciplina !== disciplina) ||
+        (plano.meta.turma || "") !== (turma || "")
+      ) && (
+        <section className="atv-card" role="status" style={{ background: "#FFF7E6", borderColor: "#F59E0B" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ flex: 1, minWidth: 220, fontSize: 13.5 }}>
+              Este plano é de <strong>{plano.meta.ano} · {plano.meta.disciplina}{plano.meta.turma ? ` · ${plano.meta.turma}` : ""}</strong>.
+              {" "}Você mudou as escolhas acima. Para um plano novo, sugira as opções de novo.
+            </span>
+            <button className="atv-btn ghost" onClick={() => { setPlano(EMPTY); setOpcoes([]); setOpcoesSel([]); }}>
+              <X size={12} /> Tirar este plano da tela
             </button>
           </div>
         </section>
@@ -2470,7 +2504,7 @@ function PlanoBody(props: {
       {/* 2. Objetivo */}
       <section className={`atv-card${has("objetivo") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>① Objetivo {inclSecoes && <InclBadge hits={inclSecoes.Objetivo} />}</h3>
+          <h3>Objetivo {inclSecoes && <InclBadge hits={inclSecoes.Objetivo} />}</h3>
           <RegenBtn field="objetivo" label="objetivo" />
         </div>
         <InlineText
@@ -2483,7 +2517,7 @@ function PlanoBody(props: {
       {/* 2. Habilidades BNCC — logo abaixo do objetivo pra evitar espaços vazios */}
       <section className={`atv-card${has("habilidades") || has("habilidades_incompletas") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>② {props.curriculoNome ? `Habilidades — Currículo de ${props.curriculoNome}` : "Habilidades BNCC"}</h3>
+          <h3>{props.curriculoNome ? `Habilidades — Currículo de ${props.curriculoNome}` : "Habilidades BNCC"}</h3>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {isMobile && (
               <button
@@ -2501,6 +2535,11 @@ function PlanoBody(props: {
           </div>
         </div>
         {habVisivel && (<>
+        {plano.bnccAviso && (
+          <p className="atv-muted" role="status" style={{ background: "#FEF3C7", border: "1px solid #F59E0B", borderRadius: 10, padding: "8px 10px", color: "#78350F", marginBottom: 10 }}>
+            {plano.bnccAviso}
+          </p>
+        )}
         <div className="atv-chips">
           {plano.habilidades.map((h, i) => (
             <div className="atv-hab-item" key={`${h.codigo}-${i}`}>
@@ -2536,7 +2575,7 @@ function PlanoBody(props: {
       {(plano.contribuicoesInter ?? []).length > 0 && (
         <section className="atv-card atv-contrib">
           <div className="atv-card-head">
-            <h3>③ 🔗 Como cada disciplina contribui</h3>
+            <h3>🔗 Como cada disciplina contribui</h3>
           </div>
           <p className="atv-muted" style={{ marginBottom: 10 }}>
             Resumo da articulação interdisciplinar proposta pela Sofia.
@@ -2563,7 +2602,7 @@ function PlanoBody(props: {
       {/* 4. Descrição */}
       <section className={`atv-card${has("descricao") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>④ Descrição da atividade</h3>
+          <h3>Descrição da atividade</h3>
         </div>
         <BlockWithRegen
           label="Abertura" value={plano.abertura}
@@ -2585,6 +2624,19 @@ function PlanoBody(props: {
         />
       </section>
 
+      {/* Avaliação: como a professora acompanha a aprendizagem nesta aula */}
+      <section className="atv-card">
+        <div className="atv-card-head">
+          <h3>Avaliação</h3>
+          <RegenBtn field="avaliacao" label="avaliação" />
+        </div>
+        <InlineText
+          value={plano.avaliacao ?? ""}
+          onChange={(v) => props.onChange("avaliacao", v)}
+          tag="p" multiline placeholder="O que observar e registrar para saber se o objetivo foi alcançado"
+        />
+      </section>
+
       {/* 5. Adaptações PCD */}
       <section className="atv-card adapt">
         <button
@@ -2592,7 +2644,7 @@ function PlanoBody(props: {
           onClick={() => modo === "regular" && setAdaptOpen((v) => !v)}
           disabled={modo === "pcd"}
         >
-          <h3>⑤ Adaptações PCD</h3>
+          <h3>Adaptações PCD</h3>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <RegenBtn field="adaptacoes" label="adaptações" />
             {modo === "regular" && (adaptOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
@@ -2652,7 +2704,7 @@ function PlanoBody(props: {
       <section className="atv-card">
         <div className="atv-card-head">
           <h3>
-            <Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑥ Sugestões da Sofia
+            <Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />Sugestões da Sofia
             {inclSecoes && <InclBadge hits={inclSecoes.Sugestões} />}
           </h3>
           <RegenBtn field="sugestoes" label="sugestões" />
@@ -2728,7 +2780,7 @@ function PlanoBody(props: {
                       }}
                       style={{ accentColor: "#F59E0B" }}
                     />
-                    Utilizada
+                    Incluir no documento
                   </label>
                   <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
                     <Check size={12} /> Usar esta
@@ -2743,7 +2795,7 @@ function PlanoBody(props: {
       {/* 7. Materiais */}
       <section className="atv-card">
         <div className="atv-card-head">
-          <h3>⑦ Material necessário</h3>
+          <h3>Material necessário</h3>
           <div style={{ display: "flex", gap: 6 }}>
             <RegenBtn field="materiais" label="materiais" />
             <button

@@ -223,7 +223,7 @@ export function buildSofiaPrompt(taskPrompt: string, context?: string): string {
     `📌 JOGOS E ATIVIDADES INTERATIVAS ("/jogos"): jogos educativos para usar em sala.`,
     `📌 QUESTÕES ("/questoes"; antes se chamava "Simulados", e "/simulados" continua abrindo): banco com 52 mil questões alinhadas à BNCC e ao SAEB, do 1º ao 9º ano. Monta provas A, B, C e D, imprime e corrige pela foto do cartão-resposta.`,
     `📌 MINHA BIBLIOTECA ("/biblioteca", no menu e em "Mais" no celular): guarda planos, atividades e simulados por ano e disciplina para reaproveitar no próximo ano letivo.`,
-    `📌 CADERNOS PRONTOS ("/cadernos", em "Mais"): fichas por ano e disciplina. O acesso abre a partir de 12/03/2027; até lá aparece só uma prévia. Não descreva o conteúdo das fichas.`,
+    `📌 CADERNOS PRONTOS ("/cadernos", em "Mais"): fichas por ano e disciplina. O acesso abre a partir de 13/03/2027; até lá aparece só uma prévia. Não descreva o conteúdo das fichas.`,
     `📌 PARA CONFIRMAR ("/confirmar"; botão com o logo do WhatsApp no menu do topo, cartão verde no Início e item em "Mais" no celular): lista das mensagens que o(a) educador(a) mandar pelo WhatsApp (texto ou áudio) para conferir antes de irem para o aluno, o planejamento, o diário, o PEI ou a agenda. O recebimento pelo WhatsApp AINDA NÃO está ligado: diga que a função está chegando, nunca que já funciona.`,
     `📌 INDIQUE E GANHE ("/indicacoes"): convidar outros educadores e ganhar benefícios.`,
     `📌 CONFIGURAÇÕES ("/configuracoes", no menu da conta ou em "Mais" no celular): perfil, ESCOLAS, TURMAS E ALUNOS (cadastro, edição e exclusão ficam aqui), plano e créditos, acessibilidade e os princípios da Sofia.`,

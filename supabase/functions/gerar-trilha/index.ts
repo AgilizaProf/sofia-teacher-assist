@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
+import { conferirHabilidades, habilidadesDoAno, listaParaPrompt } from "../_shared/bnccOficial.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -32,6 +33,18 @@ serve(async (req) => {
         })()
       : null;
 
+    // Componentes vindos como "Interdisciplinar (Português, Matemática)" ou "Português, Matemática".
+    const disciplinasLista = String(disciplina || "")
+      .replace(/^.*\((.*)\).*$/, "$1")
+      .split(/,|\se\s/)
+      .map((d) => d.trim())
+      .filter(Boolean);
+    const anoConferencia = isEdInfantil && !/pr[eé]|berç|bebê|maternal|creche/i.test(ano) ? `${ano} pré-escola` : String(ano || "");
+    const habOficiais = usandoMunicipal ? [] : habilidadesDoAno(anoConferencia, disciplinasLista, 120);
+    const listaOficial = habOficiais.length
+      ? `\nHABILIDADES OFICIAIS DA BNCC para este ano (use SOMENTE códigos desta lista e copie o texto):\n${listaParaPrompt(habOficiais)}\n`
+      : "";
+
     const sysBase = usandoMunicipal
       ? `Você é a Sofia, assistente pedagógica do AgilizaProf. Crie trilhas semestrais alinhadas ao CURRÍCULO MUNICIPAL de ${curriculo_municipal!.municipio}. USE os códigos e habilidades do currículo municipal fornecido — NÃO cite BNCC nem invente códigos. Linguagem profissional, acolhedora, não-capacitista. Devolva JSON estrito.`
       : `Você é a Sofia, assistante pedagógica do AgilizaProf. Crie trilhas semestrais alinhadas à BNCC oficial brasileira. Nunca invente habilidades — use códigos BNCC válidos para o ano/disciplina informados. Linguagem profissional, acolhedora, não-capacitista. Devolva JSON estrito.`;
@@ -56,7 +69,7 @@ REGRAS OBRIGATÓRIAS PARA EDUCAÇÃO INFANTIL:
 Turma: ${turma || "—"} | Ano escolar: ${ano || "—"} | Disciplina: ${disciplina || "—"}
 Semestre: ${semestre} | Duração: ~20 semanas
 Contexto adicional: ${contexto || "(nenhum)"}
-${usandoMunicipal ? `\nCURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio} — use ESTES códigos (não BNCC):\n${habMunicipaisTexto}\n` : ""}
+${usandoMunicipal ? `\nCURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio} — use ESTES códigos (não BNCC):\n${habMunicipaisTexto}\n` : ""}${listaOficial}
 Gere:
 1) TEMA CENTRAL (título criativo + justificativa pedagógica curta).
 2) DISTRIBUIÇÃO MENSAL (4 meses): subtema, 3 a 4 habilidades ${usandoMunicipal ? `do currículo municipal de ${curriculo_municipal!.municipio}` : "BNCC"} (código + descrição), foco, conexão anterior/próxima.
@@ -76,7 +89,7 @@ Semestre: ${semestre} | Duração: ~20 semanas
 Contexto adicional: ${contexto || "(nenhum)"}
 
 IMPORTANTE: Esta é uma turma de Educação Infantil. Use EXCLUSIVAMENTE os Campos de Experiência da BNCC e códigos EI0X__## (Objetivos de Aprendizagem e Desenvolvimento). Em "campo_experiencia" use um dos 5 campos oficiais. Em "habilidades_bncc"/"habilidades_foco" use APENAS códigos no formato EI0XYZ00A. NÃO use componentes/disciplinas do Ensino Fundamental.
-
+${listaOficial}
 Gere:
 1) TEMA CENTRAL (título criativo + justificativa pedagógica curta, com foco em interações e brincadeiras).
 2) DISTRIBUIÇÃO MENSAL (4 meses): subtema, campo_experiencia principal, 3 a 4 objetivos BNCC EI (código EI… + descrição), foco (interações/brincadeiras), conexão anterior/próxima.
@@ -96,6 +109,7 @@ Responda APENAS em JSON válido neste formato:
     const trilha = parseAiJson<Record<string, unknown>>(r.text || "{}");
     // Cortada (limite de tokens) ou ilegível: o app avisa e não grava (N8).
     const truncated = !!r.truncated || !!(trilha as { _truncated?: boolean })._truncated;
+    if (!truncated) conferirTrilha(trilha, anoConferencia, disciplinasLista, usandoMunicipal ? curriculo_municipal!.habilidades : null);
     if (truncated) console.warn("[gerar-trilha] resposta cortada", r.finishReason);
     return new Response(JSON.stringify({ trilha, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
@@ -107,3 +121,27 @@ Responda APENAS em JSON válido neste formato:
     });
   }
 });
+
+// Confere os códigos dos meses e das semanas com a BNCC oficial (ou com o
+// currículo da rede): código inventado ou de outro ano sai, texto vira o oficial.
+function conferirTrilha(
+  trilha: Record<string, unknown>,
+  ano: string,
+  disciplinas: string[],
+  municipal: Array<{ codigo: string; descricao: string }> | null,
+) {
+  const validos = new Set<string>();
+  const meses = Array.isArray(trilha.meses) ? (trilha.meses as Array<Record<string, unknown>>) : [];
+  for (const m of meses) {
+    const conf = conferirHabilidades(m.habilidades_bncc as Array<{ codigo?: string; descricao?: string }>, ano, disciplinas, municipal);
+    m.habilidades_bncc = conf.habilidades;
+    conf.habilidades.forEach((h) => validos.add(h.codigo.toUpperCase()));
+  }
+  const semanas = Array.isArray(trilha.semanas) ? (trilha.semanas as Array<Record<string, unknown>>) : [];
+  for (const sem of semanas) {
+    const foco = Array.isArray(sem.habilidades_foco) ? (sem.habilidades_foco as unknown[]) : [];
+    const conf = conferirHabilidades(foco.map((c) => ({ codigo: String(c || "") })), ano, disciplinas, municipal);
+    sem.habilidades_foco = conf.habilidades.map((h) => h.codigo);
+    conf.habilidades.forEach((h) => validos.add(h.codigo.toUpperCase()));
+  }
+}

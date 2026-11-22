@@ -576,7 +576,7 @@ export function TrilhasPanel() {
         <textarea placeholder="Contexto adicional (opcional): projetos da escola, datas comemorativas..." value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} style={{ ...inputStyle, marginTop: 10, minHeight: 60, width: "100%", resize: "vertical" }} />
        {error && <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: "#FEF2F2", color: "#991B1B", fontSize: 13 }}>{error}</div>}
         <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: "#F8FAFC", border: "1px solid var(--line)", fontSize: 12, color: "var(--ink-2)", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <span>💳 Gerar trilha: <strong>10 créditos</strong> + créditos das atividades (<strong>10 créditos por atividade</strong>)</span>
+          <span>💳 Gerar a trilha custa <strong>{CUSTOS.trilha_semestral} créditos</strong>. Cada semana que você detalhar depois custa mais {CUSTOS.planejamento_semanal}. O semestre inteiro detalhado (20 semanas) fica em cerca de <strong>{CUSTOS.trilha_semestral + 20 * CUSTOS.planejamento_semanal} créditos</strong>.</span>
         </div>
         <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end" }}>
           <button className="pl-btn primary" onClick={gerarTrilha} disabled={loading}>

@@ -19,6 +19,7 @@ import {
   usePendentesWhatsapp,
 } from "@/components/painel/whatsapp";
 import { ExtratoCreditos } from "@/components/painel/ExtratoCreditos";
+import { CUSTOS } from "@/lib/creditos/policy";
 import { AvisosSofia } from "@/components/painel/AvisosSofia";
 
 // Página inicial no visual "Painel": contador pequeno no topo, caixa para
@@ -150,6 +151,7 @@ const css = `
 .hm-cred .bar{width:60px;height:8px;border-radius:3px;background:var(--pn-bg);overflow:hidden;}
 .hm-cred .bar span{display:block;height:100%;background:var(--pn-green);}
 .hm-cred b{font-variant-numeric:tabular-nums;}
+.hm-cred-eq{font-weight:500;color:var(--pn-muted);}
 .hm-date{margin-left:auto;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--pn-muted);}
 .hm-hello{margin:14px 0 14px;font-family:var(--pn-display);font-weight:800;font-size:34px;letter-spacing:-.045em;line-height:1.05;text-wrap:balance;}
 
@@ -388,8 +390,11 @@ export function Home() {
                 <span style={{ width: `${credPct}%` }} />
               </span>
               <b>
-                {cred.disponiveis}/{cred.totais}
+                {cred.disponiveis.toLocaleString("pt-BR")}
               </b>
+              <span className="hm-cred-eq">
+                · dá para uns {Math.floor(cred.disponiveis / CUSTOS.plano_aula).toLocaleString("pt-BR")} planos de aula
+              </span>
             </button>
           )}
           {hydrated && <span className="hm-date">{dataHoje()}</span>}

@@ -7,8 +7,8 @@
 // deve receber fichas inventadas. A regra de "mostrar só o que está de acordo
 // com a busca" já está pronta em `folhasDeAcordo` para quando ele chegar.
 
-export const CADERNOS_LIBERA_EM = "12/03/2027";
-export const CADERNOS_LIBERA_CURTO = "12/03";
+export const CADERNOS_LIBERA_EM = "13/03/2027";
+export const CADERNOS_LIBERA_CURTO = "13/03";
 
 export type EtapaFolha = "infantil" | "fund1";
 

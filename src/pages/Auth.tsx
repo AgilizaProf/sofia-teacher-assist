@@ -7,6 +7,7 @@ import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
 import { shouldShowOnboarding } from "@/lib/onboarding";
 import { PencilLogo } from "@/components/painel/PainelNav";
 import { trackEvent } from "@/lib/tracking";
+import { textoGratis } from "@/lib/creditos/policy";
 
 async function postLoginRoute(): Promise<"/" | "/onboarding"> {
   try {
@@ -199,7 +200,7 @@ export function AuthPage() {
 
             <h2 className="form-title">{mode === "login" ? "Bem-vindo(a) de volta" : "Comece grátis hoje"}</h2>
             <p className="form-sub">
-              {mode === "login" ? "Entre para continuar economizando seu tempo." : <><strong>14 dias com tudo liberado.</strong> Sem cartão de crédito. Sem pegadinha.</>}
+              {mode === "login" ? "Entre para continuar economizando seu tempo." : <><strong>{textoGratis()}</strong> Sem cartão de crédito. Sem pegadinha.</>}
             </p>
 
             {popupBlocked && (
