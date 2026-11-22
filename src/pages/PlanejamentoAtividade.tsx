@@ -8,7 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { toast } from "sonner";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
-import { listTurmas, type TurmaUI } from "@/lib/db/turmas";
+import { listTurmas, createTurma, type TurmaUI } from "@/lib/db/turmas";
+import { etapaAnoDaTurma } from "@/lib/turmas/etapaAno";
 import { FolhasSugeridas } from "@/components/cadernos/FolhasSugeridas";
 import { codigosBncc } from "@/lib/cadernos/folhas";
 
@@ -150,7 +151,7 @@ export function PlanejamentoAtividade() {
   );
   const [tipo, setTipo] = useState<string>("Aula expositiva");
   const [duracao, setDuracao] = useState<string>("50");
-  const [tema, setTema] = useState<string>("");
+  const [tema, setTema] = useState<string>(search.tema || "");
   const [habilidade, setHabilidade] = useState<string>("");
   const [objetivo, setObjetivo] = useState<string>("");
   const [recursos, setRecursos] = useState<string>("");
@@ -162,23 +163,36 @@ export function PlanejamentoAtividade() {
   const [loadingTurmas, setLoadingTurmas] = useState<boolean>(true);
   const [novaTurma, setNovaTurma] = useState<string>("");
 
-  // Carrega as turmas cadastradas no perfil da professora.
+  // Turmas da professora: a mesma lista de "Minhas turmas" (Configurações),
+  // somada às turmas antigas guardadas no perfil, para ninguém perder nada.
   useEffect(() => {
     let active = true;
     (async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { if (active) setLoadingTurmas(false); return; }
-        const { data } = await supabase
-          .from("profiles")
-          .select("turmas")
-          .eq("user_id", user.id)
-          .maybeSingle();
+        const [{ data }, cadastradas] = await Promise.all([
+          supabase.from("profiles").select("turmas, etapa_ensino").eq("user_id", user.id).maybeSingle(),
+          listTurmas().catch(() => [] as TurmaUI[]),
+        ]);
         if (!active) return;
-        const list = (data?.turmas ?? []).filter(Boolean);
+        const nomes = [
+          ...cadastradas.map((t) => t.name),
+          ...((data?.turmas ?? []) as string[]),
+        ].map((n) => (n || "").trim()).filter(Boolean);
+        const list = Array.from(new Map(nomes.map((n) => [n.toLowerCase(), n])).values());
         setMinhasTurmas(list);
         // Se já veio turma por search e não está na lista, mantém; senão pré-seleciona a primeira.
         if (!turma && list.length > 0) setTurma(list[0]);
+        // Sem turma, a etapa começa na que a professora escolheu no perfil.
+        const ETAPA_PERFIL: Record<string, string> = {
+          ed_infantil: "infantil", anos_iniciais: "fund1", anos_finais: "fund2", ensino_medio: "medio", eja: "eja",
+        };
+        const etapaPerfil = ETAPA_PERFIL[(data as { etapa_ensino?: string | null } | null)?.etapa_ensino || ""];
+        if (!turma && list.length === 0 && etapaPerfil && etapaPerfil !== etapa) {
+          setEtapa(etapaPerfil);
+          setAno(ANOS_BY_ETAPA[etapaPerfil]?.[0] || "");
+        }
       } finally {
         if (active) setLoadingTurmas(false);
       }
@@ -187,15 +201,34 @@ export function PlanejamentoAtividade() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const adicionarTurma = () => {
+  const adicionarTurma = async () => {
     const t = novaTurma.trim();
     if (!t) return;
     if (minhasTurmas.includes(t)) { setTurma(t); setNovaTurma(""); return; }
     setMinhasTurmas((prev) => [...prev, t]);
     setTurma(t);
     setNovaTurma("");
-    toast.success("Turma adicionada para esta atividade. Para salvar no perfil, acesse Configurações.");
+    // Salva em "Minhas turmas", para a turma aparecer no app inteiro.
+    try {
+      const nova = await createTurma({ name: t, school: "", grade: ano, shift: "", students: "", curriculo_id: null });
+      setTurmasDb((prev) => [...prev, nova]);
+      toast.success(`Turma ${t} salva nas suas turmas.`);
+    } catch {
+      toast.message("Turma usada nesta atividade. Para salvar, cadastre em Configurações › Escolas e turmas.");
+    }
   };
+
+  // Ao escolher uma turma cadastrada, já preenche a etapa e o ano dela.
+  useEffect(() => {
+    const nome = (turma || "").trim().toLowerCase();
+    if (!nome) return;
+    const t = turmasDb.find((x) => (x.name || "").trim().toLowerCase() === nome);
+    const r = etapaAnoDaTurma(t?.grade, t?.name ?? turma);
+    if (!r) return;
+    setEtapa(r.etapa);
+    setAno(r.ano);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turma, turmasDb]);
 
   const anos = useMemo(() => ANOS_BY_ETAPA[etapa] || [], [etapa]);
   const isEI = etapa === "infantil";
@@ -385,7 +418,7 @@ export function PlanejamentoAtividade() {
                     />
                     <button type="button" className="pa-btn" onClick={adicionarTurma}>Usar</button>
                   </div>
-                  <span className="pa-help">Vale só para esta atividade.</span>
+                  <span className="pa-help">Fica salva nas suas turmas.</span>
                 </div>
               </div>
 

@@ -24,3 +24,30 @@ jobs:
           supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID }} --yes
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # Confere se cada função sobe de verdade depois de publicar. Uma função
+      # que não inicia responde 503 (BOOT_ERROR) e o app mostrava "sem internet".
+      - name: Check that every function starts
+        run: |
+          sleep 20
+          falhou=0
+          # Chave pública do app (a mesma do navegador), para passar do portão
+          # de login do Supabase e a função ser ligada de verdade.
+          chave=$(grep -oP 'VITE_SUPABASE_PUBLISHABLE_KEY="?\K[^"]+' .env)
+          for dir in supabase/functions/*/; do
+            nome=$(basename "$dir")
+            [ "$nome" = "_shared" ] && continue
+            [ -f "$dir/index.ts" ] || continue
+            codigo=$(curl -s -o /tmp/resp.txt -w "%{http_code}" -X POST \
+              "https://${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co/functions/v1/$nome" \
+              -H "Content-Type: application/json" -H "Authorization: Bearer $chave" -H "apikey: $chave" \
+              -d '{}' --max-time 60)
+            echo "$nome: $codigo $(head -c 200 /tmp/resp.txt)"
+            # OPTIONS responde 200 mesmo com a função quebrada; o POST mostra o
+            # BOOT_ERROR (503).
+            if grep -q "BOOT_ERROR\|WORKER_ERROR" /tmp/resp.txt || [ "$codigo" = "000" ] || [ "$codigo" = "503" ]; then falhou=1; fi
+          done
+          if [ "$falhou" = "1" ]; then
+            echo "::error::Uma ou mais funções da Sofia não iniciaram depois da publicação."
+            exit 1
+          fi

@@ -1,4 +1,5 @@
 import { FolhaTurma } from "@/components/alfabetizacao/FolhaTurma";
+import { ColarAlunos } from "@/components/shared/ColarAlunos";
 import { codigoDeTexto } from "@/lib/alfabetizacao/folha";
 import { obsDoAluno, useObsWhatsapp, type ObsWhatsapp } from "@/lib/alfabetizacao/whatsapp";
 import { useEffect, useMemo, useState } from "react";
@@ -338,8 +339,13 @@ export function Alfabetizacao() {
   const todos = useMemo<AlunoAlfa[]>(
     () =>
       students.map((s) => {
-        const t = s.turma && s.turma !== "Sem turma" ? s.turma : "";
-        const cls = turmas.find((x) => x.name === t);
+        const bruto = s.turma && s.turma !== "Sem turma" ? s.turma : "";
+        // "PRÉ 2 · ESCOLA TESTE" é a mesma turma "PRÉ 2" do cadastro: junta as duas.
+        const doCadastro = turmas.find(
+          (x) => x.name && (bruto === x.name || bruto.toLowerCase().startsWith(`${x.name.toLowerCase()} · `)),
+        );
+        const t = doCadastro?.name ?? bruto;
+        const cls = doCadastro;
         return {
           id: s.id,
           nome: s.name,
@@ -772,6 +778,9 @@ export function Alfabetizacao() {
                 >
                   Adicionar
                 </button>
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <ColarAlunos turmas={nomesTurmas} turmaInicial={novaTurma || turma} />
               </div>
             </div>
 

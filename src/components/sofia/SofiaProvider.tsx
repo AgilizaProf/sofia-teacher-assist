@@ -87,7 +87,7 @@ type SofiaCtx = {
   busy: boolean;
   draft: string;
   setDraft: (s: string) => void;
-  send: (text?: string) => Promise<void>;
+  send: (text?: string, opts?: { imagem?: string }) => Promise<void>;
   /** Para a resposta que está chegando (botão "Parar"). */
   stop: () => void;
   conversationId: string | null;
@@ -448,7 +448,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   }, [loc.pathname, routeName, conversationId]);
 
   const send = useCallback(
-    async (raw?: string) => {
+    async (raw?: string, opts?: { imagem?: string }) => {
       const text = (raw ?? draft).trim();
       if (!text || loading || busyRef.current) return;
       if (!isAuthed) {
@@ -491,6 +491,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
             routeContext: composedRouteContext,
             originRoute: loc.pathname,
             userContext: userContext || undefined,
+            imagem: opts?.imagem,
           },
         });
         let finalConversationId: string | null = conversationId ?? null;

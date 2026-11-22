@@ -93,6 +93,14 @@ const navCss = `
 .pn-menu svg{width:18px;height:18px;flex:none;}
 .pn-menu a,.pn-menu button{white-space:nowrap;}
 .pn-menu{width:max-content;max-width:calc(100vw - 24px);}
+.pn-mais{flex:none;height:100%;display:flex;align-items:center;margin-left:-14px;}
+.pn-mais > button{height:100%;display:flex;align-items:center;gap:4px;border:0;background:none;padding:0;cursor:pointer;
+  font-family:inherit;font-weight:500;font-size:15px;color:var(--pn-muted);border-bottom:3px solid transparent;white-space:nowrap;}
+.pn-mais > button:hover,.pn-mais > button[aria-expanded="true"]{color:var(--pn-ink);}
+.pn-mais > button.on{color:var(--pn-ink);font-weight:700;border-bottom-color:var(--pn-green);}
+.pn-menu.pn-mais-menu{position:fixed;right:auto;z-index:60;}
+@media (max-width: 1360px){.pn-mais > button{font-size:14px;}.pn-mais{margin-left:-10px;}}
+@media (max-width: 1140px){.pn-mais > button{font-size:13.5px;}.pn-mais{margin-left:-6px;}}
 .pn-bottom{display:none;}
 /* Sofia flutuante no visual Painel (computador) */
 body:has(.pn-bottom) .sofia-fab-pulse{display:none!important;}
@@ -115,7 +123,7 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
 @media (max-width: 1080px){
   .pn-top{height:58px;}
   .pn-top-in{padding:0 16px;}
-  .pn-links,.pn-right .pn-hide-m{display:none;}
+  .pn-links,.pn-mais,.pn-right .pn-hide-m{display:none;}
   .pn-indique{height:38px;padding:0 10px;font-size:13px;}
   .pn-wa{height:38px;}
   .pn-top-in{gap:12px;}
@@ -284,9 +292,17 @@ const LINKS: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/planejamento", label: "Planejar" },
   { to: "/relatorios", label: "Pareceres" },
   { to: "/inclusao", label: "Inclusão" },
+  { to: "/alfabetizacao", label: "Alfabetização" },
   { to: "/agenda", label: "Agenda" },
-  { to: "/jogos", label: "Jogos" },
   { to: "/questoes", label: "Questões" },
+];
+
+// Funções que não cabem na barra de cima: ficam no botão "Mais" (computador).
+const MAIS: Array<{ to: string; label: string; icon: keyof typeof ICONS }> = [
+  { to: "/jogos", label: "Jogos", icon: "game" },
+  { to: "/inclusao/pei", label: "PEI / PDI", icon: "pen" },
+  { to: "/biblioteca", label: "Minha Biblioteca", icon: "shelf" },
+  { to: "/cadernos", label: "Cadernos prontos", icon: "book" },
 ];
 
 export function PainelNav() {
@@ -295,8 +311,12 @@ export function PainelNav() {
   const { isAdmin } = useIsAdmin();
   const ctx = useSofiaContext();
   const sofia = useSofiaOptional();
-  const nome = (ctx.user?.nome || "").trim();
+  const nomeBruto = (ctx.user?.nome || "").trim();
+  // "Educador(a)" é só o nome de reserva enquanto carrega: não vira avatar "E".
+  const nome = nomeBruto === "Educador(a)" ? "" : nomeBruto;
   const [menu, setMenu] = useState(false);
+  const [mais, setMais] = useState<{ left: number; top: number } | null>(null);
+  const maisRef = useRef<HTMLDivElement>(null);
   const [sheet, setSheet] = useState(false);
   const [baixar, setBaixar] = useState(false);
   const app = useInstalarApp();
@@ -315,7 +335,24 @@ export function PainelNav() {
   useEffect(() => {
     setMenu(false);
     setSheet(false);
+    setMais(null);
   }, [loc.pathname]);
+  useEffect(() => {
+    if (!mais) return;
+    const fechar = (e: MouseEvent) => {
+      if (maisRef.current && !maisRef.current.contains(e.target as Node)) setMais(null);
+    };
+    const tecla = (e: KeyboardEvent) => e.key === "Escape" && setMais(null);
+    const sumir = () => setMais(null);
+    document.addEventListener("mousedown", fechar);
+    window.addEventListener("keydown", tecla);
+    window.addEventListener("resize", sumir);
+    return () => {
+      document.removeEventListener("mousedown", fechar);
+      window.removeEventListener("keydown", tecla);
+      window.removeEventListener("resize", sumir);
+    };
+  }, [mais]);
   useEffect(() => {
     if (!menu && !sheet) return;
     const onDoc = (e: MouseEvent) => {
@@ -367,6 +404,34 @@ export function PainelNav() {
               </Link>
             ))}
           </nav>
+          <div className="pn-mais" ref={maisRef}>
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={!!mais}
+              className={MAIS.some((x) => active(x.to)) ? "on" : ""}
+              onClick={(e) => {
+                if (mais) return setMais(null);
+                const r = e.currentTarget.getBoundingClientRect();
+                setMais({ left: r.left, top: r.bottom + 8 });
+              }}
+            >
+              Mais
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {mais && (
+              <div className="pn-menu pn-mais-menu" role="menu" style={{ left: mais.left, top: mais.top }}>
+                {MAIS.map((x) => (
+                  <Link key={x.to} to={x.to} role="menuitem" aria-current={cur(x.to)}>
+                    <Svg>{ICONS[x.icon]}</Svg>
+                    {x.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="pn-right" ref={ref}>
             <Link to="/indicacoes" className="pn-indique" aria-current={cur("/indicacoes")}>
               <Svg>{ICONS.gift}</Svg>
@@ -491,15 +556,17 @@ export function PainelNav() {
               >
                 <Svg>{ICONS.phone}</Svg>Baixar o app no celular
               </button>
-              <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
-                <span style={{ color: "#0B7A55", display: "flex" }}>
-                  <WhatsappLogo size={20} />
-                </span>
-                Para confirmar
-                <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
-                  {pendentes}
-                </span>
-              </Link>
+              {pendentes > 0 && (
+                <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
+                  <span style={{ color: "#0B7A55", display: "flex" }}>
+                    <WhatsappLogo size={20} />
+                  </span>
+                  Para confirmar
+                  <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
+                    {pendentes}
+                  </span>
+                </Link>
+              )}
               <Link to="/alfabetizacao">
                 <Svg>{ICONS.book}</Svg>Criança alfabetizada
               </Link>
@@ -524,6 +591,17 @@ export function PainelNav() {
               <Link to="/questoes">
                 <Svg>{ICONS.check}</Svg>Questões
               </Link>
+              {!pendentes && (
+                <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
+                  <span style={{ color: "#0B7A55", display: "flex" }}>
+                    <WhatsappLogo size={20} />
+                  </span>
+                  Para confirmar
+                  <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
+                    {pendentes}
+                  </span>
+                </Link>
+              )}
               <Link to="/configuracoes">
                 <Svg>{ICONS.gear}</Svg>Configurações
               </Link>

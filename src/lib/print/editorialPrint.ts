@@ -56,7 +56,7 @@ const LEGAL_BASE: Record<EditorialDocType, string> = {
     "Fundamentação legal: LDB – Lei nº 9.394/96 (Art. 24, V) | BNCC – Resolução CNE/CP nº 2/2017",
   planejamento:
     "Fundamentação legal: LDB – Lei nº 9.394/96 | BNCC – Resolução CNE/CP nº 2/2017",
-  pei: "Fundamentação legal: Lei nº 14.254/2021 — Lei do PEI",
+  pei: "Fundamentação legal: Lei Brasileira de Inclusão — Lei nº 13.146/2015 | Resolução CNE/CEB nº 4/2009 (AEE)",
   "plano-adaptado":
     "Fundamentação legal: Lei Brasileira de Inclusão — Lei nº 13.146/2015",
   anamnese: "Fundamentação legal: LGPD — Lei nº 13.709/2018",
