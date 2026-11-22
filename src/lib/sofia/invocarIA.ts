@@ -184,6 +184,11 @@ export async function erroDeInvoke(error: unknown): Promise<ErroIA> {
     nome === "FunctionsFetchError" ||
     /failed to fetch|fetch failed|networkerror|load failed/i.test(msg)
   ) {
+    // "Failed to fetch" também acontece quando a função da Sofia não sobe no
+    // servidor (a resposta vem sem CORS). Com o aparelho on-line, o problema é
+    // do servidor, não da internet da professora.
+    const online = typeof navigator === "undefined" || navigator.onLine !== false;
+    if (online) return new ErroIA(MSG_INSTAVEL, "servidor", undefined, msg);
     return new ErroIA(MSG_SEM_CONEXAO, "rede", undefined, msg);
   }
   const ctx = e?.context as { status?: number } | undefined;

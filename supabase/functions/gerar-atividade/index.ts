@@ -65,7 +65,7 @@ serve(async (req) => {
       // Planejar (M1): atividades-base do banco BNCC, uma por cartão da semana.
       // Com elas, a etapa "opcoes" personaliza CADA cartão mantendo a
       // disciplina e o código (N2).
-      atividadesBase = [] as Array<{ indice: number; dia?: string; disciplina?: string; codigo?: string; titulo?: string; tipo?: string; minutos?: number }>,
+      atividadesBase = [] as Array<{ indice: number; dia?: string; disciplina?: string; codigo?: string; habilidade?: string; titulo?: string; tipo?: string; minutos?: number }>,
       disciplinasInter = [] as string[],
       alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string; peiResumo?: string; anamneseResumo?: string } | null,
       diarioBordo = [] as Array<{ emoji?: string; titulo?: string; texto?: string; tags?: string[]; data?: string; turma?: string; atividadeTitulo?: string }>,
@@ -279,7 +279,8 @@ serve(async (req) => {
           `A semana já tem ${atividadesBase.length} atividade(s) definidas pela BNCC. `
             + `Personalize CADA UMA para esta turma, sem trocar a disciplina nem a habilidade:`,
           ...atividadesBase.map((a) =>
-            `${a.indice}. [${a.dia || ""}] ${a.disciplina || "Geral"} · ${a.codigo || "sem código"} · ${a.titulo || ""}`
+            `${a.indice}. [${a.dia || ""}] ${a.disciplina || "Geral"} · ${a.codigo || "sem código"}`
+            + (a.habilidade ? ` (${a.habilidade})` : "")
             + (a.minutos ? ` · ${a.minutos} min` : ""),
           ),
           ``,
@@ -289,7 +290,11 @@ serve(async (req) => {
             + `"abordagem" (1 expressão), "tipo" (ex.: jogo, leitura, investigação), `
             + `"objetivo" (1 frase da disciplina indicada), "materiais" (3 a 5 itens) `
             + `e "passos" (4 a 6 passos curtos). As atividades devem ser DIFERENTES entre si, `
-            + `mesmo quando a disciplina se repete na semana: não repita título nem abordagem.`,
+            + `mesmo quando a disciplina se repete na semana: não repita título nem abordagem. `
+            + `Cada atividade precisa trabalhar DE VERDADE a habilidade indicada no seu item `
+            + `(ex.: se o item é de Ciências sobre seres vivos, a atividade é sobre seres vivos, não sobre contagem). `
+            + `O tema da semana entra como contexto, sem tirar a atividade da sua disciplina. `
+            + `Devolva exatamente ${atividadesBase.length} opção(ões), uma para cada número da lista.`,
         ].join("\n")
       : etapa === "opcoes"
       ? [
@@ -327,6 +332,7 @@ serve(async (req) => {
         : ``,
       `Gere uma atividade completa. Materiais devem refletir a descrição. ` +
         `Sugira 4 a 5 variações alinhadas ao mesmo objetivo. ` +
+        `Preencha SEMPRE o campo "avaliacao" (2 a 4 frases: o que observar, como registrar e o critério de que o objetivo foi alcançado). ` +
         (modo === "pcd"
           ? `A atividade INTEIRA é voltada para INCLUSÃO do aluno PCD: cada momento `
             + `(abertura, desenvolvimento, fechamento) deve indicar COMO o aluno PCD `
@@ -570,6 +576,14 @@ serve(async (req) => {
       });
     }
 
+    // === Avaliação nunca vazia ===
+    // O modelo às vezes omite "avaliacao" mesmo sendo obrigatório. Sem ela o
+    // plano chega com um buraco que a coordenação cobra. Montamos uma
+    // avaliação a partir do objetivo do próprio plano.
+    if ((!regenField || regenField === "avaliacao") && !String(parsed.avaliacao ?? "").trim()) {
+      parsed.avaliacao = avaliacaoPeloObjetivo(String(parsed.objetivo ?? ""));
+    }
+
     // === Conferência das habilidades (BNCC oficial e currículo da rede) ===
     // Código que não existe ou é de outro ano/componente sai; o texto passa a
     // ser o oficial. Se algo saiu, pede uma vez de novo com a lista certa.
@@ -623,3 +637,14 @@ serve(async (req) => {
     );
   }
 });
+
+/** Avaliação simples a partir do objetivo, usada quando o modelo não devolve uma. */
+export function avaliacaoPeloObjetivo(objetivo: string): string {
+  const alvo = objetivo.trim().replace(/[.!\s]+$/, "");
+  const meta = alvo ? alvo.charAt(0).toLowerCase() + alvo.slice(1) : "realizar a proposta da aula";
+  return [
+    `Durante a aula, observe se cada aluno consegue ${meta}.`,
+    `Anote no diário quem já faz sozinho, quem faz com ajuda e quem ainda não faz, com um exemplo do que cada um produziu ou disse.`,
+    `O objetivo foi alcançado se, no fechamento, a maioria da turma consegue mostrar isso sem ajuda.`,
+  ].join(" ");
+}

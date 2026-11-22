@@ -1556,7 +1556,18 @@ export function Planejamento() {
     "plan_ctx_by_tab",
     { m1: {}, m2: {}, m3: {}, m4: {}, m5: {}, m6: {}, atv: {}, pcd: {}, trilhas: {} },
   );
-  const ctxAtual: TurmaCtx = ctxByTab[m] ?? {};
+  // Turma guardada de antes que não existe mais no cadastro (ex.: apagada em
+  // Configurações) não vale: a Sofia não pode gerar para uma turma fantasma.
+  const ctxGuardado: TurmaCtx = ctxByTab[m] ?? {};
+  const turmaGuardadaExiste =
+    !ctxGuardado.turma ||
+    turmasLoading ||
+    turmasDb.some((t) => (t.name || "").trim().toLowerCase() === ctxGuardado.turma!.trim().toLowerCase());
+  const ctxAtual: TurmaCtx = useMemo(
+    () => (turmaGuardadaExiste ? ctxGuardado : {}),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [turmaGuardadaExiste, ctxByTab, m],
+  );
   const setCtxAtual = (next: TurmaCtx) =>
     setCtxByTab((p) => ({ ...p, [m]: next }));
 
@@ -1811,7 +1822,7 @@ export function Planejamento() {
     const focosUsados = m1MaxFocos === "all"
       ? focosSelecionados
       : focosSelecionados.slice(0, m1MaxFocos);
-    const perDay = pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
+    const perDay = m1Modo === "quantidade" ? Math.max(1, Math.floor(m1Qtd)) : m1Modo === "tempo" ? Math.max(1, Math.round(m1Min / 35)) : pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
     const tempos = focosUsados.flatMap((f) => (M1_TEMPLATES[f] ?? []).map((t) => t.minutos));
     const poolSize = tempos.length;
     const mediaMin = poolSize > 0 ? Math.round(tempos.reduce((a, b) => a + b, 0) / poolSize) : 0;
@@ -1828,7 +1839,7 @@ export function Planejamento() {
       minPorDia,
       totalMin,
     };
-  }, [focosSelecionados, m1MaxFocos, pillsInt]);
+  }, [focosSelecionados, m1MaxFocos, pillsInt, m1Modo, m1Qtd, m1Min]);
   const gerarComSofia = async () => {
     if (!ctxResolvido.pronto) {
       showToast("Selecione uma turma cadastrada ou um ano de escolaridade no topo da aba.");
@@ -1889,41 +1900,101 @@ export function Planejamento() {
         indice?: number; titulo?: string; resumo?: string; abordagem?: string; tipo?: string;
         disciplina?: string; codigo_hab?: string; objetivo?: string; materiais?: string[]; passos?: string[];
       };
-      const data = await invocarIA<{ opcoes?: OpcaoM1[] }>("gerar-atividade", {
-        validar: (d) => Array.isArray(d?.opcoes) && d.opcoes.length > 0,
-        body: {
-          etapa: "opcoes",
-          tema: m1Tema || "tema da semana",
-          anoEscolar: ctxResolvido.anoLabel,
-          disciplina: focosSelecionados.join(", ") || "Geral",
-          turma: turmaNome,
-          alunosPCD,
-          incluirPCD: alunosPCD.length > 0,
-          curriculo_municipal: (curriculoMunicipalAtivo && curriculoMunicipalDados)
-            ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
-            : null,
-          tipoAtividade: "variadas",
-          duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
-          atividadesBase: basePlana.map((b, i) => ({
-            indice: i + 1,
-            dia: diaNome[b.dia],
-            disciplina: b.card.foco,
-            codigo: b.card.bncc,
-            titulo: b.card.title,
-            tipo: b.card.tag,
-            minutos: b.card.minutos,
-          })),
-        },
-      });
-
-      const opcoes = data.opcoes ?? [];
-      // Associa pela posição informada pela IA ("indice"); sem ela, pela ordem.
+      // A Sofia personaliza a semana em lotes pequenos (em paralelo): num lote
+      // grande ela devolve só 4 ou 5 atividades e o resto ficava como modelo.
+      const LOTE = 5;
+      const pedirLote = async (inicio: number, fim: number): Promise<Array<{ idx: number; op: OpcaoM1 }>> => {
+        const fatia = basePlana.slice(inicio, fim);
+        const data = await invocarIA<{ opcoes?: OpcaoM1[] }>("gerar-atividade", {
+          validar: (d) => Array.isArray(d?.opcoes) && d.opcoes.length > 0,
+          body: {
+            etapa: "opcoes",
+            tema: m1Tema || "tema da semana",
+            anoEscolar: ctxResolvido.anoLabel,
+            disciplina: focosSelecionados.join(", ") || "Geral",
+            turma: turmaNome,
+            alunosPCD,
+            incluirPCD: alunosPCD.length > 0,
+            curriculo_municipal: (curriculoMunicipalAtivo && curriculoMunicipalDados)
+              ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+              : null,
+            tipoAtividade: "variadas",
+            duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
+            atividadesBase: fatia.map((b, i) => ({
+              indice: i + 1,
+              dia: diaNome[b.dia],
+              disciplina: b.card.foco,
+              codigo: b.card.bncc,
+              habilidade: b.card.motivo,
+              titulo: b.card.title,
+              tipo: b.card.tag,
+              minutos: b.card.minutos,
+            })),
+          },
+        });
+        const ops = data.opcoes ?? [];
+        const usados = new Set<number>();
+        return ops.map((op, i) => {
+          const n = Number(op?.indice);
+          let local = Number.isInteger(n) && n >= 1 && n <= fatia.length ? n - 1 : i;
+          if (usados.has(local)) local = -1;
+          usados.add(local);
+          return { idx: local >= 0 && local < fatia.length ? inicio + local : -1, op };
+        }).filter((x) => x.idx >= 0);
+      };
+      const lotes: Array<[number, number]> = [];
+      for (let ini = 0; ini < basePlana.length; ini += LOTE) lotes.push([ini, Math.min(basePlana.length, ini + LOTE)]);
+      const resultados = await Promise.allSettled(lotes.map(([a, b]) => pedirLote(a, b)));
       const porIndice = new Map<number, OpcaoM1>();
-      opcoes.forEach((op, i) => {
-        const n = Number(op?.indice);
-        const idx = Number.isInteger(n) && n >= 1 && n <= basePlana.length ? n - 1 : i;
-        if (!porIndice.has(idx)) porIndice.set(idx, op);
+      let primeiroErro: unknown = null;
+      resultados.forEach((r) => {
+        if (r.status === "fulfilled") r.value.forEach(({ idx, op }) => { if (!porIndice.has(idx)) porIndice.set(idx, op); });
+        else if (!primeiroErro) primeiroErro = r.reason;
       });
+      // Segunda chance só para o que faltou (um lote).
+      const faltando = basePlana.map((_, i) => i).filter((i) => !porIndice.has(i));
+      if (faltando.length > 0 && faltando.length < basePlana.length) {
+        for (let k = 0; k < faltando.length; k += LOTE) {
+          const grupo = faltando.slice(k, k + LOTE);
+          try {
+            const fatiaIdx = grupo;
+            const data = await invocarIA<{ opcoes?: OpcaoM1[] }>("gerar-atividade", {
+              validar: (d) => Array.isArray(d?.opcoes) && d.opcoes.length > 0,
+              body: {
+                etapa: "opcoes",
+                tema: m1Tema || "tema da semana",
+                anoEscolar: ctxResolvido.anoLabel,
+                disciplina: focosSelecionados.join(", ") || "Geral",
+                turma: turmaNome,
+                alunosPCD,
+                incluirPCD: alunosPCD.length > 0,
+                curriculo_municipal: (curriculoMunicipalAtivo && curriculoMunicipalDados)
+                  ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+                  : null,
+                tipoAtividade: "variadas",
+                duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
+                atividadesBase: fatiaIdx.map((gi, i) => ({
+                  indice: i + 1,
+                  dia: diaNome[basePlana[gi].dia],
+                  disciplina: basePlana[gi].card.foco,
+                  codigo: basePlana[gi].card.bncc,
+                  habilidade: basePlana[gi].card.motivo,
+                  titulo: basePlana[gi].card.title,
+                  tipo: basePlana[gi].card.tag,
+                  minutos: basePlana[gi].card.minutos,
+                })),
+              },
+            });
+            (data.opcoes ?? []).forEach((op, i) => {
+              const n = Number(op?.indice);
+              const local = Number.isInteger(n) && n >= 1 && n <= fatiaIdx.length ? n - 1 : i;
+              const gi = fatiaIdx[local];
+              if (gi !== undefined && !porIndice.has(gi)) porIndice.set(gi, op);
+            });
+          } catch { /* fica como veio da BNCC */ }
+        }
+      }
+      if (porIndice.size === 0 && primeiroErro) throw primeiroErro;
       const titulosUsados = new Set<string>();
       const limpa = (v: unknown) => (typeof v === "string" ? v.trim() : "");
       const lista = (v: unknown) =>
