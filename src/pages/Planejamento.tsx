@@ -3499,12 +3499,6 @@ export function Planejamento() {
               <TempoChip />
             </div>
             <h1 className="pl-title">{isEi ? "Roteiros de experiência" : "Planejamento"}</h1>
-            {isEi && (
-              <div className="pl-ei-note">
-                🌱 <strong>Modo Educação Infantil ativo.</strong> Para roteiros com Campos de Experiência, abra o{" "}
-                <Link to="/planejamento/ei">Roteiro EI →</Link>
-              </div>
-            )}
 
             <h2 className="pl-block-title">O que você quer planejar?</h2>
             <div className="pl-tools-grid" role="tablist" aria-label="Ferramentas de planejamento">
@@ -3528,11 +3522,6 @@ export function Planejamento() {
                 );
               })}
             </div>
-            {!isEi && (
-              <p className="pl-ei-link">
-                🌱 Dá aula na Educação Infantil? <Link to="/planejamento/ei">Use os roteiros por Campos de Experiência →</Link>
-              </p>
-            )}
 
             <div className="pl-mode-head" id="pl-ferramenta" style={{ scrollMarginTop: 80 }}>
               <h2>{grupoDe(m).nome}</h2>
