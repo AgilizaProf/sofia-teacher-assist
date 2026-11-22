@@ -35,7 +35,7 @@ export function Termos() {
               <div className="legal-meta">📅 Vigência: {VIGENCIA} · 🇧🇷 Legislação brasileira aplicável</div>
               <h2 id="termos-title">1. Quem somos</h2>
               <p>
-                O <strong>AgilizaProf</strong> é uma plataforma de apoio pedagógico para educadores(as) que utiliza a assistente <strong>Sofia</strong> — uma inteligência artificial alinhada aos <strong>Princípios da Sofia</strong>, à <strong>BNCC</strong>, à <strong>LDB</strong>, ao <strong>ECA</strong>, à <strong>LBI (Lei 13.146/2015)</strong>, à <strong>Lei 14.254/2021</strong> e à <strong>LGPD (Lei 13.709/2018)</strong>.
+                O <strong>AgilizaProf</strong> é uma plataforma de apoio pedagógico para educadores(as) que utiliza a assistente <strong>Sofia</strong> — uma inteligência artificial alinhada aos <strong>Princípios da Sofia</strong>, à <strong>BNCC</strong>, à <strong>LDB</strong>, ao <strong>ECA</strong>, à <strong>LBI (Lei 13.146/2015)</strong>, à <strong>Lei 12.764/2012 (TEA)</strong>, à <strong>Lei 14.254/2021 (TDAH e dislexia)</strong> e à <strong>LGPD (Lei 13.709/2018)</strong>.
               </p>
 
               <h2>2. Aceitação dos termos</h2>

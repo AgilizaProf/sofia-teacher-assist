@@ -41,7 +41,7 @@ export function TempoChip({
   id?: string;
   className?: string;
 }) {
-  const { minutos } = useTempoEconomizado();
+  const { minutos, loading } = useTempoEconomizado();
   const [aberto, setAberto] = useState(false);
   const horas = Math.floor(minutos / 60);
   const mins = minutos % 60;
@@ -74,11 +74,11 @@ export function TempoChip({
         <span>
           <span className="lbl">Tempo devolvido a você </span>
           <b suppressHydrationWarning>
-            {horas}h {String(mins).padStart(2, "0")}min
+            {loading ? "…" : `${horas}h ${String(mins).padStart(2, "0")}min`}
           </b>
         </span>
         <span className="lvl" suppressHydrationWarning>
-          {nivel}
+          {loading ? "" : nivel}
         </span>
       </button>
       {aberto && <TempoPainel minutos={minutos} nivel={nivel} onClose={() => setAberto(false)} />}

@@ -2,6 +2,7 @@
 // Gemini 2.5 Flash via Lovable AI Gateway (formato OpenAI-compatible).
 // Flash → respostas rápidas e chat.
 // Flash-Lite → tarefas simples (sugestões, chips, saudação).
+// Mudança aqui faz o deploy publicar de novo todas as funções que usam o roteador.
 import { isBudgetExceeded, recordUsage } from "./ai-budget.ts";
 import { withConstitution } from "./sofia-constitution.ts";
 

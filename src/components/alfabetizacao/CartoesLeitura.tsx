@@ -45,8 +45,9 @@ export function CartoesLeitura() {
       <div className="af-card">
         <h2>1000 cartões de leitura, do mais fácil ao mais difícil</h2>
         <p className="dica">
-          Escolha o nível, marque os cartões e imprima para os alunos treinarem. Os mesmos cartões
-          são usados na avaliação da leitura.
+          Escolha o nível, marque quantos cartões quiser, até de níveis diferentes, e imprima de uma
+          vez. Dois cartões marcados saem na mesma folha. Os mesmos cartões são usados na avaliação
+          da leitura.
         </p>
         <div className="af-chips" style={{ marginTop: 0 }}>
           {NIVEIS_CARTAO.map((n) => (
@@ -149,7 +150,7 @@ export function CartoesLeitura() {
             Limpar
           </button>
           <button type="button" className="af-mini" onClick={() => imprimir(escolhidos)}>
-            Imprimir
+            {escolhidos.length === 1 ? "Imprimir" : `Imprimir os ${escolhidos.length}`}
           </button>
         </div>
       )}

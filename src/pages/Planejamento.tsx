@@ -1,4 +1,5 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { rotuloDataRegistro } from "@/lib/diario/rotuloData";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
@@ -1555,7 +1556,18 @@ export function Planejamento() {
     "plan_ctx_by_tab",
     { m1: {}, m2: {}, m3: {}, m4: {}, m5: {}, m6: {}, atv: {}, pcd: {}, trilhas: {} },
   );
-  const ctxAtual: TurmaCtx = ctxByTab[m] ?? {};
+  // Turma guardada de antes que não existe mais no cadastro (ex.: apagada em
+  // Configurações) não vale: a Sofia não pode gerar para uma turma fantasma.
+  const ctxGuardado: TurmaCtx = ctxByTab[m] ?? {};
+  const turmaGuardadaExiste =
+    !ctxGuardado.turma ||
+    turmasLoading ||
+    turmasDb.some((t) => (t.name || "").trim().toLowerCase() === ctxGuardado.turma!.trim().toLowerCase());
+  const ctxAtual: TurmaCtx = useMemo(
+    () => (turmaGuardadaExiste ? ctxGuardado : {}),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [turmaGuardadaExiste, ctxByTab, m],
+  );
   const setCtxAtual = (next: TurmaCtx) =>
     setCtxByTab((p) => ({ ...p, [m]: next }));
 
@@ -1603,8 +1615,14 @@ export function Planejamento() {
     };
   }, [ctxAtual]);
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
+  // Semana gerada pela Sofia só vai para a Agenda e conta tempo depois que a
+  // professora aceita. "__todas__" = semanas de antes desta regra (já valiam).
+  const [m1Aceite, setM1Aceite] = usePersistentState<string>("plan_m1_aceite", "__todas__");
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
+  // Da sexta à tarde em diante, a professora já está planejando a semana que vem:
+  // a tela abre na próxima semana (ela volta com a seta ou com "Hoje").
+  const abriuSemanaRef = useRef(false);
   const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   // SSR roda em UTC; o cliente roda no fuso local. Calcular `new Date()` em
   // ambos pode produzir HTML diferente (mês/dia trocado em torno da meia-noite
@@ -1636,6 +1654,14 @@ export function Planejamento() {
     const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
     return { days, range, label };
   }, [weekOffset, hydrated]);
+  const m1SemanaAceita = m1Aceite === "__todas__" || m1Aceite === (m1Week.days[0]?.iso ?? "");
+  useEffect(() => {
+    if (!hydrated || abriuSemanaRef.current) return;
+    abriuSemanaRef.current = true;
+    const agora = new Date();
+    const dow = agora.getDay();
+    if ((dow === 5 && agora.getHours() >= 12) || dow === 6 || dow === 0) setWeekOffset(1);
+  }, [hydrated]);
   // Cada semana tem o seu plano (antes era um só para todas as semanas).
   const semanasPlano = useSemanasPlano<M1Card>();
   const semanaChave = m1Week.days[0].iso;
@@ -1800,7 +1826,7 @@ export function Planejamento() {
     const focosUsados = m1MaxFocos === "all"
       ? focosSelecionados
       : focosSelecionados.slice(0, m1MaxFocos);
-    const perDay = pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
+    const perDay = m1Modo === "quantidade" ? Math.max(1, Math.floor(m1Qtd)) : m1Modo === "tempo" ? Math.max(1, Math.round(m1Min / 35)) : pillsInt === "Leve" ? 1 : pillsInt === "Densa" ? 3 : 2;
     const tempos = focosUsados.flatMap((f) => (M1_TEMPLATES[f] ?? []).map((t) => t.minutos));
     const poolSize = tempos.length;
     const mediaMin = poolSize > 0 ? Math.round(tempos.reduce((a, b) => a + b, 0) / poolSize) : 0;
@@ -1817,13 +1843,14 @@ export function Planejamento() {
       minPorDia,
       totalMin,
     };
-  }, [focosSelecionados, m1MaxFocos, pillsInt]);
+  }, [focosSelecionados, m1MaxFocos, pillsInt, m1Modo, m1Qtd, m1Min]);
   const gerarComSofia = async () => {
     if (!ctxResolvido.pronto) {
       showToast("Selecione uma turma cadastrada ou um ano de escolaridade no topo da aba.");
       return;
     }
     setM1Generating(true);
+    setM1Aceite(`pendente:${m1Week.days[0]?.iso ?? ""}`);
 
     const diasISO = m1Week.days.map((d) => d.iso);
     const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
@@ -1878,41 +1905,101 @@ export function Planejamento() {
         indice?: number; titulo?: string; resumo?: string; abordagem?: string; tipo?: string;
         disciplina?: string; codigo_hab?: string; objetivo?: string; materiais?: string[]; passos?: string[];
       };
-      const data = await invocarIA<{ opcoes?: OpcaoM1[] }>("gerar-atividade", {
-        validar: (d) => Array.isArray(d?.opcoes) && d.opcoes.length > 0,
-        body: {
-          etapa: "opcoes",
-          tema: m1Tema || "tema da semana",
-          anoEscolar: ctxResolvido.anoLabel,
-          disciplina: focosSelecionados.join(", ") || "Geral",
-          turma: turmaNome,
-          alunosPCD,
-          incluirPCD: alunosPCD.length > 0,
-          curriculo_municipal: (curriculoMunicipalAtivo && curriculoMunicipalDados)
-            ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
-            : null,
-          tipoAtividade: "variadas",
-          duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
-          atividadesBase: basePlana.map((b, i) => ({
-            indice: i + 1,
-            dia: diaNome[b.dia],
-            disciplina: b.card.foco,
-            codigo: b.card.bncc,
-            titulo: b.card.title,
-            tipo: b.card.tag,
-            minutos: b.card.minutos,
-          })),
-        },
-      });
-
-      const opcoes = data.opcoes ?? [];
-      // Associa pela posição informada pela IA ("indice"); sem ela, pela ordem.
+      // A Sofia personaliza a semana em lotes pequenos (em paralelo): num lote
+      // grande ela devolve só 4 ou 5 atividades e o resto ficava como modelo.
+      const LOTE = 5;
+      const pedirLote = async (inicio: number, fim: number): Promise<Array<{ idx: number; op: OpcaoM1 }>> => {
+        const fatia = basePlana.slice(inicio, fim);
+        const data = await invocarIA<{ opcoes?: OpcaoM1[] }>("gerar-atividade", {
+          validar: (d) => Array.isArray(d?.opcoes) && d.opcoes.length > 0,
+          body: {
+            etapa: "opcoes",
+            tema: m1Tema || "tema da semana",
+            anoEscolar: ctxResolvido.anoLabel,
+            disciplina: focosSelecionados.join(", ") || "Geral",
+            turma: turmaNome,
+            alunosPCD,
+            incluirPCD: alunosPCD.length > 0,
+            curriculo_municipal: (curriculoMunicipalAtivo && curriculoMunicipalDados)
+              ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+              : null,
+            tipoAtividade: "variadas",
+            duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
+            atividadesBase: fatia.map((b, i) => ({
+              indice: i + 1,
+              dia: diaNome[b.dia],
+              disciplina: b.card.foco,
+              codigo: b.card.bncc,
+              habilidade: b.card.motivo,
+              titulo: b.card.title,
+              tipo: b.card.tag,
+              minutos: b.card.minutos,
+            })),
+          },
+        });
+        const ops = data.opcoes ?? [];
+        const usados = new Set<number>();
+        return ops.map((op, i) => {
+          const n = Number(op?.indice);
+          let local = Number.isInteger(n) && n >= 1 && n <= fatia.length ? n - 1 : i;
+          if (usados.has(local)) local = -1;
+          usados.add(local);
+          return { idx: local >= 0 && local < fatia.length ? inicio + local : -1, op };
+        }).filter((x) => x.idx >= 0);
+      };
+      const lotes: Array<[number, number]> = [];
+      for (let ini = 0; ini < basePlana.length; ini += LOTE) lotes.push([ini, Math.min(basePlana.length, ini + LOTE)]);
+      const resultados = await Promise.allSettled(lotes.map(([a, b]) => pedirLote(a, b)));
       const porIndice = new Map<number, OpcaoM1>();
-      opcoes.forEach((op, i) => {
-        const n = Number(op?.indice);
-        const idx = Number.isInteger(n) && n >= 1 && n <= basePlana.length ? n - 1 : i;
-        if (!porIndice.has(idx)) porIndice.set(idx, op);
+      let primeiroErro: unknown = null;
+      resultados.forEach((r) => {
+        if (r.status === "fulfilled") r.value.forEach(({ idx, op }) => { if (!porIndice.has(idx)) porIndice.set(idx, op); });
+        else if (!primeiroErro) primeiroErro = r.reason;
       });
+      // Segunda chance só para o que faltou (um lote).
+      const faltando = basePlana.map((_, i) => i).filter((i) => !porIndice.has(i));
+      if (faltando.length > 0 && faltando.length < basePlana.length) {
+        for (let k = 0; k < faltando.length; k += LOTE) {
+          const grupo = faltando.slice(k, k + LOTE);
+          try {
+            const fatiaIdx = grupo;
+            const data = await invocarIA<{ opcoes?: OpcaoM1[] }>("gerar-atividade", {
+              validar: (d) => Array.isArray(d?.opcoes) && d.opcoes.length > 0,
+              body: {
+                etapa: "opcoes",
+                tema: m1Tema || "tema da semana",
+                anoEscolar: ctxResolvido.anoLabel,
+                disciplina: focosSelecionados.join(", ") || "Geral",
+                turma: turmaNome,
+                alunosPCD,
+                incluirPCD: alunosPCD.length > 0,
+                curriculo_municipal: (curriculoMunicipalAtivo && curriculoMunicipalDados)
+                  ? { municipio: curriculoMunicipalDados.municipio, habilidades: curriculoMunicipalDados.habilidades || [] }
+                  : null,
+                tipoAtividade: "variadas",
+                duracao: `${m1Modo === "tempo" ? m1Min : 40} min`,
+                atividadesBase: fatiaIdx.map((gi, i) => ({
+                  indice: i + 1,
+                  dia: diaNome[basePlana[gi].dia],
+                  disciplina: basePlana[gi].card.foco,
+                  codigo: basePlana[gi].card.bncc,
+                  habilidade: basePlana[gi].card.motivo,
+                  titulo: basePlana[gi].card.title,
+                  tipo: basePlana[gi].card.tag,
+                  minutos: basePlana[gi].card.minutos,
+                })),
+              },
+            });
+            (data.opcoes ?? []).forEach((op, i) => {
+              const n = Number(op?.indice);
+              const local = Number.isInteger(n) && n >= 1 && n <= fatiaIdx.length ? n - 1 : i;
+              const gi = fatiaIdx[local];
+              if (gi !== undefined && !porIndice.has(gi)) porIndice.set(gi, op);
+            });
+          } catch { /* fica como veio da BNCC */ }
+        }
+      }
+      if (porIndice.size === 0 && primeiroErro) throw primeiroErro;
       const titulosUsados = new Set<string>();
       const limpa = (v: unknown) => (typeof v === "string" ? v.trim() : "");
       const lista = (v: unknown) =>
@@ -1959,7 +2046,6 @@ export function Planejamento() {
       } else {
         showToast(`Sofia personalizou ${personalizadas} atividade(s) para ${ondeContexto}${pcdNota}${munNota}. ✨`);
       }
-      if (personalizadas > 0) void acumularTempo("atividade_m1_m2", "Atividades personalizadas pela Sofia (M1)", { multiplicador: personalizadas });
     } catch (e) {
       // Falha da IA: mantém a base do banco (que já está na tela) e explica.
       setM1Generating(false);
@@ -1970,6 +2056,13 @@ export function Planejamento() {
       }
       showToast(`Sofia montou ${total} atividade(s) para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}) pela BNCC. A personalização não saiu agora: ${mensagemAmigavel(e)}`);
     }
+  };
+  const aceitarSemanaM1 = () => {
+    const semana = m1Week.days[0]?.iso ?? "";
+    setM1Aceite(semana);
+    const n = m1Stats.atividades;
+    if (n > 0) void acumularTempo("atividade_m1_m2", "Semana aceita (Sofia preencheu)", { multiplicador: n });
+    showToast(`Semana aceita: ${n} atividade(s) foram para a Agenda. ✨`);
   };
   const limparSemanaM1 = () => {
     setM1Plan(EMPTY_M1_PLAN);
@@ -2308,7 +2401,8 @@ export function Planejamento() {
         const filtered = list.filter((e) => !(e.source === "m3" && isWeekIso));
         if (filtered.length) next[iso] = filtered;
       });
-      // Insere os m3 atuais.
+      // Insere os m3 atuais (só de semana aceita pela professora).
+      if (!m1SemanaAceita) return next;
       (Object.keys(m1Plan) as DayKey[]).forEach((dia) => {
         const iso = isoByDia[dia];
         if (!iso) return;
@@ -2331,10 +2425,10 @@ export function Planejamento() {
       return next;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [m1Plan, m1Week.days.map((d) => d.iso).join(","), hydrated]);
+  }, [m1Plan, m1Week.days.map((d) => d.iso).join(","), hydrated, m1SemanaAceita]);
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
-  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string; alunoIds?: string[] };
+  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; criadoEm?: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string; alunoIds?: string[] };
   const M6_TAGS = ["+ funcionou", "- precisa reforço", "+ inclusão", "+ família"] as const;
   const M6_EMOJIS = ["😣", "😐", "🙂", "😄", "🌟"] as const;
   // Sugestões rápidas de observação por humor — clique adiciona ao textarea.
@@ -2960,6 +3054,7 @@ export function Planejamento() {
   text: trimmed,
   tags: [...m6Tags],
   date: `Hoje · ${now}`,
+  criadoEm: new Date().toISOString(),
   turma: turmaAtual,
   atividadeId: m6AtividadeId || undefined,
   atividadeTitulo: atividadeRef?.titulo,
@@ -3652,9 +3747,9 @@ export function Planejamento() {
                     <button className="pl-btn" onClick={m1OpenExport} disabled={m1Stats.atividades === 0}><Download size={14} /> Exportar PDF / Word</button>
                     <button
                       className="pl-btn primary"
-                      onClick={gerarComSofia}
-                      disabled={m1Generating}
-                    ><Sparkles size={14} /> {m1Generating ? "Sofia personalizando…" : (m1Stats.atividades === 0 ? "Gerar com a Sofia" : "Aceitar semana toda")}</button>
+                      onClick={m1Stats.atividades === 0 ? gerarComSofia : aceitarSemanaM1}
+                      disabled={m1Generating || (m1Stats.atividades > 0 && m1SemanaAceita)}
+                    ><Sparkles size={14} /> {m1Generating ? "Sofia personalizando…" : (m1Stats.atividades === 0 ? "Gerar com a Sofia" : m1SemanaAceita ? "Semana aceita" : "Aceitar semana toda")}</button>
                   </div>
                 </div>
 
@@ -3689,6 +3784,11 @@ export function Planejamento() {
                         <div className="month" style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
                           <span>{m1Week.label}</span>
                           <small style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: "var(--muted)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{m1Week.range}</small>
+                          {(ctxResolvido.turma || ctxResolvido.anoLabel) && (
+                            <small style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: "var(--ink-2)", fontWeight: 700, textTransform: "none", letterSpacing: 0 }}>
+                              {[ctxResolvido.turma, ctxResolvido.anoLabel].filter(Boolean).join(" · ")}
+                            </small>
+                          )}
                         </div>
                         <button aria-label="Próxima semana" onClick={() => setWeekOffset((w) => w + 1)}><ChevronRight size={14} /></button>
                         {weekOffset !== 0 && (
@@ -3937,7 +4037,7 @@ export function Planejamento() {
                         <div className="pl-stat-box"><div className="v">{m1Stats.atividades}</div><div className="l">Atividades</div></div>
                         <div className="pl-stat-box"><div className="v">{m1Stats.habilidades}</div><div className="l">Habilidades BNCC</div></div>
                         <div className="pl-stat-box"><div className="v">{focosSelecionados.length}</div><div className="l">Focos ativos</div></div>
-                        <div className="pl-stat-box"><div className="v">{pillsInt[0]}</div><div className="l">Intensidade</div></div>
+                        <div className="pl-stat-box"><div className="v" style={{ fontSize: 15 }}>{pillsInt}</div><div className="l">Intensidade</div></div>
                       </div>
                       {m1Stats.atividades === 0 && (
                         <p className="lead" style={{ marginTop: 10 }}>Defina <b>tema</b> e <b>focos</b> ao lado e clique em <b>Gerar com a Sofia</b>.</p>
@@ -4863,7 +4963,7 @@ export function Planejamento() {
                           style={{ cursor: "pointer", ...(m6EditingId === e.id ? { borderColor: "var(--orange)", background: "var(--orange-soft)" } : null) }}
                         >
                           <div className="head" style={{ justifyContent: "space-between" }}>
-                            <span>{e.date}</span>
+                            <span suppressHydrationWarning>{rotuloDataRegistro(e)}</span>
                             <span style={{ display: "flex", gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
                               <button onClick={() => m6StartEdit(e)} title="Editar" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 8px", fontSize: 11, fontWeight: 600, color: "var(--ink)", cursor: "pointer" }}>Editar</button>
                               <button onClick={() => m6DeleteEntry(e.id)} title="Excluir" aria-label="Excluir" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 6px", color: "#b91c1c", cursor: "pointer", display: "inline-flex", alignItems: "center" }}><X size={12} /></button>

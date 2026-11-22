@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { traduzirErroAuth } from "@/lib/authErros";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -159,7 +160,7 @@ function ResetPasswordPage() {
       toast.success("Senha atualizada! Por segurança, todas as sessões foram encerradas. Faça login novamente.");
       navigate({ to: "/auth" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao redefinir senha.");
+      toast.error(traduzirErroAuth(err, "Não foi possível redefinir a senha. Tente de novo."));
     } finally {
       setLoading(false);
     }

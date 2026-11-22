@@ -75,6 +75,7 @@ export function Seta({ antes, agora }: { antes: number; agora: number }) {
 }
 
 export const alfaCss = `
+html{scrollbar-gutter:stable;}
 .af{min-height:100dvh;padding-bottom:110px;}
 .af *{box-sizing:border-box;}
 .af-wrap{max-width:1180px;margin:0 auto;padding:22px 24px 0;}
@@ -83,8 +84,6 @@ export const alfaCss = `
 .af-eyebrow svg{width:15px;height:15px;}
 .af-title{margin:12px 0 6px;font-family:var(--pn-display);font-weight:800;font-size:36px;letter-spacing:-.045em;line-height:1.04;}
 .af-sub{margin:0;color:var(--pn-muted);font-size:15.5px;line-height:1.5;max-width:66ch;}
-.af.foco .af-sub{display:none;}
-.af.foco .af-title{font-size:24px;}
 .af-tabs{display:inline-flex;gap:4px;flex-wrap:wrap;margin:18px 0 14px;padding:5px;border-radius:16px;background:var(--pn-surface);border:1.5px solid var(--pn-line);max-width:100%;}
 .af-tabs button{height:40px;padding:0 16px;border-radius:11px;border:0;background:transparent;font-family:inherit;font-weight:700;font-size:14.5px;color:var(--pn-muted);cursor:pointer;}
 .af-tabs button:hover{color:var(--pn-ink);background:var(--pn-bg);}
@@ -102,7 +101,7 @@ export const alfaCss = `
 .af-barras{display:grid;gap:6px;}
 .af-barra{display:grid;grid-template-columns:minmax(120px,190px) 1fr 34px;gap:8px;align-items:center;font-size:13.5px;}
 .af-barra i{display:block;height:20px;border-radius:6px;border:1.5px solid var(--pn-ink);min-width:3px;}
-.af-barra .tr{background:var(--pn-bg);border-radius:6px;}
+.af-barra .tr{background:var(--pn-bg);border-radius:6px;min-height:20px;}
 .af-barra b{text-align:right;font-variant-numeric:tabular-nums;}
 .af-nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 14px;}
 .af-num{position:relative;padding:14px 16px;border-radius:16px;background:var(--pn-surface);border:1.5px solid var(--pn-ink);}
@@ -215,7 +214,6 @@ export const alfaCss = `
   .af-wrap{padding:14px 14px 0;}
   .af-title{font-size:26px;margin:10px 0 6px;}
   .af-sub{font-size:14.5px;}
-  .af.foco .af-title{font-size:20px;}
   .af-g2{grid-template-columns:1fr;}
   .af-card{padding:14px;border-radius:14px;}
   .af-card.forte{border-radius:18px;}
@@ -248,7 +246,8 @@ export const alfaCss = `
   .af-cartao.fra p{font-size:22px;}
   .af-cartao.txt p{font-size:19px;line-height:1.65;}
   .af-pals button{min-height:46px;font-size:17px;padding:4px 12px;}
-  .af-barra{grid-template-columns:110px 1fr 28px;}
+  .af-barra{grid-template-columns:1fr 28px;row-gap:3px;}
+  .af-barra > span{grid-column:1 / -1;}
   .af-acoes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
   .af-acoes .af-mini{padding:0 4px;font-size:13.5px;}
   /* o app deixa toda tabela rolar de lado no celular; aqui cada aluno já é um cartão */

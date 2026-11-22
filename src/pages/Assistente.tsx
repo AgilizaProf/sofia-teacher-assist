@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { semBlocoContexto } from "@/lib/sofia/textoVisivel";
+import { useSemanasPlano } from "@/lib/planejamento/semanas";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   Search,
@@ -20,6 +22,7 @@ import {
   Printer,
   FileText,
   BookmarkPlus,
+  CalendarPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PainelNav } from "@/components/painel/PainelNav";
@@ -364,6 +367,10 @@ export function Assistente() {
   }, [dashClasses, dashStudents]);
 
   const turmaSelecionada = selectedTurma ? turmasInfo.find((t) => t.name === selectedTurma) : null;
+  // Com uma turma só, ela já fica escolhida (a barra não mostra "nenhuma turma").
+  useEffect(() => {
+    if (!selectedTurma && dashClasses.length === 1) setSelectedTurma(dashClasses[0].name);
+  }, [selectedTurma, dashClasses, setSelectedTurma]);
   const messages = sofia.messages;
   const loading = sofia.loading;
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
@@ -451,6 +458,34 @@ export function Assistente() {
   const htmlDaResposta = (idx: number) =>
     document.querySelector<HTMLElement>(`[data-as-msg="${idx}"] .as-md`)?.innerHTML ?? "";
   const [guardadoIdx, setGuardadoIdx] = useState<number | null>(null);
+  // "Colocar na minha semana": a resposta vira um cartão no próximo dia de aula.
+  const semanasPlano = useSemanasPlano<Record<string, unknown>>();
+  const [naSemanaIdx, setNaSemanaIdx] = useState<number | null>(null);
+  const colocarNaSemana = (markdown: string, idx: number) => {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    do d.setDate(d.getDate() + 1); while (d.getDay() === 0 || d.getDay() === 6);
+    const up = markdown.toUpperCase();
+    const v = /MATEM|EF\d{2}MA/.test(up) ? "mat" : /CIÊNC|CIENC|EF\d{2}CI/.test(up) ? "ci" : "port";
+    const bncc = [...new Set(up.match(/E[FI]\d{2}[A-Z]{2}\d{2}/g) ?? [])].slice(0, 3).join(", ");
+    const ok = semanasPlano.agendar(d, {
+      id: `sofia-chat-${Date.now()}`,
+      v,
+      tag: "Sofia",
+      title: tituloDaResposta(markdown).slice(0, 90),
+      bncc,
+      minutos: 50,
+      foco: turmaFoco || "",
+      motivo: "Trazido da conversa com a Sofia",
+      objetivo: textoParaCopiar(markdown).slice(0, 1500),
+    });
+    if (!ok) return;
+    setNaSemanaIdx(idx);
+    const quando = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
+    toast.success(`Coloquei na sua semana: ${quando}.`, {
+      action: { label: "Ver semana", onClick: () => void navigate({ to: "/planejamento", search: { m: "m3" } }) },
+    });
+  };
   const guardarResposta = async (markdown: string, idx: number) => {
     if (!sofia.conversationId) {
       toast.error("Espere a resposta terminar de salvar e tente de novo.");
@@ -712,7 +747,9 @@ export function Assistente() {
                   {ctx.dataState.alunos_count ? ` · ${ctx.dataState.alunos_count} alunos` : ""}
                 </>
               ) : (
-                "nenhuma turma escolhida"
+                ctx.dataState.turmas_count > 0
+                  ? `todas as suas ${ctx.dataState.turmas_count} turmas · toque em Editar para focar em uma`
+                  : "nenhuma turma cadastrada"
               )}
               {sofia.userContext ? " · preferências salvas" : ""}
             </span>
@@ -734,7 +771,7 @@ export function Assistente() {
                     if (m.role === "user") {
                       return (
                         <div key={i} className="as-msg user">
-                          <div className="as-bubble">{m.content}</div>
+                          <div className="as-bubble">{semBlocoContexto(m.content)}</div>
                         </div>
                       );
                     }
@@ -842,6 +879,15 @@ export function Assistente() {
                                     >
                                       {guardadoIdx === i ? <Check size={14} /> : <BookmarkPlus size={14} />}{" "}
                                       {guardadoIdx === i ? "Guardado" : "Guardar"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={"as-tool" + (naSemanaIdx === i ? " ok" : "")}
+                                      onClick={() => colocarNaSemana(parsed.clean, i)}
+                                      title="Coloca no próximo dia de aula da sua semana"
+                                    >
+                                      {naSemanaIdx === i ? <Check size={14} /> : <CalendarPlus size={14} />}{" "}
+                                      {naSemanaIdx === i ? "Na semana" : "Colocar na minha semana"}
                                     </button>
                                   </div>
                                 )}

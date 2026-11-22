@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import QRCode from "qrcode";
 import { useInstalarApp } from "@/lib/pwa/useInstalarApp";
 
 // Janela "Baixar o app": instala o AgilizaProf no celular direto pelo
@@ -97,7 +96,8 @@ export function InstalarApp({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (plataforma !== "computador") return;
-    QRCode.toDataURL(APP_URL, { width: 264, margin: 1 })
+    import("qrcode")
+      .then((m) => m.default.toDataURL(APP_URL, { width: 264, margin: 1 }))
       .then(setQr)
       .catch(() => setQr(""));
   }, [plataforma]);

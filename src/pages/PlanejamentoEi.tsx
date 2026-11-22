@@ -13,15 +13,24 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
+import { useTurmas } from "@/hooks/useTurmas";
 
 type Student = { id: string; name: string; turma?: string; diag?: string };
 
+// Grupos etários com os nomes da BNCC.
 const FAIXAS = [
-  "Bebês (0 a 1a6m)",
-  "Bem pequenos (1a7m a 3a11m)",
-  "Pequenos (4 anos)",
-  "Maiores (5 anos)",
+  "Bebês (0 a 1 ano e 6 meses)",
+  "Crianças bem pequenas (1 ano e 7 meses a 3 anos e 11 meses)",
+  "Crianças pequenas · 4 anos (Pré I)",
+  "Crianças pequenas · 5 anos (Pré II)",
 ];
+// Roteiros antigos foram gravados com os nomes de antes.
+const FAIXAS_ANTIGAS: Record<string, string> = {
+  "Bebês (0 a 1a6m)": FAIXAS[0],
+  "Bem pequenos (1a7m a 3a11m)": FAIXAS[1],
+  "Pequenos (4 anos)": FAIXAS[2],
+  "Maiores (5 anos)": FAIXAS[3],
+};
 
 const CAMPOS = [
   { id: "eu_outro_nos", emoji: "🗣️", nome: "O eu, o outro e o nós" },
@@ -44,7 +53,7 @@ const DURACOES = [15, 30, 45, 60];
 
 type Roteiro = {
   titulo: string;
-  intencao_pedagogica: { descricao: string; direitos_aprendizagem: string[] };
+  intencao_pedagogica: { descricao: string; direitos_aprendizagem: string[]; objetivos_bncc?: Array<{ codigo: string; descricao: string }> };
   preparacao_ambiente: { organizacao: string; materiais: string[]; cuidados_seguranca: string };
   acolhida: { tempo: string; como_iniciar: string };
   desenvolvimento: { o_que_oferecer: string; como_explorar: string; papel_professora: string };
@@ -81,6 +90,12 @@ export function PlanejamentoEi() {
   );
 
   const [turma, setTurma] = useState("");
+  // Turmas do cadastro único (Configurações), as mesmas das outras telas.
+  const { turmas: turmasDb } = useTurmas();
+  const turmasCadastradas = useMemo(
+    () => turmasDb.map((t) => (t.name || "").trim()).filter(Boolean),
+    [turmasDb],
+  );
   const [faixa, setFaixa] = useState(FAIXAS[2]);
   const [campos, setCampos] = useState<string[]>([CAMPOS[0].id]);
   const [tema, setTema] = useState("");
@@ -213,7 +228,7 @@ export function PlanejamentoEi() {
 
   const abrir = (row: RoteiroRow) => {
     setTurma(row.turma || "");
-    setFaixa(row.faixa_etaria || FAIXAS[2]);
+    setFaixa((row.faixa_etaria && (FAIXAS_ANTIGAS[row.faixa_etaria] || row.faixa_etaria)) || FAIXAS[2]);
     setCampos(
       (row.campos_experiencia || []).map((nome) => CAMPOS.find((c) => c.nome === nome)?.id).filter(Boolean) as string[]
     );
@@ -251,7 +266,14 @@ export function PlanejamentoEi() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="text-sm">
               <span className="block font-semibold mb-1">Turma (opcional)</span>
-              <input value={turma} onChange={(e) => setTurma(e.target.value)} placeholder="Ex.: Maternal II A" className="w-full border rounded-lg px-3 py-2 bg-background" />
+              {turmasCadastradas.length > 0 ? (
+                <select value={turma} onChange={(e) => setTurma(e.target.value)} className="w-full border rounded-lg px-3 py-2 bg-background">
+                  <option value="">Sem turma específica</option>
+                  {turmasCadastradas.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              ) : (
+                <input value={turma} onChange={(e) => setTurma(e.target.value)} placeholder="Ex.: Maternal II A" className="w-full border rounded-lg px-3 py-2 bg-background" />
+              )}
             </label>
             <label className="text-sm">
               <span className="block font-semibold mb-1">Faixa etária</span>
@@ -348,7 +370,7 @@ export function PlanejamentoEi() {
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold truncate">{r.conteudo?.titulo || "(sem título)"}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {r.faixa_etaria} {r.turma ? `· ${r.turma}` : ""} · {r.tipo_experiencia} · {r.duracao}min · {new Date(r.gerado_em).toLocaleDateString("pt-BR")}
+                      {(r.faixa_etaria && FAIXAS_ANTIGAS[r.faixa_etaria]) || r.faixa_etaria} {r.turma ? `· ${r.turma}` : ""} · {r.tipo_experiencia} · {r.duracao}min · {new Date(r.gerado_em).toLocaleDateString("pt-BR")}
                     </div>
                   </div>
                   <button type="button" onClick={() => abrir(r)} className="pn-btn ei-abrir">Abrir</button>
@@ -402,6 +424,24 @@ function RoteiroPanel(props: {
           <textarea value={roteiro.intencao_pedagogica.descricao} onChange={(e) => update({ intencao_pedagogica: { ...roteiro.intencao_pedagogica, descricao: e.target.value } })} rows={3} className="w-full border rounded-lg px-3 py-2 bg-background resize-y" />
         </Field>
         <ListField label="Direitos de aprendizagem contemplados" items={roteiro.intencao_pedagogica.direitos_aprendizagem} onChange={(v) => update({ intencao_pedagogica: { ...roteiro.intencao_pedagogica, direitos_aprendizagem: v } })} />
+        {(roteiro.intencao_pedagogica.objetivos_bncc?.length ?? 0) > 0 && (
+          <Field label="Objetivos de aprendizagem (BNCC)">
+            <ul className="space-y-1.5">
+              {roteiro.intencao_pedagogica.objetivos_bncc!.map((o, i) => (
+                <li key={`${o.codigo}-${i}`} className="text-sm leading-snug flex gap-2 items-start">
+                  <span className="font-semibold whitespace-nowrap">{o.codigo}</span>
+                  <span className="flex-1">{o.descricao}</span>
+                  <button
+                    type="button"
+                    aria-label={`Tirar ${o.codigo}`}
+                    className="text-muted-foreground hover:text-foreground px-1"
+                    onClick={() => update({ intencao_pedagogica: { ...roteiro.intencao_pedagogica, objetivos_bncc: roteiro.intencao_pedagogica.objetivos_bncc!.filter((_, j) => j !== i) } })}
+                  >×</button>
+                </li>
+              ))}
+            </ul>
+          </Field>
+        )}
       </Section>
 
       <Section title="2. Preparação do ambiente" icon="🧺">

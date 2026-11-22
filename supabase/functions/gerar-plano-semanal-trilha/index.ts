@@ -1,3 +1,4 @@
+import { conferirHabilidades } from "../_shared/bnccOficial.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
@@ -72,6 +73,21 @@ Responda APENAS em JSON:
         JSON.stringify({ ok: false, truncated: true, error: "A resposta veio incompleta. Gere de novo." }),
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
+    }
+    // Código de cada dia conferido com a BNCC oficial (ou o currículo da rede).
+    if (Array.isArray((plano as { dias?: unknown }).dias)) {
+      const municipal = usandoMunicipal ? (curriculo_municipal?.habilidades || []) : null;
+      const discs = String(disciplina || "").replace(/^.*\((.*)\).*$/, "$1").split(/,|\se\s/).map((d) => d.trim()).filter(Boolean);
+      for (const d of (plano as { dias: Array<Record<string, unknown>> }).dias) {
+        const texto = String(d.habilidade_bncc || "");
+        const codigos = [
+          ...(texto.match(/\bE[FI]\d{2}[A-Z]{2}\d{2}\b/gi) || []),
+          ...(municipal || []).map((h) => h.codigo).filter((c) => c && texto.toUpperCase().includes(c.toUpperCase())),
+        ];
+        if (!codigos.length) continue;
+        const conf = conferirHabilidades(codigos.map((c) => ({ codigo: c })), String(ano || ""), discs, municipal);
+        d.habilidade_bncc = conf.habilidades.map((h) => `${h.codigo} — ${h.descricao}`).join("; ");
+      }
     }
     return new Response(JSON.stringify({ plano, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },

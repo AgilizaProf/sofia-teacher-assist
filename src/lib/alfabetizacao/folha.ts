@@ -166,7 +166,7 @@ export type Imagem = { cinza: Uint8Array | Uint8ClampedArray; w: number; h: numb
  * Separa o escuro do claro comparando cada ponto com a média da vizinhança,
  * para aguentar sombra e luz desigual. Devolve 1 onde é escuro.
  */
-export function binarizar(img: Imagem): Uint8Array {
+export function binarizar(img: Imagem, raioPedido?: number): Uint8Array {
   const { cinza, w, h } = img;
   const W = w + 1;
   const soma = new Float64Array(W * (h + 1));
@@ -177,7 +177,7 @@ export function binarizar(img: Imagem): Uint8Array {
       soma[(y + 1) * W + (x + 1)] = soma[y * W + (x + 1)] + linha;
     }
   }
-  const raio = Math.max(12, Math.round(Math.min(w, h) / 10));
+  const raio = raioPedido ?? Math.max(12, Math.round(Math.min(w, h) / 10));
   const bin = new Uint8Array(w * h);
   for (let y = 0; y < h; y++) {
     const y0 = Math.max(0, y - raio);
@@ -368,25 +368,47 @@ export function decidirLinha(forcas: number[]): LinhaLida {
   return { nivel: null, duvida: false };
 }
 
+/** Um retângulo dentro da foto, em pontos. */
+export type Caixa = { x0: number; y0: number; x1: number; y1: number };
+
 export type LeituraDaFolha =
-  | { ok: true; cod: number; pagina: number; linhas: LinhaLida[] }
-  | { ok: false; motivo: "sem_cantos" | "sem_codigo" };
+  | {
+      ok: true;
+      cod: number;
+      pagina: number;
+      linhas: LinhaLida[];
+      /** Onde a folha está na foto (retângulo em volta dos 4 quadrados). */
+      quadro: Caixa;
+      /** Tamanho da folha na foto: pontos por milímetro. */
+      pontosPorMm: number;
+    }
+  | {
+      ok: false;
+      motivo: "sem_cantos" | "sem_codigo";
+      /** Lugares da foto que parecem uma folha (para olhar de perto). */
+      quadros: Caixa[];
+    };
+
+type Quadro = { pts: Array<[number, number]>; area: number; curto: number };
+
+const dist = (a: [number, number], b: [number, number]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+
+function caixaDe(pts: Array<[number, number]>): Caixa {
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
 
 /**
- * Lê a foto de uma folha. `linhasDe` diz quantas linhas ler em cada folha
- * conhecida (quando a folha não é conhecida, lê a página inteira).
+ * Procura, em qualquer lugar e em qualquer tamanho da foto, grupos de 4
+ * quadrados pretos que formam o retângulo da folha. Não importa se a folha
+ * ocupa a foto inteira ou só um pedaço pequeno dela.
  */
-export function lerFolha(
-  img: Imagem,
-  linhasDe?: (cod: number, pagina: number) => number | null,
-): LeituraDaFolha {
-  const { w, h } = img;
-  const bin = binarizar(img);
+function acharQuadros(bin: Uint8Array, w: number, h: number): Quadro[] {
   const menor = Math.min(w, h);
-  // quadrado do canto: 9 mm numa folha de 210 mm; a folha ocupa de 35% a 100% da foto
-  const ladoMin = menor * 0.012;
+  const ladoMin = Math.max(4, menor * 0.0035);
   const ladoMax = menor * 0.11;
-  const todas = manchas(bin, w, h, Math.max(16, Math.floor(ladoMin * ladoMin * 0.5)));
+  const todas = manchas(bin, w, h, Math.max(12, Math.floor(ladoMin * ladoMin * 0.5)));
   const cand = todas
     .filter((m) => {
       const mw = m.x1 - m.x0 + 1;
@@ -397,20 +419,20 @@ export function lerFolha(
       return m.area / (mw * mh) >= 0.5; // cheio (um quadrado girado ocupa menos a caixa)
     })
     .sort((a, b) => b.area - a.area)
-    .slice(0, 14);
-  if (cand.length < 4) return { ok: false, motivo: "sem_cantos" };
-
-  // todas as combinações de 4, da maior área para a menor
-  type Combo = { pts: Array<[number, number]>; area: number };
-  const combos: Combo[] = [];
+    .slice(0, 48);
   const n = cand.length;
+  const out: Quadro[] = [];
+  if (n < 4) return out;
+  // proporção entre o quadrado do canto e o lado curto do retângulo dos cantos
+  const alvo = CANTO_LADO / (CANTOS_MM[1][0] - CANTOS_MM[0][0]);
   for (let a = 0; a < n; a++)
-    for (let b = a + 1; b < n; b++)
-      for (let c = b + 1; c < n; c++)
+    for (let b = a + 1; b < n; b++) {
+      if (cand[a].area > cand[b].area * 5) break; // ordenado por área: daqui em diante só piora
+      for (let c = b + 1; c < n; c++) {
+        if (cand[a].area > cand[c].area * 5) break;
         for (let d = c + 1; d < n; d++) {
+          if (cand[a].area > cand[d].area * 5) break;
           const q = [cand[a], cand[b], cand[c], cand[d]];
-          const areas = q.map((m) => m.area);
-          if (Math.max(...areas) > Math.min(...areas) * 5) continue;
           const mx = (q[0].cx + q[1].cx + q[2].cx + q[3].cx) / 4;
           const my = (q[0].cy + q[1].cy + q[2].cy + q[3].cy) / 4;
           const pts = q
@@ -418,37 +440,135 @@ export function lerFolha(
             .sort(
               (p1, p2) => Math.atan2(p1[1] - my, p1[0] - mx) - Math.atan2(p2[1] - my, p2[0] - mx),
             );
+          const l = [0, 1, 2, 3].map((i) => dist(pts[i], pts[(i + 1) % 4]));
+          // lados opostos parecidos (a foto torta deforma, mas não tanto)
+          const r1 = l[0] / l[2];
+          const r2 = l[1] / l[3];
+          if (r1 < 0.5 || r1 > 2 || r2 < 0.5 || r2 > 2) continue;
+          const m1 = (l[0] + l[2]) / 2;
+          const m2 = (l[1] + l[3]) / 2;
+          const curto = Math.min(m1, m2);
+          const longo = Math.max(m1, m2);
+          // a folha é mais alta que larga: 267 por 180 mm entre os quadrados
+          const prop = longo / curto;
+          if (prop < 1.08 || prop > 2.1) continue;
           const area = Math.abs(areaQuadrilatero(pts));
-          if (area < menor * menor * 0.08) continue;
-          combos.push({ pts, area });
+          if (area < curto * longo * 0.6) continue; // muito torto para ser a folha
+          // o quadrado do canto tem que combinar com o tamanho da folha
+          const lado = Math.sqrt((q[0].area + q[1].area + q[2].area + q[3].area) / 4);
+          const rel = lado / curto / alvo;
+          if (rel < 0.45 || rel > 2.2) continue;
+          out.push({ pts, area, curto });
         }
-  combos.sort((x, y) => y.area - x.area);
+      }
+    }
+  out.sort((x, y) => y.area - x.area);
+  return out.slice(0, 60);
+}
 
-  let achouCantos = false;
-  for (const combo of combos.slice(0, 40)) {
-    achouCantos = true;
-    // os pontos estão em ordem ao redor do centro; falta saber qual é o de cima à esquerda
-    for (let giro = 0; giro < 4; giro++) {
-      const px = [0, 1, 2, 3].map((i) => combo.pts[(i + giro) % 4]);
-      const proj = projecaoDe4(CANTOS_MM, px);
-      if (!proj) continue;
-      const bits: number[] = [];
-      for (let i = 0; i < FAIXA.n; i++) {
-        const f = escuro(bin, w, h, proj, FAIXA.x0 + (i + 0.5) * FAIXA.celula, FAIXA.y, 1.3, 5);
-        bits.push(f > 0.5 ? 1 : 0);
+/**
+ * Lê a foto de uma folha. `linhasDe` diz quantas linhas ler em cada folha
+ * conhecida (quando a folha não é conhecida, lê a página inteira).
+ */
+export function lerFolha(
+  img: Imagem,
+  linhasDe?: (cod: number, pagina: number) => number | null,
+): LeituraDaFolha {
+  const { w, h } = img;
+  const menor = Math.min(w, h);
+  const quadros: Caixa[] = [];
+  // duas vizinhanças: a larga serve para a folha de perto; a curta, para a
+  // folha pequena no meio de uma mesa escura ou de uma sala
+  const raios = [Math.max(12, Math.round(menor / 10)), Math.max(10, Math.round(menor / 34))];
+  for (const raio of raios) {
+    const bin = binarizar(img, raio);
+    for (const combo of acharQuadros(bin, w, h)) {
+      if (quadros.length < 6) quadros.push(caixaDe(combo.pts));
+      // os pontos estão em ordem ao redor do centro; falta saber qual é o de cima à esquerda
+      for (let giro = 0; giro < 4; giro++) {
+        const px = [0, 1, 2, 3].map((i) => combo.pts[(i + giro) % 4]);
+        const proj = projecaoDe4(CANTOS_MM, px);
+        if (!proj) continue;
+        const bits: number[] = [];
+        for (let i = 0; i < FAIXA.n; i++) {
+          const f = escuro(bin, w, h, proj, FAIXA.x0 + (i + 0.5) * FAIXA.celula, FAIXA.y, 1.3, 5);
+          bits.push(f > 0.5 ? 1 : 0);
+        }
+        const id = lerBitsDaFaixa(bits);
+        if (!id) continue;
+        const conhecidas = linhasDe ? linhasDe(id.cod, id.pagina) : null;
+        if (linhasDe && conhecidas === null) continue; // código que não é de nenhuma folha da conta
+        const total = conhecidas ?? TABELA.porPagina;
+        const linhas: LinhaLida[] = [];
+        for (let r = 0; r < total; r++) {
+          const forcas = TABELA.xNivel.map((x) => tintaDoQuadrinho(img, proj, x, yDaLinha(r)));
+          linhas.push(decidirLinha(forcas));
+        }
+        return {
+          ok: true,
+          cod: id.cod,
+          pagina: id.pagina,
+          linhas,
+          quadro: caixaDe(combo.pts),
+          pontosPorMm: combo.curto / (CANTOS_MM[1][0] - CANTOS_MM[0][0]),
+        };
       }
-      const id = lerBitsDaFaixa(bits);
-      if (!id) continue;
-      const conhecidas = linhasDe ? linhasDe(id.cod, id.pagina) : null;
-      if (linhasDe && conhecidas === null) continue; // código que não é de nenhuma folha da conta
-      const total = conhecidas ?? TABELA.porPagina;
-      const linhas: LinhaLida[] = [];
-      for (let r = 0; r < total; r++) {
-        const forcas = TABELA.xNivel.map((x) => tintaDoQuadrinho(img, proj, x, yDaLinha(r)));
-        linhas.push(decidirLinha(forcas));
-      }
-      return { ok: true, cod: id.cod, pagina: id.pagina, linhas };
     }
   }
-  return { ok: false, motivo: achouCantos ? "sem_codigo" : "sem_cantos" };
+  return { ok: false, motivo: quadros.length ? "sem_codigo" : "sem_cantos", quadros };
+}
+
+/** De onde vem a foto: tamanho original e um jeito de pegar a foto inteira ou um pedaço. */
+export type FonteDaFoto = {
+  w: number;
+  h: number;
+  /** Devolve a foto (ou só o recorte) com o maior lado em até `maxLado` pontos. */
+  pegar: (recorte: Caixa | null, maxLado: number) => Imagem;
+};
+
+/** Abaixo disto (pontos por mm) a marca de caneta pode não aparecer direito. */
+const NITIDEZ_BOA = 3.4;
+const NITIDEZ_MINIMA = 1.9;
+
+/**
+ * Lê a folha mesmo em foto tirada de longe. Primeiro procura a folha na foto
+ * inteira; se ela estiver pequena, recorta só aquele pedaço da foto original,
+ * que tem mais detalhe, e lê de novo.
+ */
+export function lerFolhaNaFoto(
+  fonte: FonteDaFoto,
+  linhasDe?: (cod: number, pagina: number) => number | null,
+  maxLado = 1700,
+): LeituraDaFolha {
+  const inteira = fonte.pegar(null, maxLado);
+  const r1 = lerFolha(inteira, linhasDe);
+  if (r1.ok && r1.pontosPorMm >= NITIDEZ_BOA) return r1;
+  const escala = fonte.w / inteira.w; // da foto reduzida para a original
+  const lugares = r1.ok ? [r1.quadro] : r1.quadros.slice(0, 4);
+  let melhor: LeituraDaFolha = r1;
+  for (const q of lugares) {
+    // folga em volta: os quadrados ficam a 15 mm da borda do papel
+    const fx = (q.x1 - q.x0) * 0.16 + 8;
+    const fy = (q.y1 - q.y0) * 0.16 + 8;
+    const rec: Caixa = {
+      x0: Math.max(0, Math.floor((q.x0 - fx) * escala)),
+      y0: Math.max(0, Math.floor((q.y0 - fy) * escala)),
+      x1: Math.min(fonte.w, Math.ceil((q.x1 + fx) * escala)),
+      y1: Math.min(fonte.h, Math.ceil((q.y1 + fy) * escala)),
+    };
+    const ladoOriginal = Math.max(rec.x1 - rec.x0, rec.y1 - rec.y0);
+    const ladoAntes = ladoOriginal / escala;
+    if (Math.min(ladoOriginal, maxLado) < ladoAntes * 1.2) continue; // não ganha detalhe
+    const r2 = lerFolha(fonte.pegar(rec, maxLado), linhasDe);
+    if (!r2.ok) continue;
+    if (!melhor.ok || r2.pontosPorMm > melhor.pontosPorMm) melhor = r2;
+    break;
+  }
+  // folha pequena demais mesmo assim: mostra o que deu para ler, mas pede para conferir tudo
+  if (melhor.ok && melhor.pontosPorMm < NITIDEZ_MINIMA)
+    return {
+      ...melhor,
+      linhas: melhor.linhas.map((l) => (l.nivel ? { ...l, duvida: true } : l)),
+    };
+  return melhor;
 }

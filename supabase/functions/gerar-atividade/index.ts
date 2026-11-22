@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { userIdFromAuthHeader, isBudgetExceeded, recordUsage } from "../_shared/ai-budget.ts";
 import { withConstitution } from "../_shared/sofia-constitution.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
+import { conferirHabilidades, habilidadesDoAno, listaParaPrompt } from "../_shared/bnccOficial.ts";
 import { semLatexProfundo } from "../_shared/math-text.ts";
 
 const cors = {
@@ -64,7 +65,7 @@ serve(async (req) => {
       // Planejar (M1): atividades-base do banco BNCC, uma por cartão da semana.
       // Com elas, a etapa "opcoes" personaliza CADA cartão mantendo a
       // disciplina e o código (N2).
-      atividadesBase = [] as Array<{ indice: number; dia?: string; disciplina?: string; codigo?: string; titulo?: string; tipo?: string; minutos?: number }>,
+      atividadesBase = [] as Array<{ indice: number; dia?: string; disciplina?: string; codigo?: string; habilidade?: string; titulo?: string; tipo?: string; minutos?: number }>,
       disciplinasInter = [] as string[],
       alunoFoco = null as { nome?: string; codigo?: string; anotacoes?: string; peiResumo?: string; anamneseResumo?: string } | null,
       diarioBordo = [] as Array<{ emoji?: string; titulo?: string; texto?: string; tags?: string[]; data?: string; turma?: string; atividadeTitulo?: string }>,
@@ -94,7 +95,7 @@ serve(async (req) => {
                 }`,
             )
             .join("\n")
-        : "Nenhum aluno PCD informado.";
+        : "Nenhum aluno informado. NÃO cite nomes de alunos: escreva adaptações gerais (ex.: \"para estudantes com TEA\").";
 
     const histResumo =
       Array.isArray(historico) && historico.length
@@ -135,8 +136,17 @@ serve(async (req) => {
         })()
       : null;
 
+    // Habilidades oficiais do ano e componente: a Sofia escolhe desta lista em
+    // vez de lembrar códigos de cabeça (evita código real com texto trocado).
+    const discsParaLista: string[] =
+      Array.isArray(disciplinasInter) && disciplinasInter.length > 0
+        ? disciplinasInter
+        : disciplina ? [disciplina] : [];
+    const habOficiais = habilidadesDoAno(anoPedagogico, discsParaLista);
+    const habOficiaisResumo = habOficiais.length ? listaParaPrompt(habOficiais) : "";
+
     const systemPrompt = usandoMunicipal
-     ? `Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade alinhados ao CURRÍCULO MUNICIPAL de ${curriculo_municipal!.municipio}, em PT-BR, claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. Não invente dados sobre alunos.\n\nREGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "diário", "anamnese", "PEI", "laudo", "planejamento" ou qualquer outra fonte. Escreva sempre como conhecimento direto sobre o(a) aluno(a). Evite: "de acordo com o PEI", "de acordo com a anamnese", "conforme o PEI", "com base na anamnese", "o PEI prevê", "as anotações indicam" — descreva os fatos diretamente.\n\nREGRAS DO CURRÍCULO MUNICIPAL (invioláveis):\n1) Use EXCLUSIVAMENTE as habilidades e os códigos do currículo municipal fornecido na lista do usuário. É PROIBIDO usar, citar ou converter para códigos da BNCC (ex.: NÃO gere EF03MA07, EF05LP12 etc.).\n2) O campo 'habilidades[].codigo' DEVE ser um código do currículo municipal, copiado EXATAMENTE como aparece na lista fornecida.\n3) A 'descricao' de cada habilidade deve reproduzir, em PT-BR, o enunciado da habilidade municipal correspondente.\n4) Se nenhuma habilidade municipal couber perfeitamente, escolha a mais próxima da lista fornecida — NUNCA invente um código e NUNCA recorra à BNCC.\n5) 'titulo', 'objetivo' e 'desenvolvimento' devem refletir os objetos de conhecimento e a terminologia do currículo municipal, mobilizando explicitamente a(s) habilidade(s) municipal(is) citada(s).`
+     ? `Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade alinhados ao CURRÍCULO MUNICIPAL de ${curriculo_municipal!.municipio}, em PT-BR, claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. Não invente dados sobre alunos.\n\nREGRA DE REDAÇÃO (inviolável): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "diário", "anamnese", "PEI", "laudo", "planejamento" ou qualquer outra fonte. Escreva sempre como conhecimento direto sobre o(a) aluno(a). Evite: "de acordo com o PEI", "de acordo com a anamnese", "conforme o PEI", "com base na anamnese", "o PEI prevê", "as anotações indicam" — descreva os fatos diretamente.\n\nREGRAS DO CURRÍCULO MUNICIPAL (invioláveis):\n1) Use EXCLUSIVAMENTE as habilidades e os códigos do currículo municipal fornecido na lista do usuário. É PROIBIDO usar, citar ou converter para códigos da BNCC (ex.: NÃO gere EF03MA07, EF05LP12 etc.). A única exceção é o campo 'habilidades[].bncc', onde vai o código da BNCC correspondente, só como referência.\n2) O campo 'habilidades[].codigo' DEVE ser um código do currículo municipal, copiado EXATAMENTE como aparece na lista fornecida.\n3) A 'descricao' de cada habilidade deve reproduzir, em PT-BR, o enunciado da habilidade municipal correspondente.\n4) Se nenhuma habilidade municipal couber perfeitamente, escolha a mais próxima da lista fornecida — NUNCA invente um código e NUNCA recorra à BNCC.\n5) 'titulo', 'objetivo' e 'desenvolvimento' devem refletir os objetos de conhecimento e a terminologia do currículo municipal, mobilizando explicitamente a(s) habilidade(s) municipal(is) citada(s).`
       : "Você é Sofia, assistente pedagógica brasileira. Gere planos de atividade " +
       "ESTRITAMENTE alinhados à BNCC (Base Nacional Comum Curricular), em PT-BR, " +
       "claros e aplicáveis em sala de aula. Sempre adapte ao ano escolar informado. " +
@@ -223,14 +233,17 @@ serve(async (req) => {
       `Atividades já realizadas nesta turma/disciplina (NÃO repita temas, habilidades ou abordagens idênticas — sugira progressão ou variação):`,
       histResumo,
       ``,
-      `DIÁRIO DE BORDO recente da turma (humor + observações + tags). `
-        + `Use estes sinais para calibrar a atividade: se houve agitação ou `
-        + `desregulação, prefira aberturas calmas e ritmadas; se algo "funcionou", `
-        + `replique a estratégia; se há "precisa reforço", retome o conteúdo com `
-        + `outra abordagem; se há registros de "+ inclusão" ou "+ família", `
-        + `mantenha esses elementos. Cite explicitamente em "sugestoes" como o `
-        + `plano responde aos padrões observados no diário.`,
-      diarioResumo,
+      Array.isArray(diarioBordo) && diarioBordo.length
+        ? `DIÁRIO DE BORDO recente da turma (humor + observações + tags). `
+          + `Use estes sinais para calibrar a atividade: se houve agitação ou `
+          + `desregulação, prefira aberturas calmas e ritmadas; se algo "funcionou", `
+          + `replique a estratégia; se há "precisa reforço", retome o conteúdo com `
+          + `outra abordagem; se há registros de "+ inclusão" ou "+ família", `
+          + `mantenha esses elementos. Em "sugestoes", diga como o plano responde `
+          + `ao que aconteceu nas últimas aulas.`
+        : `Não há diário de bordo desta turma. NÃO mencione diário, registros, `
+          + `engajamento anterior nem retorno das famílias: não há informação sobre isso.`,
+      Array.isArray(diarioBordo) && diarioBordo.length ? diarioResumo : ``,
     ].join("\n");
 
     // Regeneração por campo: se regenField vier preenchido, pedimos APENAS
@@ -242,6 +255,7 @@ serve(async (req) => {
       desenvolvimento: "DESENVOLVIMENTO da descrição",
       fechamento: "FECHAMENTO da descrição",
       habilidades: "HABILIDADES BNCC",
+      avaliacao: "AVALIAÇÃO",
       adaptacoes: "ADAPTAÇÕES PCD",
       sugestoes: "SUGESTÕES de variação",
       materiais: "lista de MATERIAIS",
@@ -265,7 +279,8 @@ serve(async (req) => {
           `A semana já tem ${atividadesBase.length} atividade(s) definidas pela BNCC. `
             + `Personalize CADA UMA para esta turma, sem trocar a disciplina nem a habilidade:`,
           ...atividadesBase.map((a) =>
-            `${a.indice}. [${a.dia || ""}] ${a.disciplina || "Geral"} · ${a.codigo || "sem código"} · ${a.titulo || ""}`
+            `${a.indice}. [${a.dia || ""}] ${a.disciplina || "Geral"} · ${a.codigo || "sem código"}`
+            + (a.habilidade ? ` (${a.habilidade})` : "")
             + (a.minutos ? ` · ${a.minutos} min` : ""),
           ),
           ``,
@@ -275,7 +290,11 @@ serve(async (req) => {
             + `"abordagem" (1 expressão), "tipo" (ex.: jogo, leitura, investigação), `
             + `"objetivo" (1 frase da disciplina indicada), "materiais" (3 a 5 itens) `
             + `e "passos" (4 a 6 passos curtos). As atividades devem ser DIFERENTES entre si, `
-            + `mesmo quando a disciplina se repete na semana: não repita título nem abordagem.`,
+            + `mesmo quando a disciplina se repete na semana: não repita título nem abordagem. `
+            + `Cada atividade precisa trabalhar DE VERDADE a habilidade indicada no seu item `
+            + `(ex.: se o item é de Ciências sobre seres vivos, a atividade é sobre seres vivos, não sobre contagem). `
+            + `O tema da semana entra como contexto, sem tirar a atividade da sua disciplina. `
+            + `Devolva exatamente ${atividadesBase.length} opção(ões), uma para cada número da lista.`,
         ].join("\n")
       : etapa === "opcoes"
       ? [
@@ -293,6 +312,9 @@ serve(async (req) => {
       ``,
       habMunicipaisResumo
         ? `HABILIDADES DO CURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio} (use ESTES códigos — não BNCC):\n${habMunicipaisResumo}`
+        : habOficiaisResumo
+        ? `HABILIDADES OFICIAIS DA BNCC para este ano e componente. Escolha de 1 a 3 códigos SOMENTE desta lista, `
+          + `os que mais combinam com o tema, e copie o texto de cada um sem mudar:\n${habOficiaisResumo}`
         : ``,
       ``,
       Array.isArray(opcoesSelecionadas) && opcoesSelecionadas.length > 0
@@ -310,6 +332,7 @@ serve(async (req) => {
         : ``,
       `Gere uma atividade completa. Materiais devem refletir a descrição. ` +
         `Sugira 4 a 5 variações alinhadas ao mesmo objetivo. ` +
+        `Preencha SEMPRE o campo "avaliacao" (2 a 4 frases: o que observar, como registrar e o critério de que o objetivo foi alcançado). ` +
         (modo === "pcd"
           ? `A atividade INTEIRA é voltada para INCLUSÃO do aluno PCD: cada momento `
             + `(abertura, desenvolvimento, fechamento) deve indicar COMO o aluno PCD `
@@ -343,6 +366,10 @@ serve(async (req) => {
             abertura: { type: "string", description: "Descrição da abertura da aula." },
             desenvolvimento: { type: "string" },
             fechamento: { type: "string" },
+            avaliacao: {
+              type: "string",
+              description: "Como a professora acompanha a aprendizagem nesta aula: o que observar, que registro fazer e um critério simples de que o objetivo foi alcançado. 2 a 4 frases.",
+            },
             habilidades: {
               type: "array",
               items: {
@@ -350,6 +377,9 @@ serve(async (req) => {
                 properties: {
                   codigo: { type: "string", description: codigoDesc },
                   descricao: { type: "string" },
+                  ...(usandoMunicipal
+                    ? { bncc: { type: "string", description: "Código da BNCC que corresponde a esta habilidade da rede (ex.: EF03CI04). Só para referência da coordenação." } }
+                    : {}),
                 },
                 required: ["codigo", "descricao"],
                 additionalProperties: false,
@@ -404,6 +434,7 @@ serve(async (req) => {
             "abertura",
             "desenvolvimento",
             "fechamento",
+            "avaliacao",
             "habilidades",
             "adaptacoes",
             "sugestoes",
@@ -548,48 +579,49 @@ serve(async (req) => {
       });
     }
 
-    // === Validação dos códigos BNCC (pulada quando currículo municipal está ativo) ===
-    if (usandoMunicipal) {
-      return new Response(JSON.stringify({ plano: parsed }), {
-        headers: { ...cors, "Content-Type": "application/json" },
-      });
+    // === Avaliação nunca vazia ===
+    // O modelo às vezes omite "avaliacao" mesmo sendo obrigatório. Sem ela o
+    // plano chega com um buraco que a coordenação cobra. Montamos uma
+    // avaliação a partir do objetivo do próprio plano.
+    if ((!regenField || regenField === "avaliacao") && !String(parsed.avaliacao ?? "").trim()) {
+      parsed.avaliacao = avaliacaoPeloObjetivo(String(parsed.objetivo ?? ""));
     }
-    const disciplinasParaValidar: string[] =
-      Array.isArray(disciplinasInter) && disciplinasInter.length > 0
-        ? disciplinasInter
-        : disciplina ? [disciplina] : [];
-    const validation = validarHabilidadesBNCC(parsed.habilidades, anoPedagogico, disciplinasParaValidar);
 
-    if (!validation.ok && validation.invalidos.length > 0) {
-      console.warn("BNCC inválidos, tentando regenerar:", validation.invalidos);
-      const feedback =
-        `As seguintes habilidades BNCC NÃO são válidas para o ano "${anoPedagogico}" ` +
-        `e disciplina(s) "${disciplinasParaValidar.join(", ") || "—"}": ` +
-        validation.invalidos.map((i) => `${i.codigo} (motivo: ${i.motivo})`).join("; ") +
-        `. Regenere o plano completo SUBSTITUINDO essas habilidades por códigos BNCC ` +
-        `REAIS e compatíveis. Padrão: ${validation.padraoEsperado}. ` +
-        `Devolva APENAS chamada da função criar_plano_atividade.`;
-      const resp2 = await callAI(feedback);
-      if (resp2.ok) {
-        const parsed2 = await parseResp(resp2);
-        if (parsed2 && !parsed2._truncated) {
-          const v2 = validarHabilidadesBNCC(parsed2.habilidades, anoPedagogico, disciplinasParaValidar);
-          if (v2.ok) {
-            parsed = parsed2;
-          } else {
-            // mantém apenas os válidos da segunda tentativa; anexa aviso
-            const validos = (parsed2.habilidades || []).filter((_: unknown, idx: number) =>
-              !v2.invalidos.find((i) => i.indice === idx),
-            );
-            parsed = {
-              ...parsed2,
-              habilidades: validos,
-              bnccAviso: validos.length === 0
-                ? "Não foi possível validar habilidades BNCC para este ano/disciplina. Revise manualmente."
-                : `Algumas habilidades BNCC foram removidas por não serem compatíveis com ${anoPedagogico}.`,
-            };
+    // === Conferência das habilidades (BNCC oficial e currículo da rede) ===
+    // Código que não existe ou é de outro ano/componente sai; o texto passa a
+    // ser o oficial. Se algo saiu, pede uma vez de novo com a lista certa.
+    const municipalLista = usandoMunicipal ? curriculo_municipal!.habilidades : null;
+    const disciplinasParaValidar = discsParaLista;
+    const conferir = (p: Record<string, unknown>) =>
+      conferirHabilidades(p.habilidades as Array<{ codigo?: string; descricao?: string }>, anoPedagogico, disciplinasParaValidar, municipalLista);
+
+    if (!regenField || regenField === "habilidades") {
+      let conf = conferir(parsed);
+      if (conf.removidas.length > 0 || conf.habilidades.length === 0) {
+        console.warn("Habilidades fora da lista oficial, tentando de novo:", conf.removidas);
+        const lista = habMunicipaisResumo || habOficiaisResumo;
+        const feedback =
+          `Estas habilidades não valem para o ano "${anoPedagogico}" e componente "${disciplinasParaValidar.join(", ") || "—"}": ` +
+          (conf.removidas.map((i) => `${i.codigo} (${i.motivo})`).join("; ") || "nenhuma habilidade válida") +
+          `. Refaça o plano completo usando SOMENTE códigos desta lista, copiando o texto:\n${lista || "(use códigos reais da BNCC)"}\n` +
+          `Devolva APENAS a chamada da função criar_plano_atividade.`;
+        const resp2 = await callAI(feedback);
+        if (resp2.ok) {
+          const parsed2 = await parseResp(resp2);
+          if (parsed2 && !parsed2._truncated) {
+            const conf2 = conferir(parsed2);
+            if (conf2.habilidades.length >= conf.habilidades.length) {
+              parsed = parsed2;
+              conf = conf2;
+            }
           }
         }
+      }
+      parsed = { ...parsed, habilidades: conf.habilidades };
+      if (conf.habilidades.length === 0) {
+        parsed.bnccAviso = "Não foi possível confirmar uma habilidade oficial para este ano e componente. Escolha uma na lista antes de usar o plano.";
+      } else if (conf.removidas.length > 0) {
+        parsed.bnccAviso = `Tiramos ${conf.removidas.length === 1 ? "um código que não confere" : "códigos que não conferem"} com a BNCC para ${anoPedagogico}. Confira as habilidades antes de usar.`;
       }
     }
 
@@ -609,108 +641,13 @@ serve(async (req) => {
   }
 });
 
-// ===========================
-// Validador de códigos BNCC
-// ===========================
-
-const AREA_EF: Record<string, string[]> = {
-  "Língua Portuguesa": ["LP"],
-  "Matemática": ["MA"],
-  "Ciências": ["CI"],
-  "História": ["HI"],
-  "Geografia": ["GE"],
-  "Arte": ["AR"],
-  "Educação Física": ["EF"],
-  "Inglês": ["LI"],
-  "Língua Inglesa": ["LI"],
-  "Ensino Religioso": ["ER"],
-};
-
-const CAMPO_EI: Record<string, string> = {
-  "O eu, o outro e o nós": "EO",
-  "Corpo, gestos e movimentos": "CG",
-  "Traços, sons, cores e formas": "TS",
-  "Escuta, fala, pensamento e imaginação": "EF",
-  "Espaços, tempos, quantidades, relações e transformações": "ET",
-};
-
-function isEducacaoInfantil(ano: string): boolean {
-  const a = (ano || "").toLowerCase();
-  return /infantil|creche|berç|bebê|maternal|pré-?escola/.test(a);
-}
-
-function faixaEI(ano: string): string | null {
-  const a = (ano || "").toLowerCase();
-  if (/(berç|0\s*a\s*1|bebê|0-1)/.test(a)) return "01";
-  if (/(maternal|1\s*a\s*3|creche)/.test(a)) return "02";
-  if (/(pré|pre|4\s*a\s*5|infantil\s*[45])/.test(a)) return "03";
-  return null;
-}
-
-function anoNum(ano: string): number {
-  const m = (ano || "").match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : 0;
-}
-
-type ValidationItem = { indice: number; codigo: string; motivo: string };
-
-function validarHabilidadesBNCC(
-  habilidades: Array<{ codigo?: string; descricao?: string }> | undefined,
-  anoEscolar: string,
-  disciplinas: string[],
-): { ok: boolean; invalidos: ValidationItem[]; padraoEsperado: string } {
-  const invalidos: ValidationItem[] = [];
-  const lista = Array.isArray(habilidades) ? habilidades : [];
-
-  let padraoEsperado = "EF<ano 2 dígitos><área 2 letras><nn 2 dígitos> ou EI<faixa><campo 2 letras><nn>";
-
-  if (isEducacaoInfantil(anoEscolar)) {
-    const faixa = faixaEI(anoEscolar);
-    const camposPermitidos = disciplinas
-      .map((d) => CAMPO_EI[d])
-      .filter(Boolean);
-    padraoEsperado = `EI${faixa ?? "<faixa>"}${
-      camposPermitidos.length ? "(" + camposPermitidos.join("|") + ")" : "<campo>"
-    }<nn>`;
-    lista.forEach((h, i) => {
-      const cod = (h?.codigo || "").trim().toUpperCase();
-      const m = cod.match(/^EI(\d{2})([A-Z]{2})(\d{2})$/);
-      if (!m) return invalidos.push({ indice: i, codigo: cod, motivo: "formato EI inválido" });
-      if (faixa && m[1] !== faixa) return invalidos.push({ indice: i, codigo: cod, motivo: `faixa ${m[1]} ≠ ${faixa}` });
-      if (camposPermitidos.length && !camposPermitidos.includes(m[2])) {
-        return invalidos.push({ indice: i, codigo: cod, motivo: `campo ${m[2]} fora dos campos selecionados` });
-      }
-    });
-    return { ok: invalidos.length === 0, invalidos, padraoEsperado };
-  }
-
-  // Ensino Fundamental
-  const n = anoNum(anoEscolar);
-  if (n < 1 || n > 9) {
-    // sem ano confiável → não invalidamos por ano, só por formato
-    lista.forEach((h, i) => {
-      const cod = (h?.codigo || "").trim().toUpperCase();
-      if (!/^EF\d{2}[A-Z]{2}\d{2}$/.test(cod)) {
-        invalidos.push({ indice: i, codigo: cod, motivo: "formato EF inválido" });
-      }
-    });
-    return { ok: invalidos.length === 0, invalidos, padraoEsperado };
-  }
-  const anoStr = n.toString().padStart(2, "0");
-  const areasPermitidas = disciplinas.flatMap((d) => AREA_EF[d] || []);
-  padraoEsperado = `EF${anoStr}${
-    areasPermitidas.length ? "(" + areasPermitidas.join("|") + ")" : "<área>"
-  }<nn>`;
-
-  lista.forEach((h, i) => {
-    const cod = (h?.codigo || "").trim().toUpperCase();
-    const m = cod.match(/^EF(\d{2})([A-Z]{2})(\d{2})$/);
-    if (!m) return invalidos.push({ indice: i, codigo: cod, motivo: "formato EF inválido" });
-    if (m[1] !== anoStr) return invalidos.push({ indice: i, codigo: cod, motivo: `ano ${m[1]} ≠ ${anoStr}` });
-    if (areasPermitidas.length && !areasPermitidas.includes(m[2])) {
-      return invalidos.push({ indice: i, codigo: cod, motivo: `área ${m[2]} fora das disciplinas selecionadas` });
-    }
-  });
-
-  return { ok: invalidos.length === 0, invalidos, padraoEsperado };
+/** Avaliação simples a partir do objetivo, usada quando o modelo não devolve uma. */
+export function avaliacaoPeloObjetivo(objetivo: string): string {
+  const alvo = objetivo.trim().replace(/[.!\s]+$/, "");
+  const meta = alvo ? alvo.charAt(0).toLowerCase() + alvo.slice(1) : "realizar a proposta da aula";
+  return [
+    `Durante a aula, observe se cada aluno consegue ${meta}.`,
+    `Anote no diário quem já faz sozinho, quem faz com ajuda e quem ainda não faz, com um exemplo do que cada um produziu ou disse.`,
+    `O objetivo foi alcançado se, no fechamento, a maioria da turma consegue mostrar isso sem ajuda.`,
+  ].join(" ");
 }

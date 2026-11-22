@@ -6,12 +6,12 @@ import { toast } from "sonner";
 import {
   alunosDaPagina,
   codigoTexto,
-  lerFolha,
+  lerFolhaNaFoto,
   novoCodigo,
   paginasDaFolha,
   type FolhaSondagem,
 } from "@/lib/alfabetizacao/folha";
-import { fotoParaImagem } from "@/lib/alfabetizacao/folhaFoto";
+import { abrirFoto } from "@/lib/alfabetizacao/folhaFoto";
 import { htmlFolha } from "@/lib/alfabetizacao/folhaImprimir";
 import { imprimirHtml } from "@/lib/alfabetizacao/imprimir";
 import { novoId } from "@/lib/alfabetizacao/store";
@@ -44,7 +44,7 @@ function hojeLocal(): string {
 
 const MSG_ERRO: Record<string, string> = {
   sem_cantos:
-    "Não achei a folha na foto. Tire outra com a folha inteira aparecendo, os quatro quadrados pretos dos cantos à mostra, em um lugar claro.",
+    "Não achei a folha na foto. Pode ser de perto ou de longe, mas a folha inteira precisa aparecer, com os quatro quadrados pretos dos cantos à mostra, em um lugar claro.",
   sem_codigo:
     "Achei uma folha, mas não consegui saber de qual turma ela é. A foto pode ter ficado cortada ou escura, ou a folha foi impressa em outra conta. Tente outra foto ou marque na tela.",
 };
@@ -110,15 +110,20 @@ export function FolhaTurma({
     setFeito(null);
     setLendo(true);
     try {
-      const img = await fotoParaImagem(f);
+      const foto = await abrirFoto(f);
       // deixa a tela mostrar "Lendo…" antes da conta pesada
       await new Promise((r) => setTimeout(r, 30));
-      const r = lerFolha(img, (cod, pagina) => {
-        const folha = folhas.find((x) => x.cod === cod);
-        if (!folha) return null;
-        const n = alunosDaPagina(folha, pagina).length;
-        return n > 0 ? n : null;
-      });
+      let r;
+      try {
+        r = lerFolhaNaFoto(foto, (cod, pagina) => {
+          const folha = folhas.find((x) => x.cod === cod);
+          if (!folha) return null;
+          const n = alunosDaPagina(folha, pagina).length;
+          return n > 0 ? n : null;
+        });
+      } finally {
+        foto.fechar();
+      }
       if (!r.ok) {
         setErro(MSG_ERRO[r.motivo]);
         return;

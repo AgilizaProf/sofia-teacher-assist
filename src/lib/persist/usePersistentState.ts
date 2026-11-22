@@ -3,6 +3,57 @@ import { supabase } from "@/integrations/supabase/client";
 import { falhouSalvarNaNuvem, salvouNaNuvem } from "./avisoNuvem";
 import { detectShapeMismatch, reportStorageIssue, previewOf, shapeOf } from "./storageDiagnostics";
 
+type Snapshot = { data: unknown; updated_at: string } | null;
+
+// Leitura agrupada: as telas abrem vários usePersistentState ao mesmo tempo.
+// Em vez de um pedido ao banco por chave (e às vezes dois, pelo getSession e
+// pelo onAuthStateChange), junta as chaves pedidas no mesmo instante numa
+// consulta só e reaproveita a resposta por alguns segundos.
+const FRESCO_MS = 3000;
+const recentes = new Map<string, { at: number; p: Promise<Snapshot> }>();
+let fila: { uid: string; keys: Map<string, (s: Snapshot) => void>; fail: Array<() => void> } | null = null;
+
+function lerSnapshot(uid: string, key: string, forcar = false): Promise<Snapshot> {
+  const id = `${uid}:${key}`;
+  const r = recentes.get(id);
+  if (!forcar && r && Date.now() - r.at < FRESCO_MS) return r.p;
+  const p = new Promise<Snapshot>((resolve, reject) => {
+    let lote = fila;
+    if (!lote || lote.uid !== uid) {
+      const atual: NonNullable<typeof fila> = { uid, keys: new Map(), fail: [] };
+      lote = fila = atual;
+      setTimeout(async () => {
+        if (fila === atual) fila = null;
+        const chaves = [...atual.keys.keys()];
+        try {
+          const { data, error } = await supabase
+            .from("app_snapshots")
+            .select("key, data, updated_at")
+            .eq("user_id", uid)
+            .in("key", chaves);
+          if (error) throw error;
+          const porChave = new Map((data ?? []).map((d) => [d.key as string, d]));
+          for (const [k, done] of atual.keys) {
+            const d = porChave.get(k);
+            done(d ? { data: d.data, updated_at: d.updated_at as string } : null);
+          }
+        } catch {
+          atual.fail.forEach((f) => f());
+        }
+      }, 25);
+    }
+    const prev = lote.keys.get(key);
+    lote.keys.set(key, (snap) => {
+      prev?.(snap);
+      resolve(snap);
+    });
+    lote.fail.push(() => reject(new Error("snapshot_read_failed")));
+  });
+  recentes.set(id, { at: Date.now(), p });
+  p.catch(() => recentes.delete(id));
+  return p;
+}
+
 /**
  * Local-first persistent state with optional cloud sync (Supabase).
  *
@@ -147,18 +198,13 @@ export function usePersistentState<T>(key: string, initial: T) {
     };
   }, [key, lsKey]);
 
-  const pullRemote = useCallback(async (uid: string) => {
+  const pullRemote = useCallback(async (uid: string, forcar = false) => {
     try {
       // Se o usuário já mexeu no estado local antes do remote responder,
       // NÃO sobrescreva. Apenas marca como hidratado para liberar o push.
       if (userTouchedRef.current) { hydratedRef.current = true; return; }
-      const { data, error } = await supabase
-        .from("app_snapshots")
-        .select("data, updated_at")
-        .eq("user_id", uid)
-        .eq("key", key)
-        .maybeSingle();
-      if (error || !data) { hydratedRef.current = true; return; }
+      const data = await lerSnapshot(uid, key, forcar);
+      if (!data) { hydratedRef.current = true; return; }
       const mismatch = detectShapeMismatch(data.data, initialRef.current);
       if (mismatch) {
         const prev = previewOf(data.data);
@@ -247,7 +293,7 @@ export function usePersistentState<T>(key: string, initial: T) {
       // Suspende a proteção userTouched para permitir overwrite remoto recente.
       userTouchedRef.current = false;
       hydratedRef.current = false;
-      void pullRemote(uid);
+      void pullRemote(uid, true);
     };
     if (typeof window !== "undefined") {
       window.addEventListener("aprof:snapshot-changed", onSnapChange);
