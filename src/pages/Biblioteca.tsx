@@ -219,12 +219,27 @@ export function Biblioteca() {
     });
     return [...s].sort((a, b) => a - b);
   }, [turmas]);
-  const meusAnos = filtros.definido ? filtros.anos : anosTurmas.length ? anosTurmas : ANOS;
+  // Enquanto ela não marcou os anos e disciplinas, o que já foi guardado
+  // aparece sempre: um plano do 3º ano guardado por quem só tem turma de
+  // Pré não pode sumir da Biblioteca logo depois do "Guardado".
+  const anosDosItens = useMemo(
+    () => [...new Set(itens.map((i) => i.ano_escolar).filter((a): a is number => a !== null))],
+    [itens],
+  );
+  const discDosItens = useMemo(
+    () => [...new Set(itens.map((i) => i.componente).filter((c): c is string => !!c))],
+    [itens],
+  );
+  const anosPadrao = anosTurmas.length ? anosTurmas : ANOS;
+  const meusAnos = filtros.definido
+    ? filtros.anos
+    : [...new Set([...anosPadrao, ...anosDosItens])].sort((a, b) => a - b);
+  const discPadrao = discPerfil.filter((d) => DISCIPLINAS.includes(d)).length
+    ? discPerfil.filter((d) => DISCIPLINAS.includes(d))
+    : DISCIPLINAS;
   const minhasDisc = filtros.definido
     ? filtros.disciplinas
-    : discPerfil.filter((d) => DISCIPLINAS.includes(d)).length
-      ? discPerfil.filter((d) => DISCIPLINAS.includes(d))
-      : DISCIPLINAS;
+    : DISCIPLINAS.filter((d) => discPadrao.includes(d) || discDosItens.includes(d));
 
   const anosLetivos = useMemo(() => {
     const s = new Set<number>([anoAtual, anoAtual + 1]);

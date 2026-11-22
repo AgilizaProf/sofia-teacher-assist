@@ -1,0 +1,48 @@
+name: Edge functions boot
+
+# Liga cada função da Sofia com o Deno, como o Supabase faz, e falha se
+# alguma não chegar a iniciar (erro de import, de sintaxe ou no topo do
+# arquivo). Assim um BOOT_ERROR aparece no PR, antes de chegar à professora.
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/**"
+      - ".github/workflows/functions-boot.yml"
+  workflow_dispatch:
+
+jobs:
+  boot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Start every function
+        env:
+          SUPABASE_URL: http://127.0.0.1:54321
+          SUPABASE_SERVICE_ROLE_KEY: teste
+          SUPABASE_ANON_KEY: teste
+          LOVABLE_API_KEY: teste
+        run: |
+          falhou=0
+          porta=8100
+          for dir in supabase/functions/*/; do
+            nome=$(basename "$dir")
+            [ "$nome" = "_shared" ] && continue
+            [ -f "$dir/index.ts" ] || continue
+            porta=$((porta+1))
+            set +e
+            DENO_SERVE_ADDRESS="tcp:127.0.0.1:$porta" PORT=$porta \
+              timeout 40 deno run -A --no-lock --no-check "$dir/index.ts" > /tmp/$nome.log 2>&1
+            codigo=$?
+            set -e
+            if [ "$codigo" = "124" ]; then
+              echo "ok   $nome"
+            else
+              echo "FALHA $nome (saiu com $codigo)"
+              grep -v "^Download" /tmp/$nome.log | head -30
+              falhou=1
+            fi
+          done
+          [ "$falhou" = "0" ] || { echo "::error::Alguma função não inicia."; exit 1; }
