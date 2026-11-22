@@ -12,9 +12,10 @@ import { useTurmas } from "@/hooks/useTurmas";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { supabase } from "@/integrations/supabase/client";
 import { buildRelatorioBase, decidirTipoRelatorio } from "@/lib/documentos/relatorioBuilder";
-import {
-  exportarRelatoriosZip,
-} from "@/lib/documentos/relatorioDocx";
+
+// A biblioteca de Word (docx) é grande: só carrega quando a professora exporta.
+const exportarRelatoriosZip = async (docs: RelatorioDocumento[]) =>
+  (await import("@/lib/documentos/relatorioDocx")).exportarRelatoriosZip(docs);
 import {
   imprimirRelatorioEditorial,
   exportarRelatorioEditorialWord,

@@ -62,7 +62,9 @@ export const incPainelCss = `
 .pn.inc-root .list-toolbar{margin-top:12px;}
 .pn.inc-root .list-search input{border:1.5px solid var(--pn-line);border-radius:12px;font-size:14px;}
 .pn.inc-root .list-search input:focus{border-color:var(--pn-ink);}
-.pn.inc-root .list-filter{border:1.5px solid var(--pn-line);border-radius:10px;background:var(--pn-surface);padding:9px 12px;font-weight:600;}
+.pn.inc-root .list-filter{border:1.5px solid var(--pn-line);border-radius:10px;background:var(--pn-surface);padding:9px 34px 9px 12px;font-weight:600;position:relative;min-height:42px;}
+.pn.inc-root .list-filter::after{content:"";position:absolute;right:14px;top:50%;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-70%) rotate(45deg);}
+.pn.inc-root .list-filter[aria-expanded="true"]::after{transform:translateY(-30%) rotate(-135deg);}
 .pn.inc-root .student-card{background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:18px;}
 .pn.inc-root .student-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);transform:translate(-2px,-2px);background:var(--pn-surface);}
 .pn.inc-root .student-card h3,.pn.inc-root .student-card b{font-family:var(--pn-display);}
@@ -106,7 +108,7 @@ export const incPainelCss = `
   .inc-resumo{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
   .inc-res{grid-template-columns:minmax(0,1fr);grid-template-areas:"ic" "lb" "nm" "sm";row-gap:4px;padding:10px;}
   .inc-res b{text-align:left;font-size:22px;}
-  .inc-res .lb{font-size:10px;}
+  .inc-res .lb{font-size:12px;letter-spacing:.02em;}
   .pn.inc-root .inc-action,.pn.inc-root .inc-section{flex-direction:column;align-items:flex-start;gap:8px;min-height:0;}
   .inc-action .ic{width:38px;height:38px;}
   .inc-action b,.inc-section b{font-size:14.5px;}

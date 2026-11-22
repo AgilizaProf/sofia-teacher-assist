@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User, Loader2 } from "lucide-react";
+import { traduzirErroAuth } from "@/lib/authErros";
 
 type Profile = {
   display_name: string;
@@ -124,7 +125,7 @@ export function ProfileEditor() {
       .upsert(payload, { onConflict: "user_id" });
     setSaving(false);
     if (error) {
-      toast.error("Erro ao salvar: " + error.message);
+      toast.error(traduzirErroAuth(error, "Não foi possível salvar. Tente de novo."));
     } else {
       toast.success("Perfil atualizado.");
       if (typeof window !== "undefined") {

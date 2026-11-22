@@ -892,7 +892,30 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   /* ─────────── Salvar / Histórico (local + remoto) ─────────── */
 
   // Salva no histórico e na nuvem. Devolve o id do plano na nuvem (ou null).
+  // Trava enquanto salva (dois toques não viram dois planos) e não grava de
+  // novo um plano que não mudou desde o último salvamento.
+  const [salvando, setSalvando] = useState(false);
+  const salvandoRef = useRef<Promise<string | null> | null>(null);
+  const ultimoSalvoRef = useRef<{ plano: PlanoAtividade; idNuvem: string | null } | null>(null);
   const salvarPlano = async (opts?: { silencioso?: boolean }): Promise<string | null> => {
+    if (salvandoRef.current) return salvandoRef.current;
+    if (ultimoSalvoRef.current?.plano === plano && ultimoSalvoRef.current.idNuvem) {
+      setSalvo(true);
+      if (!opts?.silencioso) showToast("Este plano já está salvo no histórico");
+      window.setTimeout(() => setSalvo(false), 2000);
+      return ultimoSalvoRef.current.idNuvem;
+    }
+    const p = salvarPlanoAgora(opts);
+    salvandoRef.current = p;
+    setSalvando(true);
+    try {
+      return await p;
+    } finally {
+      salvandoRef.current = null;
+      setSalvando(false);
+    }
+  };
+  const salvarPlanoAgora = async (opts?: { silencioso?: boolean }): Promise<string | null> => {
     const f = validar();
     setMissing(f);
     if (f.length > 0) { setSalvo(false); return null; }
@@ -940,6 +963,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         : `Planejamento salvo: ${plano.titulo}`,
       detail: `${anoEscolar} · ${disciplina}`,
     });
+    ultimoSalvoRef.current = { plano, idNuvem };
     setSalvo(true);
     if (!opts?.silencioso) showToast(nuvemFalhou ? "Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo." : "Plano salvo no histórico");
     window.setTimeout(() => setSalvo(false), 2000);
@@ -2056,8 +2080,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
       {temPlano && (
         <div className="atv-actionbar">
-          <button className="atv-btn primary" onClick={() => void salvarPlano()}>
-            <Save size={14} /> {salvo ? "Salvo!" : "Salvar plano"}
+          <button
+            className="atv-btn primary"
+            onClick={() => void salvarPlano()}
+            disabled={salvando}
+            aria-busy={salvando}
+          >
+            <Save size={14} /> {salvando ? "Salvando…" : salvo ? "Salvo!" : "Salvar plano"}
           </button>
           <button className="atv-btn" onClick={() => void guardarBiblioteca()} disabled={guardando}>
             📚 {guardando ? "Guardando…" : "Guardar na Biblioteca"}
@@ -3004,10 +3033,10 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-sug-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;align-items:start;}
 .atv-sug-grid > *{align-self:start;height:auto;min-height:0;}
 .atv-sug{position:relative;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 10px 10px 10px;display:flex;flex-direction:column;gap:6px;}
-.atv-sug-fav{position:absolute;top:6px;right:6px;background:transparent;border:none;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;cursor:pointer;color:#92400E;}
+.atv-sug-fav{position:absolute;top:2px;right:2px;background:transparent;border:none;width:36px;height:36px;border-radius:6px;display:grid;place-items:center;cursor:pointer;color:#92400E;}
 .atv-sug-fav:hover{background:rgba(245,158,11,.15);}
 .atv-sug-fav.on{background:rgba(245,158,11,.18);}
-.atv-sug-title{font-weight:700;font-size:13px;color:#92400E;}
+.atv-sug-title{font-weight:700;font-size:13px;color:#92400E;padding-right:34px;}
 .atv-sug p{font-size:12.5px;color:var(--ink-2,#334155);margin:0;line-height:1.45;}
 .atv-sug button{align-self:flex-start;}
 .atv-sug button.atv-sug-fav{align-self:auto;}

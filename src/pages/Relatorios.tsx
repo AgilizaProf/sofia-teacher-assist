@@ -50,6 +50,7 @@ import { matchAnoCurriculo } from "@/lib/curriculo/matchAno";
 import { wrapParecerPrintHtml as wrapStandardPrintHtml } from "@/lib/print/parecerPrintPlanejamento";
 import { RelatorioDialog } from "@/components/documentos/RelatorioDialog";
 import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
+import { nomeExibicao } from "@/lib/nomeExibicao";
 
 const css = `
 .rel-root{
@@ -1853,7 +1854,7 @@ ${parecerHtml}
                 <div className="rel-card-head">
                   <div className="rel-av">{a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}</div>
                   <div className="rel-stu">
-                    <b>{a.nome}</b>
+                    <b>{nomeExibicao(a.nome)}</b>
                     <small>{a.turma || ctx.entity.turma_atual?.nome || "Sem turma"} · {resolvePeriodoAluno(a.id, a.turma).tituloLower}</small>
                   </div>
                   {a.pcd && <span className="rel-badge pcd">PCD</span>}
@@ -2071,7 +2072,7 @@ ${parecerHtml}
                   >
                     <div className="rel-h-av" style={{ background: palette[idx % palette.length] }}>{initials}</div>
                     <div className="rel-h-name">
-                      <b>{a.nome}</b>
+                      <b>{nomeExibicao(a.nome)}</b>
                       <small>{a.turma || "Sem turma"} · {resolvePeriodoAluno(a.id, a.turma).tituloLower}{a.pcd ? ` · ${a.pcd}` : ""}</small>
                     </div>
                     <span className="rel-status done"><span className="dot" />FINALIZADO</span>

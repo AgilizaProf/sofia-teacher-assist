@@ -1,5 +1,6 @@
 import { memo, useCallback } from "react";
 import type { StudentUI } from "@/lib/db/inclusao";
+import { nomeExibicao } from "@/lib/nomeExibicao";
 
 interface AlunoCardProps {
   student: StudentUI;
@@ -13,8 +14,12 @@ function AlunoCardImpl({ student: s, onSelect }: AlunoCardProps) {
       <div className="sc-head">
         <div className={"sc-avatar" + (s.featured ? " featured" : "")}>{s.initials}</div>
         <div className="sc-info">
-          <b>{s.name}</b>
-          <span>{s.age} · {s.turma}</span>
+          <b>{nomeExibicao(s.name)}</b>
+          <span>
+            {[s.age, s.turma && s.turma !== "Sem turma" ? `Turma ${s.turma}` : "Sem turma"]
+              .filter((x) => x && x !== "—")
+              .join(" · ")}
+          </span>
         </div>
       </div>
       <div className="sc-tags">
