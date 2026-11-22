@@ -16,12 +16,20 @@ import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 
 type Student = { id: string; name: string; turma?: string; diag?: string };
 
+// Grupos etários com os nomes da BNCC.
 const FAIXAS = [
-  "Bebês (0 a 1a6m)",
-  "Bem pequenos (1a7m a 3a11m)",
-  "Pequenos (4 anos)",
-  "Maiores (5 anos)",
+  "Bebês (0 a 1 ano e 6 meses)",
+  "Crianças bem pequenas (1 ano e 7 meses a 3 anos e 11 meses)",
+  "Crianças pequenas · 4 anos (Pré I)",
+  "Crianças pequenas · 5 anos (Pré II)",
 ];
+// Roteiros antigos foram gravados com os nomes de antes.
+const FAIXAS_ANTIGAS: Record<string, string> = {
+  "Bebês (0 a 1a6m)": FAIXAS[0],
+  "Bem pequenos (1a7m a 3a11m)": FAIXAS[1],
+  "Pequenos (4 anos)": FAIXAS[2],
+  "Maiores (5 anos)": FAIXAS[3],
+};
 
 const CAMPOS = [
   { id: "eu_outro_nos", emoji: "🗣️", nome: "O eu, o outro e o nós" },
@@ -213,7 +221,7 @@ export function PlanejamentoEi() {
 
   const abrir = (row: RoteiroRow) => {
     setTurma(row.turma || "");
-    setFaixa(row.faixa_etaria || FAIXAS[2]);
+    setFaixa((row.faixa_etaria && (FAIXAS_ANTIGAS[row.faixa_etaria] || row.faixa_etaria)) || FAIXAS[2]);
     setCampos(
       (row.campos_experiencia || []).map((nome) => CAMPOS.find((c) => c.nome === nome)?.id).filter(Boolean) as string[]
     );
@@ -348,7 +356,7 @@ export function PlanejamentoEi() {
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold truncate">{r.conteudo?.titulo || "(sem título)"}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {r.faixa_etaria} {r.turma ? `· ${r.turma}` : ""} · {r.tipo_experiencia} · {r.duracao}min · {new Date(r.gerado_em).toLocaleDateString("pt-BR")}
+                      {(r.faixa_etaria && FAIXAS_ANTIGAS[r.faixa_etaria]) || r.faixa_etaria} {r.turma ? `· ${r.turma}` : ""} · {r.tipo_experiencia} · {r.duracao}min · {new Date(r.gerado_em).toLocaleDateString("pt-BR")}
                     </div>
                   </div>
                   <button type="button" onClick={() => abrir(r)} className="pn-btn ei-abrir">Abrir</button>

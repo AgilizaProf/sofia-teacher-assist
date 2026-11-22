@@ -23,7 +23,7 @@ export async function shouldShowOnboarding(userId: string): Promise<boolean> {
 
 /** Marks onboarding as concluded for the current user (Supabase only).
  *  Optionally persists lead data (name + phone) captured in the onboarding flow. */
-export async function markOnboardingDone(lead?: { name?: string; phone?: string }): Promise<boolean> {
+export async function markOnboardingDone(lead?: { name?: string; phone?: string; etapa?: string }): Promise<boolean> {
   try {
     const { data } = await supabase.auth.getUser();
     const user = data.user;
@@ -37,10 +37,12 @@ export async function markOnboardingDone(lead?: { name?: string; phone?: string 
       display_name?: string;
       email?: string | null;
       telefone?: string;
+      etapa_ensino?: string;
       user_id: string;
     } = { onboarding_concluido: true, user_id: uid };
     if (name) patch.display_name = name;
     patch.telefone = phone;
+    if (lead?.etapa) patch.etapa_ensino = lead.etapa;
     patch.email = user.email ?? null;
     const { error } = await supabase
       .from("profiles")

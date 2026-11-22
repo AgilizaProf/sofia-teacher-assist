@@ -8,7 +8,7 @@ export const Route = createFileRoute("/cadernos")({
       {
         name: "description",
         content:
-          "Fichas por ano e disciplina, prontas para imprimir, com versão PCD. Acesso a partir de 12/03/2027.",
+          "Fichas por ano e disciplina, prontas para imprimir, com versão PCD. Acesso a partir de 13/03/2027.",
       },
     ],
   }),

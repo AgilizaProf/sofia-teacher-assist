@@ -3,6 +3,21 @@
 
 const MAX = 80;
 
+/**
+ * Nome todo em maiúsculas ou todo em minúsculas vira "Nome Sobrenome"
+ * ("ANA DA SILVA" e "ana da silva" viram "Ana da Silva"). Nome já escrito
+ * com maiúsculas e minúsculas fica como a professora escreveu.
+ */
+export function nomeProprio(nome: string): string {
+  const l = (nome || "").replace(/\s+/g, " ").trim();
+  if (!l || (l !== l.toUpperCase() && l !== l.toLowerCase())) return l;
+  return l
+    .toLowerCase()
+    .split(" ")
+    .map((p, i) => (i > 0 && /^(da|de|do|das|dos|e)$/.test(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join(" ");
+}
+
 /** Tira numeração ("1.", "01 -", "3)"), marcadores e colunas extras de planilha. */
 function limparLinha(linha: string): string {
   let l = linha.split("\t").map((c) => c.trim()).filter(Boolean).find((c) => /[a-zà-ú]{2}/i.test(c)) ?? "";
@@ -10,15 +25,7 @@ function limparLinha(linha: string): string {
   l = l.replace(/^\d{1,3}\s*[.)\-–º°:]?\s+/, "");
   l = l.replace(/\s+/g, " ").trim();
   if (!/[a-zà-ú]/i.test(l)) return "";
-  // Nome todo em maiúsculas vira "Nome Sobrenome"
-  if (l === l.toUpperCase()) {
-    l = l
-      .toLowerCase()
-      .split(" ")
-      .map((p) => (/^(da|de|do|das|dos|e)$/.test(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
-      .join(" ");
-  }
-  return l.slice(0, 120);
+  return nomeProprio(l).slice(0, 120);
 }
 
 function chave(nome: string): string {

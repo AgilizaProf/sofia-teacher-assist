@@ -1,4 +1,5 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { rotuloDataRegistro } from "@/lib/diario/rotuloData";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
@@ -1605,6 +1606,9 @@ export function Planejamento() {
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
+  // Da sexta à tarde em diante, a professora já está planejando a semana que vem:
+  // a tela abre na próxima semana (ela volta com a seta ou com "Hoje").
+  const abriuSemanaRef = useRef(false);
   const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   // SSR roda em UTC; o cliente roda no fuso local. Calcular `new Date()` em
   // ambos pode produzir HTML diferente (mês/dia trocado em torno da meia-noite
@@ -1636,6 +1640,13 @@ export function Planejamento() {
     const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
     return { days, range, label };
   }, [weekOffset, hydrated]);
+  useEffect(() => {
+    if (!hydrated || abriuSemanaRef.current) return;
+    abriuSemanaRef.current = true;
+    const agora = new Date();
+    const dow = agora.getDay();
+    if ((dow === 5 && agora.getHours() >= 12) || dow === 6 || dow === 0) setWeekOffset(1);
+  }, [hydrated]);
   // Cada semana tem o seu plano (antes era um só para todas as semanas).
   const semanasPlano = useSemanasPlano<M1Card>();
   const semanaChave = m1Week.days[0].iso;
@@ -2334,7 +2345,7 @@ export function Planejamento() {
   }, [m1Plan, m1Week.days.map((d) => d.iso).join(","), hydrated]);
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
-  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string; alunoIds?: string[] };
+  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; criadoEm?: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string; alunoIds?: string[] };
   const M6_TAGS = ["+ funcionou", "- precisa reforço", "+ inclusão", "+ família"] as const;
   const M6_EMOJIS = ["😣", "😐", "🙂", "😄", "🌟"] as const;
   // Sugestões rápidas de observação por humor — clique adiciona ao textarea.
@@ -2960,6 +2971,7 @@ export function Planejamento() {
   text: trimmed,
   tags: [...m6Tags],
   date: `Hoje · ${now}`,
+  criadoEm: new Date().toISOString(),
   turma: turmaAtual,
   atividadeId: m6AtividadeId || undefined,
   atividadeTitulo: atividadeRef?.titulo,
@@ -3689,6 +3701,11 @@ export function Planejamento() {
                         <div className="month" style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
                           <span>{m1Week.label}</span>
                           <small style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: "var(--muted)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{m1Week.range}</small>
+                          {(ctxResolvido.turma || ctxResolvido.anoLabel) && (
+                            <small style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: "var(--ink-2)", fontWeight: 700, textTransform: "none", letterSpacing: 0 }}>
+                              {[ctxResolvido.turma, ctxResolvido.anoLabel].filter(Boolean).join(" · ")}
+                            </small>
+                          )}
                         </div>
                         <button aria-label="Próxima semana" onClick={() => setWeekOffset((w) => w + 1)}><ChevronRight size={14} /></button>
                         {weekOffset !== 0 && (
@@ -3937,7 +3954,7 @@ export function Planejamento() {
                         <div className="pl-stat-box"><div className="v">{m1Stats.atividades}</div><div className="l">Atividades</div></div>
                         <div className="pl-stat-box"><div className="v">{m1Stats.habilidades}</div><div className="l">Habilidades BNCC</div></div>
                         <div className="pl-stat-box"><div className="v">{focosSelecionados.length}</div><div className="l">Focos ativos</div></div>
-                        <div className="pl-stat-box"><div className="v">{pillsInt[0]}</div><div className="l">Intensidade</div></div>
+                        <div className="pl-stat-box"><div className="v" style={{ fontSize: 15 }}>{pillsInt}</div><div className="l">Intensidade</div></div>
                       </div>
                       {m1Stats.atividades === 0 && (
                         <p className="lead" style={{ marginTop: 10 }}>Defina <b>tema</b> e <b>focos</b> ao lado e clique em <b>Gerar com a Sofia</b>.</p>
@@ -4863,7 +4880,7 @@ export function Planejamento() {
                           style={{ cursor: "pointer", ...(m6EditingId === e.id ? { borderColor: "var(--orange)", background: "var(--orange-soft)" } : null) }}
                         >
                           <div className="head" style={{ justifyContent: "space-between" }}>
-                            <span>{e.date}</span>
+                            <span suppressHydrationWarning>{rotuloDataRegistro(e)}</span>
                             <span style={{ display: "flex", gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
                               <button onClick={() => m6StartEdit(e)} title="Editar" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 8px", fontSize: 11, fontWeight: 600, color: "var(--ink)", cursor: "pointer" }}>Editar</button>
                               <button onClick={() => m6DeleteEntry(e.id)} title="Excluir" aria-label="Excluir" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 6px", color: "#b91c1c", cursor: "pointer", display: "inline-flex", alignItems: "center" }}><X size={12} /></button>

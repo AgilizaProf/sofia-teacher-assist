@@ -251,7 +251,7 @@ export function useHistoricoCreditos(limit = 5): {
   return { items, loading };
 }
 // ===== Assinatura: promoção / cortesia (N4) =====
-// Quem está na promoção "grátis até 12/03/2027" entra como plano "pro" mensal
+// Quem está na promoção "grátis até 13/03/2027" entra como plano "pro" mensal
 // com source = 'admin_grant'. Essa pessoa não paga nada: não pode ver
 // "Você paga hoje R$ 34,90/mês" nem ser levada ao checkout.
 export type AssinaturaInfo = {

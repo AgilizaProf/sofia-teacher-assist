@@ -34,7 +34,7 @@ export function Privacidade() {
             </p>
 
             <section className="legal-card" aria-labelledby="priv-title">
-              <div className="legal-meta">📅 Vigência: {VIGENCIA} · 🇧🇷 Servidores no Brasil · 🔒 100% LGPD</div>
+              <div className="legal-meta">📅 Vigência: {VIGENCIA} · 🔒 De acordo com a LGPD</div>
 
               <h2 id="priv-title">1. Controlador e Encarregado (DPO)</h2>
               <p>

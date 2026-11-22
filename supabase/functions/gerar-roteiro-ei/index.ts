@@ -30,6 +30,11 @@ serve(async (req) => {
       "Bem pequenos (1a7m a 3a11m)": "10 a 15 minutos por experiência",
       "Pequenos (4 anos)": "20 a 30 minutos por experiência",
       "Maiores (5 anos)": "30 a 40 minutos por experiência",
+      // Nomes da BNCC (usados no app a partir de agora)
+      "Bebês (0 a 1 ano e 6 meses)": "3 a 5 minutos por estímulo",
+      "Crianças bem pequenas (1 ano e 7 meses a 3 anos e 11 meses)": "10 a 15 minutos por experiência",
+      "Crianças pequenas · 4 anos (Pré I)": "20 a 30 minutos por experiência",
+      "Crianças pequenas · 5 anos (Pré II)": "30 a 40 minutos por experiência",
     };
     const tempo = tempoAtencao[faixa_etaria] || "tempo adequado à faixa etária";
 

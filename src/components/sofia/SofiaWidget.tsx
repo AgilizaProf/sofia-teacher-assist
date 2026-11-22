@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { semBlocoContexto } from "@/lib/sofia/textoVisivel";
 import { useHydrated } from "@/hooks/useHydrated";
 import {
   Sparkles,
@@ -385,7 +386,7 @@ export function SofiaWidget() {
                     if (m.role !== "assistant") {
                       return (
                         <div key={i} className="sofia-msg user">
-                          {m.content}
+                          {semBlocoContexto(m.content)}
                         </div>
                       );
                     }

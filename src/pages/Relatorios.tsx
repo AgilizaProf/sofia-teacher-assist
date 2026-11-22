@@ -1,4 +1,5 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { nomeProprio } from "@/lib/alunos/colarLista";
 import { ColarAlunos } from "@/components/shared/ColarAlunos";
 import { peiPdiPorAluno, resumoPeiPdi, type LinhaPeiPdi } from "@/lib/pei/resumoPeiPdi";
 import {
@@ -724,7 +725,7 @@ export function Relatorios() {
     setEditAluno(null);
   };
   const salvarNovoAluno = () => {
-    const nome = novoAluno.name.trim();
+    const nome = nomeProprio(novoAluno.name);
     if (!nome) { toast.error("Informe o nome do(a) aluno(a)."); return; }
     if (editAluno) {
       if (editAluno.id.startsWith("db:")) {
@@ -1361,20 +1362,26 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     const keys = competKeysFor(id, turma, pcd);
     let preenchido = 0; let pesoTotal = 0; let pontos = 0;
     let naoObservadas = 0; let semAvaliacao = 0;
+    let consolidados = 0; let emDesenvolvimento = 0;
     keys.forEach((k) => {
       const s = rub[k];
       if (!s) { semAvaliacao += 1; return; }
       if (s === "no") { naoObservadas += 1; return; }
       preenchido += 1;
       pesoTotal += 3;
-      if (s === "ed") pontos += 2;
-      else if (s === "co") pontos += 3;
+      if (s === "ed") { pontos += 2; emDesenvolvimento += 1; }
+      else if (s === "co") { pontos += 3; consolidados += 1; }
     });
     // Itens marcados como "Não observada" são desconsiderados do denominador.
     const universo = Math.max(0, keys.length - naoObservadas);
     const pctPreenchido = universo > 0 ? Math.round((preenchido / universo) * 100) : 0;
     const pctDesempenho = pesoTotal ? Math.round((pontos / pesoTotal) * 100) : 0;
-    return { pctPreenchido, pctDesempenho, naoObservadas, semAvaliacao, total: keys.length };
+    // Na Educação Infantil não há nota (LDB, art. 31): o resumo mostra marcos
+    // descritivos em vez de porcentagem de desempenho.
+    const resumo = isEiAluno(turma, id)
+      ? `${consolidados} ${consolidados === 1 ? "conquista consolidada" : "conquistas consolidadas"} · ${emDesenvolvimento} em desenvolvimento`
+      : `Desempenho ${pctDesempenho}%`;
+    return { pctPreenchido, pctDesempenho, naoObservadas, semAvaliacao, total: keys.length, resumo };
   };
 
   // ===== Helpers de impressão (parecer único e em lote) =====
@@ -1439,7 +1446,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     void areas; void rub;
     return `<article class="report">
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
-${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
+${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: resolvePeriodoAluno(a.id, a.turma).tituloLower })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
 <div class="sig">
@@ -1503,7 +1510,6 @@ ${parecerHtml}
       return () => clearTimeout(t);
     }
   }, [totalSavedMin]);
-  const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
   // Período de avaliação selecionado pelo professor (Bimestral/Trimestral/Semestral/Anual)
   // Quando o usuário filtra por uma turma específica, o banner respeita a periodicidade configurada
   // para aquela turma; caso contrário, usa o padrão global.
@@ -1862,7 +1868,7 @@ ${parecerHtml}
                   <div className="rel-av">{a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}</div>
                   <div className="rel-stu">
                     <b>{a.nome}</b>
-                    <small>{a.turma || ctx.entity.turma_atual?.nome || "Sem turma"} · {bimestreNum}º bimestre</small>
+                    <small>{a.turma || ctx.entity.turma_atual?.nome || "Sem turma"} · {resolvePeriodoAluno(a.id, a.turma).tituloLower}</small>
                   </div>
                   {a.pcd && <span className="rel-badge pcd">PCD</span>}
                   {isMobile && (
@@ -1878,14 +1884,19 @@ ${parecerHtml}
                 </div>
                 <span className={"rel-status " + a.status}><span className="dot" />{a.statusLabel}</span>
                 {(() => {
-                   const { pctPreenchido, pctDesempenho, naoObservadas } = computeProgress(a.id, a.turma, a.pcd);
+                   const { pctPreenchido, resumo, naoObservadas } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 6 }}>
                       <div className="rel-card-prog">
                         <span>{pctPreenchido === 0 ? "Avaliação ainda não começou" : `Avaliação ${pctPreenchido}% feita`}</span>
-                        {pctPreenchido > 0 && <span>Desempenho {pctDesempenho}%</span>}
+                        {pctPreenchido > 0 && <span>{resumo}</span>}
                       </div>
                       <div className="rel-progress"><i style={{ width: `${pctPreenchido}%` }} /></div>
+                      {a.status === "done" && pctPreenchido < 50 && (
+                        <div style={{ marginTop: 6, fontSize: 11.5, fontWeight: 600, color: "#92400E" }}>
+                          Parecer finalizado com só {pctPreenchido}% da avaliação feita. Vale completar e gerar de novo.
+                        </div>
+                      )}
                       {naoObservadas > 0 && (
                         <div
                           title="Itens marcados como 'Não observada' não entram no cálculo. Avalie-os para refletir no parecer."
@@ -2075,7 +2086,7 @@ ${parecerHtml}
                     <div className="rel-h-av" style={{ background: palette[idx % palette.length] }}>{initials}</div>
                     <div className="rel-h-name">
                       <b>{a.nome}</b>
-                      <small>{a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · ${a.pcd}` : ""}</small>
+                      <small>{a.turma || "Sem turma"} · {resolvePeriodoAluno(a.id, a.turma).tituloLower}{a.pcd ? ` · ${a.pcd}` : ""}</small>
                     </div>
                     <span className="rel-status done"><span className="dot" />FINALIZADO</span>
                     <div className="rel-h-date">Bimestre atual</div>
@@ -2096,7 +2107,7 @@ ${parecerHtml}
             <h3>Pré-visualização · {preview.name}</h3>
             <div className="rel-modal-meta">{preview.meta} · {preview.statusLabel}</div>
             <div className="rel-modal-body">
-              <p><b>{preview.name}</b> demonstrou avanços significativos nas competências esperadas para o bimestre, alinhadas à BNCC. Participa ativamente das atividades coletivas, colabora com colegas e apresenta autonomia crescente nas produções escritas.</p>
+              <p><b>{preview.name}</b> demonstrou avanços significativos nas competências esperadas para o período, alinhadas à BNCC. Participa ativamente das atividades coletivas, colabora com colegas e apresenta autonomia crescente nas produções escritas.</p>
               <p style={{ marginTop: 12 }}>Sugestão de continuidade: aprofundar leituras compartilhadas e propor desafios de escrita autoral para consolidar a fluência.</p>
             </div>
             <div className="rel-modal-foot">
@@ -2112,7 +2123,7 @@ ${parecerHtml}
       {bnccOpen && (() => {
         const { id, nome, turma, pcd } = bnccOpen;
         const rub = getAlunoRubric(id);
-        const { pctPreenchido, pctDesempenho } = computeProgress(id, turma, pcd);
+        const { pctPreenchido, resumo } = computeProgress(id, turma, pcd);
         const year = yearForAluno(id, turma);
         const areas = areasFor(id, turma, pcd);
         const provasAluno = provasDoAluno(provas, nome, turma);
@@ -2188,7 +2199,7 @@ ${parecerHtml}
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: 0, fontSize: 18 }}>{tituloModal}</h3>
                   <div style={{ fontSize: 12, color: "var(--text-soft)", marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span>{turma || "Sem turma"} · {bimestreNum}º bimestre</span>
+                    <span>{turma || "Sem turma"} · {resolvePeriodoAluno(id, turma).tituloLower}</span>
                     {ei ? (
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 99, background: "#EDEAFE", color: "#4338CA", fontWeight: 700 }}>
                         Direitos de Aprendizagem: {EI_DIREITOS_APRENDIZAGEM}
@@ -2224,7 +2235,7 @@ ${parecerHtml}
               <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--line-soft)", background: "#FAF8F2" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
                   <span>Progresso da avaliação</span>
-                  <span>{pctPreenchido}% avaliado · Desempenho {pctDesempenho}%</span>
+                  <span>{pctPreenchido}% avaliado · {resumo}</span>
                 </div>
                 <div style={{ height: 8, background: "#EEE9DC", borderRadius: 99, overflow: "hidden" }}>
                   <div style={{ width: `${pctPreenchido}%`, height: "100%", background: "#0B7A55", transition: "width .3s" }} />
@@ -2600,7 +2611,7 @@ ${parecerHtml}
           const bodyInner = `
 <article class="report">
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
-${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
+${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: resolvePeriodoAluno(a.id, a.turma).tituloLower })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
 <div class="sig">
@@ -2659,7 +2670,7 @@ ${parecerHtml}
           if (a.nome) identFields.push({ label: "Estudante", value: a.nome });
           if (a.turma) identFields.push({ label: "Turma", value: a.turma });
           if (escola?.name) identFields.push({ label: "Escola", value: escola.name });
-          identFields.push({ label: "Período avaliado", value: `${bimestreNum}º bimestre` });
+          identFields.push({ label: "Período avaliado", value: resolvePeriodoAluno(a.id, a.turma).tituloLower });
           if (user.name) identFields.push({ label: "Professor(a)", value: user.name });
           if (a.pcd) identFields.push({ label: "PCD", value: a.pcd });
 
@@ -2774,7 +2785,7 @@ ${parecerHtml}
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
-          link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${bimestreNum}bim.doc`;
+          link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${resolvePeriodoAluno(a.id, a.turma).tituloLower.replace(/[^0-9a-zA-Z]+/g, "")}.doc`;
           document.body.appendChild(link); link.click(); document.body.removeChild(link);
           setTimeout(() => URL.revokeObjectURL(url), 1500);
           toast.success("Documento Word exportado.");
@@ -2787,7 +2798,7 @@ ${parecerHtml}
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: headerColor, marginBottom: 4 }}>{titulo}</div>
                   <h3 style={{ margin: 0 }}>{a.nome}</h3>
                   <div className="rel-modal-meta" style={{ marginBottom: 0 }}>
-                    {a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · PCD: ${a.pcd}` : ""}
+                    {a.turma || "Sem turma"} · {resolvePeriodoAluno(a.id, a.turma).tituloLower}{a.pcd ? ` · PCD: ${a.pcd}` : ""}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -2804,12 +2815,12 @@ ${parecerHtml}
               <div style={{ marginTop: 14 }} className="rel-modal-body">
                 <p style={{ margin: 0 }}>{descricao}</p>
                 {(() => {
-                  const { pctPreenchido, pctDesempenho } = computeProgress(a.id, a.turma, a.pcd);
+                  const { pctPreenchido, resumo } = computeProgress(a.id, a.turma, a.pcd);
                   return (
                     <div style={{ marginTop: 14 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
-                        <span>Avaliação BNCC</span>
-                        <span>{pctPreenchido}% avaliado · Desempenho {pctDesempenho}%</span>
+                        <span>{isEiAluno(a.turma, a.id) ? "Avaliação dos campos de experiência" : "Avaliação BNCC"}</span>
+                        <span>{pctPreenchido}% avaliado · {resumo}</span>
                       </div>
                       <div className="rel-progress" style={{ marginTop: 6 }}><i style={{ width: `${pctPreenchido}%` }} /></div>
                     </div>
@@ -3014,7 +3025,7 @@ ${parecerHtml}
                             const url = URL.createObjectURL(blob);
                             const link = document.createElement("a");
                             link.href = url;
-                            link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${bimestreNum}bim.txt`;
+                            link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${resolvePeriodoAluno(a.id, a.turma).tituloLower.replace(/[^0-9a-zA-Z]+/g, "")}.txt`;
                             document.body.appendChild(link); link.click(); document.body.removeChild(link);
                             setTimeout(() => URL.revokeObjectURL(url), 1500);
                             toast.success("Texto do parecer salvo.");
@@ -3151,7 +3162,7 @@ ${parecerHtml}
                 <li><b>Gere o parecer com a Sofia</b>: ela usa anamnese, registros, PEI e a rubrica BNCC para escrever um rascunho.</li>
                 <li><b>Revise e finalize</b>: edite o texto, salve em PDF/Word ou imprima quando estiver pronto.</li>
                 <li><b>Acompanhe o progresso</b> nos KPIs do topo (a fazer, rascunho, finalizados e tempo economizado).</li>
-                <li><b>Filtre</b> por status, turma, bimestre ou apenas alunos PCD usando os filtros acima da lista.</li>
+                <li><b>Filtre</b> por status, turma, período ou apenas alunos PCD usando os filtros acima da lista.</li>
               </ol>
               <p style={{ marginTop: 14, fontSize: 12, color: "var(--muted)" }}>Dica: clique em qualquer card de aluno (ou em um(a) aluno(a) finalizado(a) abaixo) para abrir as ações específicas daquele status.</p>
             </div>
@@ -3167,7 +3178,7 @@ ${parecerHtml}
 
       {statusModal && (() => {
         const labelMap: Record<"todo" | "draft" | "done", { title: string; eyebrow: string; desc: string }> = {
-          todo:  { title: "Alunos a fazer",      eyebrow: "A FAZER",      desc: "Estes alunos ainda não tiveram a BNCC avaliada neste bimestre." },
+          todo:  { title: "Alunos a fazer",      eyebrow: "A FAZER",      desc: "Estes alunos ainda não tiveram a BNCC avaliada neste período." },
           draft: { title: "Pareceres em rascunho", eyebrow: "EM RASCUNHO", desc: "Avaliações iniciadas que ainda não foram concluídas." },
           done:  { title: "Pareceres finalizados", eyebrow: "FINALIZADOS", desc: "Pareceres já gerados — clique para revisar e exportar." },
         };

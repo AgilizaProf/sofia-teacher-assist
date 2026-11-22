@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { getPlanoAtual, cancelarAssinatura, type PlanoAtualDTO } from "@/lib/plano.functions";
 import { trackEvent } from "@/lib/tracking";
 import { ehCortesia } from "@/lib/creditos/useCreditos";
-import { CREDITOS_MENSAIS, PROMO_ATE_TEXTO } from "@/lib/creditos/policy";
+import { CREDITOS_MENSAIS, PROMO_ATE_ISO, PROMO_ATE_TEXTO } from "@/lib/creditos/policy";
 
 function fmtData(iso: string | null): string {
   if (!iso) return "—";
@@ -128,7 +128,7 @@ export function PlanoCard() {
       </div>
       <p style={{ color: MUTED, fontSize: 13, margin: "0 0 18px" }}>
         {data && ehCortesia(data)
-          ? `Você está na promoção: tudo liberado e grátis até ${PROMO_ATE_TEXTO}. Nada é cobrado sem você escolher.`
+          ? "Você está no período grátis, com tudo liberado. Nada é cobrado sem você escolher."
           : "Assine, troque de ciclo ou cancele a qualquer momento. Pagamento processado pelo Mercado Pago."}
       </p>
 
@@ -161,7 +161,7 @@ function PlanoBody({
   const isMpActive = isPro && data.source === "mercadopago" && data.status === "active";
   const isMpCanceled = isPro && data.source === "mercadopago" && data.status !== "active";
   const isAdminGrant = isPro && data.source === "admin_grant";
-  // Promoção "grátis até 12/03/2027" (N4): sem checkout nem oferta de compra
+  // Promoção "grátis até 13/03/2027" (N4): sem checkout nem oferta de compra
   // enquanto a cortesia vale, mesmo que o servidor mande pode_assinar_*.
   const cortesiaAtiva = ehCortesia(data);
   const podeAssinarMensal = data.pode_assinar_mensal && !cortesiaAtiva;
@@ -183,7 +183,7 @@ function PlanoBody({
     : isMpCanceled
       ? "Acesso até"
       : isAdminGrant
-        ? "Cortesia até"
+        ? "Grátis até"
         : "—";
   const terminoData = data.current_period_end ? fmtData(data.current_period_end) : "—";
 
@@ -205,11 +205,20 @@ function PlanoBody({
       ? `Você mantém o Pro até ${fmtData(data.current_period_end)}. Depois disso, volta para o Free.`
       : "Assinatura cancelada.";
   } else if (cortesiaAtiva) {
-    label = `Grátis até ${PROMO_ATE_TEXTO}`;
+    // Uma regra só: grátis até o fim da promoção (ou 14 dias para quem chega
+    // depois). Indicações podem estender a data: isso aparece como bônus.
+    const fimPromo = new Date(PROMO_ATE_ISO).getTime();
+    const fim = data.current_period_end ? new Date(data.current_period_end).getTime() : NaN;
+    const comBonus = !isNaN(fim) && fim - fimPromo > 2 * 86400000;
+    const dentroDaPromo = Date.now() <= fimPromo;
+    label = comBonus || !dentroDaPromo
+      ? `Grátis até ${fmtData(data.current_period_end!)}`
+      : `Grátis até ${PROMO_ATE_TEXTO}`;
     labelStyle = pill("#E8F6EF", "#064E36");
-    descricao = data.current_period_end
-      ? `Tudo liberado, com ${CREDITOS_MENSAIS.toLocaleString("pt-BR")} créditos por mês, até ${fmtData(data.current_period_end)}. Você não paga nada e não precisa escolher plano agora.`
-      : `Tudo liberado, com ${CREDITOS_MENSAIS.toLocaleString("pt-BR")} créditos por mês. Você não paga nada e não precisa escolher plano agora.`;
+    const creditos = `${CREDITOS_MENSAIS.toLocaleString("pt-BR")} créditos por mês`;
+    descricao = comBonus && dentroDaPromo
+      ? `Tudo liberado, com ${creditos}. A promoção vai até ${PROMO_ATE_TEXTO} e, com o bônus das suas indicações, o seu acesso grátis vai até ${fmtData(data.current_period_end!)}. Nada é cobrado sem você escolher.`
+      : `Tudo liberado, com ${creditos}. Você não paga nada e não precisa escolher plano agora.`;
   } else if (isAdminGrant) {
     label = "Pro · Cortesia";
     labelStyle = pill("#E8F6EF", "#064E36");

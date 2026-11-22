@@ -18,3 +18,14 @@ describe("colar lista de alunos", () => {
     expect(r.repetidos).toEqual(["Ana Souza"]);
   });
 });
+
+import { nomeProprio } from "./colarLista";
+describe("nomeProprio", () => {
+  it("arruma nomes todos em maiúsculas ou minúsculas", () => {
+    expect(nomeProprio("ANA DA SILVA")).toBe("Ana da Silva");
+    expect(nomeProprio("joão  dos santos")).toBe("João dos Santos");
+  });
+  it("respeita o que já está escrito certo", () => {
+    expect(nomeProprio("Maria McDonald")).toBe("Maria McDonald");
+  });
+});

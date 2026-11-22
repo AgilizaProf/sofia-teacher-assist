@@ -7,6 +7,7 @@ import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
 import { shouldShowOnboarding } from "@/lib/onboarding";
 import { PencilLogo } from "@/components/painel/PainelNav";
 import { trackEvent } from "@/lib/tracking";
+import { textoGratis } from "@/lib/creditos/policy";
 
 async function postLoginRoute(): Promise<"/" | "/onboarding"> {
   try {
@@ -35,6 +36,16 @@ export function AuthPage() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  // Botões "Cadastrar grátis" da landing chegam com ?modo=cadastro.
+  useEffect(() => {
+    try {
+      const modo = new URLSearchParams(window.location.search).get("modo");
+      if (modo === "cadastro" || modo === "cadastrar" || modo === "register") setMode("register");
+    } catch {
+      /* sem URL: fica em Entrar */
+    }
+  }, []);
 
   useEffect(() => {
     captureReferralFromUrl();
@@ -199,7 +210,7 @@ export function AuthPage() {
 
             <h2 className="form-title">{mode === "login" ? "Bem-vindo(a) de volta" : "Comece grátis hoje"}</h2>
             <p className="form-sub">
-              {mode === "login" ? "Entre para continuar economizando seu tempo." : <><strong>14 dias com tudo liberado.</strong> Sem cartão de crédito. Sem pegadinha.</>}
+              {mode === "login" ? "Entre para continuar economizando seu tempo." : <><strong>{textoGratis()}</strong> Sem cartão de crédito. Sem pegadinha.</>}
             </p>
 
             {popupBlocked && (
@@ -255,6 +266,7 @@ export function AuthPage() {
                 )}
               </div>
 
+              {mode === "login" && (
               <div className="row">
                 <div className="checkbox-wrap">
                   <input type="checkbox" id="remember" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
@@ -262,6 +274,7 @@ export function AuthPage() {
                 </div>
                 <button type="button" className="forgot-link" onClick={() => { setForgotEmail(email); setForgotOpen(true); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Esqueci minha senha</button>
               </div>
+              )}
 
               <button type="submit" className="cta" disabled={loading}>
                 <span>{loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar minha conta grátis"}</span>
@@ -279,9 +292,9 @@ export function AuthPage() {
             )}
 
             <div className="trust-row">
-              <span className="trust-item"><span className="ic">🔒</span>100% LGPD</span>
+              <span className="trust-item"><span className="ic">🔒</span>De acordo com a LGPD</span>
               <span className="trust-item"><span className="ic">🛡️</span>Dados criptografados</span>
-              <span className="trust-item"><span className="ic">🇧🇷</span>Servidor no Brasil</span>
+              <span className="trust-item"><span className="ic">🇧🇷</span>Feito para a escola brasileira</span>
             </div>
 
             <p className="legal">
