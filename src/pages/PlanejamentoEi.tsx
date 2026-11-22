@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
-import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
-import { ArrowLeft, Sparkles, Save, Loader2, FileText, RefreshCw, Trash2 } from "lucide-react";
+import { Sparkles, Save, Loader2, FileText, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FolhasSugeridas } from "@/components/cadernos/FolhasSugeridas";
@@ -79,7 +76,8 @@ const empty: Roteiro = {
   adaptacoes_pcd: "",
 };
 
-export function PlanejamentoEi({ embutido = false }: { embutido?: boolean } = {}) {
+/** Roteiro de experiência da Educação Infantil, mostrado dentro do Planejamento. */
+export function PlanejamentoEi(_props: { embutido?: boolean } = {}) {
   const [students] = usePersistentState<Student[]>("inc_students", []);
   const { curriculos } = useCurriculoMunicipal();
   const curriculoPadrao = useMemo(
@@ -251,17 +249,9 @@ export function PlanejamentoEi({ embutido = false }: { embutido?: boolean } = {}
   };
 
   return (
-    <div className={embutido ? "ei-root ei-embutido" : "pn ei-root"}>
-      <style>{(embutido ? "" : painelTokensCss + tempoChipCss) + eiCss}</style>
-      {!embutido && <PainelNav />}
+    <div className="ei-root ei-embutido">
+      <style>{eiCss}</style>
       <main className="ei-main">
-        {!embutido && (
-          <>
-            <div className="pn-strip"><TempoChip /></div>
-            <Link to="/planejamento" className="ei-voltar"><ArrowLeft size={16} /> Planejamento</Link>
-            <h1 className="ei-title">Educação Infantil</h1>
-          </>
-        )}
         <p className="ei-sub">A Sofia cria um roteiro de experiência para Creche e Pré-escola, com Campos de Experiência e direitos de aprendizagem.</p>
 
         <section className="ei-card">

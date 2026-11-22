@@ -1302,6 +1302,7 @@ export function Planejamento() {
     tag?: string;
     turma?: string;
     aluno?: string;
+    ei?: "1";
   };
   const navigate = useNavigate({ from: "/planejamento" });
   const isEi = useEiMode();
@@ -1309,7 +1310,7 @@ export function Planejamento() {
   // página. Abre sozinho quando a professora escolhe uma turma ou ano da
   // Educação Infantil; se ela voltar ao plano comum, só reabre depois que a
   // etapa sair da Educação Infantil e voltar.
-  const [eiInline, setEiInline] = useState(false);
+  const [eiInline, setEiInline] = useState(search.ei === "1");
   const eiDispensado = useRef(false);
   const aoMudarEtapaEi = useCallback((ei: boolean) => {
     if (!ei) { eiDispensado.current = false; return; }
@@ -3523,7 +3524,7 @@ export function Planejamento() {
             {isEi && (
               <div className="pl-ei-note">
                 🌱 <strong>Modo Educação Infantil ativo.</strong> Para roteiros com Campos de Experiência, abra o{" "}
-                <Link to="/planejamento/ei">Roteiro EI →</Link>
+                <button type="button" className="pl-ei-btn" onClick={abrirRoteiroEi}>Roteiro EI</button>
               </div>
             )}
 

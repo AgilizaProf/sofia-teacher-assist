@@ -1,14 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PlanejamentoEi } from "@/pages/PlanejamentoEi";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// A página separada da Educação Infantil saiu: o roteiro por Campos de
+// Experiência agora abre dentro do Planejamento. Links antigos e favoritos
+// caem direto nele.
 export const Route = createFileRoute("/planejamento/ei")({
-  head: () => ({
-    meta: [
-      { title: "Roteiro de Experiência · Educação Infantil — AgilizaProf" },
-      { name: "description", content: "Sofia cria roteiros de experiência para Creche e Pré-escola com Campos de Experiência, direitos de aprendizagem e adaptação por faixa etária." },
-      { property: "og:title", content: "Educação Infantil · Roteiro de Experiência" },
-      { property: "og:description", content: "Sem habilidades BNCC do Fundamental — Campos de Experiência e marcos de desenvolvimento, do jeito certo." },
-    ],
-  }),
-  component: PlanejamentoEi,
+  beforeLoad: () => {
+    throw redirect({ to: "/planejamento", search: { m: "atv", ei: "1" } as never });
+  },
 });
