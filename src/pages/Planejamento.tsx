@@ -1,4 +1,5 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { rotuloDataRegistro } from "@/lib/diario/rotuloData";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
@@ -2344,7 +2345,7 @@ export function Planejamento() {
   }, [m1Plan, m1Week.days.map((d) => d.iso).join(","), hydrated]);
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
-  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string; alunoIds?: string[] };
+  type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; criadoEm?: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string; alunoIds?: string[] };
   const M6_TAGS = ["+ funcionou", "- precisa reforço", "+ inclusão", "+ família"] as const;
   const M6_EMOJIS = ["😣", "😐", "🙂", "😄", "🌟"] as const;
   // Sugestões rápidas de observação por humor — clique adiciona ao textarea.
@@ -2970,6 +2971,7 @@ export function Planejamento() {
   text: trimmed,
   tags: [...m6Tags],
   date: `Hoje · ${now}`,
+  criadoEm: new Date().toISOString(),
   turma: turmaAtual,
   atividadeId: m6AtividadeId || undefined,
   atividadeTitulo: atividadeRef?.titulo,
@@ -4878,7 +4880,7 @@ export function Planejamento() {
                           style={{ cursor: "pointer", ...(m6EditingId === e.id ? { borderColor: "var(--orange)", background: "var(--orange-soft)" } : null) }}
                         >
                           <div className="head" style={{ justifyContent: "space-between" }}>
-                            <span>{e.date}</span>
+                            <span suppressHydrationWarning>{rotuloDataRegistro(e)}</span>
                             <span style={{ display: "flex", gap: 6 }} onClick={(ev) => ev.stopPropagation()}>
                               <button onClick={() => m6StartEdit(e)} title="Editar" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 8px", fontSize: 11, fontWeight: 600, color: "var(--ink)", cursor: "pointer" }}>Editar</button>
                               <button onClick={() => m6DeleteEntry(e.id)} title="Excluir" aria-label="Excluir" style={{ background: "transparent", border: "1px solid var(--line)", borderRadius: 6, padding: "3px 6px", color: "#b91c1c", cursor: "pointer", display: "inline-flex", alignItems: "center" }}><X size={12} /></button>

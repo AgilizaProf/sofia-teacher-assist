@@ -1,4 +1,5 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { nomeProprio } from "@/lib/alunos/colarLista";
 import { fraseLegalInclusao, leisCurtoInclusao } from "@/lib/inclusao/leisInclusao";
 import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from "react";
 import { AlunoCard } from "@/components/inclusao/AlunoCard";
@@ -2025,7 +2026,7 @@ ${ident}
   const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (savingStudent) return;
-    const name = nsName.trim();
+    const name = nomeProprio(nsName);
     if (!name) return;
     const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
     const turmaNorm = norm(nsTurma.trim() || "Sem turma");

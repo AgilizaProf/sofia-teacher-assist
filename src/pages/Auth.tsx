@@ -37,6 +37,16 @@ export function AuthPage() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
+  // Botões "Cadastrar grátis" da landing chegam com ?modo=cadastro.
+  useEffect(() => {
+    try {
+      const modo = new URLSearchParams(window.location.search).get("modo");
+      if (modo === "cadastro" || modo === "cadastrar" || modo === "register") setMode("register");
+    } catch {
+      /* sem URL: fica em Entrar */
+    }
+  }, []);
+
   useEffect(() => {
     captureReferralFromUrl();
     supabase.auth.getSession().then(async ({ data }) => {
@@ -256,6 +266,7 @@ export function AuthPage() {
                 )}
               </div>
 
+              {mode === "login" && (
               <div className="row">
                 <div className="checkbox-wrap">
                   <input type="checkbox" id="remember" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
@@ -263,6 +274,7 @@ export function AuthPage() {
                 </div>
                 <button type="button" className="forgot-link" onClick={() => { setForgotEmail(email); setForgotOpen(true); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Esqueci minha senha</button>
               </div>
+              )}
 
               <button type="submit" className="cta" disabled={loading}>
                 <span>{loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar minha conta grátis"}</span>
@@ -280,9 +292,9 @@ export function AuthPage() {
             )}
 
             <div className="trust-row">
-              <span className="trust-item"><span className="ic">🔒</span>100% LGPD</span>
+              <span className="trust-item"><span className="ic">🔒</span>De acordo com a LGPD</span>
               <span className="trust-item"><span className="ic">🛡️</span>Dados criptografados</span>
-              <span className="trust-item"><span className="ic">🇧🇷</span>Servidor no Brasil</span>
+              <span className="trust-item"><span className="ic">🇧🇷</span>Feito para a escola brasileira</span>
             </div>
 
             <p className="legal">

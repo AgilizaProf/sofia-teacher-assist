@@ -70,8 +70,9 @@ Turma: ${turma || "—"} | Ano escolar: ${ano || "—"} | Disciplina: ${discipli
 Semestre: ${semestre} | Duração: ~20 semanas
 Contexto adicional: ${contexto || "(nenhum)"}
 ${usandoMunicipal ? `\nCURRÍCULO MUNICIPAL DE ${curriculo_municipal!.municipio} — use ESTES códigos (não BNCC):\n${habMunicipaisTexto}\n` : ""}${listaOficial}
+REGRA DOS TÍTULOS: escreva títulos claros, que a professora entende de primeira e pode ler para a turma ou mostrar à coordenação. Diga o assunto de verdade (ex.: "Frações no dia a dia", "Os animais do nosso bairro"). Até 6 palavras. Nada de trocadilhos, palavras inventadas, siglas, códigos ou emojis no título.
 Gere:
-1) TEMA CENTRAL (título criativo + justificativa pedagógica curta).
+1) TEMA CENTRAL (título claro + justificativa pedagógica curta).
 2) DISTRIBUIÇÃO MENSAL (4 meses): subtema, 3 a 4 habilidades ${usandoMunicipal ? `do currículo municipal de ${curriculo_municipal!.municipio}` : "BNCC"} (código + descrição), foco, conexão anterior/próxima.
 3) DISTRIBUIÇÃO SEMANAL (20 semanas): título, habilidades_foco (códigos ${usandoMunicipal ? "municipais" : "BNCC"}), tipo_atividade, conecta_anterior, prepara_proxima.
 
@@ -90,8 +91,9 @@ Contexto adicional: ${contexto || "(nenhum)"}
 
 IMPORTANTE: Esta é uma turma de Educação Infantil. Use EXCLUSIVAMENTE os Campos de Experiência da BNCC e códigos EI0X__## (Objetivos de Aprendizagem e Desenvolvimento). Em "campo_experiencia" use um dos 5 campos oficiais. Em "habilidades_bncc"/"habilidades_foco" use APENAS códigos no formato EI0XYZ00A. NÃO use componentes/disciplinas do Ensino Fundamental.
 ${listaOficial}
+REGRA DOS TÍTULOS: escreva títulos claros, que a professora entende de primeira e pode ler para a turma ou mostrar à coordenação. Diga o assunto de verdade (ex.: "Frações no dia a dia", "Os animais do nosso bairro"). Até 6 palavras. Nada de trocadilhos, palavras inventadas, siglas, códigos ou emojis no título.
 Gere:
-1) TEMA CENTRAL (título criativo + justificativa pedagógica curta, com foco em interações e brincadeiras).
+1) TEMA CENTRAL (título claro + justificativa pedagógica curta, com foco em interações e brincadeiras).
 2) DISTRIBUIÇÃO MENSAL (4 meses): subtema, campo_experiencia principal, 3 a 4 objetivos BNCC EI (código EI… + descrição), foco (interações/brincadeiras), conexão anterior/próxima.
 3) DISTRIBUIÇÃO SEMANAL (20 semanas): título, campo_experiencia, habilidades_foco (códigos EI…), tipo_atividade (brincadeira/exploração/roda/etc.), conecta_anterior, prepara_proxima.
 

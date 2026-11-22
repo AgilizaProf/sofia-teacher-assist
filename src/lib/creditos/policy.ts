@@ -242,6 +242,7 @@ export function categoriaDoLancamento(descricao: string, tipo?: string | null): 
 /** Fim da promoção "grátis até 13/03/2027" (mesma data da migration). */
 export const PROMO_ATE_ISO = "2027-03-13T23:59:59-03:00";
 export const PROMO_ATE_TEXTO = "13/03/2027";
+export const PROMO_ATE_EXTENSO = "13 de março de 2027";
 
 /** Dias de teste grátis do Pro para quem se cadastra depois da promoção. */
 export const TESTE_GRATIS_DIAS = 14;
@@ -252,6 +253,6 @@ export const TESTE_GRATIS_DIAS = 14;
  */
 export function textoGratis(now: Date = new Date()): string {
   return now.getTime() <= new Date(PROMO_ATE_ISO).getTime()
-    ? `Grátis até ${PROMO_ATE_TEXTO}, com tudo liberado.`
+    ? `Grátis até ${PROMO_ATE_EXTENSO}, com tudo liberado.`
     : `${TESTE_GRATIS_DIAS} dias grátis com tudo liberado.`;
 }

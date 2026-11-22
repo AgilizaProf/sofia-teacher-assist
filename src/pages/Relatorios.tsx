@@ -1,4 +1,5 @@
 import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { nomeProprio } from "@/lib/alunos/colarLista";
 import { ColarAlunos } from "@/components/shared/ColarAlunos";
 import { peiPdiPorAluno, resumoPeiPdi, type LinhaPeiPdi } from "@/lib/pei/resumoPeiPdi";
 import {
@@ -724,7 +725,7 @@ export function Relatorios() {
     setEditAluno(null);
   };
   const salvarNovoAluno = () => {
-    const nome = novoAluno.name.trim();
+    const nome = nomeProprio(novoAluno.name);
     if (!nome) { toast.error("Informe o nome do(a) aluno(a)."); return; }
     if (editAluno) {
       if (editAluno.id.startsWith("db:")) {
