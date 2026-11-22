@@ -1,19 +1,35 @@
-// Abre a foto da folha no navegador e devolve os tons de cinza para a leitura.
+// Abre a foto da folha no navegador e entrega os tons de cinza para a leitura.
 // A foto fica só na memória da aba: não é enviada nem guardada.
-import type { Imagem } from "./folha";
+import type { Caixa, FonteDaFoto, Imagem } from "./folha";
 
-export async function fotoParaImagem(arquivo: Blob, maxLado = 1700): Promise<Imagem> {
+/**
+ * Abre a foto. Devolve um jeito de pegar a foto inteira reduzida ou só um
+ * pedaço dela com todo o detalhe (para a folha fotografada de longe).
+ * Chame `fechar` ao terminar.
+ */
+export async function abrirFoto(arquivo: Blob): Promise<FonteDaFoto & { fechar: () => void }> {
   const url = URL.createObjectURL(arquivo);
+  let img: HTMLImageElement;
   try {
-    const img = await new Promise<HTMLImageElement>((ok, erro) => {
+    img = await new Promise<HTMLImageElement>((ok, erro) => {
       const el = new Image();
       el.onload = () => ok(el);
       el.onerror = () => erro(new Error("Não consegui abrir esta foto."));
       el.src = url;
     });
-    const escala = Math.min(1, maxLado / Math.max(img.naturalWidth, img.naturalHeight));
-    const w = Math.max(1, Math.round(img.naturalWidth * escala));
-    const h = Math.max(1, Math.round(img.naturalHeight * escala));
+  } catch (e) {
+    URL.revokeObjectURL(url);
+    throw e;
+  }
+  const W = img.naturalWidth;
+  const H = img.naturalHeight;
+  const pegar = (recorte: Caixa | null, maxLado: number): Imagem => {
+    const r = recorte ?? { x0: 0, y0: 0, x1: W, y1: H };
+    const rw = Math.max(1, r.x1 - r.x0);
+    const rh = Math.max(1, r.y1 - r.y0);
+    const escala = Math.min(1, maxLado / Math.max(rw, rh));
+    const w = Math.max(1, Math.round(rw * escala));
+    const h = Math.max(1, Math.round(rh * escala));
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
@@ -21,7 +37,8 @@ export async function fotoParaImagem(arquivo: Blob, maxLado = 1700): Promise<Ima
     if (!ctx) throw new Error("Não consegui preparar a foto.");
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, w, h);
-    ctx.drawImage(img, 0, 0, w, h);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, r.x0, r.y0, rw, rh, 0, 0, w, h);
     const rgba = ctx.getImageData(0, 0, w, h).data;
     const cinza = new Uint8Array(w * h);
     for (let i = 0, j = 0; j < cinza.length; i += 4, j++)
@@ -30,7 +47,6 @@ export async function fotoParaImagem(arquivo: Blob, maxLado = 1700): Promise<Ima
     canvas.width = 1;
     canvas.height = 1;
     return { cinza, w, h };
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+  };
+  return { w: W, h: H, pegar, fechar: () => URL.revokeObjectURL(url) };
 }

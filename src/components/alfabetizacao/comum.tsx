@@ -75,6 +75,7 @@ export function Seta({ antes, agora }: { antes: number; agora: number }) {
 }
 
 export const alfaCss = `
+html{scrollbar-gutter:stable;}
 .af{min-height:100dvh;padding-bottom:110px;}
 .af *{box-sizing:border-box;}
 .af-wrap{max-width:1180px;margin:0 auto;padding:22px 24px 0;}
@@ -83,8 +84,6 @@ export const alfaCss = `
 .af-eyebrow svg{width:15px;height:15px;}
 .af-title{margin:12px 0 6px;font-family:var(--pn-display);font-weight:800;font-size:36px;letter-spacing:-.045em;line-height:1.04;}
 .af-sub{margin:0;color:var(--pn-muted);font-size:15.5px;line-height:1.5;max-width:66ch;}
-.af.foco .af-sub{display:none;}
-.af.foco .af-title{font-size:24px;}
 .af-tabs{display:inline-flex;gap:4px;flex-wrap:wrap;margin:18px 0 14px;padding:5px;border-radius:16px;background:var(--pn-surface);border:1.5px solid var(--pn-line);max-width:100%;}
 .af-tabs button{height:40px;padding:0 16px;border-radius:11px;border:0;background:transparent;font-family:inherit;font-weight:700;font-size:14.5px;color:var(--pn-muted);cursor:pointer;}
 .af-tabs button:hover{color:var(--pn-ink);background:var(--pn-bg);}
@@ -215,7 +214,6 @@ export const alfaCss = `
   .af-wrap{padding:14px 14px 0;}
   .af-title{font-size:26px;margin:10px 0 6px;}
   .af-sub{font-size:14.5px;}
-  .af.foco .af-title{font-size:20px;}
   .af-g2{grid-template-columns:1fr;}
   .af-card{padding:14px;border-radius:14px;}
   .af-card.forte{border-radius:18px;}

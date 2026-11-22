@@ -14,12 +14,15 @@ import {
   decidirLinha,
   lerBitsDaFaixa,
   lerFolha,
+  lerFolhaNaFoto,
   novoCodigo,
   paginasDaFolha,
   projecaoDe4,
   projetar,
   yDaLinha,
+  type Caixa,
   type FolhaSondagem,
+  type FonteDaFoto,
   type Imagem,
 } from "./folha";
 import { htmlFolha } from "./folhaImprimir";
@@ -41,6 +44,8 @@ type Cena = {
   sombra?: number;
   /** Foto fora de foco: raio do borrão, em pontos. */
   borrao?: number;
+  /** Coisas em cima da mesa: [x, y, largura, altura, tom]. */
+  objetos?: Array<[number, number, number, number, number]>;
 };
 
 function sorteio(semente: number) {
@@ -132,8 +137,12 @@ function fotografar(c: Cena): Imagem {
       let soma = 0;
       for (let s = 0; s < 4; s++) {
         const [x, y] = projetar(inv, px + 0.25 + (s % 2) * 0.5, py + 0.25 + (s >> 1) * 0.5);
-        if (x < 0 || y < 0 || x > FOLHA_L || y > FOLHA_A) soma += mesa;
-        else soma += 232 - 205 * tinta(x, y, c, bits, ruidoQr);
+        if (x < 0 || y < 0 || x > FOLHA_L || y > FOLHA_A) {
+          const o = c.objetos?.find(
+            (q) => px >= q[0] && px < q[0] + q[2] && py >= q[1] && py < q[1] + q[3],
+          );
+          soma += o ? o[4] : mesa;
+        } else soma += 232 - 205 * tinta(x, y, c, bits, ruidoQr);
       }
       let v = soma / 4;
       if (c.sombra) v *= c.sombra + (1 - c.sombra) * (px / w) * (0.6 + (0.4 * py) / h);
@@ -237,8 +246,9 @@ describe("folha da turma: impressão", () => {
     expect(paginas[0]).toContain("Página 1 de 2");
     expect(paginas[1]).toContain("Aluno 28");
     expect(html).toContain("Folha 4F2A");
+    expect(html).toContain("Agiliza<b>Prof</b>"); // leva a marca do app
     expect(html).toContain("2º ano &lt;A&gt;"); // nome da turma não vira HTML
-    expect(html.match(/<svg /g)).toHaveLength(2); // um QR code por página
+    expect(html.match(/class="qr"/g)).toHaveLength(2); // um QR code por página
     // cada página leva a sua própria faixa (a página muda os quadradinhos pretos)
     const pretos = (p: string) => (p.match(/class="pt"/g) || []).length;
     expect(pretos(paginas[0])).toBe(4 + bitsDaFaixa(0x4f2a, 0).filter(Boolean).length);
@@ -400,7 +410,7 @@ describe("folha da turma: leitura da foto", () => {
     });
     const r = lerFolha(img, (cod) => (cod === 0x4f2a ? 10 : null));
     expect(r.ok && r.linhas).toHaveLength(10);
-    expect(lerFolha(img, () => null)).toEqual({ ok: false, motivo: "sem_codigo" });
+    expect(lerFolha(img, () => null)).toMatchObject({ ok: false, motivo: "sem_codigo" });
   });
 
   it("duas marcas na mesma linha pedem conferência", () => {
@@ -423,6 +433,122 @@ describe("folha da turma: leitura da foto", () => {
 
   it("foto que não é da folha", () => {
     const cinza = new Uint8Array(600 * 800).fill(200);
-    expect(lerFolha({ cinza, w: 600, h: 800 })).toEqual({ ok: false, motivo: "sem_cantos" });
+    expect(lerFolha({ cinza, w: 600, h: 800 })).toMatchObject({ ok: false, motivo: "sem_cantos" });
+  });
+});
+
+// ───────── foto tirada de longe ─────────
+
+/** Faz de conta que `img` é a foto original do celular: entrega inteira ou recortada, reduzida. */
+function fonteDe(img: Imagem, pedidos: Array<Caixa | null> = []): FonteDaFoto {
+  return {
+    w: img.w,
+    h: img.h,
+    pegar(recorte, maxLado) {
+      pedidos.push(recorte);
+      const r = recorte ?? { x0: 0, y0: 0, x1: img.w, y1: img.h };
+      const rw = r.x1 - r.x0;
+      const rh = r.y1 - r.y0;
+      const e = Math.min(1, maxLado / Math.max(rw, rh));
+      const w = Math.max(1, Math.round(rw * e));
+      const h = Math.max(1, Math.round(rh * e));
+      const cinza = new Uint8Array(w * h);
+      for (let y = 0; y < h; y++) {
+        const ya = r.y0 + Math.floor(y / e);
+        const yb = Math.max(ya + 1, r.y0 + Math.floor((y + 1) / e));
+        for (let x = 0; x < w; x++) {
+          const xa = r.x0 + Math.floor(x / e);
+          const xb = Math.max(xa + 1, r.x0 + Math.floor((x + 1) / e));
+          let soma = 0;
+          let n = 0;
+          for (let j = ya; j < yb && j < img.h; j++)
+            for (let i = xa; i < xb && i < img.w; i++) {
+              soma += img.cinza[j * img.w + i];
+              n++;
+            }
+          cinza[y * w + x] = n ? soma / n : 255;
+        }
+      }
+      return { cinza, w, h };
+    },
+  };
+}
+
+describe("folha da turma: foto tirada de longe", () => {
+  // a folha ocupa só um pedaço da foto, em cima de uma mesa com outras coisas
+  const longe = fotografar({
+    cod: 0x4f2a,
+    marcas: MARCAS,
+    w: 2600,
+    h: 1950,
+    mesa: 95,
+    sombra: 0.7,
+    cantosDaFolha: [
+      [1480, 560],
+      [2090, 590],
+      [2060, 1470],
+      [1440, 1430],
+    ],
+    objetos: [
+      [200, 300, 420, 300, 30], // um caderno escuro
+      [300, 1200, 60, 60, 20], // quadradinhos pretos soltos
+      [520, 1210, 58, 58, 20],
+      [310, 1500, 60, 62, 20],
+      [900, 200, 40, 40, 25],
+      [1000, 900, 300, 500, 215], // outra folha, em branco
+      [2300, 150, 46, 44, 15],
+    ],
+  });
+
+  it("procura a folha no meio da foto e lê de perto no recorte", () => {
+    const pedidos: Array<Caixa | null> = [];
+    const r = lerFolhaNaFoto(fonteDe(longe, pedidos));
+    expect(r.ok && r.cod).toBe(0x4f2a);
+    expect(niveis(r)).toEqual(ESPERADO);
+    // primeiro a foto inteira, depois só o pedaço onde a folha está
+    expect(pedidos[0]).toBeNull();
+    const rec = pedidos[pedidos.length - 1]!;
+    expect(rec.x0).toBeGreaterThan(1200);
+    expect(rec.x0).toBeLessThan(1480);
+    expect(rec.x1).toBeGreaterThan(2090);
+    expect(rec.y0).toBeLessThan(560);
+    expect(rec.y1).toBeGreaterThan(1470);
+  });
+
+  it("foto de perto continua com uma leitura só", () => {
+    const perto = fotografar({
+      cod: 0x4f2a,
+      marcas: MARCAS,
+      w: 900,
+      h: 1250,
+      cantosDaFolha: [
+        [30, 25],
+        [870, 25],
+        [870, 1213],
+        [30, 1213],
+      ],
+    });
+    const pedidos: Array<Caixa | null> = [];
+    expect(niveis(lerFolhaNaFoto(fonteDe(perto, pedidos)))).toEqual(ESPERADO);
+    expect(pedidos).toEqual([null]);
+  });
+
+  it("folha longe demais para ver a caneta: não inventa, pede para conferir ou recusa", () => {
+    const minuscula = fotografar({
+      cod: 0x4f2a,
+      marcas: MARCAS,
+      w: 1400,
+      h: 1000,
+      mesa: 90,
+      cantosDaFolha: [
+        [600, 300],
+        [800, 300],
+        [800, 583],
+        [600, 583],
+      ],
+    });
+    const r = lerFolhaNaFoto(fonteDe(minuscula));
+    if (r.ok) expect(r.linhas.filter((l) => l.nivel && !l.duvida)).toEqual([]);
+    else expect(["sem_cantos", "sem_codigo"]).toContain(r.motivo);
   });
 });
