@@ -1605,6 +1605,9 @@ export function Planejamento() {
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
+  // Da sexta à tarde em diante, a professora já está planejando a semana que vem:
+  // a tela abre na próxima semana (ela volta com a seta ou com "Hoje").
+  const abriuSemanaRef = useRef(false);
   const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   // SSR roda em UTC; o cliente roda no fuso local. Calcular `new Date()` em
   // ambos pode produzir HTML diferente (mês/dia trocado em torno da meia-noite
@@ -1636,6 +1639,13 @@ export function Planejamento() {
     const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
     return { days, range, label };
   }, [weekOffset, hydrated]);
+  useEffect(() => {
+    if (!hydrated || abriuSemanaRef.current) return;
+    abriuSemanaRef.current = true;
+    const agora = new Date();
+    const dow = agora.getDay();
+    if ((dow === 5 && agora.getHours() >= 12) || dow === 6 || dow === 0) setWeekOffset(1);
+  }, [hydrated]);
   // Cada semana tem o seu plano (antes era um só para todas as semanas).
   const semanasPlano = useSemanasPlano<M1Card>();
   const semanaChave = m1Week.days[0].iso;
@@ -3689,6 +3699,11 @@ export function Planejamento() {
                         <div className="month" style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
                           <span>{m1Week.label}</span>
                           <small style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: "var(--muted)", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{m1Week.range}</small>
+                          {(ctxResolvido.turma || ctxResolvido.anoLabel) && (
+                            <small style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 11.5, color: "var(--ink-2)", fontWeight: 700, textTransform: "none", letterSpacing: 0 }}>
+                              {[ctxResolvido.turma, ctxResolvido.anoLabel].filter(Boolean).join(" · ")}
+                            </small>
+                          )}
                         </div>
                         <button aria-label="Próxima semana" onClick={() => setWeekOffset((w) => w + 1)}><ChevronRight size={14} /></button>
                         {weekOffset !== 0 && (
@@ -3937,7 +3952,7 @@ export function Planejamento() {
                         <div className="pl-stat-box"><div className="v">{m1Stats.atividades}</div><div className="l">Atividades</div></div>
                         <div className="pl-stat-box"><div className="v">{m1Stats.habilidades}</div><div className="l">Habilidades BNCC</div></div>
                         <div className="pl-stat-box"><div className="v">{focosSelecionados.length}</div><div className="l">Focos ativos</div></div>
-                        <div className="pl-stat-box"><div className="v">{pillsInt[0]}</div><div className="l">Intensidade</div></div>
+                        <div className="pl-stat-box"><div className="v" style={{ fontSize: 15 }}>{pillsInt}</div><div className="l">Intensidade</div></div>
                       </div>
                       {m1Stats.atividades === 0 && (
                         <p className="lead" style={{ marginTop: 10 }}>Defina <b>tema</b> e <b>focos</b> ao lado e clique em <b>Gerar com a Sofia</b>.</p>

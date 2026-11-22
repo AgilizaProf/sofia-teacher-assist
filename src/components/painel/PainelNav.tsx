@@ -292,14 +292,14 @@ const LINKS: Array<{ to: string; label: string; exact?: boolean }> = [
   { to: "/planejamento", label: "Planejar" },
   { to: "/relatorios", label: "Pareceres" },
   { to: "/inclusao", label: "Inclusão" },
+  { to: "/alfabetizacao", label: "Alfabetização" },
   { to: "/agenda", label: "Agenda" },
-  { to: "/jogos", label: "Jogos" },
   { to: "/questoes", label: "Questões" },
 ];
 
 // Funções que não cabem na barra de cima: ficam no botão "Mais" (computador).
 const MAIS: Array<{ to: string; label: string; icon: keyof typeof ICONS }> = [
-  { to: "/alfabetizacao", label: "Criança alfabetizada", icon: "book" },
+  { to: "/jogos", label: "Jogos", icon: "game" },
   { to: "/inclusao/pei", label: "PEI / PDI", icon: "pen" },
   { to: "/biblioteca", label: "Minha Biblioteca", icon: "shelf" },
   { to: "/cadernos", label: "Cadernos prontos", icon: "book" },
@@ -311,7 +311,9 @@ export function PainelNav() {
   const { isAdmin } = useIsAdmin();
   const ctx = useSofiaContext();
   const sofia = useSofiaOptional();
-  const nome = (ctx.user?.nome || "").trim();
+  const nomeBruto = (ctx.user?.nome || "").trim();
+  // "Educador(a)" é só o nome de reserva enquanto carrega: não vira avatar "E".
+  const nome = nomeBruto === "Educador(a)" ? "" : nomeBruto;
   const [menu, setMenu] = useState(false);
   const [mais, setMais] = useState<{ left: number; top: number } | null>(null);
   const maisRef = useRef<HTMLDivElement>(null);
@@ -554,15 +556,17 @@ export function PainelNav() {
               >
                 <Svg>{ICONS.phone}</Svg>Baixar o app no celular
               </button>
-              <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
-                <span style={{ color: "#0B7A55", display: "flex" }}>
-                  <WhatsappLogo size={20} />
-                </span>
-                Para confirmar
-                <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
-                  {pendentes}
-                </span>
-              </Link>
+              {pendentes > 0 && (
+                <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
+                  <span style={{ color: "#0B7A55", display: "flex" }}>
+                    <WhatsappLogo size={20} />
+                  </span>
+                  Para confirmar
+                  <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
+                    {pendentes}
+                  </span>
+                </Link>
+              )}
               <Link to="/alfabetizacao">
                 <Svg>{ICONS.book}</Svg>Criança alfabetizada
               </Link>
@@ -587,6 +591,17 @@ export function PainelNav() {
               <Link to="/questoes">
                 <Svg>{ICONS.check}</Svg>Questões
               </Link>
+              {!pendentes && (
+                <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
+                  <span style={{ color: "#0B7A55", display: "flex" }}>
+                    <WhatsappLogo size={20} />
+                  </span>
+                  Para confirmar
+                  <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
+                    {pendentes}
+                  </span>
+                </Link>
+              )}
               <Link to="/configuracoes">
                 <Svg>{ICONS.gear}</Svg>Configurações
               </Link>

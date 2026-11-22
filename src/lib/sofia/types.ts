@@ -18,6 +18,8 @@ export type SofiaUser = {
    *  "Ensino Fundamental - Anos Iniciais"). Usada como fallback quando
    *  a turma em foco não permite inferir o nível. */
   etapa_ensino?: string | null;
+  /** false enquanto o nome ainda está carregando (a tela mostra um espaço, não um nome falso). */
+  carregado?: boolean;
 };
 
 export type SofiaTurma = {
