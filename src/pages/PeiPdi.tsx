@@ -13,6 +13,7 @@ import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
+import { peiPartesPreenchidas, peiTemConteudo, PEI_TOTAL_PARTES, type PEIData } from "@/components/inclusao/PEIFormModal";
 
 type Student = {
   id: string; name: string; turma?: string; anoEscolar?: string;
@@ -47,6 +48,15 @@ type PeiRow = {
 };
 
 const BIMESTRES = ["1º bimestre", "2º bimestre", "3º bimestre", "4º bimestre", "1º semestre", "2º semestre"];
+
+/** Bimestre do calendário escolar de hoje (fev–abr, mai–jul, ago–set, out–dez). */
+function bimestreAtual(hoje = new Date()): string {
+  const mes = hoje.getMonth() + 1;
+  if (mes <= 4) return BIMESTRES[0];
+  if (mes <= 7) return BIMESTRES[1];
+  if (mes <= 9) return BIMESTRES[2];
+  return BIMESTRES[3];
+}
 
 const emptyPei: PeiData = {
   perfil_aluno: { descricao: "", pontos_fortes: [], areas_suporte: [] },
@@ -83,7 +93,7 @@ export function PeiPdi() {
   const [peiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
 
   const [alunoId, setAlunoId] = useState<string>("");
-  const [bimestre, setBimestre] = useState<string>(BIMESTRES[0]);
+  const [bimestre, setBimestre] = useState<string>(() => bimestreAtual());
   const [contexto, setContexto] = useState("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -111,6 +121,17 @@ export function PeiPdi() {
     setDebugLog((prev) => [...prev, { ...e, ts: new Date().toLocaleTimeString("pt-BR") }]);
 
   const aluno = useMemo(() => students.find((s) => s.id === alunoId) || null, [students, alunoId]);
+
+  // PEIs escritos na ficha do aluno (Inclusão). Eles aparecem aqui também,
+  // para a professora não achar que o PEI sumiu.
+  const peisDaFicha = useMemo(
+    () =>
+      students
+        .map((s) => ({ s, pei: (peiByStudent[s.id] || {}) as Partial<PEIData> }))
+        .filter(({ pei }) => peiTemConteudo(pei))
+        .map(({ s, pei }) => ({ id: s.id, nome: s.name, turma: s.turma, partes: peiPartesPreenchidas(pei) })),
+    [students, peiByStudent],
+  );
 
   // Load list of saved PEIs
   const loadVersions = async () => {
@@ -398,9 +419,9 @@ export function PeiPdi() {
           </div>
           {loadingList ? (
             <p className="pei-muted">Carregando…</p>
-          ) : versions.length === 0 ? (
+          ) : versions.length === 0 && peisDaFicha.length === 0 ? (
             <p className="pei-muted">Nenhum PEI salvo ainda. Os que você salvar aparecem aqui.</p>
-          ) : (
+          ) : versions.length === 0 ? null : (
             <ul className="pei-salvos">
               {versions.map((v) => (
                 <li key={v.id} className={currentId === v.id ? "on" : ""}>
@@ -415,6 +436,27 @@ export function PeiPdi() {
             </ul>
           )}
         </section>
+
+        {peisDaFicha.length > 0 && (
+          <section className="pei-card">
+            <div className="pei-cab">
+              <h2 className="pei-h2"><FileText size={18} /> PEIs na ficha do aluno</h2>
+            </div>
+            <ul className="pei-salvos">
+              {peisDaFicha.map((p) => (
+                <li key={p.id}>
+                  <div className="tx">
+                    <b>{p.nome}</b>
+                    <small>
+                      {[p.turma, p.partes >= PEI_TOTAL_PARTES ? "PEI completo" : `PEI em construção (${p.partes} de ${PEI_TOTAL_PARTES})`].filter(Boolean).join(" · ")}
+                    </small>
+                  </div>
+                  <Link to="/inclusao" className="pn-btn pei-abrir">Abrir na Inclusão</Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {mostrarDebug && (
           <section className="pei-card pei-debug">
