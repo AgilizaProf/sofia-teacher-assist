@@ -123,7 +123,7 @@ export function Privacidade() {
 
               <h2>13. Cookies e tecnologias similares</h2>
               <p>
-                Utilizamos cookies <strong>essenciais</strong> para autenticação e segurança, e cookies <strong>analíticos</strong> agregados para entender o uso e melhorar a experiência. Você pode gerenciá-los pelo seu navegador.
+                Utilizamos cookies <strong>essenciais</strong> para autenticação e segurança, e cookies <strong>analíticos</strong> agregados para entender o uso e melhorar a experiência. Só se você aceitar no aviso de cookies, usamos também o Pixel do Meta nas páginas de entrada, cadastro e planos, para medir de onde vêm os cadastros. Nenhum dado de aluno é enviado. Você pode mudar essa escolha limpando os dados do site no navegador.
               </p>
 
               <h2>14. Alterações desta Política</h2>
