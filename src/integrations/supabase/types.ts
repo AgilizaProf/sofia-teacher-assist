@@ -266,6 +266,45 @@ export type Database = {
         }
         Relationships: []
       }
+      biblioteca_itens: {
+        Row: {
+          ano_escolar: number | null
+          ano_letivo: number | null
+          componente: string | null
+          criado_em: string
+          habilidades: string[]
+          id: string
+          ref_id: string | null
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          ano_escolar?: number | null
+          ano_letivo?: number | null
+          componente?: string | null
+          criado_em?: string
+          habilidades?: string[]
+          id?: string
+          ref_id?: string | null
+          tipo: string
+          titulo?: string
+          user_id: string
+        }
+        Update: {
+          ano_escolar?: number | null
+          ano_letivo?: number | null
+          componente?: string | null
+          criado_em?: string
+          habilidades?: string[]
+          id?: string
+          ref_id?: string | null
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cancellation_feedback: {
         Row: {
           ciclo: string | null
@@ -1795,6 +1834,51 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_entradas: {
+        Row: {
+          aluno_id: string | null
+          aluno_nome: string | null
+          confirmado_em: string | null
+          destino_final: string | null
+          destino_sugerido: string | null
+          id: string
+          payload: Json
+          recebido_em: string
+          status: string
+          texto: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          aluno_id?: string | null
+          aluno_nome?: string | null
+          confirmado_em?: string | null
+          destino_final?: string | null
+          destino_sugerido?: string | null
+          id?: string
+          payload?: Json
+          recebido_em?: string
+          status?: string
+          texto?: string
+          tipo?: string
+          user_id: string
+        }
+        Update: {
+          aluno_id?: string | null
+          aluno_nome?: string | null
+          confirmado_em?: string | null
+          destino_final?: string | null
+          destino_sugerido?: string | null
+          id?: string
+          payload?: Json
+          recebido_em?: string
+          status?: string
+          texto?: string
+          tipo?: string
           user_id?: string
         }
         Relationships: []

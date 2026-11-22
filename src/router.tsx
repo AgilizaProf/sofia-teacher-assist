@@ -1,15 +1,15 @@
-import { createRouter, useRouter } from "@tanstack/react-router";
+import { createRouter, useRouter, type ErrorComponentProps } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { PaginaNaoEncontrada, TelaStatus } from "@/components/RootErrorBoundary";
 
-function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function DefaultErrorComponent({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
 
   return (
     <TelaStatus
       titulo="Algo deu errado"
       texto="Tivemos um problema ao abrir esta tela. Tente de novo em instantes."
-      detalhe={import.meta.env.DEV && error?.message ? error.message : undefined}
+      detalhe={import.meta.env.DEV && error instanceof Error && error.message ? error.message : undefined}
       acoes={[
         {
           label: "Tentar de novo",
