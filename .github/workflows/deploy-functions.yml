@@ -31,13 +31,17 @@ jobs:
         run: |
           sleep 20
           falhou=0
+          # Chave pública do app (a mesma do navegador), para passar do portão
+          # de login do Supabase e a função ser ligada de verdade.
+          chave=$(grep -oP 'VITE_SUPABASE_PUBLISHABLE_KEY="?\K[^"]+' .env)
           for dir in supabase/functions/*/; do
             nome=$(basename "$dir")
             [ "$nome" = "_shared" ] && continue
             [ -f "$dir/index.ts" ] || continue
             codigo=$(curl -s -o /tmp/resp.txt -w "%{http_code}" -X POST \
               "https://${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co/functions/v1/$nome" \
-              -H "Content-Type: application/json" -d '{}' --max-time 60)
+              -H "Content-Type: application/json" -H "Authorization: Bearer $chave" -H "apikey: $chave" \
+              -d '{}' --max-time 60)
             echo "$nome: $codigo $(head -c 200 /tmp/resp.txt)"
             # OPTIONS responde 200 mesmo com a função quebrada; o POST mostra o
             # BOOT_ERROR (503).
