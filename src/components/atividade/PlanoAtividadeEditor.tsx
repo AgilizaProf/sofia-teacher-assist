@@ -2392,6 +2392,54 @@ const LABELS: Record<string, string> = {
 
 /* ─────────────────────────── Body ─────────────────────────── */
 
+/**
+ * Encaixa os cartões do plano em duas colunas sem buracos: cada cartão ocupa
+ * tantas linhas finas (8px) quanto a sua altura, e o grid põe o próximo onde
+ * houver espaço. Em uma coluna (celular) não faz nada.
+ */
+function useGridEncaixado() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const grid = ref.current;
+    if (!grid || typeof ResizeObserver === "undefined") return;
+    const LINHA = 8;
+    const ESPACO = 14;
+    let quadro = 0;
+    const ajustar = () => {
+      quadro = 0;
+      const duasColunas = getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length > 1;
+      grid.classList.toggle("atv-encaixe", duasColunas);
+      for (const el of Array.from(grid.children) as HTMLElement[]) {
+        if (!duasColunas) {
+          el.style.gridRowEnd = "";
+          continue;
+        }
+        const h = el.getBoundingClientRect().height;
+        el.style.gridRowEnd = `span ${Math.max(1, Math.ceil((h + ESPACO) / LINHA))}`;
+      }
+    };
+    const agendar = () => {
+      if (!quadro) quadro = requestAnimationFrame(ajustar);
+    };
+    const ro = new ResizeObserver(agendar);
+    const observarFilhos = () => {
+      ro.disconnect();
+      ro.observe(grid);
+      Array.from(grid.children).forEach((c) => ro.observe(c));
+      agendar();
+    };
+    observarFilhos();
+    const mo = new MutationObserver(observarFilhos);
+    mo.observe(grid, { childList: true });
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      if (quadro) cancelAnimationFrame(quadro);
+    };
+  }, []);
+  return ref;
+}
+
 function PlanoBody(props: {
   plano: PlanoAtividade;
   modo: "regular" | "pcd";
@@ -2415,6 +2463,7 @@ function PlanoBody(props: {
   onToggleFavorita: (s: Sugestao) => void;
   onRemoverFavorita: (titulo: string) => void;
 }) {
+  const gridRef = useGridEncaixado();
   const { plano, modo, alunosPCDCount, missing, regenField, onRegenField } = props;
   const [adaptOpen, setAdaptOpen] = useState(modo === "pcd" || alunosPCDCount > 0);
   useEffect(() => {
@@ -2485,7 +2534,7 @@ function PlanoBody(props: {
   );
 
   return (
-    <div className="atv-grid">
+    <div className="atv-grid" ref={gridRef}>
       {modo === "pcd" && inclSecoes && (
         <section className={`atv-card atv-incl-banner${inclVazias.length > 2 || !adaptOk ? " warn" : " ok"}`}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -2974,6 +3023,13 @@ const css = `
 .atv-empty p{max-width:520px;margin:0 auto;font-size:13.5px;line-height:1.5;}
 .atv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;grid-auto-rows:min-content;}
 .atv-grid > *{align-self:start;height:auto;min-height:0;min-width:0;}
+/* Encaixe em duas colunas (useGridEncaixado): linhas de 8px, cada cartão ocupa as que precisa. */
+.atv-grid.atv-encaixe{grid-auto-rows:8px;row-gap:0;}
+.atv-grid.atv-encaixe > *{margin-bottom:14px;}
+/* Título: menos folga entre o nome do plano e a linha de ano/disciplina. */
+.atv-card.title .atv-card-head{margin-bottom:0;align-items:center;}
+.atv-card.title h2.atv-inline{line-height:1.25;}
+.atv-card.title .atv-meta{margin-top:6px;}
 @media(max-width:980px){.atv-grid{grid-template-columns:1fr;}}
 /* Mobile: título da atividade mais compacto e menos espaçado. */
 @media(max-width:640px){
