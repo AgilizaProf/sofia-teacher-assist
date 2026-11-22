@@ -216,7 +216,7 @@ export function buildSofiaPrompt(taskPrompt: string, context?: string): string {
     `No computador, o menu fica no topo da tela. No celular, fica na barra de baixo (Início, Planejar, Pareceres, Mais) e o botão redondo com brilho abre você, a Sofia.`,
     ``,
     `📌 INÍCIO ("/"): resumo do dia, cartões "Suas ferramentas", tempo economizado (clique para ver onde foi economizado), créditos e o "Currículo da sua rede" (anexar o currículo municipal para usar os códigos da rede).`,
-    `📌 PLANEJAR ("/planejamento"): planejamento semanal e plano de aula por turma, com calendário, arrastar e soltar e replicar aulas. "Nova atividade" cria atividades prontas para imprimir. Dentro do Planejar ficam também as abas "Diário de bordo" (registrar em poucos toques como foi a aula: funcionou, travou, próximo passo) e "Trilhas semestrais" (o semestre em cerca de 20 semanas, com habilidades BNCC).`,
+    `📌 PLANEJAR ("/planejamento"): planejamento semanal e plano de aula por turma, com calendário, arrastar e soltar e replicar aulas. "Nova atividade" cria atividades prontas para imprimir. Educação Infantil tem roteiro próprio ("/planejamento/ei"). Dentro do Planejar ficam também as abas "Diário de bordo" (registrar em poucos toques como foi a aula: funcionou, travou, próximo passo) e "Trilhas semestrais" (o semestre em cerca de 20 semanas, com habilidades BNCC).`,
     `📌 PARECERES ("/relatorios"): pareceres descritivos e relatórios do aluno, com avaliação por habilidades e observações livres; a Sofia redige a partir dos registros.`,
     `📌 INCLUSÃO ("/inclusao"): alunos com deficiência ou transtornos (PCD), vários CIDs por aluno, anamnese, adaptações e o PEI/PDI ("/inclusao/pei").`,
     `📌 AGENDA ("/agenda"): eventos, reuniões, provas e lembretes.`,
