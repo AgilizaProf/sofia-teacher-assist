@@ -1446,7 +1446,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
     void areas; void rub;
     return `<article class="report">
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
-${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
+${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: resolvePeriodoAluno(a.id, a.turma).tituloLower })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
 <div class="sig">
@@ -1510,7 +1510,6 @@ ${parecerHtml}
       return () => clearTimeout(t);
     }
   }, [totalSavedMin]);
-  const bimestreNum = (() => { const m = new Date().getMonth() + 1; return Math.min(4, Math.ceil(m / 3)); })();
   // Período de avaliação selecionado pelo professor (Bimestral/Trimestral/Semestral/Anual)
   // Quando o usuário filtra por uma turma específica, o banner respeita a periodicidade configurada
   // para aquela turma; caso contrário, usa o padrão global.
@@ -1869,7 +1868,7 @@ ${parecerHtml}
                   <div className="rel-av">{a.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}</div>
                   <div className="rel-stu">
                     <b>{a.nome}</b>
-                    <small>{a.turma || ctx.entity.turma_atual?.nome || "Sem turma"} · {bimestreNum}º bimestre</small>
+                    <small>{a.turma || ctx.entity.turma_atual?.nome || "Sem turma"} · {resolvePeriodoAluno(a.id, a.turma).tituloLower}</small>
                   </div>
                   {a.pcd && <span className="rel-badge pcd">PCD</span>}
                   {isMobile && (
@@ -2087,7 +2086,7 @@ ${parecerHtml}
                     <div className="rel-h-av" style={{ background: palette[idx % palette.length] }}>{initials}</div>
                     <div className="rel-h-name">
                       <b>{a.nome}</b>
-                      <small>{a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · ${a.pcd}` : ""}</small>
+                      <small>{a.turma || "Sem turma"} · {resolvePeriodoAluno(a.id, a.turma).tituloLower}{a.pcd ? ` · ${a.pcd}` : ""}</small>
                     </div>
                     <span className="rel-status done"><span className="dot" />FINALIZADO</span>
                     <div className="rel-h-date">Bimestre atual</div>
@@ -2108,7 +2107,7 @@ ${parecerHtml}
             <h3>Pré-visualização · {preview.name}</h3>
             <div className="rel-modal-meta">{preview.meta} · {preview.statusLabel}</div>
             <div className="rel-modal-body">
-              <p><b>{preview.name}</b> demonstrou avanços significativos nas competências esperadas para o bimestre, alinhadas à BNCC. Participa ativamente das atividades coletivas, colabora com colegas e apresenta autonomia crescente nas produções escritas.</p>
+              <p><b>{preview.name}</b> demonstrou avanços significativos nas competências esperadas para o período, alinhadas à BNCC. Participa ativamente das atividades coletivas, colabora com colegas e apresenta autonomia crescente nas produções escritas.</p>
               <p style={{ marginTop: 12 }}>Sugestão de continuidade: aprofundar leituras compartilhadas e propor desafios de escrita autoral para consolidar a fluência.</p>
             </div>
             <div className="rel-modal-foot">
@@ -2200,7 +2199,7 @@ ${parecerHtml}
                 <div style={{ flex: 1 }}>
                   <h3 style={{ margin: 0, fontSize: 18 }}>{tituloModal}</h3>
                   <div style={{ fontSize: 12, color: "var(--text-soft)", marginTop: 2, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span>{turma || "Sem turma"} · {bimestreNum}º bimestre</span>
+                    <span>{turma || "Sem turma"} · {resolvePeriodoAluno(id, turma).tituloLower}</span>
                     {ei ? (
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 99, background: "#EDEAFE", color: "#4338CA", fontWeight: 700 }}>
                         Direitos de Aprendizagem: {EI_DIREITOS_APRENDIZAGEM}
@@ -2612,7 +2611,7 @@ ${parecerHtml}
           const bodyInner = `
 <article class="report">
 <h1>Parecer descritivo · ${esc(a.nome)}</h1>
-${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: `${bimestreNum}º bimestre` })}
+${buildIdentBlock({ aluno: a, escola: escola?.name, professor: user.name, periodo: resolvePeriodoAluno(a.id, a.turma).tituloLower })}
 ${aluno?.notes ? `<section><h2>Observações</h2><p>${esc(aluno.notes)}</p></section>` : ""}
 ${parecerHtml}
 <div class="sig">
@@ -2671,7 +2670,7 @@ ${parecerHtml}
           if (a.nome) identFields.push({ label: "Estudante", value: a.nome });
           if (a.turma) identFields.push({ label: "Turma", value: a.turma });
           if (escola?.name) identFields.push({ label: "Escola", value: escola.name });
-          identFields.push({ label: "Período avaliado", value: `${bimestreNum}º bimestre` });
+          identFields.push({ label: "Período avaliado", value: resolvePeriodoAluno(a.id, a.turma).tituloLower });
           if (user.name) identFields.push({ label: "Professor(a)", value: user.name });
           if (a.pcd) identFields.push({ label: "PCD", value: a.pcd });
 
@@ -2786,7 +2785,7 @@ ${parecerHtml}
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
-          link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${bimestreNum}bim.doc`;
+          link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${resolvePeriodoAluno(a.id, a.turma).tituloLower.replace(/[^0-9a-zA-Z]+/g, "")}.doc`;
           document.body.appendChild(link); link.click(); document.body.removeChild(link);
           setTimeout(() => URL.revokeObjectURL(url), 1500);
           toast.success("Documento Word exportado.");
@@ -2799,7 +2798,7 @@ ${parecerHtml}
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", color: headerColor, marginBottom: 4 }}>{titulo}</div>
                   <h3 style={{ margin: 0 }}>{a.nome}</h3>
                   <div className="rel-modal-meta" style={{ marginBottom: 0 }}>
-                    {a.turma || "Sem turma"} · {bimestreNum}º bimestre{a.pcd ? ` · PCD: ${a.pcd}` : ""}
+                    {a.turma || "Sem turma"} · {resolvePeriodoAluno(a.id, a.turma).tituloLower}{a.pcd ? ` · PCD: ${a.pcd}` : ""}
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -3026,7 +3025,7 @@ ${parecerHtml}
                             const url = URL.createObjectURL(blob);
                             const link = document.createElement("a");
                             link.href = url;
-                            link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${bimestreNum}bim.txt`;
+                            link.download = `Parecer_${a.nome.replace(/\s+/g, "_")}_${resolvePeriodoAluno(a.id, a.turma).tituloLower.replace(/[^0-9a-zA-Z]+/g, "")}.txt`;
                             document.body.appendChild(link); link.click(); document.body.removeChild(link);
                             setTimeout(() => URL.revokeObjectURL(url), 1500);
                             toast.success("Texto do parecer salvo.");
@@ -3163,7 +3162,7 @@ ${parecerHtml}
                 <li><b>Gere o parecer com a Sofia</b>: ela usa anamnese, registros, PEI e a rubrica BNCC para escrever um rascunho.</li>
                 <li><b>Revise e finalize</b>: edite o texto, salve em PDF/Word ou imprima quando estiver pronto.</li>
                 <li><b>Acompanhe o progresso</b> nos KPIs do topo (a fazer, rascunho, finalizados e tempo economizado).</li>
-                <li><b>Filtre</b> por status, turma, bimestre ou apenas alunos PCD usando os filtros acima da lista.</li>
+                <li><b>Filtre</b> por status, turma, período ou apenas alunos PCD usando os filtros acima da lista.</li>
               </ol>
               <p style={{ marginTop: 14, fontSize: 12, color: "var(--muted)" }}>Dica: clique em qualquer card de aluno (ou em um(a) aluno(a) finalizado(a) abaixo) para abrir as ações específicas daquele status.</p>
             </div>
@@ -3179,7 +3178,7 @@ ${parecerHtml}
 
       {statusModal && (() => {
         const labelMap: Record<"todo" | "draft" | "done", { title: string; eyebrow: string; desc: string }> = {
-          todo:  { title: "Alunos a fazer",      eyebrow: "A FAZER",      desc: "Estes alunos ainda não tiveram a BNCC avaliada neste bimestre." },
+          todo:  { title: "Alunos a fazer",      eyebrow: "A FAZER",      desc: "Estes alunos ainda não tiveram a BNCC avaliada neste período." },
           draft: { title: "Pareceres em rascunho", eyebrow: "EM RASCUNHO", desc: "Avaliações iniciadas que ainda não foram concluídas." },
           done:  { title: "Pareceres finalizados", eyebrow: "FINALIZADOS", desc: "Pareceres já gerados — clique para revisar e exportar." },
         };

@@ -172,7 +172,7 @@ export function PlanejamentoAtividade() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { if (active) setLoadingTurmas(false); return; }
         const [{ data }, cadastradas] = await Promise.all([
-          supabase.from("profiles").select("turmas").eq("user_id", user.id).maybeSingle(),
+          supabase.from("profiles").select("turmas, etapa_ensino").eq("user_id", user.id).maybeSingle(),
           listTurmas().catch(() => [] as TurmaUI[]),
         ]);
         if (!active) return;
@@ -184,6 +184,15 @@ export function PlanejamentoAtividade() {
         setMinhasTurmas(list);
         // Se já veio turma por search e não está na lista, mantém; senão pré-seleciona a primeira.
         if (!turma && list.length > 0) setTurma(list[0]);
+        // Sem turma, a etapa começa na que a professora escolheu no perfil.
+        const ETAPA_PERFIL: Record<string, string> = {
+          ed_infantil: "infantil", anos_iniciais: "fund1", anos_finais: "fund2", ensino_medio: "medio", eja: "eja",
+        };
+        const etapaPerfil = ETAPA_PERFIL[(data as { etapa_ensino?: string | null } | null)?.etapa_ensino || ""];
+        if (!turma && list.length === 0 && etapaPerfil && etapaPerfil !== etapa) {
+          setEtapa(etapaPerfil);
+          setAno(ANOS_BY_ETAPA[etapaPerfil]?.[0] || "");
+        }
       } finally {
         if (active) setLoadingTurmas(false);
       }
