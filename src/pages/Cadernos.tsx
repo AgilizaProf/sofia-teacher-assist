@@ -3,7 +3,11 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav";
 
-// Cadernos prontos: ainda bloqueado. Não listamos atividades inventadas.
+// Cadernos prontos ("Atividade pronta" no Início): ainda bloqueado. Não
+// listamos atividades inventadas. A busca, os anos e os tipos de caderno abaixo
+// são exemplos fechados: mostram como a tela vai funcionar e abrem o aviso de
+// acesso. Quando o catálogo chegar, trocar a prateleira pelas fichas reais de
+// CATALOGO_FOLHAS (filtradas por ano e por `folhasDeAcordo`).
 // Mostramos só uma prévia desfocada (3 miniaturas reais das fichas, em
 // public/cadernos/previa-N.jpg) e a data de liberação. Ver, PDF e PCD abrem o
 // aviso de acesso. Quando os cadernos ficarem prontos, esta página passa a
@@ -12,6 +16,8 @@ import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav
 import { CADERNOS_LIBERA_EM, CADERNOS_LIBERA_CURTO, TIPOS_FOLHA } from "@/lib/cadernos/folhas";
 
 export { CADERNOS_LIBERA_EM };
+
+const ANOS = ["1º ano", "2º ano", "3º ano", "4º ano", "5º ano"];
 
 const PREVIAS = ["/cadernos/previa-1.jpg", "/cadernos/previa-2.jpg", "/cadernos/previa-3.jpg"];
 
@@ -47,7 +53,28 @@ const css = `
 .cd-tag{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--pn-ink);color:#fff;border-radius:16px;padding:18px 22px;display:grid;gap:4px;justify-items:center;text-align:center;box-shadow:4px 4px 0 var(--pn-sun);width:min(340px,86%);}
 .cd-tag b{font-family:var(--pn-display);font-size:20px;}
 .cd-tag span{font-size:13.5px;opacity:.9;}
+.cd-busca{display:flex;gap:8px;margin:4px 0 14px;}
+.cd-busca input{flex:1;min-width:0;height:46px;padding:0 14px;border-radius:12px;border:2px solid var(--pn-ink);background:#fff;font-family:inherit;font-size:15px;color:var(--pn-ink);}
+.cd-busca button{height:46px;padding:0 16px;border-radius:12px;border:2px solid var(--pn-ink);background:var(--pn-ink);color:#fff;font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.cd-busca button svg{width:15px;height:15px;}
+.cd-anos{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;}
+.cd-anos button{height:36px;padding:0 14px;border-radius:999px;border:1.5px solid var(--pn-line);background:#fff;font-family:inherit;font-size:14px;font-weight:700;color:var(--pn-muted);cursor:pointer;}
+.cd-anos button[aria-pressed="true"]{background:var(--pn-ink);border-color:var(--pn-ink);color:#fff;}
+.cd-h2{margin:22px 0 10px;font-family:var(--pn-display);font-size:19px;letter-spacing:-.02em;}
+.cd-tipos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.cd-tipo{position:relative;text-align:left;border:1.5px solid var(--pn-line);border-radius:14px;background:var(--pn-surface);padding:14px 14px 12px;font-family:inherit;cursor:pointer;display:grid;gap:3px;color:var(--pn-ink);}
+.cd-tipo:hover{border-color:var(--pn-ink);}
+.cd-tipo b{font-size:15.5px;padding-right:26px;}
+.cd-tipo span{font-size:13.5px;color:var(--pn-muted);}
+.cd-tipo em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--pn-green);margin-top:4px;}
+.cd-tipo svg{position:absolute;right:12px;top:13px;width:16px;height:16px;color:var(--pn-muted);}
+.cd-criar{margin-top:14px;font-size:14.5px;color:var(--pn-muted);}
+.cd-criar a{color:var(--pn-green);font-weight:700;}
 @media (max-width:860px){
+  .cd-tipos{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .cd-tipo{padding:12px 10px 10px 12px;}
+  .cd-tipo b{font-size:14.5px;padding-right:20px;hyphens:auto;-webkit-hyphens:auto;}
+  .cd-tipo svg{right:10px;top:12px;width:14px;height:14px;}
   .cd{padding-bottom:110px;}
   .cd-wrap{padding:16px max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));}
   .cd-title{font-size:27px;}
@@ -75,6 +102,8 @@ function Svg({ children }: { children: ReactNode }) {
 
 export function Cadernos() {
   const [aviso, setAviso] = useState<string | null>(null);
+  const [ano, setAno] = useState(ANOS[0]);
+  const [busca, setBusca] = useState("");
 
   useEffect(() => {
     if (!aviso) return;
@@ -88,10 +117,11 @@ export function Cadernos() {
       <style dangerouslySetInnerHTML={{ __html: painelTokensCss + css }} />
       <PainelNav />
       <main className="cd-wrap">
-        <span className="cd-eyebrow">Cadernos prontos</span>
-        <h1 className="cd-title">Fichas prontas para imprimir</h1>
+        <span className="cd-eyebrow">Atividade pronta</span>
+        <h1 className="cd-title">Cadernos e fichas prontas para imprimir</h1>
         <p className="cd-sub">
-          Fichas organizadas por ano e disciplina, prontas para imprimir, com versão PCD.
+          Busque o conteúdo ou a habilidade da BNCC e receba as fichas daquele assunto, do 1º ao 5º
+          ano, prontas para imprimir e com versão PCD.
         </p>
 
         <div className="cd-lock" role="note">
@@ -100,6 +130,34 @@ export function Cadernos() {
             <b>Cadernos prontos: acesso a partir de {CADERNOS_LIBERA_EM}.</b> Até lá, as fichas
             aparecem desfocadas, só para mostrar onde vão ficar.
           </span>
+        </div>
+
+        <form
+          className="cd-busca"
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setAviso(PREVIAS[0]);
+          }}
+        >
+          <input
+            type="search"
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Ex.: adição, sílabas, EF02MA05"
+            aria-label="Buscar conteúdo ou código da BNCC"
+          />
+          <button type="submit">
+            <Svg>{ICONS.lock}</Svg>Buscar
+          </button>
+        </form>
+
+        <div className="cd-anos" role="group" aria-label="Ano">
+          {ANOS.map((a) => (
+            <button key={a} type="button" aria-pressed={a === ano} onClick={() => setAno(a)}>
+              {a}
+            </button>
+          ))}
         </div>
 
         <div className="cd-grid">
@@ -130,6 +188,29 @@ export function Cadernos() {
             </div>
           ))}
         </div>
+
+        <h2 className="cd-h2">Cadernos do {ano}</h2>
+        <div className="cd-tipos">
+          {TIPOS_FOLHA.map((t, i) => (
+            <button
+              key={t.id}
+              type="button"
+              className="cd-tipo"
+              aria-label={`${t.nome} do ${ano}: acesso a partir de ${CADERNOS_LIBERA_EM}`}
+              onClick={() => setAviso(PREVIAS[i % PREVIAS.length])}
+            >
+              <Svg>{ICONS.lock}</Svg>
+              <b>{t.nome}</b>
+              <span>{t.resumo}</span>
+              <em>a partir de {CADERNOS_LIBERA_CURTO}</em>
+            </button>
+          ))}
+        </div>
+
+        <p className="cd-criar">
+          Prefere criar uma atividade nova com a Sofia?{" "}
+          <Link to="/planejamento/atividade">Criar atividade</Link>
+        </p>
 
         <section className="cd-what" aria-labelledby="cd-what-h">
           <h2 id="cd-what-h">O que vai ter aqui</h2>

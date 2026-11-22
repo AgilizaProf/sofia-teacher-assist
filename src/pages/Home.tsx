@@ -36,9 +36,10 @@ const CARDS: Card[] = [
     icon: ICONS.cal,
   },
   {
-    to: "/planejamento/atividade",
-    title: "Nova atividade",
-    desc: "Atividade pronta e alinhada ao currículo",
+    to: "/cadernos",
+    title: "Atividade pronta",
+    desc: "Cadernos e fichas prontas para imprimir, por ano e habilidade",
+    tag: "Em breve",
     bg: "var(--pn-cream)",
     icon: (
       <>
