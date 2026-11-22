@@ -30,9 +30,9 @@ const CSS = `${MARCA_CSS}
 body{margin:0;font-family:var(--body);color:var(--ink)}
 .pg{display:grid;gap:7mm;padding:10mm 11mm 10mm 10mm;page-break-after:always;height:297mm;align-content:start}
 .pg:last-child{page-break-after:auto}
-.pg.g4{grid-template-columns:1fr 1fr;grid-template-rows:repeat(2,133mm)}
-.pg.g2{grid-template-columns:1fr;grid-template-rows:repeat(2,133mm)}
+.pg.gr{grid-template-columns:1fr 1fr;grid-template-rows:repeat(2,133mm)}
 .pg.g1{grid-template-columns:1fr;grid-template-rows:270mm}
+.ct.w{grid-column:1/-1}
 .ct{border:0.7mm solid var(--ink);border-radius:5mm;background:#fff;box-shadow:1.4mm 1.4mm 0 var(--sun);padding:5.5mm 6.5mm 5mm;display:flex;flex-direction:column;overflow:hidden}
 .ct-h{display:flex;justify-content:space-between;align-items:center;gap:3mm;padding-bottom:3mm;margin-bottom:4mm;border-bottom:0.5mm solid var(--line)}
 .ct-nv{display:inline-flex;align-items:center;gap:1.5mm;padding:1mm 2.6mm 1mm 1mm;border-radius:99mm;background:var(--green-soft);color:var(--green);font-weight:700;font-size:8.5pt;white-space:nowrap}
@@ -46,6 +46,8 @@ body{margin:0;font-family:var(--body);color:var(--ink)}
 .tx p{margin:0;font-size:21px;line-height:1.75}
 .g1 .tx p{font-size:25px;line-height:1.9}
 .g1 .tx h3{font-size:30px}
+.ct.cp .tx p{font-size:19px;line-height:1.55}
+.ct.cp .tx h3{font-size:21px;margin-bottom:3.5mm}
 .ct-f{display:flex;justify-content:space-between;gap:3mm;font-size:8pt;color:var(--muted);margin-top:3.5mm;padding-top:2mm;border-top:0.5mm solid var(--line)}
 .ct-f b{color:var(--ink);font-weight:700}
 @media print{@page{size:A4;margin:0}}
@@ -61,29 +63,54 @@ function corpo(c: Cartao): string {
   return `<div class="tx"><h3>${esc(c.titulo)}</h3><p>${esc(c.texto || "")}</p></div>`;
 }
 
-function htmlCartao(c: Cartao): string {
+function htmlCartao(c: Cartao, classe = ""): string {
   const nv = NIVEIS_CARTAO.find((n) => n.n === c.nivel);
   const titulo = c.tipo === "texto" ? "" : `<p class="ct-t">${esc(c.titulo)}</p>`;
-  return `<div class="ct"><div class="ct-h">${marcaHtml(6)}<span class="ct-nv"><i>${c.nivel}</i>${esc(nv?.nome || "")}</span></div>${titulo}<div class="ct-b">${corpo(c)}</div><div class="ct-f"><span>Cartão de leitura <b>${esc(c.id)}</b></span><span>${c.total} ${c.tipo === "silabas" ? "sílabas" : "palavras"}</span></div></div>`;
+  return `<div class="ct${classe}"><div class="ct-h">${marcaHtml(6)}<span class="ct-nv"><i>${c.nivel}</i>${esc(nv?.nome || "")}</span></div>${titulo}<div class="ct-b">${corpo(c)}</div><div class="ct-f"><span>Cartão de leitura <b>${esc(c.id)}</b></span><span>${c.total} ${c.tipo === "silabas" ? "sílabas" : "palavras"}</span></div></div>`;
 }
 
-/** Quantos cartões cabem por folha A4, conforme o tipo. */
-function porFolha(c: Cartao): 1 | 2 | 4 {
-  if (c.tipo === "texto") return c.nivel === 6 ? 1 : 2;
-  if (c.tipo === "frases") return 2;
-  return 4;
+/** Sílabas e palavras ocupam um quarto da folha; frases e textos, meia folha. */
+const largo = (c: Cartao) => c.tipo === "frases" || c.tipo === "texto";
+
+/**
+ * Divide os cartões em folhas A4, na ordem em que foram marcados. Cada folha
+ * tem duas fileiras: em uma fileira cabem dois cartões pequenos ou um largo.
+ * Assim dois cartões marcados saem sempre na mesma folha, mesmo de tipos
+ * diferentes.
+ */
+export function folhasDeCartoes(cartoes: Cartao[]): Cartao[][] {
+  const folhas: Cartao[][] = [];
+  let atual: Cartao[] = [];
+  let fileiras = 0;
+  let vagaAoLado = false;
+  for (const c of cartoes) {
+    if (!largo(c) && vagaAoLado) {
+      atual.push(c);
+      vagaAoLado = false;
+      continue;
+    }
+    if (fileiras === 2) {
+      folhas.push(atual);
+      atual = [];
+      fileiras = 0;
+    }
+    atual.push(c);
+    fileiras++;
+    vagaAoLado = !largo(c);
+  }
+  if (atual.length) folhas.push(atual);
+  return folhas;
 }
 
 export function htmlCartoes(cartoes: Cartao[]): string {
-  const paginas: string[] = [];
-  let i = 0;
-  while (i < cartoes.length) {
-    const n = porFolha(cartoes[i]);
-    const grupo: Cartao[] = [];
-    while (i < cartoes.length && grupo.length < n && porFolha(cartoes[i]) === n)
-      grupo.push(cartoes[i++]);
-    paginas.push(`<div class="pg g${n}">${grupo.map(htmlCartao).join("")}</div>`);
-  }
+  const paginas = folhasDeCartoes(cartoes).map((grupo) => {
+    // um texto longo sozinho na folha usa a folha inteira, com letra maior
+    if (grupo.length === 1 && grupo[0].nivel === 6)
+      return `<div class="pg g1">${htmlCartao(grupo[0])}</div>`;
+    return `<div class="pg gr">${grupo
+      .map((c) => htmlCartao(c, (largo(c) ? " w" : "") + (c.nivel === 6 ? " cp" : "")))
+      .join("")}</div>`;
+  });
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Cartões de leitura</title><style>${CSS}</style></head><body>${paginas.join("")}</body></html>`;
 }
 
