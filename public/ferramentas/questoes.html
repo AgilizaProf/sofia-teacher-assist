@@ -297,7 +297,7 @@ img,svg,video,canvas{max-width:100%}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
 <link rel="stylesheet" href="/ferramentas/painel-simulados.css">
 <script>if(/[?&]embed=1/.test(location.search))document.documentElement.classList.add("embed");</script>
-<style>html.embed .topo-in{display:none}html.embed header.topo{position:static;box-shadow:none;border:0;background:transparent}</style>
+<style>html.embed .topo-in{display:none}.faixa-c span,.icone-pag{color:#14161F}.faixa-c span svg{width:26px;height:26px}.icone-pag svg{width:55%;height:55%}html.embed header.topo{position:static;box-shadow:none;border:0;background:transparent}</style>
 </head>
 <body>
 
@@ -1125,7 +1125,7 @@ function nAval(v){return Object.values(S.aval).filter(x=>x===v).length;}
 function avaliar(ref,v){if(S.aval[ref]===v)delete S.aval[ref];else S.aval[ref]=v;PREF=null;salvar();return S.aval[ref]||0;}
 
 /* ============ ABAS ============ */
-const ABAS=[["inicio","Início"],["banco","Banco de questões"],["redacao","Produção textual ✍️"],["sofia","Criar com a Sofia"],["minhas","Minhas questões"],["gerador","Gerador de simulados"],["alunos","Alunos e turmas"],["leitor","Leitor QR"],["resultados","Resultados e reforço"],["relatos","Relatos de erro"]];
+const ABAS=[["inicio","Início"],["banco","Banco de questões"],["redacao","Produção textual"],["sofia","Criar com a Sofia"],["minhas","Minhas questões"],["gerador","Gerador de simulados"],["alunos","Alunos e turmas"],["leitor","Leitor QR"],["resultados","Resultados e reforço"],["relatos","Relatos de erro"]];
 // sem faixa de abas: tudo se abre pelos cartões do Início, e cada seção tem um botão para voltar
 function montarAbas(){
   const el=$("#abas"),nome=(ABAS.find(a=>a[0]===S.aba)||[])[1];
@@ -1134,8 +1134,9 @@ function montarAbas(){
   if($("#voltar-ini"))$("#voltar-ini").onclick=()=>irPara("inicio");
 }
 function irPara(k){S.aba=k;salvar();montarAbas();RENDER[k]();window.scrollTo({top:0});}
+const ICO={banco:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>',redacao:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',gerador:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',leitor:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="4" height="4"/><path d="M17 7v4M13 17h4M13 13h1"/></svg>',resultados:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/></svg>',alunos:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',minhas:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>',sofia:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>',relatos:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>'};
 function cabecalho(icone,titulo,sub,roxo){return `<div class="cab-pag"><div class="icone-pag${roxo?" roxo":""}" aria-hidden="true">${icone}</div><div><h1>${titulo}</h1>${sub?`<p class="sub">${sub}</p>`:""}</div></div>`;}
-function aplicarZoom(){document.documentElement.style.setProperty("--zoom",S.zoom||1);}
+function aplicarZoom(){const de=document.documentElement;de.style.setProperty("--zoom",de.classList.contains("embed")?1:(S.zoom||1));}
 $("#marca-ini").onclick=()=>irPara("inicio");
 $("#z-menos").onclick=()=>{S.zoom=Math.max(.85,Math.round(((S.zoom||1)-.1)*100)/100);aplicarZoom();salvar();};
 $("#z-mais").onclick=()=>{S.zoom=Math.min(1.5,Math.round(((S.zoom||1)+.1)*100)/100);aplicarZoom();salvar();};
@@ -1143,13 +1144,13 @@ $("#z-mais").onclick=()=>{S.zoom=Math.min(1.5,Math.round(((S.zoom||1)+.1)*100)/1
 /* ============ INÍCIO ============ */
 function renderInicio(){
   const nFig=todas().filter(q=>q.fig||q.img).length,nSaeb=todas().filter(q=>q.saeb).length;
-  const cards=[["banco","📚","Banco de questões",`${todas().length.toLocaleString("pt-BR")} questões do 1º ao 9º ano, com texto-base, descritores SAEB e BNCC`,"#C9DBFF,#8DB2FF"],
-    ["redacao","✍️","Produção textual",`${REDACOES.length} propostas de redação com folha pautada e critérios de correção`,"#FFE0EC,#FF9EC1"],
-    ["gerador","🖨️","Gerador de simulados","Provas tipo A, B, C e D com QR code, ou só o cartão-resposta da sua prova","#FFD3C0,#FF9A70"],
-    ["leitor","📷","Leitor QR","Fotografe o cartão e veja os acertos de cada prova","#BDEFD8,#5FD3A0"],
-    ["resultados","📊","Resultados e reforço","Notas da turma, desempenho por habilidade e o reforço para quem precisa","#C6EEF5,#6CCFE0"],
-    ["alunos","👩‍🏫","Alunos e turmas","Cadastre os nomes que saem nas provas","#F9D0DD,#F28AA8"],
-    ["minhas","🗂️","Minhas questões","Questões suas e da Sofia, com imagem própria","#DDE3EE,#AEB9CF"]];
+  const cards=[["banco",ICO.banco,"Banco de questões",`${todas().length.toLocaleString("pt-BR")} questões do 1º ao 9º ano, com texto-base, descritores SAEB e BNCC`,"#C9DBFF,#8DB2FF"],
+    ["redacao",ICO.redacao,"Produção textual",`${REDACOES.length} propostas de redação com folha pautada e critérios de correção`,"#FFE0EC,#FF9EC1"],
+    ["gerador",ICO.gerador,"Gerador de simulados","Provas tipo A, B, C e D com QR code, ou só o cartão-resposta da sua prova","#FFD3C0,#FF9A70"],
+    ["leitor",ICO.leitor,"Leitor QR","Fotografe o cartão e veja os acertos de cada prova","#BDEFD8,#5FD3A0"],
+    ["resultados",ICO.resultados,"Resultados e reforço","Notas da turma, desempenho por habilidade e o reforço para quem precisa","#C6EEF5,#6CCFE0"],
+    ["alunos",ICO.alunos,"Alunos e turmas","Cadastre os nomes que saem nas provas","#F9D0DD,#F28AA8"],
+    ["minhas",ICO.minhas,"Minhas questões","Questões suas e da Sofia, com imagem própria","#DDE3EE,#AEB9CF"]];
   const cont={minhas:S.minhas.length,resultados:S.resultados.length,relatos:relatosAbertos().length};
   $("#painel").innerHTML=`<h2 class="pn-bloco">O que você quer fazer?</h2>
    <div class="inicio-cards">${cards.map(([k,ic,t,d,g])=>`<button class="card-ini" data-ir="${k}"><div class="faixa-c" style="background:linear-gradient(135deg,${g})"><span>${ic}</span>${cont[k]?`<em class="cont">${cont[k]}</em>`:""}</div><div class="corpo"><b>${t}</b><p>${d}</p></div></button>`).join("")}</div>
@@ -1193,7 +1194,7 @@ function renderBanco(){
   const pags=Math.max(1,Math.ceil(lista.length/POR));F.pag=Math.min(F.pag,pags-1);
   const pag=lista.slice(F.pag*POR,F.pag*POR+POR);
   const cont={};todas().forEach(q=>cont[q.disc]=(cont[q.disc]||0)+1);
-  $("#painel").innerHTML=cabecalho("📚","Banco de questões",`${todas().length.toLocaleString("pt-BR")} questões alinhadas à BNCC e ao SAEB, do 1º ao 9º ano, em ${Object.keys(DISC).length} componentes. Marque 👍 Gostei ou 👎 Não gostei: as questões parecidas com as que você gosta passam a aparecer mais, aqui e no sorteio dos simulados.`)+`
+  $("#painel").innerHTML=cabecalho(ICO.banco,"Banco de questões",`${todas().length.toLocaleString("pt-BR")} questões alinhadas à BNCC e ao SAEB, do 1º ao 9º ano, em ${Object.keys(DISC).length} componentes. Marque 👍 Gostei ou 👎 Não gostei: as questões parecidas com as que você gosta passam a aparecer mais, aqui e no sorteio dos simulados.`)+`
    <div class="pilulas" style="margin-bottom:12px"><button class="pilula" data-disc="" aria-pressed="${!F.disc}">Todas <small>${todas().length}</small></button>${Object.entries(DISC).map(([k,v])=>`<button class="pilula" data-disc="${k}" aria-pressed="${F.disc===k}">${v} <small>${cont[k]||0}</small></button>`).join("")}</div>
    <div class="grade-filtros" style="margin-bottom:12px">
     <label class="campo">Ano<select id="f-ano">${opcoes(ANOS,F.ano,"Todos os anos")}</select></label>
@@ -1263,7 +1264,7 @@ function renderRedacao(){
   if(RD.genero&&!generos.includes(RD.genero))RD.genero="";
   const lista=base.filter(r=>(!RD.genero||r.genero===RD.genero)&&(!RD.fig||(RD.fig==="com"?!!r.fig:!r.fig))&&(!b||semAcento([r.tema,r.genero,r.enunciado,r.texto,r.hab,r.id].join(" ")).toLowerCase().includes(b)));
   const POR=10,pags=Math.max(1,Math.ceil(lista.length/POR));RD.pag=Math.min(RD.pag,pags-1);
-  $("#painel").innerHTML=cabecalho("✍️","Produção textual",`${REDACOES.length} propostas de redação do 1º ao 9º ano, com gêneros da BNCC, textos motivadores e imagens. Cada proposta sai impressa com folha pautada, campos para nome, turma e data e critérios de correção.`)+`
+  $("#painel").innerHTML=cabecalho(ICO.redacao,"Produção textual",`${REDACOES.length} propostas de redação do 1º ao 9º ano, com gêneros da BNCC, textos motivadores e imagens. Cada proposta sai impressa com folha pautada, campos para nome, turma e data e critérios de correção.`)+`
    <div class="grade-filtros" style="margin-bottom:12px">
     <label class="campo">Ano<select id="rd-ano">${opcoes(ANOS,RD.ano,"Todos os anos")}</select></label>
     <label class="campo">Gênero<select id="rd-gen">${opcoes(Object.fromEntries(generos.map(g=>[g,g])),RD.genero,"Todos os gêneros")}</select></label>
@@ -1370,9 +1371,9 @@ function validarSofia(o,ano,disc){
 function campoImagem(){return `<div class="grade-filtros"><label class="campo">Imagens nas questões<select id="sf-img">${opcoes({sem:"Sem imagem",algumas:"Algumas com imagem",todas:"Todas com imagem"},SF.img)}</select></label>
    <label class="campo">Tipo de imagem<select id="sf-figtipo"${SF.img==="sem"?" disabled":""}>${opcoes({graf:"Gráficos e tabelas",geo:"Figuras geométricas",tir:"Tirinhas",mapa:"Mapas e orientação",ciclo:"Ciclos e sequências",cont:"Contagem, dinheiro, relógio"},SF.figTipo,"A Sofia escolhe")}</select></label></div>`;}
 async function renderSofia(){
-  if(!SOFIA_LIGADA){$("#painel").innerHTML=cabecalho("✨","Criar com a Sofia","Em breve a Sofia vai criar questões sob medida aqui, com gabarito, prontas para entrar no seu simulado.",true)+`<div class="aviso">Em breve. Enquanto isso, use as 52 mil questões do banco ou escreva as suas em Minhas questões.</div><div class="linha-acoes" style="margin-top:14px"><button class="btn prim" data-ir2="banco">Abrir o banco de questões</button><button class="btn" data-ir2="minhas">Minhas questões</button></div>`;$("#painel").querySelectorAll("[data-ir2]").forEach(b=>b.onclick=()=>irPara(b.dataset.ir2));return;}
+  if(!SOFIA_LIGADA){$("#painel").innerHTML=cabecalho(ICO.sofia,"Criar com a Sofia","Em breve a Sofia vai criar questões sob medida aqui, com gabarito, prontas para entrar no seu simulado.",true)+`<div class="aviso">Em breve. Enquanto isso, use as 52 mil questões do banco ou escreva as suas em Minhas questões.</div><div class="linha-acoes" style="margin-top:14px"><button class="btn prim" data-ir2="banco">Abrir o banco de questões</button><button class="btn" data-ir2="minhas">Minhas questões</button></div>`;$("#painel").querySelectorAll("[data-ir2]").forEach(b=>b.onclick=()=>irPara(b.dataset.ir2));return;}
   const base=SF.base!=null?getQ(SF.base):null;
-  $("#painel").innerHTML=cabecalho("✨","Criar com a Sofia","A Sofia é a assistente pedagógica do AgilizaProf. Diga o ano, o componente e o tema, e ela cria questões novas, com ou sem imagem e com gabarito, prontas para entrar no seu simulado.",true)+`
+  $("#painel").innerHTML=cabecalho(ICO.sofia,"Criar com a Sofia","A Sofia é a assistente pedagógica do AgilizaProf. Diga o ano, o componente e o tema, e ela cria questões novas, com ou sem imagem e com gabarito, prontas para entrar no seu simulado.",true)+`
    <div class="duas larga">
     <section class="painel pilha">
      <div class="sofia-cab"><div class="avatar" aria-hidden="true">S</div><div class="balao">${base?`Vou criar questões parecidas com a <b>${esc(base.id)}</b> (${anoTxt(base.ano)}, ${esc(DISC[base.disc])}): mesma habilidade, outro contexto.`:"Olá, professor(a)! Me conte o que você precisa. Posso criar questões no estilo BNCC ou SAEB, usar um texto que você colar e desenhar gráficos, formas, relógios, mapas e tirinhas."}</div></div>
@@ -1443,7 +1444,7 @@ function desenharResSofia(){
 /* ============ MINHAS QUESTÕES ============ */
 let ED=null;
 function renderMinhas(){
-  $("#painel").innerHTML=cabecalho("🗂️","Minhas questões","Questões que você escreveu ou guardou da Sofia. Elas entram no banco, nos simulados e no leitor QR como qualquer outra. Você pode anexar uma imagem própria.")+`
+  $("#painel").innerHTML=cabecalho(ICO.minhas,"Minhas questões","Questões que você escreveu ou guardou da Sofia. Elas entram no banco, nos simulados e no leitor QR como qualquer outra. Você pode anexar uma imagem própria.")+`
    <div class="linha-acoes" style="margin-bottom:14px"><button class="btn prim" id="m-nova">+ Escrever questão</button>${SOFIA_LIGADA?`<button class="btn roxo" id="m-sofia">✨ Pedir à Sofia</button>`:""}</div>
    <div id="m-editor"></div>
    <div class="lista" id="m-lista">${S.minhas.length?S.minhas.map(q=>`<div class="pilha" style="gap:6px">${htmlQuestao(q,{gab:true})}<div class="linha-acoes"><button class="btn peq" data-editar="${q.id}">Editar</button><button class="btn peq perigo" data-apagarq="${q.id}">Apagar</button></div></div>`).join(""):`<div class="vazio">Você ainda não tem questões próprias. Escreva uma ou peça à Sofia.</div>`}</div>
@@ -1718,7 +1719,7 @@ function renderGerador(){
   if(!G.turmas.length&&S.turmas[0])G.turmas=[S.turmas[0].id];
   const turma=S.turmas.find(t=>G.turmas.includes(t.id));
   anoDaTurma();
-  $("#painel").innerHTML=cabecalho("🖨️","Gerador de simulados","Gere uma prova para cada aluno da turma, com o nome impresso e um cartão-resposta com QR code próprio. Escolha tipos de prova A, B, C e D com as mesmas questões em ordens diferentes, uma versão por aluno ou prova única. O QR guarda o aluno, o tipo e o gabarito. Se a prova foi feita fora do AgilizaProf, gere só o cartão-resposta com o seu gabarito.")+`
+  $("#painel").innerHTML=cabecalho(ICO.gerador,"Gerador de simulados","Gere uma prova para cada aluno da turma, com o nome impresso e um cartão-resposta com QR code próprio. Escolha tipos de prova A, B, C e D com as mesmas questões em ordens diferentes, uma versão por aluno ou prova única. O QR guarda o aluno, o tipo e o gabarito. Se a prova foi feita fora do AgilizaProf, gere só o cartão-resposta com o seu gabarito.")+`
    <div class="duas">
     <section class="painel pilha">
      <h2>1. Questões</h2>
@@ -2186,7 +2187,7 @@ let turmaAberta=null;
 function renderAlunos(){
   if(!S.turmas.find(t=>t.id===turmaAberta))turmaAberta=S.turmas[0]?.id||null;
   const t=S.turmas.find(x=>x.id===turmaAberta);
-  $("#painel").innerHTML=cabecalho("👩‍🏫","Alunos e turmas","Os nomes cadastrados aqui saem impressos em cada prova e dentro do QR code do cartão-resposta. As turmas, os simulados e os resultados ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.")+`
+  $("#painel").innerHTML=cabecalho(ICO.alunos,"Alunos e turmas","Os nomes cadastrados aqui saem impressos em cada prova e dentro do QR code do cartão-resposta. As turmas, os simulados e os resultados ficam salvos na sua conta e aparecem em qualquer aparelho em que você entrar.")+`
    <div class="duas">
     <section class="painel pilha">
      <h2>Turmas</h2>
@@ -2245,7 +2246,7 @@ let LS={simId:"",lote:[]}; // simulado em foco e provas lidas nesta sessão
 function renderLeitor(){
   const sims=S.simulados;
   if(!LS.simId&&sims[0])LS.simId=sims[0].id;
-  $("#painel").innerHTML=cabecalho("📷","Leitor QR","Fotografe o cartão-resposta de frente, com boa luz e o cartão inteiro na foto. O QR identifica o aluno e o simulado, as bolinhas pintadas são lidas automaticamente e a quantidade de acertos aparece na hora. Você também pode escolher várias fotos de uma vez.")+`
+  $("#painel").innerHTML=cabecalho(ICO.leitor,"Leitor QR","Fotografe o cartão-resposta de frente, com boa luz e o cartão inteiro na foto. O QR identifica o aluno e o simulado, as bolinhas pintadas são lidas automaticamente e a quantidade de acertos aparece na hora. Você também pode escolher várias fotos de uma vez.")+`
    <div class="duas">
     <section class="pilha">
      <div class="painel pilha">
@@ -2538,7 +2539,7 @@ function renderRelatos(){
   const todos=relatosTodos();const lista=RF2==="abertos"?todos.filter(r=>r.status==="aberto"):todos;
   const pode=!RDB||RPODE;
   const porTipo={};todos.filter(r=>r.status==="aberto").forEach(r=>porTipo[r.tipo]=(porTipo[r.tipo]||0)+1);
-  $("#painel").innerHTML=cabecalho("⚠️","Relatos de erro","Quando alguém encontra uma questão que precisa de ajuste, o relato aparece aqui com o tipo de problema e a explicação. Use o botão ⚠️ Relatar erro em qualquer questão do banco ou da projeção.")+`
+  $("#painel").innerHTML=cabecalho(ICO.relatos,"Relatos de erro","Quando alguém encontra uma questão que precisa de ajuste, o relato aparece aqui com o tipo de problema e a explicação. Use o botão ⚠️ Relatar erro em qualquer questão do banco ou da projeção.")+`
    ${RDB?"":`<div class="aviso" style="margin-bottom:14px">Os seus relatos ficam guardados na sua conta. Em breve eles vão direto para a equipe que revisa o banco.</div>`}
    <div class="resumo-num" style="margin-bottom:14px"><div><b>${todos.filter(r=>r.status==="aberto").length}</b><span>relatos abertos</span></div><div><b>${todos.filter(r=>r.status==="corrigido").length}</b><span>corrigidos</span></div>${Object.entries(porTipo).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,n])=>`<div><b>${n}</b><span>${esc(TIPOS_RELATO[k]||k)}</span></div>`).join("")}</div>
    <div class="pilulas" style="margin-bottom:12px"><button class="pilula" data-rf="abertos" aria-pressed="${RF2==="abertos"}">Abertos</button><button class="pilula" data-rf="todos" aria-pressed="${RF2==="todos"}">Todos</button>${todos.length?`<button class="pilula" id="rl-csv">Baixar planilha (CSV)</button>`:""}</div>
@@ -2701,7 +2702,7 @@ function renderResultados(){
      <div class="painel pilha"><h2>Análise das alternativas</h2><p class="fonte" style="margin:0">Quantos alunos marcaram cada alternativa (na ordem original da questão). Uma alternativa errada muito marcada indica um erro comum para trabalhar em sala.</p>
       <div class="tabela-wrap"><table><thead><tr><th>Questão</th><th>Acerto</th><th>A</th><th>B</th><th>C</th><th>D</th><th>Branco</th></tr></thead><tbody>${itensQ.slice().sort((a,b)=>a.o.a/a.o.n-b.o.a/b.o.n).map(({q,o,k})=>`<tr><td style="white-space:normal;min-width:220px">${q.origem==="cartao"?`<b>Questão ${k+1}</b>`:`<b>${k+1}. ${esc(q.id)}</b> ${esc((q.enunciado||"").slice(0,70))}${q.enunciado.length>70?"…":""}`}</td><td class="num">${pct(o.a/o.n)}</td>${[0,1,2,3].map(j=>`<td class="num"${j===q.correta?' style="color:var(--bom);font-weight:800"':""}>${o.alt[j]}</td>`).join("")}<td class="num">${o.alt[4]}</td></tr>`).join("")}</tbody></table></div></div>`;
   }
-  $("#painel").innerHTML=cabecalho("📊","Resultados e reforço","Notas da turma, desempenho por descritor do SAEB ou habilidade da BNCC e, conforme a nota de cada aluno, o que reforçar.")+`
+  $("#painel").innerHTML=cabecalho(ICO.resultados,"Resultados e reforço","Notas da turma, desempenho por descritor do SAEB ou habilidade da BNCC e, conforme a nota de cada aluno, o que reforçar.")+`
    ${chaves.length?`<div class="linha-acoes" style="margin-bottom:14px;align-items:flex-end"><label class="campo" style="flex:1;min-width:220px">Simulado<select id="r-sim">${chaves.map(k=>`<option value="${esc(k)}"${k===RF?" selected":""}>${esc(k.split("|").slice(1).join("|"))}${(d=>d?" · "+esc(d):"")(simDisc(S.simulados.find(s=>s.id===k.split("|")[0])))} (${grupos[k].length})</option>`).join("")}</select></label>${tlist.length>1?`<label class="campo" style="min-width:180px">Turma<select id="r-turma"><option value="">Todas as turmas</option>${tlist.map(t=>`<option${t===RT?" selected":""}>${esc(t)}</option>`).join("")}</select></label>`:""}<button class="btn prim" id="r-quadro">🖨️ Imprimir resultados</button><button class="btn" id="r-csv">Planilha (CSV)</button></div><div class="pilha">${simDisc(sim)?`<p class="fonte" style="margin:0;font-size:1rem">Disciplina: <b>${esc(simDisc(sim))}</b>${sim.turma?` · Turma: <b>${esc(RT||sim.turma)}</b>`:""}</p>`:""}${analise}</div>`
    :`<div class="vazio">Ainda não há resultados. Corrija os cartões-resposta na aba Leitor QR.</div>`}`;
   if(!chaves.length)return;

@@ -72,7 +72,7 @@ const CARDS: Card[] = [
     desc: "Leitura e escrita de cada aluno, com cartões e evolução",
     bg: "var(--pn-blue-soft)",
     tag: "Novo",
-    icon: ICONS.book,
+    icon: ICONS.abc,
   },
   {
     to: "/inclusao",
@@ -86,7 +86,7 @@ const CARDS: Card[] = [
     title: "Agenda",
     desc: "Reuniões, provas e prazos da escola",
     bg: "var(--pn-green-soft)",
-    icon: ICONS.cal,
+    icon: ICONS.clock,
   },
   {
     to: "/jogos",
@@ -110,19 +110,6 @@ const CARDS: Card[] = [
       <>
         <path d="M9 11l3 3L22 4" />
         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-      </>
-    ),
-  },
-  {
-    to: "/indicacoes",
-    title: "Indique e ganhe",
-    desc: "Convide colegas e ganhe créditos e meses grátis",
-    bg: "var(--pn-sun)",
-    icon: (
-      <>
-        <rect x="3" y="8" width="18" height="4" rx="1" />
-        <path d="M12 8v13M19 12v9H5v-9" />
-        <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
       </>
     ),
   },
@@ -226,6 +213,7 @@ a.hm-card:hover{border-color:var(--pn-ink);box-shadow:4px 4px 0 var(--pn-ink);tr
   .hm-sofia{padding:14px;}
   .hm-time .lbl{display:none;}
   .hm-cred .bar{width:40px;}
+  .hm-cred-eq{display:none;}
   .hm-sugs{display:none;}
   .hm-curr{padding:12px;gap:10px;}
   .hm-curr .hm-badge{width:36px;height:36px;}
@@ -476,7 +464,7 @@ export function Home() {
                   enviar();
                 }
               }}
-              placeholder="O que você precisa hoje? Ex.: planeje uma aula de frações com adaptação para um aluno com TEA."
+              placeholder="O que você precisa hoje? Ex.: aula de frações com adaptação para TEA."
             />
             <div className="hm-box-row">
               {turmas.length > 0 && (
@@ -549,7 +537,7 @@ export function Home() {
 
         <div className="hm-sec">
           <h2>Suas ferramentas</h2>
-          <span>{CARDS.length + 1} funções</span>
+          <span>{CARDS.length + (pendentes > 0 ? 1 : 0)} funções</span>
         </div>
         <nav className="hm-cards" aria-label="Funcionalidades">
           {pendentes > 0 && cardWa}
@@ -587,8 +575,8 @@ export function Home() {
               </div>
             );
           })}
-          {/* Enquanto o WhatsApp não está no ar, o cartão fica por último. */}
-          {pendentes === 0 && cardWa}
+          {/* Sem mensagens esperando, o "Para confirmar" fica só no topo e no menu,
+              e a grade fecha em linhas completas. "Indique e ganhe" também fica no topo. */}
         </nav>
 
         {!app.instalado && (

@@ -19,6 +19,7 @@ import { useFontSize, useHighContrast } from "@/hooks/useA11y";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
+import { installGetUserCache } from "@/lib/supabase/cacheGetUser";
 import {
   installPlatformTelemetry,
   trackPageVisit,
@@ -34,11 +35,14 @@ import { META_PIXEL_ID, trackPageView } from "@/lib/tracking";
 
 import appCss from "../styles.css?url";
 
+// Antes de qualquer tela montar: evita dezenas de getUser() iguais ao servidor.
+if (typeof window !== "undefined") installGetUserCache();
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#0B7A55" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -136,9 +140,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
             __html: `
           #ap-splash{position:fixed;inset:0;background:#EDF0F5;
             display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999;
-            transition:opacity .4s ease;font-family:'DM Sans',-apple-system,sans-serif;}
-          #ap-splash.hide{opacity:0;pointer-events:none;}
-          #ap-splash .ap-logo{font-family:'Sora',Georgia,serif;font-weight:900;font-size:40px;color:#14161F;letter-spacing:-.03em;}
+            transition:opacity .2s ease;font-family:'DM Sans',-apple-system,sans-serif;}
+          #ap-splash.hide{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility 0s .2s;}
+          #ap-splash .ap-logo{font-family:'Sora',Georgia,serif;font-weight:800;font-size:40px;color:#14161F;letter-spacing:-.03em;}
           #ap-splash .ap-logo span{color:#0B7A55;}
           #ap-splash .ap-sub{font-size:13px;color:#596074;font-weight:500;letter-spacing:.04em;}
           #ap-splash .ap-ring{width:36px;height:36px;border:2.5px solid rgba(11,122,85,.25);border-top-color:#0B7A55;
@@ -291,14 +295,18 @@ function RootComponent() {
     });
     return () => subscription.unsubscribe();
   }, []);
-  useEffect(() => {
-    if (typeof window !== "undefined") window.scrollTo(0, 0);
-  }, [loc.pathname]);
+  // Rolagem: o roteador (scrollRestoration) já leva ao topo nas páginas novas e
+  // devolve a posição ao voltar. Forçar o topo aqui fazia o "voltar" perder o lugar.
 
   useReducedMotion();
   useFontSize();
   useHighContrast();
   const { ready, authed, isPublicRoute } = useAuthGuard();
+  // A tela de abertura sai assim que o app sabe o que mostrar, sem esperar
+  // o carregamento de scripts de terceiros (Pixel) e imagens.
+  useEffect(() => {
+    if (ready || isPublicRoute) document.getElementById("ap-splash")?.classList.add("hide");
+  }, [ready, isPublicRoute]);
   // No primeiro acesso a pessoa só informa nome e celular; a Sofia aparece depois.
   const showSofia = ready && authed && !isPublicRoute && loc.pathname !== "/onboarding";
 

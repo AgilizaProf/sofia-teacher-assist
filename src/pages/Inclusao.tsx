@@ -2221,7 +2221,8 @@ ${ident}
                   <div className="list-search">
                     <Search size={14} />
                     <input
-                      placeholder="Buscar por nome, turma ou diagnóstico…"
+                      placeholder="Buscar aluno…"
+                      aria-label="Buscar por nome, turma ou diagnóstico"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                     />

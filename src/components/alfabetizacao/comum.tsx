@@ -101,7 +101,7 @@ html{scrollbar-gutter:stable;}
 .af-barras{display:grid;gap:6px;}
 .af-barra{display:grid;grid-template-columns:minmax(120px,190px) 1fr 34px;gap:8px;align-items:center;font-size:13.5px;}
 .af-barra i{display:block;height:20px;border-radius:6px;border:1.5px solid var(--pn-ink);min-width:3px;}
-.af-barra .tr{background:var(--pn-bg);border-radius:6px;}
+.af-barra .tr{background:var(--pn-bg);border-radius:6px;min-height:20px;}
 .af-barra b{text-align:right;font-variant-numeric:tabular-nums;}
 .af-nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 14px;}
 .af-num{position:relative;padding:14px 16px;border-radius:16px;background:var(--pn-surface);border:1.5px solid var(--pn-ink);}
@@ -246,7 +246,8 @@ html{scrollbar-gutter:stable;}
   .af-cartao.fra p{font-size:22px;}
   .af-cartao.txt p{font-size:19px;line-height:1.65;}
   .af-pals button{min-height:46px;font-size:17px;padding:4px 12px;}
-  .af-barra{grid-template-columns:110px 1fr 28px;}
+  .af-barra{grid-template-columns:1fr 28px;row-gap:3px;}
+  .af-barra > span{grid-column:1 / -1;}
   .af-acoes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
   .af-acoes .af-mini{padding:0 4px;font-size:13.5px;}
   /* o app deixa toda tabela rolar de lado no celular; aqui cada aluno já é um cartão */
