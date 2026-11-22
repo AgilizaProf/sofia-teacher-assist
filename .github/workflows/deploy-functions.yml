@@ -31,15 +31,21 @@ jobs:
         run: |
           sleep 20
           falhou=0
+          # Chave pública do app (a mesma do navegador), para passar do portão
+          # de login do Supabase e a função ser ligada de verdade.
+          chave=$(grep -oP 'VITE_SUPABASE_PUBLISHABLE_KEY="?\K[^"]+' .env)
           for dir in supabase/functions/*/; do
             nome=$(basename "$dir")
             [ "$nome" = "_shared" ] && continue
             [ -f "$dir/index.ts" ] || continue
-            codigo=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS \
+            codigo=$(curl -s -o /tmp/resp.txt -w "%{http_code}" -X POST \
               "https://${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co/functions/v1/$nome" \
-              -H "Origin: https://agilizaprof.app.br" -H "Access-Control-Request-Method: POST" --max-time 60)
-            echo "$nome: $codigo"
-            if [ "$codigo" != "200" ] && [ "$codigo" != "204" ]; then falhou=1; fi
+              -H "Content-Type: application/json" -H "Authorization: Bearer $chave" -H "apikey: $chave" \
+              -d '{}' --max-time 60)
+            echo "$nome: $codigo $(head -c 200 /tmp/resp.txt)"
+            # OPTIONS responde 200 mesmo com a função quebrada; o POST mostra o
+            # BOOT_ERROR (503).
+            if grep -q "BOOT_ERROR\|WORKER_ERROR" /tmp/resp.txt || [ "$codigo" = "000" ] || [ "$codigo" = "503" ]; then falhou=1; fi
           done
           if [ "$falhou" = "1" ]; then
             echo "::error::Uma ou mais funções da Sofia não iniciaram depois da publicação."
