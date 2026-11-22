@@ -367,6 +367,7 @@ export type Database = {
           ano_referencia: number
           ciclo_snapshot: string | null
           created_at: string
+          creditos_bonus_persistente: number
           creditos_totais: number
           creditos_utilizados: number
           data_renovacao: string
@@ -383,6 +384,7 @@ export type Database = {
           ano_referencia: number
           ciclo_snapshot?: string | null
           created_at?: string
+          creditos_bonus_persistente?: number
           creditos_totais?: number
           creditos_utilizados?: number
           data_renovacao?: string
@@ -399,6 +401,7 @@ export type Database = {
           ano_referencia?: number
           ciclo_snapshot?: string | null
           created_at?: string
+          creditos_bonus_persistente?: number
           creditos_totais?: number
           creditos_utilizados?: number
           data_renovacao?: string
@@ -1253,10 +1256,15 @@ export type Database = {
           plan: string
           purchased_at: string
           referral_code: string
+          referred_bonus_credits: number
           referred_bonus_days: number
+          referred_credited: boolean
           referred_user_id: string
+          referrer_bonus_credits: number
           referrer_bonus_days: number
+          referrer_credited: boolean
           referrer_user_id: string
+          source: string
         }
         Insert: {
           created_at?: string
@@ -1267,10 +1275,15 @@ export type Database = {
           plan: string
           purchased_at?: string
           referral_code: string
+          referred_bonus_credits?: number
           referred_bonus_days: number
+          referred_credited?: boolean
           referred_user_id: string
+          referrer_bonus_credits?: number
           referrer_bonus_days: number
+          referrer_credited?: boolean
           referrer_user_id: string
+          source?: string
         }
         Update: {
           created_at?: string
@@ -1281,10 +1294,15 @@ export type Database = {
           plan?: string
           purchased_at?: string
           referral_code?: string
+          referred_bonus_credits?: number
           referred_bonus_days?: number
+          referred_credited?: boolean
           referred_user_id?: string
+          referrer_bonus_credits?: number
           referrer_bonus_days?: number
+          referrer_credited?: boolean
           referrer_user_id?: string
+          source?: string
         }
         Relationships: []
       }
@@ -1897,6 +1915,14 @@ export type Database = {
         }
         Returns: Json
       }
+      adicionar_creditos_bonus_persistente: {
+        Args: { _descricao: string; _quantidade: number; _user_id: string }
+        Returns: Json
+      }
+      admin_conceder_indicacao: {
+        Args: { _plan: string; _referred: string; _referrer: string }
+        Returns: Json
+      }
       admin_grant_pro: {
         Args: {
           _ciclo: string
@@ -1919,11 +1945,16 @@ export type Database = {
         Returns: Json
       }
       cleanup_old_sofia_conversations: { Args: never; Returns: undefined }
+      conceder_acesso_bonus_dias: {
+        Args: { _dias: number; _user_id: string }
+        Returns: string
+      }
       consumir_creditos: {
         Args: { _descricao: string; _quantidade: number; _user_id: string }
         Returns: Json
       }
       ensure_referral_code: { Args: { _uid: string }; Returns: string }
+      expire_referral_bonus_subscriptions: { Args: never; Returns: number }
       garantir_creditos_usuario: { Args: { _user_id: string }; Returns: Json }
       has_role: {
         Args: {
@@ -1945,7 +1976,12 @@ export type Database = {
           url_mensal: string
         }[]
       }
+      referral_code_exists: { Args: { _code: string }; Returns: boolean }
       registrar_mensagem_sofia: { Args: { _user_id: string }; Returns: Json }
+      reordenar_semanas_trilha: {
+        Args: { _ordem: string[]; _trilha_id: string }
+        Returns: undefined
+      }
       touch_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {

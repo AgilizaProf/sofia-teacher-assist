@@ -8,6 +8,20 @@
       "when": 1795369037623,
       "tag": "0000_whatsapp_entradas_biblioteca",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795369688195,
+      "tag": "0001_referral_rewards_acesso_creditos",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795369750271,
+      "tag": "0002_seguranca_indicacoes_creditos_perfis",
+      "breakpoints": true
     }
   ]
 }
