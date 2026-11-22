@@ -614,7 +614,6 @@ export function Relatorios() {
       return curriculosAtivos.find((c) => c.eh_padrao)?.id ?? curriculosAtivos[0]?.id ?? "bncc";
     });
   }, [curriculosAtivos, filterTurma, turmasDb]);
-  const [filterBimestre, setFilterBimestre] = useState("1º");
   const [filterPcd, setFilterPcd] = useState(routeSearch.pcd === "apenas" ? "Apenas PCD" : "Todos");
 
   // Sincroniza filtros com mudanças nos search params (deep-link vindo do Dashboard).
@@ -1794,19 +1793,6 @@ ${parecerHtml}
               <Calendar size={13} /> Turma · {filterTurma} <ChevronDown size={11} strokeWidth={2.4} />
               <Dropdown id="turma" value={filterTurma} onChange={setFilterTurma}
                 options={["Todas", ...dashClasses.map((c) => c.name)]} />
-            </div>
-            <div
-              className="rel-pill"
-              role="button"
-              tabIndex={0}
-              aria-haspopup="menu"
-              aria-expanded={openDropdown === "bim"}
-              onClick={() => setOpenDropdown(openDropdown === "bim" ? null : "bim")}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenDropdown(openDropdown === "bim" ? null : "bim"); } }}
-            >
-              <Calendar size={13} /> Bimestre · {filterBimestre} <ChevronDown size={11} strokeWidth={2.4} />
-              <Dropdown id="bim" value={filterBimestre} onChange={setFilterBimestre}
-                options={["1º", "2º", "3º", "4º"]} />
             </div>
             <div
               className="rel-pill"

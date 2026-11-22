@@ -65,7 +65,7 @@ async function exportarM4ParaAgenda(
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
-export type Habilidade = { codigo: string; descricao: string };
+export type Habilidade = { codigo: string; descricao: string; /** Código BNCC equivalente quando o código é da rede municipal. */ bncc?: string };
 export type Adaptacao = {
   categoria: "TEA" | "TDAH" | "DI" | "Deficiência física" | "Outra";
   texto: string;
@@ -1452,7 +1452,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       ));
       partes.push(editorialLongField(
         p.habilidades.map((h) => {
-          const cod = h.codigo?.trim();
+          const cod = [h.codigo?.trim(), h.bncc && h.bncc !== h.codigo ? `BNCC ${h.bncc}` : ""].filter(Boolean).join(" · ");
           const desc = h.descricao?.trim();
           if (cod && desc) return `• ${cod} — ${desc}`;
           return `• ${cod || desc || "—"}`;
@@ -2217,7 +2217,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           etapa={isEI ? "infantil" : etapaDoAno(anoEscolar)}
           ano={anoEscolar}
           componentes={disciplina && disciplina !== "Interdisciplinar" ? [disciplina] : []}
-          habilidades={(plano.habilidades ?? []).map((h) => h.codigo).filter(Boolean)}
+          habilidades={(plano.habilidades ?? []).map((h) => h.bncc || h.codigo).filter(Boolean)}
         />
       </div>
 
@@ -2544,7 +2544,7 @@ function PlanoBody(props: {
           {plano.habilidades.map((h, i) => (
             <div className="atv-hab-item" key={`${h.codigo}-${i}`}>
               <span className="atv-chip" title={h.descricao}>
-                {h.codigo}
+                {h.codigo}{h.bncc && h.bncc !== h.codigo ? ` · BNCC ${h.bncc}` : ""}
                 <button onClick={() => props.onRemoveHab(i)} aria-label="Remover">
                   <X size={11} />
                 </button>

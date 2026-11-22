@@ -339,8 +339,13 @@ export function Alfabetizacao() {
   const todos = useMemo<AlunoAlfa[]>(
     () =>
       students.map((s) => {
-        const t = s.turma && s.turma !== "Sem turma" ? s.turma : "";
-        const cls = turmas.find((x) => x.name === t);
+        const bruto = s.turma && s.turma !== "Sem turma" ? s.turma : "";
+        // "PRÉ 2 · ESCOLA TESTE" é a mesma turma "PRÉ 2" do cadastro: junta as duas.
+        const doCadastro = turmas.find(
+          (x) => x.name && (bruto === x.name || bruto.toLowerCase().startsWith(`${x.name.toLowerCase()} · `)),
+        );
+        const t = doCadastro?.name ?? bruto;
+        const cls = doCadastro;
         return {
           id: s.id,
           nome: s.name,
