@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { conferirHabilidades, habilidadesDoAno, listaParaPrompt } from "../_shared/bnccOficial.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -38,6 +39,11 @@ serve(async (req) => {
     };
     const tempo = tempoAtencao[faixa_etaria] || "tempo adequado à faixa etária";
 
+    // Objetivos de aprendizagem oficiais (BNCC-EI) do grupo etário e dos campos
+    // escolhidos. A coordenação costuma pedir o código (ex.: EI03ET07).
+    const anoEI = `Educação Infantil ${faixa_etaria}`;
+    const objetivosOficiais = habilidadesDoAno(anoEI, campos_experiencia, 40);
+
     const sys = `Você é a Sofia, assistente pedagógica do AgilizaProf, especializada em Educação Infantil (BNCC-EI). NUNCA use termos do Ensino Fundamental (habilidade BNCC, plano de aula, avaliação formal, exercício, disciplina, nota, conceito, rendimento). USE: campos de experiência, intenção pedagógica, observação e registro, brincadeira, vivência, roteiro de experiência, marcos de desenvolvimento. Linguagem em português brasileiro, acolhedora, focada nas crianças. Responda APENAS em JSON válido.\n\nREGRA DE REDAÇÃO (inviolável para parecer/relatório descritivo): NUNCA mencione, cite ou faça referência a que a informação veio de "observações", "registros", "anotações", "anamnese" ou "notas do(a) educador(a)" ao descrever a criança. Escreva sempre como conhecimento direto sobre a criança (ex.: "demonstra interesse em…", "está desenvolvendo…", "avança em…"). Os campos estruturais do roteiro (o_que_observar, registro) continuam usando esses termos normalmente — a regra vale para descrições da criança.`;
 
     const user = `Crie um ROTEIRO DE EXPERIÊNCIA para Educação Infantil.
@@ -51,13 +57,14 @@ DURAÇÃO PREVISTA: ${duracao} minutos
 ALUNOS PCD NA TURMA: ${alunos_pcd.length ? alunos_pcd.join(", ") : "(nenhum)"}
 
 TEMPO DE ATENÇÃO ESPERADO PARA ESSA FAIXA: ${tempo}
-
+${objetivosOficiais.length ? `\nOBJETIVOS DE APRENDIZAGEM DA BNCC PARA ESSA FAIXA E ESSES CAMPOS (escolha 1 a 3 desta lista, copiando código e texto):\n${listaParaPrompt(objetivosOficiais)}\n` : ""}
 Devolva APENAS JSON válido neste formato exato:
 {
   "titulo": "título criativo da experiência em linguagem infantil",
   "intencao_pedagogica": {
     "descricao": "o que a professora intenciona observar e favorecer",
-    "direitos_aprendizagem": ["Brincar", "Explorar", ...]
+    "direitos_aprendizagem": ["Brincar", "Explorar", ...],
+    "objetivos_bncc": [{ "codigo": "EI03ET07", "descricao": "texto oficial do objetivo" }]
   },
   "preparacao_ambiente": {
     "organizacao": "como organizar o espaço antes das crianças chegarem",
@@ -101,6 +108,15 @@ Regras:
         { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
       );
     }
+
+    // Só ficam objetivos que existem na BNCC e são do grupo e campo certos.
+    const intencao = (roteiro.intencao_pedagogica ?? {}) as Record<string, unknown>;
+    const conf = conferirHabilidades(
+      intencao.objetivos_bncc as Array<{ codigo?: string; descricao?: string }> | undefined,
+      anoEI,
+      campos_experiencia,
+    );
+    roteiro.intencao_pedagogica = { ...intencao, objetivos_bncc: conf.habilidades.slice(0, 3) };
 
     return new Response(JSON.stringify({ roteiro, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },

@@ -11,7 +11,7 @@
 
 import { BNCC_EF, BNCC_EI } from "./bnccDados.ts";
 
-export type Habilidade = { codigo: string; descricao: string };
+export type Habilidade = { codigo: string; descricao: string; bncc?: string };
 
 const COMP_EF: Record<string, string> = {
   "lingua portuguesa": "lp",
@@ -121,7 +121,7 @@ export type ResultadoConferencia = {
  *   o resto sai.
  */
 export function conferirHabilidades(
-  habilidades: Array<{ codigo?: string; descricao?: string }> | undefined,
+  habilidades: Array<{ codigo?: string; descricao?: string; bncc?: string }> | undefined,
   ano: string,
   disciplinas: string[],
   municipal?: Array<{ codigo: string; descricao: string }> | null,
@@ -167,7 +167,16 @@ export function conferirHabilidades(
     // municipal, para que código e texto nunca fiquem trocados.
     if (!ef && !eiItem && mapaMunicipal.has(cod)) {
       vistos.add(cod);
-      out.push({ codigo: original, descricao: mapaMunicipal.get(cod) || h.descricao || "" });
+      // Código da BNCC equivalente, só se ele existir e for do ano/componente certo.
+      const eq = (h?.bncc || "").trim().toUpperCase();
+      let bncc: string | undefined;
+      if (eq) {
+        const efEq = BNCC_EF[eq];
+        const eiEq = BNCC_EI[eq];
+        if (efEq && !ei && n && n >= efEq[1] && n <= efEq[2] && (!comps.length || comps.includes(efEq[3]))) bncc = eq;
+        else if (eiEq && ei && (!g || eiEq[1] === g)) bncc = eq;
+      }
+      out.push({ codigo: original, descricao: mapaMunicipal.get(cod) || h.descricao || "", ...(bncc ? { bncc } : {}) });
       continue;
     }
     if (!ef && !eiItem) {

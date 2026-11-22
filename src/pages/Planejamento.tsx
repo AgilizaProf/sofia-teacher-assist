@@ -1615,6 +1615,9 @@ export function Planejamento() {
     };
   }, [ctxAtual]);
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
+  // Semana gerada pela Sofia só vai para a Agenda e conta tempo depois que a
+  // professora aceita. "__todas__" = semanas de antes desta regra (já valiam).
+  const [m1Aceite, setM1Aceite] = usePersistentState<string>("plan_m1_aceite", "__todas__");
   // Semana mostrada na M1 (offset em semanas a partir da semana atual).
   const [weekOffset, setWeekOffset] = useState<number>(0);
   // Da sexta à tarde em diante, a professora já está planejando a semana que vem:
@@ -1651,6 +1654,7 @@ export function Planejamento() {
     const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
     return { days, range, label };
   }, [weekOffset, hydrated]);
+  const m1SemanaAceita = m1Aceite === "__todas__" || m1Aceite === (m1Week.days[0]?.iso ?? "");
   useEffect(() => {
     if (!hydrated || abriuSemanaRef.current) return;
     abriuSemanaRef.current = true;
@@ -1846,6 +1850,7 @@ export function Planejamento() {
       return;
     }
     setM1Generating(true);
+    setM1Aceite(`pendente:${m1Week.days[0]?.iso ?? ""}`);
 
     const diasISO = m1Week.days.map((d) => d.iso);
     const focosLimitados = m1MaxFocos === "all" ? focosSelecionados : focosSelecionados.slice(0, m1MaxFocos);
@@ -2041,7 +2046,6 @@ export function Planejamento() {
       } else {
         showToast(`Sofia personalizou ${personalizadas} atividade(s) para ${ondeContexto}${pcdNota}${munNota}. ✨`);
       }
-      if (personalizadas > 0) void acumularTempo("atividade_m1_m2", "Atividades personalizadas pela Sofia (M1)", { multiplicador: personalizadas });
     } catch (e) {
       // Falha da IA: mantém a base do banco (que já está na tela) e explica.
       setM1Generating(false);
@@ -2052,6 +2056,13 @@ export function Planejamento() {
       }
       showToast(`Sofia montou ${total} atividade(s) para ${ctxResolvido.anoLabel} (${ctxResolvido.etapaLabel}) pela BNCC. A personalização não saiu agora: ${mensagemAmigavel(e)}`);
     }
+  };
+  const aceitarSemanaM1 = () => {
+    const semana = m1Week.days[0]?.iso ?? "";
+    setM1Aceite(semana);
+    const n = m1Stats.atividades;
+    if (n > 0) void acumularTempo("atividade_m1_m2", "Semana aceita (Sofia preencheu)", { multiplicador: n });
+    showToast(`Semana aceita: ${n} atividade(s) foram para a Agenda. ✨`);
   };
   const limparSemanaM1 = () => {
     setM1Plan(EMPTY_M1_PLAN);
@@ -2390,7 +2401,8 @@ export function Planejamento() {
         const filtered = list.filter((e) => !(e.source === "m3" && isWeekIso));
         if (filtered.length) next[iso] = filtered;
       });
-      // Insere os m3 atuais.
+      // Insere os m3 atuais (só de semana aceita pela professora).
+      if (!m1SemanaAceita) return next;
       (Object.keys(m1Plan) as DayKey[]).forEach((dia) => {
         const iso = isoByDia[dia];
         if (!iso) return;
@@ -2413,7 +2425,7 @@ export function Planejamento() {
       return next;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [m1Plan, m1Week.days.map((d) => d.iso).join(","), hydrated]);
+  }, [m1Plan, m1Week.days.map((d) => d.iso).join(","), hydrated, m1SemanaAceita]);
   const [diary, setDiary] = usePersistentState<Record<string, "ok" | "warn" | "next" | undefined>>("plan_diary", {});
   // M6 — diário de bordo
   type M6Entry = { id: string; emoji: string; title: string; text: string; tags: string[]; date: string; criadoEm?: string; pinned?: boolean; turma?: string; atividadeId?: string; atividadeTitulo?: string; alunoIds?: string[] };
@@ -3735,9 +3747,9 @@ export function Planejamento() {
                     <button className="pl-btn" onClick={m1OpenExport} disabled={m1Stats.atividades === 0}><Download size={14} /> Exportar PDF / Word</button>
                     <button
                       className="pl-btn primary"
-                      onClick={gerarComSofia}
-                      disabled={m1Generating}
-                    ><Sparkles size={14} /> {m1Generating ? "Sofia personalizando…" : (m1Stats.atividades === 0 ? "Gerar com a Sofia" : "Aceitar semana toda")}</button>
+                      onClick={m1Stats.atividades === 0 ? gerarComSofia : aceitarSemanaM1}
+                      disabled={m1Generating || (m1Stats.atividades > 0 && m1SemanaAceita)}
+                    ><Sparkles size={14} /> {m1Generating ? "Sofia personalizando…" : (m1Stats.atividades === 0 ? "Gerar com a Sofia" : m1SemanaAceita ? "Semana aceita" : "Aceitar semana toda")}</button>
                   </div>
                 </div>
 
