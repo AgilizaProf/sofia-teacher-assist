@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { invocarIA, mensagemAmigavel, temConteudo, ErroIA } from "@/lib/sofia/invocarIA";
 import { useAvisoSairSemSalvar } from "@/components/documentos/useAvisoSairSemSalvar";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
@@ -57,7 +58,25 @@ const emptyPei: PeiData = {
 };
 
 export function PeiPdi() {
-  const [students] = usePersistentState<Student[]>("inc_students", []);
+  // Alunos de Inclusão (banco), os mesmos da ficha. A lista antiga do aparelho
+  // (inc_students) só entra para quem ainda não está no banco.
+  const [legado] = usePersistentState<Student[]>("inc_students", []);
+  const { students: doBanco } = useInclusaoStudents();
+  const students = useMemo<Student[]>(() => {
+    const pcd = doBanco
+      .filter((s) => (s.pcd ?? "").toString().trim().toLowerCase() !== "nao")
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        turma: s.turma && s.turma !== "Sem turma" ? s.turma : "",
+        anoEscolar: s.anoEscolar,
+        diag: s.diag,
+        cid: s.cid,
+        aee: s.aee,
+      }));
+    const nomes = new Set(pcd.map((s) => s.name.trim().toLowerCase()));
+    return [...pcd, ...(Array.isArray(legado) ? legado : []).filter((s) => s?.name && !nomes.has(s.name.trim().toLowerCase()))];
+  }, [doBanco, legado]);
   const [regByStudent] = usePersistentState<Record<string, Array<{ when?: string; cat?: string; body?: string }>>>("inc_reg", {});
   const [anamByStudent] = usePersistentState<Record<string, unknown[]>>("inc_anam", {});
   const [anamObsGeralByStudent] = usePersistentState<Record<string, string>>("inc_anam_obs_geral", {});

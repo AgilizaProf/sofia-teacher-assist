@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link, useSearch, useNavigate } from "@tanstack/react-router";
 import { mentionsName } from "@/lib/sofia/mentions";
 import { sanitizeFilter, sanitizeM6Filters, type M6FilterState } from "@/lib/sofia/m6Filters";
@@ -32,6 +33,8 @@ import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { useTurmas } from "@/hooks/useTurmas";
 import { Skeleton } from "@/components/ui/skeleton";
 import { brDateKey, localDateKey } from "@/lib/datetime";
+import { useSemanasPlano } from "@/lib/planejamento/semanas";
+import { useAgenda } from "@/hooks/useAgenda";
 import { invocarIA, mensagemAmigavel, temConteudo, temTexto, ErroIA } from "@/lib/sofia/invocarIA";
 
 const css = `
@@ -461,28 +464,62 @@ const M_CONFIG: Record<MKey, { badge: string; title: string; sub: string; lead: 
     chips: [{ label: "✨ Sugerir trilha", solid: true }, { label: "📅 20 semanas" }, { label: "🎯 BNCC oficial" }], crumb: "Trilhas semestrais" },
 };
 
-const TABS: Array<{ k: MKey; num: string; label: string }> = [
-  { k: "atv", num: "M1", label: "Atividades" },
-  { k: "pcd", num: "M2", label: "Atividades PCD" },
-  { k: "m1",  num: "M3", label: "Sofia preenche a semana" },
-  { k: "m4", num: "M4", label: "Calendário com camadas" },
-  { k: "m5", num: "M5", label: "Drag & drop · multi-turma" },
-  { k: "m6", num: "M6", label: "Diário de bordo" },
-  { k: "trilhas", num: "M7", label: "Trilhas semestrais" },
+
+// As ferramentas do Planejar, agrupadas em quatro entradas. Cada entrada pode
+// ter mais de uma visão (ex.: Semana e Mês), escolhidas logo abaixo do título.
+// "Organizar a semana" (m5) saiu: a semana da Sofia já permite arrastar as
+// atividades entre os dias, e as datas agora são as reais.
+const GRUPOS_PLANEJAR: Array<{
+  k: MKey;
+  nome: string;
+  desc: string;
+  icone: string;
+  cor: string;
+  visoes: Array<{ k: MKey; nome: string; explica: string }>;
+}> = [
+  {
+    k: "atv", nome: "Atividade", icone: "✏️", cor: "green",
+    desc: "O plano completo de uma aula, para a turma ou adaptado para aluno PCD.",
+    visoes: [
+      { k: "atv", nome: "Para a turma", explica: "Escolha turma, ano e tema. A Sofia monta objetivo, passos, habilidades BNCC, materiais e avaliação, e você edita tudo." },
+      { k: "pcd", nome: "Para aluno PCD", explica: "A Sofia usa o cadastro do aluno na Inclusão e adapta a atividade à necessidade dele." },
+    ],
+  },
+  {
+    k: "m1", nome: "Semana", icone: "✨", cor: "sun",
+    desc: "A Sofia esboça a semana e você ajusta. Veja também o mês, com a Agenda.",
+    visoes: [
+      { k: "m1", nome: "Semana", explica: "A Sofia sugere as atividades de cada dia pela BNCC e pelo tema. Arraste entre os dias, edite ou apague o que quiser." },
+      { k: "m4", nome: "Mês", explica: "O mês inteiro, com as aulas planejadas e os compromissos da sua Agenda." },
+    ],
+  },
+  {
+    k: "trilhas", nome: "Semestre", icone: "🧭", cor: "ink",
+    desc: "O semestre em cerca de 20 semanas encadeadas, com BNCC.",
+    visoes: [
+      { k: "trilhas", nome: "Semestre", explica: "Escolha turma, ano e disciplina. A Sofia distribui o semestre em semanas, com as habilidades BNCC de cada uma." },
+    ],
+  },
+  {
+    k: "m6", nome: "Diário de bordo", icone: "📓", cor: "cream",
+    desc: "Como foi a aula, em três toques. A Sofia usa isso na próxima.",
+    visoes: [
+      { k: "m6", nome: "Diário de bordo", explica: "Depois da aula, marque se funcionou, travou ou o que vem depois. A Sofia sugere um ajuste para a próxima aula." },
+    ],
+  },
 ];
 
-// Nome curto, explicação e ícone de cada ferramenta (visual Painel).
-const TAB_INFO: Record<MKey, { nome: string; desc: string; icone: string; cor: string }> = {
-  atv: { nome: "Atividades", desc: "A Sofia monta o plano completo de uma atividade para a turma.", icone: "✏️", cor: "green" },
-  pcd: { nome: "Atividades PCD", desc: "Adaptações por necessidade, a partir dos laudos.", icone: "♿", cor: "sky" },
-  m1: { nome: "Sofia preenche a semana", desc: "A semana esboçada pela Sofia para você revisar.", icone: "✨", cor: "sun" },
-  m2: { nome: "Sequência didática", desc: "Uma aula puxando a próxima.", icone: "🔗", cor: "lilac" },
-  m3: { nome: "Editor conversacional", desc: "Você fala e a Sofia ajusta a atividade.", icone: "💬", cor: "lilac" },
-  m4: { nome: "Calendário", desc: "A semana por disciplina, BNCC ou tipo de aula.", icone: "📅", cor: "lilac" },
-  m5: { nome: "Organizar a semana", desc: "Arraste entre os dias e replique em outras turmas.", icone: "↔️", cor: "coral" },
-  m6: { nome: "Diário de bordo", desc: "Registre como foi a aula em 3 toques.", icone: "📓", cor: "cream" },
-  trilhas: { nome: "Trilhas semestrais", desc: "O semestre inteiro em ~20 semanas com BNCC.", icone: "🧭", cor: "ink" },
-};
+function grupoDe(k: MKey) {
+  return GRUPOS_PLANEJAR.find((g) => g.visoes.some((v) => v.k === k)) ?? GRUPOS_PLANEJAR[0];
+}
+
+// Endereços antigos (?m=m5, m2, m3) caem na Semana.
+function mudancaValida(k: MKey | undefined): MKey {
+  if (!k) return "atv";
+  if (k === "m5" || k === "m2" || k === "m3") return "m1";
+  return k;
+}
+
 
 const M2_STEPS: Array<{ d: string; tag: string; t: string; p: string; suggest?: boolean }> = [];
 const M6_AULAS: Array<{ id: string; t: string; s: string }> = [];
@@ -1274,7 +1311,7 @@ export function Planejamento() {
   const [curriculoPlanoId, setCurriculoPlanoId] = useState<string>("bncc");
   const curriculoMunicipalDados = curriculosAtivos.find((c) => c.id === curriculoPlanoId) ?? null;
   const curriculoMunicipalAtivo = curriculoMunicipalDados !== null;
-  const [m, setM] = useState<MKey>(search.m || "atv");
+  const [m, setM] = useState<MKey>(mudancaValida(search.m));
   const [week, setWeek] = usePersistentState<Week>("plan_week", INITIAL_WEEK);
   const [dropDay, setDropDay] = useState<DayKey | null>(null);
   const dragCard = useRef<{ from: DayKey; id: string } | null>(null);
@@ -1438,12 +1475,12 @@ export function Planejamento() {
   const [m5PrintModalOpen, setM5PrintModalOpen] = useState(false);
   const m5WordMode = useRef(false);
   const m5OpenExport = () => {
-    const total = DAYS.reduce((s, d) => s + (week[d.k]?.length || 0), 0);
+    const total = diasM5.reduce((s, d) => s + (week[d.k]?.length || 0), 0);
     if (total === 0) { showToast("A semana está vazia."); return; }
     setM5PrintModalOpen(true);
   };
   const executarExportacaoM5 = (info: PrintInfo) => {
-    const secoes = DAYS
+    const secoes = diasM5
       .filter((d) => (week[d.k]?.length || 0) > 0)
       .map((d) => {
         const cards = week[d.k] || [];
@@ -1566,7 +1603,49 @@ export function Planejamento() {
     };
   }, [ctxAtual]);
   const [m1Tema, setM1Tema] = usePersistentState<string>("plan_m1_tema", "");
-  const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1_PLAN);
+  // Semana mostrada na M1 (offset em semanas a partir da semana atual).
+  const [weekOffset, setWeekOffset] = useState<number>(0);
+  const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  // SSR roda em UTC; o cliente roda no fuso local. Calcular `new Date()` em
+  // ambos pode produzir HTML diferente (mês/dia trocado em torno da meia-noite
+  // UTC) e quebrar a hydration. Só renderizamos a semana real após hidratar.
+  const hydrated = useHydrated();
+  const m1Week = useMemo(() => {
+    const today = hydrated ? new Date() : new Date(Date.UTC(2026, 0, 5)); // segunda fixa pré-hidratação
+    today.setHours(0, 0, 0, 0);
+    const dow = today.getDay(); // 0=dom .. 6=sab
+    const diffToMon = dow === 0 ? -6 : 1 - dow;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diffToMon + weekOffset * 7);
+    const days: Array<{ k: DayKey; n: string; d: number; date: Date; iso: string }> = [];
+    const labels: Array<{ k: DayKey; n: string }> = [
+      { k: "seg", n: "SEG" }, { k: "ter", n: "TER" }, { k: "qua", n: "QUA" },
+      { k: "qui", n: "QUI" }, { k: "sex", n: "SEX" },
+    ];
+    for (let i = 0; i < 5; i++) {
+      const dt = new Date(monday);
+      dt.setDate(monday.getDate() + i);
+      days.push({ k: labels[i].k, n: labels[i].n, d: dt.getDate(), date: dt, iso: localDateKey(dt) });
+    }
+    const first = days[0].date;
+    const last = days[4].date;
+    const sameMonth = first.getMonth() === last.getMonth();
+    const range = sameMonth
+      ? `${first.getDate()}–${last.getDate()} de ${MONTHS_PT[first.getMonth()]} de ${first.getFullYear()}`
+      : `${first.getDate()} de ${MONTHS_PT[first.getMonth()]} – ${last.getDate()} de ${MONTHS_PT[last.getMonth()]} de ${last.getFullYear()}`;
+    const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
+    return { days, range, label };
+  }, [weekOffset, hydrated]);
+  // Cada semana tem o seu plano (antes era um só para todas as semanas).
+  const semanasPlano = useSemanasPlano<M1Card>();
+  const semanaChave = m1Week.days[0].iso;
+  const planoDaSemana = semanasPlano.planoDe;
+  const m1Plan: M1Plan = useMemo(() => planoDaSemana(semanaChave), [planoDaSemana, semanaChave]);
+  const atualizarSemanaPlano = semanasPlano.atualizar;
+  const setM1Plan = useCallback(
+    (u: M1Plan | ((p: M1Plan) => M1Plan)) => atualizarSemanaPlano(semanaChave, u),
+    [atualizarSemanaPlano, semanaChave],
+  );
   const [m1Generating, setM1Generating] = useState(false);
   // Limita quantos focos a Sofia usa numa geração (controla volume de sugestões).
   // "all" = usa todos os focos selecionados.
@@ -1630,39 +1709,21 @@ export function Planejamento() {
     showToast(`Sofia adicionou ${novos.length} atividade(s) em ${m1DayModal.n}. ✓`);
     setM1DayModal(null);
   };
-  // Semana mostrada na M1 (offset em semanas a partir da semana atual).
-  const [weekOffset, setWeekOffset] = useState<number>(0);
-  const MONTHS_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
-  // SSR roda em UTC; o cliente roda no fuso local. Calcular `new Date()` em
-  // ambos pode produzir HTML diferente (mês/dia trocado em torno da meia-noite
-  // UTC) e quebrar a hydration. Só renderizamos a semana real após hidratar.
-  const hydrated = useHydrated();
-  const m1Week = useMemo(() => {
-    const today = hydrated ? new Date() : new Date(Date.UTC(2026, 0, 5)); // segunda fixa pré-hidratação
-    today.setHours(0, 0, 0, 0);
-    const dow = today.getDay(); // 0=dom .. 6=sab
-    const diffToMon = dow === 0 ? -6 : 1 - dow;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + diffToMon + weekOffset * 7);
-    const days: Array<{ k: DayKey; n: string; d: number; date: Date; iso: string }> = [];
-    const labels: Array<{ k: DayKey; n: string }> = [
-      { k: "seg", n: "SEG" }, { k: "ter", n: "TER" }, { k: "qua", n: "QUA" },
-      { k: "qui", n: "QUI" }, { k: "sex", n: "SEX" },
-    ];
-    for (let i = 0; i < 5; i++) {
-      const dt = new Date(monday);
-      dt.setDate(monday.getDate() + i);
-      days.push({ k: labels[i].k, n: labels[i].n, d: dt.getDate(), date: dt, iso: localDateKey(dt) });
-    }
-    const first = days[0].date;
-    const last = days[4].date;
-    const sameMonth = first.getMonth() === last.getMonth();
-    const range = sameMonth
-      ? `${first.getDate()}–${last.getDate()} de ${MONTHS_PT[first.getMonth()]} de ${first.getFullYear()}`
-      : `${first.getDate()} de ${MONTHS_PT[first.getMonth()]} – ${last.getDate()} de ${MONTHS_PT[last.getMonth()]} de ${last.getFullYear()}`;
-    const label = weekOffset === 0 ? "Semana atual" : weekOffset === 1 ? "Próxima semana" : weekOffset === -1 ? "Semana anterior" : `${weekOffset > 0 ? "+" : ""}${weekOffset} semanas`;
-    return { days, range, label };
-  }, [weekOffset, hydrated]);
+  // "Organizar a semana" (M5) mostra sempre a semana atual com as datas reais
+  // (antes os dias eram fixos: SEG 11 a SEX 15).
+  const diasM5 = useMemo(() => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const dow = hoje.getDay();
+    const seg = new Date(hoje);
+    // No fim de semana, a professora já está olhando para a semana que vem.
+    seg.setDate(hoje.getDate() + (dow === 0 ? 1 : dow === 6 ? 2 : 1 - dow));
+    return DAYS.map((d, i) => {
+      const dt = new Date(seg);
+      dt.setDate(seg.getDate() + i);
+      return { ...d, d: hydrated ? String(dt.getDate()) : "", iso: localDateKey(dt) };
+    });
+  }, [hydrated]);
 
   const focosSelecionados = useMemo(
     () => Object.keys(pillsFoco).filter((k) => pillsFoco[k]),
@@ -1963,9 +2024,6 @@ export function Planejamento() {
   // M4 — Calendário mensal por camadas
   type M4Cat = "aulas" | "aval" | "eventos" | "feriados" | "bncc" | "sofia";
   type M4Evt = { cat: M4Cat; title: string; meta?: string };
-  // Calendário começa vazio — apenas eventos criados pela professora (via abas
-  // Atividades / Atividades PCD) aparecem aqui.
-  const M4_EVENTS_BY_DAY: Record<number, M4Evt[]> = {};
   const M4_CAT_META: Record<M4Cat, { color: string; label: string }> = {
     aulas: { color: "#3B82F6", label: "Aula" },
     aval: { color: "#F59E0B", label: "Avaliação" },
@@ -1985,6 +2043,25 @@ export function Planejamento() {
     setM4Month((s) => (s.y === now.getFullYear() && s.m === now.getMonth() ? s : { y: now.getFullYear(), m: now.getMonth() }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Compromissos da Agenda (reuniões, provas, entregas) aparecem no Mês.
+  // As aulas copiadas do Planejar para a Agenda (tipo "plan") ficam de fora,
+  // porque já aparecem aqui como aulas.
+  const { events: eventosAgenda } = useAgenda();
+  const M4_EVENTS_BY_DAY = useMemo(() => {
+    const out: Record<number, M4Evt[]> = {};
+    const prefix = `${m4Month.y}-${String(m4Month.m + 1).padStart(2, "0")}-`;
+    for (const e of eventosAgenda) {
+      if (!e.date?.startsWith(prefix) || e.type === "plan") continue;
+      const dia = parseInt(e.date.slice(8, 10), 10);
+      if (!dia) continue;
+      (out[dia] ??= []).push({
+        cat: e.type === "eval" ? "aval" : "eventos",
+        title: e.title,
+        meta: [e.time, "Agenda"].filter(Boolean).join(" · "),
+      });
+    }
+    return out;
+  }, [eventosAgenda, m4Month]);
   const [m4SelectedDay, setM4SelectedDay] = usePersistentState<number | null>("plan_m4_selected_day", null);
   const m4PrintRef = useRef<HTMLDivElement | null>(null);
   const m4Print = () => {
@@ -3336,39 +3413,50 @@ export function Planejamento() {
 
             <h2 className="pl-block-title">O que você quer planejar?</h2>
             <div className="pl-tools-grid" role="tablist" aria-label="Ferramentas de planejamento">
-              {TABS.map((t) => {
-                const info = TAB_INFO[t.k];
+              {GRUPOS_PLANEJAR.map((g) => {
+                const ativo = grupoDe(m).k === g.k;
                 return (
                   <button
-                    key={t.k}
+                    key={g.k}
                     type="button"
                     role="tab"
-                    aria-selected={m === t.k}
-                    className={"pl-tool" + (m === t.k ? " active" : "")}
-                    onClick={() => setMudanca(t.k)}
+                    aria-selected={ativo}
+                    className={"pl-tool" + (ativo ? " active" : "")}
+                    onClick={() => setMudanca(ativo ? m : g.k)}
                   >
-                    <span className={"ic " + info.cor} aria-hidden>{info.icone}</span>
+                    <span className={"ic " + g.cor} aria-hidden>{g.icone}</span>
                     <span className="tx">
-                      <b>{info.nome}</b>
-                      <small>{info.desc}</small>
+                      <b>{g.nome}</b>
+                      <small>{g.desc}</small>
                     </span>
                   </button>
                 );
               })}
-              {!isEi && (
-                <Link to="/planejamento/ei" className="pl-tool">
-                  <span className="ic sun" aria-hidden>🌱</span>
-                  <span className="tx">
-                    <b>Educação Infantil</b>
-                    <small>Roteiros com Campos de Experiência.</small>
-                  </span>
-                </Link>
-              )}
             </div>
+            {!isEi && (
+              <p className="pl-ei-link">
+                🌱 Dá aula na Educação Infantil? <Link to="/planejamento/ei">Use os roteiros por Campos de Experiência →</Link>
+              </p>
+            )}
 
             <div className="pl-mode-head" id="pl-ferramenta" style={{ scrollMarginTop: 80 }}>
-              <h2>{TAB_INFO[m]?.nome ?? cfg.title}</h2>
-              <p>{cfg.sub}</p>
+              <h2>{grupoDe(m).nome}</h2>
+              {grupoDe(m).visoes.length > 1 && (
+                <div className="pl-visoes" role="group" aria-label={`Como ver: ${grupoDe(m).nome}`}>
+                  {grupoDe(m).visoes.map((v) => (
+                    <button
+                      key={v.k}
+                      type="button"
+                      aria-pressed={m === v.k}
+                      className={m === v.k ? "on" : ""}
+                      onClick={() => setMudanca(v.k)}
+                    >
+                      {v.nome}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p>{grupoDe(m).visoes.find((v) => v.k === m)?.explica ?? cfg.sub}</p>
             </div>
           </div>
 
@@ -3422,7 +3510,7 @@ export function Planejamento() {
                       />
                     ) : (
                     <div className="pl-week">
-                      {DAYS.map((d) => {
+                      {diasM5.map((d) => {
                         const cards = week[d.k];
                         const empty = cards.length === 0;
                         return (
@@ -4576,6 +4664,9 @@ export function Planejamento() {
                       value={m6Text}
                       onChange={(e) => setM6Text(e.target.value)}
                     />
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                      <BotaoDitado onTexto={(t) => setM6Text((v) => juntarDitado(v, t))} />
+                    </div>
                     {m6Emoji && M6_QUICK_BY_EMOJI[m6Emoji] && (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, alignItems: "center" }}>
                         <button
@@ -5126,7 +5217,7 @@ export function Planejamento() {
         const close = () => setM1EditCard(null);
         const upd = (patch: Partial<M1Card>) => m1UpdateCard(dia, id, patch);
         const linesToArr = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
-        const diaInfo = DAYS.find((d) => d.k === dia);
+        const diaInfo = m1Week.days.find((d) => d.k === dia);
         const diaLabel = diaInfo ? `${diaInfo.n} ${diaInfo.d}` : dia.toUpperCase();
         return <M1EditCardModal
           card={card}

@@ -27,7 +27,8 @@ export type SofiaTaskType =
   | "trilha_relatorio"
   | "trilha_progressao"
   | "trilha_defasagem"
-  | "roteiro_ei";
+  | "roteiro_ei"
+  | "jogo_conteudo";
 
 const TAREFAS_LITE: SofiaTaskType[] = [
   "sugestoes", "chips", "saudacao", "atalhos", "padroes",
@@ -79,6 +80,7 @@ const TOKEN_LIMITS: Record<SofiaTaskType, number> = {
   trilha_defasagem:  2000,
   trilha_semana:     2000,
   roteiro_ei:        2000,
+  jogo_conteudo:     2000,
   parecer:            4000,
   relatorio_bimestral:4000,
   trilha_relatorio:   4000,

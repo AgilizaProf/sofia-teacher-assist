@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
 import { TempoChip, tempoChipCss } from "@/components/painel/TempoChip";
 import { supabase } from "@/integrations/supabase/client";
+import { anoDaTurma, guardarNaBiblioteca, type ResultadoGuardar, type TipoBiblioteca } from "@/lib/biblioteca";
 
 // Página do app que abriga uma ferramenta completa (Jogos e atividades interativas, Questões)
 // no visual "Painel": menu do app, contador pequeno no topo, título e a
@@ -48,11 +49,23 @@ type Snapshot = { data: unknown; updated_at: string } | null;
 // A Sofia das Questões usa isto para sugerir habilidades ao montar um simulado.
 type PlanejamentoTurma = { turma: string; ano: string; codigos: string[]; quando: string };
 
+// Alunos cadastrados no app (Pareceres, Alfabetização, Inclusão), por turma.
+// Questões e Jogos usam isto para não pedir a lista de novo.
+type AlunosDaTurma = { turma: string; ano: number | null; alunos: string[] };
+
+// Últimas aulas planejadas: os Jogos oferecem o tema delas para a Sofia montar o jogo.
+type AulaPlanejada = { titulo: string; tema: string; turma: string; ano: string };
+
 type AprofNuvem = {
   get: (key: string) => Promise<Snapshot>;
   set: (key: string, data: unknown) => Promise<boolean>;
   usuario: () => Promise<string | null>;
   planejamento: () => Promise<PlanejamentoTurma[]>;
+  relatar: (relato: unknown) => Promise<boolean>;
+  guardar: (item: unknown) => Promise<ResultadoGuardar>;
+  alunos: () => Promise<AlunosDaTurma[]>;
+  aulas: () => Promise<AulaPlanejada[]>;
+  sofiaJogo: (pedido: unknown) => Promise<{ itens: Array<{ pergunta: string; resposta: string }> } | { erro: string }>;
 };
 
 // Só estas chaves podem ser lidas ou gravadas pelas ferramentas (lista branca).
@@ -164,6 +177,105 @@ const aprofNuvem: AprofNuvem = {
   // id da conta, para a ferramenta separar a cópia local de cada professora no mesmo navegador
   async usuario() {
     return usuarioId();
+  },
+  // Relato de questão com erro: vai para Administração > Erros, onde a equipe do
+  // AgilizaProf corrige o banco. Antes ficava só na conta da professora.
+  async relatar(relato) {
+    const r = (relato ?? {}) as Record<string, unknown>;
+    const txt = (v: unknown, n = 200) => (typeof v === "string" || typeof v === "number" ? String(v).slice(0, n) : "");
+    const uid = await usuarioId();
+    const { error } = await supabase.from("platform_errors").insert({
+      user_id: uid,
+      route: "/questoes",
+      severity: "info",
+      message: `Relato de questão ${txt(r.qid, 40)}: ${txt(r.tipo, 40)}${r.detalhe ? ` · ${txt(r.detalhe, 800)}` : ""}`,
+      metadata: {
+        tipo: "relato_questao",
+        qid: txt(r.qid, 40),
+        ano: txt(r.ano, 10),
+        disc: txt(r.disc, 10),
+        problema: txt(r.tipo, 40),
+        letra_sugerida: txt(r.letra, 2),
+        gabarito_atual: txt(r.gabarito, 2),
+        enunciado: txt(r.enunciado, 200),
+        detalhe: txt(r.detalhe, 800),
+      },
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 300) : null,
+    });
+    return !error;
+  },
+  // só leitura, e só da conta de quem está logado
+  async alunos() {
+    const uid = await usuarioId();
+    if (!uid) return [];
+    const [{ data: alunos }, { data: turmas }] = await Promise.all([
+      supabase.from("alunos_inclusao").select("nome, turma").eq("user_id", uid).limit(2000),
+      supabase.from("turmas").select("nome, ano").eq("user_id", uid).limit(500),
+    ]);
+    const anoDe = new Map((turmas ?? []).map((t) => [t.nome, anoDaTurma(`${t.ano ?? ""} ${t.nome}`)]));
+    const porTurma = new Map<string, string[]>();
+    for (const a of alunos ?? []) {
+      const turma = (a.turma ?? "").trim();
+      const nome = (a.nome ?? "").trim();
+      if (!turma || turma === "Sem turma" || !nome) continue;
+      porTurma.set(turma, [...(porTurma.get(turma) ?? []), nome]);
+    }
+    return [...porTurma.entries()].map(([turma, nomes]) => ({
+      turma,
+      ano: anoDe.get(turma) ?? anoDaTurma(turma),
+      alunos: nomes.sort((x, y) => x.localeCompare(y, "pt-BR")),
+    }));
+  },
+  // só leitura, e só da conta de quem está logado
+  async aulas() {
+    const uid = await usuarioId();
+    if (!uid) return [];
+    const { data } = await supabase
+      .from("planos_aula")
+      .select("titulo, data, created_at")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    const vistos = new Set<string>();
+    const out: AulaPlanejada[] = [];
+    for (const p of data ?? []) {
+      const d = (p.data ?? {}) as Record<string, unknown>;
+      const plano = (d.plano ?? {}) as Record<string, unknown>;
+      const tema = texto(d.tema) || texto(plano.titulo) || texto(p.titulo);
+      if (!tema || vistos.has(tema.toLowerCase())) continue;
+      vistos.add(tema.toLowerCase());
+      out.push({ titulo: texto(p.titulo) || tema, tema, turma: texto(d.turma), ano: texto(d.ano) });
+      if (out.length >= 6) break;
+    }
+    return out;
+  },
+  // Sofia preenche perguntas e respostas de um jogo (função gerar-jogo).
+  async sofiaJogo(pedido) {
+    try {
+      const { invocarIA } = await import("@/lib/sofia/invocarIA");
+      const r = await invocarIA<{ itens?: Array<{ pergunta: string; resposta: string }> }>("gerar-jogo", {
+        body: pedido,
+        validar: (d) => (Array.isArray(d.itens) && d.itens.length > 0) || "A Sofia não conseguiu montar o jogo agora.",
+      });
+      return { itens: r.itens ?? [] };
+    } catch (e) {
+      return { erro: e instanceof Error && e.message ? e.message : "A Sofia não conseguiu montar o jogo agora." };
+    }
+  },
+  // Guarda um simulado ou jogo na Minha Biblioteca do app.
+  async guardar(item) {
+    const r = (item ?? {}) as Record<string, unknown>;
+    const tipos: TipoBiblioteca[] = ["simulado", "ficha", "jogo", "atividade"];
+    const tipo = tipos.includes(r.tipo as TipoBiblioteca) ? (r.tipo as TipoBiblioteca) : "simulado";
+    const txt = (v: unknown, n = 160) => (typeof v === "string" || typeof v === "number" ? String(v).slice(0, n) : "");
+    return guardarNaBiblioteca({
+      tipo,
+      refId: txt(r.refId, 80) || null,
+      titulo: txt(r.titulo, 160) || "Sem título",
+      ano: txt(r.ano, 20) || null,
+      componente: txt(r.componente, 80) || null,
+      habilidades: Array.isArray(r.habilidades) ? r.habilidades.map((h) => txt(h, 20)).filter(Boolean).slice(0, 30) : [],
+    });
   },
   // só leitura, e só da conta de quem está logado
   async planejamento() {

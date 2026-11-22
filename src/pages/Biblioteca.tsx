@@ -1,3 +1,4 @@
+import { anoDaTurma, linkDoItem } from "@/lib/biblioteca";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -51,6 +52,7 @@ const TIPO_COR: Record<string, string> = {
   simulado: "var(--pn-pink)",
   jogo: "var(--pn-lilac)",
   sequencia: "var(--pn-blue-soft)",
+  conversa: "var(--pn-green-soft)",
 };
 const TIPO_NOME: Record<string, string> = {
   plano: "Plano de aula",
@@ -59,6 +61,7 @@ const TIPO_NOME: Record<string, string> = {
   simulado: "Simulado",
   jogo: "Jogo",
   sequencia: "Sequência didática",
+  conversa: "Resposta da Sofia",
 };
 
 export function nomeAno(n: number | null): string {
@@ -66,14 +69,7 @@ export function nomeAno(n: number | null): string {
   return n === 0 ? "Educação Infantil" : `${n}º ano`;
 }
 
-/** "3º ano B", "1o Ano", "Pré II", "Infantil 5" → número do ano (0 = EI). */
-export function anoDaTurma(grade: string): number | null {
-  const g = (grade || "").toLowerCase();
-  const m = g.match(/([1-9])\s*(?:º|°|o|ª)?\s*ano/);
-  if (m) return Number(m[1]);
-  if (/infantil|(^|\s)pr[ée](\s|-|$)|pr[ée]-?escola|creche|maternal|berç/.test(g)) return 0;
-  return null;
-}
+export { anoDaTurma };
 
 const css = `
 .bb{min-height:100dvh;padding-bottom:40px;}
@@ -110,6 +106,8 @@ const css = `
 .bb-code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--pn-bg);padding:1px 5px;border-radius:5px;color:var(--pn-ink);}
 .bb-rm{justify-self:start;border:0;background:none;padding:0;font-family:inherit;font-size:13px;font-weight:700;color:var(--pn-muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
 .bb-rm:hover{color:#B42318;}
+.bb-acoes{display:flex;align-items:center;gap:12px;margin-top:2px;}
+.bb .bb-abrir{height:32px;padding:0 14px;font-size:13.5px;text-decoration:none;}
 .bb-empty{background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:20px;box-shadow:4px 4px 0 var(--pn-ink);padding:22px;}
 .bb-empty h2{margin:0;font-family:var(--pn-display);font-size:22px;letter-spacing:-.03em;}
 .bb-empty p{margin:8px 0 0;font-size:15px;line-height:1.5;color:var(--pn-muted);}
@@ -351,10 +349,9 @@ export function Biblioteca() {
             </h2>
             <p>Guarde aqui planos, atividades e simulados para o próximo ano letivo.</p>
             <p>
-              O botão “Guardar na Biblioteca” vai aparecer no{" "}
-              <Link to="/planejamento">Planejamento</Link>, nas atividades, em{" "}
-              <Link to="/questoes">Questões</Link> e nos{" "}
-              <Link to="/cadernos">Cadernos prontos</Link>.
+              Use o botão “📚 Guardar na Biblioteca” ao montar uma atividade no{" "}
+              <Link to="/planejamento">Planejamento</Link>, no plano do semestre e na lista de
+              simulados de <Link to="/questoes">Questões</Link>.
             </p>
           </section>
         )}
@@ -427,13 +424,22 @@ export function Biblioteca() {
                                   </span>
                                 ))}
                             </small>
-                            <button
-                              type="button"
-                              className="bb-rm"
-                              onClick={() => void remover(i.id)}
-                            >
-                              Tirar da Biblioteca
-                            </button>
+                            <div className="bb-acoes">
+                              <Link
+                                className="pn-btn bb-abrir"
+                                to={linkDoItem(i.tipo, i.ref_id).to}
+                                search={linkDoItem(i.tipo, i.ref_id).search as never}
+                              >
+                                Abrir
+                              </Link>
+                              <button
+                                type="button"
+                                className="bb-rm"
+                                onClick={() => void remover(i.id)}
+                              >
+                                Tirar da Biblioteca
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

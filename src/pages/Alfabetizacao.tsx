@@ -1,4 +1,5 @@
 import { FolhaTurma } from "@/components/alfabetizacao/FolhaTurma";
+import { ColarAlunos } from "@/components/shared/ColarAlunos";
 import { codigoDeTexto } from "@/lib/alfabetizacao/folha";
 import { obsDoAluno, useObsWhatsapp, type ObsWhatsapp } from "@/lib/alfabetizacao/whatsapp";
 import { useEffect, useMemo, useState } from "react";
@@ -772,6 +773,9 @@ export function Alfabetizacao() {
                 >
                   Adicionar
                 </button>
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <ColarAlunos turmas={nomesTurmas} turmaInicial={novaTurma || turma} />
               </div>
             </div>
 

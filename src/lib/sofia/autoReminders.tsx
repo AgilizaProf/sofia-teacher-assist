@@ -163,15 +163,7 @@ export function SofiaAutoReminders() {
             category: "pcd",
             text: `Ao editar o plano de **${turma}**, lembre de incluir suportes para ${nomes}${extra}. Posso abrir o editor agora?`,
             dedupKey: `pcd:m3:${turma}:${wk}`,
-            action: actionOpenPlanejamento("m3", "Abrir editor (M3)"),
-          });
-
-          // M5 — replicar entre turmas: aviso de que a turma de destino tem PCDs.
-          notif.push({
-            category: "pcd",
-            text: `Antes de replicar para **${turma}**, lembre que ${nomes}${extra} pode(m) precisar de ajustes específicos.`,
-            dedupKey: `pcd:m5:${turma}:${wk}`,
-            action: actionOpenPlanejamento("m5", "Revisar antes de replicar"),
+            action: actionOpenPlanejamento("m3", "Abrir a semana"),
           });
 
           // Atalho extra: abrir o detalhe do primeiro aluno PCD da turma

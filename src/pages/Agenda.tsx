@@ -19,6 +19,9 @@ import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { baixarIcs } from "@/lib/agenda/ics";
+import { CHAVE_SEMANAS, cartoesComData, type PlanoSemana } from "@/lib/planejamento/semanas";
+import { localDateKey } from "@/lib/datetime";
 
 // ---- Integração M4 → Agenda --------------------------------------------------
 // Eventos do calendário M4 (Planejamento) são persistidos em localStorage sob
@@ -875,7 +878,30 @@ const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
   // Hidrata o store M4 do localStorage E do snapshot remoto (Supabase).
   // Sem isso, ao abrir a Agenda em outro dispositivo / após limpar cache,
   // os eventos do calendário M4 não apareciam para importar.
-  const [m4Store] = usePersistentState<M4UserStore>("plan_m4_user_events", {});
+  const [m4StoreMes] = usePersistentState<M4UserStore>("plan_m4_user_events", {});
+  // Aulas do plano da semana (Planejar > Semana), de hoje em diante, também
+  // aparecem para trazer para a Agenda, cada uma no seu dia.
+  type CartaoSemana = { id: string; title: string; minutos?: number; tag?: string };
+  const [semanasPlano] = usePersistentState<Record<string, PlanoSemana<CartaoSemana>>>(CHAVE_SEMANAS, {});
+  const m4Store = useMemo<M4UserStore>(() => {
+    const out: M4UserStore = {};
+    for (const { date, card } of cartoesComData<CartaoSemana>(semanasPlano, localDateKey(new Date()))) {
+      if (!card?.title) continue;
+      (out[date] ??= []).push({
+        id: `sem-${date}-${card.id}`,
+        cat: "aulas",
+        title: card.title,
+        meta: card.tag ? `Semana · ${card.tag}` : "Semana",
+        source: "m3",
+        minutos: card.minutos,
+      });
+    }
+    for (const [date, arr] of Object.entries(m4StoreMes)) {
+      const ja = new Set((out[date] ?? []).map((e) => e.title.trim().toLowerCase()));
+      out[date] = [...(out[date] ?? []), ...arr.filter((e) => !ja.has((e.title || "").trim().toLowerCase()))];
+    }
+    return out;
+  }, [semanasPlano, m4StoreMes]);
   // Considera um evento M4 como "já na agenda" se houver evento na mesma
   // data com o mesmo título (case-insensitive, trim). Isto permite que o
   // botão "Trazer atividades agendadas (M4)" mostre tudo do calendário M4
@@ -1345,8 +1371,25 @@ const deleteCalendar = async () => {
                 <span className="ic sun" aria-hidden>🗂️</span>
                 <span className="tx">
                   <b>Trazer do planejamento{m4Pending > 0 ? ` · ${m4Pending}` : ""}</b>
-                  <small>Atividades agendadas no Planejamento.</small>
+                  <small>Aulas da semana e atividades agendadas no Planejar.</small>
                 </span>
+              </button>
+              <button
+                type="button"
+                className="ag-action"
+                onClick={() => {
+                  const hoje = localDateKey(new Date());
+                  const proximos = events.filter((e) => e.date >= hoje);
+                  if (!proximos.length) {
+                    toast.message("Não há compromissos daqui para a frente na Agenda.");
+                    return;
+                  }
+                  baixarIcs(proximos.map((e) => ({ id: e.id, date: e.date, title: e.title, time: e.time, notes: e.notes })));
+                  toast.success(`${proximos.length} compromissos no arquivo. Abra no celular para entrar no calendário com lembrete.`);
+                }}
+              >
+                <span className="ic sky" aria-hidden>🔔</span>
+                <span className="tx"><b>Lembretes no celular</b><small>Leva os próximos compromissos para o calendário do celular, com aviso.</small></span>
               </button>
               <button type="button" className="ag-action" onClick={openPrintDialog}>
                 <span className="ic coral" aria-hidden><Printer size={22} /></span>

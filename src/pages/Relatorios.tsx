@@ -1,3 +1,17 @@
+import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { ColarAlunos } from "@/components/shared/ColarAlunos";
+import { peiPdiPorAluno, resumoPeiPdi, type LinhaPeiPdi } from "@/lib/pei/resumoPeiPdi";
+import {
+  areaDaRubrica,
+  lerResultados,
+  provasDoAluno,
+  somarProvas,
+  statusPelaProva,
+  textoDiario,
+  textoProvas,
+  type EntradaDiario,
+  type ResultadoProva,
+} from "@/lib/pareceres/evidencias";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
@@ -769,6 +783,48 @@ const [anamByStudent] = usePersistentState<Record<string, Record<string, unknown
   const { dados: alfaDados } = useAlfaDados();
 const [peiByStudent] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
 const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; cat: string; body: string }>>>("inc_reg", {});
+  // Inclusão guarda anamnese, PEI e registros pelo id do aluno no banco; aqui a
+  // lista usa "db:<id>". Antes a busca era feita com "db:<id>" e nunca achava
+  // nada, então o parecer saía sem PEI, anamnese e registros.
+  const doInc = <T,>(mapa: Record<string, T>, id: string): T | undefined =>
+    mapa[id.startsWith("db:") ? id.slice(3) : id] ?? mapa[id];
+  // PEI feito na tela PEI/PDI (tabela pei_pdi): entra quando a ficha não tem PEI.
+  const [acharPeiPdi, setAcharPeiPdi] = useState<ReturnType<typeof peiPdiPorAluno>>(() => () => undefined);
+  useEffect(() => {
+    let vivo = true;
+    void supabase
+      .from("pei_pdi")
+      .select("aluno_client_id, aluno_nome, bimestre, objetivos_longo, objetivos_curto, estrategias, avaliacao, gerado_em")
+      .order("gerado_em", { ascending: false })
+      .limit(300)
+      .then(({ data }) => {
+        if (vivo && data) setAcharPeiPdi(() => peiPdiPorAluno(data as LinhaPeiPdi[]));
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+  // Provas corrigidas no Leitor QR de Questões (guardadas na conta) e diário de bordo.
+  const [provas, setProvas] = useState<ResultadoProva[]>([]);
+  useEffect(() => {
+    let vivo = true;
+    void supabase.auth.getUser().then(({ data: u }) => {
+      if (!u.user) return;
+      void supabase
+        .from("app_snapshots")
+        .select("data")
+        .eq("user_id", u.user.id)
+        .eq("key", "simulados_dados")
+        .maybeSingle()
+        .then(({ data }) => {
+          if (vivo) setProvas(lerResultados(data?.data));
+        });
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+  const [diarioEntradas] = usePersistentState<EntradaDiario[]>("plan_m6_entries", []);
   const [bnccOpen, setBnccOpen] = useState<{ id: string; nome: string; turma: string; pcd?: string } | null>(null);
   // Estado de expansão do campo de observações no modal BNCC.
   // Começa sempre recolhido (Set vazio) para liberar espaço visual.
@@ -966,24 +1022,28 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       // ignoramos esses dados na geração — sem apagá-los (Opção B).
       const ehPcd = !!(a.pcd && a.pcd.trim());
       // Busca dados reais do aluno cadastrados em /inclusao (apenas se PCD)
-      const anamData = ehPcd ? anamByStudent[a.id] : undefined;
+      const anamData = ehPcd ? doInc(anamByStudent, a.id) : undefined;
       const anamResumoTexto = anamData
         ? Object.entries(anamData)
             .filter(([, v]) => v && typeof v === "object")
             .map(([k, v]) => `${k}: ${JSON.stringify(v).slice(0, 200)}`)
             .join("\n")
         : "";
-      const peiDoAluno = ehPcd ? peiByStudent[a.id] : undefined;
+      const peiDoAluno = ehPcd ? doInc(peiByStudent, a.id) : undefined;
+      const peiPdi = ehPcd ? acharPeiPdi(a.id.startsWith("db:") ? a.id.slice(3) : a.id, a.nome) : undefined;
       const peiResumoCompleto = peiDoAluno
         ? [
             peiDoAluno.objetivos ? `Objetivos: ${peiDoAluno.objetivos}` : "",
             peiDoAluno.estrategias ? `Estratégias: ${peiDoAluno.estrategias}` : "",
             peiDoAluno.adaptacoes ? `Adaptações: ${peiDoAluno.adaptacoes}` : "",
+            peiPdi ? resumoPeiPdi(peiPdi) : "",
             peiResumo,
           ].filter(Boolean).join("\n")
-        : peiResumo;
+        : peiPdi
+          ? [resumoPeiPdi(peiPdi), peiResumo].filter(Boolean).join("\n")
+          : peiResumo;
       // Registros do diário de inclusão (inc_reg) também só entram para PCD.
-      const registrosDoAluno = ehPcd ? (regByStudent[a.id] || []).slice(0, 50) : [];
+      const registrosDoAluno = ehPcd ? (doInc(regByStudent, a.id) || []).slice(0, 50) : [];
 
       // Parecer do período anterior (do histórico) p/ a IA descrever a evolução (longitudinal).
       const anteriores = (parecerHist[a.id] || []).filter((p) => p.periodoLabel && p.periodoLabel !== periodoLabel);
@@ -1013,10 +1073,15 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           anamneseResumo: anamResumoTexto,
           peiResumo: peiResumoCompleto,
           observacoesProfessor: bnccObsByAluno[a.id]?.trim() || "",
-          avaliacaoBncc: leituraEscrita
-            ? `${linhas}\n\nLeitura e escrita (níveis confirmados pela professora)\n  - ${leituraEscrita}`
-            : linhas,
-          temPeiReal: Boolean(peiByStudent[a.id]),
+          avaliacaoBncc: [
+            linhas,
+            leituraEscrita ? `Leitura e escrita (níveis confirmados pela professora)\n  - ${leituraEscrita}` : "",
+            textoProvas(provasDoAluno(provas, a.nome, a.turma)),
+            textoDiario(diarioEntradas, a.turma, a.nome, [a.id, a.id.replace(/^db:/, "")]),
+          ]
+            .filter(Boolean)
+            .join("\n\n"),
+          temPeiReal: Boolean(peiDoAluno || peiPdi),
           parecerAnteriorTexto,
           parecerAnteriorIntervalo: parecerAnterior?.periodoLabel || "",
           registros: registrosDoAluno,
@@ -2050,6 +2115,58 @@ ${parecerHtml}
         const { pctPreenchido, pctDesempenho } = computeProgress(id, turma, pcd);
         const year = yearForAluno(id, turma);
         const areas = areasFor(id, turma, pcd);
+        const provasAluno = provasDoAluno(provas, nome, turma);
+        const somaProvas = somarProvas(provasAluno).porArea;
+        // Áreas da rubrica com sugestão pelas provas (só completa o que está em branco).
+        const sugestoesProva: Array<{ ai: number; n: number; st: BnccStatus; o: { a: number; n: number } }> = [];
+        areas.forEach((area, ai) => {
+          const k = areaDaRubrica(area.area);
+          const o = k ? somaProvas[k] : undefined;
+          const st = statusPelaProva(o);
+          if (st && o) sugestoesProva.push({ ai, n: area.comps.length, st, o });
+        });
+        const preencherPelaProva = () => {
+          setBnccByAluno((prev) => {
+            const cur = { ...(prev[id] || {}) };
+            let n = 0;
+            for (const sp of sugestoesProva)
+              for (let j = 0; j < sp.n; j++) {
+                const k = `${sp.ai}.${j}`;
+                if (!cur[k] || cur[k] === "no") {
+                  cur[k] = sp.st;
+                  n++;
+                }
+              }
+            setTimeout(() => (n ? toast.success(`${n} itens preenchidos pelas provas. Confira e ajuste.`) : toast.message("Os itens dessas áreas já estavam marcados.")), 0);
+            return { ...prev, [id]: cur };
+          });
+        };
+        // Usa as marcas desta área para a turma toda, só onde ainda está em branco.
+        const colegas = alunosLista.filter((x) => x.turma === turma && x.id !== id);
+        const areaParaTurma = (ai: number, count: number) => {
+          const minhas = rub;
+          setBnccByAluno((prev) => {
+            const out = { ...prev };
+            let n = 0;
+            for (const c of colegas) {
+              const cur = { ...(out[c.id] || {}) };
+              let mudou = false;
+              for (let j = 0; j < count; j++) {
+                const k = `${ai}.${j}`;
+                if (minhas[k] && (!cur[k] || cur[k] === "no")) {
+                  cur[k] = minhas[k];
+                  mudou = true;
+                }
+              }
+              if (mudou) {
+                out[c.id] = cur;
+                n++;
+              }
+            }
+            setTimeout(() => (n ? toast.success(`Marcas copiadas para ${n} ${n === 1 ? "colega" : "colegas"} da turma (só onde estava em branco).`) : toast.message("Os colegas já tinham marcas nesta área.")), 0);
+            return out;
+          });
+        };
         const cls = turmaByName(turma);
         const turmaYear = cls?.grade?.replace(/\D/g, "") || "";
         const isPcd = !!pcd;
@@ -2132,6 +2249,26 @@ ${parecerHtml}
                     Esta turma ainda não tem <b>etapa/ano</b> definidos. Defina em <b>Início → Turmas</b> (Educação Infantil ou o ano do Fundamental) para a avaliação usar a base correta da BNCC.
                   </div>
                 )}
+                {provasAluno.length > 0 && (
+                  <div style={{ marginTop: 12, padding: 12, border: "1px solid var(--line-soft)", borderRadius: 10, background: "#F4FAF7", fontSize: 13 }}>
+                    <b>Provas corrigidas em Questões</b>
+                    <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+                      {provasAluno.slice(0, 4).map((p, k) => (
+                        <li key={k}>{p.titulo || "Prova"}: {p.acertos} de {p.total} acertos</li>
+                      ))}
+                    </ul>
+                    {sugestoesProva.length > 0 ? (
+                      <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                        <button type="button" className="pn-btn" onClick={preencherPelaProva}>Preencher pela prova</button>
+                        <span style={{ fontSize: 12, color: "var(--text-soft)" }}>
+                          {sugestoesProva.map((sp) => `${areas[sp.ai].area}: ${Math.round((100 * sp.o.a) / sp.o.n)}%`).join(" · ")}. Só completa o que está em branco.
+                        </span>
+                      </div>
+                    ) : (
+                      <p style={{ margin: "6px 0 0", fontSize: 12, color: "var(--text-soft)" }}>Estas provas entram no parecer. Para sugerir as marcas, cada matéria precisa de pelo menos 3 questões com habilidade.</p>
+                    )}
+                  </div>
+                )}
                 {areas.map((area, ai) => (
                   <div key={area.area} style={{ marginTop: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
@@ -2153,6 +2290,14 @@ ${parecerHtml}
                           title="Resetar competências desta área para o estado padrão (não observada)"
                           style={{ cursor: "pointer", border: "1px dashed var(--line)", background: "#fff", color: "var(--text-soft)", borderRadius: 8, padding: "3px 7px", fontSize: 10, fontWeight: 800 }}
                         >Limpar área</button>
+                        {colegas.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => areaParaTurma(ai, area.comps.length)}
+                            title="Usar as marcas desta área para os colegas da turma, só onde ainda está em branco"
+                            style={{ cursor: "pointer", border: "1px dashed var(--line)", background: "#fff", color: "var(--text)", borderRadius: 8, padding: "3px 7px", fontSize: 10, fontWeight: 800 }}
+                          >Turma toda</button>
+                        )}
                       </div>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -2233,8 +2378,11 @@ ${parecerHtml}
                               : "Descreva avanços, dificuldades, comportamentos e informações relevantes sobre o aluno no período…"}
                             style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--line-soft)", fontSize: 13, resize: "vertical", fontFamily: "inherit", background: "#FAFAFB" }}
                           />
-                          <div style={{ fontSize: 11, color: "var(--text-soft)", marginTop: 6 }}>
-                            Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o {ei ? "parecer descritivo" : "parecer"}.
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
+                            <div style={{ fontSize: 11, color: "var(--text-soft)", flex: 1 }}>
+                              Essas observações ficam salvas com a avaliação e são consideradas pela Sofia ao gerar o {ei ? "parecer descritivo" : "parecer"}.
+                            </div>
+                            <BotaoDitado onTexto={(t) => setBnccObsByAluno((p) => ({ ...p, [id]: juntarDitado(p[id] || "", t) }))} />
                           </div>
                         </>
                       )}
@@ -2316,6 +2464,12 @@ ${parecerHtml}
               <button onClick={fecharModalAluno} aria-label="Fechar" style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--muted)" }}><X size={18} /></button>
             </div>
             <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+              {!editAluno && (
+                <div style={{ paddingBottom: 12, borderBottom: "1px solid var(--line-soft)" }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 12.5, color: "var(--muted)" }}>Tem a turma inteira? Cole todos os nomes de uma vez.</p>
+                  <ColarAlunos turmas={dashClasses.map((c) => c.name)} turmaInicial={novoAluno.classRef} />
+                </div>
+              )}
               <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 700, color: "var(--primary-dark)" }}>
                 Nome completo
                 <input

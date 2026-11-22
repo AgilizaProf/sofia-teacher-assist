@@ -14,7 +14,20 @@ export type SofiaChatInput = {
   routeContext?: string;
   originRoute?: string;
   userContext?: string;
+  /** Foto enviada com a última mensagem (data URL JPEG/PNG/WebP). Não é guardada. */
+  imagem?: string;
 };
+
+/** Conteúdo que o gateway aceita: texto, ou texto + imagem (formato OpenAI). */
+export type GatewayContent =
+  | string
+  | Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }>;
+
+const MAX_IMAGEM = 6_000_000;
+export function imagemValida(v: unknown): string | undefined {
+  if (typeof v !== "string" || v.length > MAX_IMAGEM) return undefined;
+  return /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v) ? v : undefined;
+}
 
 type Supa = SupabaseClient<Database>;
 
@@ -66,6 +79,7 @@ export function parseChatInput(d: unknown): SofiaChatInput {
     routeContext: str(o.routeContext, 8000),
     originRoute: str(o.originRoute, 200),
     userContext: str(o.userContext, 3000),
+    imagem: imagemValida(o.imagem),
   };
 }
 
@@ -240,16 +254,24 @@ export async function prepareSofiaChat(supabase: Supa, userId: string, data: Sof
   const history = trimHistory(data.messages);
   const lastUser = history[history.length - 1]?.content ?? "";
   const model = pickModel(lastUser);
-  const chatMessages = [
+  const chatMessages: Array<{ role: "system" | "user" | "assistant"; content: GatewayContent }> = [
     { role: "system" as const, content: buildSystemPrompt(data.routeContext, data.userContext) },
-    ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+    ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content as GatewayContent })),
   ];
+  // A foto vai junto só da última pergunta (o histórico guarda só o texto).
+  if (data.imagem && chatMessages.length > 1) {
+    const ultima = chatMessages[chatMessages.length - 1];
+    ultima.content = [
+      { type: "text", text: String(ultima.content) },
+      { type: "image_url", image_url: { url: data.imagem } },
+    ];
+  }
   return { conversationId: conversationId as string, chatMessages, model };
 }
 
 export function gatewayBody(
   model: string,
-  messages: Array<{ role: string; content: string }>,
+  messages: Array<{ role: string; content: GatewayContent }>,
   stream: boolean,
 ) {
   return JSON.stringify({
@@ -275,7 +297,7 @@ export const MSG_TEMPO_ESGOTADO = "A Sofia demorou demais para responder. Tente 
  */
 export async function callGateway(
   model: string,
-  messages: Array<{ role: string; content: string }>,
+  messages: Array<{ role: string; content: GatewayContent }>,
   stream: boolean,
   signal?: AbortSignal,
 ) {

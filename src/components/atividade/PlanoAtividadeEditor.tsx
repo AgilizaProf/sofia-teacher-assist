@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { guardarNaBiblioteca } from "@/lib/biblioteca";
+import { useSemanasPlano } from "@/lib/planejamento/semanas";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
   Check, Pencil, Lightbulb, AlertTriangle, Save, FileDown, CalendarPlus,
@@ -158,8 +160,6 @@ type M1Card = {
   // segundo evento espelho (o editor já grava o evento atv/pcd na data exata).
   noM4Sync?: boolean;
 };
-type M1Plan = Record<DayKey, M1Card[]>;
-const EMPTY_M1: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
 const VARIANT_BY_DISC: Record<string, Variant> = {
   "Língua Portuguesa": "port",
@@ -247,7 +247,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   );
 
   // M1 plan (mesma chave usada em Planejamento.tsx)
-  const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1);
+  // Plano da semana: cada semana tem o seu (mesma regra do Planejamento).
+  const semanasPlano = useSemanasPlano<M1Card>();
 
   // Eventos do usuário no calendário M4 (camadas). Mesma chave lida em
   // src/pages/Planejamento.tsx no módulo M4 para integrar visualmente as
@@ -878,10 +879,12 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   /* ─────────── Salvar / Histórico (local + remoto) ─────────── */
 
-  const salvarPlano = async () => {
+  // Salva no histórico e na nuvem. Devolve o id do plano na nuvem (ou null).
+  const salvarPlano = async (opts?: { silencioso?: boolean }): Promise<string | null> => {
     const f = validar();
     setMissing(f);
-    if (f.length > 0) { setSalvo(false); return; }
+    if (f.length > 0) { setSalvo(false); return null; }
+    let idNuvem: string | null = null;
 
     const id = `p_${Date.now()}`;
     const registro: PlanoSalvo = {
@@ -910,6 +913,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           .select("id")
           .single();
         if (!error && data?.id) {
+          idNuvem = data.id;
           setHistorico((h) => h.map((p) => p.id === id ? { ...p, remoteId: data.id } : p));
         } else {
           nuvemFalhou = true;
@@ -925,9 +929,68 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       detail: `${anoEscolar} · ${disciplina}`,
     });
     setSalvo(true);
-    showToast(nuvemFalhou ? "Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo." : "Plano salvo no histórico");
+    if (!opts?.silencioso) showToast(nuvemFalhou ? "Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo." : "Plano salvo no histórico");
     window.setTimeout(() => setSalvo(false), 2000);
+    return idNuvem;
   };
+
+  // Guardar na Minha Biblioteca: salva o plano (se ainda não foi) e põe a ficha
+  // dele na Biblioteca, no ano e na matéria certos, para usar de novo.
+  const [guardando, setGuardando] = useState(false);
+  const guardadoRef = useRef<{ plano: PlanoAtividade; id: string } | null>(null);
+  const guardarBiblioteca = async () => {
+    setGuardando(true);
+    try {
+      // Mesmo plano, sem mudanças: não salva outra cópia.
+      const idNuvem =
+        guardadoRef.current?.plano === plano ? guardadoRef.current.id : await salvarPlano({ silencioso: true });
+      if (idNuvem) guardadoRef.current = { plano, id: idNuvem };
+      if (!idNuvem) {
+        if (validar().length === 0) showToast("Não consegui salvar o plano na nuvem. Tente de novo.");
+        return;
+      }
+      const r = await guardarNaBiblioteca({
+        tipo: "plano",
+        refId: idNuvem,
+        titulo: plano.titulo,
+        ano: anoEscolar,
+        componente: disciplina,
+        habilidades: plano.habilidades.map((h) => h.codigo.trim()).filter(Boolean),
+      });
+      showToast(r.ok ? "📚 " + r.mensagem : r.mensagem);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  // Abrir um plano guardado (vem da Minha Biblioteca: ?abrir=<id>).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const abrir = new URLSearchParams(window.location.search).get("abrir");
+    if (!abrir || !/^[0-9a-f-]{36}$/i.test(abrir)) return;
+    let vivo = true;
+    void (async () => {
+      const { data } = await supabase.from("planos_aula").select("id, data").eq("id", abrir).maybeSingle();
+      const reg = (data?.data ?? null) as (Partial<PlanoSalvo> & { plano?: PlanoAtividade }) | null;
+      if (!vivo || !reg?.plano) return;
+      if ((reg.modo ?? "regular") !== modo) return;
+      carregarPlano({
+        id: reg.id ?? abrir,
+        remoteId: abrir,
+        titulo: reg.titulo ?? reg.plano.titulo,
+        turma: reg.turma ?? "",
+        disciplina: reg.disciplina ?? "",
+        ano: reg.ano ?? "",
+        modo: reg.modo ?? "regular",
+        salvoEm: reg.salvoEm ?? "",
+        plano: { ...EMPTY, ...reg.plano },
+      });
+    })();
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const carregarPlano = (p: PlanoSalvo) => {
     setPlano(p.plano);
@@ -1028,7 +1091,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (${modo === "pcd" ? "PCD" : "regular"}).`,
         noM4Sync: true,
       };
-      setM1Plan({ ...m1Plan, [alvo]: [...(m1Plan[alvo] || []), card] });
+      semanasPlano.agendar(dt, card);
     }
 
     // 2) Adiciona ao calendário M4 (camadas) na data exata escolhida.
@@ -1130,7 +1193,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     let okSave = 0;
     let okSched = 0;
     let falhasNuvemLote = 0;
-    const m1Acc: M1Plan = { ...m1Plan };
+    const agendarNaSemana: Array<{ dt: Date; card: M1Card }> = [];
     const m4Acc: M4UserStore = { ...m4UserEvents };
     for (let i = 0; i < planosParaSalvar.length; i++) {
       const p = planosParaSalvar[i];
@@ -1183,7 +1246,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (lote · ${modo === "pcd" ? "PCD" : "regular"}).`,
             noM4Sync: true,
           };
-          m1Acc[alvo] = [...(m1Acc[alvo] || []), card];
+          agendarNaSemana.push({ dt, card });
         }
         const evt: M4UserEvt = {
           id: `m4u_${Date.now()}_${i}`,
@@ -1201,7 +1264,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         void exportarM4ParaAgenda(data, evt);
       }
     }
-    setM1Plan(m1Acc);
+    agendarNaSemana.forEach(({ dt, card }) => semanasPlano.agendar(dt, card));
     setM4UserEvents(m4Acc);
     logActivity({
       type: "planejamento",
@@ -1959,8 +2022,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
       {temPlano && (
         <div className="atv-actionbar">
-          <button className="atv-btn primary" onClick={salvarPlano}>
+          <button className="atv-btn primary" onClick={() => void salvarPlano()}>
             <Save size={14} /> {salvo ? "Salvo!" : "Salvar plano"}
+          </button>
+          <button className="atv-btn" onClick={() => void guardarBiblioteca()} disabled={guardando}>
+            📚 {guardando ? "Guardando…" : "Guardar na Biblioteca"}
           </button>
           <button className="atv-btn" onClick={exportarPDF}>
             <FileDown size={14} /> Exportar PDF / Word

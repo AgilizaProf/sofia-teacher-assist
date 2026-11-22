@@ -47,6 +47,11 @@ export const planPainelCss = `
 .pl-mode-head{margin:26px 0 0;}
 .pn.pl-root .pl-mode-head h2{font-size:24px;font-weight:800;letter-spacing:-.035em;}
 .pl-mode-head p{margin-top:2px!important;color:var(--pn-muted);font-size:14.5px;}
+.pl-visoes{display:inline-flex;gap:4px;margin:8px 0 4px;padding:4px;background:var(--pn-bg);border:1.5px solid var(--pn-line);border-radius:12px;}
+.pl-visoes button{height:34px;padding:0 14px;border:0;border-radius:9px;background:transparent;font-family:inherit;font-size:14px;font-weight:700;color:var(--pn-ink);cursor:pointer;}
+.pl-visoes button.on{background:var(--pn-ink);color:#fff;}
+.pl-ei-link{margin:10px 0 0;font-size:14px;color:var(--pn-muted);}
+.pl-ei-link a{color:var(--pn-green);font-weight:700;}
 
 /* Área de trabalho */
 .pn.pl-root .pl-workspace{padding:14px 24px 100px;}
@@ -63,7 +68,7 @@ export const planPainelCss = `
 .pn.pl-root .pl-card{border:1.5px solid var(--pn-line);}
 .pn.pl-root .pl-card:hover{border-color:var(--pn-ink);}
 
-@media(max-width:1100px){.pl-tools-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:1100px){.pl-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:860px){
   .pl-top{padding:16px 16px 0;}
   .pl-title{font-size:28px;}
