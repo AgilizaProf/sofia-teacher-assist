@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PainelNav, painelTokensCss } from "@/components/painel/PainelNav";
@@ -9,6 +9,11 @@ import {
   destinoLabel,
   type DestinoId,
 } from "@/components/painel/whatsapp";
+import {
+  nomeDaPergunta,
+  resolverAluno,
+  type AlunoSala,
+} from "@/lib/whatsapp/alunoDaMensagem";
 
 // "Para confirmar": mensagens que chegaram pelo WhatsApp (texto ou áudio
 // transcrito) e esperam a professora conferir o aluno, o texto e o destino.
@@ -68,6 +73,12 @@ const css = `
 .cf-steps li{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.45;}
 .cf-steps li b.k{width:26px;height:26px;border-radius:8px;background:var(--pn-ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;}
 .cf-soon{display:inline-block;margin-top:6px;padding:4px 10px;border-radius:8px;background:var(--pn-cream);font-size:13px;font-weight:700;}
+.cf-qual{padding:12px 14px;border-radius:12px;background:var(--pn-cream);border:1.5px solid var(--pn-ink);}
+.cf-qual b{display:block;font-family:var(--pn-display);font-size:16px;margin-bottom:8px;}
+.cf-qual .op{display:flex;flex-wrap:wrap;gap:8px;}
+.cf-qual .op button{min-height:40px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--pn-ink);background:#fff;font-family:inherit;font-size:15px;font-weight:700;color:var(--pn-ink);cursor:pointer;text-align:left;}
+.cf-qual .op button span{display:block;font-size:12.5px;font-weight:600;color:var(--pn-muted);}
+.cf-sel{width:100%;max-width:420px;height:42px;border:2px solid var(--pn-ink);border-radius:10px;padding:0 10px;font-family:inherit;font-size:16px;background:#fff;color:var(--pn-ink);}
 .cf-msg{padding:16px;border:1.5px dashed var(--pn-line);border-radius:14px;color:var(--pn-muted);font-size:14.5px;text-align:center;}
 @media (max-width:860px){
   .cf{padding-bottom:110px;}
@@ -105,6 +116,7 @@ function ehDestino(v: string | null): v is DestinoId {
 export function Confirmar() {
   const [estado, setEstado] = useState<Estado>("carregando");
   const [itens, setItens] = useState<Entrada[]>([]);
+  const [alunos, setAlunos] = useState<AlunoSala[]>([]);
 
   const carregar = useCallback(async () => {
     try {
@@ -115,13 +127,27 @@ export function Confirmar() {
         setEstado("sem_login");
         return;
       }
-      const { data, error } = await supabase
-        .from("whatsapp_entradas")
-        .select("id, recebido_em, tipo, texto, aluno_id, aluno_nome, destino_sugerido, payload")
-        .eq("user_id", user.id)
-        .eq("status", "pendente")
-        .order("recebido_em", { ascending: false })
-        .limit(100);
+      const [{ data, error }, { data: sala }] = await Promise.all([
+        supabase
+          .from("whatsapp_entradas")
+          .select("id, recebido_em, tipo, texto, aluno_id, aluno_nome, destino_sugerido, payload")
+          .eq("user_id", user.id)
+          .eq("status", "pendente")
+          .order("recebido_em", { ascending: false })
+          .limit(100),
+        // Alunos da Minha sala, para saber quem é quem quando o nome se repete.
+        supabase.from("alunos_inclusao").select("id, nome, turma").eq("user_id", user.id).limit(2000),
+      ]);
+      setAlunos(
+        (sala ?? [])
+          .map((a) => ({
+            id: String(a.id),
+            nome: (a.nome ?? "").trim(),
+            turma: (a.turma ?? "").trim(),
+          }))
+          .filter((a) => a.nome)
+          .sort((x, y) => x.nome.localeCompare(y.nome, "pt-BR")),
+      );
       if (error) {
         // Tabela ainda não criada no banco: mesmo estado vazio, sem erro técnico.
         if (/does not exist|schema cache|relation/i.test(error.message)) {
@@ -185,7 +211,7 @@ export function Confirmar() {
             </p>
             <div className="cf-list">
               {itens.map((x) => (
-                <Item key={x.id} x={x} onFeito={tirar} />
+                <Item key={x.id} x={x} alunos={alunos} onFeito={tirar} />
               ))}
             </div>
           </>
@@ -238,14 +264,37 @@ function Vazio() {
   );
 }
 
-function Item({ x, onFeito }: { x: Entrada; onFeito: (id: string) => void }) {
+function Item({
+  x,
+  alunos,
+  onFeito,
+}: {
+  x: Entrada;
+  alunos: AlunoSala[];
+  onFeito: (id: string) => void;
+}) {
   const [texto, setTexto] = useState(x.texto);
   const [editando, setEditando] = useState(false);
   const [destino, setDestino] = useState<DestinoId | null>(
     ehDestino(x.destino_sugerido) ? x.destino_sugerido : null,
   );
   const [ocupado, setOcupado] = useState(false);
-  const nome = (x.aluno_nome || "").trim();
+  const nomeMsg = (x.aluno_nome || "").trim();
+  const resolvido = useMemo(() => resolverAluno(x, alunos), [x, alunos]);
+  // undefined = a professora ainda não mexeu; segue o que veio resolvido.
+  const [alunoEscolhido, setAlunoEscolhido] = useState<string | null | undefined>(undefined);
+  const [trocando, setTrocando] = useState(false);
+  const alunoId = alunoEscolhido === undefined ? (resolvido.escolhido?.id ?? null) : alunoEscolhido;
+  const aluno = alunoId ? (alunos.find((a) => a.id === alunoId) ?? null) : null;
+  // Nome repetido (dois Bentos) e ninguém escolhido ainda: pergunta antes de confirmar.
+  const emDuvida = !aluno && alunoEscolhido === undefined && resolvido.candidatos.length > 1;
+  const foraDaSala =
+    !aluno && alunoEscolhido === undefined && !!nomeMsg && alunos.length > 0 && resolvido.candidatos.length === 0;
+  const nome = aluno?.nome || nomeMsg;
+  const escolher = (id: string | null) => {
+    setAlunoEscolhido(id);
+    setTrocando(false);
+  };
 
   const salvar = async (status: "confirmado" | "descartado") => {
     if (status === "confirmado" && (!destino || !texto.trim())) return;
@@ -253,7 +302,13 @@ function Item({ x, onFeito }: { x: Entrada; onFeito: (id: string) => void }) {
     const agora = new Date().toISOString();
     const patch =
       status === "confirmado"
-        ? { status, texto: texto.trim(), destino_final: destino, confirmado_em: agora }
+        ? {
+            status,
+            texto: texto.trim(),
+            destino_final: destino,
+            confirmado_em: agora,
+            ...(aluno ? { aluno_id: aluno.id, aluno_nome: aluno.nome } : {}),
+          }
         : { status };
     let { error } = await supabase.from("whatsapp_entradas").update(patch).eq("id", x.id);
     // Banco ainda sem o destino "Leitura e escrita" na regra da tabela: guarda
@@ -271,6 +326,7 @@ function Item({ x, onFeito }: { x: Entrada; onFeito: (id: string) => void }) {
           texto: texto.trim(),
           destino_final: "registro",
           confirmado_em: agora,
+          ...(aluno ? { aluno_id: aluno.id, aluno_nome: aluno.nome } : {}),
           payload: { ...base, destino_extra: "alfabetizacao" },
         } as never)
         .eq("id", x.id));
@@ -291,18 +347,74 @@ function Item({ x, onFeito }: { x: Entrada; onFeito: (id: string) => void }) {
   return (
     <article className="cf-item" aria-label={nome ? `Mensagem sobre ${nome}` : "Mensagem"}>
       <div className="cf-top">
-        <span className={"cf-ava" + (nome ? "" : " sem")} aria-hidden>
-          {nome ? iniciais(nome) : "?"}
+        <span className={"cf-ava" + (aluno ? "" : " sem")} aria-hidden>
+          {aluno ? iniciais(aluno.nome) : nome && !emDuvida && !foraDaSala ? iniciais(nome) : "?"}
         </span>
         <span className="cf-who">
           <b>{nome || "Aluno não identificado"}</b>
           <span>
             {quando(x.recebido_em)}
+            {aluno?.turma ? ` · ${aluno.turma}` : ""}
             {nome ? "" : " · escolha o destino ou descarte"}
           </span>
         </span>
         <span className="cf-tag">{x.tipo === "audio" ? "Áudio transcrito" : "Texto"}</span>
       </div>
+
+      {emDuvida && (
+        <div className="cf-qual" role="group" aria-label={`Qual ${nomeDaPergunta(nomeMsg)}?`}>
+          <b>Qual {nomeDaPergunta(nomeMsg)}?</b>
+          <div className="op">
+            {resolvido.candidatos.map((c) => (
+              <button key={c.id} type="button" onClick={() => escolher(c.id)}>
+                {c.nome}
+                {c.turma && <span>{c.turma}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {foraDaSala && !trocando && (
+        <div className="cf-qual">
+          <b>{nomeMsg} não está na Minha sala.</b>
+          <button type="button" className="cf-link" onClick={() => setTrocando(true)}>
+            Escolher o aluno
+          </button>
+        </div>
+      )}
+      {!emDuvida && !foraDaSala && !trocando && alunos.length > 0 && (
+        <div>
+          <button type="button" className="cf-link" onClick={() => setTrocando(true)}>
+            {aluno ? "Trocar aluno" : "Escolher aluno"}
+          </button>
+        </div>
+      )}
+      {trocando && (
+        <div>
+          <label className="cf-dh" htmlFor={`cf-a-${x.id}`}>
+            Aluno desta mensagem
+          </label>
+          <select
+            id={`cf-a-${x.id}`}
+            className="cf-sel"
+            value={alunoId ?? ""}
+            onChange={(e) => escolher(e.target.value || null)}
+          >
+            <option value="">Sem aluno (turma toda ou agenda)</option>
+            {[...new Set(alunos.map((a) => a.turma || "Sem turma"))].map((t) => (
+              <optgroup key={t} label={t}>
+                {alunos
+                  .filter((a) => (a.turma || "Sem turma") === t)
+                  .map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nome}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+      )}
 
       {editando ? (
         <div>
@@ -348,7 +460,8 @@ function Item({ x, onFeito }: { x: Entrada; onFeito: (id: string) => void }) {
         <button
           type="button"
           className="pn-btn primary"
-          disabled={ocupado || !destino || !texto.trim()}
+          disabled={ocupado || emDuvida || !destino || !texto.trim()}
+          title={emDuvida ? `Escolha qual ${nomeDaPergunta(nomeMsg)} antes de confirmar` : undefined}
           onClick={() => void salvar("confirmado")}
         >
           Confirmar
