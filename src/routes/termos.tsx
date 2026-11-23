@@ -6,7 +6,9 @@ export const Route = createFileRoute("/termos")({
     meta: [
       { title: "Termos de Uso · AgilizaProf" },
       { name: "description", content: "Termos de Uso do AgilizaProf — regras de utilização da Sofia, conformidade com LGPD, ECA, LBI, LDB, BNCC e CDC." },
+      { name: "robots", content: "index, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://agilizaprof.app.br/termos" }],
   }),
   component: Termos,
 });
