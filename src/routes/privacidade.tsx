@@ -6,7 +6,9 @@ export const Route = createFileRoute("/privacidade")({
     meta: [
       { title: "Política de Privacidade · AgilizaProf" },
       { name: "description", content: "Política de Privacidade do AgilizaProf — como tratamos dados pessoais de educadores e estudantes em conformidade com a LGPD, o ECA e a LBI." },
+      { name: "robots", content: "index, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://agilizaprof.app.br/privacidade" }],
   }),
   component: Privacidade,
 });

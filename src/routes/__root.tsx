@@ -54,6 +54,10 @@ export const Route = createRootRoute({
         content:
           "Plataforma de inteligência artificial pedagógica para professores brasileiros. Crie planos de aula, relatórios e atividades personalizadas em minutos.",
       },
+      // O app é área logada: o Google não deve listar essas telas. Só entrar,
+      // privacidade e termos liberam a indexação (cada rota sobrescreve esta tag).
+      // A página de vendas, que deve aparecer no Google, é www.agilizaprof.com.br.
+      { name: "robots", content: "noindex, follow" },
       { name: "author", content: "AgilizaProf" },
       { name: "application-name", content: "AgilizaProf" },
       {

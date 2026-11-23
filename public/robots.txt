@@ -1,0 +1,10 @@
+# AgilizaProf (app). A página de vendas é https://www.agilizaprof.com.br
+# As telas da área logada pedem "noindex" no próprio HTML, por isso ficam liberadas aqui
+# (o Google precisa abrir a página para ler esse aviso).
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /ferramentas/
+Disallow: /bncc/
+
+Sitemap: https://agilizaprof.app.br/sitemap.xml
