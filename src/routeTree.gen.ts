@@ -55,6 +55,7 @@ import { Route as AdminFunilRouteImport } from './routes/admin.funil'
 import { Route as AdminErrosRouteImport } from './routes/admin.erros'
 import { Route as AdminCuponsRouteImport } from './routes/admin.cupons'
 import { Route as AdminConversaoRouteImport } from './routes/admin.conversao'
+import { Route as AdminCadernosRouteImport } from './routes/admin.cadernos'
 import { Route as AdminAvisosRouteImport } from './routes/admin.avisos'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
 import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
@@ -294,6 +295,11 @@ const AdminConversaoRoute = AdminConversaoRouteImport.update({
   path: '/conversao',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCadernosRoute = AdminCadernosRouteImport.update({
+  id: '/cadernos',
+  path: '/cadernos',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAvisosRoute = AdminAvisosRouteImport.update({
   id: '/avisos',
   path: '/avisos',
@@ -358,6 +364,7 @@ export interface FileRoutesByFullPath {
   '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/cadernos': typeof AdminCadernosRoute
   '/admin/avisos': typeof AdminAvisosRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/cupons': typeof AdminCuponsRoute
@@ -411,6 +418,7 @@ export interface FileRoutesByTo {
   '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/cadernos': typeof AdminCadernosRoute
   '/admin/avisos': typeof AdminAvisosRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/cupons': typeof AdminCuponsRoute
@@ -466,6 +474,7 @@ export interface FileRoutesById {
   '/simulados': typeof SimuladosRoute
   '/termos': typeof TermosRoute
   '/admin/atividades': typeof AdminAtividadesRoute
+  '/admin/cadernos': typeof AdminCadernosRoute
   '/admin/avisos': typeof AdminAvisosRoute
   '/admin/conversao': typeof AdminConversaoRoute
   '/admin/cupons': typeof AdminCuponsRoute
@@ -522,6 +531,7 @@ export interface FileRouteTypes {
     | '/simulados'
     | '/termos'
     | '/admin/atividades'
+    | '/admin/cadernos'
     | '/admin/avisos'
     | '/admin/conversao'
     | '/admin/cupons'
@@ -575,6 +585,7 @@ export interface FileRouteTypes {
     | '/simulados'
     | '/termos'
     | '/admin/atividades'
+    | '/admin/cadernos'
     | '/admin/avisos'
     | '/admin/conversao'
     | '/admin/cupons'
@@ -629,6 +640,7 @@ export interface FileRouteTypes {
     | '/simulados'
     | '/termos'
     | '/admin/atividades'
+    | '/admin/cadernos'
     | '/admin/avisos'
     | '/admin/conversao'
     | '/admin/cupons'
@@ -1013,6 +1025,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminConversaoRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/cadernos': {
+      id: '/admin/cadernos'
+      path: '/cadernos'
+      fullPath: '/admin/cadernos'
+      preLoaderRoute: typeof AdminCadernosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/avisos': {
       id: '/admin/avisos'
       path: '/avisos'
@@ -1060,6 +1079,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAtividadesRoute: typeof AdminAtividadesRoute
+  AdminCadernosRoute: typeof AdminCadernosRoute
   AdminAvisosRoute: typeof AdminAvisosRoute
   AdminConversaoRoute: typeof AdminConversaoRoute
   AdminCuponsRoute: typeof AdminCuponsRoute
@@ -1078,6 +1098,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAtividadesRoute: AdminAtividadesRoute,
+  AdminCadernosRoute: AdminCadernosRoute,
   AdminAvisosRoute: AdminAvisosRoute,
   AdminConversaoRoute: AdminConversaoRoute,
   AdminCuponsRoute: AdminCuponsRoute,

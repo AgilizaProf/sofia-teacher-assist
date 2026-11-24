@@ -3,13 +3,16 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { PainelNav, painelTokensCss, ICONS } from "@/components/painel/PainelNav";
 
-// Cadernos prontos: ainda bloqueado. Não listamos atividades inventadas.
-// Mostramos só uma prévia desfocada (3 miniaturas reais das fichas, em
-// public/cadernos/previa-N.jpg) e a data de liberação. Ver, PDF e PCD abrem o
-// aviso de acesso. Quando os cadernos ficarem prontos, esta página passa a
-// listar as fichas por ano e disciplina.
+// Cadernos prontos. Até 13/03/2027 a professora vê só a prévia desfocada
+// (3 miniaturas reais das fichas, em public/cadernos/previa-N.jpg) e a data de
+// liberação. A partir dessa data, e antes disso para o admin, a página vira a
+// busca real: disciplina, código da BNCC ou assunto, com cada atividade e
+// todos os PDFs onde ela aparece (ver CadernosBusca e lib/cadernos/catalogo).
 
 import { CADERNOS_LIBERA_EM, CADERNOS_LIBERA_CURTO, TIPOS_FOLHA } from "@/lib/cadernos/folhas";
+import { cadernosLiberados } from "@/lib/cadernos/catalogo";
+import { CadernosBusca } from "@/components/cadernos/CadernosBusca";
+import { useIsAdmin } from "@/lib/admin/useIsAdmin";
 
 export { CADERNOS_LIBERA_EM };
 
@@ -74,6 +77,48 @@ function Svg({ children }: { children: ReactNode }) {
 }
 
 export function Cadernos() {
+  const { ready, isAdmin } = useIsAdmin();
+  const liberado = cadernosLiberados();
+  if (liberado || (ready && isAdmin)) return <CadernosAbertos admin={!liberado} />;
+  return <CadernosTrancados />;
+}
+
+function CadernosAbertos({ admin }: { admin: boolean }) {
+  return (
+    <div className="pn cd">
+      <style dangerouslySetInnerHTML={{ __html: painelTokensCss + css }} />
+      <PainelNav />
+      <main className="cd-wrap">
+        <span className="cd-eyebrow">Cadernos prontos</span>
+        <h1 className="cd-title">Atividades prontas para imprimir</h1>
+        <p className="cd-sub">
+          Procure pela disciplina, pelo código da BNCC ou pelo assunto. Cada atividade mostra todos
+          os cadernos onde ela está e abre o PDF direto na página certa.
+        </p>
+        {admin && (
+          <div className="cd-lock" role="note">
+            <Svg>{ICONS.lock}</Svg>
+            <span>
+              <b>Prévia de administrador.</b> As professoras continuam vendo o cadeado até{" "}
+              {CADERNOS_LIBERA_EM}. Os PDFs são enviados em{" "}
+              <Link to="/admin/cadernos">Admin › Cadernos</Link>.
+            </span>
+          </div>
+        )}
+        <CadernosBusca />
+        <p className="cd-sub" style={{ marginTop: 22 }}>
+          Quer uma atividade nova sobre outro tema?{" "}
+          <Link to="/planejamento/atividade" style={{ color: "var(--pn-green)", fontWeight: 700 }}>
+            Criar com a Sofia
+          </Link>
+          .
+        </p>
+      </main>
+    </div>
+  );
+}
+
+function CadernosTrancados() {
   const [aviso, setAviso] = useState<string | null>(null);
 
   useEffect(() => {
