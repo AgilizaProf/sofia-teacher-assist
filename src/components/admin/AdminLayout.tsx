@@ -53,15 +53,28 @@ const navItems = [
     icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75 M12 12m-2 0a2 2 0 1 0 4 0 2 2 0 0 0-4 0",
   },
   { to: "/admin/indicacoes", label: "Indicações", icon: "M20 12v10H4V12 M2 7h20v5H2z M12 22V7" },
-  { to: "/admin/avisos", label: "Aviso para todos", icon: "M3 11l18-5v12L3 14v-3z M11.6 16.8a3 3 0 1 1-5.8-1.6" },
+  {
+    to: "/admin/avisos",
+    label: "Aviso para todos",
+    icon: "M3 11l18-5v12L3 14v-3z M11.6 16.8a3 3 0 1 1-5.8-1.6",
+  },
   { to: "/admin/funil", label: "Caminho do usuário", icon: "M22 3H2l8 9.46V19l4 2v-8.54L22 3z" },
+  {
+    to: "/admin/cadernos",
+    label: "Cadernos",
+    icon: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z",
+  },
 ];
 
 // As 13 telas ficam em 5 grupos. No topo aparecem só os grupos; dentro de
 // cada grupo, as telas viram abas menores.
 const GROUPS: { label: string; icon: string; items: string[] }[] = [
   { label: "Visão geral", icon: navItems[0].icon, items: ["/admin"] },
-  { label: "Pessoas", icon: navItems[1].icon, items: ["/admin/usuarios", "/admin/pro", "/admin/indicacoes", "/admin/avisos"] },
+  {
+    label: "Pessoas",
+    icon: navItems[1].icon,
+    items: ["/admin/usuarios", "/admin/pro", "/admin/indicacoes", "/admin/avisos"],
+  },
   {
     label: "Vendas",
     icon: "M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
@@ -70,7 +83,7 @@ const GROUPS: { label: string; icon: string; items: string[] }[] = [
   {
     label: "Uso e IA",
     icon: "M22 12h-4l-3 9L9 3l-3 9H2",
-    items: ["/admin/atividades", "/admin/ia"],
+    items: ["/admin/atividades", "/admin/ia", "/admin/cadernos"],
   },
   {
     label: "Sistema",

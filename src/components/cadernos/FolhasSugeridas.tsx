@@ -1,4 +1,15 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { useIsAdmin } from "@/lib/admin/useIsAdmin";
+import {
+  abrirPdf,
+  atividadesParaPlano,
+  cadernosLiberados,
+  carregarCatalogo,
+  NOME_TIPO,
+  type Atividade,
+} from "@/lib/cadernos/catalogo";
 import {
   CADERNOS_LIBERA_CURTO,
   CADERNOS_LIBERA_EM,
@@ -10,9 +21,10 @@ import {
 
 // Bloco "Atividades em folha (PDF)": complemento à atividade da BNCC que a
 // professora está buscando. Aparece só para Educação Infantil e Fundamental 1.
-// Enquanto os cadernos estão trancados, mostra os seis tipos de folha com a
-// prévia desfocada e a data de acesso, igual à página Cadernos. Quando o
-// catálogo existir, mostra só os tipos que têm folha de acordo com a busca.
+// Enquanto os cadernos estão trancados (até 13/03/2027), mostra os seis tipos
+// de folha com a prévia desfocada e a data de acesso, igual à página Cadernos.
+// Depois disso (e antes para o admin), mostra as fichas reais do catálogo que
+// batem com a habilidade, o ano e a disciplina, com o PDF na página certa.
 
 const PREVIAS = ["/cadernos/previa-1.jpg", "/cadernos/previa-2.jpg", "/cadernos/previa-3.jpg"];
 
@@ -39,6 +51,14 @@ const css = `
 .fs-modal h3{margin:0 0 8px;font-family:'Sora',sans-serif;font-size:20px;letter-spacing:-.03em;}
 .fs-modal p{margin:0 0 14px;font-size:15px;line-height:1.5;}
 .fs-ok{height:44px;padding:0 18px;border-radius:12px;border:2px solid #14161F;background:#0B7A55;color:#fff;font:inherit;font-weight:700;box-shadow:3px 3px 0 #14161F;cursor:pointer;}
+.fs-lista{display:grid;gap:8px;margin:12px 0 0;}
+.fs-item{display:grid;gap:4px;padding:10px 12px;border:1.5px solid #D6DBE5;border-radius:12px;}
+.fs-item-meta{font-size:12.5px;font-weight:700;color:#0B7A55;}
+.fs-item-tit{font-size:15px;line-height:1.3;}
+.fs-item-pdfs{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+.fs-item-pdfs button{height:32px;padding:0 10px;border-radius:9px;border:1.5px solid #14161F;background:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#14161F;}
+.fs-item-pdfs button:hover{background:#CDEFE2;}
+.fs-todas{display:inline-block;margin-top:12px;font-weight:700;color:#0B7A55;font-size:14.5px;}
 @media (max-width:1100px){.fs-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media (max-width:520px){.fs{padding:14px;border-radius:18px;box-shadow:3px 3px 0 #14161F;}.fs-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 `;
@@ -60,13 +80,105 @@ function Cadeado() {
   );
 }
 
-export function FolhasSugeridas(props: {
+type PropsFolhas = {
   etapa: EtapaFolha | null;
   ano?: string;
   componentes?: string[];
   habilidades?: string[];
   className?: string;
-}) {
+};
+
+export function FolhasSugeridas(props: PropsFolhas) {
+  const { ready, isAdmin } = useIsAdmin();
+  if (!props.etapa) return null;
+  if (cadernosLiberados() || (ready && isAdmin)) return <FolhasDoCatalogo {...props} />;
+  return <FolhasTrancadas {...props} />;
+}
+
+const MOSTRAR = 4;
+
+function FolhasDoCatalogo(props: PropsFolhas) {
+  const { etapa, ano, className } = props;
+  const componentes = (props.componentes ?? []).filter(Boolean);
+  const habilidades = (props.habilidades ?? []).filter(Boolean);
+  const [lista, setLista] = useState<Atividade[] | null>(null);
+  const [abrindo, setAbrindo] = useState<string | null>(null);
+  const chaveBusca = JSON.stringify([etapa, ano, componentes, habilidades]);
+
+  useEffect(() => {
+    let vivo = true;
+    carregarCatalogo()
+      .then((cat) => {
+        if (vivo) setLista(atividadesParaPlano(cat, { etapa, ano, componentes, habilidades }));
+      })
+      .catch(() => vivo && setLista([]));
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveBusca]);
+
+  if (!lista || lista.length === 0) return null;
+
+  const abrir = async (arquivo: string, pagina: number | null, chave: string) => {
+    setAbrindo(chave);
+    try {
+      await abrirPdf(arquivo, pagina);
+    } catch {
+      toast.error("Não consegui abrir esse PDF agora. Tente de novo em instantes.");
+    } finally {
+      setAbrindo(null);
+    }
+  };
+
+  const q = habilidades[0] ?? [componentes[0], ano].filter(Boolean).join(" ");
+  return (
+    <section className={"fs" + (className ? " " + className : "")} aria-labelledby="fs-h">
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <span className="fs-eyebrow">Complemento</span>
+      <h2 id="fs-h">Atividades em folha (PDF)</h2>
+      <p className="fs-sub">
+        Fichas prontas dos Cadernos AgilizaProf de acordo com a sua busca. Cada botão abre o PDF na
+        página da ficha.
+      </p>
+      <div className="fs-lista">
+        {lista.slice(0, MOSTRAR).map((a) => (
+          <div className="fs-item" key={a.chave}>
+            <span className="fs-item-meta">
+              {a.etapa === "infantil"
+                ? (a.tema ?? "Educação Infantil")
+                : `${a.componente} · ${a.ano}`}
+              {a.habilidades.length ? ` · ${a.habilidades.join(", ")}` : ""}
+            </span>
+            <b className="fs-item-tit">{a.titulo}</b>
+            <span className="fs-item-pdfs">
+              {a.pdfs.map((p) => {
+                const chave = `${p.arquivo}#${p.pagina}`;
+                return (
+                  <button
+                    type="button"
+                    key={chave}
+                    disabled={abrindo === chave}
+                    onClick={() => abrir(p.arquivo, p.pagina, chave)}
+                  >
+                    {abrindo === chave ? "Abrindo…" : NOME_TIPO[p.tipo]}
+                  </button>
+                );
+              })}
+            </span>
+          </div>
+        ))}
+      </div>
+      <Link className="fs-todas" to="/cadernos" search={{ q }}>
+        {lista.length > MOSTRAR
+          ? `Ver as ${lista.length} fichas nos Cadernos`
+          : "Abrir os Cadernos"}
+      </Link>
+    </section>
+  );
+}
+
+function FolhasTrancadas(props: PropsFolhas) {
   const { etapa, ano, className } = props;
   const componentes = (props.componentes ?? []).filter(Boolean);
   const habilidades = (props.habilidades ?? []).filter(Boolean);
