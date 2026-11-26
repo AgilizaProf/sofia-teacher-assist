@@ -29,6 +29,13 @@
       "when": 1795705681644,
       "tag": "0003_promocao_13_marco_e_teste_14_dias",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795707707371,
+      "tag": "0004_seguranca_cupons_senha_indicacoes",
+      "breakpoints": true
     }
   ]
 }
