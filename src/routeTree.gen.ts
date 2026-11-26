@@ -9,194 +9,62 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermosRouteImport } from './routes/termos'
-import { Route as SimuladosRouteImport } from './routes/simulados'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RelatoriosRouteImport } from './routes/relatorios'
-import { Route as RelatorioPedagogicoRouteImport } from './routes/relatorio-pedagogico'
-import { Route as QuestoesRouteImport } from './routes/questoes'
-import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as PlanejamentoPedagogicoRouteImport } from './routes/planejamento-pedagogico'
-import { Route as PlanejamentoRouteImport } from './routes/planejamento'
-import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagamento-confirmado-mensal'
-import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento-confirmado-anual'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as MinhaSalaRouteImport } from './routes/minha-sala'
-import { Route as JogosRouteImport } from './routes/jogos'
-import { Route as IndicacoesRouteImport } from './routes/indicacoes'
-import { Route as InclusaoRouteImport } from './routes/inclusao'
-import { Route as EiRouteImport } from './routes/ei'
-import { Route as ConfirmarRouteImport } from './routes/confirmar'
-import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
-import { Route as CadernosRouteImport } from './routes/cadernos'
-import { Route as BibliotecaRouteImport } from './routes/biblioteca'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AtividadeRouteImport } from './routes/atividade'
-import { Route as AssistenteRouteImport } from './routes/assistente'
-import { Route as AlfabetizacaoRouteImport } from './routes/alfabetizacao'
-import { Route as AgendaRouteImport } from './routes/agenda'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as RefRouteImport } from './routes/$ref'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RefRouteImport } from './routes/$ref'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AgendaRouteImport } from './routes/agenda'
+import { Route as AlfabetizacaoRouteImport } from './routes/alfabetizacao'
+import { Route as AssistenteRouteImport } from './routes/assistente'
+import { Route as AtividadeRouteImport } from './routes/atividade'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BibliotecaRouteImport } from './routes/biblioteca'
+import { Route as CadernosRouteImport } from './routes/cadernos'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as ConfirmarRouteImport } from './routes/confirmar'
+import { Route as EiRouteImport } from './routes/ei'
+import { Route as InclusaoRouteImport } from './routes/inclusao'
+import { Route as IndicacoesRouteImport } from './routes/indicacoes'
+import { Route as JogosRouteImport } from './routes/jogos'
+import { Route as MinhaSalaRouteImport } from './routes/minha-sala'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PagamentoConfirmadoAnualRouteImport } from './routes/pagamento-confirmado-anual'
+import { Route as PagamentoConfirmadoMensalRouteImport } from './routes/pagamento-confirmado-mensal'
+import { Route as PlanejamentoRouteImport } from './routes/planejamento'
+import { Route as PlanejamentoPedagogicoRouteImport } from './routes/planejamento-pedagogico'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as QuestoesRouteImport } from './routes/questoes'
+import { Route as RelatorioPedagogicoRouteImport } from './routes/relatorio-pedagogico'
+import { Route as RelatoriosRouteImport } from './routes/relatorios'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SimuladosRouteImport } from './routes/simulados'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
-import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
-import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
-import { Route as AdminStorageRouteImport } from './routes/admin.storage'
-import { Route as AdminRetencaoRouteImport } from './routes/admin.retencao'
-import { Route as AdminProRouteImport } from './routes/admin.pro'
-import { Route as AdminManutencaoRouteImport } from './routes/admin.manutencao'
-import { Route as AdminInfraRouteImport } from './routes/admin.infra'
-import { Route as AdminIndicacoesRouteImport } from './routes/admin.indicacoes'
-import { Route as AdminIaRouteImport } from './routes/admin.ia'
-import { Route as AdminFunilRouteImport } from './routes/admin.funil'
-import { Route as AdminErrosRouteImport } from './routes/admin.erros'
-import { Route as AdminCuponsRouteImport } from './routes/admin.cupons'
-import { Route as AdminConversaoRouteImport } from './routes/admin.conversao'
-import { Route as AdminAvisosRouteImport } from './routes/admin.avisos'
 import { Route as AdminAtividadesRouteImport } from './routes/admin.atividades'
-import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
+import { Route as AdminAvisosRouteImport } from './routes/admin.avisos'
+import { Route as AdminConversaoRouteImport } from './routes/admin.conversao'
+import { Route as AdminCuponsRouteImport } from './routes/admin.cupons'
+import { Route as AdminErrosRouteImport } from './routes/admin.erros'
+import { Route as AdminFunilRouteImport } from './routes/admin.funil'
+import { Route as AdminIaRouteImport } from './routes/admin.ia'
+import { Route as AdminIndicacoesRouteImport } from './routes/admin.indicacoes'
+import { Route as AdminInfraRouteImport } from './routes/admin.infra'
+import { Route as AdminManutencaoRouteImport } from './routes/admin.manutencao'
+import { Route as AdminProRouteImport } from './routes/admin.pro'
+import { Route as AdminRetencaoRouteImport } from './routes/admin.retencao'
+import { Route as AdminStorageRouteImport } from './routes/admin.storage'
+import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as InclusaoPeiRouteImport } from './routes/inclusao.pei'
+import { Route as PlanejamentoAtividadeRouteImport } from './routes/planejamento.atividade'
+import { Route as PlanejamentoEiRouteImport } from './routes/planejamento.ei'
 import { Route as ApiSofiaChatRouteImport } from './routes/api/sofia.chat'
-import { Route as ApiPublicWebhooksMercadopago_debugRouteImport } from './routes/api/public/webhooks/mercadopago_debug'
+import { Route as ApiSofiaSuggestionsRouteImport } from './routes/api/sofia.suggestions'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
+import { Route as ApiPublicWebhooksMercadopago_debugRouteImport } from './routes/api/public/webhooks/mercadopago_debug'
 
-const TermosRoute = TermosRouteImport.update({
-  id: '/termos',
-  path: '/termos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SimuladosRoute = SimuladosRouteImport.update({
-  id: '/simulados',
-  path: '/simulados',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RelatoriosRoute = RelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RelatorioPedagogicoRoute = RelatorioPedagogicoRouteImport.update({
-  id: '/relatorio-pedagogico',
-  path: '/relatorio-pedagogico',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QuestoesRoute = QuestoesRouteImport.update({
-  id: '/questoes',
-  path: '/questoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacidadeRoute = PrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlanejamentoPedagogicoRoute = PlanejamentoPedagogicoRouteImport.update({
-  id: '/planejamento-pedagogico',
-  path: '/planejamento-pedagogico',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlanejamentoRoute = PlanejamentoRouteImport.update({
-  id: '/planejamento',
-  path: '/planejamento',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PagamentoConfirmadoMensalRoute =
-  PagamentoConfirmadoMensalRouteImport.update({
-    id: '/pagamento-confirmado-mensal',
-    path: '/pagamento-confirmado-mensal',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const PagamentoConfirmadoAnualRoute =
-  PagamentoConfirmadoAnualRouteImport.update({
-    id: '/pagamento-confirmado-anual',
-    path: '/pagamento-confirmado-anual',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MinhaSalaRoute = MinhaSalaRouteImport.update({
-  id: '/minha-sala',
-  path: '/minha-sala',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JogosRoute = JogosRouteImport.update({
-  id: '/jogos',
-  path: '/jogos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndicacoesRoute = IndicacoesRouteImport.update({
-  id: '/indicacoes',
-  path: '/indicacoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InclusaoRoute = InclusaoRouteImport.update({
-  id: '/inclusao',
-  path: '/inclusao',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EiRoute = EiRouteImport.update({
-  id: '/ei',
-  path: '/ei',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfirmarRoute = ConfirmarRouteImport.update({
-  id: '/confirmar',
-  path: '/confirmar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
-  id: '/configuracoes',
-  path: '/configuracoes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CadernosRoute = CadernosRouteImport.update({
-  id: '/cadernos',
-  path: '/cadernos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BibliotecaRoute = BibliotecaRouteImport.update({
-  id: '/biblioteca',
-  path: '/biblioteca',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AtividadeRoute = AtividadeRouteImport.update({
-  id: '/atividade',
-  path: '/atividade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AssistenteRoute = AssistenteRouteImport.update({
-  id: '/assistente',
-  path: '/assistente',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AlfabetizacaoRoute = AlfabetizacaoRouteImport.update({
-  id: '/alfabetizacao',
-  path: '/alfabetizacao',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AgendaRoute = AgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefRoute = RefRouteImport.update({
@@ -204,9 +72,141 @@ const RefRoute = RefRouteImport.update({
   path: '/$ref',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlfabetizacaoRoute = AlfabetizacaoRouteImport.update({
+  id: '/alfabetizacao',
+  path: '/alfabetizacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssistenteRoute = AssistenteRouteImport.update({
+  id: '/assistente',
+  path: '/assistente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtividadeRoute = AtividadeRouteImport.update({
+  id: '/atividade',
+  path: '/atividade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BibliotecaRoute = BibliotecaRouteImport.update({
+  id: '/biblioteca',
+  path: '/biblioteca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadernosRoute = CadernosRouteImport.update({
+  id: '/cadernos',
+  path: '/cadernos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmarRoute = ConfirmarRouteImport.update({
+  id: '/confirmar',
+  path: '/confirmar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EiRoute = EiRouteImport.update({
+  id: '/ei',
+  path: '/ei',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InclusaoRoute = InclusaoRouteImport.update({
+  id: '/inclusao',
+  path: '/inclusao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndicacoesRoute = IndicacoesRouteImport.update({
+  id: '/indicacoes',
+  path: '/indicacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JogosRoute = JogosRouteImport.update({
+  id: '/jogos',
+  path: '/jogos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MinhaSalaRoute = MinhaSalaRouteImport.update({
+  id: '/minha-sala',
+  path: '/minha-sala',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PagamentoConfirmadoAnualRoute =
+  PagamentoConfirmadoAnualRouteImport.update({
+    id: '/pagamento-confirmado-anual',
+    path: '/pagamento-confirmado-anual',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PagamentoConfirmadoMensalRoute =
+  PagamentoConfirmadoMensalRouteImport.update({
+    id: '/pagamento-confirmado-mensal',
+    path: '/pagamento-confirmado-mensal',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PlanejamentoRoute = PlanejamentoRouteImport.update({
+  id: '/planejamento',
+  path: '/planejamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanejamentoPedagogicoRoute = PlanejamentoPedagogicoRouteImport.update({
+  id: '/planejamento-pedagogico',
+  path: '/planejamento-pedagogico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuestoesRoute = QuestoesRouteImport.update({
+  id: '/questoes',
+  path: '/questoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatorioPedagogicoRoute = RelatorioPedagogicoRouteImport.update({
+  id: '/relatorio-pedagogico',
+  path: '/relatorio-pedagogico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelatoriosRoute = RelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimuladosRoute = SimuladosRouteImport.update({
+  id: '/simulados',
+  path: '/simulados',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -214,84 +214,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const PlanejamentoEiRoute = PlanejamentoEiRouteImport.update({
-  id: '/ei',
-  path: '/ei',
-  getParentRoute: () => PlanejamentoRoute,
-} as any)
-const PlanejamentoAtividadeRoute = PlanejamentoAtividadeRouteImport.update({
-  id: '/atividade',
-  path: '/atividade',
-  getParentRoute: () => PlanejamentoRoute,
-} as any)
-const InclusaoPeiRoute = InclusaoPeiRouteImport.update({
-  id: '/pei',
-  path: '/pei',
-  getParentRoute: () => InclusaoRoute,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
-  id: '/usuarios',
-  path: '/usuarios',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminStorageRoute = AdminStorageRouteImport.update({
-  id: '/storage',
-  path: '/storage',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRetencaoRoute = AdminRetencaoRouteImport.update({
-  id: '/retencao',
-  path: '/retencao',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminProRoute = AdminProRouteImport.update({
-  id: '/pro',
-  path: '/pro',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminManutencaoRoute = AdminManutencaoRouteImport.update({
-  id: '/manutencao',
-  path: '/manutencao',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminInfraRoute = AdminInfraRouteImport.update({
-  id: '/infra',
-  path: '/infra',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminIndicacoesRoute = AdminIndicacoesRouteImport.update({
-  id: '/indicacoes',
-  path: '/indicacoes',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminIaRoute = AdminIaRouteImport.update({
-  id: '/ia',
-  path: '/ia',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFunilRoute = AdminFunilRouteImport.update({
-  id: '/funil',
-  path: '/funil',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminErrosRoute = AdminErrosRouteImport.update({
-  id: '/erros',
-  path: '/erros',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCuponsRoute = AdminCuponsRouteImport.update({
-  id: '/cupons',
-  path: '/cupons',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminConversaoRoute = AdminConversaoRouteImport.update({
-  id: '/conversao',
-  path: '/conversao',
+const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
+  id: '/atividades',
+  path: '/atividades',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAvisosRoute = AdminAvisosRouteImport.update({
@@ -299,31 +224,106 @@ const AdminAvisosRoute = AdminAvisosRouteImport.update({
   path: '/avisos',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAtividadesRoute = AdminAtividadesRouteImport.update({
-  id: '/atividades',
-  path: '/atividades',
+const AdminConversaoRoute = AdminConversaoRouteImport.update({
+  id: '/conversao',
+  path: '/conversao',
   getParentRoute: () => AdminRoute,
 } as any)
-const ApiSofiaSuggestionsRoute = ApiSofiaSuggestionsRouteImport.update({
-  id: '/api/sofia/suggestions',
-  path: '/api/sofia/suggestions',
-  getParentRoute: () => rootRouteImport,
+const AdminCuponsRoute = AdminCuponsRouteImport.update({
+  id: '/cupons',
+  path: '/cupons',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminErrosRoute = AdminErrosRouteImport.update({
+  id: '/erros',
+  path: '/erros',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFunilRoute = AdminFunilRouteImport.update({
+  id: '/funil',
+  path: '/funil',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminIaRoute = AdminIaRouteImport.update({
+  id: '/ia',
+  path: '/ia',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminIndicacoesRoute = AdminIndicacoesRouteImport.update({
+  id: '/indicacoes',
+  path: '/indicacoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInfraRoute = AdminInfraRouteImport.update({
+  id: '/infra',
+  path: '/infra',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminManutencaoRoute = AdminManutencaoRouteImport.update({
+  id: '/manutencao',
+  path: '/manutencao',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProRoute = AdminProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRetencaoRoute = AdminRetencaoRouteImport.update({
+  id: '/retencao',
+  path: '/retencao',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStorageRoute = AdminStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const InclusaoPeiRoute = InclusaoPeiRouteImport.update({
+  id: '/pei',
+  path: '/pei',
+  getParentRoute: () => InclusaoRoute,
+} as any)
+const PlanejamentoAtividadeRoute = PlanejamentoAtividadeRouteImport.update({
+  id: '/atividade',
+  path: '/atividade',
+  getParentRoute: () => PlanejamentoRoute,
+} as any)
+const PlanejamentoEiRoute = PlanejamentoEiRouteImport.update({
+  id: '/ei',
+  path: '/ei',
+  getParentRoute: () => PlanejamentoRoute,
 } as any)
 const ApiSofiaChatRoute = ApiSofiaChatRouteImport.update({
   id: '/api/sofia/chat',
   path: '/api/sofia/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicWebhooksMercadopago_debugRoute =
-  ApiPublicWebhooksMercadopago_debugRouteImport.update({
-    id: '/api/public/webhooks/mercadopago_debug',
-    path: '/api/public/webhooks/mercadopago_debug',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const ApiSofiaSuggestionsRoute = ApiSofiaSuggestionsRouteImport.update({
+  id: '/api/sofia/suggestions',
+  path: '/api/sofia/suggestions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksMercadopagoRoute =
   ApiPublicWebhooksMercadopagoRouteImport.update({
     id: '/api/public/webhooks/mercadopago',
     path: '/api/public/webhooks/mercadopago',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWebhooksMercadopago_debugRoute =
+  ApiPublicWebhooksMercadopago_debugRouteImport.update({
+    id: '/api/public/webhooks/mercadopago_debug',
+    path: '/api/public/webhooks/mercadopago_debug',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -691,193 +691,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/termos': {
-      id: '/termos'
-      path: '/termos'
-      fullPath: '/termos'
-      preLoaderRoute: typeof TermosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/simulados': {
-      id: '/simulados'
-      path: '/simulados'
-      fullPath: '/simulados'
-      preLoaderRoute: typeof SimuladosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/relatorios': {
-      id: '/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof RelatoriosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/relatorio-pedagogico': {
-      id: '/relatorio-pedagogico'
-      path: '/relatorio-pedagogico'
-      fullPath: '/relatorio-pedagogico'
-      preLoaderRoute: typeof RelatorioPedagogicoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/questoes': {
-      id: '/questoes'
-      path: '/questoes'
-      fullPath: '/questoes'
-      preLoaderRoute: typeof QuestoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacidade': {
-      id: '/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/planejamento-pedagogico': {
-      id: '/planejamento-pedagogico'
-      path: '/planejamento-pedagogico'
-      fullPath: '/planejamento-pedagogico'
-      preLoaderRoute: typeof PlanejamentoPedagogicoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/planejamento': {
-      id: '/planejamento'
-      path: '/planejamento'
-      fullPath: '/planejamento'
-      preLoaderRoute: typeof PlanejamentoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pagamento-confirmado-mensal': {
-      id: '/pagamento-confirmado-mensal'
-      path: '/pagamento-confirmado-mensal'
-      fullPath: '/pagamento-confirmado-mensal'
-      preLoaderRoute: typeof PagamentoConfirmadoMensalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pagamento-confirmado-anual': {
-      id: '/pagamento-confirmado-anual'
-      path: '/pagamento-confirmado-anual'
-      fullPath: '/pagamento-confirmado-anual'
-      preLoaderRoute: typeof PagamentoConfirmadoAnualRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/minha-sala': {
-      id: '/minha-sala'
-      path: '/minha-sala'
-      fullPath: '/minha-sala'
-      preLoaderRoute: typeof MinhaSalaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jogos': {
-      id: '/jogos'
-      path: '/jogos'
-      fullPath: '/jogos'
-      preLoaderRoute: typeof JogosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/indicacoes': {
-      id: '/indicacoes'
-      path: '/indicacoes'
-      fullPath: '/indicacoes'
-      preLoaderRoute: typeof IndicacoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inclusao': {
-      id: '/inclusao'
-      path: '/inclusao'
-      fullPath: '/inclusao'
-      preLoaderRoute: typeof InclusaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ei': {
-      id: '/ei'
-      path: '/ei'
-      fullPath: '/ei'
-      preLoaderRoute: typeof EiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/confirmar': {
-      id: '/confirmar'
-      path: '/confirmar'
-      fullPath: '/confirmar'
-      preLoaderRoute: typeof ConfirmarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/configuracoes': {
-      id: '/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof ConfiguracoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cadernos': {
-      id: '/cadernos'
-      path: '/cadernos'
-      fullPath: '/cadernos'
-      preLoaderRoute: typeof CadernosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/biblioteca': {
-      id: '/biblioteca'
-      path: '/biblioteca'
-      fullPath: '/biblioteca'
-      preLoaderRoute: typeof BibliotecaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/atividade': {
-      id: '/atividade'
-      path: '/atividade'
-      fullPath: '/atividade'
-      preLoaderRoute: typeof AtividadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/assistente': {
-      id: '/assistente'
-      path: '/assistente'
-      fullPath: '/assistente'
-      preLoaderRoute: typeof AssistenteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/alfabetizacao': {
-      id: '/alfabetizacao'
-      path: '/alfabetizacao'
-      fullPath: '/alfabetizacao'
-      preLoaderRoute: typeof AlfabetizacaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/agenda': {
-      id: '/agenda'
-      path: '/agenda'
-      fullPath: '/agenda'
-      preLoaderRoute: typeof AgendaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$ref': {
@@ -887,11 +705,193 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RefRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alfabetizacao': {
+      id: '/alfabetizacao'
+      path: '/alfabetizacao'
+      fullPath: '/alfabetizacao'
+      preLoaderRoute: typeof AlfabetizacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assistente': {
+      id: '/assistente'
+      path: '/assistente'
+      fullPath: '/assistente'
+      preLoaderRoute: typeof AssistenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atividade': {
+      id: '/atividade'
+      path: '/atividade'
+      fullPath: '/atividade'
+      preLoaderRoute: typeof AtividadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/biblioteca': {
+      id: '/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/biblioteca'
+      preLoaderRoute: typeof BibliotecaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadernos': {
+      id: '/cadernos'
+      path: '/cadernos'
+      fullPath: '/cadernos'
+      preLoaderRoute: typeof CadernosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirmar': {
+      id: '/confirmar'
+      path: '/confirmar'
+      fullPath: '/confirmar'
+      preLoaderRoute: typeof ConfirmarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ei': {
+      id: '/ei'
+      path: '/ei'
+      fullPath: '/ei'
+      preLoaderRoute: typeof EiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inclusao': {
+      id: '/inclusao'
+      path: '/inclusao'
+      fullPath: '/inclusao'
+      preLoaderRoute: typeof InclusaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/indicacoes': {
+      id: '/indicacoes'
+      path: '/indicacoes'
+      fullPath: '/indicacoes'
+      preLoaderRoute: typeof IndicacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jogos': {
+      id: '/jogos'
+      path: '/jogos'
+      fullPath: '/jogos'
+      preLoaderRoute: typeof JogosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/minha-sala': {
+      id: '/minha-sala'
+      path: '/minha-sala'
+      fullPath: '/minha-sala'
+      preLoaderRoute: typeof MinhaSalaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento-confirmado-anual': {
+      id: '/pagamento-confirmado-anual'
+      path: '/pagamento-confirmado-anual'
+      fullPath: '/pagamento-confirmado-anual'
+      preLoaderRoute: typeof PagamentoConfirmadoAnualRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pagamento-confirmado-mensal': {
+      id: '/pagamento-confirmado-mensal'
+      path: '/pagamento-confirmado-mensal'
+      fullPath: '/pagamento-confirmado-mensal'
+      preLoaderRoute: typeof PagamentoConfirmadoMensalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planejamento': {
+      id: '/planejamento'
+      path: '/planejamento'
+      fullPath: '/planejamento'
+      preLoaderRoute: typeof PlanejamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planejamento-pedagogico': {
+      id: '/planejamento-pedagogico'
+      path: '/planejamento-pedagogico'
+      fullPath: '/planejamento-pedagogico'
+      preLoaderRoute: typeof PlanejamentoPedagogicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/questoes': {
+      id: '/questoes'
+      path: '/questoes'
+      fullPath: '/questoes'
+      preLoaderRoute: typeof QuestoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorio-pedagogico': {
+      id: '/relatorio-pedagogico'
+      path: '/relatorio-pedagogico'
+      fullPath: '/relatorio-pedagogico'
+      preLoaderRoute: typeof RelatorioPedagogicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relatorios': {
+      id: '/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof RelatoriosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulados': {
+      id: '/simulados'
+      path: '/simulados'
+      fullPath: '/simulados'
+      preLoaderRoute: typeof SimuladosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -901,116 +901,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/planejamento/ei': {
-      id: '/planejamento/ei'
-      path: '/ei'
-      fullPath: '/planejamento/ei'
-      preLoaderRoute: typeof PlanejamentoEiRouteImport
-      parentRoute: typeof PlanejamentoRoute
-    }
-    '/planejamento/atividade': {
-      id: '/planejamento/atividade'
-      path: '/atividade'
-      fullPath: '/planejamento/atividade'
-      preLoaderRoute: typeof PlanejamentoAtividadeRouteImport
-      parentRoute: typeof PlanejamentoRoute
-    }
-    '/inclusao/pei': {
-      id: '/inclusao/pei'
-      path: '/pei'
-      fullPath: '/inclusao/pei'
-      preLoaderRoute: typeof InclusaoPeiRouteImport
-      parentRoute: typeof InclusaoRoute
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/admin/usuarios': {
-      id: '/admin/usuarios'
-      path: '/usuarios'
-      fullPath: '/admin/usuarios'
-      preLoaderRoute: typeof AdminUsuariosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/storage': {
-      id: '/admin/storage'
-      path: '/storage'
-      fullPath: '/admin/storage'
-      preLoaderRoute: typeof AdminStorageRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/retencao': {
-      id: '/admin/retencao'
-      path: '/retencao'
-      fullPath: '/admin/retencao'
-      preLoaderRoute: typeof AdminRetencaoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pro': {
-      id: '/admin/pro'
-      path: '/pro'
-      fullPath: '/admin/pro'
-      preLoaderRoute: typeof AdminProRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/manutencao': {
-      id: '/admin/manutencao'
-      path: '/manutencao'
-      fullPath: '/admin/manutencao'
-      preLoaderRoute: typeof AdminManutencaoRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/infra': {
-      id: '/admin/infra'
-      path: '/infra'
-      fullPath: '/admin/infra'
-      preLoaderRoute: typeof AdminInfraRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/indicacoes': {
-      id: '/admin/indicacoes'
-      path: '/indicacoes'
-      fullPath: '/admin/indicacoes'
-      preLoaderRoute: typeof AdminIndicacoesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/ia': {
-      id: '/admin/ia'
-      path: '/ia'
-      fullPath: '/admin/ia'
-      preLoaderRoute: typeof AdminIaRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/funil': {
-      id: '/admin/funil'
-      path: '/funil'
-      fullPath: '/admin/funil'
-      preLoaderRoute: typeof AdminFunilRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/erros': {
-      id: '/admin/erros'
-      path: '/erros'
-      fullPath: '/admin/erros'
-      preLoaderRoute: typeof AdminErrosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/cupons': {
-      id: '/admin/cupons'
-      path: '/cupons'
-      fullPath: '/admin/cupons'
-      preLoaderRoute: typeof AdminCuponsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/conversao': {
-      id: '/admin/conversao'
-      path: '/conversao'
-      fullPath: '/admin/conversao'
-      preLoaderRoute: typeof AdminConversaoRouteImport
+    '/admin/atividades': {
+      id: '/admin/atividades'
+      path: '/atividades'
+      fullPath: '/admin/atividades'
+      preLoaderRoute: typeof AdminAtividadesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/avisos': {
@@ -1020,19 +915,117 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAvisosRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/atividades': {
-      id: '/admin/atividades'
-      path: '/atividades'
-      fullPath: '/admin/atividades'
-      preLoaderRoute: typeof AdminAtividadesRouteImport
+    '/admin/conversao': {
+      id: '/admin/conversao'
+      path: '/conversao'
+      fullPath: '/admin/conversao'
+      preLoaderRoute: typeof AdminConversaoRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/api/sofia/suggestions': {
-      id: '/api/sofia/suggestions'
-      path: '/api/sofia/suggestions'
-      fullPath: '/api/sofia/suggestions'
-      preLoaderRoute: typeof ApiSofiaSuggestionsRouteImport
-      parentRoute: typeof rootRouteImport
+    '/admin/cupons': {
+      id: '/admin/cupons'
+      path: '/cupons'
+      fullPath: '/admin/cupons'
+      preLoaderRoute: typeof AdminCuponsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/erros': {
+      id: '/admin/erros'
+      path: '/erros'
+      fullPath: '/admin/erros'
+      preLoaderRoute: typeof AdminErrosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/funil': {
+      id: '/admin/funil'
+      path: '/funil'
+      fullPath: '/admin/funil'
+      preLoaderRoute: typeof AdminFunilRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ia': {
+      id: '/admin/ia'
+      path: '/ia'
+      fullPath: '/admin/ia'
+      preLoaderRoute: typeof AdminIaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/indicacoes': {
+      id: '/admin/indicacoes'
+      path: '/indicacoes'
+      fullPath: '/admin/indicacoes'
+      preLoaderRoute: typeof AdminIndicacoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/infra': {
+      id: '/admin/infra'
+      path: '/infra'
+      fullPath: '/admin/infra'
+      preLoaderRoute: typeof AdminInfraRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/manutencao': {
+      id: '/admin/manutencao'
+      path: '/manutencao'
+      fullPath: '/admin/manutencao'
+      preLoaderRoute: typeof AdminManutencaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pro': {
+      id: '/admin/pro'
+      path: '/pro'
+      fullPath: '/admin/pro'
+      preLoaderRoute: typeof AdminProRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/retencao': {
+      id: '/admin/retencao'
+      path: '/retencao'
+      fullPath: '/admin/retencao'
+      preLoaderRoute: typeof AdminRetencaoRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/storage': {
+      id: '/admin/storage'
+      path: '/storage'
+      fullPath: '/admin/storage'
+      preLoaderRoute: typeof AdminStorageRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/inclusao/pei': {
+      id: '/inclusao/pei'
+      path: '/pei'
+      fullPath: '/inclusao/pei'
+      preLoaderRoute: typeof InclusaoPeiRouteImport
+      parentRoute: typeof InclusaoRoute
+    }
+    '/planejamento/atividade': {
+      id: '/planejamento/atividade'
+      path: '/atividade'
+      fullPath: '/planejamento/atividade'
+      preLoaderRoute: typeof PlanejamentoAtividadeRouteImport
+      parentRoute: typeof PlanejamentoRoute
+    }
+    '/planejamento/ei': {
+      id: '/planejamento/ei'
+      path: '/ei'
+      fullPath: '/planejamento/ei'
+      preLoaderRoute: typeof PlanejamentoEiRouteImport
+      parentRoute: typeof PlanejamentoRoute
     }
     '/api/sofia/chat': {
       id: '/api/sofia/chat'
@@ -1041,11 +1034,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSofiaChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/webhooks/mercadopago_debug': {
-      id: '/api/public/webhooks/mercadopago_debug'
-      path: '/api/public/webhooks/mercadopago_debug'
-      fullPath: '/api/public/webhooks/mercadopago_debug'
-      preLoaderRoute: typeof ApiPublicWebhooksMercadopago_debugRouteImport
+    '/api/sofia/suggestions': {
+      id: '/api/sofia/suggestions'
+      path: '/api/sofia/suggestions'
+      fullPath: '/api/sofia/suggestions'
+      preLoaderRoute: typeof ApiSofiaSuggestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/webhooks/mercadopago': {
@@ -1053,6 +1046,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/webhooks/mercadopago'
       fullPath: '/api/public/webhooks/mercadopago'
       preLoaderRoute: typeof ApiPublicWebhooksMercadopagoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/mercadopago_debug': {
+      id: '/api/public/webhooks/mercadopago_debug'
+      path: '/api/public/webhooks/mercadopago_debug'
+      fullPath: '/api/public/webhooks/mercadopago_debug'
+      preLoaderRoute: typeof ApiPublicWebhooksMercadopago_debugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
