@@ -20,6 +20,8 @@ type Search = {
   aluno?: string;
   /** Plano guardado (planos_aula.id) para abrir direto na Atividade. */
   abrir?: string;
+  /** "1" abre o roteiro da Educação Infantil dentro da aba Atividade. */
+  ei?: "1";
 };
 
 // Mapa "rótulo visível para o usuário (M1..M7)" → chave interna da aba.
@@ -55,6 +57,7 @@ export const Route = createFileRoute("/planejamento")({
       turma: sanitizeFilter(s.turma),
       aluno: sanitizeFilter(s.aluno),
       abrir: typeof s.abrir === "string" && /^[0-9a-f-]{36}$/i.test(s.abrir) ? s.abrir : undefined,
+      ei: s.ei === "1" || s.ei === 1 ? "1" : undefined,
     };
   },
   head: () => ({

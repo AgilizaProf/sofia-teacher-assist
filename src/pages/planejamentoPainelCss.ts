@@ -52,6 +52,9 @@ export const planPainelCss = `
 .pl-visoes button.on{background:var(--pn-ink);color:#fff;}
 .pl-ei-link{margin:10px 0 0;font-size:14px;color:var(--pn-muted);}
 .pl-ei-link a{color:var(--pn-green);font-weight:700;}
+.pl-ei-btn{background:none;border:none;padding:0;font:inherit;color:var(--pn-green);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.pl-ei-inline{margin-top:8px;}
+.pl-ei-inline-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1.5px solid var(--pn-line);border-radius:14px;background:var(--pn-surface);}
 
 /* Área de trabalho */
 .pn.pl-root .pl-workspace{padding:14px 24px 100px;}

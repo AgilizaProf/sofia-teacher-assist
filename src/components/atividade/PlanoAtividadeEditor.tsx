@@ -223,7 +223,14 @@ function lerDiarioBordo(turma: string): DiarioBordoItem[] {
 
 /* ─────────────────────────── Component ─────────────────────────── */
 
-export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
+export function PlanoAtividadeEditor({
+  modo,
+  onEducacaoInfantil,
+}: {
+  modo: "regular" | "pcd";
+  /** Avisa a tela de Planejamento quando a turma/ano escolhido é da Educação Infantil. */
+  onEducacaoInfantil?: (ei: boolean) => void;
+}) {
   const sofia = useSofiaUserData();
   const [peiByStudentRaw] = usePersistentState<Record<string, Record<string, unknown>>>("inc_pei", {});
   const [anamByStudentRaw] = usePersistentState<Record<string, unknown[]>>("inc_anam", {});
@@ -348,6 +355,10 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     () => /\(EI\)/.test(anoEscolar) || /educa[cç][aã]o\s+infantil/i.test(anoEscolar),
     [anoEscolar],
   );
+  useEffect(() => {
+    onEducacaoInfantil?.(isEI);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEI]);
   const disciplinasOpts = isEI ? DISCIPLINAS_EI : DISCIPLINAS;
   const disciplinaLabel = isEI ? "Campo de Experiência" : "Disciplina";
   const interLabel = isEI ? "Campos a integrar" : "Disciplinas a integrar";
