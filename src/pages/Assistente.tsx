@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { semBlocoContexto } from "@/lib/sofia/textoVisivel";
+import { useSemanasPlano } from "@/lib/planejamento/semanas";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   Search,
   Plus,
@@ -16,6 +18,11 @@ import {
   Copy,
   Check,
   Square,
+  Paperclip,
+  Printer,
+  FileText,
+  BookmarkPlus,
+  CalendarPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PainelNav } from "@/components/painel/PainelNav";
@@ -30,6 +37,9 @@ import { brDateKey, diffDaysBR } from "@/lib/datetime";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { parseQuickOptions, isFreeTextOption } from "@/lib/sofia/quickOptions";
 import { textoParaCopiar } from "@/lib/sofia/markdownChat";
+import { lerAnexo, mensagemComAnexo, type Anexo } from "@/lib/sofia/anexoChat";
+import { baixarRespostaWord, imprimirResposta, tituloDaResposta } from "@/lib/sofia/exportarResposta";
+import { guardarNaBiblioteca } from "@/lib/biblioteca";
 import { SofiaMarkdown } from "@/components/sofia/SofiaMarkdown";
 import { useDashClasses, useDashStudents, type LegacyDashStudent } from "@/hooks/useDashLegacyData";
 
@@ -357,6 +367,10 @@ export function Assistente() {
   }, [dashClasses, dashStudents]);
 
   const turmaSelecionada = selectedTurma ? turmasInfo.find((t) => t.name === selectedTurma) : null;
+  // Com uma turma só, ela já fica escolhida (a barra não mostra "nenhuma turma").
+  useEffect(() => {
+    if (!selectedTurma && dashClasses.length === 1) setSelectedTurma(dashClasses[0].name);
+  }, [selectedTurma, dashClasses, setSelectedTurma]);
   const messages = sofia.messages;
   const loading = sofia.loading;
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
@@ -422,6 +436,81 @@ export function Assistente() {
   );
 
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  // Foto ou arquivo anexado à próxima mensagem.
+  const [anexo, setAnexo] = useState<Anexo | null>(null);
+  const [lendoAnexo, setLendoAnexo] = useState(false);
+  const anexoInputRef = useRef<HTMLInputElement | null>(null);
+  const escolherAnexo = async (file: File | undefined) => {
+    if (!file) return;
+    setLendoAnexo(true);
+    try {
+      const r = await lerAnexo(file);
+      if ("erro" in r) toast.error(r.erro);
+      else {
+        setAnexo(r);
+        setTimeout(() => composerRef.current?.focus(), 0);
+      }
+    } finally {
+      setLendoAnexo(false);
+    }
+  };
+  // Imprimir, Word e Guardar usam a resposta como aparece na tela.
+  const htmlDaResposta = (idx: number) =>
+    document.querySelector<HTMLElement>(`[data-as-msg="${idx}"] .as-md`)?.innerHTML ?? "";
+  const [guardadoIdx, setGuardadoIdx] = useState<number | null>(null);
+  // "Colocar na minha semana": a resposta vira um cartão no próximo dia de aula.
+  const semanasPlano = useSemanasPlano<Record<string, unknown>>();
+  const [naSemanaIdx, setNaSemanaIdx] = useState<number | null>(null);
+  const colocarNaSemana = (markdown: string, idx: number) => {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    do d.setDate(d.getDate() + 1); while (d.getDay() === 0 || d.getDay() === 6);
+    const up = markdown.toUpperCase();
+    const v = /MATEM|EF\d{2}MA/.test(up) ? "mat" : /CIÊNC|CIENC|EF\d{2}CI/.test(up) ? "ci" : "port";
+    const bncc = [...new Set(up.match(/E[FI]\d{2}[A-Z]{2}\d{2}/g) ?? [])].slice(0, 3).join(", ");
+    const ok = semanasPlano.agendar(d, {
+      id: `sofia-chat-${Date.now()}`,
+      v,
+      tag: "Sofia",
+      title: tituloDaResposta(markdown).slice(0, 90),
+      bncc,
+      minutos: 50,
+      foco: turmaFoco || "",
+      motivo: "Trazido da conversa com a Sofia",
+      objetivo: textoParaCopiar(markdown).slice(0, 1500),
+    });
+    if (!ok) return;
+    setNaSemanaIdx(idx);
+    const quando = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
+    toast.success(`Coloquei na sua semana: ${quando}.`, {
+      action: { label: "Ver semana", onClick: () => void navigate({ to: "/planejamento", search: { m: "m3" } }) },
+    });
+  };
+  const guardarResposta = async (markdown: string, idx: number) => {
+    if (!sofia.conversationId) {
+      toast.error("Espere a resposta terminar de salvar e tente de novo.");
+      return;
+    }
+    const r = await guardarNaBiblioteca({
+      tipo: "conversa",
+      refId: sofia.conversationId,
+      titulo: tituloDaResposta(markdown),
+      ano: null,
+      habilidades: [...new Set(markdown.toUpperCase().match(/E[FI]\d{2}[A-Z]{2}\d{2}/g) ?? [])].slice(0, 12),
+    });
+    if (r.ok) {
+      setGuardadoIdx(idx);
+      toast.success(r.mensagem);
+    } else toast.error(r.mensagem);
+  };
+  // Vindo da Minha Biblioteca: abre a conversa guardada.
+  const { conversa } = useSearch({ from: "/assistente" });
+  const abriuConversa = useRef<string | null>(null);
+  useEffect(() => {
+    if (!conversa || abriuConversa.current === conversa) return;
+    abriuConversa.current = conversa;
+    void sofia.loadConversation(conversa);
+  }, [conversa, sofia]);
   // Copia texto limpo (sem **, ## nem marcadores Markdown) e, onde o
   // navegador permite, também a versão formatada para o Word/Docs.
   const copiar = (markdown: string, idx: number) => {
@@ -508,9 +597,13 @@ export function Assistente() {
   };
 
   const sendMessage = (raw?: string) => {
-    const content = (raw ?? sofia.draft).trim();
-    if (!content || sofia.busy) return;
-    sofia.send(content);
+    const texto = (raw ?? sofia.draft).trim();
+    // Atalhos (raw) não levam o anexo; só a mensagem escrita no campo.
+    const comAnexo = raw === undefined ? anexo : null;
+    if ((!texto && !comAnexo) || sofia.busy) return;
+    const content = mensagemComAnexo(texto, comAnexo);
+    sofia.send(content, comAnexo?.tipo === "imagem" ? { imagem: comAnexo.dataUrl } : undefined);
+    if (comAnexo) setAnexo(null);
     void import("@/lib/admin/track").then(({ trackEvent }) =>
       trackEvent("sofia_chat_mensagem", { origin: raw ? "shortcut" : "manual" }),
     );
@@ -654,7 +747,9 @@ export function Assistente() {
                   {ctx.dataState.alunos_count ? ` · ${ctx.dataState.alunos_count} alunos` : ""}
                 </>
               ) : (
-                "nenhuma turma escolhida"
+                ctx.dataState.turmas_count > 0
+                  ? `todas as suas ${ctx.dataState.turmas_count} turmas · toque em Editar para focar em uma`
+                  : "nenhuma turma cadastrada"
               )}
               {sofia.userContext ? " · preferências salvas" : ""}
             </span>
@@ -676,7 +771,7 @@ export function Assistente() {
                     if (m.role === "user") {
                       return (
                         <div key={i} className="as-msg user">
-                          <div className="as-bubble">{m.content}</div>
+                          <div className="as-bubble">{semBlocoContexto(m.content)}</div>
                         </div>
                       );
                     }
@@ -758,6 +853,41 @@ export function Assistente() {
                                           <Copy size={14} /> Copiar
                                         </>
                                       )}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="as-tool"
+                                      onClick={() => {
+                                        if (!imprimirResposta(htmlDaResposta(i), tituloDaResposta(parsed.clean)))
+                                          toast.error("O navegador bloqueou a janela de impressão. Libere os pop-ups e tente de novo.");
+                                      }}
+                                    >
+                                      <Printer size={14} /> Imprimir
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="as-tool"
+                                      onClick={() => baixarRespostaWord(htmlDaResposta(i), tituloDaResposta(parsed.clean))}
+                                    >
+                                      <FileText size={14} /> Word
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={"as-tool" + (guardadoIdx === i ? " ok" : "")}
+                                      onClick={() => void guardarResposta(parsed.clean, i)}
+                                      title="Guardar na Minha Biblioteca"
+                                    >
+                                      {guardadoIdx === i ? <Check size={14} /> : <BookmarkPlus size={14} />}{" "}
+                                      {guardadoIdx === i ? "Guardado" : "Guardar"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={"as-tool" + (naSemanaIdx === i ? " ok" : "")}
+                                      onClick={() => colocarNaSemana(parsed.clean, i)}
+                                      title="Coloca no próximo dia de aula da sua semana"
+                                    >
+                                      {naSemanaIdx === i ? <Check size={14} /> : <CalendarPlus size={14} />}{" "}
+                                      {naSemanaIdx === i ? "Na semana" : "Colocar na minha semana"}
                                     </button>
                                   </div>
                                 )}
@@ -865,7 +995,41 @@ export function Assistente() {
 
           <div className="as-composer-wrap">
             <div className="as-inner">
+              {anexo && (
+                <div className="as-anexo" role="status">
+                  {anexo.tipo === "imagem" ? (
+                    <img src={anexo.dataUrl} alt="" />
+                  ) : (
+                    <FileText size={18} aria-hidden />
+                  )}
+                  <span>{anexo.nome}</span>
+                  <button type="button" aria-label="Tirar o anexo" onClick={() => setAnexo(null)}>
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
               <div className="as-composer">
+                <input
+                  ref={anexoInputRef}
+                  type="file"
+                  accept="image/*,.txt,.csv,.md,.docx"
+                  hidden
+                  onChange={(e) => {
+                    void escolherAnexo(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  type="button"
+                  className="as-clip"
+                  aria-label="Anexar foto ou arquivo"
+                  title="Anexar foto ou arquivo (Word, texto)"
+                  disabled={lendoAnexo || sofia.busy}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => anexoInputRef.current?.click()}
+                >
+                  <Paperclip size={18} />
+                </button>
                 <textarea
                   ref={composerRef}
                   rows={1}
@@ -904,7 +1068,7 @@ export function Assistente() {
                     aria-label="Enviar mensagem"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => sendMessage()}
-                    disabled={!sofia.draft.trim()}
+                    disabled={!sofia.draft.trim() && !anexo}
                   >
                     <Send size={18} />
                   </button>

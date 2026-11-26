@@ -1,0 +1,36 @@
+name: Testes
+
+# Roda a cada pull request e a cada mudança na main.
+# Confere os tipos (TypeScript) e roda os testes automáticos.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: testes-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Instalar dependências
+        run: bun install --frozen-lockfile
+
+      - name: Conferir tipos
+        run: bun run typecheck
+
+      - name: Rodar testes
+        run: bun run test

@@ -128,6 +128,8 @@ type AskArgs = {
     routeContext?: string;
     originRoute?: string;
     userContext?: string;
+    /** Foto junto da última mensagem (data URL). */
+    imagem?: string;
   };
 };
 

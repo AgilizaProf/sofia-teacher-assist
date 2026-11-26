@@ -120,6 +120,13 @@ body:has(.as-root){padding-bottom:0!important;}
 .as-composer textarea{flex:1;min-width:0;border:0;outline:0;resize:none;background:transparent;font-family:inherit;font-size:16px;line-height:1.45;color:var(--pn-ink);
   padding:7px 0;max-height:200px;min-height:24px;}
 .as-composer textarea::placeholder{color:#8A90A2;}
+.as-clip{flex:none;width:36px;height:44px;border:0;background:transparent;color:var(--pn-muted);display:grid;place-items:center;border-radius:10px;margin-left:-6px;cursor:pointer;}
+.as-clip:hover{background:var(--pn-line,#eee);color:var(--pn-ink);}
+.as-clip:disabled{opacity:.5;cursor:default;}
+.as-anexo{display:inline-flex;align-items:center;gap:8px;max-width:100%;margin:0 0 8px;padding:6px 8px;border:1.5px solid var(--pn-line);border-radius:10px;background:var(--pn-surface);font-size:13px;font-weight:600;}
+.as-anexo img{width:36px;height:36px;object-fit:cover;border-radius:6px;}
+.as-anexo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;}
+.as-anexo button{border:0;background:transparent;cursor:pointer;color:var(--pn-muted);display:grid;place-items:center;}
 .as-send{flex:none;width:44px;height:44px;border-radius:12px;border:2px solid var(--pn-ink);background:var(--pn-green);color:#fff;display:grid;place-items:center;}
 .as-send:disabled{background:#C5CAD6;color:#fff;cursor:default;}
 .as-foot{margin-top:8px!important;font-size:12px;color:var(--pn-muted);text-align:center;}

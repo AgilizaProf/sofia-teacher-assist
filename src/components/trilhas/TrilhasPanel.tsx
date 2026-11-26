@@ -1,3 +1,4 @@
+import { guardarNaBiblioteca, codigosBncc } from "@/lib/biblioteca";
 import { useEffect, useMemo, useState } from "react";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
@@ -573,7 +574,7 @@ export function TrilhasPanel() {
         <textarea placeholder="Contexto adicional (opcional): projetos da escola, datas comemorativas..." value={form.contexto} onChange={(e) => setForm({ ...form, contexto: e.target.value })} style={{ ...inputStyle, marginTop: 10, minHeight: 60, width: "100%", resize: "vertical" }} />
        {error && <div style={{ marginTop: 10, padding: 10, borderRadius: 8, background: "#FEF2F2", color: "#991B1B", fontSize: 13 }}>{error}</div>}
         <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 8, background: "#F8FAFC", border: "1px solid var(--line)", fontSize: 12, color: "var(--ink-2)", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <span>💳 Gerar trilha: <strong>10 créditos</strong> + créditos das atividades (<strong>10 créditos por atividade</strong>)</span>
+          <span>💳 Gerar a trilha custa <strong>{CUSTOS.trilha_semestral} créditos</strong>. Cada semana que você detalhar depois custa mais {CUSTOS.planejamento_semanal}. O semestre inteiro detalhado (20 semanas) fica em cerca de <strong>{CUSTOS.trilha_semestral + 20 * CUSTOS.planejamento_semanal} créditos</strong>.</span>
         </div>
         <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end" }}>
           <button className="pl-btn primary" onClick={gerarTrilha} disabled={loading}>
@@ -594,7 +595,29 @@ export function TrilhasPanel() {
                   <div style={{ fontWeight: 600, fontSize: 14, overflowWrap: "break-word", wordBreak: "normal" }}><BookOpen size={14} style={{ display: "inline", marginRight: 6 }} />{t.tema_central}</div>
                   <div style={{ color: "var(--muted)", fontSize: 12.5, marginTop: 4, overflowWrap: "break-word" }}>{t.turma} · {t.ano_escolar} · {t.disciplina} · {t.semestre}</div>
                 </div>
-                <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); excluir(t.id); }} title="Excluir trilha"><Trash2 size={14} /></button>
+                <div style={{ display: "flex", gap: 4, flex: "none" }}>
+                  <button
+                    className="pl-btn ghost"
+                    title="Guardar na Minha Biblioteca"
+                    aria-label="Guardar na Minha Biblioteca"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const r = await guardarNaBiblioteca({
+                        tipo: "sequencia",
+                        refId: t.id,
+                        titulo: t.tema_central || "Trilha do semestre",
+                        ano: t.ano_escolar,
+                        componente: t.disciplina,
+                        habilidades: selected === t.id ? codigosBncc(semanas) : [],
+                      });
+                      if (r.ok) toast.success(r.mensagem);
+                      else toast.error(r.mensagem);
+                    }}
+                  >
+                    📚
+                  </button>
+                  <button className="pl-btn ghost" onClick={(e) => { e.stopPropagation(); excluir(t.id); }} title="Excluir trilha"><Trash2 size={14} /></button>
+                </div>
               </div>
               {selected === t.id && (
                 <div style={{ marginTop: 14, borderTop: "1px solid var(--line)", paddingTop: 14 }}>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { traduzirErroAuth } from "@/lib/authErros";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
@@ -7,6 +8,7 @@ import { captureReferralFromUrl, getPendingReferral } from "@/lib/referral";
 import { shouldShowOnboarding } from "@/lib/onboarding";
 import { PencilLogo } from "@/components/painel/PainelNav";
 import { trackEvent } from "@/lib/tracking";
+import { textoGratis } from "@/lib/creditos/policy";
 
 async function postLoginRoute(): Promise<"/" | "/onboarding"> {
   try {
@@ -35,6 +37,16 @@ export function AuthPage() {
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  // Botões "Cadastrar grátis" da landing chegam com ?modo=cadastro.
+  useEffect(() => {
+    try {
+      const modo = new URLSearchParams(window.location.search).get("modo");
+      if (modo === "cadastro" || modo === "cadastrar" || modo === "register") setMode("register");
+    } catch {
+      /* sem URL: fica em Entrar */
+    }
+  }, []);
 
   useEffect(() => {
     captureReferralFromUrl();
@@ -103,7 +115,7 @@ export function AuthPage() {
         location: mode === "login" ? "login_page" : "register_page",
         error: err instanceof Error ? err.message : "auth_error",
       });
-      toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
+      toast.error(traduzirErroAuth(err, "Não foi possível entrar. Tente de novo."));
     } finally {
       setLoading(false);
     }
@@ -155,7 +167,7 @@ export function AuthPage() {
       setForgotOpen(false);
       setForgotEmail("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Não foi possível enviar o e-mail.");
+      toast.error(traduzirErroAuth(err, "Não foi possível enviar o e-mail."));
     } finally {
       setForgotLoading(false);
     }
@@ -199,7 +211,7 @@ export function AuthPage() {
 
             <h2 className="form-title">{mode === "login" ? "Bem-vindo(a) de volta" : "Comece grátis hoje"}</h2>
             <p className="form-sub">
-              {mode === "login" ? "Entre para continuar economizando seu tempo." : <><strong>14 dias com tudo liberado.</strong> Sem cartão de crédito. Sem pegadinha.</>}
+              {mode === "login" ? "Entre para continuar economizando seu tempo." : <><strong>{textoGratis()}</strong> Sem cartão de crédito. Sem pegadinha.</>}
             </p>
 
             {popupBlocked && (
@@ -225,7 +237,7 @@ export function AuthPage() {
                   <label htmlFor="name">Nome</label>
                   <div className="input-wrap">
                     <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <input className="input" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" required />
+                    <input className="input" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" autoComplete="name" required />
                   </div>
                 </div>
               )}
@@ -234,7 +246,7 @@ export function AuthPage() {
                 <label htmlFor="email">E-mail</label>
                 <div className="input-wrap">
                   <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 6-10 7L2 6"/></svg>
-                  <input className="input" type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
+                  <input className="input" type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" autoComplete="email" autoCapitalize="none" spellCheck={false} inputMode="email" required />
                 </div>
               </div>
 
@@ -242,8 +254,8 @@ export function AuthPage() {
                 <label htmlFor="password">Senha</label>
                 <div className="input-wrap">
                   <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  <input className="input" type={showPwd ? "text" : "password"} id="password" value={password} onChange={(e) => { setPassword(e.target.value); checkStrength(e.target.value); }} placeholder="Mínimo 8 caracteres" minLength={8} required />
-                  <button type="button" className="password-toggle" onClick={() => setShowPwd(!showPwd)} aria-label="Mostrar senha">
+                  <input className="input input-pwd" type={showPwd ? "text" : "password"} id="password" value={password} onChange={(e) => { setPassword(e.target.value); checkStrength(e.target.value); }} placeholder={mode === "login" ? "Sua senha" : "Mínimo 8 caracteres"} autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required />
+                  <button type="button" className="password-toggle" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"} aria-pressed={showPwd}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                   </button>
                 </div>
@@ -255,13 +267,15 @@ export function AuthPage() {
                 )}
               </div>
 
+              {mode === "login" && (
               <div className="row">
                 <div className="checkbox-wrap">
                   <input type="checkbox" id="remember" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                   <label htmlFor="remember">Permanecer conectado</label>
                 </div>
-                <button type="button" className="forgot-link" onClick={() => { setForgotEmail(email); setForgotOpen(true); }} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>Esqueci minha senha</button>
+                <button type="button" className="forgot-link" onClick={() => { setForgotEmail(email); setForgotOpen(true); }} style={{ background: "none", border: "none", cursor: "pointer", padding: "10px 0", fontFamily: "inherit" }}>Esqueci minha senha</button>
               </div>
+              )}
 
               <button type="submit" className="cta" disabled={loading}>
                 <span>{loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar minha conta grátis"}</span>
@@ -279,9 +293,9 @@ export function AuthPage() {
             )}
 
             <div className="trust-row">
-              <span className="trust-item"><span className="ic">🔒</span>100% LGPD</span>
+              <span className="trust-item"><span className="ic">🔒</span>De acordo com a LGPD</span>
               <span className="trust-item"><span className="ic">🛡️</span>Dados criptografados</span>
-              <span className="trust-item"><span className="ic">🇧🇷</span>Servidor no Brasil</span>
+              <span className="trust-item"><span className="ic">🇧🇷</span>Feito para a escola brasileira</span>
             </div>
 
             <p className="legal">
@@ -296,7 +310,7 @@ export function AuthPage() {
             <h3 style={{ fontFamily: "'Sora',sans-serif", fontWeight: 800, letterSpacing: "-.03em", fontSize: 22, color: "#14161F", margin: 0 }}>Recuperar senha</h3>
             <p style={{ fontSize: 14, color: "#596074", marginTop: 6, marginBottom: 18 }}>Informe seu e-mail e enviaremos um link para você criar uma nova senha.</p>
             <form onSubmit={sendReset} style={{ display: "grid", gap: 10 }}>
-              <input type="email" placeholder="seu@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required style={{ padding: "12px 14px", borderRadius: 10, border: "1.5px solid #D6DBE5", fontSize: 15, fontFamily: "inherit", outline: "none" }} />
+              <input type="email" aria-label="E-mail" autoComplete="email" autoCapitalize="none" placeholder="seu@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required style={{ padding: "12px 14px", borderRadius: 10, border: "1.5px solid #D6DBE5", fontSize: 16, fontFamily: "inherit", outline: "none" }} />
               <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                 <button type="button" onClick={() => setForgotOpen(false)} style={{ flex: 1, padding: "11px 14px", borderRadius: 10, border: "2px solid #14161F", background: "#fff", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: "#14161F" }}>Cancelar</button>
                 <button type="submit" disabled={forgotLoading} style={{ flex: 1, padding: "11px 14px", borderRadius: 10, border: "2px solid #14161F", background: "#0B7A55", boxShadow: "3px 3px 0 #14161F", color: "#fff", fontWeight: 800, cursor: "pointer", fontFamily: "inherit", opacity: forgotLoading ? .7 : 1 }}>{forgotLoading ? "Enviando..." : "Enviar link"}</button>
@@ -349,11 +363,12 @@ const css = `
 .field{margin-bottom:16px;}
 .field label{display:block;font-family:'Sora',sans-serif;font-size:13.5px;font-weight:700;margin-bottom:7px;}
 .input-wrap{position:relative;}
-.input{width:100%;padding:13px 16px 13px 44px;border:1.5px solid var(--line);border-radius:12px;font-size:15.5px;font-family:inherit;color:var(--ink);background:#fff;transition:border-color .15s,box-shadow .15s;}
+.input-pwd{padding-right:52px!important;}
+.input{width:100%;padding:13px 16px 13px 44px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;transition:border-color .15s,box-shadow .15s;}
 .input::placeholder{color:#9AA1B2;}
 .input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px var(--green-soft);}
 .input-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted);width:19px;height:19px;pointer-events:none;}
-.password-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;border-radius:6px;}
+.password-toggle{position:absolute;right:2px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:12px;display:flex;align-items:center;border-radius:6px;}
 .password-toggle:hover{color:var(--ink);}
 .password-strength{margin-top:10px;}
 .strength-bar{height:6px;background:var(--ground);border-radius:3px;overflow:hidden;margin-bottom:6px;}
@@ -369,14 +384,14 @@ const css = `
 .cta:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);}
 .cta:disabled{opacity:.7;cursor:not-allowed;transform:none;}
 .more-opts{text-align:center;margin-top:16px;}
-.more-opts button{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px;}
+.more-opts button{background:none;border:none;color:var(--muted);font-size:13px;padding:10px 6px;cursor:pointer;font-family:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px;}
 .more-opts button:hover{color:var(--ink);}
 .more-content{margin-top:12px;}
 .apple-btn{width:100%;padding:12px 18px;border-radius:12px;background:var(--ink);color:#fff;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;}
 .trust-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--line);flex-wrap:wrap;}
 .trust-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600;}
 .trust-item .ic{font-size:14px;}
-.legal{text-align:center;font-size:11.5px;color:var(--muted);margin:14px 0 0;line-height:1.6;}
+.legal{text-align:center;font-size:12.5px;color:var(--muted);margin:14px 0 0;line-height:1.6;}
 .legal a{color:var(--ink);text-decoration:underline;font-weight:600;}
 .toast{background:#FDE3DE;border:1.5px solid var(--coral);color:#A3301F;padding:12px 14px;border-radius:12px;font-size:13.5px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;}
 .toast strong{display:block;margin-bottom:2px;}

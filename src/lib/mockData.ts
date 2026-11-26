@@ -1,5 +1,4 @@
 // Empty initial state for new users.
-// Demo fixtures are preserved separately in mockData.demo.ts.
 
 import { useEffect, useState } from "react";
 import { getMockAccount, subscribeMockAccount, PRO_DATASET, type MockAccount } from "./sofia/mockAccount";

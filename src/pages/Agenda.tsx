@@ -18,6 +18,9 @@ import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
+import { baixarIcs } from "@/lib/agenda/ics";
+import { CHAVE_SEMANAS, cartoesComData, type PlanoSemana } from "@/lib/planejamento/semanas";
+import { localDateKey } from "@/lib/datetime";
 
 // ---- Integração M4 → Agenda --------------------------------------------------
 // Eventos do calendário M4 (Planejamento) são persistidos em localStorage sob
@@ -92,10 +95,10 @@ const css = `
 @media(max-width:640px){
   .ag-radar{grid-template-columns:repeat(2,1fr);gap:8px;}
   .ag-radar-card{padding:10px 12px;border-radius:11px;}
-  .ag-radar-label{font-size:9.5px;}
+  .ag-radar-label{font-size:12px;letter-spacing:.4px;}
   .ag-radar-count{font-size:22px;margin-top:6px;}
   .ag-radar-count small{font-size:11px;}
-  .ag-radar-desc{font-size:11px;margin-top:3px;}
+  .ag-radar-desc{font-size:12px;margin-top:3px;}
 }
 .ag-radar-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 15px;position:relative;overflow:hidden;cursor:pointer;transition:.18s;}
 .ag-radar-card:hover{border-color:#cdd4e0;transform:translateY(-1px);box-shadow:0 6px 18px rgba(20,22,31,.06);}
@@ -103,7 +106,11 @@ const css = `
 .ag-radar-card.urgent::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--danger),#ff6464);}
 .ag-radar-card.warn{border-color:rgba(245,158,11,.3);}
 .ag-radar-card.warn::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--warn);}
-.ag-radar-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-mute);}
+.ag-vazia{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px;border:1.5px dashed var(--border);border-radius:14px;background:#fff;margin-bottom:12px;}
+.ag-vazia b{font-family:'Sora',sans-serif;font-size:17px;}
+.ag-vazia span{font-size:14px;color:var(--text-mute);}
+.ag-vazia button{margin-top:6px;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:12px;border:2px solid #14161F;background:#0B7A55;color:#fff;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:3px 3px 0 #14161F;}
+.ag-radar-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-mute);}
 .ag-radar-card.urgent .ag-radar-label{color:var(--danger);}
 .ag-radar-card.warn .ag-radar-label{color:var(--warn);}
 .ag-radar-count{font-family:'Sora',serif;font-size:30px;font-weight:800;line-height:1;letter-spacing:-1px;margin-top:8px;}
@@ -234,14 +241,14 @@ const css = `
 .ag-panel-event .ev-body{flex:1;min-width:0;}
 .ag-panel-event .ev-title{font-weight:600;font-size:13px;color:var(--text);}
 .ag-panel-event .ev-meta{font-size:11.5px;color:var(--text-mute);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;}
-.ag-panel-event .ev-actions{display:flex;gap:4px;}
-.ag-icon-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-mute);}
+.ag-panel-event .ev-actions{display:flex;gap:8px;}
+.ag-icon-btn{width:36px;height:36px;border-radius:7px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-mute);}
 .ag-icon-btn:hover{background:var(--bg);color:var(--text);}
 .ag-icon-btn.danger:hover{color:var(--danger);border-color:rgba(239,68,68,.3);}
 .ag-empty{font-size:12.5px;color:var(--text-mute);padding:14px;border:1px dashed var(--border);border-radius:10px;text-align:center;}
 .ag-form{display:flex;flex-direction:column;gap:10px;background:#FAFBFD;border:1px solid var(--border);border-radius:12px;padding:14px;}
 .ag-form label{font-size:11.5px;font-weight:600;color:var(--text-mute);display:flex;flex-direction:column;gap:5px;}
-.ag-form input,.ag-form select,.ag-form textarea{font-family:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none;}
+.ag-form input,.ag-form select,.ag-form textarea{font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none;}
 .ag-form input:focus,.ag-form select:focus,.ag-form textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(11,122,85,.15);}
 .ag-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .ag-panel-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);background:#fff;}
@@ -771,8 +778,23 @@ export function Agenda() {
     }
   };
   const deleteEvent = async (id: string) => {
+    const copia = rawEvents.find((ev) => ev.id === id);
     try {
       await remove(id);
+      // Apagar não pede confirmação, mas dá alguns segundos para desfazer.
+      if (copia) {
+        const { id: _id, ...dados } = copia;
+        void _id;
+        toast.success(`Evento "${copia.title}" apagado`, {
+          duration: 7000,
+          action: {
+            label: "Desfazer",
+            onClick: () => {
+              void create(dados).catch(() => toast.error("Não foi possível trazer o evento de volta."));
+            },
+          },
+        });
+      }
     } catch (e) {
       console.error("[Agenda] falha ao excluir evento:", e);
       toast.error("Não foi possível excluir o evento.");
@@ -874,7 +896,30 @@ const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false);
   // Hidrata o store M4 do localStorage E do snapshot remoto (Supabase).
   // Sem isso, ao abrir a Agenda em outro dispositivo / após limpar cache,
   // os eventos do calendário M4 não apareciam para importar.
-  const [m4Store] = usePersistentState<M4UserStore>("plan_m4_user_events", {});
+  const [m4StoreMes] = usePersistentState<M4UserStore>("plan_m4_user_events", {});
+  // Aulas do plano da semana (Planejar > Semana), de hoje em diante, também
+  // aparecem para trazer para a Agenda, cada uma no seu dia.
+  type CartaoSemana = { id: string; title: string; minutos?: number; tag?: string };
+  const [semanasPlano] = usePersistentState<Record<string, PlanoSemana<CartaoSemana>>>(CHAVE_SEMANAS, {});
+  const m4Store = useMemo<M4UserStore>(() => {
+    const out: M4UserStore = {};
+    for (const { date, card } of cartoesComData<CartaoSemana>(semanasPlano, localDateKey(new Date()))) {
+      if (!card?.title) continue;
+      (out[date] ??= []).push({
+        id: `sem-${date}-${card.id}`,
+        cat: "aulas",
+        title: card.title,
+        meta: card.tag ? `Semana · ${card.tag}` : "Semana",
+        source: "m3",
+        minutos: card.minutos,
+      });
+    }
+    for (const [date, arr] of Object.entries(m4StoreMes)) {
+      const ja = new Set((out[date] ?? []).map((e) => e.title.trim().toLowerCase()));
+      out[date] = [...(out[date] ?? []), ...arr.filter((e) => !ja.has((e.title || "").trim().toLowerCase()))];
+    }
+    return out;
+  }, [semanasPlano, m4StoreMes]);
   // Considera um evento M4 como "já na agenda" se houver evento na mesma
   // data com o mesmo título (case-insensitive, trim). Isto permite que o
   // botão "Trazer atividades agendadas (M4)" mostre tudo do calendário M4
@@ -1343,8 +1388,25 @@ const deleteCalendar = async () => {
                 <span className="ic sun" aria-hidden>🗂️</span>
                 <span className="tx">
                   <b>Trazer do planejamento{m4Pending > 0 ? ` · ${m4Pending}` : ""}</b>
-                  <small>Atividades agendadas no Planejamento.</small>
+                  <small>Aulas da semana e atividades agendadas no Planejar.</small>
                 </span>
+              </button>
+              <button
+                type="button"
+                className="ag-action"
+                onClick={() => {
+                  const hoje = localDateKey(new Date());
+                  const proximos = events.filter((e) => e.date >= hoje);
+                  if (!proximos.length) {
+                    toast.message("Não há compromissos daqui para a frente na Agenda.");
+                    return;
+                  }
+                  baixarIcs(proximos.map((e) => ({ id: e.id, date: e.date, title: e.title, time: e.time, notes: e.notes })));
+                  toast.success(`${proximos.length} compromissos no arquivo. Abra no celular para entrar no calendário com lembrete.`);
+                }}
+              >
+                <span className="ic sky" aria-hidden>🔔</span>
+                <span className="tx"><b>Lembretes no celular</b><small>Leva os próximos compromissos para o calendário do celular, com aviso.</small></span>
               </button>
               <button type="button" className="ag-action" onClick={openPrintDialog}>
                 <span className="ic coral" aria-hidden><Printer size={22} /></span>
@@ -1434,6 +1496,15 @@ const deleteCalendar = async () => {
                   </div>
                 </div>
               )}
+              {!agendaLoading && events.length === 0 ? (
+                <div className="ag-vazia">
+                  <b>Nenhum evento ainda</b>
+                  <span>Reuniões, provas e prazos aparecem aqui assim que você criar o primeiro.</span>
+                  <button type="button" onClick={() => openDayPanel(todayKey)}>
+                    <Plus size={16} /> Criar o primeiro evento
+                  </button>
+                </div>
+              ) : (
               <div className="ag-radar">
                 <div className="ag-radar-card" onClick={() => openDayPanel(todayKey)}>
                   <span className="ag-radar-label">Hoje</span>
@@ -1471,10 +1542,14 @@ const deleteCalendar = async () => {
                 </div>
               </div>
 
-              <div className="ag-drag-hint" role="note">
-                <span className="ag-drag-hint-ic">↔</span>
-                Evento mudou? Arraste!
-              </div>
+              )}
+              {/* Arrastar só funciona bem com mouse: no celular a dica não aparece. */}
+              {events.length > 0 && !isMobile && (
+                <div className="ag-drag-hint" role="note">
+                  <span className="ag-drag-hint-ic">↔</span>
+                  Evento mudou? Arraste!
+                </div>
+              )}
               <div className="ag-cal-card">
                 {isMobile ? (
                   <>

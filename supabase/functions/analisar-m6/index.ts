@@ -1,103 +1,104 @@
-// Diário de bordo (M6): depois que a professora registra uma aula, a Sofia
-// sugere um ajuste para a próxima aula.
-//
-// Este arquivo estava vazio no repositório. Como o deploy publica todas as
-// pastas de supabase/functions, uma função vazia iria para o ar no lugar da
-// que existe hoje. Esta versão pede login (sem login responde "Sua sessão
-// expirou") e limita o tamanho do que vai para a IA. Não cobra créditos, como
-// as outras análises do diário.
-import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson } from "../_shared/sofia-router.ts";
+// Diário de bordo: depois que a professora registra como foi a aula, a Sofia
+// lê o registro (e os últimos registros da turma) e sugere um ajuste concreto
+// para a próxima aula. Antes este arquivo estava vazio e o pedido sempre falhava.
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 import { respostaSemLogin } from "../_shared/cobranca.ts";
 
-/** Corta textos e listas para a chamada não ficar enorme (custo). */
-function curto(v: unknown, max: number): string {
-  return typeof v === "string" ? v.slice(0, max) : "";
-}
-function listaCurta(v: unknown, itens: number, max: number): string[] {
-  return Array.isArray(v) ? v.slice(0, itens).map((x) => curto(x, max)).filter(Boolean) : [];
+type Registro = { emoji?: string; title?: string; text?: string; tags?: string[]; date?: string };
+
+const HUMOR: Record<string, string> = {
+  "😣": "aula difícil",
+  "😐": "aula mais ou menos",
+  "🙂": "aula boa",
+  "😄": "aula muito boa",
+  "🌟": "aula excelente",
+};
+
+function linha(r: Registro): string {
+  const humor = r.emoji ? HUMOR[r.emoji] ?? r.emoji : "";
+  return [r.date, humor, r.title, r.text, r.tags?.length ? `marcas: ${r.tags.join(", ")}` : ""]
+    .filter(Boolean)
+    .join(" · ")
+    .slice(0, 600);
 }
 
-const json = (body: unknown) =>
-  new Response(JSON.stringify(body), { headers: { ...cors, "Content-Type": "application/json" } });
+function texto(v: unknown, max = 400): string {
+  return typeof v === "string" ? v.trim().slice(0, max) : "";
+}
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    // Sem login não chama a IA (antes qualquer pessoa podia usar de graça).
     if (!userId) return respostaSemLogin(cors);
+    const body = await req.json().catch(() => ({}));
+    const entry = (body?.entry ?? {}) as Registro;
+    const historico = (Array.isArray(body?.historicoEntries) ? body.historicoEntries : []) as Registro[];
+    const proxima = body?.proximaAula as
+      | { titulo?: string; objetivo?: string; passos?: string[]; diferenciacao?: string }
+      | null;
+    const turma = texto(body?.turma, 80);
 
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    const entry = (body.entry ?? {}) as Record<string, unknown>;
-    const proxima = (body.proximaAula ?? null) as Record<string, unknown> | null;
-    const historico = Array.isArray(body.historicoEntries) ? body.historicoEntries.slice(0, 5) : [];
-
-    const registro = {
-      titulo: curto(entry.title, 200),
-      texto: curto(entry.text, 4000),
-      tags: listaCurta(entry.tags, 10, 40),
-    };
-    if (!registro.texto && !registro.titulo) {
-      return json({ ok: false, error: "Escreva o registro da aula antes de pedir a análise." });
+    if (!texto(entry.text) && !texto(entry.title) && !entry.emoji) {
+      return new Response(JSON.stringify({ ok: false, error: "O registro está vazio." }), {
+        status: 400,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
     }
 
-    const anteriores = historico.map((h) => {
-      const e = (h ?? {}) as Record<string, unknown>;
-      return { data: curto(e.date, 20), titulo: curto(e.title, 200), texto: curto(e.text, 1000) };
-    });
-    const proximaAula = proxima
-      ? {
-          titulo: curto(proxima.titulo, 200),
-          objetivo: curto(proxima.objetivo, 600),
-          passos: listaCurta(proxima.passos, 10, 300),
-          diferenciacao: curto(proxima.diferenciacao, 600),
-        }
-      : null;
+    const sys =
+      "Você é a Sofia, assistente pedagógica do AgilizaProf. Lê o diário de bordo da professora e sugere um ajuste prático e curto para a próxima aula. " +
+      "Use só o que está nos registros: não invente alunos, nomes, notas nem códigos BNCC. Linguagem simples, respeitosa e não capacitista. Devolva JSON estrito.";
 
-    const system =
-      "Você é a Sofia, parceira pedagógica de professores. A partir do registro do diário de bordo, " +
-      "sugira um ajuste concreto para a próxima aula. Use só o que foi registrado, sem inventar fatos sobre alunos. " +
-      "Linguagem simples e não-capacitista. Responda em JSON estrito.";
-    const user = `Turma: ${curto(body.turma, 80) || "não informada"}
-
-REGISTRO DE HOJE
-${JSON.stringify(registro)}
+    const user = `REGISTRO DE HOJE${turma ? ` (turma ${turma})` : ""}
+${linha(entry)}
 
 REGISTROS ANTERIORES (mais recentes primeiro)
-${JSON.stringify(anteriores)}
+${historico.slice(0, 5).map(linha).join("\n") || "(nenhum)"}
 
 PRÓXIMA AULA PLANEJADA
-${proximaAula ? JSON.stringify(proximaAula) : "ainda não planejada"}
+${proxima ? `${texto(proxima.titulo, 120)} · objetivo: ${texto(proxima.objetivo, 240)}${proxima.diferenciacao ? ` · já tem: ${texto(proxima.diferenciacao, 240)}` : ""}` : "(nenhuma aula planejada)"}
 
 Responda APENAS em JSON:
 {
-  "resumo": "uma frase sobre o que aconteceu na aula",
-  "ajuste": "o ajuste para a próxima aula, em uma ou duas frases",
-  "abertura": "uma atividade curta para abrir a próxima aula",
-  "sinais": ["até 3 sinais para observar"]
+  "resumo": "uma frase sobre o que o registro mostra",
+  "ajuste": "um ajuste concreto para a próxima aula, em até 2 frases",
+  "abertura": "como começar a próxima aula retomando o que aconteceu hoje, em 1 frase",
+  "sinais": ["até 3 sinais para observar na próxima aula"]
 }`;
 
-    const r = await callAI({ userId, tipo: "diario_analise", system, user, json: true, maxTokens: 1200 });
+    const r = await callAI({ userId, tipo: "diario_analise", system: sys, user, json: true, maxTokens: 1000 });
     if (!r.ok) return aiErrorResponse(r);
-
-    let s: Record<string, unknown> = {};
-    try {
-      s = parseAiJson(r.text || "{}");
-    } catch {
-      s = {};
+    const bruto = parseAiJson<Record<string, unknown>>(r.text || "{}");
+    if (r.truncated || jsonTruncado(bruto)) {
+      return new Response(
+        JSON.stringify({ ok: false, truncated: true, error: "A resposta veio incompleta. Tente de novo." }),
+        { status: 200, headers: { ...cors, "Content-Type": "application/json" } },
+      );
     }
     const sugestao = {
-      resumo: curto(s.resumo, 400),
-      ajuste: curto(s.ajuste, 600),
-      abertura: curto(s.abertura, 400),
-      sinais: listaCurta(s.sinais, 3, 200),
+      resumo: texto(bruto.resumo, 300),
+      ajuste: texto(bruto.ajuste, 400),
+      abertura: texto(bruto.abertura, 300),
+      sinais: (Array.isArray(bruto.sinais) ? bruto.sinais : [])
+        .map((s) => texto(s, 160))
+        .filter(Boolean)
+        .slice(0, 3),
     };
     if (!sugestao.ajuste) {
-      return json({ ok: false, error: "A Sofia não conseguiu analisar agora. Tente de novo em instantes." });
+      return new Response(JSON.stringify({ ok: false, error: "A Sofia não conseguiu sugerir um ajuste agora." }), {
+        status: 200,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
     }
-    return json({ ok: true, sugestao, model: r.model });
+    return new Response(JSON.stringify({ sugestao, model: r.model }), {
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
   } catch (e) {
     console.error("[analisar-m6] erro interno", e);
-    return json({ ok: false, error: "A Sofia não conseguiu analisar agora. Tente de novo em instantes." });
+    return erroSimples("A Sofia não conseguiu analisar o registro agora. Tente de novo em instantes.", e);
   }
 });

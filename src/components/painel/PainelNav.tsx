@@ -93,6 +93,15 @@ const navCss = `
 .pn-menu svg{width:18px;height:18px;flex:none;}
 .pn-menu a,.pn-menu button{white-space:nowrap;}
 .pn-menu{width:max-content;max-width:calc(100vw - 24px);}
+.pn-mais{flex:none;height:100%;display:flex;align-items:center;}
+.pn-links a[hidden]{display:none;}
+.pn-mais > button{height:100%;display:flex;align-items:center;gap:4px;border:0;background:none;padding:0;cursor:pointer;
+  font-family:inherit;font-weight:500;font-size:15px;color:var(--pn-muted);border-bottom:3px solid transparent;white-space:nowrap;}
+.pn-mais > button:hover,.pn-mais > button[aria-expanded="true"]{color:var(--pn-ink);}
+.pn-mais > button.on{color:var(--pn-ink);font-weight:700;border-bottom-color:var(--pn-green);}
+.pn-menu.pn-mais-menu{position:fixed;right:auto;z-index:60;}
+@media (max-width: 1360px){.pn-mais > button{font-size:14px;}}
+@media (max-width: 1140px){.pn-mais > button{font-size:13.5px;}}
 .pn-bottom{display:none;}
 /* Sofia flutuante no visual Painel (computador) */
 body:has(.pn-bottom) .sofia-fab-pulse{display:none!important;}
@@ -107,7 +116,12 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
 .pn-sheet-bg{position:fixed;inset:0;z-index:60;background:rgba(20,22,31,.45);display:flex;align-items:flex-end;}
 .pn-sheet{width:100%;background:var(--pn-bg);border-top:2px solid var(--pn-ink);border-radius:20px 20px 0 0;
   padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));max-height:80vh;overflow:auto;}
-.pn-sheet h2{margin:0 0 12px;font-family:var(--pn-display);font-size:20px;letter-spacing:-.03em;}
+.pn-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;}
+.pn-sheet-x{width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:12px;
+  border:1.5px solid var(--pn-line);background:var(--pn-surface);color:var(--pn-ink);cursor:pointer;}
+.pn-sheet-x svg{width:20px;height:20px;}
+.pn-sheet-list .pn-sheet-sair{margin-top:12px;}
+.pn-sheet h2{margin:0;font-family:var(--pn-display);font-size:20px;letter-spacing:-.03em;}
 .pn-sheet-list{display:flex;flex-direction:column;gap:8px;}
 .pn-sheet-list a,.pn-sheet-list button{display:flex;align-items:center;gap:12px;padding:12px;background:var(--pn-surface);border:1.5px solid var(--pn-line);border-radius:14px;
   text-decoration:none;color:var(--pn-ink);font-family:var(--pn-body);font-weight:700;font-size:15px;text-align:left;cursor:pointer;}
@@ -115,7 +129,7 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
 @media (max-width: 1080px){
   .pn-top{height:58px;}
   .pn-top-in{padding:0 16px;}
-  .pn-links,.pn-right .pn-hide-m{display:none;}
+  .pn-links,.pn-mais,.pn-right .pn-hide-m{display:none;}
   .pn-indique{height:38px;padding:0 10px;font-size:13px;}
   .pn-wa{height:38px;}
   .pn-top-in{gap:12px;}
@@ -130,7 +144,7 @@ body:has(.pn-bottom) .sofia-fab{background:#0B7A55!important;border:2px solid #1
   .pn-bottom{display:flex;gap:4px;position:fixed;z-index:50;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:6px;
     background:var(--pn-surface);border:2px solid var(--pn-ink);border-radius:18px;box-shadow:3px 3px 0 var(--pn-ink);}
   .pn-bottom a,.pn-bottom button{flex:1;height:54px;border-radius:12px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-    text-decoration:none;font-family:var(--pn-body);font-size:11.5px;font-weight:700;color:var(--pn-muted);cursor:pointer;}
+    text-decoration:none;font-family:var(--pn-body);font-size:12px;font-weight:700;color:var(--pn-muted);cursor:pointer;}
   .pn-bottom a[aria-current="page"]{background:var(--pn-ink);color:#fff;}
   .pn-bottom .pn-sofia{flex:0 0 54px;background:var(--pn-green);color:#fff;}
   .pn-bottom svg{width:20px;height:20px;}
@@ -269,6 +283,41 @@ export const ICONS = {
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
     </>
   ),
+  abc: (
+    <>
+      <path d="M3 17l3.5-9 3.5 9" />
+      <line x1="4.3" y1="14" x2="8.7" y2="14" />
+      <path d="M13 8v9h3.2a2.2 2.2 0 0 0 0-4.5H13" />
+      <path d="M13 12.5h2.7a2.2 2.2 0 0 0 0-4.5H13" />
+      <path d="M22 9.2A3.5 3.5 0 1 0 22 15.8" />
+    </>
+  ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <polyline points="12 7 12 12 15.5 14" />
+    </>
+  ),
+  target: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1.5" />
+    </>
+  ),
+  layers: (
+    <>
+      <polygon points="12 3 22 8 12 13 2 8 12 3" />
+      <polyline points="2 12.5 12 17.5 22 12.5" />
+      <polyline points="2 17 12 22 22 17" />
+    </>
+  ),
+  x: (
+    <>
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </>
+  ),
   star: <path d="M12 2l2.9 6.9L22 10l-5.5 4.7L18.2 22 12 18.3 5.8 22l1.7-7.3L2 10l7.1-1.1z" />,
   out: (
     <>
@@ -279,14 +328,22 @@ export const ICONS = {
   ),
 };
 
-const LINKS: Array<{ to: string; label: string; exact?: boolean }> = [
-  { to: "/", label: "Início", exact: true },
-  { to: "/planejamento", label: "Planejar" },
-  { to: "/relatorios", label: "Pareceres" },
-  { to: "/inclusao", label: "Inclusão" },
-  { to: "/agenda", label: "Agenda" },
-  { to: "/jogos", label: "Jogos" },
-  { to: "/questoes", label: "Questões" },
+const LINKS: Array<{ to: string; label: string; icon: keyof typeof ICONS; exact?: boolean }> = [
+  { to: "/", label: "Início", icon: "home", exact: true },
+  { to: "/planejamento", label: "Planejar", icon: "cal" },
+  { to: "/relatorios", label: "Pareceres", icon: "pen" },
+  { to: "/inclusao", label: "Inclusão", icon: "users" },
+  { to: "/alfabetizacao", label: "Alfabetização", icon: "abc" },
+  { to: "/agenda", label: "Agenda", icon: "clock" },
+  { to: "/questoes", label: "Questões", icon: "check" },
+];
+
+// Funções que não cabem na barra de cima: ficam no botão "Mais" (computador).
+const MAIS: Array<{ to: string; label: string; icon: keyof typeof ICONS }> = [
+  { to: "/jogos", label: "Jogos", icon: "game" },
+  { to: "/inclusao/pei", label: "PEI / PDI", icon: "target" },
+  { to: "/biblioteca", label: "Minha Biblioteca", icon: "shelf" },
+  { to: "/cadernos", label: "Cadernos prontos", icon: "layers" },
 ];
 
 export function PainelNav() {
@@ -295,8 +352,16 @@ export function PainelNav() {
   const { isAdmin } = useIsAdmin();
   const ctx = useSofiaContext();
   const sofia = useSofiaOptional();
-  const nome = (ctx.user?.nome || "").trim();
+  const nomeBruto = (ctx.user?.nome || "").trim();
+  // "Educador(a)" é só o nome de reserva enquanto carrega: não vira avatar "E".
+  const nome = nomeBruto === "Educador(a)" ? "" : nomeBruto;
   const [menu, setMenu] = useState(false);
+  const [mais, setMais] = useState<{ left: number; top: number } | null>(null);
+  const maisRef = useRef<HTMLDivElement>(null);
+  // Quantos links do topo cabem inteiros; os que não cabem vão para o "Mais".
+  const linksRef = useRef<HTMLElement>(null);
+  const [cabem, setCabem] = useState(LINKS.length);
+  const medirRef = useRef<() => void>(() => {});
   const [sheet, setSheet] = useState(false);
   const [baixar, setBaixar] = useState(false);
   const app = useInstalarApp();
@@ -315,7 +380,55 @@ export function PainelNav() {
   useEffect(() => {
     setMenu(false);
     setSheet(false);
+    setMais(null);
   }, [loc.pathname]);
+  useEffect(() => {
+    const nav = linksRef.current;
+    if (!nav || typeof ResizeObserver === "undefined") return;
+    const medir = () => {
+      const itens = Array.from(nav.children) as HTMLElement[];
+      itens.forEach((i) => (i.hidden = false));
+      if (getComputedStyle(nav).display === "none") return;
+      const limite = nav.getBoundingClientRect().right + 0.5;
+      let n = itens.length;
+      for (let i = 0; i < itens.length; i++) {
+        if (itens[i].getBoundingClientRect().right > limite) {
+          n = i;
+          break;
+        }
+      }
+      itens.forEach((it, i) => (it.hidden = i >= n));
+      setCabem(n);
+    };
+    medirRef.current = medir;
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(nav.parentElement ?? nav);
+    void document.fonts?.ready.then(medir);
+    return () => ro.disconnect();
+  }, []);
+  // O item ativo fica em negrito (mais largo): mede de novo ao trocar de página.
+  useEffect(() => {
+    medirRef.current();
+  }, [loc.pathname]);
+  const escondidos = LINKS.slice(cabem);
+
+  useEffect(() => {
+    if (!mais) return;
+    const fechar = (e: MouseEvent) => {
+      if (maisRef.current && !maisRef.current.contains(e.target as Node)) setMais(null);
+    };
+    const tecla = (e: KeyboardEvent) => e.key === "Escape" && setMais(null);
+    const sumir = () => setMais(null);
+    document.addEventListener("mousedown", fechar);
+    window.addEventListener("keydown", tecla);
+    window.addEventListener("resize", sumir);
+    return () => {
+      document.removeEventListener("mousedown", fechar);
+      window.removeEventListener("keydown", tecla);
+      window.removeEventListener("resize", sumir);
+    };
+  }, [mais]);
   useEffect(() => {
     if (!menu && !sheet) return;
     const onDoc = (e: MouseEvent) => {
@@ -360,13 +473,50 @@ export function PainelNav() {
               Agiliza<b>Prof</b>
             </span>
           </Link>
-          <nav className="pn-links" aria-label="Navegação principal">
+          <nav className="pn-links" aria-label="Navegação principal" ref={linksRef}>
             {LINKS.map((l) => (
               <Link key={l.to} to={l.to} aria-current={cur(l.to, l.exact)}>
                 {l.label}
               </Link>
             ))}
           </nav>
+          <div className="pn-mais" ref={maisRef}>
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={!!mais}
+              className={
+                MAIS.some((x) => active(x.to)) || escondidos.some((x) => active(x.to, x.exact)) ? "on" : ""
+              }
+              onClick={(e) => {
+                if (mais) return setMais(null);
+                const r = e.currentTarget.getBoundingClientRect();
+                setMais({ left: r.left, top: r.bottom + 8 });
+              }}
+            >
+              Mais
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {mais && (
+              <div className="pn-menu pn-mais-menu" role="menu" style={{ left: mais.left, top: mais.top }}>
+                {escondidos.map((x) => (
+                  <Link key={x.to} to={x.to} role="menuitem" aria-current={cur(x.to, x.exact)}>
+                    <Svg>{ICONS[x.icon]}</Svg>
+                    {x.label}
+                  </Link>
+                ))}
+                {escondidos.length > 0 && <hr />}
+                {MAIS.map((x) => (
+                  <Link key={x.to} to={x.to} role="menuitem" aria-current={cur(x.to)}>
+                    <Svg>{ICONS[x.icon]}</Svg>
+                    {x.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="pn-right" ref={ref}>
             <Link to="/indicacoes" className="pn-indique" aria-current={cur("/indicacoes")}>
               <Svg>{ICONS.gift}</Svg>
@@ -476,7 +626,12 @@ export function PainelNav() {
             aria-label="Mais opções"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2>Tudo do AgilizaProf</h2>
+            <div className="pn-sheet-head">
+              <h2>Tudo do AgilizaProf</h2>
+              <button type="button" className="pn-sheet-x" aria-label="Fechar" onClick={() => setSheet(false)}>
+                <Svg>{ICONS.x}</Svg>
+              </button>
+            </div>
             <div className="pn-sheet-list">
               <Link to="/indicacoes" style={{ background: "#FFB224", borderColor: "#14161F" }}>
                 <Svg>{ICONS.gift}</Svg>Indique e ganhe
@@ -491,17 +646,22 @@ export function PainelNav() {
               >
                 <Svg>{ICONS.phone}</Svg>Baixar o app no celular
               </button>
-              <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
-                <span style={{ color: "#0B7A55", display: "flex" }}>
-                  <WhatsappLogo size={20} />
-                </span>
-                Para confirmar
-                <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
-                  {pendentes}
-                </span>
+              {pendentes > 0 && (
+                <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
+                  <span style={{ color: "#0B7A55", display: "flex" }}>
+                    <WhatsappLogo size={20} />
+                  </span>
+                  Para confirmar
+                  <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
+                    {pendentes}
+                  </span>
+                </Link>
+              )}
+              <Link to="/alfabetizacao">
+                <Svg>{ICONS.abc}</Svg>Criança alfabetizada
               </Link>
               <Link to="/cadernos">
-                <Svg>{ICONS.book}</Svg>Cadernos prontos
+                <Svg>{ICONS.layers}</Svg>Cadernos prontos
               </Link>
               <Link to="/biblioteca">
                 <Svg>{ICONS.shelf}</Svg>Minha Biblioteca
@@ -510,10 +670,10 @@ export function PainelNav() {
                 <Svg>{ICONS.users}</Svg>Inclusão
               </Link>
               <Link to="/inclusao/pei">
-                <Svg>{ICONS.pen}</Svg>PEI / PDI
+                <Svg>{ICONS.target}</Svg>PEI / PDI
               </Link>
               <Link to="/agenda">
-                <Svg>{ICONS.cal}</Svg>Agenda
+                <Svg>{ICONS.clock}</Svg>Agenda
               </Link>
               <Link to="/jogos">
                 <Svg>{ICONS.game}</Svg>Jogos e atividades interativas
@@ -521,6 +681,17 @@ export function PainelNav() {
               <Link to="/questoes">
                 <Svg>{ICONS.check}</Svg>Questões
               </Link>
+              {!pendentes && (
+                <Link to="/confirmar" style={{ background: "#D9FDD3", borderColor: "#14161F" }}>
+                  <span style={{ color: "#0B7A55", display: "flex" }}>
+                    <WhatsappLogo size={20} />
+                  </span>
+                  Para confirmar
+                  <span className={"pn-wa-n" + (pendentes ? "" : " zero")} aria-label={waRotulo}>
+                    {pendentes}
+                  </span>
+                </Link>
+              )}
               <Link to="/configuracoes">
                 <Svg>{ICONS.gear}</Svg>Configurações
               </Link>
@@ -529,7 +700,13 @@ export function PainelNav() {
                   <Svg>{ICONS.star}</Svg>Administração
                 </Link>
               )}
-              <button type="button" onClick={sair}>
+              <button
+                type="button"
+                className="pn-sheet-sair"
+                onClick={() => {
+                  if (window.confirm("Quer mesmo sair da sua conta?")) void sair();
+                }}
+              >
                 <Svg>{ICONS.out}</Svg>Sair
               </button>
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { leisCurtoInclusao } from "@/lib/inclusao/leisInclusao";
 import { X, Save, Printer, Plus, Trash2, Sparkles, Wand2, CheckCircle2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
@@ -428,6 +429,13 @@ function tabPreenchida(t: TabKey, d: PEIData): boolean {
   }
 }
 
+/** Quantas das 8 partes do PEI já têm algo escrito (para "PEI em construção (3 de 8)"). */
+export const PEI_TOTAL_PARTES = TABS.length;
+export function peiPartesPreenchidas(d: Partial<PEIData> | null | undefined): number {
+  if (!d) return 0;
+  return TABS.filter((t) => tabPreenchida(t.key, d as PEIData)).length;
+}
+
 /**
  * "O PEI tem conteúdo real?" — fonte única usada pelos cards de Inclusão.
  * IMPORTANTE: ignora os campos semeados ao abrir o PEI (diagnostico/cid/serie),
@@ -597,7 +605,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
     const upd = { ...draft, atualizadoEm: new Date().toISOString() };
     setPeiByStudent((prev) => ({ ...prev, [aluno.id]: upd }));
     setSavedAt(upd.atualizadoEm);
-    toast.success("PEI salvo · Lei 14.254/2021");
+    toast.success("PEI salvo");
   };
 
   const totalPreenchidas = useMemo(() => TABS.filter((t) => tabPreenchida(t.key, draft)).length, [draft]);
@@ -620,7 +628,7 @@ export function PEIFormModal({ open, onClose, aluno }: Props) {
           <div>
             <h2>Plano Educacional Individualizado{aluno ? ` · ${aluno.name}` : ""}</h2>
             <span className="meta" style={{ display: "block", marginTop: 4 }}>
-              Protocolo {draft.protocolo} · Lei 14.254/2021 · <b>{totalPreenchidas} de {TABS.length} seções preenchidas</b>
+              Protocolo {draft.protocolo} · {leisCurtoInclusao({ cid: draft.cid, diag: draft.diagnostico })} · <b>{totalPreenchidas} de {TABS.length} seções preenchidas</b>
               {savedAt && <span style={{ color: "var(--success)", marginLeft: 8 }}> · <CheckCircle2 size={11} style={{ verticalAlign: -1 }} /> salvo automaticamente</span>}
             </span>
           </div>

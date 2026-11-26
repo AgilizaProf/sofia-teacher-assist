@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const DESTINOS = [
   { id: "registro", label: "Registro do aluno" },
+  { id: "alfabetizacao", label: "Leitura e escrita" },
   { id: "parecer", label: "Relatório e parecer" },
   { id: "planejamento", label: "Planejamento" },
   { id: "diario", label: "Diário de bordo" },

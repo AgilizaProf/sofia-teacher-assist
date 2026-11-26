@@ -1,3 +1,6 @@
+import { BotaoDitado, juntarDitado } from "@/components/shared/BotaoDitado";
+import { nomeProprio } from "@/lib/alunos/colarLista";
+import { fraseLegalInclusao, leisCurtoInclusao } from "@/lib/inclusao/leisInclusao";
 import { useState, useEffect, useMemo, useRef, useCallback, type ReactNode } from "react";
 import { AlunoCard } from "@/components/inclusao/AlunoCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,7 +49,7 @@ import {
 import { PlanoInclusaoModal, type PlanoInclusao } from "@/components/inclusao/PlanoInclusaoModal";
 import { PlanoPeriodoModal } from "@/components/inclusao/PlanoPeriodoModal";
 import { PlanoInclusaoVisualizarModal } from "@/components/inclusao/PlanoInclusaoVisualizarModal";
-import { PEIFormModal, buildPEIContext, peiTemConteudo, type PEIData } from "@/components/inclusao/PEIFormModal";
+import { PEIFormModal, buildPEIContext, peiTemConteudo, peiPartesPreenchidas, PEI_TOTAL_PARTES, type PEIData } from "@/components/inclusao/PEIFormModal";
 import { createAgendaEvent } from "@/lib/db/agenda";
 import { supabase } from "@/integrations/supabase/client";
 import { invocarIA, mensagemAmigavel, temTexto } from "@/lib/sofia/invocarIA";
@@ -862,7 +865,14 @@ const ANAM_SUGESTOES_EI: Record<string, string[]> = {
 function isEducacaoInfantilSerie(s?: string | null): boolean {
   const t = (s || "").toLowerCase();
   if (!t) return false;
-  return /(infantil|bercário|berçario|berc[aá]rio|maternal|pr[eé]\b|pr[eé]-escola|jardim|g[1-5]\b|creche)/.test(t);
+  return /(infantil|ber[cç][aá]rio|maternal|pr[eé](?![a-zà-ú])|jardim|\bg[1-5]\b|creche)/.test(t);
+}
+
+/** Na Educação Infantil não se dá nota: mostra o nível em palavras. */
+function nivelEI(p: number): string {
+  if (p >= 80) return "Consolidado";
+  if (p >= 40) return "Em desenvolvimento";
+  return "Ainda não";
 }
 
 // Objetivos do PEI exibidos na KPI/painel de status.
@@ -1099,7 +1109,9 @@ export function Inclusao() {
         }
       : undefined,
   );
-  const isEISelected = isEducacaoInfantilSerie(selectedForAnam?.anoEscolar);
+  const isEISelected =
+    isEducacaoInfantilSerie(selectedForAnam?.anoEscolar) ||
+    (!selectedForAnam?.anoEscolar && isEducacaoInfantilSerie(selectedForAnam?.turma));
   const buildBlankAnam = () => {
     const base = isEISelected ? ANAMNESE_EIXOS_EI : ANAMNESE_EIXOS;
     return base.map((e) => ({ l: e.l, items: e.items.map((i) => ({ ...i })), obs: "" }));
@@ -1208,7 +1220,7 @@ export function Inclusao() {
 </div>
 ${corpo}
 <table class="sig"><tr><td>Professor(a) regente</td><td>Coordenação pedagógica</td></tr></table>
-<div class="legal">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.</div>
+<div class="legal">${esc(fraseLegalInclusao(selected))}</div>
 </div></body></html>`;
     const blob = new Blob(["\ufeff", html], { type: "application/msword" });
     const url = URL.createObjectURL(blob);
@@ -1268,6 +1280,10 @@ ${corpo}
     ),
     [anamData],
   );
+  // Aluno da Educação Infantil (pelo ano/turma ou pelo modelo da anamnese):
+  // nada de porcentagem nem "desempenho acadêmico".
+  const mostrarComoEI = anamUsesEI || isEISelected;
+  const [confirmarTrocaAnamEI, setConfirmarTrocaAnamEI] = useState(false);
   // Habilidades · evolução — recalcula automaticamente sempre que muda anamnese ou registros
   const skillsEvolucao = useMemo(() => {
     const POS = ["progresso", "avanço", "avancou", "avançou", "consegui", "conclu", "evolu", "melhor", "interagiu", "participou", "iniciou", "consolidou", "autônom", "autonom", "calmo", "regulou", "respondeu bem", "colabor"];
@@ -1303,12 +1319,12 @@ ${corpo}
     }
     return [
       calc("Atenção sustentada", "Aspectos Pedagógicos", ["ped", "com"]),
-      calc("Leitura / Escrita / Cálculo", "Desempenho Acadêmico", ["ped"]),
+      ...(isEISelected ? [] : [calc("Leitura / Escrita / Cálculo", "Desempenho Acadêmico", ["ped"])]),
       calc("Interação em dupla", "Interações Sociais", ["com", "ped"]),
       calc("Autonomia", "Autonomia", ["ped", "com"]),
       calc("Autorregulação", "Emoção", ["com", "sen"]),
     ];
-  }, [anamData, regByStudent, studentKey, anamUsesEI]);
+  }, [anamData, regByStudent, studentKey, anamUsesEI, isEISelected]);
 
   // Planos adaptados gerados pela Sofia, persistidos por aluno
   const [plansByStudent, setPlansByStudent] = usePersistentState<Record<string, PlanoInclusao[]>>("inc_plans", {});
@@ -1790,7 +1806,7 @@ ${ident}
 <section>
   <h2>Parecer descritivo</h2>
   ${corpoInterno}
-  <div style="margin-top:14px;border:1px solid #555;border-radius:6px;padding:7px 10px;font-size:10px;color:#333;line-height:1.4;">Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC · a partir de registros, revisado pela professora.</div>
+  <div style="margin-top:14px;border:1px solid #555;border-radius:6px;padding:7px 10px;font-size:10px;color:#333;line-height:1.4;">${esc(fraseLegalInclusao(selected))}</div>
 </section>
 <div class="sig">
   <div>Professor(a) responsável<br/>${esc(user.name || "")}</div>
@@ -1976,6 +1992,7 @@ ${ident}
     let anamCompletas = 0;
     let anamIniciadas = 0;
     let peiAtivos = 0;
+    let peiCompletos = 0;
     let registros = 0;
     let objTotal = 0;
     let objAtingidos = 0;
@@ -1986,13 +2003,16 @@ ${ident}
       if (total > 0 && feitos >= total) anamCompletas++;
       else if (feitos > 0) anamIniciadas++;
       const pei = (peiByStudent[st.id] || {}) as Record<string, unknown>;
-      if (peiTemConteudo(pei as Partial<PEIData>)) peiAtivos++;
+      if (peiTemConteudo(pei as Partial<PEIData>)) {
+        peiAtivos++;
+        if (peiPartesPreenchidas(pei as Partial<PEIData>) >= PEI_TOTAL_PARTES) peiCompletos++;
+      }
       const objs = objetivosDoPei(pei);
       objTotal += objs.length;
       objAtingidos += objs.filter((o) => objetivoConcluido(o.status)).length;
       registros += (regByStudent[st.id] || []).length;
     }
-    return { total: students.length, anamCompletas, anamIniciadas, peiAtivos, registros, objTotal, objAtingidos };
+    return { total: students.length, anamCompletas, anamIniciadas, peiAtivos, peiCompletos, registros, objTotal, objAtingidos };
   }, [students, peiByStudent, regByStudent]);
 
   const filtered = students.filter((s) => {
@@ -2006,7 +2026,7 @@ ${ident}
   const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (savingStudent) return;
-    const name = nsName.trim();
+    const name = nomeProprio(nsName);
     if (!name) return;
     const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
     const turmaNorm = norm(nsTurma.trim() || "Sem turma");
@@ -2181,9 +2201,9 @@ ${ident}
                       </div>
                       <div className="inc-res">
                         <span className="ic sun" aria-hidden><CheckCircle2 size={16} /></span>
-                        <span className="lb">PEI ativo</span>
-                        <b>{resumoTurma.peiAtivos}<span>/{resumoTurma.total}</span></b>
-                        <small>{resumoTurma.objTotal > 0 ? `${resumoTurma.objAtingidos}/${resumoTurma.objTotal} objetivos realizados` : "sem objetivos definidos"}</small>
+                        <span className="lb">PEI completo</span>
+                        <b>{resumoTurma.peiCompletos}<span>/{resumoTurma.total}</span></b>
+                        <small>{resumoTurma.peiAtivos > resumoTurma.peiCompletos ? `${resumoTurma.peiAtivos - resumoTurma.peiCompletos} em construção · ` : ""}{resumoTurma.objTotal > 0 ? `${resumoTurma.objAtingidos}/${resumoTurma.objTotal} objetivos realizados` : "sem objetivos definidos"}</small>
                       </div>
                       <div className="inc-res">
                         <span className="ic coral" aria-hidden><Pencil size={16} /></span>
@@ -2201,7 +2221,8 @@ ${ident}
                   <div className="list-search">
                     <Search size={14} />
                     <input
-                      placeholder="Buscar por nome, turma ou diagnóstico…"
+                      placeholder="Buscar aluno…"
+                      aria-label="Buscar por nome, turma ou diagnóstico"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                     />
@@ -2297,7 +2318,7 @@ ${ident}
                 <div className="hero">
                   <div className="hero-l">
                     <button className="back" onClick={() => goView("list")}><ArrowLeft size={13} /> Voltar à lista</button>
-                    <h1>{selected.name} <span className="age">· {selected.age} · {selected.turma}</span></h1>
+                    <h1>{selected.name} <span className="age">· {[selected.age, selected.anoEscolar, selected.turma].filter((x) => x && x !== "—" && x !== "Sem turma").join(" · ") || "sem turma"}</span></h1>
                     <div className="tag-row">
                       <span className="diagnostic"><span className="pulse" />{selected.diag}</span>
                       {selected.anoEscolar && <span className="tag"><b>Ano escolar:</b> {selected.anoEscolar}</span>}
@@ -2323,13 +2344,17 @@ ${ident}
                         const at = typeof peiSel.atualizadoEm === "string" && peiSel.atualizadoEm
                           ? new Date(peiSel.atualizadoEm).toLocaleDateString("pt-BR")
                           : "";
+                        const partes = peiPartesPreenchidas(peiSel as Partial<PEIData>);
+                        const completo = partes >= PEI_TOTAL_PARTES;
                         return (
                           <span
                             className="tag"
-                            style={{ background: "#ECFDF5", borderColor: "#A7F3D0", color: "#065F46" }}
+                            style={completo
+                              ? { background: "#ECFDF5", borderColor: "#A7F3D0", color: "#065F46" }
+                              : { background: "#FFFBEB", borderColor: "#FDE68A", color: "#92400E" }}
                             title="Plano Educacional Individualizado salvo — será usado pela Sofia ao gerar relatórios"
                           >
-                            📋 <b>PEI ativo</b>{at ? ` — atualizado em ${at}` : ""}
+                            📋 <b>{completo ? "PEI completo" : `PEI em construção (${partes} de ${PEI_TOTAL_PARTES})`}</b>{at ? ` — atualizado em ${at}` : ""}
                           </span>
                         );
                       })()}
@@ -2486,7 +2511,7 @@ ${ident}
                               <span className="ac-tag" style={{ background: "#DBEAFE", color: "#1E40AF" }}>Próximo passo</span>
                             </div>
                             <h2 className="ac-title">Hora de cadastrar o <em>PEI</em> de {firstName}</h2>
-                            <p className="ac-body">Já tenho o perfil pedagógico de {firstName}. Vamos formalizar o Plano Educacional Individualizado (Lei 14.254/2021) para alinhar metas, adaptações e equipe responsável.</p>
+                            <p className="ac-body">Já tenho o perfil pedagógico de {firstName}. Vamos formalizar o Plano Educacional Individualizado para alinhar metas, adaptações e equipe responsável.</p>
                             <div className="ac-cta">
                               <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => setPeiOpen(true)}>Preencher PEI <ChevronRight size={14} /></button>
                               <button className="btn-ghost-dark" onClick={() => setActiveTab("anam")}>Revisar Anamnese</button>
@@ -2509,7 +2534,7 @@ ${ident}
                             </div>
                             <h2 className="ac-title">Já consigo sugerir <em>adaptações</em> para {firstName}</h2>
                             <p className="ac-body">
-                              Faltam <b>{8 - peiFilled} eixo{8 - peiFilled > 1 ? "s" : ""}</b> do PEI para um plano completo conforme a Lei 14.254/2021.
+                              Faltam <b>{8 - peiFilled} eixo{8 - peiFilled > 1 ? "s" : ""}</b> do PEI para um plano completo.
                               {ultimoReg ? ` Último registro: "${ultimoReg.body.slice(0, 80)}${ultimoReg.body.length > 80 ? "…" : ""}"` : ""}
                             </p>
                             <div className="ac-cta">
@@ -2550,7 +2575,7 @@ ${ident}
                   <div className={`section${isMobile && colPei ? " m-collapsed" : ""}`}>
                     <div className="section-head">
                       <h3>Plano Educacional Individualizado · Eixos ativos</h3>
-                      <span className="legal">Lei 14.254/2021 · BNCC Inclusão</span>
+                      <span className="legal">{leisCurtoInclusao(selected)} · BNCC</span>
                       <button className="more" onClick={() => setPeiOpen(true)}>Ver completo →</button>
                       {isMobile && (
                         <button type="button" className="incl-mcol-btn" aria-label={colPei ? "Expandir" : "Recolher"} onClick={() => setColPei((v) => !v)}>
@@ -2691,7 +2716,7 @@ ${ident}
                             const obs = e.items.filter((i) => i.s !== "naoObservado");
                             if (obs.length === 0) return { v: "Sem dados", t: "" };
                             const p = eixoPct(e.items);
-                            return { v: `${p}%`, t: p >= 80 ? "ok" : p >= 40 ? "warn" : "warn" };
+                            return { v: mostrarComoEI ? nivelEI(p) : `${p}%`, t: p >= 80 ? "ok" : p >= 40 ? "warn" : "warn" };
                           };
                           const baseLinhas: Array<{ l: string; v: string; t: "" | "warn" | "ok" }> = [
                             { l: "Ano escolar", v: selected.anoEscolar || "Não informado", t: "" },
@@ -2712,7 +2737,7 @@ ${ident}
                               ]
                             : [
                                 ...baseLinhas,
-                                { l: "Desempenho acadêmico", ...pillFor("Desempenho Acadêmico") },
+                                ...(mostrarComoEI ? [] : [{ l: "Desempenho acadêmico", ...pillFor("Desempenho Acadêmico") }]),
                                 { l: "Aspectos pedagógicos", ...pillFor("Aspectos Pedagógicos") },
                                 { l: "Interações sociais", ...pillFor("Interações Sociais") },
                                 { l: "Autonomia", ...pillFor("Autonomia") },
@@ -2737,7 +2762,7 @@ ${ident}
                           if (consolidados.length === 0 && naoAlcancados.length === 0) {
                             return (
                               <p style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>
-                                Preencha a Anamnese para ver destaques e pontos de atenção do(a) aluno(a) aqui.
+                                Preencha a Anamnese para ver as conquistas e o que ainda não foi alcançado aqui.
                               </p>
                             );
                           }
@@ -2745,7 +2770,7 @@ ${ident}
                             <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
                               {consolidados.length > 0 && (
                                 <div>
-                                  <b style={{ fontSize: 11, color: "var(--success)" }}>Destaques</b>
+                                  <b style={{ fontSize: 11, color: "var(--success)" }}>{mostrarComoEI ? "Conquistas" : "Destaques"}</b>
                                   <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: 12 }}>
                                     {consolidados.slice(0, 3).map((c) => <li key={c}>{c}</li>)}
                                   </ul>
@@ -2753,7 +2778,7 @@ ${ident}
                               )}
                               {naoAlcancados.length > 0 && (
                                 <div>
-                                  <b style={{ fontSize: 11, color: "var(--warn)" }}>Pontos de atenção</b>
+                                  <b style={{ fontSize: 11, color: "var(--warn)" }}>Ainda não alcançado</b>
                                   <ul style={{ margin: "4px 0 0 16px", padding: 0, fontSize: 12 }}>
                                     {naoAlcancados.slice(0, 3).map((c) => <li key={c}>{c}</li>)}
                                   </ul>
@@ -2835,12 +2860,12 @@ ${ident}
                                 <div className="skill-head">
                                   <b>{s.l}</b>
                                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                                    {visible && s.delta !== 0 && (
+                                    {visible && s.delta !== 0 && !mostrarComoEI && (
                                       <span style={{ color: arrowColor, fontSize: 11, fontWeight: 700 }} title={`Anamnese ${s.baseline}% · ${s.pos > 0 ? `+${s.pos}` : ""}${s.pos > 0 && s.neg > 0 ? " / " : ""}${s.neg > 0 ? `-${s.neg}` : ""} registros`}>
                                         {arrow} {s.delta > 0 ? `+${s.delta}` : s.delta}
                                       </span>
                                     )}
-                                    <span>{visible ? `${s.p}%` : "—"}</span>
+                                    <span>{visible ? (mostrarComoEI ? nivelEI(s.p) : `${s.p}%`) : "—"}</span>
                                   </span>
                                 </div>
                                 <div className="skill-bar"><div className={"skill-fill" + (s.c ? " " + s.c : "")} style={{ width: s.p + "%" }} /></div>
@@ -2855,7 +2880,7 @@ ${ident}
 
                       <div className="trust-card">
                         <span className="dot" />
-                        <span><b>PEI conforme Lei 14.254/2021.</b> Documentos exportados pelo AgilizaProf têm validade institucional na secretaria.</span>
+                        <span><b>PEI com base na {leisCurtoInclusao(selected)}.</b> Modelo pronto para você revisar e entregar conforme as regras da sua rede.</span>
                       </div>
                     </aside>
                   </div>
@@ -2866,10 +2891,33 @@ ${ident}
                   <div className="section">
                     <div className="section-head">
                       <h3>Anamnese · {eixosPreenchidos} de {anamData.length} eixos preenchidos</h3>
-                      <span className="legal">{selected?.anoEscolar ? selected.anoEscolar + " · " : ""}{selected?.turma || ""} · {selected?.diag || ""}</span>
+                      <span className="legal">{[selected?.anoEscolar, selected?.turma, selected?.diag].filter(Boolean).join(" · ")}</span>
                       <button className="btn btn-secondary" onClick={() => { setAnamPrintMode("completo"); setAnamPrintOpen(true); }}><Printer size={14} /> Imprimir Anamnese</button>
                       <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => saveTab("Anamnese")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
+                    {isEISelected && !anamUsesEI && (
+                      <div style={{ margin: "8px 0", padding: 10, borderRadius: 8, background: "color-mix(in oklab, var(--warn) 12%, transparent)", border: "1px solid color-mix(in oklab, var(--warn) 35%, transparent)", fontSize: 12 }}>
+                        <b>Esta anamnese está no modelo do Ensino Fundamental</b>, mas {selected?.name?.split(" ")[0] || "a criança"} é da Educação Infantil.
+                        {" "}O modelo da Educação Infantil segue os campos de experiência da BNCC.
+                        <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          {!confirmarTrocaAnamEI ? (
+                            <button className="btn btn-secondary" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => setConfirmarTrocaAnamEI(true)}>
+                              Usar o modelo da Educação Infantil
+                            </button>
+                          ) : (
+                            <>
+                              <span>As marcações desta anamnese serão apagadas. Continuar?</span>
+                              <button className="btn btn-primary" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => { setAnamByStudent((prev) => ({ ...prev, [studentKey]: buildBlankAnam() })); setConfirmarTrocaAnamEI(false); }}>
+                                Sim, trocar
+                              </button>
+                              <button className="btn btn-secondary" style={{ fontSize: 11, padding: "4px 8px" }} onClick={() => setConfirmarTrocaAnamEI(false)}>
+                                Cancelar
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     {/* Ano de Referência Pedagógico — define o parâmetro
                         pedagógico real do aluno, que pode diferir do ano de
                         matrícula. A Sofia respeita este valor em toda geração
@@ -3289,7 +3337,7 @@ ${ident}
                   <div className="section">
                     <div className="section-head">
                       <h3>Relatórios · Pareceres descritivos</h3>
-                      <span className="legal">Lei 14.254/2021</span>
+                      <span className="legal">{leisCurtoInclusao(selected)}</span>
                       <button className="btn btn-primary bg-emerald-400 text-emerald-400" onClick={() => saveTab("Relatórios")}><CheckCircle2 size={14} /> Salvar</button>
                     </div>
                     <div className="rel-feature">
@@ -3796,7 +3844,7 @@ ${ident}
                   <div style={{ borderTop: "1px solid #333", paddingTop: 4, fontSize: 10.5, textAlign: "center" }}>Coordenação pedagógica</div>
                 </div>
                 <div style={{ marginTop: 18, fontSize: 10, color: "#6B7691", borderTop: "1px dashed #ccc", paddingTop: 6 }}>
-                  Documento gerado conforme a Lei nº 14.254/2021, Lei nº 13.146/2015 (LBI) e BNCC.
+                  {fraseLegalInclusao(selected)}
                 </div>
               </div>
             </div>
@@ -3863,7 +3911,7 @@ ${ident}
                 <div>
                   <h2>Objetivos do PEI · {selected.name}</h2>
                   <span className="meta" style={{ display: "block", marginTop: 4 }}>
-                    {atingidos} de {objs.length} realizado(s) · Lei 14.254/2021
+                    {atingidos} de {objs.length} realizado(s) · {leisCurtoInclusao(selected)}
                   </span>
                 </div>
                 <button className="inc-modal-close" onClick={() => setObjetivosModalOpen(false)} aria-label="Fechar"><X size={16} /></button>
@@ -3926,7 +3974,7 @@ ${ident}
                 )}
               </div>
               <div className="inc-modal-foot">
-                <span className="legal">Status sincronizado com o PEI · Lei 14.254/2021</span>
+                <span className="legal">Status sincronizado com o PEI</span>
                 <button className="inc-btn-ghost" onClick={() => { setObjetivosModalOpen(false); setPeiOpen(true); }}>
                   <FileText size={14} /> Editar no PEI
                 </button>
@@ -3962,7 +4010,7 @@ ${ident}
                 <div className="inc-a4-head">
                   <div className="center">
                     <b>Documento de Anamnese Pedagógica</b>
-                    <span>AgilizaProf · Educação Inclusiva<br />Conforme Lei 14.254/2021 · BNCC Inclusão</span>
+                    <span>AgilizaProf · Educação Inclusiva<br />{leisCurtoInclusao(selected)} · BNCC</span>
                   </div>
                   <div className="stamp">PROTOCOLO<br />#ANAM-{(selected?.id || "").slice(-6).toUpperCase()}<br />{new Date().toLocaleDateString("pt-BR")}</div>
                 </div>
@@ -4215,6 +4263,9 @@ ${ident}
                     placeholder={`Descrição livre para ${REG_CAT_LABEL[k]} (opcional)…`}
                     style={{ width: "100%", padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 8, fontFamily: "inherit", fontSize: 12.5, resize: "vertical" }}
                   />
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+                    <BotaoDitado onTexto={(t) => setNrBodies((prev) => ({ ...prev, [k]: juntarDitado(prev[k] || "", t) }))} />
+                  </div>
                 </div>
               );
             })}

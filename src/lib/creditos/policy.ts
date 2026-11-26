@@ -20,6 +20,8 @@ export const CUSTOS = {
   chat_sofia_longa: 5, // geração longa no chat
   anexar_rede: 100, // anexar arquivo de Rede (currículo municipal)
   anexar_agenda: 30, // anexar arquivo de Agenda (calendário escolar)
+  leitura_avaliada: 5, // a Sofia ouve a leitura de um aluno (cobrado na função)
+  texto_corrigido: 10, // a Sofia corrige a foto de um texto (cobrado na função)
   exportacao: 0,
 } as const;
 
@@ -91,7 +93,7 @@ export const PRECO_MENSAL = 34.9; // R$/mês
 export const PRECO_ANUAL = 247.0; // R$/ano
 export const ECONOMIA_ANUAL = PRECO_MENSAL * 12 - PRECO_ANUAL; // R$ 171,80
 export const CREDITOS_ANUAIS_TOTAL = 19500; // 18.000 + 3x500
-export const CREDITOS_MENSAIS = 1500; // plano mensal e promoção até 12/03/2027
+export const CREDITOS_MENSAIS = 1500; // plano mensal e promoção até 13/03/2027
 
 // Próxima data de renovação do plano mensal:
 // 30 dias a partir da última data de renovação (creditado pelo Mercado Pago).
@@ -193,6 +195,8 @@ export const TABELA_CUSTOS: LinhaCusto[] = [
   { nome: "Atividade gerada", custo: CUSTOS.atividade_gerada },
   { nome: "Atividade PCD", custo: CUSTOS.atividade_pcd },
   { nome: "Adaptação PCD", custo: CUSTOS.adaptacao_pcd },
+  { nome: "Ouvir a leitura de um aluno", custo: CUSTOS.leitura_avaliada },
+  { nome: "Corrigir um texto pela foto", custo: CUSTOS.texto_corrigido },
   { nome: "Anexar calendário na Agenda", custo: CUSTOS.anexar_agenda },
   { nome: "Anexar currículo da rede", custo: CUSTOS.anexar_rede },
   { nome: "Exportar PDF ou Word", custo: CUSTOS.exportacao },
@@ -235,6 +239,20 @@ export function categoriaDoLancamento(descricao: string, tipo?: string | null): 
   return "Outros";
 }
 
-/** Fim da promoção "grátis até 12/03/2027" (mesma data da migration). */
-export const PROMO_ATE_ISO = "2027-03-12T23:59:59-03:00";
-export const PROMO_ATE_TEXTO = "12/03/2027";
+/** Fim da promoção "grátis até 13/03/2027" (mesma data da migration). */
+export const PROMO_ATE_ISO = "2027-03-13T23:59:59-03:00";
+export const PROMO_ATE_TEXTO = "13/03/2027";
+export const PROMO_ATE_EXTENSO = "13 de março de 2027";
+
+/** Dias de teste grátis do Pro para quem se cadastra depois da promoção. */
+export const TESTE_GRATIS_DIAS = 14;
+
+/**
+ * Frase única do período grátis, igual no cadastro, no topo e em
+ * Configurações: até o fim da promoção vale a data; depois, os 14 dias.
+ */
+export function textoGratis(now: Date = new Date()): string {
+  return now.getTime() <= new Date(PROMO_ATE_ISO).getTime()
+    ? `Grátis até ${PROMO_ATE_EXTENSO}, com tudo liberado.`
+    : `${TESTE_GRATIS_DIAS} dias grátis com tudo liberado.`;
+}

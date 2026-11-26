@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   invocarIA,
   erroDeInvoke,
@@ -12,6 +12,7 @@ import {
   MSG_MUITOS_PEDIDOS,
   MSG_CREDITOS_INDISPONIVEIS,
   MSG_PADRAO,
+  MSG_INSTAVEL,
   type ClienteFunctions,
 } from "./invocarIA";
 
@@ -162,11 +163,20 @@ describe("invocarIA", () => {
     expect(e.message).toMatch(/precisa de 20/);
   });
 
-  it("erro de rede vira mensagem de conexão", async () => {
+  it("erro de rede sem internet vira mensagem de conexão", async () => {
+    const err = new Error("Failed to fetch");
+    err.name = "FunctionsFetchError";
+    vi.stubGlobal("navigator", { onLine: false });
+    const e = await falha(invocarIA("gerar-pei", { client: cliente({ error: err }) }));
+    vi.unstubAllGlobals();
+    expect(e.message).toBe(MSG_SEM_CONEXAO);
+  });
+
+  it("falha de rede com internet ligada culpa o servidor, não a professora", async () => {
     const err = new Error("Failed to fetch");
     err.name = "FunctionsFetchError";
     const e = await falha(invocarIA("gerar-pei", { client: cliente({ error: err }) }));
-    expect(e.message).toBe(MSG_SEM_CONEXAO);
+    expect(e.message).toBe(MSG_INSTAVEL);
   });
 
   it("exceção lançada pelo invoke também é tratada", async () => {
@@ -177,7 +187,7 @@ describe("invocarIA", () => {
         }),
       }),
     );
-    expect(e.message).toBe(MSG_SEM_CONEXAO);
+    expect(e.message).toBe(MSG_INSTAVEL);
   });
 
   it("resposta vazia (null, {}, '') é erro", async () => {

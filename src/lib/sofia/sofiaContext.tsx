@@ -164,6 +164,7 @@ export function SofiaContextProvider({ children }: { children: React.ReactNode }
       creditos_usados: 0,
       creditos_total: 3000,
       etapa_ensino: etapaEnsino,
+      carregado: authUser !== null,
     };
 
     // ── Dados reais do Supabase ─────────────────────────────────────────

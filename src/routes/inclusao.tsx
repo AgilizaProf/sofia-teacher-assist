@@ -16,7 +16,7 @@ export const Route = createFileRoute("/inclusao")({
   head: () => ({
     meta: [
       { title: "Inclusão · PEI e pareceres — AgilizaProf" },
-      { name: "description", content: "PEI, anamnese, registros e pareceres descritivos com a Sofia. Conforme Lei 14.254/2021 e BNCC Inclusão." },
+      { name: "description", content: "PEI, anamnese, registros e pareceres descritivos com a Sofia. Com base na LBI, nas leis de cada diagnóstico e na BNCC." },
       { property: "og:title", content: "Inclusão · PEI e pareceres — AgilizaProf" },
       { property: "og:description", content: "Acompanhamento PCD com PEI institucional, anamnese guiada e pareceres com IA." },
     ],

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Header as AppHeader } from "@/components/Header";
 import { SOFIA_CONSTITUTION_VERSION } from "@/lib/sofia-constitution";
 import { ProfileEditor } from "@/components/settings/ProfileEditor";
@@ -15,7 +15,7 @@ const PRINCIPLES: Array<{ n: number; emoji: string; name: string; summary: strin
   { n: 1, emoji: "📋", name: "Dados reais", summary: "A Sofia só usa o que você cadastrou. Nunca inventa." },
   { n: 2, emoji: "📚", name: "BNCC", summary: "Todo plano e parecer cita habilidades BNCC oficiais." },
   { n: 3, emoji: "💛", name: "Linguagem humanizada", summary: "Zero linguagem capacitista. Pessoa antes da condição." },
-  { n: 4, emoji: "⚖️", name: "Legalidade", summary: "Respeita LBI, Lei 14.254/2021, LDB, ECA, LGPD e BNCC." },
+  { n: 4, emoji: "⚖️", name: "Legalidade", summary: "Respeita LBI, Lei do TEA, Lei 14.254/2021 (TDAH e dislexia), LDB, ECA, LGPD e BNCC." },
   { n: 5, emoji: "🎓", name: "Autores de referência", summary: "Apoiada em Freire, Vygotsky, Mantoan e mais." },
   { n: 6, emoji: "🔍", name: "Transparência", summary: "Planos e documentos formais mostram fontes, habilidades e base teórica." },
   { n: 7, emoji: "✍️", name: "Sua autoria", summary: "Você é a autora. A Sofia é apoio, nunca substitui." },
@@ -87,7 +87,7 @@ export function Configuracoes() {
           <section className="cfg-section" aria-labelledby="perfil-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <h2 id="perfil-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
-                👤 Meu perfil
+                Meu perfil
               </h2>
             </div>
             <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 18px" }}>
@@ -106,7 +106,7 @@ export function Configuracoes() {
           <section className="cfg-section" aria-labelledby="acessibilidade-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <h2 id="acessibilidade-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
-                ♿ Acessibilidade
+                Acessibilidade
               </h2>
               <button
                 type="button"
@@ -188,7 +188,7 @@ export function Configuracoes() {
 
           <section className="cfg-section" aria-labelledby="sofia-cards-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <h2 id="sofia-cards-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: "0 0 4px" }}>
-              ✨ Cartões da Sofia
+              Cartões da Sofia
             </h2>
             <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 16px" }}>
               Controle os cartões de boas-vindas e dicas que a Sofia mostra ao navegar entre as páginas. Isso não afeta o chat, as sugestões nem a geração de conteúdo — a Sofia continua funcionando normalmente.
@@ -216,7 +216,7 @@ export function Configuracoes() {
           <section className="cfg-section" aria-labelledby="curriculo-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24, marginBottom: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <h2 id="curriculo-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0 }}>
-                🏫 Currículo Municipal
+                Currículo Municipal
               </h2>
             </div>
             <p style={{ color: "#6B7691", fontSize: 13, margin: "0 0 16px" }}>
@@ -227,9 +227,8 @@ export function Configuracoes() {
 
           <section className="cfg-section" aria-labelledby="principios-title" style={{ background: "#fff", border: "1px solid #E4E8F0", borderRadius: 14, padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <Shield size={20} color="#0B7A55" />
               <h2 id="principios-title" style={{ fontFamily: "'Sora',serif", fontSize: 20, fontWeight: 700, margin: 0, flex: 1 }}>
-                🛡️ Princípios da Sofia
+                Princípios da Sofia
               </h2>
               <button
                 type="button"

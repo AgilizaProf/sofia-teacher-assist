@@ -22,6 +22,8 @@ import { reportError } from "@/lib/admin/track";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { useSofiaUserDataOptional } from "@/lib/sofia/SofiaUserContext";
 import { brDateKey } from "@/lib/datetime";
+import { alunosAvaliados, resumoParaSofia, useAlfaDados } from "@/lib/alfabetizacao/store";
+import { obsParaSofia, useObsWhatsapp } from "@/lib/alfabetizacao/whatsapp";
 import { comControle, SofiaCanceladaError, SofiaTempoEsgotadoError } from "./streamControl";
 
 export type SofiaMessage = {
@@ -83,7 +85,7 @@ type SofiaCtx = {
   busy: boolean;
   draft: string;
   setDraft: (s: string) => void;
-  send: (text?: string) => Promise<void>;
+  send: (text?: string, opts?: { imagem?: string }) => Promise<void>;
   /** Para a resposta que está chegando (botão "Parar"). */
   stop: () => void;
   conversationId: string | null;
@@ -115,6 +117,8 @@ function useRouteContext() {
   const sofia = useSofiaContextOptional();
   const { curriculo, isAtivo: municipalAtivo } = useCurriculoMunicipal();
   const userData = useSofiaUserDataOptional();
+  const { dados: alfa } = useAlfaDados();
+  const obsWhatsapp = useObsWhatsapp();
   return useMemo(() => {
     const p = loc.pathname;
     let tela = "Você está na Página inicial (painel do(a) educador(a)).";
@@ -144,6 +148,9 @@ function useRouteContext() {
     else if (p.startsWith("/questoes") || p.startsWith("/simulados"))
       tela = "Você está na tela Questões (banco de questões e provas).";
     else if (p.startsWith("/biblioteca")) tela = "Você está na tela Minha Biblioteca.";
+    else if (p.startsWith("/alfabetizacao"))
+      tela =
+        "Você está na tela Criança alfabetizada (avaliação de leitura, correção de texto pela foto, cartões de leitura e evolução da turma).";
     else if (p.startsWith("/confirmar"))
       tela = "Você está na tela Para confirmar (mensagens do WhatsApp).";
     else if (p.startsWith("/cadernos")) tela = "Você está na tela Cadernos prontos.";
@@ -194,6 +201,22 @@ function useRouteContext() {
         'Nível de ensino: NÃO INFORMADO. Antes de responder qualquer pedido pedagógico, pergunte: "Para te ajudar melhor, com qual nível de ensino você está trabalhando? 🧸 Educação Infantil  📚 Ensino Fundamental  🎓 Ensino Médio". Use a resposta para adaptar toda a conversa.',
       );
     }
+    // ── Leitura e escrita (níveis confirmados em /alfabetizacao) ────────
+    const leituraEscrita = resumoParaSofia(alfa, alunosAvaliados(alfa), 1800);
+    if (leituraEscrita) {
+      linhas.push(
+        `\nLEITURA E ESCRITA DOS ALUNOS (níveis confirmados pela professora na tela Criança alfabetizada):\n${leituraEscrita}`,
+      );
+      linhas.push(
+        "Use esses níveis ao sugerir atividades, agrupamentos e pareceres para esses alunos.",
+      );
+    }
+    const obsLeitura = obsParaSofia(obsWhatsapp);
+    if (obsLeitura) {
+      linhas.push(
+        `\nOBSERVAÇÕES DE LEITURA E ESCRITA (enviadas pelo WhatsApp e confirmadas pela professora):\n${obsLeitura}`,
+      );
+    }
     // ── Currículo municipal ─────────────────────────────────────────────
     if (
       municipalAtivo &&
@@ -239,6 +262,8 @@ function useRouteContext() {
 
     return linhas.join("\n");
   }, [
+    alfa,
+    obsWhatsapp,
     loc.pathname,
     sofia?.user?.primeiro_nome,
     sofia?.entity?.turma_atual,
@@ -421,7 +446,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
   }, [loc.pathname, routeName, conversationId]);
 
   const send = useCallback(
-    async (raw?: string) => {
+    async (raw?: string, opts?: { imagem?: string }) => {
       const text = (raw ?? draft).trim();
       if (!text || loading || busyRef.current) return;
       if (!isAuthed) {
@@ -464,6 +489,7 @@ export function SofiaProvider({ children }: { children: React.ReactNode }) {
             routeContext: composedRouteContext,
             originRoute: loc.pathname,
             userContext: userContext || undefined,
+            imagem: opts?.imagem,
           },
         });
         let finalConversationId: string | null = conversationId ?? null;

@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { guardarNaBiblioteca } from "@/lib/biblioteca";
+import { useSemanasPlano } from "@/lib/planejamento/semanas";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles, RefreshCw, Plus, Copy, ChevronDown, ChevronUp, X,
   Check, Pencil, Lightbulb, AlertTriangle, Save, FileDown, CalendarPlus,
@@ -63,7 +65,7 @@ async function exportarM4ParaAgenda(
 
 /* ─────────────────────────── Types ─────────────────────────── */
 
-export type Habilidade = { codigo: string; descricao: string };
+export type Habilidade = { codigo: string; descricao: string; /** Código BNCC equivalente quando o código é da rede municipal. */ bncc?: string };
 export type Adaptacao = {
   categoria: "TEA" | "TDAH" | "DI" | "Deficiência física" | "Outra";
   texto: string;
@@ -91,6 +93,10 @@ export type PlanoAtividade = {
   abertura: string;
   desenvolvimento: string;
   fechamento: string;
+  /** Como acompanhar a aprendizagem na aula (o que observar e registrar). */
+  avaliacao?: string;
+  /** Aviso da conferência das habilidades com a BNCC oficial. */
+  bnccAviso?: string;
   habilidades: Habilidade[];
   adaptacoes: Adaptacao[];
   sugestoes: Sugestao[];
@@ -158,8 +164,6 @@ type M1Card = {
   // segundo evento espelho (o editor já grava o evento atv/pcd na data exata).
   noM4Sync?: boolean;
 };
-type M1Plan = Record<DayKey, M1Card[]>;
-const EMPTY_M1: M1Plan = { seg: [], ter: [], qua: [], qui: [], sex: [] };
 
 const VARIANT_BY_DISC: Record<string, Variant> = {
   "Língua Portuguesa": "port",
@@ -198,10 +202,11 @@ function lerDiarioBordo(turma: string): DiarioBordoItem[] {
     if (!raw) return [];
     const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return [];
+    // Diário só da turma escolhida. Sem turma, nenhum registro vai para a
+    // Sofia (senão ela cita aulas e alunos de outra turma).
     const tnorm = (turma || "").toLowerCase().trim();
-    const filtered = tnorm
-      ? arr.filter((e: { turma?: string }) => !e.turma || e.turma.toLowerCase() === tnorm)
-      : arr;
+    if (!tnorm) return [];
+    const filtered = arr.filter((e: { turma?: string }) => (e.turma || "").toLowerCase().trim() === tnorm);
     return filtered.slice(0, 8).map((e: { emoji?: string; title?: string; text?: string; tags?: string[]; date?: string; turma?: string; atividadeTitulo?: string }) => ({
       emoji: e.emoji || "",
       titulo: e.title || "",
@@ -247,7 +252,8 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
   );
 
   // M1 plan (mesma chave usada em Planejamento.tsx)
-  const [m1Plan, setM1Plan] = usePersistentState<M1Plan>("plan_m1_plan", EMPTY_M1);
+  // Plano da semana: cada semana tem o seu (mesma regra do Planejamento).
+  const semanasPlano = useSemanasPlano<M1Card>();
 
   // Eventos do usuário no calendário M4 (camadas). Mesma chave lida em
   // src/pages/Planejamento.tsx no módulo M4 para integrar visualmente as
@@ -364,10 +370,13 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anoTurma]);
 
+  // Sem turma escolhida, o plano da turma não leva nomes de alunos: as
+  // adaptações saem gerais. Só a atividade "Para aluno PCD" deixa escolher
+  // qualquer aluno cadastrado, porque ela é feita para um aluno específico.
   const alunosPCDDaTurma = useMemo(() => {
-    if (!turma) return sofia.alunosPCD;
+    if (!turma) return modo === "pcd" ? sofia.alunosPCD : [];
     return sofia.alunosPCDPorTurma[turma] ?? [];
-  }, [sofia, turma]);
+  }, [sofia, turma, modo]);
 
   // Toggle PCD: ligado por padrão se a turma tiver PCD
   const [incluirPCD, setIncluirPCD] = useState<boolean>(true);
@@ -655,7 +664,11 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     const novo = await callSofia(field as string);
     setRegenField("");
     if (!novo) return;
-    setPlano({ ...plano, [field]: novo[field] as PlanoAtividade[typeof field] });
+    setPlano({
+      ...plano,
+      [field]: novo[field] as PlanoAtividade[typeof field],
+      ...(field === "habilidades" ? { bnccAviso: novo.bnccAviso } : {}),
+    });
     showToast(`Sofia regenerou: ${field}`);
   };
 
@@ -876,10 +889,35 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
   /* ─────────── Salvar / Histórico (local + remoto) ─────────── */
 
-  const salvarPlano = async () => {
+  // Salva no histórico e na nuvem. Devolve o id do plano na nuvem (ou null).
+  // Trava enquanto salva (dois toques não viram dois planos) e não grava de
+  // novo um plano que não mudou desde o último salvamento.
+  const [salvando, setSalvando] = useState(false);
+  const salvandoRef = useRef<Promise<string | null> | null>(null);
+  const ultimoSalvoRef = useRef<{ plano: PlanoAtividade; idNuvem: string | null } | null>(null);
+  const salvarPlano = async (opts?: { silencioso?: boolean }): Promise<string | null> => {
+    if (salvandoRef.current) return salvandoRef.current;
+    if (ultimoSalvoRef.current?.plano === plano && ultimoSalvoRef.current.idNuvem) {
+      setSalvo(true);
+      if (!opts?.silencioso) showToast("Este plano já está salvo no histórico");
+      window.setTimeout(() => setSalvo(false), 2000);
+      return ultimoSalvoRef.current.idNuvem;
+    }
+    const p = salvarPlanoAgora(opts);
+    salvandoRef.current = p;
+    setSalvando(true);
+    try {
+      return await p;
+    } finally {
+      salvandoRef.current = null;
+      setSalvando(false);
+    }
+  };
+  const salvarPlanoAgora = async (opts?: { silencioso?: boolean }): Promise<string | null> => {
     const f = validar();
     setMissing(f);
-    if (f.length > 0) { setSalvo(false); return; }
+    if (f.length > 0) { setSalvo(false); return null; }
+    let idNuvem: string | null = null;
 
     const id = `p_${Date.now()}`;
     const registro: PlanoSalvo = {
@@ -908,6 +946,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           .select("id")
           .single();
         if (!error && data?.id) {
+          idNuvem = data.id;
           setHistorico((h) => h.map((p) => p.id === id ? { ...p, remoteId: data.id } : p));
         } else {
           nuvemFalhou = true;
@@ -922,10 +961,70 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         : `Planejamento salvo: ${plano.titulo}`,
       detail: `${anoEscolar} · ${disciplina}`,
     });
+    ultimoSalvoRef.current = { plano, idNuvem };
     setSalvo(true);
-    showToast(nuvemFalhou ? "Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo." : "Plano salvo no histórico");
+    if (!opts?.silencioso) showToast(nuvemFalhou ? "Plano salvo neste aparelho, mas não consegui salvar na nuvem. Tente de novo." : "Plano salvo no histórico");
     window.setTimeout(() => setSalvo(false), 2000);
+    return idNuvem;
   };
+
+  // Guardar na Minha Biblioteca: salva o plano (se ainda não foi) e põe a ficha
+  // dele na Biblioteca, no ano e na matéria certos, para usar de novo.
+  const [guardando, setGuardando] = useState(false);
+  const guardadoRef = useRef<{ plano: PlanoAtividade; id: string } | null>(null);
+  const guardarBiblioteca = async () => {
+    setGuardando(true);
+    try {
+      // Mesmo plano, sem mudanças: não salva outra cópia.
+      const idNuvem =
+        guardadoRef.current?.plano === plano ? guardadoRef.current.id : await salvarPlano({ silencioso: true });
+      if (idNuvem) guardadoRef.current = { plano, id: idNuvem };
+      if (!idNuvem) {
+        if (validar().length === 0) showToast("Não consegui salvar o plano na nuvem. Tente de novo.");
+        return;
+      }
+      const r = await guardarNaBiblioteca({
+        tipo: "plano",
+        refId: idNuvem,
+        titulo: plano.titulo,
+        ano: anoEscolar,
+        componente: disciplina,
+        habilidades: plano.habilidades.map((h) => h.codigo.trim()).filter(Boolean),
+      });
+      showToast(r.ok ? "📚 " + r.mensagem : r.mensagem);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  // Abrir um plano guardado (vem da Minha Biblioteca: ?abrir=<id>).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const abrir = new URLSearchParams(window.location.search).get("abrir");
+    if (!abrir || !/^[0-9a-f-]{36}$/i.test(abrir)) return;
+    let vivo = true;
+    void (async () => {
+      const { data } = await supabase.from("planos_aula").select("id, data").eq("id", abrir).maybeSingle();
+      const reg = (data?.data ?? null) as (Partial<PlanoSalvo> & { plano?: PlanoAtividade }) | null;
+      if (!vivo || !reg?.plano) return;
+      if ((reg.modo ?? "regular") !== modo) return;
+      carregarPlano({
+        id: reg.id ?? abrir,
+        remoteId: abrir,
+        titulo: reg.titulo ?? reg.plano.titulo,
+        turma: reg.turma ?? "",
+        disciplina: reg.disciplina ?? "",
+        ano: reg.ano ?? "",
+        modo: reg.modo ?? "regular",
+        salvoEm: reg.salvoEm ?? "",
+        plano: { ...EMPTY, ...reg.plano },
+      });
+    })();
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const carregarPlano = (p: PlanoSalvo) => {
     setPlano(p.plano);
@@ -1026,7 +1125,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (${modo === "pcd" ? "PCD" : "regular"}).`,
         noM4Sync: true,
       };
-      setM1Plan({ ...m1Plan, [alvo]: [...(m1Plan[alvo] || []), card] });
+      semanasPlano.agendar(dt, card);
     }
 
     // 2) Adiciona ao calendário M4 (camadas) na data exata escolhida.
@@ -1128,7 +1227,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
     let okSave = 0;
     let okSched = 0;
     let falhasNuvemLote = 0;
-    const m1Acc: M1Plan = { ...m1Plan };
+    const agendarNaSemana: Array<{ dt: Date; card: M1Card }> = [];
     const m4Acc: M4UserStore = { ...m4UserEvents };
     for (let i = 0; i < planosParaSalvar.length; i++) {
       const p = planosParaSalvar[i];
@@ -1181,7 +1280,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
             motivo: `Agendado em ${dt.toLocaleDateString("pt-BR")} (lote · ${modo === "pcd" ? "PCD" : "regular"}).`,
             noM4Sync: true,
           };
-          m1Acc[alvo] = [...(m1Acc[alvo] || []), card];
+          agendarNaSemana.push({ dt, card });
         }
         const evt: M4UserEvt = {
           id: `m4u_${Date.now()}_${i}`,
@@ -1199,7 +1298,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         void exportarM4ParaAgenda(data, evt);
       }
     }
-    setM1Plan(m1Acc);
+    agendarNaSemana.forEach(({ dt, card }) => semanasPlano.agendar(dt, card));
     setM4UserEvents(m4Acc);
     logActivity({
       type: "planejamento",
@@ -1363,6 +1462,10 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       p.desenvolvimento ? `Desenvolvimento\n${p.desenvolvimento}` : "",
       p.fechamento ? `Fechamento\n${p.fechamento}` : "",
     ].filter(Boolean).join("\n\n")));
+    if (p.avaliacao?.trim()) {
+      partes.push(editorialSection("Avaliação"));
+      partes.push(editorialLongField(p.avaliacao));
+    }
     if (p.habilidades.length > 0) {
       partes.push(editorialSection(
         municipalAtivo && curriculoMunicipalDados
@@ -1371,7 +1474,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
       ));
       partes.push(editorialLongField(
         p.habilidades.map((h) => {
-          const cod = h.codigo?.trim();
+          const cod = [h.codigo?.trim(), h.bncc && h.bncc !== h.codigo ? `BNCC ${h.bncc}` : ""].filter(Boolean).join(" · ");
           const desc = h.descricao?.trim();
           if (cod && desc) return `• ${cod} — ${desc}`;
           return `• ${cod || desc || "—"}`;
@@ -1644,7 +1747,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
               <span>Incluir adaptações PCD</span>
               {alunosPCDDaTurma.length > 0 && (
                 <span className="atv-toggle-hint">
-                  {alunosPCDDaTurma.length} aluno(s) PCD em {turma || "—"}
+                  {alunosPCDDaTurma.length === 1 ? "1 aluno PCD" : `${alunosPCDDaTurma.length} alunos PCD`} em {turma}
                 </span>
               )}
             </label>
@@ -1931,6 +2034,24 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
         </section>
       )}
 
+      {temPlano && plano.meta && (
+        (plano.meta.ano && anoEscolar && plano.meta.ano !== anoEscolar) ||
+        (plano.meta.disciplina && disciplina && plano.meta.disciplina !== disciplina) ||
+        (plano.meta.turma || "") !== (turma || "")
+      ) && (
+        <section className="atv-card" role="status" style={{ background: "#FFF7E6", borderColor: "#F59E0B" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ flex: 1, minWidth: 220, fontSize: 13.5 }}>
+              Este plano é de <strong>{plano.meta.ano} · {plano.meta.disciplina}{plano.meta.turma ? ` · ${plano.meta.turma}` : ""}</strong>.
+              {" "}Você mudou as escolhas acima. Para um plano novo, sugira as opções de novo.
+            </span>
+            <button className="atv-btn ghost" onClick={() => { setPlano(EMPTY); setOpcoes([]); setOpcoesSel([]); }}>
+              <X size={12} /> Tirar este plano da tela
+            </button>
+          </div>
+        </section>
+      )}
+
       {temPlano && (
         <PlanoBody
           plano={plano}
@@ -1957,8 +2078,16 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
 
       {temPlano && (
         <div className="atv-actionbar">
-          <button className="atv-btn primary" onClick={salvarPlano}>
-            <Save size={14} /> {salvo ? "Salvo!" : "Salvar plano"}
+          <button
+            className="atv-btn primary"
+            onClick={() => void salvarPlano()}
+            disabled={salvando}
+            aria-busy={salvando}
+          >
+            <Save size={14} /> {salvando ? "Salvando…" : salvo ? "Salvo!" : "Salvar plano"}
+          </button>
+          <button className="atv-btn" onClick={() => void guardarBiblioteca()} disabled={guardando}>
+            📚 {guardando ? "Guardando…" : "Guardar na Biblioteca"}
           </button>
           <button className="atv-btn" onClick={exportarPDF}>
             <FileDown size={14} /> Exportar PDF / Word
@@ -2115,7 +2244,7 @@ export function PlanoAtividadeEditor({ modo }: { modo: "regular" | "pcd" }) {
           etapa={isEI ? "infantil" : etapaDoAno(anoEscolar)}
           ano={anoEscolar}
           componentes={disciplina && disciplina !== "Interdisciplinar" ? [disciplina] : []}
-          habilidades={(plano.habilidades ?? []).map((h) => h.codigo).filter(Boolean)}
+          habilidades={(plano.habilidades ?? []).map((h) => h.bncc || h.codigo).filter(Boolean)}
         />
       </div>
 
@@ -2261,6 +2390,54 @@ const LABELS: Record<string, string> = {
 
 /* ─────────────────────────── Body ─────────────────────────── */
 
+/**
+ * Encaixa os cartões do plano em duas colunas sem buracos: cada cartão ocupa
+ * tantas linhas finas (8px) quanto a sua altura, e o grid põe o próximo onde
+ * houver espaço. Em uma coluna (celular) não faz nada.
+ */
+function useGridEncaixado() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const grid = ref.current;
+    if (!grid || typeof ResizeObserver === "undefined") return;
+    const LINHA = 8;
+    const ESPACO = 14;
+    let quadro = 0;
+    const ajustar = () => {
+      quadro = 0;
+      const duasColunas = getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length > 1;
+      grid.classList.toggle("atv-encaixe", duasColunas);
+      for (const el of Array.from(grid.children) as HTMLElement[]) {
+        if (!duasColunas) {
+          el.style.gridRowEnd = "";
+          continue;
+        }
+        const h = el.getBoundingClientRect().height;
+        el.style.gridRowEnd = `span ${Math.max(1, Math.ceil((h + ESPACO) / LINHA))}`;
+      }
+    };
+    const agendar = () => {
+      if (!quadro) quadro = requestAnimationFrame(ajustar);
+    };
+    const ro = new ResizeObserver(agendar);
+    const observarFilhos = () => {
+      ro.disconnect();
+      ro.observe(grid);
+      Array.from(grid.children).forEach((c) => ro.observe(c));
+      agendar();
+    };
+    observarFilhos();
+    const mo = new MutationObserver(observarFilhos);
+    mo.observe(grid, { childList: true });
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+      if (quadro) cancelAnimationFrame(quadro);
+    };
+  }, []);
+  return ref;
+}
+
 function PlanoBody(props: {
   plano: PlanoAtividade;
   modo: "regular" | "pcd";
@@ -2284,6 +2461,7 @@ function PlanoBody(props: {
   onToggleFavorita: (s: Sugestao) => void;
   onRemoverFavorita: (titulo: string) => void;
 }) {
+  const gridRef = useGridEncaixado();
   const { plano, modo, alunosPCDCount, missing, regenField, onRegenField } = props;
   const [adaptOpen, setAdaptOpen] = useState(modo === "pcd" || alunosPCDCount > 0);
   useEffect(() => {
@@ -2354,7 +2532,7 @@ function PlanoBody(props: {
   );
 
   return (
-    <div className="atv-grid">
+    <div className="atv-grid" ref={gridRef}>
       {modo === "pcd" && inclSecoes && (
         <section className={`atv-card atv-incl-banner${inclVazias.length > 2 || !adaptOk ? " warn" : " ok"}`}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -2402,7 +2580,7 @@ function PlanoBody(props: {
       {/* 2. Objetivo */}
       <section className={`atv-card${has("objetivo") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>① Objetivo {inclSecoes && <InclBadge hits={inclSecoes.Objetivo} />}</h3>
+          <h3>Objetivo {inclSecoes && <InclBadge hits={inclSecoes.Objetivo} />}</h3>
           <RegenBtn field="objetivo" label="objetivo" />
         </div>
         <InlineText
@@ -2415,7 +2593,7 @@ function PlanoBody(props: {
       {/* 2. Habilidades BNCC — logo abaixo do objetivo pra evitar espaços vazios */}
       <section className={`atv-card${has("habilidades") || has("habilidades_incompletas") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>② {props.curriculoNome ? `Habilidades — Currículo de ${props.curriculoNome}` : "Habilidades BNCC"}</h3>
+          <h3>{props.curriculoNome ? `Habilidades — Currículo de ${props.curriculoNome}` : "Habilidades BNCC"}</h3>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {isMobile && (
               <button
@@ -2433,11 +2611,16 @@ function PlanoBody(props: {
           </div>
         </div>
         {habVisivel && (<>
+        {plano.bnccAviso && (
+          <p className="atv-muted" role="status" style={{ background: "#FEF3C7", border: "1px solid #F59E0B", borderRadius: 10, padding: "8px 10px", color: "#78350F", marginBottom: 10 }}>
+            {plano.bnccAviso}
+          </p>
+        )}
         <div className="atv-chips">
           {plano.habilidades.map((h, i) => (
             <div className="atv-hab-item" key={`${h.codigo}-${i}`}>
               <span className="atv-chip" title={h.descricao}>
-                {h.codigo}
+                {h.codigo}{h.bncc && h.bncc !== h.codigo ? ` · BNCC ${h.bncc}` : ""}
                 <button onClick={() => props.onRemoveHab(i)} aria-label="Remover">
                   <X size={11} />
                 </button>
@@ -2468,7 +2651,7 @@ function PlanoBody(props: {
       {(plano.contribuicoesInter ?? []).length > 0 && (
         <section className="atv-card atv-contrib">
           <div className="atv-card-head">
-            <h3>③ 🔗 Como cada disciplina contribui</h3>
+            <h3>🔗 Como cada disciplina contribui</h3>
           </div>
           <p className="atv-muted" style={{ marginBottom: 10 }}>
             Resumo da articulação interdisciplinar proposta pela Sofia.
@@ -2495,7 +2678,7 @@ function PlanoBody(props: {
       {/* 4. Descrição */}
       <section className={`atv-card${has("descricao") ? " atv-invalid" : ""}`}>
         <div className="atv-card-head">
-          <h3>④ Descrição da atividade</h3>
+          <h3>Descrição da atividade</h3>
         </div>
         <BlockWithRegen
           label="Abertura" value={plano.abertura}
@@ -2517,6 +2700,19 @@ function PlanoBody(props: {
         />
       </section>
 
+      {/* Avaliação: como a professora acompanha a aprendizagem nesta aula */}
+      <section className="atv-card">
+        <div className="atv-card-head">
+          <h3>Avaliação</h3>
+          <RegenBtn field="avaliacao" label="avaliação" />
+        </div>
+        <InlineText
+          value={plano.avaliacao ?? ""}
+          onChange={(v) => props.onChange("avaliacao", v)}
+          tag="p" multiline placeholder="O que observar e registrar para saber se o objetivo foi alcançado"
+        />
+      </section>
+
       {/* 5. Adaptações PCD */}
       <section className="atv-card adapt">
         <button
@@ -2524,7 +2720,7 @@ function PlanoBody(props: {
           onClick={() => modo === "regular" && setAdaptOpen((v) => !v)}
           disabled={modo === "pcd"}
         >
-          <h3>⑤ Adaptações PCD</h3>
+          <h3>Adaptações PCD</h3>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <RegenBtn field="adaptacoes" label="adaptações" />
             {modo === "regular" && (adaptOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />)}
@@ -2584,7 +2780,7 @@ function PlanoBody(props: {
       <section className="atv-card">
         <div className="atv-card-head">
           <h3>
-            <Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />⑥ Sugestões da Sofia
+            <Lightbulb size={14} style={{ verticalAlign: -2, marginRight: 4 }} />Sugestões da Sofia
             {inclSecoes && <InclBadge hits={inclSecoes.Sugestões} />}
           </h3>
           <RegenBtn field="sugestoes" label="sugestões" />
@@ -2660,7 +2856,7 @@ function PlanoBody(props: {
                       }}
                       style={{ accentColor: "#F59E0B" }}
                     />
-                    Utilizada
+                    Incluir no documento
                   </label>
                   <button className="atv-btn ghost" onClick={() => props.onUsarSugestao(s)}>
                     <Check size={12} /> Usar esta
@@ -2675,7 +2871,7 @@ function PlanoBody(props: {
       {/* 7. Materiais */}
       <section className="atv-card">
         <div className="atv-card-head">
-          <h3>⑦ Material necessário</h3>
+          <h3>Material necessário</h3>
           <div style={{ display: "flex", gap: 6 }}>
             <RegenBtn field="materiais" label="materiais" />
             <button
@@ -2825,6 +3021,13 @@ const css = `
 .atv-empty p{max-width:520px;margin:0 auto;font-size:13.5px;line-height:1.5;}
 .atv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;grid-auto-rows:min-content;}
 .atv-grid > *{align-self:start;height:auto;min-height:0;min-width:0;}
+/* Encaixe em duas colunas (useGridEncaixado): linhas de 8px, cada cartão ocupa as que precisa. */
+.atv-grid.atv-encaixe{grid-auto-rows:8px;row-gap:0;}
+.atv-grid.atv-encaixe > *{margin-bottom:14px;}
+/* Título: menos folga entre o nome do plano e a linha de ano/disciplina. */
+.atv-card.title .atv-card-head{margin-bottom:0;align-items:center;}
+.atv-card.title h2.atv-inline{line-height:1.25;}
+.atv-card.title .atv-meta{margin-top:6px;}
 @media(max-width:980px){.atv-grid{grid-template-columns:1fr;}}
 /* Mobile: título da atividade mais compacto e menos espaçado. */
 @media(max-width:640px){
@@ -2884,10 +3087,10 @@ textarea.atv-inline-input{min-height:44px;height:auto;resize:vertical;field-sizi
 .atv-sug-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;align-items:start;}
 .atv-sug-grid > *{align-self:start;height:auto;min-height:0;}
 .atv-sug{position:relative;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 10px 10px 10px;display:flex;flex-direction:column;gap:6px;}
-.atv-sug-fav{position:absolute;top:6px;right:6px;background:transparent;border:none;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;cursor:pointer;color:#92400E;}
+.atv-sug-fav{position:absolute;top:2px;right:2px;background:transparent;border:none;width:36px;height:36px;border-radius:6px;display:grid;place-items:center;cursor:pointer;color:#92400E;}
 .atv-sug-fav:hover{background:rgba(245,158,11,.15);}
 .atv-sug-fav.on{background:rgba(245,158,11,.18);}
-.atv-sug-title{font-weight:700;font-size:13px;color:#92400E;}
+.atv-sug-title{font-weight:700;font-size:13px;color:#92400E;padding-right:34px;}
 .atv-sug p{font-size:12.5px;color:var(--ink-2,#334155);margin:0;line-height:1.45;}
 .atv-sug button{align-self:flex-start;}
 .atv-sug button.atv-sug-fav{align-self:auto;}

@@ -6,7 +6,7 @@ function Questoes() {
     <Ferramenta
       titulo="Questões"
       sub="52 mil questões alinhadas à BNCC e ao SAEB, do 1º ao 9º ano. Monte provas A, B, C e D, imprima e corrija pela foto do cartão-resposta."
-      ferramenta="questoes"
+      src="/ferramentas/questoes.html"
     />
   );
 }

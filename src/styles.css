@@ -360,8 +360,8 @@ button[aria-label="Dispensar"] > * {
   .ag-radar { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
   .ag-radar-card { padding: 10px 12px !important; }
   .ag-radar-count { font-size: 22px !important; }
-  .ag-radar-label { font-size: 9.5px !important; }
-  .ag-radar-desc { font-size: 11px !important; }
+  .ag-radar-label { font-size: 12px !important; letter-spacing: .4px !important; }
+  .ag-radar-desc { font-size: 12px !important; }
   /* Agenda — barra de ações empilha sem scroll horizontal */
   .ag-actions { flex-wrap: wrap; gap: 8px; width: 100%; }
   .ag-actions > * { flex: 1 1 auto; min-width: 0; }
@@ -583,9 +583,13 @@ html.high-contrast {
   --color-text-soft: #3B4256;
   --color-muted: #4A5568;
 }
-html.high-contrast body {
-  filter: contrast(1.12);
+/* Sem filter no body: filter vira o "containing block" dos elementos fixos
+   (barra de baixo, botão da Sofia, janelas), que passariam a rolar com a página. */
+html.high-contrast .pn {
+  --pn-muted: #2E3442;
+  --pn-line: #8D96A8;
 }
+html.high-contrast body { color: #0B0D14; }
 
 
 /* Modais no visual Painel (Dialog e AlertDialog compartilhados) */
@@ -659,3 +663,35 @@ html.high-contrast body {
   .mr-doc .mr-rot { display: block; }
   .mr-doc input.mr-campo { width: 100% !important; }
 }
+
+/* ===== Acabamento para telas de toque (revisão técnica) ===== */
+/* Letra de 16px nos campos: abaixo disso o iPhone/iPad dá zoom na página ao tocar no campo.
+   O !important vence também os estilos escritos direto no componente. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+  select,
+  textarea { font-size: 16px !important; }
+}
+/* Caixinhas de marcar nunca encolhem quando o texto ao lado quebra linha. */
+input[type="checkbox"], input[type="radio"] { flex-shrink: 0; }
+/* Área mínima de toque para botões só com ícone ou muito baixos (o ícone continua do mesmo tamanho). */
+@media (pointer: coarse), (max-width: 900px) {
+  .hm-icbtn, .ag-panel-close, .av-x, .as-h-del, .sofia-bubble-close, .ssg-inline-dismiss, .sf-close,
+  .atv-fav-x, .tc-del, .pim-x, .rel-mcol-btn, .atv-x, .ag-icon-btn, .ag-cal-nav-btn {
+    min-width: 40px !important; min-height: 40px !important;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; }
+  .atv-regen { min-height: 34px; padding: 4px 10px !important; font-size: 12.5px !important; }
+  .rel-tab { min-height: 40px; }
+  .rel-search-mini input { min-height: 36px; }
+  /* Abas que rolam para o lado: a borda direita esmaece para mostrar que há mais. */
+  .rel-tabs {
+    padding-right: 28px !important;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+}
+/* Textos de apoio nunca abaixo de 12px. */
+.rel-tab .count { font-size: 12px; }
+
