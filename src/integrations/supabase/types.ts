@@ -1174,6 +1174,50 @@ export type Database = {
           },
         ]
       }
+      promo_code_resgates: {
+        Row: {
+          created_at: string
+          promo_code_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          promo_code_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          promo_code_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_resgates_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_code_tentativas: {
+        Row: {
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
+      }
       promo_codes: {
         Row: {
           active: boolean
