@@ -2734,19 +2734,26 @@ nuvemCarregar().then(preencherHabs,preencherHabs);
 };
 </script>
 <script>
-/* O banco de questões fica num arquivo à parte (banco-2f4209f18d.bin), guardado no aparelho
-   depois da primeira vez (Cache Storage). Antes vinha dentro desta página, em
-   texto base64, e era baixado e decodificado inteiro a cada abertura. */
+/* O banco de questões (com gabaritos) vem da função banco-questoes do app, que
+   só entrega para quem está logado (antes era um arquivo público do site).
+   Depois da primeira vez fica guardado no aparelho (Cache Storage).
+   VERSAO_BANCO: troque quando o banco mudar (scripts/empacotar-banco-questoes.mjs). */
 (function(){
- var URL_BANCO="/ferramentas/dados/banco-2f4209f18d.bin",CACHE="aprof-questoes-banco";
+ var VERSAO_BANCO="2f4209f18d",CHAVE_BANCO="/ferramentas/dados/banco-"+VERSAO_BANCO+".bin",CACHE="aprof-questoes-banco";
  function aviso(t){var p=document.getElementById("painel");if(p)p.innerHTML='<div class="vazio" style="margin:40px auto;max-width:520px;text-align:center">'+t+'</div>';}
  aviso("Abrindo o banco de questões…");
+ async function baixar(){
+  var ponte=window.parent&&window.parent.aprofNuvem;
+  if(!ponte||!ponte.bancoQuestoes)throw new Error("sem ponte do app");
+  return await ponte.bancoQuestoes();}
  async function buscar(){
-  if(window.caches){try{var c=await caches.open(CACHE);var r=await c.match(URL_BANCO);
-   if(!r){r=await fetch(URL_BANCO);if(!r.ok)throw new Error("http "+r.status);await c.put(URL_BANCO,r.clone());
-    c.keys().then(function(ks){ks.forEach(function(k){if(k.url.indexOf(URL_BANCO)<0)c.delete(k);});});}
-   return await r.arrayBuffer();}catch(e){/* sem Cache Storage: baixa direto */}}
-  var r2=await fetch(URL_BANCO);if(!r2.ok)throw new Error("http "+r2.status);return await r2.arrayBuffer();}
+  if(window.caches){try{var c=await caches.open(CACHE);var r=await c.match(CHAVE_BANCO);
+   if(r)return await r.arrayBuffer();
+   var buf=await baixar();
+   await c.put(CHAVE_BANCO,new Response(buf.slice(0)));
+   c.keys().then(function(ks){ks.forEach(function(k){if(k.url.indexOf(CHAVE_BANCO)<0)c.delete(k);});});
+   return buf;}catch(e){/* sem Cache Storage: baixa direto */}}
+  return await baixar();}
  async function abrir(buf){
   var u=new Uint8Array(buf);
   if(!(u[0]===0x1f&&u[1]===0x8b))return JSON.parse(new TextDecoder().decode(u)); // já veio descomprimido
