@@ -7,7 +7,6 @@ import { invocarIA, mensagemAmigavel, temTexto } from "@/lib/sofia/invocarIA";
 import { useAvisoSairSemSalvar } from "@/components/documentos/useAvisoSairSemSalvar";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
-import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { useTurmas } from "@/hooks/useTurmas";
@@ -159,6 +158,7 @@ export function PlanejamentoEi(_props: { embutido?: boolean } = {}) {
       const data = await invocarIA<{ roteiro?: Roteiro }>("gerar-roteiro-ei", {
         validar: (d) => temTexto(d?.roteiro?.titulo),
         body: {
+          descricaoCobranca: "Roteiro EI (Sofia)",
           turma, faixa_etaria: faixa,
           campos_experiencia: camposNomes,
           tema, tipo_experiencia: tipo, duracao,
@@ -180,7 +180,6 @@ export function PlanejamentoEi(_props: { embutido?: boolean } = {}) {
       setCurrentId(null);
       setNaoSalvo(true);
       toast.success("Roteiro gerado pela Sofia. Revise e salve.");
-      void consumirCreditos(CUSTOS.planejamento_semanal, "Roteiro EI (Sofia)");
     } catch (e) {
       toast.error("Não consegui gerar o roteiro.", { description: mensagemAmigavel(e) });
     } finally {

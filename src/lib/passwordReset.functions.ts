@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
+import { getRequest, getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -9,6 +9,18 @@ const Input = z.object({
 });
 
 const WINDOW_MIN = 15;
+
+/**
+ * Endereço de volta do e-mail de nova senha. Antes o app mandava qualquer
+ * `redirectTo` e o servidor repassava ao Supabase; com um curinga na lista de
+ * "Redirect URLs" isso mandaria o link de troca de senha para outro site.
+ * Agora o endereço é sempre a página /reset-password do próprio app (o mesmo
+ * domínio que recebeu o pedido), seja qual for o valor enviado.
+ */
+function redirectSeguro(): string {
+  const origem = new URL(getRequest().url).origin;
+  return `${origem}/reset-password`;
+}
 const MAX_PER_EMAIL = 3;
 const MAX_PER_IP = 10;
 
@@ -58,7 +70,7 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
 
     // Sempre retorna sucesso opaco (não confirma se o e-mail existe), evitando enumeração.
     try {
-      await supabaseAdmin.auth.resetPasswordForEmail(data.email, { redirectTo: data.redirectTo });
+      await supabaseAdmin.auth.resetPasswordForEmail(data.email, { redirectTo: redirectSeguro() });
     } catch (e) {
       console.error("[requestPasswordReset] provider error:", e);
     }

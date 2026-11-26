@@ -99,7 +99,7 @@ useEffect(() => {
       .eq("id", id);
     setCurriculos((cs) => cs.map((c) => c.id === id ? { ...c, status: "processando", erro_msg: null } : c));
     await supabase.functions.invoke("processar-curriculo", {
-      body: { curriculo_id: id, arquivo_path: alvo.arquivo_path, municipio: alvo.municipio, ordem: alvo.ordem },
+      body: { curriculo_id: id, arquivo_path: alvo.arquivo_path, municipio: alvo.municipio, ordem: alvo.ordem, reprocessar: true },
     });
     await load();
   }, [curriculos, load]);

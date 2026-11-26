@@ -4,6 +4,7 @@ import {
   MSG_TEMPO_ESGOTADO,
   SofiaChatError,
   callGateway,
+  cobrarMensagemChat,
   finalizeSofiaChat,
   parseChatInput,
   prepareSofiaChat,
@@ -49,6 +50,15 @@ export const Route = createFileRoute("/api/sofia/chat")({
               }
             };
             let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+            // Texto já entregue à professora: é cobrado mesmo se a conexão
+            // cair ou ela parar no meio (o que foi lido já foi usado).
+            let acc = "";
+            let cobrado = false;
+            const cobrar = async () => {
+              if (cobrado || !acc.trim()) return;
+              cobrado = true;
+              await cobrarMensagemChat(supabase, userId, acc);
+            };
             try {
               const prep = await prepareSofiaChat(supabase, userId, input);
               send({ type: "meta", conversationId: prep.conversationId });
@@ -75,7 +85,6 @@ export const Route = createFileRoute("/api/sofia/chat")({
                 });
               const decoder = new TextDecoder();
               let buf = "";
-              let acc = "";
               let finish: string | null = null;
               for (;;) {
                 if (cancel.signal.aborted) throw new SofiaChatError("Resposta interrompida.", 499);
@@ -110,6 +119,7 @@ export const Route = createFileRoute("/api/sofia/chat")({
                 acc,
                 finish,
               );
+              await cobrar();
               send({ type: "done", ...final });
             } catch (err) {
               const message =
@@ -119,6 +129,7 @@ export const Route = createFileRoute("/api/sofia/chat")({
               if (!cancel.signal.aborted) console.error("[sofia.chat] erro:", message);
               send({ type: "error", message });
             } finally {
+              await cobrar();
               cancel.abort();
               reader?.cancel().catch(() => {});
               request.signal?.removeEventListener?.("abort", pararTudo);

@@ -14,7 +14,7 @@ import { etapaDoAno } from "@/lib/cadernos/folhas";
 import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { useSofiaUserData } from "@/lib/sofia/SofiaUserContext";
 import { logActivity } from "@/lib/activity/activityLog";
-import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { descricaoDoc } from "@/lib/creditos/consume";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { formatTurmaGrade } from "@/lib/turmaGrade";
@@ -528,7 +528,7 @@ export function PlanoAtividadeEditor({
     let novo: PlanoAtividade | undefined;
     try {
       const data = await invocarIA<{ plano?: PlanoAtividade }>("gerar-atividade", {
-        body: payload,
+        body: { ...payload, descricaoCobranca: "Plano de aula BNCC" },
         validar: (d) => temConteudo(d?.plano),
       });
       novo = data.plano;
@@ -537,7 +537,6 @@ export function PlanoAtividadeEditor({
       return null;
     }
     if (!novo) { setErro("A Sofia não devolveu um plano desta vez. Gere de novo."); return null; }
-    void consumirCreditos(CUSTOS.plano_aula, "Plano de aula BNCC");
     return novo;
   };
 
@@ -733,7 +732,7 @@ export function PlanoAtividadeEditor({
         let erroIA = "";
         try {
           const data = await invocarIA<{ plano?: PlanoAtividade }>("gerar-atividade", {
-            body: payload,
+            body: { ...payload, descricaoCobranca: descricaoDoc("Adaptação inclusiva (PCD)", a.primeiro_nome) },
             validar: (d) => temConteudo(d?.plano),
           });
           novo = data.plano;
@@ -793,7 +792,6 @@ export function PlanoAtividadeEditor({
               description: `Atividade PCD gerada para ${a.primeiro_nome}: ${enriched.titulo}`,
               detail: `${anoEscolar} · ${disciplina}`,
             });
-            void consumirCreditos(CUSTOS.adaptacao_pcd, descricaoDoc("Adaptação inclusiva (PCD)", a.primeiro_nome));
           }
         }
       } catch (e) {

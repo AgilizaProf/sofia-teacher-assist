@@ -22,7 +22,6 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { SeletorCurriculo } from "@/components/shared/SeletorCurriculo";
-import { consumirCreditos } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { CUSTOS } from "@/lib/creditos/policy";
@@ -3009,7 +3008,7 @@ export function Planejamento() {
       };
       // Só mostra/guarda/cobra com relatório de verdade (N1/N8).
       const data = await invocarIA<{ relatorio?: M6AIRelatorio }>("gerar-relatorio", {
-        body: payload,
+        body: { ...payload, descricaoCobranca: "Relatório pedagógico (M6)" },
         validar: (d) => !!d?.relatorio && temConteudo(d.relatorio),
       });
       const rel = data.relatorio as M6AIRelatorio;
@@ -3025,7 +3024,6 @@ export function Planejamento() {
           [histKey]: [...(prev[histKey] ?? []).slice(-4), novoReg],
         }));
       }
-      void consumirCreditos(CUSTOS.parecer_descritivo, "Relatório pedagógico (M6)");
       void acumularTempo("relatorio_ia", "Relatório pedagógico gerado pela IA");
     } catch (e) {
       setM6AIErro(mensagemAmigavel(e, "Não consegui gerar o relatório agora. Tente de novo."));

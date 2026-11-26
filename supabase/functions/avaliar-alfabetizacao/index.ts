@@ -11,7 +11,7 @@
 // Créditos: confere o saldo antes e desconta só depois de um resultado válido.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { isBudgetExceeded, recordUsage, userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { isBudgetExceeded, muitasChamadasRecentes, recordUsage, userIdFromAuthHeader } from "../_shared/ai-budget.ts";
 import { corsHeaders as cors, parseAiJson, jsonTruncado } from "../_shared/sofia-router.ts";
 import { CATEGORIAS_ERRO } from "./categorias.ts";
 
@@ -253,6 +253,9 @@ serve(async (req) => {
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     if (!userId) return falha("Sua sessão expirou. Entre novamente.", { upstreamStatus: 401 });
+    if (await muitasChamadasRecentes(userId)) {
+      return falha("A Sofia está com muitos pedidos agora. Tente de novo em instantes.", { upstreamStatus: 429 });
+    }
 
     const body = await req.json().catch(() => ({}));
     const modo = body?.modo === "texto" ? "texto" : body?.modo === "leitura" ? "leitura" : "";

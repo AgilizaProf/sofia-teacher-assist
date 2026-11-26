@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca, respostaSemLogin } from "../_shared/cobranca.ts";
 import { matchAnoCurriculo } from "../_shared/matchAno.ts";
 import { sanitizarTextoSofia } from "../_shared/sanitize-texto.ts";
 
@@ -30,6 +31,7 @@ serve(async (req) => {
 
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    if (!userId) return respostaSemLogin(cors);
     const body = await req.json().catch(() => ({}));
     const {
       periodo = "bimestral",
@@ -123,7 +125,7 @@ Responda APENAS com JSON válido neste formato:
   "comunicacao_familias": "1 parágrafo curto pronto para enviar às famílias, com menção à evolução quando houver histórico"
 }`;
 
-    const r = await callAI({ userId, tipo: "relatorio_bimestral", system: sys, user, json: true, maxTokens: 8000 });
+    const r = await callAI({ userId, tipo: "relatorio_bimestral", system: sys, user, json: true, maxTokens: 8000, custoCreditos: CUSTOS.parecer_descritivo });
     if (!r.ok) return aiErrorResponse(r);
     let parsed = parseAiJson<Record<string, unknown>>(r.text || "{}");
     // Cortado pelo limite de tokens: o app avisa "A resposta veio incompleta" (N8).
@@ -133,6 +135,8 @@ Responda APENAS com JSON válido neste formato:
       parsed = { resumo: String((parsed as { _raw?: string })._raw || "").slice(0, 1500) };
     }
     parsed = sanitizarTextoSofia(parsed) as Record<string, unknown>;
+    // Cortado: o app descarta e pede para gerar de novo, então não cobra.
+    if (!truncated) await cobrarCreditos(userId, CUSTOS.parecer_descritivo, descricaoCobranca(body, "Relatório pedagógico (M6)"));
     return new Response(JSON.stringify({ relatorio: parsed, truncated, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

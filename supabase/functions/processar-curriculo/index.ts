@@ -1,6 +1,38 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { userIdFromAuthHeader, isBudgetExceeded } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca } from "../_shared/cobranca.ts";
+
+const PREFIXO_COBRANCA = "Anexo de Rede";
+const JANELA_REPROCESSO_DIAS = 7;
+const MAX_REPROCESSOS_GRATIS = 3;
+
+/**
+ * Tentar de novo depois de um erro é grátis, mas só até 3 vezes nos 7 dias
+ * seguintes a um envio pago. Fora disso, cada leitura custa CUSTOS.anexar_rede.
+ * (O status do registro não serve para decidir: a professora pode alterá-lo.)
+ */
+async function reprocessoGratis(userId: string): Promise<boolean> {
+  const desde = new Date(Date.now() - JANELA_REPROCESSO_DIAS * 86_400_000).toISOString();
+  const { data: pago } = await admin
+    .from("creditos_historico")
+    .select("created_at")
+    .eq("user_id", userId)
+    .eq("tipo", "uso")
+    .like("descricao", `${PREFIXO_COBRANCA}%`)
+    .gte("created_at", desde)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!pago) return false;
+  const { count } = await admin
+    .from("ai_usage")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("task", "processar-curriculo-reprocesso")
+    .gte("created_at", pago.created_at);
+  return (count ?? 0) < MAX_REPROCESSOS_GRATIS;
+}
 import { corsHeaders as cors } from "../_shared/sofia-router.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -279,6 +311,11 @@ serve(async (req) => {
     const ordemValida: 1 | 2 = ordem === 2 ? 2 : 1;
     console.log(`[processar-curriculo] curriculo_id=${curriculo_id} ordem=${ordemValida}`);
 
+    // O arquivo precisa ser da própria professora (curriculo-<id da conta>-<ordem>.pdf).
+    if (typeof arquivo_path === "string" && arquivo_path && !arquivo_path.startsWith(`curriculo-${userId}-`)) {
+      return new Response(JSON.stringify({ ok: false, error: "Não encontrei este currículo. Envie o PDF de novo." }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+
     if (!curriculo_id || !arquivo_path) {
       return new Response(JSON.stringify({ ok: false, error: "Não consegui identificar o arquivo enviado. Envie de novo." }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
     }
@@ -302,6 +339,26 @@ serve(async (req) => {
       await admin.from("user_curriculo_municipal").update({ status: "erro", erro_msg: "Não encontrei o arquivo enviado. Envie o PDF de novo." }).eq("id", curriculo_id);
       return new Response(JSON.stringify({ ok: false, error: "Não encontrei o arquivo enviado. Envie o PDF de novo." }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
     }
+
+    // Cobrança no servidor: envio novo custa CUSTOS.anexar_rede; tentar de novo
+    // após erro é grátis dentro do limite de reprocessoGratis().
+    const gratis = (body as { reprocessar?: unknown }).reprocessar === true && (await reprocessoGratis(userId));
+    if (!gratis) {
+      const saldo = await isBudgetExceeded(userId);
+      if (saldo.erro) {
+        return new Response(JSON.stringify({ ok: false, creditCheckFailed: true, error: "Não consegui conferir seus créditos agora. Tente de novo em instantes." }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
+      }
+      if (saldo.creditos < CUSTOS.anexar_rede) {
+        return new Response(JSON.stringify({ ok: false, blocked: true, error: `Créditos insuficientes para esta ação (precisa de ${CUSTOS.anexar_rede}, você tem ${saldo.creditos}).` }), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
+      }
+      await cobrarCreditos(userId, CUSTOS.anexar_rede, descricaoCobranca(body, `${PREFIXO_COBRANCA} — ${String(municipio || "").slice(0, 80)}`));
+    } else {
+      await admin.from("ai_usage").insert({
+        user_id: userId, provider: "google", model: "-", task: "processar-curriculo-reprocesso",
+        input_tokens: 0, output_tokens: 0, cost_brl: 0,
+      });
+    }
+    await admin.from("user_curriculo_municipal").update({ status: "processando", erro_msg: null }).eq("id", curriculo_id);
 
     // Fire and forget: processa em background
     const processamento = processarComGemini(curriculo_id, arquivo_path, municipio, ordemValida, userId);

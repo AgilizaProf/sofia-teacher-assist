@@ -4,7 +4,6 @@ import { usePersistentState } from "@/lib/persist/usePersistentState";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Loader2, Calendar, BookOpen, Trash2, Wand2, CheckCircle2, Printer, Download, Edit3, Save, X, GripVertical } from "lucide-react";
 import { useTurmas } from "@/hooks/useTurmas";
-import { consumirCreditos } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
@@ -212,7 +211,7 @@ export function TrilhasPanel() {
       };
       // Sem semanas não há trilha: nada é gravado e nada é cobrado (N1/N8).
       const data = await invocarIA<{ trilha?: Record<string, unknown> }>("gerar-trilha", {
-        body: payload,
+        body: { ...payload, descricaoCobranca: `Trilha semestral · ${form.semestre}` },
         validar: (d) =>
           Array.isArray(d?.trilha?.semanas) && (d.trilha!.semanas as unknown[]).length > 0
             ? true
@@ -260,7 +259,6 @@ export function TrilhasPanel() {
       await carregar();
       setSelected(trilhaRow!.id);
       setForm({ turmaId: "", turma: "", ano: "", disciplinas: [], disciplinaCustom: "", interdisciplinar: true, semestre: "1º semestre", contexto: "" });
-      void consumirCreditos(CUSTOS.trilha_semestral, `Trilha semestral · ${tema.titulo || form.semestre}`);
       // 20 min por atividade da trilha (1 atividade-tipo por semana)
       if (semanasArr.length > 0) {
         void acumularTempo("trilha_atividade", `Trilha semestral · ${tema.titulo || form.semestre}`, { multiplicador: semanasArr.length });
@@ -309,6 +307,7 @@ export function TrilhasPanel() {
             ? true
             : "A Sofia devolveu o plano sem os dias da semana. Gere de novo.",
         body: {
+          descricaoCobranca: `Planejamento semanal · Semana ${s.semana}`,
           semana: s.semana,
           tema_central: trilha.tema_central || "",
           habilidades_semana: habilidades,
@@ -333,7 +332,6 @@ export function TrilhasPanel() {
       const { data: novas } = await supabase.from("trilha_semanas").select("*").eq("trilha_id", trilha.id).order("semana");
       setSemanas((novas as Semana[]) || []);
       setPlanoAberto(s.id);
-      void consumirCreditos(CUSTOS.planejamento_semanal, `Planejamento semanal · Semana ${s.semana}`);
       void acumularTempo("planejamento_ia", `Planejamento semanal · Semana ${s.semana}`);
     } catch (e) {
       toast.error(`Não consegui gerar o plano da semana ${s.semana}.`, { description: mensagemAmigavel(e) });

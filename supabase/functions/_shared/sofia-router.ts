@@ -3,7 +3,7 @@
 // Flash → respostas rápidas e chat.
 // Flash-Lite → tarefas simples (sugestões, chips, saudação).
 // Mudança aqui faz o deploy publicar de novo todas as funções que usam o roteador.
-import { isBudgetExceeded, recordUsage } from "./ai-budget.ts";
+import { isBudgetExceeded, muitasChamadasRecentes, recordUsage } from "./ai-budget.ts";
 import { withConstitution } from "./sofia-constitution.ts";
 
 export const MODELOS = {
@@ -94,10 +94,27 @@ export function maxTokensFor(tipo: SofiaTaskType): number {
   return TOKEN_LIMITS[tipo] ?? 2000;
 }
 
+/** Teto do texto enviado à IA por chamada (bem acima do uso normal). */
+const MAX_CHARS_PEDIDO = 300_000;
+
 export async function callAI(args: CallAIArgs): Promise<CallAIResult> {
   const route = rotear(args.tipo);
   const maxTokens = args.maxTokens ?? maxTokensFor(args.tipo);
   const systemPrompt = withConstitution(args.system);
+
+  if (args.user.length > MAX_CHARS_PEDIDO) {
+    return {
+      ok: false,
+      status: 413,
+      text: "",
+      error: "Pedido grande demais para a Sofia. Tente com menos informações de uma vez.",
+      ...route,
+    };
+  }
+
+  if (args.userId && (await muitasChamadasRecentes(args.userId))) {
+    return { ok: false, status: 429, text: "", error: "Limite de pedidos por minuto atingido.", ...route };
+  }
 
   if (args.userId) {
     const b = await isBudgetExceeded(args.userId);
@@ -219,6 +236,8 @@ export function aiErrorResponse(r: CallAIResult): Response {
     mensagem = r.error && /^Créditos insuficientes/.test(r.error)
       ? r.error
       : "Seus créditos acabaram. Eles renovam no próximo ciclo do seu plano.";
+  } else if (r.status === 413) {
+    mensagem = r.error || "Pedido grande demais para a Sofia.";
   } else if (r.status === 429) {
     mensagem = "A Sofia está com muitos pedidos agora. Tente de novo em instantes.";
   } else if (r.status === 402) {

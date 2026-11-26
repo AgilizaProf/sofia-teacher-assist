@@ -27,7 +27,7 @@ import { useEiMode } from "@/lib/ei/useEiMode";
 import { useInclusaoStudents } from "@/hooks/useInclusaoStudents";
 import { useDashClasses } from "@/hooks/useDashLegacyData";
 import { Skeleton } from "@/components/ui/skeleton";
-import { consumirCreditos, descricaoDoc } from "@/lib/creditos/consume";
+import { descricaoDoc } from "@/lib/creditos/consume";
 import { acumularTempo } from "@/lib/tempo/acumular";
 import { useTempoEconomizado } from "@/lib/tempo/useTempoEconomizado";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
@@ -1066,6 +1066,7 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
       const data = await invocarIA<{ parecer?: ParecerNarrativo }>("gerar-parecer-inclusao", {
         validar: (d) => parecerTemConteudo(d?.parecer),
         body: {
+          descricaoCobranca: descricaoDoc("Parecer descritivo", a.nome),
           aluno: a.nome,
           diagnostico: a.pcd || "",
           periodo: tipoPeriodoAluno,
@@ -1126,7 +1127,6 @@ const [regByStudent] = usePersistentState<Record<string, Array<{ when: string; c
           duration: 6000,
         }
       );
-      void consumirCreditos(CUSTOS.parecer_descritivo, descricaoDoc("Parecer descritivo", a.nome));
      void acumularTempo("relatorio_aluno", `Relatório — ${a.nome}`);
       return true;
     } catch (e) {

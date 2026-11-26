@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca, respostaSemLogin } from "../_shared/cobranca.ts";
 import { conferirHabilidades, habilidadesDoAno, listaParaPrompt } from "../_shared/bnccOficial.ts";
 
 serve(async (req) => {
@@ -8,6 +9,7 @@ serve(async (req) => {
 
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    if (!userId) return respostaSemLogin(cors);
     const body = await req.json().catch(() => ({}));
     const {
       turma = "",
@@ -97,7 +99,7 @@ Regras:
 - ${faixa_etaria.includes("Bem pequenos") ? "Para BEM PEQUENOS: máximo 2 materiais centrais, espaço para exploração livre." : ""}
 - ${faixa_etaria.includes("Pré") || faixa_etaria.includes("Pequenos") || faixa_etaria.includes("Maiores") ? "PRÉ-ESCOLA: pode incluir registro (desenho, colagem, fala). NUNCA cópia, ditado ou exercício formal." : ""}`;
 
-    const r = await callAI({ userId, tipo: "roteiro_ei", system: sys, user, json: true, maxTokens: 3500 });
+    const r = await callAI({ userId, tipo: "roteiro_ei", system: sys, user, json: true, maxTokens: 3500, custoCreditos: CUSTOS.planejamento_semanal });
     if (!r.ok) return aiErrorResponse(r);
 
     const roteiro = parseAiJson<Record<string, unknown>>(r.text || "{}");
@@ -118,6 +120,7 @@ Regras:
     );
     roteiro.intencao_pedagogica = { ...intencao, objetivos_bncc: conf.habilidades.slice(0, 3) };
 
+    await cobrarCreditos(userId, CUSTOS.planejamento_semanal, descricaoCobranca(body, "Roteiro EI (Sofia)"));
     return new Response(JSON.stringify({ roteiro, model: r.model }), {
       headers: { ...cors, "Content-Type": "application/json" },
     });

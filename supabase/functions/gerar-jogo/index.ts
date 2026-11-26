@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { callAI, aiErrorResponse, corsHeaders as cors, parseAiJson, jsonTruncado, erroSimples } from "../_shared/sofia-router.ts";
 import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { respostaSemLogin } from "../_shared/cobranca.ts";
 
 function texto(v: unknown, max = 200): string {
   return typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "";
@@ -16,6 +17,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
+    // Sem login não chama a IA (antes qualquer pessoa podia usar de graça).
+    if (!userId) return respostaSemLogin(cors);
     const body = await req.json().catch(() => ({}));
     const tema = texto(body?.tema, 300);
     if (tema.length < 3) return json({ ok: false, error: "Escreva o tema do jogo." }, 400);

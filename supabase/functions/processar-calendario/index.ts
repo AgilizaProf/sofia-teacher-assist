@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { userIdFromAuthHeader } from "../_shared/ai-budget.ts";
+import { userIdFromAuthHeader, isBudgetExceeded } from "../_shared/ai-budget.ts";
+import { CUSTOS, cobrarCreditos, descricaoCobranca } from "../_shared/cobranca.ts";
 import { corsHeaders as cors } from "../_shared/sofia-router.ts";
 
 const GOOGLE_KEY = Deno.env.get("GOOGLE_API_KEY")!;
@@ -19,6 +20,16 @@ serve(async (req) => {
     const userId = await userIdFromAuthHeader(req.headers.get("Authorization"));
     if (!userId) {
       return falha("Sua sessão expirou. Entre de novo para importar o calendário.");
+    }
+
+    // Confere o saldo antes de mandar o PDF para a IA (anexar agenda custa 30).
+    const saldo = await isBudgetExceeded(userId);
+    if (saldo.erro) return falha("Não consegui conferir seus créditos agora. Tente de novo em instantes.", { creditCheckFailed: true });
+    if (saldo.creditos < CUSTOS.anexar_agenda) {
+      return falha(
+        `Créditos insuficientes para esta ação (precisa de ${CUSTOS.anexar_agenda}, você tem ${saldo.creditos}).`,
+        { blocked: true },
+      );
     }
 
     const body = await req.json().catch(() => ({}));
@@ -121,6 +132,8 @@ REGRAS gerais:
         inputTokens: 40000, outputTokens: eventos.length * 40,
       });
     } catch { /* não bloqueia */ }
+
+    await cobrarCreditos(userId, CUSTOS.anexar_agenda, descricaoCobranca(body, "Anexo de Agenda (calendário escolar)"));
 
     return new Response(
       JSON.stringify({ ok: true, ano: parsed.ano, total: eventos.length, eventos }),

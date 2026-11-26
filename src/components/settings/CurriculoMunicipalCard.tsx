@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { invocarIA, mensagemAmigavel } from "@/lib/sofia/invocarIA";
 import { useCurriculoMunicipal, type CurriculoMunicipal } from "@/hooks/useCurriculoMunicipal";
 import { toast } from "sonner";
-import { consumirCreditos } from "@/lib/creditos/consume";
 import { CUSTOS } from "@/lib/creditos/policy";
 import { useCreditosGate } from "@/lib/creditos/CreditosGate";
 import { acumularTempo } from "@/lib/tempo/acumular";
@@ -113,12 +112,11 @@ export function CurriculoMunicipalCard() {
       const okGate = await creditosGate.checar({ custo: CUSTOS.anexar_rede, acao: `Anexo de Rede — ${municipio.trim()}` });
       if (!okGate) return;
 
-      // Só cobra se o envio para leitura foi aceito (N1/N6).
+      // Os créditos são descontados no servidor quando o envio é aceito.
       await invocarIA<{ ok?: boolean; status?: string }>("processar-curriculo", {
-        body: { curriculo_id: row.id, arquivo_path: path, municipio: municipio.trim(), ordem },
+        body: { curriculo_id: row.id, arquivo_path: path, municipio: municipio.trim(), ordem, descricaoCobranca: `Anexo de Rede — ${municipio.trim()}` },
         validar: (d) => d?.ok === true,
       });
-      void consumirCreditos(CUSTOS.anexar_rede, `Anexo de Rede — ${municipio.trim()}`);
       void acumularTempo("curriculo_municipio", `Currículo Municipal — ${municipio.trim()}`);
       toast.info("Arquivo enviado! Processando habilidades em background...");
       void import("@/lib/admin/track").then(({ trackEvent }) =>

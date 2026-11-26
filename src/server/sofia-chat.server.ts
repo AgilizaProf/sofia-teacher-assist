@@ -393,3 +393,43 @@ export async function finalizeSofiaChat(
     truncated: isTruncatedFinish(finishReason),
   };
 }
+
+/** Respostas com 1500+ caracteres contam como geração longa (CUSTOS.chat_sofia_longa). */
+export const CHAT_LIMIAR_LONGA = 1500;
+export const CHAT_CUSTO_LONGA = 5;
+
+/**
+ * Cobrança do chat, feita no servidor (antes era o navegador que descontava,
+ * e quem chamasse a rota direto conversava de graça):
+ * - geração longa: 5 créditos nesta mensagem;
+ * - chat curto: registrar_mensagem_sofia (1 crédito a cada 10 mensagens).
+ * Roda com o login da própria professora; as funções do banco conferem
+ * auth.uid(). Nunca lança: uma falha fica no log e não apaga a resposta.
+ */
+export async function cobrarMensagemChat(
+  supabase: Supa,
+  userId: string,
+  texto: string,
+): Promise<void> {
+  try {
+    if (texto.trim().length >= CHAT_LIMIAR_LONGA) {
+      const { error } = await supabase.rpc(
+        "consumir_creditos" as never,
+        {
+          _user_id: userId,
+          _quantidade: CHAT_CUSTO_LONGA,
+          _descricao: "Chat — geração longa",
+        } as never,
+      );
+      if (error) console.warn("[sofia.chat] cobrança (longa) falhou:", error.message);
+    } else {
+      const { error } = await supabase.rpc(
+        "registrar_mensagem_sofia" as never,
+        { _user_id: userId } as never,
+      );
+      if (error) console.warn("[sofia.chat] cobrança (mensagem) falhou:", error.message);
+    }
+  } catch (e) {
+    console.warn("[sofia.chat] cobrança falhou:", e);
+  }
+}
