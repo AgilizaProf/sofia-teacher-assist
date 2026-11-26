@@ -66,10 +66,11 @@ type AprofNuvem = {
   alunos: () => Promise<AlunosDaTurma[]>;
   aulas: () => Promise<AulaPlanejada[]>;
   sofiaJogo: (pedido: unknown) => Promise<{ itens: Array<{ pergunta: string; resposta: string }> } | { erro: string }>;
+  bancoQuestoes: () => Promise<ArrayBuffer>;
 };
 
 // Só estas chaves podem ser lidas ou gravadas pelas ferramentas (lista branca).
-// simulados_dados: Questões (questoes.html) e a página antiga simulados.html.
+// simulados_dados: Questões (questoes.html).
 // jogos_dados: Jogos e atividades interativas (jogos.html).
 const CHAVES_FERRAMENTAS = ["simulados_dados", "jogos_dados"] as const;
 
@@ -276,6 +277,15 @@ const aprofNuvem: AprofNuvem = {
       componente: txt(r.componente, 80) || null,
       habilidades: Array.isArray(r.habilidades) ? r.habilidades.map((h) => txt(h, 20)).filter(Boolean).slice(0, 30) : [],
     });
+  },
+  // Banco de questões (com gabaritos): vem da função banco-questoes, que só
+  // entrega para quem está logado. Antes era um arquivo público do site.
+  async bancoQuestoes() {
+    const { data, error } = await supabase.functions.invoke("banco-questoes", { method: "GET" });
+    if (error) throw error;
+    if (data instanceof Blob) return data.arrayBuffer();
+    if (data instanceof ArrayBuffer) return data;
+    throw new Error("Resposta inesperada ao abrir o banco de questões.");
   },
   // só leitura, e só da conta de quem está logado
   async planejamento() {
